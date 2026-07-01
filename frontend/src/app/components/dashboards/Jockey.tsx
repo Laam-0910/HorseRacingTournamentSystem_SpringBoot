@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   { index: "03", icon: "calendar",         label: "Race Calendar", view: "calendar"    },
   { index: "04", icon: "mail",             label: "Invitations",   view: "invitations" },
   { index: "05", icon: "alert-triangle",   label: "Rule Violations", view: "violations" },
-  { index: "06", icon: "user-cog",         label: "Profile & 2FA", view: "profile"     },
 ];
 
 // ── Sub-views ────────────────────────────────────────────────────────────────
@@ -193,7 +192,10 @@ function ViolationsView({ violations }: { violations: any[] }) {
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function Jockey() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<JockeyTab>("hub");
+  const [activeTab, setActiveTab] = useState<JockeyTab>(() => {
+    const tabParam = new URLSearchParams(window.location.search).get("tab");
+    return (tabParam as JockeyTab) || "hub";
+  });
   const [dashboard, setDashboard] = useState<any>(null);
   const [mounts, setMounts] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);

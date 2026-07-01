@@ -3,23 +3,27 @@ import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import DashboardLayout from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
+import ViewLive from "./components/ViewLive";
 
-type SpectatorTab = "home" | "racecard" | "results" | "horses" | "stats" | "profile";
+type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "profile";
 
 const ROLE_COLOR = "#ef4444";
 
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: "Overview",   view: "home"     },
-  { index: "02", icon: "info",             label: "Racecard",   view: "racecard" },
-  { index: "03", icon: "award",            label: "Results",    view: "results"  },
-  { index: "04", icon: "activity",         label: "Horses",     view: "horses"   },
-  { index: "05", icon: "bar-chart-3",      label: "Statistics", view: "stats"    },
-  { index: "06", icon: "user-cog",         label: "Profile & 2FA", view: "profile" },
+  { index: "02", icon: "tv",               label: "Live Watch", view: "live"     },
+  { index: "03", icon: "info",             label: "Racecard",   view: "racecard" },
+  { index: "04", icon: "award",            label: "Results",    view: "results"  },
+  { index: "05", icon: "activity",         label: "Horses",     view: "horses"   },
+  { index: "06", icon: "bar-chart-3",      label: "Statistics", view: "stats"    },
 ];
 
 export default function Spectator() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<SpectatorTab>("home");
+  const [activeTab, setActiveTab] = useState<SpectatorTab>(() => {
+    const tabParam = new URLSearchParams(window.location.search).get("tab");
+    return (tabParam as SpectatorTab) || "home";
+  });
   const [meetings, setMeetings] = useState<any[]>([]);
   const [races, setRaces] = useState<any[]>([]);
   const [horses, setHorses] = useState<any[]>([]);
@@ -74,6 +78,9 @@ export default function Spectator() {
             </div>
           </div>
         );
+
+      case "live":
+        return <ViewLive />;
 
       case "racecard":
         return (

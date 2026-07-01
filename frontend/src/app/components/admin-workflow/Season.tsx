@@ -1,5 +1,157 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { api } from "../../../lib/api";
+
+interface InlineDatePickerProps {
+  label: string;
+  value: string; // format: dd-mm-yyyy
+  onChange: (val: string) => void;
+}
+
+function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentDate, setCurrentDate] = useState(() => {
+    const today = new Date();
+    return { month: today.getMonth(), year: today.getFullYear() };
+  });
+
+  const datePattern = /^(\d{2})-(\d{2})-(\d{4})$/;
+  const match = value.match(datePattern);
+  const selectedDay = match ? parseInt(match[1]) : null;
+  const selectedMonth = match ? parseInt(match[2]) - 1 : null;
+  const selectedYear = match ? parseInt(match[3]) : null;
+
+  useEffect(() => {
+    if (isOpen && selectedMonth !== null && selectedYear !== null) {
+      setCurrentDate({ month: selectedMonth, year: selectedYear });
+    }
+  }, [isOpen, selectedMonth, selectedYear]);
+
+  const daysInMonth = new Date(currentDate.year, currentDate.month + 1, 0).getDate();
+  let firstDay = new Date(currentDate.year, currentDate.month, 1).getDay();
+  firstDay = firstDay === 0 ? 6 : firstDay - 1; 
+
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  const handlePrevMonth = () => {
+    setCurrentDate(prev => {
+      if (prev.month === 0) {
+        return { month: 11, year: prev.year - 1 };
+      }
+      return { month: prev.month - 1, year: prev.year };
+    });
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(prev => {
+      if (prev.month === 11) {
+        return { month: 0, year: prev.year + 1 };
+      }
+      return { month: prev.month + 1, year: prev.year };
+    });
+  };
+
+  const handleSelectDay = (day: number) => {
+    const formattedDay = String(day).padStart(2, '0');
+    const formattedMonth = String(currentDate.month + 1).padStart(2, '0');
+    onChange(`${formattedDay}-${formattedMonth}-${currentDate.year}`);
+    setIsOpen(false);
+  };
+
+  const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const blanksArray = Array.from({ length: firstDay }, (_, i) => i);
+
+  return (
+    <div className="relative">
+      <label className="text-[10px] font-semibold text-white/60 uppercase tracking-wider block mb-1.5 font-mono">
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          readOnly
+          onClick={() => setIsOpen(!isOpen)}
+          value={value}
+          placeholder="dd-mm-yyyy"
+          className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-xs focus:border-amber-500/50 focus:outline-none cursor-pointer transition font-mono"
+        />
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-amber-500 transition text-sm focus:outline-none"
+        >
+          📅
+        </button>
+      </div>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
+          <div className="absolute top-[110%] left-0 w-64 bg-[#100f0c] border border-[#2a2825] rounded-xl p-3.5 shadow-2xl z-50 space-y-3 select-none">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <button 
+                type="button"
+                onClick={handlePrevMonth}
+                className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition"
+              >
+                ◀
+              </button>
+              <span className="font-bold text-white uppercase tracking-wider">
+                {months[currentDate.month]} {currentDate.year}
+              </span>
+              <button 
+                type="button"
+                onClick={handleNextMonth}
+                className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition"
+              >
+                ▶
+              </button>
+            </div>
+
+            <div className="grid grid-cols-7 text-center text-[9px] font-semibold text-white/40 uppercase font-mono">
+              <span>Mo</span>
+              <span>Tu</span>
+              <span>We</span>
+              <span>Th</span>
+              <span>Fr</span>
+              <span>Sa</span>
+              <span>Su</span>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1">
+              {blanksArray.map(b => (
+                <div key={`blank-${b}`} className="h-7 w-7"></div>
+              ))}
+              {daysArray.map(day => {
+                const isSelected = 
+                  selectedDay === day && 
+                  selectedMonth === currentDate.month && 
+                  selectedYear === currentDate.year;
+
+                return (
+                  <button
+                    key={`day-${day}`}
+                    type="button"
+                    onClick={() => handleSelectDay(day)}
+                    className={`h-7 w-7 text-[10px] font-mono rounded-lg flex items-center justify-center transition ${
+                      isSelected 
+                        ? "bg-amber-500 text-black font-bold" 
+                        : "text-white/80 hover:bg-white/5 hover:text-amber-500"
+                    }`}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export default function Season() {
   const [seasons, setSeasons] = useState<any[]>([]);
@@ -10,6 +162,12 @@ export default function Season() {
   const [newSeasonEndDate, setNewSeasonEndDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // States for Extend Season Modal
+  const [extendingSeason, setExtendingSeason] = useState<any | null>(null);
+  const [extendStartDateInput, setExtendStartDateInput] = useState<string>("");
+  const [extendDateInput, setExtendDateInput] = useState<string>("");
+  const [extendError, setExtendError] = useState<string>("");
 
   const formatDateTime = (dateStr: string) => {
     if (!dateStr) return "";
@@ -72,30 +230,86 @@ export default function Season() {
     }
   };
 
-  const handleExtend = async (season: any) => {
-    const defaultDate = season.endDate ? season.endDate.substring(0, 10) : "";
-    const newDate = prompt("Enter new End Date (yyyy-MM-dd):", defaultDate);
-    if (!newDate) return;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(newDate)) {
-      alert("Invalid date format. Please use yyyy-MM-dd.");
+  const handleExtend = (season: any) => {
+    const rawStartDate = season.startDate ? season.startDate.substring(0, 10) : "";
+    const rawEndDate = season.endDate ? season.endDate.substring(0, 10) : "";
+    
+    const toDisplay = (d: string) => {
+      if (!d) return "";
+      const parts = d.split("-");
+      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      return d;
+    };
+
+    setExtendingSeason(season);
+    setExtendStartDateInput(toDisplay(rawStartDate));
+    setExtendDateInput(toDisplay(rawEndDate));
+    setExtendError("");
+  };
+
+  const handleExtendSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setExtendError("");
+    
+    if (!extendStartDateInput || !extendDateInput) {
+      setExtendError("Please select both start and end dates.");
       return;
     }
+
+    const toDbFormat = (d: string) => {
+      const parts = d.split("-");
+      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      return d;
+    };
+
+    const dbStartDate = toDbFormat(extendStartDateInput);
+    const dbEndDate = toDbFormat(extendDateInput);
+
+    if (new Date(dbStartDate) >= new Date(dbEndDate)) {
+      setExtendError("Start Date must be before End Date.");
+      return;
+    }
+
     try {
-      await api.post(`/races/seasons/${season.id}/extend`, { endDate: newDate });
+      await api.post(`/races/seasons/${extendingSeason.id}/extend`, {
+        startDate: dbStartDate,
+        endDate: dbEndDate
+      });
       fetchSeasons();
+      setExtendingSeason(null);
     } catch (err: any) {
-      alert("Failed to extend season: " + err.message);
+      setExtendError("Failed to extend season: " + err.message);
     }
   };
 
   const handleCreateSeason = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    
+    if (!newSeasonStartDate || !newSeasonEndDate) {
+      setError("Please select both start and end dates.");
+      return;
+    }
+
+    const toDbFormat = (d: string) => {
+      const parts = d.split("-");
+      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      return d;
+    };
+
+    const dbStartDate = toDbFormat(newSeasonStartDate);
+    const dbEndDate = toDbFormat(newSeasonEndDate);
+
+    if (new Date(dbStartDate) >= new Date(dbEndDate)) {
+      setError("Start Date must be before End Date.");
+      return;
+    }
+
     try {
       await api.post("/races/seasons", {
         name: newSeasonName,
-        startDate: newSeasonStartDate,
-        endDate: newSeasonEndDate,
+        startDate: dbStartDate,
+        endDate: dbEndDate,
         status: "PENDING",
       });
       setNewSeasonName("");
@@ -183,28 +397,16 @@ export default function Season() {
                 placeholder="E.g., Winter Season 2026"
               />
             </div>
-            <div>
-              <label className="text-[10px] font-semibold text-white/60 uppercase tracking-wider block mb-1.5">Start Date</label>
-              <input
-                type="datetime-local"
-                step="1"
-                required
-                value={newSeasonStartDate}
-                onChange={(e) => setNewSeasonStartDate(e.target.value)}
-                className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-lg text-white text-xs"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] font-semibold text-white/60 uppercase tracking-wider block mb-1.5">End Date</label>
-              <input
-                type="datetime-local"
-                step="1"
-                required
-                value={newSeasonEndDate}
-                onChange={(e) => setNewSeasonEndDate(e.target.value)}
-                className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-lg text-white text-xs"
-              />
-            </div>
+            <InlineDatePicker
+              label="Start Date"
+              value={newSeasonStartDate}
+              onChange={setNewSeasonStartDate}
+            />
+            <InlineDatePicker
+              label="End Date"
+              value={newSeasonEndDate}
+              onChange={setNewSeasonEndDate}
+            />
           </div>
           <div className="flex justify-end">
             <button
@@ -238,6 +440,69 @@ export default function Season() {
           <p className="text-sm text-white/40">Select a season to view its rules.</p>
         )}
       </div>
+
+      {/* Extend Season Modal */}
+      {extendingSeason && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#151310] border border-[#2a2825] rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4 animate-in-fade-in duration-200">
+            <div className="flex items-center justify-between">
+              <h4 className="text-base font-bold text-white font-serif flex items-center space-x-2">
+                <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                <span>Extend Season End Date</span>
+              </h4>
+              <button 
+                type="button"
+                onClick={() => setExtendingSeason(null)}
+                className="text-white/40 hover:text-white/80 text-lg transition focus:outline-none"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <span className="text-[10px] text-white/40 uppercase tracking-wider font-mono">Season Name</span>
+              <p className="text-white text-sm font-semibold">{extendingSeason.name}</p>
+            </div>
+
+            <form onSubmit={handleExtendSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <InlineDatePicker
+                  label="New Start Date"
+                  value={extendStartDateInput}
+                  onChange={setExtendStartDateInput}
+                />
+                <InlineDatePicker
+                  label="New End Date"
+                  value={extendDateInput}
+                  onChange={setExtendDateInput}
+                />
+              </div>
+
+              {extendError && (
+                <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">
+                  ⚠️ {extendError}
+                </p>
+              )}
+
+              <div className="flex justify-end space-x-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setExtendingSeason(null)}
+                  className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs font-semibold rounded-lg transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition"
+                >
+                  Extend Season
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

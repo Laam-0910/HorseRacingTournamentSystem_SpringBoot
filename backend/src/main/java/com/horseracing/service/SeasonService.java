@@ -111,14 +111,26 @@ public class SeasonService {
     }
 
     @Transactional
-    public SeasonDTO extendSeason(Integer id, String newEndDateStr) {
+    public SeasonDTO extendSeason(Integer id, String newStartDateStr, String newEndDateStr) {
         Season season = seasonRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Season not found"));
-        if (newEndDateStr != null && newEndDateStr.contains("T")) {
-            newEndDateStr = newEndDateStr.substring(0, 10);
+        
+        if (newStartDateStr != null && !newStartDateStr.trim().isEmpty()) {
+            if (newStartDateStr.contains("T")) {
+                newStartDateStr = newStartDateStr.substring(0, 10);
+            }
+            java.sql.Date newStartDate = java.sql.Date.valueOf(newStartDateStr);
+            season.setStartDate(newStartDate);
         }
-        java.sql.Date newEndDate = java.sql.Date.valueOf(newEndDateStr);
-        season.setEndDate(newEndDate);
+
+        if (newEndDateStr != null && !newEndDateStr.trim().isEmpty()) {
+            if (newEndDateStr.contains("T")) {
+                newEndDateStr = newEndDateStr.substring(0, 10);
+            }
+            java.sql.Date newEndDate = java.sql.Date.valueOf(newEndDateStr);
+            season.setEndDate(newEndDate);
+        }
+
         Season saved = seasonRepository.save(season);
         return seasonMapper.toDTO(saved);
     }

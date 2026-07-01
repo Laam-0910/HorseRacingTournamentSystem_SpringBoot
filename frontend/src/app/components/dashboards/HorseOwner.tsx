@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   { index: "03", icon: "calendar",          label: "Race Calendar",      view: "calendar"    },
   { index: "04", icon: "mail",              label: "Invitations",        view: "invitations" },
   { index: "05", icon: "award",             label: "Results & Earnings", view: "results"     },
-  { index: "06", icon: "user-cog",          label: "Profile & 2FA",      view: "profile"     },
 ];
 
 // ── Shared input/select styles ─────────────────────────────────────────────
@@ -369,7 +368,10 @@ function ResultsView({ results }: { results: any[] }) {
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function HorseOwner() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<OwnerTab>("hub");
+  const [activeTab, setActiveTab] = useState<OwnerTab>(() => {
+    const tabParam = new URLSearchParams(window.location.search).get("tab");
+    return (tabParam as OwnerTab) || "hub";
+  });
   const [dashboard, setDashboard] = useState<any>(null);
   const [stable, setStable] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);

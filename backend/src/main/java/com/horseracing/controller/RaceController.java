@@ -50,8 +50,9 @@ public class RaceController {
     @PostMapping("/seasons/{id}/extend")
     public ResponseEntity<?> extendSeason(@PathVariable Integer id, @RequestBody Map<String, String> body) {
         try {
+            String newStartDate = body.get("startDate");
             String newEndDate = body.get("endDate");
-            SeasonDTO updated = seasonService.extendSeason(id, newEndDate);
+            SeasonDTO updated = seasonService.extendSeason(id, newStartDate, newEndDate);
             return ResponseEntity.ok(Map.of("success", true, "season", updated));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
