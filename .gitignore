@@ -1,0 +1,30 @@
+# IDE / Editor logs and settings
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.DS_Store
+*.log
+
+# Backend (Spring Boot / Maven / Gradle)
+**/target/
+**/build/
+.gradle/
+**/out/
+.env
+.env.*
+
+# Frontend (React / Node / Vite)
+**/node_modules/
+**/dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+
+# Local configuration files
+application-local.properties
+application-local.yml
+application-private.properties
+application-private.yml

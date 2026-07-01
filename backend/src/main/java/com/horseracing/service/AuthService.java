@@ -1,0 +1,287 @@
+package com.horseracing.backend.service;
+
+import com.horseracing.backend.dto.LoginRequestDTO;
+import com.horseracing.backend.dto.LoginResponseDTO;
+import com.horseracing.backend.dto.RegisterRequestDTO;
+import com.horseracing.backend.dto.UserDTO;
+import com.horseracing.backend.entity.User;
+import com.horseracing.backend.mapper.UserMapper;
+import com.horseracing.backend.repository.UserRepository;
+import com.horseracing.backend.security.JwtTokenProvider;
+import com.horseracing.backend.tool.EmailSender;
+import lombok.Builder;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider tokenProvider;
+    private final UserMapper userMapper;
+    private final EmailSender emailSender;
+
+    @Data
+    @Builder
+    private static class OtpSession {
+        private String otpCode;
+        private long creationTime;
+        private Object pendingData;
+    }
+
+    private final Map<String, OtpSession> otpStorage = new ConcurrentHashMap<>();
+
+    @Transactional
+    public LoginResponseDTO login(LoginRequestDTO request) {
+        String username = request.getUsername();
+        String password = request.getPassword();
+
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            userOpt = userRepository.findByEmail(username); // Allow login by email
+        }
+
+        if (userOpt.isEmpty()) {
+            return LoginResponseDTO.builder()
+                    .success(false)
+                    .error("User not found")
+                    .build();
+        }
+
+        User user = userOpt.get();
+        if ("INACTIVE".equals(user.getStatus())) {
+            return LoginResponseDTO.builder()
+                    .success(false)
+                    .error("Account is inactive")
+                    .build();
+        }
+
+        boolean validPassword = false;
+        // Legacy plain-text password support
+        if (!user.getPasswordHash().startsWith("$2a$")) {
+            if (user.getPasswordHash().equals(password)) {
+                validPassword = true;
+                user.setPasswordHash(passwordEncoder.encode(password));
+                userRepository.save(user);
+            }
+        } else {
+            validPassword = passwordEncoder.matches(password, user.getPasswordHash());
+        }
+
+        if (!validPassword) {
+            return LoginResponseDTO.builder()
+                    .success(false)
+                    .error("Incorrect password")
+                    .build();
+        }
+
+        boolean requireOtp = (user.getRequireOtp() != null && user.getRequireOtp());
+        int roleId = user.getRoleId();
+
+        if (roleId == 1 || roleId == 5 || !requireOtp) {
+            // Admin, Referee, or general OTP disabled bypasses verification
+            String token = tokenProvider.generateToken(user.getUsername(), user.getRoleId());
+            return LoginResponseDTO.builder()
+                    .success(true)
+                    .requireOtp(false)
+                    .token(token)
+                    .user(userMapper.toDTO(user))
+                    .build();
+        } else {
+            // Generate OTP for 2FA
+            String otp = String.format("%06d", new Random().nextInt(999999));
+            String otpTxId = UUID.randomUUID().toString();
+            
+            otpStorage.put(otpTxId, OtpSession.builder()
+                    .otpCode(otp)
+                    .creationTime(System.currentTimeMillis())
+                    .pendingData(user)
+                    .build());
+
+            // Send Email
+            emailSender.sendVerificationCode(user.getEmail(), otp, "LOGIN");
+
+            return LoginResponseDTO.builder()
+                    .success(true)
+                    .requireOtp(true)
+                    .otpTxId(otpTxId)
+                    .build();
+        }
+    }
+
+    public LoginResponseDTO verifyLogin(String otpTxId, String enteredOtp) {
+        OtpSession session = otpStorage.get(otpTxId);
+        if (session == null || !session.getOtpCode().equals(enteredOtp)) {
+            return LoginResponseDTO.builder()
+                    .success(false)
+                    .error("Invalid verification code")
+                    .build();
+        }
+
+        // Expire in 1 minute (60,000 ms)
+        if ((System.currentTimeMillis() - session.getCreationTime()) > 60000) {
+            otpStorage.remove(otpTxId);
+            return LoginResponseDTO.builder()
+                    .success(false)
+                    .error("Verification code has expired")
+                    .build();
+        }
+
+        otpStorage.remove(otpTxId);
+        User user = (User) session.getPendingData();
+        String token = tokenProvider.generateToken(user.getUsername(), user.getRoleId());
+
+        return LoginResponseDTO.builder()
+                .success(true)
+                .requireOtp(false)
+                .token(token)
+                .user(userMapper.toDTO(user))
+                .build();
+    }
+
+    public Map<String, Object> register(RegisterRequestDTO request) {
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
+            throw new IllegalArgumentException("Username is already taken");
+        }
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+
+        int roleId = request.getRoleId() != null ? request.getRoleId() : 4; // Default Spectator
+        
+        User pendingUser = new User();
+        pendingUser.setUsername(request.getUsername());
+        pendingUser.setEmail(request.getEmail());
+        pendingUser.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        pendingUser.setRoleId(roleId);
+        pendingUser.setWeight(request.getWeight());
+        pendingUser.setStatus("ACTIVE");
+        pendingUser.setTotalRacesParticipated(0);
+        pendingUser.setTotalTop3Finishes(0);
+
+        if (roleId == 1 || roleId == 5) {
+            // Admin and Referee bypass email verification
+            User saved = userRepository.save(pendingUser);
+            return Map.of("success", true, "requireOtp", false, "user", userMapper.toDTO(saved));
+        } else {
+            // Generate register OTP
+            String otp = String.format("%06d", new Random().nextInt(999999));
+            String otpTxId = UUID.randomUUID().toString();
+
+            otpStorage.put(otpTxId, OtpSession.builder()
+                    .otpCode(otp)
+                    .creationTime(System.currentTimeMillis())
+                    .pendingData(pendingUser)
+                    .build());
+
+            emailSender.sendVerificationCode(request.getEmail(), otp, "REGISTER");
+
+            return Map.of("success", true, "requireOtp", true, "otpTxId", otpTxId);
+        }
+    }
+
+    @Transactional
+    public Map<String, Object> verifyRegister(String otpTxId, String enteredOtp) {
+        OtpSession session = otpStorage.get(otpTxId);
+        if (session == null || !session.getOtpCode().equals(enteredOtp)) {
+            return Map.of("success", false, "error", "Invalid verification code");
+        }
+
+        // Expire in 5 minutes (300,000 ms)
+        if ((System.currentTimeMillis() - session.getCreationTime()) > 300000) {
+            otpStorage.remove(otpTxId);
+            return Map.of("success", false, "error", "Verification code has expired");
+        }
+
+        User pendingUser = (User) session.getPendingData();
+        // Double check email is not taken in the meantime
+        if (userRepository.findByEmail(pendingUser.getEmail()).isPresent()) {
+            otpStorage.remove(otpTxId);
+            return Map.of("success", false, "error", "Email already in use");
+        }
+
+        otpStorage.remove(otpTxId);
+        User saved = userRepository.save(pendingUser);
+        return Map.of("success", true, "user", userMapper.toDTO(saved));
+    }
+
+    public Map<String, Object> forgotPassword(String email) {
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            userOpt = userRepository.findByUsername(email);
+        }
+
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Email or Username not found");
+        }
+
+        User user = userOpt.get();
+        int roleId = user.getRoleId();
+
+        // Allow only Owner(2), Jockey(3), Spectator(4)
+        if (roleId == 2 || roleId == 3 || roleId == 4) {
+            String otp = String.format("%06d", new Random().nextInt(999999));
+            String otpTxId = UUID.randomUUID().toString();
+
+            otpStorage.put(otpTxId, OtpSession.builder()
+                    .otpCode(otp)
+                    .creationTime(System.currentTimeMillis())
+                    .pendingData(user.getEmail())
+                    .build());
+
+            emailSender.sendVerificationCode(user.getEmail(), otp, "FORGOT_PASSWORD");
+
+            return Map.of("success", true, "otpTxId", otpTxId);
+        } else {
+            throw new IllegalArgumentException("Your account role is not permitted to reset password this way");
+        }
+    }
+
+    @Transactional
+    public Map<String, Object> verifyForgotPassword(String otpTxId, String enteredOtp, String newPassword) {
+        OtpSession session = otpStorage.get(otpTxId);
+        if (session == null || !session.getOtpCode().equals(enteredOtp)) {
+            return Map.of("success", false, "error", "Invalid verification code");
+        }
+
+        // Expire in 5 minutes (300,000 ms)
+        if ((System.currentTimeMillis() - session.getCreationTime()) > 300000) {
+            otpStorage.remove(otpTxId);
+            return Map.of("success", false, "error", "Verification code has expired");
+        }
+
+        String email = (String) session.getPendingData();
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            otpStorage.remove(otpTxId);
+            return Map.of("success", false, "error", "User not found");
+        }
+
+        otpStorage.remove(otpTxId);
+        User user = userOpt.get();
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+
+        return Map.of("success", true, "message", "Password updated successfully");
+    }
+
+    @Transactional
+    public Boolean toggleOtp(String username, Boolean requireOtp) {
+        Optional<User> userOpt = userRepository.findByUsername(username);
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("User not found");
+        }
+        User user = userOpt.get();
+        user.setRequireOtp(requireOtp);
+        userRepository.save(user);
+        return user.getRequireOtp();
+    }
+}

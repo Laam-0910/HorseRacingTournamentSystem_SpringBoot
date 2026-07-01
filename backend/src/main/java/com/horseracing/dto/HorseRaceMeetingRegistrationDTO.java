@@ -1,0 +1,21 @@
+package com.horseracing.backend.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import java.sql.Timestamp;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class HorseRaceMeetingRegistrationDTO {
+    private Integer id;
+    private Integer raceMeetingId;
+    private String raceMeetingName;
+    private Integer horseId;
+    private String horseName;       // Tên chiến mã bổ trợ để hiển thị
+    private String status;          // PENDING, APPROVED, REJECTED
+    private Timestamp registeredAt;
+}

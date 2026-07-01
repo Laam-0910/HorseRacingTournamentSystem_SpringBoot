@@ -1,0 +1,935 @@
+import { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../context/AuthContext";
+import { api } from "../../../lib/api";
+
+// ─────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────
+type SubView = "home" | "live" | "racecard" | "results" | "fixtures" | "statistics" | "horses" | "jockeys_owners" | "incident" | "about";
+
+interface Season { id: number; name: string; startDate: string; endDate: string; status?: string; }
+interface Meeting { id: number; name: string; venue: string; startDate: string; totalBudget: number; }
+interface Horse { id: number; name: string; age: number; breed: string; ownerName: string; rating: number; wins: number; races: number; }
+interface Jockey { id: number; name: string; wins: number; races: number; winRate: number; }
+interface Result { id: number; raceName: string; meetingName: string; date: string; entries: ResultEntry[]; }
+interface ResultEntry { position: number; horseName: string; jockeyName: string; finishTime: string; prize: number; }
+interface Fixture { id: number; name: string; venue: string; date: string; numRaces: number; status: string; }
+interface Stat { jockeyName: string; horseName: string; wins: number; races: number; winRate: number; top3Rate: number; earnings: number; }
+interface Incident { id: number; raceName: string; date: string; horseName: string; jockeyName: string; type: string; description: string; penalty: string; }
+interface RacecardEntry { position: number; horseName: string; jockeyName: string; ownerName: string; age: number; weight: string; rating: number; }
+interface Racecard { id: number; name: string; class: string; distance: string; going: string; prize: number; entries: RacecardEntry[]; }
+
+const TRANSLATIONS: Record<string, any> = {
+  vi: {
+    home: "Trang chủ",
+    live: "Trực tiếp",
+    racecard: "Bảng đua",
+    results: "Kết quả",
+    fixtures: "Lịch thi đấu",
+    statistics: "Thống kê",
+    horses: "Danh sách Ngựa",
+    jockeys_owners: "Nài & Chủ ngựa",
+    incident: "Báo cáo sự cố",
+    welcome: "Chào mừng đến với Hệ thống Quản lý Đua ngựa",
+    welcomeSub: "Chọn một chức năng bên dưới để bắt đầu.",
+    activeSeasons: "Mùa giải đang hoạt động",
+    noActiveSeasons: "Hiện chưa có mùa giải nào hoạt động.",
+    upcomingMeetings: "Các Ngày hội đua sắp tới",
+    noUpcomingMeetings: "Chưa lên lịch ngày hội đua nào.",
+    watchLive: "XEM TRỰC TIẾP",
+    viewRacecard: "Xem Bảng đua",
+    about: "Giới thiệu",
+    signin: "Đăng nhập",
+    register: "Đăng ký",
+    signout: "Đăng xuất",
+    dashboard: "Trang quản trị",
+    searchPlaceholder: "Tìm kiếm ngựa, nài, chủ ngựa, trận đua...",
+    notifications: "Thông báo",
+    clearAll: "Xóa tất cả",
+    noNotifications: "Không có thông báo mới",
+  },
+  en: {
+    home: "Home",
+    live: "Live",
+    racecard: "Racecard",
+    results: "Results",
+    fixtures: "Fixtures",
+    statistics: "Statistics",
+    horses: "Horses",
+    jockeys_owners: "Jockeys & Owners",
+    incident: "Incident Report",
+    welcome: "Welcome to Horse Race Management System",
+    welcomeSub: "Select an option from the menu to get started.",
+    activeSeasons: "Active Seasons",
+    noActiveSeasons: "No active seasons currently available.",
+    upcomingMeetings: "Upcoming Race Meetings",
+    noUpcomingMeetings: "No upcoming meetings scheduled.",
+    watchLive: "WATCH LIVE",
+    viewRacecard: "View Racecard",
+    about: "About",
+    signin: "Sign In",
+    register: "Register",
+    signout: "Sign out",
+    dashboard: "Dashboard",
+    searchPlaceholder: "Search horse, jockey, horse owner, race…",
+    notifications: "Notifications",
+    clearAll: "Clear All",
+    noNotifications: "No more notifications",
+  },
+  zh: {
+    home: "首页",
+    live: "直播",
+    racecard: "排位表",
+    results: "比赛结果",
+    fixtures: "赛程安排",
+    statistics: "统计数据",
+    horses: "马匹登记",
+    jockeys_owners: "骑师与马主",
+    incident: "事故报告",
+    welcome: "欢迎来到赛马管理系统",
+    welcomeSub: "从菜单中选择一个选项以开始。",
+    activeSeasons: "进行中的赛季",
+    noActiveSeasons: "当前没有进行中的赛季。",
+    upcomingMeetings: "即将进行的赛事",
+    noUpcomingMeetings: "没有安排即将进行的赛事。",
+    watchLive: "观看直播",
+    viewRacecard: "查看排位表",
+    about: "关于",
+    signin: "登录",
+    register: "注册",
+    signout: "退出登录",
+    dashboard: "管理面板",
+    searchPlaceholder: "搜索马匹、骑师、马主、比赛...",
+    notifications: "通知",
+    clearAll: "清除全部",
+    noNotifications: "没有更多通知",
+  },
+  ja: {
+    home: "ホーム",
+    live: "ライブ",
+    racecard: "レースカード",
+    results: "レース結果",
+    fixtures: "日程・スケジュール",
+    statistics: "統計データ",
+    horses: "競走馬一覧",
+    jockeys_owners: "騎手＆馬主",
+    incident: "インシデント報告",
+    welcome: "競馬管理システムへようこそ",
+    welcomeSub: "メニューからオプションを選択して開始します。",
+    activeSeasons: "アクティブなシーズン",
+    noActiveSeasons: "現在開催中のシーズンはありません。",
+    upcomingMeetings: "開催予定のレースミーティング",
+    noUpcomingMeetings: "開催予定のレースはありません。",
+    watchLive: "ライブを見る",
+    viewRacecard: "レースカードを見る",
+    about: "概要",
+    signin: "ログイン",
+    register: "会員登録",
+    signout: "ログアウト",
+    dashboard: "管理ダッシュボード",
+    searchPlaceholder: "馬、騎手、馬主、レースを検索...",
+    notifications: "通知",
+    clearAll: "すべてクリア",
+    noNotifications: "新しい通知はありません",
+  }
+};
+
+// ─────────────────────────────────────────────
+// Chatbot
+// ─────────────────────────────────────────────
+const CHAT_LANG: Record<string, any> = {
+  vi: { label: "AI Horse Racing", placeholder: "Nhập câu hỏi...", typing: "Đang phân tích...", welcome: "Xin chào! Hỏi tôi về ngựa, nài, race, dự đoán kết quả nhé.", error: "Lỗi: ", noconn: "Không kết nối được server AI.", quick: ["Rating cao nhất","Dự đoán race","Nài xuất sắc","Mùa giải"], quickQ: ["Ngựa nào rating cao nhất?","Dự đoán kết quả race mới nhất","Nài ngựa xuất sắc nhất?","Mùa giải hiện tại"] },
+  en: { label: "AI Horse Racing", placeholder: "Ask a question...", typing: "Analyzing...", welcome: "Hello! Ask me about horses, jockeys, races, or predictions.", error: "Error: ", noconn: "Cannot connect to AI server.", quick: ["Top Rating","Predict Race","Best Jockey","Season"], quickQ: ["Which horse has the highest rating?","Predict the latest race result","Which jockey has the best top-3 rate?","Current season summary"] },
+  ja: { label: "AI競馬アシスタント", placeholder: "質問を入力...", typing: "分析中...", welcome: "こんにちは！馬・騎手・レース・予測について聞いてください。", error: "エラー：", noconn: "AIサーバーに接続できません。", quick: ["最高レーティング","レース予測","優秀騎手","シーズン"], quickQ: ["最もレーティングが高い馬は？","最新レースを予測","トップ3率が最も高い騎手は？","今シーズンのまとめ"] },
+  zh: { label: "AI赛马助手", placeholder: "输入问题...", typing: "分析中...", welcome: "你好！请问关于马匹、骑师、比赛或预测的问题。", error: "错误：", noconn: "无法连接AI服务器。", quick: ["最高评分","预测赛事","优秀骑师","赛季"], quickQ: ["哪匹马评分最高？","预测最新比赛结果","哪位骑师前三率最高？","本赛季总结"] },
+};
+
+function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState([{ id: "welcome", type: "bot", text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.vi.welcome }]);
+  const [input, setInput] = useState("");
+  const [waiting, setWaiting] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMessages(prev => prev.map(m => m.id === "welcome" ? { ...m, text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.vi.welcome } : m));
+  }, [lang]);
+
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+
+  const changeLang = (l: string) => {
+    setLang(l);
+  };
+
+  const sendMessage = async (text?: string) => {
+    const msg = text || input.trim();
+    if (!msg || waiting) return;
+    setInput("");
+    const userMsg = { id: `u-${Date.now()}`, type: "user", text: msg };
+    const typingMsg = { id: `t-${Date.now()}`, type: "typing", text: CHAT_LANG[lang].typing };
+    setMessages(prev => [...prev, userMsg, typingMsg]);
+    setWaiting(true);
+    try {
+      const data = await api.post<any>("/ai/chat", { message: msg, lang });
+      setMessages(prev => prev.filter(m => m.type !== "typing").concat({ id: `b-${Date.now()}`, type: "bot", text: data.success ? data.reply : CHAT_LANG[lang].error + (data.error || "") }));
+    } catch {
+      setMessages(prev => prev.filter(m => m.type !== "typing").concat({ id: `b-${Date.now()}`, type: "bot", text: CHAT_LANG[lang].noconn }));
+    } finally { setWaiting(false); }
+  };
+
+  const L = CHAT_LANG[lang];
+
+  return (
+    <>
+      {/* Toggle Button */}
+      <button onClick={() => setOpen(o => !o)} style={{ position: "fixed", bottom: 24, right: 24, width: 52, height: 52, borderRadius: "50%", background: "#C9A84C", color: "#111", border: "none", cursor: "pointer", fontSize: 22, zIndex: 9999, boxShadow: "0 2px 10px rgba(0,0,0,0.5)" }}>
+        🤖
+      </button>
+
+      {/* Chat Widget */}
+      {open && (
+        <div style={{ position: "fixed", bottom: 88, right: 24, width: 370, height: 530, background: "#1a1a1a", border: "1px solid #2e2e2e", borderRadius: 12, display: "flex", flexDirection: "column", zIndex: 9998, overflow: "hidden", boxShadow: "0 6px 28px rgba(0,0,0,0.75)" }}>
+          {/* Header */}
+          <div style={{ background: "#111", color: "#C9A84C", padding: "11px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(201,168,76,0.2)", flexShrink: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>🤖 {L.label}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <select value={lang} onChange={e => changeLang(e.target.value)} style={{ background: "#1e1e1e", border: "1px solid rgba(201,168,76,0.33)", color: "#C9A84C", borderRadius: 5, fontSize: 11, padding: "3px 5px", cursor: "pointer", outline: "none" }}>
+                <option value="vi">🇻🇳 VI</option>
+                <option value="en">🇺🇸 EN</option>
+                <option value="ja">🇯🇵 JA</option>
+                <option value="zh">🇨🇳 ZH</option>
+              </select>
+              <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: "#777", fontSize: 17, cursor: "pointer", padding: "2px 4px" }}>✕</button>
+            </div>
+          </div>
+
+          {/* Quick Actions */}
+          <div style={{ padding: "8px 12px", borderBottom: "1px solid #222", display: "flex", flexWrap: "wrap", gap: 6, flexShrink: 0, background: "#141414" }}>
+            {L.quick.map((q: string, i: number) => (
+              <button key={i} onClick={() => sendMessage(L.quickQ[i])} style={{ fontSize: 11, padding: "4px 11px", border: "1px solid rgba(201,168,76,0.33)", borderRadius: 20, background: "#241f00", color: "#C9A84C", cursor: "pointer", whiteSpace: "nowrap" }}>{q}</button>
+            ))}
+          </div>
+
+          {/* Messages */}
+          <div style={{ flex: 1, overflowY: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 8, background: "#1a1a1a" }}>
+            {messages.map(m => (
+              <div key={m.id} style={{ maxWidth: "86%", padding: "8px 12px", borderRadius: 10, fontSize: 13, lineHeight: 1.55, wordBreak: "break-word", whiteSpace: "pre-wrap", alignSelf: m.type === "user" ? "flex-end" : "flex-start", background: m.type === "user" ? "#C9A84C" : "#242424", color: m.type === "user" ? "#111" : (m.type === "typing" ? "#666" : "#ddd"), fontWeight: m.type === "user" ? 500 : 400, fontStyle: m.type === "typing" ? "italic" : "normal", border: m.type !== "user" ? "1px solid #2e2e2e" : "none" }}>{m.text}</div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div style={{ padding: "10px 12px", borderTop: "1px solid #222", display: "flex", gap: 8, flexShrink: 0, background: "#141414" }}>
+            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendMessage()} placeholder={L.placeholder} style={{ flex: 1, padding: "8px 13px", border: "1px solid #333", borderRadius: 20, fontSize: 13, outline: "none", background: "#222", color: "#e0e0e0" }} />
+            <button onClick={() => sendMessage()} disabled={waiting} style={{ width: 36, height: 36, borderRadius: "50%", background: waiting ? "#3a3a3a" : "#C9A84C", color: waiting ? "#666" : "#111", border: "none", cursor: waiting ? "not-allowed" : "pointer", fontSize: 16, flexShrink: 0 }}>▶</button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────
+// Sub-view components
+// ─────────────────────────────────────────────
+function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeting[]; t: any }) {
+  return (
+    <div>
+      <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "0.5rem" }}>{t.welcome}</h2>
+      <p style={{ color: "#a0a0a0", marginBottom: "2rem" }}>{t.welcomeSub}</p>
+
+      {/* Active Seasons */}
+      <div style={{ marginBottom: "2.5rem" }}>
+        <h3 style={{ color: "#c9a227", fontWeight: 700, fontFamily: "monospace", fontSize: "1.25rem", marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.05em", paddingBottom: "0.5rem", borderBottom: "1px solid #2a2825" }}>{t.activeSeasons}</h3>
+        {seasons.length === 0 ? (
+          <p style={{ color: "#a0a0a0", fontSize: "0.875rem", fontFamily: "monospace", fontStyle: "italic" }}>{t.noActiveSeasons}</p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
+            {seasons.map(s => (
+              <div key={s.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
+                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f0f0f0" }}>{s.name}</h4>
+                  <span style={{ fontSize: "0.55rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,157,111,0.15)", color: "#4a9d6f" }}>Active</span>
+                </div>
+                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                  📅 {s.startDate} → {s.endDate}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Upcoming Meetings */}
+      <div style={{ marginBottom: "2.5rem" }}>
+        <h3 style={{ color: "#c9a227", fontWeight: 700, fontFamily: "monospace", fontSize: "1.25rem", marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.05em", paddingBottom: "0.5rem", borderBottom: "1px solid #2a2825" }}>{t.upcomingMeetings}</h3>
+        {meetings.length === 0 ? (
+          <p style={{ color: "#a0a0a0", fontSize: "0.875rem", fontFamily: "monospace", fontStyle: "italic" }}>{t.noUpcomingMeetings}</p>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
+            {meetings.map(m => (
+              <div key={m.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem" }}>
+                <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f0f0f0", marginBottom: "0.75rem" }}>{m.name}</h4>
+                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>📍 Venue: {m.venue}</p>
+                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>📅 Date: {m.startDate}</p>
+                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>💰 Budget: ${m.totalBudget?.toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function GenericTableView({ title, data, columns }: { title: string; data: any[]; columns: { key: string; label: string }[] }) {
+  return (
+    <div>
+      <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1.5rem" }}>{title}</h2>
+      {data.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "3rem", background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem" }}>
+          <p style={{ color: "#a0a0a0", fontFamily: "monospace" }}>No data available.</p>
+        </div>
+      ) : (
+        <div className="rounded-xl overflow-x-auto" style={{ border: "1px solid #2a2825" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: "rgba(201,162,39,0.08)", borderBottom: "1px solid #2a2825" }}>
+                {columns.map(c => (
+                  <th key={c.key} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#c9a227", fontWeight: 600 }}>{c.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.map((row, i) => (
+                <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+                  {columns.map(c => (
+                    <td key={c.key} style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#f0f0f0" }}>{row[c.key] ?? "-"}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AboutView() {
+  return (
+    <div style={{ maxWidth: "800px" }}>
+      <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.75rem", color: "#f0f0f0", marginBottom: "0.5rem" }}>About Horse Race Management System</h2>
+      <p style={{ color: "#c9a227", fontFamily: "monospace", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2rem" }}>The Complete Racing Management Platform</p>
+      
+      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.5rem", marginBottom: "1.5rem" }}>
+        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#c9a227", marginBottom: "0.75rem" }}>Our Mission</h3>
+        <p style={{ color: "#a0a0a0", fontSize: "0.9rem", lineHeight: 1.7 }}>
+          The Horse Race Management System is a comprehensive platform designed to streamline and modernize horse racing tournament management. From season initialization to race-day operations, our system provides administrators, horse owners, jockeys, and referees with the tools they need to conduct fair, exciting, and well-organized race events.
+        </p>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
+        {[
+          { icon: "🏆", title: "Season Management", desc: "Full tournament lifecycle from setup to results" },
+          { icon: "🐎", title: "Horse Registry", desc: "Track horses, ratings, and performance" },
+          { icon: "🏇", title: "Jockey Management", desc: "Manage jockey profiles and invitations" },
+          { icon: "📋", title: "Race Operations", desc: "Racecard, schedule, live supervision" },
+          { icon: "📊", title: "Statistics", desc: "Win rates, earnings, performance analytics" },
+          { icon: "⚠️", title: "Incident Reports", desc: "Rule violation tracking and penalties" },
+        ].map((item, i) => (
+          <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1rem" }}>
+            <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{item.icon}</div>
+            <h4 style={{ fontWeight: 700, color: "#f0f0f0", fontSize: "0.875rem", marginBottom: "0.25rem" }}>{item.title}</h4>
+            <p style={{ color: "#a0a0a0", fontSize: "0.75rem" }}>{item.desc}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────
+// MAIN LANDING COMPONENT
+// ─────────────────────────────────────────────
+export default function Landing() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const [view, setView] = useState<SubView>("home");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const [lang, setLangRaw] = useState(() => localStorage.getItem('app-lang') || 'vi');
+  const setLang = (code: string) => { setLangRaw(code); localStorage.setItem('app-lang', code); };
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+  const langLabel = lang.toUpperCase();
+
+  const [showNoLiveToast, setShowNoLiveToast] = useState(false);
+  const [noLiveTimer, setNoLiveTimer] = useState<any>(null);
+
+  // Data states
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [horses, setHorses] = useState<any[]>([]);
+  const [users, setUsers] = useState<any[]>([]); // Resolve jockey/owner details
+  const [violations, setViolations] = useState<any[]>([]);
+  const [liveRaces, setLiveRaces] = useState<any[]>([]);
+
+  // Selected states for Racecard & Results
+  const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null);
+  const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
+  const [selectedRaceEntries, setSelectedRaceEntries] = useState<any[]>([]);
+  const [meetingRaces, setMeetingRaces] = useState<any[]>([]);
+
+  // Fetch initial background data
+  const fetchData = async () => {
+    try {
+      const [seasonsData, meetingsData, usersData, horsesData, violationsData] = await Promise.all([
+        api.get<any[]>("/races/seasons").catch(() => []),
+        api.get<any[]>("/public/meetings").catch(() => []),
+        api.get<any[]>("/public/users").catch(() => []),
+        api.get<any[]>("/public/horses").catch(() => []),
+        api.get<any[]>("/public/violations").catch(() => []),
+      ]);
+      setSeasons(seasonsData);
+      setMeetings(meetingsData);
+      setUsers(usersData);
+      setHorses(horsesData);
+      setViolations(violationsData);
+      if (meetingsData.length > 0) {
+        setSelectedMeetingId(meetingsData[0].id);
+      }
+    } catch (err) {
+      console.error("Failed to load landing data", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Fetch races when selected meeting changes
+  useEffect(() => {
+    if (selectedMeetingId) {
+      api.get<any[]>(`/public/races?meetingId=${selectedMeetingId}`)
+        .then(data => {
+          setMeetingRaces(data);
+          if (data.length > 0) {
+            setSelectedRaceId(data[0].id);
+          } else {
+            setSelectedRaceId(null);
+            setSelectedRaceEntries([]);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [selectedMeetingId]);
+
+  // Fetch entries when selected race changes
+  useEffect(() => {
+    if (selectedRaceId) {
+      api.get<any[]>(`/public/results?raceId=${selectedRaceId}`)
+        .then(setSelectedRaceEntries)
+        .catch(() => {});
+    }
+  }, [selectedRaceId]);
+
+  // Poll live races when live view is selected
+  useEffect(() => {
+    if (view === "live") {
+      api.get<any[]>("/races/live")
+        .then(setLiveRaces)
+        .catch(() => {});
+    }
+  }, [view]);
+
+  const getRoleLabel = (roleId: number) => {
+    const map: Record<number, string> = { 1: "ADMIN", 2: "OWNER", 3: "JOCKEY", 4: "SPECTATOR", 5: "REFEREE" };
+    return map[roleId] || "MEMBER";
+  };
+
+  const handleDashboard = () => {
+    if (!user) return;
+    if (user.roleId === 1) navigate("/dashboard/admin");
+    else if (user.roleId === 2) navigate("/dashboard/owner");
+    else if (user.roleId === 3) navigate("/dashboard/jockey");
+    else if (user.roleId === 5) navigate("/dashboard/referee");
+    else navigate("/dashboard/spectator");
+  };
+
+  const handleLiveBtnClick = () => {
+    setView("live");
+  };
+
+  const SUB_NAV: { key: SubView; label: string; icon: string }[] = [
+    { key: "home", label: t.home, icon: "🏠" },
+    { key: "live", label: t.live, icon: "📺" },
+    { key: "racecard", label: t.racecard, icon: "ℹ️" },
+    { key: "results", label: t.results, icon: "🏆" },
+    { key: "fixtures", label: t.fixtures, icon: "📅" },
+    { key: "statistics", label: t.statistics, icon: "📊" },
+    { key: "horses", label: t.horses, icon: "🐎" },
+    { key: "jockeys_owners", label: t.jockeys_owners, icon: "👤" },
+    { key: "incident", label: t.incident, icon: "⚠️" },
+  ];
+
+  // Helper date formatter for Landing views
+  const formatLandingDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr.replace(" ", "T"));
+      if (isNaN(d.getTime())) return dateStr;
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const seconds = String(d.getSeconds()).padStart(2, '0');
+      return `${day}-${month}-${year} ${hours}-${minutes}-${seconds}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const renderSubView = () => {
+    switch (view) {
+      case "home":
+        return <HomeView seasons={seasons.filter(s => s.status === "ACTIVE")} meetings={meetings} t={t} />;
+      case "live":
+        return (
+          <div>
+            <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1rem" }}>{t.live}</h2>
+            {liveRaces.length === 0 ? (
+              <div style={{ padding: "4rem 2rem", border: "1px solid #2a2825", borderRadius: "0.75rem", background: "rgba(255,255,255,0.01)", textAlign: "center" }}>
+                <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "14px" }}>No live broadcast currently. There are no races running right now.</p>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-3">
+                <div className="lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                  {liveRaces.map((r, i) => {
+                    let embedUrl = "";
+                    if (r.youtubeLiveUrl) {
+                      embedUrl = r.youtubeLiveUrl.replace("watch?v=", "embed/");
+                    }
+                    return (
+                      <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "rgba(201,162,39,0.2)", padding: "1.25rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+                          <h4 style={{ fontWeight: 700, color: "#f0f0f0" }}>{r.classLevel} - Race #{r.id}</h4>
+                          <span style={{ color: "#ef4444", fontWeight: "bold", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
+                          </span>
+                        </div>
+                        {embedUrl ? (
+                          <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "0.5rem", border: "1px solid #2a2825" }}>
+                            <iframe src={embedUrl} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }} allowFullScreen></iframe>
+                          </div>
+                        ) : (
+                          <div style={{ height: 260, background: "#111", borderRadius: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #2a2825" }}>
+                            <p style={{ color: "#a0a0a0", fontSize: "12px", fontFamily: "monospace" }}>Video broadcast stream not linked yet.</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.01)", borderColor: "#2a2825", padding: "1.25rem", display: "flex", flexDirection: "column", height: 400 }}>
+                  <h5 style={{ fontFamily: "monospace", fontSize: "11px", color: "#c9a227", textTransform: "uppercase", marginBottom: "0.5rem" }}>Live Spectator Chat</h5>
+                  <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "12px" }}>
+                    <p><strong style={{ color: "#c9a227" }}>spectator_99:</strong> Horse #3 looks very fast today!</p>
+                    <p><strong style={{ color: "#c9a227" }}>john_doe:</strong> Great turf condition.</p>
+                    <p><strong style={{ color: "#c9a227" }}>jockey_fan:</strong> Jockey weight is perfectly adjusted.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      case "racecard":
+        return (
+          <div>
+            <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1rem" }}>{t.racecard}</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-4">
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <h5 style={{ fontFamily: "monospace", fontSize: "11px", color: "#c9a227", textTransform: "uppercase" }}>Select Meeting</h5>
+                {meetings.map(m => (
+                  <button key={m.id} onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} style={{ width: "100%", padding: "0.75rem", background: selectedMeetingId === m.id ? "rgba(201,162,39,0.1)" : "rgba(255,255,255,0.02)", border: selectedMeetingId === m.id ? "1px solid #c9a227" : "1px solid #2a2825", borderRadius: "0.5rem", color: "#f0f0f0", textAlign: "left", cursor: "pointer", transition: "all 0.2s" }}>
+                    <strong>{m.name}</strong>
+                    <p style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "2px" }}>📍 {m.venue}</p>
+                  </button>
+                ))}
+              </div>
+              <div className="lg:col-span-3">
+                {selectedMeetingId ? (
+                  <div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                      {meetingRaces.map(r => (
+                        <button key={r.id} onClick={() => setSelectedRaceId(r.id)} style={{ padding: "0.5rem 1rem", background: selectedRaceId === r.id ? "#c9a227" : "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.375rem", color: selectedRaceId === r.id ? "#0e0c09" : "#f0f0f0", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>
+                          R-{r.id} ({r.classLevel})
+                        </button>
+                      ))}
+                      {meetingRaces.length === 0 && <p style={{ color: "#a0a0a0", fontSize: "13px" }}>No races scheduled for this meeting.</p>}
+                    </div>
+                    {selectedRaceId && (
+                      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "#2a2825", padding: "1.25rem" }}>
+                        <h4 style={{ fontWeight: 700, color: "#f0f0f0", marginBottom: "1rem" }}>Gate Entries</h4>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                          <thead>
+                            <tr style={{ borderBottom: "1px solid #2a2825", color: "#c9a227", textAlign: "left" }}>
+                              <th style={{ padding: "0.5rem" }}>Gate</th>
+                              <th style={{ padding: "0.5rem" }}>Horse</th>
+                              <th style={{ padding: "0.5rem" }}>Jockey</th>
+                              <th style={{ padding: "0.5rem" }}>Owner</th>
+                              <th style={{ padding: "0.5rem" }}>Rating</th>
+                              <th style={{ padding: "0.5rem" }}>Weight</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedRaceEntries.map((e, idx) => (
+                              <tr key={idx} style={{ borderBottom: "1px solid rgba(42,40,37,0.3)" }}>
+                                <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>#{e.entry?.gateNumber || idx + 1}</td>
+                                <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
+                                <td style={{ padding: "0.5rem" }}>{e.jockey?.username}</td>
+                                <td style={{ padding: "0.5rem" }}>{e.owner?.username}</td>
+                                <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.horse?.currentRating}</td>
+                                <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.carriedWeight} kg</td>
+                              </tr>
+                            ))}
+                            {selectedRaceEntries.length === 0 && (
+                              <tr><td colSpan={6} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No horses registered for this race card yet.</td></tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p style={{ color: "#a0a0a0", fontSize: "14px", fontStyle: "italic" }}>Please select a race meeting from the sidebar.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      case "results":
+        return (
+          <div>
+            <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1rem" }}>{t.results}</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-4">
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <h5 style={{ fontFamily: "monospace", fontSize: "11px", color: "#c9a227", textTransform: "uppercase" }}>Select Meeting</h5>
+                {meetings.map(m => (
+                  <button key={m.id} onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} style={{ width: "100%", padding: "0.75rem", background: selectedMeetingId === m.id ? "rgba(201,162,39,0.1)" : "rgba(255,255,255,0.02)", border: selectedMeetingId === m.id ? "1px solid #c9a227" : "1px solid #2a2825", borderRadius: "0.5rem", color: "#f0f0f0", textAlign: "left", cursor: "pointer", transition: "all 0.2s" }}>
+                    <strong>{m.name}</strong>
+                    <p style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "2px" }}>📍 {m.venue}</p>
+                  </button>
+                ))}
+              </div>
+              <div className="lg:col-span-3">
+                {selectedMeetingId ? (
+                  <div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                      {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").map(r => (
+                        <button key={r.id} onClick={() => setSelectedRaceId(r.id)} style={{ padding: "0.5rem 1rem", background: selectedRaceId === r.id ? "#c9a227" : "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.375rem", color: selectedRaceId === r.id ? "#0e0c09" : "#f0f0f0", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>
+                          R-{r.id} ({r.classLevel})
+                        </button>
+                      ))}
+                      {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").length === 0 && <p style={{ color: "#a0a0a0", fontSize: "13px" }}>No official finished results for this meeting yet.</p>}
+                    </div>
+                    {selectedRaceId && (
+                      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "#2a2825", padding: "1.25rem" }}>
+                        <h4 style={{ fontWeight: 700, color: "#f0f0f0", marginBottom: "1rem" }}>Leaderboard / Final Standings</h4>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                          <thead>
+                            <tr style={{ borderBottom: "1px solid #2a2825", color: "#c9a227", textAlign: "left" }}>
+                              <th style={{ padding: "0.5rem" }}>Pos</th>
+                              <th style={{ padding: "0.5rem" }}>Horse</th>
+                              <th style={{ padding: "0.5rem" }}>Jockey</th>
+                              <th style={{ padding: "0.5rem" }}>Owner</th>
+                              <th style={{ padding: "0.5rem" }}>Finish Time</th>
+                              <th style={{ padding: "0.5rem" }}>Prize Money</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {selectedRaceEntries.map((e, idx) => (
+                              <tr key={idx} style={{ borderBottom: "1px solid rgba(42,40,37,0.3)", background: e.entry?.finalPosition === 1 ? "rgba(201,162,39,0.05)" : "transparent" }}>
+                                <td style={{ padding: "0.5rem", fontWeight: "bold" }}>
+                                  {e.entry?.finalPosition === 1 ? "🥇 1st" : e.entry?.finalPosition === 2 ? "🥈 2nd" : e.entry?.finalPosition === 3 ? "🥉 3rd" : `${e.entry?.finalPosition}th`}
+                                </td>
+                                <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
+                                <td style={{ padding: "0.5rem" }}>{e.jockey?.username}</td>
+                                <td style={{ padding: "0.5rem" }}>{e.owner?.username}</td>
+                                <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
+                                <td style={{ padding: "0.5rem", fontFamily: "monospace", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</td>
+                              </tr>
+                            ))}
+                            {selectedRaceEntries.length === 0 && (
+                              <tr><td colSpan={6} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No entry logs available.</td></tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p style={{ color: "#a0a0a0", fontSize: "14px", fontStyle: "italic" }}>Please select a race meeting from the sidebar.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      case "fixtures":
+        return <GenericTableView title="Race Fixtures / Meetings" data={meetings} columns={[{ key: "id", label: "ID" }, { key: "name", label: "Meeting" }, { key: "venue", label: "Venue" }, { key: "startDate", label: "Start Date" }, { key: "totalBudget", label: "Budget" }]} />;
+      case "statistics":
+        return (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-2">
+            <GenericTableView title="Leading Horses (Top Rating)" data={[...horses].sort((a,b) => (b.currentRating - a.currentRating)).slice(0, 10)} columns={[{ key: "name", label: "Horse Name" }, { key: "breed", label: "Breed" }, { key: "currentRating", label: "Rating" }]} />
+            <GenericTableView title="Leading Jockeys" data={users.filter(u => u.roleId === 3).slice(0, 10)} columns={[{ key: "username", label: "Jockey Username" }, { key: "email", label: "Email" }, { key: "status", label: "Status" }]} />
+          </div>
+        );
+      case "horses":
+        return <GenericTableView title="Registered Horse Registry" data={horses} columns={[{ key: "id", label: "ID" }, { key: "name", label: "Horse Name" }, { key: "breed", label: "Breed" }, { key: "currentRating", label: "Current Rating" }]} />;
+      case "jockeys_owners":
+        return (
+          <div>
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+              <button onClick={() => setView("jockeys_owners")} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontWeight: "bold" }}>Directories Overview</button>
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-2">
+              <GenericTableView title="Jockeys" data={users.filter(u => u.roleId === 3)} columns={[{ key: "id", label: "ID" }, { key: "username", label: "Jockey" }, { key: "email", label: "Email" }, { key: "weight", label: "Weight" }]} />
+              <GenericTableView title="Horse Owners" data={users.filter(u => u.roleId === 2)} columns={[{ key: "id", label: "ID" }, { key: "username", label: "Owner" }, { key: "email", label: "Email" }]} />
+            </div>
+          </div>
+        );
+      case "incident":
+        return <GenericTableView title="Violation Incident Reports" data={violations} columns={[{ key: "id", label: "Report ID" }, { key: "raceId", label: "Race ID" }, { key: "horseId", label: "Horse ID" }, { key: "jockeyId", label: "Jockey ID" }, { key: "description", label: "Description" }, { key: "penalty", label: "Penalty" }, { key: "status", label: "Status" }]} />;
+      case "about":
+        return <AboutView />;
+      default:
+        return <HomeView seasons={seasons.filter(s => s.status === "ACTIVE")} meetings={meetings} t={t} />;
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#0a0907", color: "#f0f0f0", fontFamily: "'Outfit', 'Noto Sans SC', sans-serif" }}>
+
+      {/* ── TOP TICKER BAR ─────────────────────── */}
+      <div style={{ background: "#0a0907", borderBottom: "1px solid #2a2825" }}>
+        <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", height: "2rem", display: "flex", alignItems: "center", fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0" }}>
+          <span>Welcome to HorseRace · Royal Ascot meeting in progress</span>
+        </div>
+      </div>
+
+      {/* ── HEADER ─────────────────────────────── */}
+      <header style={{ background: "#151310", position: "relative", zIndex: 50 }}>
+        <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", height: "4rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.5rem" }}>
+          {/* Logo */}
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem", textDecoration: "none" }}>
+            <div style={{ width: 36, height: 36, borderRadius: "0.25rem", background: "#c9a227", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0e0c09" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            </div>
+            <div>
+              <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f0f0f0", lineHeight: 1.2 }}>HorseRace</p>
+              <p style={{ fontSize: "0.6rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.15em" }}>Management System</p>
+            </div>
+          </a>
+
+          {/* Search Bar */}
+          <div style={{ flex: 1, maxWidth: "28rem", position: "relative" }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" strokeWidth="2" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder={t.searchPlaceholder}
+              style={{ width: "100%", paddingLeft: "2.25rem", paddingRight: "1rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", fontSize: "0.75rem", background: "rgba(21,19,16,0.8)", borderRadius: "0.375rem", color: "#f0f0f0" }}
+            />
+          </div>
+
+          {/* Right Controls */}
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0" }}>
+            {/* Language */}
+            <div style={{ position: "relative" }}>
+              <button onClick={() => setShowLangMenu(v => !v)} style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontFamily: "monospace", fontSize: "0.7rem" }}>
+                🌐 {langLabel} ▾
+              </button>
+              {showLangMenu && (
+                <div style={{ position: "absolute", right: 0, top: "100%", marginTop: "0.25rem", width: "7rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.375rem", zIndex: 50 }}>
+                  {[["en","EN","English"],["vi","VI","Tiếng Việt"],["zh","ZH","简体中文"],["ja","JA","日本語"]].map(([code, label, name]) => (
+                    <button key={code} onClick={() => { setLang(code); setShowLangMenu(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "0.375rem 0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", fontFamily: "monospace" }}>{name}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Bell */}
+            <div style={{ position: "relative" }}>
+              <button onClick={() => setShowNotifications(v => !v)} style={{ position: "relative", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", display: "flex", padding: "0.25rem" }}>
+                🔔
+                <span style={{ position: "absolute", top: 0, right: 0, width: 8, height: 8, borderRadius: "50%", background: "#c9a227" }} />
+              </button>
+              {showNotifications && (
+                <div style={{ position: "absolute", right: 0, marginTop: "0.75rem", width: "20rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.5rem", zIndex: 50, overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
+                  <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #2a2825", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#1a1815" }}>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#fff", fontFamily: "'Roboto Slab', serif" }}>{t.notifications}</span>
+                    <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", cursor: "pointer" }}>{t.clearAll}</button>
+                  </div>
+                  {[
+                    { icon: "🏆", color: "#c9a227", bg: "rgba(201,162,39,0.1)", title: "Tournament Season 2026", desc: "Registrations are now open for Jockeys and Owners!", time: "10 mins ago" },
+                    { icon: "📅", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", title: "Upcoming Race Meeting", desc: "Gold Cup Championship starts Sunday at 3:00 PM.", time: "2 hours ago" },
+                    { icon: "🛡", color: "#4ade80", bg: "rgba(74,222,128,0.1)", title: "System Update", desc: "Database integration verified and performance optimized.", time: "1 day ago" },
+                  ].map((n, i) => (
+                    <div key={i} style={{ padding: "0.875rem", display: "flex", gap: "0.75rem", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
+                      <div style={{ width: 28, height: 28, borderRadius: "50%", background: n.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.875rem", flexShrink: 0 }}>{n.icon}</div>
+                      <div>
+                        <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 500 }}>{n.title}</p>
+                        <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.5)", marginTop: "0.25rem" }}>{n.desc}</p>
+                        <span style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{n.time}</span>
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ padding: "0.5rem 1rem", textAlign: "center", background: "#1a1815", fontSize: "0.6rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{t.noNotifications}</div>
+                </div>
+              )}
+            </div>
+
+            {/* Auth Controls */}
+            {user ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
+                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#c0392b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, color: "#fff" }}>
+                  {user.username?.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p style={{ fontSize: "0.75rem", color: "#f0f0f0" }}>{user.username}</p>
+                  <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c0392b" }}>{getRoleLabel(user.roleId)}</p>
+                </div>
+                <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>{t.signout}</button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
+                <Link to="/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.375rem 0.75rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0e0c09", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  👤 {t.signin}
+                </Link>
+                <Link to="/register" style={{ padding: "0.375rem 0.75rem", borderRadius: "0.25rem", border: "1px solid rgba(201,162,39,0.5)", color: "#c9a227", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  {t.register}
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── MAIN NAV (Racing / About / Dashboard) */}
+        <nav style={{ borderTop: "1px solid #2a2825", borderBottom: "1px solid #2a2825", background: "#0a0907" }}>
+          <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+            {user && (
+              <button onClick={handleDashboard} style={{ padding: "0.75rem 2rem", fontSize: "0.875rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", border: "none", borderBottom: "2px solid transparent", background: "transparent", color: "#a0a0a0", cursor: "pointer" }}>
+                {t.dashboard}
+              </button>
+            )}
+            <button onClick={() => { setView("home"); }} style={{ padding: "0.75rem 2rem", fontSize: "0.875rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", border: "none", borderBottom: `2px solid ${view !== "about" ? "#c9a227" : "transparent"}`, background: view !== "about" ? "rgba(201,162,39,0.05)" : "transparent", color: view !== "about" ? "#c9a227" : "#a0a0a0", cursor: "pointer" }}>
+              {lang === "vi" ? "Đua ngựa" : "Racing"}
+            </button>
+            <button onClick={() => setView("about")} style={{ padding: "0.75rem 2rem", fontSize: "0.875rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", border: "none", borderBottom: `2px solid ${view === "about" ? "#c9a227" : "transparent"}`, background: view === "about" ? "rgba(201,162,39,0.05)" : "transparent", color: view === "about" ? "#c9a227" : "#a0a0a0", cursor: "pointer" }}>
+              {t.about}
+            </button>
+          </div>
+        </nav>
+
+        {/* ── SUB NAV BAR */}
+        <div style={{ background: "#0e0c09", borderBottom: "1px solid #2a2825", overflowX: "auto" }}>
+          <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", height: "46px", display: "flex", alignItems: "center", gap: "0.75rem", whiteSpace: "nowrap" }}>
+            {SUB_NAV.map(n => {
+              const active = view === n.key;
+              return (
+                <button
+                  key={n.key}
+                  onClick={() => {
+                    setView(n.key);
+                  }}
+                  className="hover-lift hover-scale"
+                  style={{
+                    padding: "0.375rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer",
+                    border: active ? "1px solid rgba(201,162,39,0.4)" : "1px solid rgba(201,162,39,0.05)",
+                    background: active ? "rgba(201,162,39,0.15)" : "rgba(21,19,16,0.4)",
+                    color: active ? "#c9a227" : "#a0a0a0",
+                    fontWeight: active ? 700 : 400,
+                    transform: active ? "scale(1.02) translateY(-1px)" : "none",
+                    display: "flex", alignItems: "center", gap: "0.375rem",
+                    transition: "all 0.2s",
+                  }}
+                >
+                  {n.icon} {n.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </header>
+
+      {/* ── HERO SECTION ────────────────────────── */}
+      <section style={{ position: "relative", overflow: "hidden", borderBottom: "1px solid #2a2825" }}>
+        <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/anhngua1-1.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #0e0c09, rgba(14,12,9,0.8), transparent)" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0e0c09, transparent, transparent)" }} />
+        </div>
+        <div style={{ position: "relative", maxWidth: "80rem", margin: "0 auto", padding: "3.5rem 1rem 5rem" }}>
+          <div style={{ maxWidth: "32rem" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.15em", padding: "0.25rem 0.625rem", borderRadius: "0.25rem", background: "rgba(201,162,39,0.13)", color: "#c9a227" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#c0392b", display: "inline-block" }} />
+              Meeting in progress
+            </span>
+            <h1 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "clamp(1.75rem, 4vw, 3rem)", color: "#f0f0f0", marginTop: "1rem", lineHeight: 1.25 }}>
+              Royal Ascot · Spring Gold Cup Day
+            </h1>
+            <p style={{ fontSize: "0.95rem", color: "#a0a0a0", marginTop: "0.75rem" }}>
+              10 races · turf · firm going · total prize fund $3.4M
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1.5rem" }}>
+              <button onClick={handleLiveBtnClick} style={{ padding: "0.625rem 1.25rem", fontSize: "0.875rem", fontFamily: "monospace", background: "rgba(21,19,16,0.6)", backdropFilter: "blur(8px)", border: "1px solid rgba(192,57,43,0.3)", color: "#ef4444", borderRadius: "0.375rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                🔴 {t.watchLive}
+              </button>
+              <button onClick={() => setView("racecard")} style={{ padding: "0.625rem 1.25rem", fontSize: "0.875rem", fontFamily: "monospace", background: "rgba(21,19,16,0.6)", backdropFilter: "blur(8px)", border: "1px solid #2a2825", color: "#f0f0f0", borderRadius: "0.375rem", cursor: "pointer" }}>
+                {t.viewRacecard}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── MAIN CONTENT AREA ───────────────────── */}
+      <section style={{ maxWidth: "80rem", margin: "0 auto", padding: "2.5rem 1rem 4rem" }}>
+        {renderSubView()}
+      </section>
+
+      {/* ── FOOTER ──────────────────────────────── */}
+      <footer style={{ borderTop: "1px solid #2a2825", padding: "2rem 1rem", textAlign: "center" }}>
+        <div style={{ maxWidth: "80rem", margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
+            <div style={{ width: 28, height: 28, borderRadius: "0.25rem", background: "#c9a227", display: "flex", alignItems: "center", justifyContent: "center" }}>🏆</div>
+            <span style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f0f0f0" }}>HorseRace</span>
+            <span style={{ color: "#a0a0a0", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.15em" }}>Management System</span>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>© 2026 HorseRace Management System. All rights reserved.</p>
+        </div>
+      </footer>
+
+      {/* ── NO LIVE TOAST ───────────────────────── */}
+      {showNoLiveToast && (
+        <div style={{ position: "fixed", top: "1.5rem", left: "50%", transform: "translateX(-50%)", zIndex: 99999 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.875rem 1.25rem", borderRadius: "0.75rem", border: "1px solid rgba(201,162,39,0.2)", background: "#1a1715", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
+            <span style={{ fontSize: "1.25rem" }}>📺</span>
+            <div>
+              <p style={{ fontSize: "0.875rem", fontWeight: 600, color: "#f4f2ec" }}>No Live Broadcast</p>
+              <p style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0", marginTop: "0.25rem" }}>No races are currently taking place.</p>
+            </div>
+            <button onClick={() => setShowNoLiveToast(false)} style={{ marginLeft: "0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer" }}>✕</button>
+          </div>
+        </div>
+      )}
+
+
+      {/* ── CHATBOT ─────────────────────────────── */}
+      <ChatBot lang={lang} setLang={setLang} />
+
+    </div>
+
+  );
+}
