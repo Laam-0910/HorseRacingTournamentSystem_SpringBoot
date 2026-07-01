@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Data
 @NoArgsConstructor
@@ -16,7 +17,10 @@ public class RaceMeetingDTO {
     private Integer seasonId;
     private String seasonName; // Tên của Mùa giải để tiện hiển thị
     private String name;        // ví dụ: Spring Gold Cup Day
+    
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp startDate;
+    
     private String venue;
     private BigDecimal totalBudget;
 }

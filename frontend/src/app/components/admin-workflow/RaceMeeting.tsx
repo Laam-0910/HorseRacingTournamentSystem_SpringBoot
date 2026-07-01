@@ -11,6 +11,7 @@ export default function RaceMeeting() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [editingMeeting, setEditingMeeting] = useState<any | null>(null);
 
   const formatDateTime = (dateStr: string) => {
     if (!dateStr) return "";
@@ -29,6 +30,27 @@ export default function RaceMeeting() {
     }
   };
 
+  const formatForDateTimeLocal = (dateStr: string) => {
+    if (!dateStr) return "";
+    try {
+      const cleanStr = dateStr.replace(" ", "T");
+      const d = new Date(cleanStr);
+      if (isNaN(d.getTime())) return "";
+      
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const year = d.getFullYear();
+      const month = pad(d.getMonth() + 1);
+      const day = pad(d.getDate());
+      const hours = pad(d.getHours());
+      const minutes = pad(d.getMinutes());
+      const seconds = pad(d.getSeconds());
+      
+      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+    } catch {
+      return "";
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     setError("");
@@ -38,7 +60,7 @@ export default function RaceMeeting() {
 
       const ss = await api.get<any[]>("/races/seasons");
       setSeasons(ss);
-      if (ss.length > 0) {
+      if (ss.length > 0 && !seasonId) {
         setSeasonId(ss[0].id.toString());
       }
     } catch (err: any) {
@@ -52,25 +74,74 @@ export default function RaceMeeting() {
     fetchData();
   }, []);
 
+  const handleEdit = (m: any) => {
+    setEditingMeeting(m);
+    setName(m.name || "");
+    setVenue(m.venue || "");
+    setSeasonId(m.seasonId ? m.seasonId.toString() : "");
+    setDate(formatForDateTimeLocal(m.startDate || m.date));
+    setError("");
+    setSuccess("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMeeting(null);
+    setName("");
+    setVenue("");
+    setDate("");
+    if (seasons.length > 0) {
+      setSeasonId(seasons[0].id.toString());
+    }
+    setError("");
+    setSuccess("");
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this race meeting? This action cannot be undone.")) {
+      return;
+    }
+    setError("");
+    setSuccess("");
+    try {
+      await api.delete(`/races/meetings/${id}`);
+      setSuccess("Race meeting deleted successfully.");
+      fetchData();
+      if (editingMeeting?.id === id) {
+        handleCancelEdit();
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to delete meeting.");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
     try {
-      await api.post("/races/meetings", {
+      const payload = {
         name,
-        startDate: date.replace("T", " "),
+        startDate: date.replace("T", " ") + (date.length === 16 ? ":00" : ""),
         venue,
         seasonId: parseInt(seasonId),
-      });
-      setSuccess("Race meeting created successfully.");
+      };
+
+      if (editingMeeting) {
+        await api.post(`/races/meetings/${editingMeeting.id}`, payload);
+        setSuccess("Race meeting updated successfully.");
+        setEditingMeeting(null);
+      } else {
+        await api.post("/races/meetings", payload);
+        setSuccess("Race meeting created successfully.");
+      }
+
       setName("");
       setDate("");
       setVenue("");
       fetchData();
     } catch (err: any) {
-      setError(err.message || "Failed to create meeting.");
+      setError(err.message || "Failed to save meeting.");
     }
   };
 
@@ -95,6 +166,7 @@ export default function RaceMeeting() {
                   <th className="px-6 py-4">Date</th>
                   <th className="px-6 py-4">Venue</th>
                   <th className="px-6 py-4">Season ID</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-sm">
@@ -102,9 +174,23 @@ export default function RaceMeeting() {
                   <tr key={m.id} className="hover:bg-[#151310]/15 transition">
                     <td className="px-6 py-4 font-mono text-white/40">#{m.id}</td>
                     <td className="px-6 py-4 font-semibold text-white">{m.name}</td>
-                    <td className="px-6 py-4 text-white/80">{formatDateTime(m.date)}</td>
+                    <td className="px-6 py-4 text-white/80">{formatDateTime(m.startDate || m.date)}</td>
                     <td className="px-6 py-4 text-white/60">📍 {m.venue}</td>
                     <td className="px-6 py-4 text-white/40">Season #{m.seasonId}</td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <button
+                        onClick={() => handleEdit(m)}
+                        className="px-2.5 py-1 text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-md transition"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(m.id)}
+                        className="px-2.5 py-1 text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-md transition"
+                      >
+                        Delete
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -117,7 +203,7 @@ export default function RaceMeeting() {
       <div className="space-y-4">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-          <span>Add New Meeting</span>
+          <span>{editingMeeting ? `Edit Meeting #${editingMeeting.id}` : "Add New Meeting"}</span>
         </h3>
 
         {error && (
@@ -188,8 +274,17 @@ export default function RaceMeeting() {
             type="submit"
             className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-xl transition"
           >
-            Create Meeting
+            {editingMeeting ? "Save Changes" : "Create Meeting"}
           </button>
+          {editingMeeting && (
+            <button
+              type="button"
+              onClick={handleCancelEdit}
+              className="w-full py-2.5 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-xl transition mt-2"
+            >
+              Cancel Edit
+            </button>
+          )}
         </form>
       </div>
     </div>

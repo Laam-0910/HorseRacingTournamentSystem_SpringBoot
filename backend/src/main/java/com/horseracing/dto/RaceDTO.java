@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Data
 @NoArgsConstructor
@@ -15,9 +16,16 @@ public class RaceDTO {
     private Integer id;
     private Integer raceMeetingId;
     private String raceMeetingName; // Tên Ngày hội đua bổ trợ
+    
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp startTime;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp registrationStartTime;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Timestamp registrationEndTime;
+    
     private String status;          // SCHEDULED, DECLARATION_OPEN, DECLARATION_CLOSED, RUNNING, OFFICIAL, CANCELLED, etc.
     private String classLevel;
     private Integer minRating;

@@ -31,6 +31,9 @@ public class RaceService {
     private final RaceMapper raceMapper;
     private final RaceMeetingMapper raceMeetingMapper;
 
+    @jakarta.persistence.PersistenceContext
+    private jakarta.persistence.EntityManager entityManager;
+
     public List<RaceDTO> getAllRaces() {
         Map<Integer, String> meetingMap = raceMeetingRepository.findAll().stream()
                 .collect(Collectors.toMap(RaceMeeting::getId, RaceMeeting::getName));
@@ -145,6 +148,74 @@ public class RaceService {
                 .map(Season::getName)
                 .orElse(null);
         return raceMeetingMapper.toDTO(savedMeeting, seasonName);
+    }
+
+    @Transactional
+    public RaceMeetingDTO updateMeeting(Integer id, RaceMeetingDTO dto) {
+        RaceMeeting meeting = raceMeetingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found with id: " + id));
+        meeting.setName(dto.getName());
+        meeting.setVenue(dto.getVenue());
+        meeting.setStartDate(dto.getStartDate());
+        meeting.setSeasonId(dto.getSeasonId());
+        if (dto.getTotalBudget() != null) {
+            meeting.setTotalBudget(dto.getTotalBudget());
+        }
+        RaceMeeting savedMeeting = raceMeetingRepository.save(meeting);
+        String seasonName = seasonRepository.findById(savedMeeting.getSeasonId())
+                .map(Season::getName)
+                .orElse(null);
+        return raceMeetingMapper.toDTO(savedMeeting, seasonName);
+    }
+
+    @Transactional
+    public void deleteMeeting(Integer id) {
+        if (!raceMeetingRepository.existsById(id)) {
+            throw new IllegalArgumentException("Race Meeting not found with id: " + id);
+        }
+
+        // 1. Delete Violations associated with races of this meeting
+        entityManager.createNativeQuery(
+            "DELETE FROM Violation WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
+        ).setParameter("meetingId", id).executeUpdate();
+
+        // 2. Delete RaceEntries
+        entityManager.createNativeQuery(
+            "DELETE FROM RaceEntry WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
+        ).setParameter("meetingId", id).executeUpdate();
+
+        // 3. Delete RaceInvitations
+        entityManager.createNativeQuery(
+            "DELETE FROM RaceInvitation WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
+        ).setParameter("meetingId", id).executeUpdate();
+
+        // 4. Delete RaceReferees
+        entityManager.createNativeQuery(
+            "DELETE FROM RaceReferee WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
+        ).setParameter("meetingId", id).executeUpdate();
+
+        // 5. Delete Races
+        entityManager.createNativeQuery(
+            "DELETE FROM Race WHERE race_meeting_id = :meetingId"
+        ).setParameter("meetingId", id).executeUpdate();
+
+        // 6. Delete HorseRegistrations
+        entityManager.createNativeQuery(
+            "DELETE FROM HorseRaceMeetingRegistration WHERE race_meeting_id = :meetingId"
+        ).setParameter("meetingId", id).executeUpdate();
+
+        // 7. Delete JockeyRegistrations
+        entityManager.createNativeQuery(
+            "DELETE FROM JockeyRaceMeetingRegistration WHERE race_meeting_id = :meetingId"
+        ).setParameter("meetingId", id).executeUpdate();
+
+        // 8. Delete OwnerRegistrations
+        entityManager.createNativeQuery(
+            "DELETE FROM OwnerRaceMeetingRegistration WHERE race_meeting_id = :meetingId"
+        ).setParameter("meetingId", id).executeUpdate();
+
+        // 9. Delete the RaceMeeting itself
+        raceMeetingRepository.deleteById(id);
     }
 
     public List<RaceDTO> getLiveRaces() {
