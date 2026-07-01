@@ -13,11 +13,13 @@ const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: "Referee Hub",   view: "hub"       },
   { index: "02", icon: "alert-triangle",   label: "Incidents",     view: "incidents" },
   { index: "03", icon: "clipboard-check",  label: "Duties",        view: "duties"    },
-  { index: "04", icon: "user-cog",         label: "Profile & 2FA", view: "profile"   },
 ];
 
 export default function Referee() {
-  const [activeTab, setActiveTab] = useState<RefereeTab>("hub");
+  const [activeTab, setActiveTab] = useState<RefereeTab>(() => {
+    const tabParam = new URLSearchParams(window.location.search).get("tab");
+    return (tabParam as RefereeTab) || "hub";
+  });
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 

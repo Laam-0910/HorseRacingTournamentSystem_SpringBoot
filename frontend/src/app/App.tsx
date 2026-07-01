@@ -12,6 +12,7 @@ import VerifyForgot from "./components/auth/VerifyForgot";
 // ===== Landing =====
 import Landing from "./components/landing/Landing";
 import Chatbot from "./components/landing/Chatbot";
+import Livestream from "./components/landing/Livestream";
 
 // ===== Dashboards =====
 import Admin from "./components/dashboards/Admin";
@@ -41,6 +42,22 @@ export default function App() {
           {/* Public */}
           <Route path="/" element={<Landing />} />
           <Route path="/chatbot" element={<Chatbot />} />
+          <Route
+            path="/livestream"
+            element={
+              <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}>
+                <Livestream />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/livestream/:raceId"
+            element={
+              <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}>
+                <Livestream />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

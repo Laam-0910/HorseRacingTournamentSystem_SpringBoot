@@ -45,7 +45,6 @@ const NAV_ITEMS = [
   { index: "09", icon: "user-cog",         label: "User & Role Management",    view: "users"         },
   { index: "10", icon: "settings",         label: "System Configuration",      view: "config"        },
   { index: "11", icon: "tv",               label: "Live Setting",              view: "live-settings" },
-  { index: "12", icon: "user-cog",         label: "Profile & 2FA",             view: "profile"       },
 ];
 
 // ─── AdminWelcome Component (matches AdminWelcome.jsp exactly) ────────────────
@@ -224,7 +223,10 @@ function AdminWelcome({ onViewChange }: { onViewChange: (view: any) => void }) {
 // ─── Main Admin Dashboard ─────────────────────────────────────────────────────
 export default function Admin() {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<AdminTab>("welcome");
+  const [activeTab, setActiveTab] = useState<AdminTab>(() => {
+    const tabParam = new URLSearchParams(window.location.search).get("tab");
+    return (tabParam as AdminTab) || "welcome";
+  });
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 

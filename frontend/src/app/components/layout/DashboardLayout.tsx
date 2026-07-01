@@ -177,7 +177,20 @@ export default function DashboardLayout({
           </div>
 
           {/* Profile */}
-          <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--sidebar-border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div 
+            onClick={() => onViewChange('profile')}
+            title="Go to Profile & 2FA"
+            style={{ 
+              padding: '1rem 1.25rem', 
+              borderBottom: '1px solid var(--sidebar-border)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '0.75rem',
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+            }}
+            className="hover:bg-white/[0.04]"
+          >
             <div style={{ width: 36, height: 36, borderRadius: '50%', background: roleColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontFamily: 'monospace', fontWeight: 700, color: '#0e0c09', flexShrink: 0 }}>
               {initials}
             </div>

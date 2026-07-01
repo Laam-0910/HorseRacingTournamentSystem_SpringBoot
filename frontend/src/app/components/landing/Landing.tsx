@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
+import { getYouTubeEmbedUrl } from "../../../lib/utils";
+
 
 // ─────────────────────────────────────────────
 // Types
@@ -246,17 +248,33 @@ function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeti
           <p style={{ color: "#a0a0a0", fontSize: "0.875rem", fontFamily: "monospace", fontStyle: "italic" }}>{t.noActiveSeasons}</p>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
-            {seasons.map(s => (
-              <div key={s.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
-                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f0f0f0" }}>{s.name}</h4>
-                  <span style={{ fontSize: "0.55rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,157,111,0.15)", color: "#4a9d6f" }}>Active</span>
+            {seasons.map(s => {
+              const formatSeasonDate = (rawStr: string) => {
+                if (!rawStr) return "";
+                try {
+                  const datePart = rawStr.substring(0, 10);
+                  const parts = datePart.split("-");
+                  if (parts.length === 3) {
+                    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                  }
+                  return datePart;
+                } catch {
+                  return rawStr;
+                }
+              };
+
+              return (
+                <div key={s.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
+                    <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f0f0f0" }}>{s.name}</h4>
+                    <span style={{ fontSize: "0.55rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,157,111,0.15)", color: "#4a9d6f" }}>Active</span>
+                  </div>
+                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                    📅 {formatSeasonDate(s.startDate)} → {formatSeasonDate(s.endDate)}
+                  </p>
                 </div>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
-                  📅 {s.startDate} → {s.endDate}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -268,14 +286,40 @@ function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeti
           <p style={{ color: "#a0a0a0", fontSize: "0.875rem", fontFamily: "monospace", fontStyle: "italic" }}>{t.noUpcomingMeetings}</p>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
-            {meetings.map(m => (
-              <div key={m.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem" }}>
-                <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f0f0f0", marginBottom: "0.75rem" }}>{m.name}</h4>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>📍 Venue: {m.venue}</p>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>📅 Date: {m.startDate}</p>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>💰 Budget: ${m.totalBudget?.toLocaleString()}</p>
-              </div>
-            ))}
+            {meetings.map(m => {
+              const formatDateTime = (rawStr: string) => {
+                if (!rawStr) return { date: "", time: "" };
+                try {
+                  const cleanStr = rawStr.replace("T", " ");
+                  const parts = cleanStr.split(" ");
+                  const dateParts = parts[0].split("-");
+                  const dateFormatted = dateParts.length === 3 
+                    ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` 
+                    : parts[0];
+                  let timeFormatted = "";
+                  if (parts[1]) {
+                    const timeParts = parts[1].split(":");
+                    timeFormatted = timeParts.slice(0, 2).join(":");
+                  }
+                  return { date: dateFormatted, time: timeFormatted };
+                } catch {
+                  return { date: rawStr, time: "" };
+                }
+              };
+              const { date, time } = formatDateTime(m.startDate);
+
+              return (
+                <div key={m.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem" }}>
+                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f0f0f0", marginBottom: "0.75rem" }}>{m.name}</h4>
+                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>📍 Venue: {m.venue}</p>
+                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>📅 Date: {date}</p>
+                  {time && (
+                    <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>🕒 Time: {time}</p>
+                  )}
+                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>💰 Budget: ${m.totalBudget?.toLocaleString()}</p>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -319,11 +363,11 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
 
 function AboutView() {
   return (
-    <div style={{ maxWidth: "800px" }}>
+    <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}>
       <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.75rem", color: "#f0f0f0", marginBottom: "0.5rem" }}>About Horse Race Management System</h2>
       <p style={{ color: "#c9a227", fontFamily: "monospace", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2rem" }}>The Complete Racing Management Platform</p>
       
-      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.5rem", marginBottom: "1.5rem" }}>
+      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.5rem", marginBottom: "1.5rem", textAlign: "center" }}>
         <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#c9a227", marginBottom: "0.75rem" }}>Our Mission</h3>
         <p style={{ color: "#a0a0a0", fontSize: "0.9rem", lineHeight: 1.7 }}>
           The Horse Race Management System is a comprehensive platform designed to streamline and modernize horse racing tournament management. From season initialization to race-day operations, our system provides administrators, horse owners, jockeys, and referees with the tools they need to conduct fair, exciting, and well-organized race events.
@@ -339,7 +383,7 @@ function AboutView() {
           { icon: "📊", title: "Statistics", desc: "Win rates, earnings, performance analytics" },
           { icon: "⚠️", title: "Incident Reports", desc: "Rule violation tracking and penalties" },
         ].map((item, i) => (
-          <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1rem" }}>
+          <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1rem", textAlign: "center" }}>
             <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{item.icon}</div>
             <h4 style={{ fontWeight: 700, color: "#f0f0f0", fontSize: "0.875rem", marginBottom: "0.25rem" }}>{item.title}</h4>
             <p style={{ color: "#a0a0a0", fontSize: "0.75rem" }}>{item.desc}</p>
@@ -360,6 +404,7 @@ export default function Landing() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showDashboardMenu, setShowDashboardMenu] = useState(false);
   const [lang, setLangRaw] = useState(() => localStorage.getItem('app-lang') || 'vi');
   const setLang = (code: string) => { setLangRaw(code); localStorage.setItem('app-lang', code); };
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
@@ -459,12 +504,12 @@ export default function Landing() {
   };
 
   const handleLiveBtnClick = () => {
-    setView("live");
+    navigate("/livestream");
   };
 
   const SUB_NAV: { key: SubView; label: string; icon: string }[] = [
-    { key: "home", label: t.home, icon: "🏠" },
     { key: "live", label: t.live, icon: "📺" },
+    { key: "home", label: lang === "vi" ? "Đua ngựa" : "Racing", icon: "🏇" },
     { key: "racecard", label: t.racecard, icon: "ℹ️" },
     { key: "results", label: t.results, icon: "🏆" },
     { key: "fixtures", label: t.fixtures, icon: "📅" },
@@ -472,6 +517,7 @@ export default function Landing() {
     { key: "horses", label: t.horses, icon: "🐎" },
     { key: "jockeys_owners", label: t.jockeys_owners, icon: "👤" },
     { key: "incident", label: t.incident, icon: "⚠️" },
+    { key: "about", label: t.about, icon: "ℹ️" },
   ];
 
   // Helper date formatter for Landing views
@@ -508,10 +554,7 @@ export default function Landing() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-3">
                 <div className="lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                   {liveRaces.map((r, i) => {
-                    let embedUrl = "";
-                    if (r.youtubeLiveUrl) {
-                      embedUrl = r.youtubeLiveUrl.replace("watch?v=", "embed/");
-                    }
+                    const embedUrl = r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "";
                     return (
                       <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "rgba(201,162,39,0.2)", padding: "1.25rem" }}>
                         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
@@ -816,50 +859,207 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* ── MAIN NAV (Racing / About / Dashboard) */}
-        <nav style={{ borderTop: "1px solid #2a2825", borderBottom: "1px solid #2a2825", background: "#0a0907" }}>
-          <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
-            {user && (
-              <button onClick={handleDashboard} style={{ padding: "0.75rem 2rem", fontSize: "0.875rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", border: "none", borderBottom: "2px solid transparent", background: "transparent", color: "#a0a0a0", cursor: "pointer" }}>
-                {t.dashboard}
-              </button>
-            )}
-            <button onClick={() => { setView("home"); }} style={{ padding: "0.75rem 2rem", fontSize: "0.875rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", border: "none", borderBottom: `2px solid ${view !== "about" ? "#c9a227" : "transparent"}`, background: view !== "about" ? "rgba(201,162,39,0.05)" : "transparent", color: view !== "about" ? "#c9a227" : "#a0a0a0", cursor: "pointer" }}>
-              {lang === "vi" ? "Đua ngựa" : "Racing"}
-            </button>
-            <button onClick={() => setView("about")} style={{ padding: "0.75rem 2rem", fontSize: "0.875rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", border: "none", borderBottom: `2px solid ${view === "about" ? "#c9a227" : "transparent"}`, background: view === "about" ? "rgba(201,162,39,0.05)" : "transparent", color: view === "about" ? "#c9a227" : "#a0a0a0", cursor: "pointer" }}>
-              {t.about}
-            </button>
-          </div>
-        </nav>
-
         {/* ── SUB NAV BAR */}
-        <div style={{ background: "#0e0c09", borderBottom: "1px solid #2a2825", overflowX: "auto" }}>
-          <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", height: "46px", display: "flex", alignItems: "center", gap: "0.75rem", whiteSpace: "nowrap" }}>
-            {SUB_NAV.map(n => {
-              const active = view === n.key;
-              return (
-                <button
-                  key={n.key}
-                  onClick={() => {
-                    setView(n.key);
-                  }}
-                  className="hover-lift hover-scale"
-                  style={{
-                    padding: "0.375rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer",
-                    border: active ? "1px solid rgba(201,162,39,0.4)" : "1px solid rgba(201,162,39,0.05)",
-                    background: active ? "rgba(201,162,39,0.15)" : "rgba(21,19,16,0.4)",
-                    color: active ? "#c9a227" : "#a0a0a0",
-                    fontWeight: active ? 700 : 400,
-                    transform: active ? "scale(1.02) translateY(-1px)" : "none",
-                    display: "flex", alignItems: "center", gap: "0.375rem",
-                    transition: "all 0.2s",
-                  }}
-                >
-                  {n.icon} {n.label}
-                </button>
-              );
-            })}
+        <div style={{ background: "#0e0c09", borderBottom: "1px solid #2a2825", position: "relative" }}>
+          <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", height: "46px", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            
+            {/* Hamburger Dropdown Menu (Always Visible) */}
+            <div style={{ position: "relative", flexShrink: 0 }}>
+              <button
+                onClick={() => setShowDashboardMenu(v => !v)}
+                style={{
+                  background: "rgba(201,162,39,0.05)",
+                  border: "1px solid rgba(201,162,39,0.2)",
+                  color: "#c9a227",
+                  fontSize: "1.1rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 32,
+                  height: 32,
+                  borderRadius: "0.375rem",
+                  transition: "all 0.2s"
+                }}
+                className="hover-scale"
+              >
+                ☰
+              </button>
+              
+              {showDashboardMenu && (
+                <>
+                  {/* Backdrop to close click */}
+                  <div 
+                    style={{ position: "fixed", inset: 0, zIndex: 40 }}
+                    onClick={() => setShowDashboardMenu(false)}
+                  />
+                  
+                  {/* Dropdown Menu */}
+                  <div style={{
+                    position: "absolute",
+                    left: 0,
+                    top: "110%",
+                    width: "10rem",
+                    background: "#151310",
+                    border: "1px solid #2a2825",
+                    borderRadius: "0.5rem",
+                    boxShadow: "0 20px 40px rgba(0,0,0,0.5)",
+                    zIndex: 50,
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                    padding: "0.25rem 0"
+                  }}>
+                    {user ? (
+                      <>
+                        <button
+                          onClick={() => {
+                            setShowDashboardMenu(false);
+                            handleDashboard();
+                          }}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            padding: "0.75rem 1rem",
+                            color: "#f0f0f0",
+                            textAlign: "left",
+                            fontSize: "0.75rem",
+                            fontFamily: "monospace",
+                            textTransform: "uppercase",
+                            cursor: "pointer",
+                            transition: "background 0.2s"
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "rgba(201,162,39,0.1)"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                        >
+                          💼 {t.dashboard}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowDashboardMenu(false);
+                            const roleId = user.roleId;
+                            if (roleId === 1) navigate("/dashboard/admin?tab=profile");
+                            else if (roleId === 2) navigate("/dashboard/owner?tab=profile");
+                            else if (roleId === 3) navigate("/dashboard/jockey?tab=profile");
+                            else if (roleId === 5) navigate("/dashboard/referee?tab=profile");
+                            else navigate("/dashboard/spectator?tab=profile");
+                          }}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            padding: "0.75rem 1rem",
+                            color: "#f0f0f0",
+                            textAlign: "left",
+                            fontSize: "0.75rem",
+                            fontFamily: "monospace",
+                            textTransform: "uppercase",
+                            cursor: "pointer",
+                            transition: "background 0.2s"
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "rgba(201,162,39,0.1)"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                        >
+                          👤 {lang === "vi" ? "Hồ sơ" : "Profile"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowDashboardMenu(false);
+                            logout();
+                          }}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            padding: "0.75rem 1rem",
+                            color: "#ef4444",
+                            textAlign: "left",
+                            fontSize: "0.75rem",
+                            fontFamily: "monospace",
+                            textTransform: "uppercase",
+                            cursor: "pointer",
+                            transition: "background 0.2s",
+                            borderTop: "1px solid rgba(255,255,255,0.05)"
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "rgba(239,68,68,0.1)"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                        >
+                          🚪 {t.signout}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <Link
+                          to="/login"
+                          onClick={() => setShowDashboardMenu(false)}
+                          style={{
+                            padding: "0.75rem 1rem",
+                            color: "#c9a227",
+                            textAlign: "left",
+                            fontSize: "0.75rem",
+                            fontFamily: "monospace",
+                            textTransform: "uppercase",
+                            textDecoration: "none",
+                            cursor: "pointer",
+                            transition: "background 0.2s"
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "rgba(201,162,39,0.1)"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                        >
+                          👤 {t.signin}
+                        </Link>
+                        <Link
+                          to="/register"
+                          onClick={() => setShowDashboardMenu(false)}
+                          style={{
+                            padding: "0.75rem 1rem",
+                            color: "#a0a0a0",
+                            textAlign: "left",
+                            fontSize: "0.75rem",
+                            fontFamily: "monospace",
+                            textTransform: "uppercase",
+                            textDecoration: "none",
+                            cursor: "pointer",
+                            transition: "background 0.2s"
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
+                          onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
+                        >
+                          📝 {t.register}
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Scrollable Nav Items */}
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "0.5rem" }}>
+              {SUB_NAV.map(n => {
+                const active = view === n.key;
+                return (
+                  <button
+                    key={n.key}
+                    onClick={() => {
+                      setView(n.key);
+                    }}
+                    className="hover-lift hover-scale"
+                    style={{
+                      padding: "0.375rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer",
+                      border: active ? "1px solid rgba(201,162,39,0.4)" : "1px solid rgba(201,162,39,0.05)",
+                      background: active ? "rgba(201,162,39,0.15)" : "rgba(21,19,16,0.4)",
+                      color: active ? "#c9a227" : "#a0a0a0",
+                      fontWeight: active ? 700 : 400,
+                      transform: active ? "scale(1.02) translateY(-1px)" : "none",
+                      display: "flex", alignItems: "center", gap: "0.375rem",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {n.icon} {n.label}
+                  </button>
+                );
+              })}
+            </div>
+
           </div>
         </div>
       </header>
@@ -871,7 +1071,7 @@ export default function Landing() {
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0e0c09, transparent, transparent)" }} />
         </div>
         <div style={{ position: "relative", maxWidth: "80rem", margin: "0 auto", padding: "3.5rem 1rem 5rem" }}>
-          <div style={{ maxWidth: "32rem" }}>
+          <div style={{ maxWidth: "50rem" }}>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.15em", padding: "0.25rem 0.625rem", borderRadius: "0.25rem", background: "rgba(201,162,39,0.13)", color: "#c9a227" }}>
               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#c0392b", display: "inline-block" }} />
               Meeting in progress
@@ -879,9 +1079,6 @@ export default function Landing() {
             <h1 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "clamp(1.75rem, 4vw, 3rem)", color: "#f0f0f0", marginTop: "1rem", lineHeight: 1.25 }}>
               Royal Ascot · Spring Gold Cup Day
             </h1>
-            <p style={{ fontSize: "0.95rem", color: "#a0a0a0", marginTop: "0.75rem" }}>
-              10 races · turf · firm going · total prize fund $3.4M
-            </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1.5rem" }}>
               <button onClick={handleLiveBtnClick} style={{ padding: "0.625rem 1.25rem", fontSize: "0.875rem", fontFamily: "monospace", background: "rgba(21,19,16,0.6)", backdropFilter: "blur(8px)", border: "1px solid rgba(192,57,43,0.3)", color: "#ef4444", borderRadius: "0.375rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 🔴 {t.watchLive}

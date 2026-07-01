@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .requestMatchers("/ai/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/races/**").permitAll()
+                .requestMatchers("/ws/chat/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
