@@ -39,13 +39,32 @@ const labelStyle: React.CSSProperties = {
 };
 
 // ── HubView ────────────────────────────────────────────────────────────────
-function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse }: {
+function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorses }: {
   dashboard: any;
   meetings: any[];
   stable: any[];
   onRegisterOwner: (id: number) => void;
-  onRegisterHorse: (meetingId: number, horseId: number) => void;
+  onRegisterHorses: (meetingId: number, horseIds: number[]) => Promise<void>;
 }) {
+  const [selectedHorses, setSelectedHorses] = useState<Record<number, number[]>>({});
+
+  const handleCheckboxChange = (meetingId: number, horseId: number) => {
+    setSelectedHorses((prev) => {
+      const list = prev[meetingId] || [];
+      const newList = list.includes(horseId)
+        ? list.filter((id) => id !== horseId)
+        : [...list, horseId];
+      return { ...prev, [meetingId]: newList };
+    });
+  };
+
+  const handleBulkRegister = async (meetingId: number) => {
+    const list = selectedHorses[meetingId] || [];
+    if (list.length === 0) return;
+    await onRegisterHorses(meetingId, list);
+    setSelectedHorses((prev) => ({ ...prev, [meetingId]: [] }));
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Stats */}
@@ -72,36 +91,105 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
           {meetings.length === 0 ? (
             <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>No upcoming meetings available.</p>
-          ) : meetings.map((m: any) => (
-            <div key={m.id} className="rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
-                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
+          ) : meetings.map((m: any) => {
+            const isOwnerReg = dashboard?.registeredMeetingIds?.includes(m.id);
+            const unregHorses = dashboard?.meetingUnregisteredHorses?.[m.id] || [];
+            const regHorses = dashboard?.meetingRegisteredHorses?.[m.id] || [];
+            const selectedList = selectedHorses[m.id] || [];
+
+            return (
+              <div key={m.id} className="rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+                    <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
+                  </div>
+                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue}</p>
+                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📅 {m.startDate || m.date}</p>
+                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>💰 ${(m.totalBudget || 0).toLocaleString()}</p>
                 </div>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue}</p>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📅 {m.startDate || m.date}</p>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>💰 ${(m.totalBudget || 0).toLocaleString()}</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {isOwnerReg ? (
+                    <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "#4a9d6f", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0" }}>
+                      ✓ Registered as Owner
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => onRegisterOwner(m.id)}
+                      style={{ width: "100%", padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                    >
+                      Register Stable Owner
+                    </button>
+                  )}
+
+                  {/* Registered Horses */}
+                  {regHorses.length > 0 && (
+                    <div style={{ marginTop: "0.25rem" }}>
+                      <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", marginBottom: "0.25rem" }}>Registered Horses:</p>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
+                        {regHorses.map((rh: any) => (
+                          <span key={rh.horse.id} style={{ fontSize: "0.65rem", fontFamily: "monospace", background: "rgba(74, 157, 111, 0.15)", border: "1px solid rgba(74, 157, 111, 0.3)", color: "#4a9d6f", padding: "0.125rem 0.375rem", borderRadius: "0.25rem" }}>
+                            🐎 {rh.horse.name} ({rh.status})
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Unregistered Horses with Checkboxes */}
+                  {stable.length === 0 ? (
+                    <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", marginTop: "0.25rem" }}>
+                      No active horses in stable. Go to "My Stable" to declare horses.
+                    </p>
+                  ) : unregHorses.length === 0 ? (
+                    <p style={{ fontSize: "0.65rem", color: "#4a9d6f", fontStyle: "italic", fontFamily: "monospace", marginTop: "0.25rem" }}>
+                      ✓ All stable horses registered
+                    </p>
+                  ) : (
+                    <div style={{ marginTop: "0.25rem", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem" }}>
+                      <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", marginBottom: "0.375rem" }}>Select Horses to Register:</p>
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "120px", overflowY: "auto" }}>
+                        {unregHorses.map((h: any) => {
+                          const isChecked = selectedList.includes(h.id);
+                          return (
+                            <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => handleCheckboxChange(m.id, h.id)}
+                                style={{ accentColor: ROLE_COLOR, cursor: "pointer" }}
+                              />
+                              <span>{h.name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        onClick={() => handleBulkRegister(m.id)}
+                        disabled={selectedList.length === 0}
+                        style={{
+                          width: "100%",
+                          marginTop: "0.75rem",
+                          padding: "0.5rem",
+                          background: selectedList.length === 0 ? "rgba(255,255,255,0.05)" : ROLE_COLOR,
+                          color: selectedList.length === 0 ? "#a0a0a0" : "#fff",
+                          border: "none",
+                          borderRadius: "0.5rem",
+                          fontFamily: "monospace",
+                          fontSize: "0.7rem",
+                          fontWeight: 700,
+                          cursor: selectedList.length === 0 ? "not-allowed" : "pointer",
+                          transition: "all 0.2s"
+                        }}
+                      >
+                        Register Selected Horses ({selectedList.length})
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                <button
-                  onClick={() => onRegisterOwner(m.id)}
-                  style={{ flex: 1, minWidth: 120, padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
-                >
-                  Register Stable Owner
-                </button>
-                {stable.length > 0 && (
-                  <select
-                    defaultValue=""
-                    onChange={e => { if (e.target.value) { onRegisterHorse(m.id, parseInt(e.target.value)); e.target.value = ""; } }}
-                    style={{ flex: 1, minWidth: 120, padding: "0.5rem", background: "#0e0c09", border: "1px solid #2a2825", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.7rem", fontFamily: "monospace" }}
-                  >
-                    <option value="">-- Register Horse --</option>
-                    {stable.map((h: any) => <option key={h.id} value={h.id}>{h.name}</option>)}
-                  </select>
-                )}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>
@@ -413,12 +501,16 @@ export default function HorseOwner() {
     } catch (err: any) { setErrorMsg(err.message || "Failed to register for meeting."); }
   };
 
-  const handleRegisterHorse = async (meetingId: number, horseId: number) => {
+  const handleRegisterHorses = async (meetingId: number, horseIds: number[]) => {
     try {
-      await api.post("/registrations/horse", { meetingId, horseId });
-      setSuccessMsg("Successfully registered horse for meeting.");
+      setErrorMsg("");
+      setSuccessMsg("");
+      await Promise.all(
+        horseIds.map(horseId => api.post("/registrations/horse", { meetingId, horseId }))
+      );
+      setSuccessMsg(`Successfully registered ${horseIds.length} horse(s) for meeting.`);
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to register horse."); }
+    } catch (err: any) { setErrorMsg(err.message || "Failed to register horse(s)."); }
   };
 
   const handleSendInvitation = async (form: { horseId: number; raceId: number; jockeyId: number }) => {
@@ -440,7 +532,7 @@ export default function HorseOwner() {
   const renderContent = () => {
     switch (activeTab) {
       case "hub":
-        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorse={handleRegisterHorse} />;
+        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} />;
       case "stable":
         return <StableView stable={stable} onRefresh={fetchData} />;
       case "calendar":
@@ -452,7 +544,7 @@ export default function HorseOwner() {
       case "profile":
         return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Horse Owner" />;
       default:
-        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorse={handleRegisterHorse} />;
+        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} />;
     }
   };
 

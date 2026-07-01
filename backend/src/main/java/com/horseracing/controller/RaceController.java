@@ -89,6 +89,26 @@ public class RaceController {
         }
     }
 
+    @PostMapping("/meetings/{id}")
+    public ResponseEntity<?> updateMeeting(@PathVariable Integer id, @RequestBody RaceMeetingDTO meetingDTO) {
+        try {
+            RaceMeetingDTO updated = raceService.updateMeeting(id, meetingDTO);
+            return ResponseEntity.ok(Map.of("success", true, "meeting", updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/meetings/{id}")
+    public ResponseEntity<?> deleteMeeting(@PathVariable Integer id) {
+        try {
+            raceService.deleteMeeting(id);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Race Meeting deleted successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
     @GetMapping
     public ResponseEntity<List<RaceDTO>> getRaces() {
         return ResponseEntity.ok(raceService.getAllRaces());

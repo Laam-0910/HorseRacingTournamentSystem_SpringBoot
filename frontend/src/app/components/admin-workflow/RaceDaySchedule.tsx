@@ -114,7 +114,7 @@ export default function RaceDaySchedule() {
         raceMeetingId: selectedMeetingId,
         classLevel,
         trackType,
-        startTime: startTime.replace("T", " "),
+        startTime: startTime.replace("T", " ") + (startTime.length === 16 ? ":00" : ""),
         distanceMeters: parseInt(distance),
         minEntries: minVal,
         maxEntries: maxVal,
