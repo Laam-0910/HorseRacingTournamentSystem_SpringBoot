@@ -74,7 +74,7 @@ public class ProcessResultsService {
                     if (jockeyOpt.isPresent()) {
                         User jockey = jockeyOpt.get();
                         jockey.setTotalRacesParticipated((jockey.getTotalRacesParticipated() != null ? jockey.getTotalRacesParticipated() : 0) + 1);
-                        if (finalPosition <= 3) {
+                        if (finalPosition != null && finalPosition <= 3) {
                             jockey.setTotalTop3Finishes((jockey.getTotalTop3Finishes() != null ? jockey.getTotalTop3Finishes() : 0) + 1);
                         }
                         userRepository.save(jockey);

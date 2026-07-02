@@ -153,7 +153,7 @@ function CalendarView({ meetings }: { meetings: any[] }) {
   );
 }
 
-function ViolationsView({ violations }: { violations: any[] }) {
+function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAcknowledge: (id: number) => void }) {
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Rule Violations</h3>
@@ -166,7 +166,7 @@ function ViolationsView({ violations }: { violations: any[] }) {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "rgba(192,57,43,0.08)", borderBottom: "1px solid #2a2825" }}>
-                {["Race", "Date", "Type", "Description", "Penalty"].map(h => (
+                {["Race", "Date", "Type", "Description", "Penalty", "Status", "Action"].map(h => (
                   <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#ef4444" }}>{h}</th>
                 ))}
               </tr>
@@ -179,6 +179,16 @@ function ViolationsView({ violations }: { violations: any[] }) {
                   <td style={{ padding: "0.75rem 1rem", color: "#ef4444", fontFamily: "monospace", fontSize: "0.75rem" }}>{v.type}</td>
                   <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem" }}>{v.description}</td>
                   <td style={{ padding: "0.75rem 1rem", color: "#c9a227", fontSize: "0.8rem" }}>{v.penalty}</td>
+                  <td style={{ padding: "0.75rem 1rem", color: v.status === "CONFIRMED" ? "#4ade80" : "#f87171", fontFamily: "monospace", fontSize: "0.75rem" }}>
+                    {v.status === "CONFIRMED" ? "Acknowledged" : "Pending Acknowledgment"}
+                  </td>
+                  <td style={{ padding: "0.75rem 1rem" }}>
+                    {v.status !== "CONFIRMED" && (
+                      <button onClick={() => onAcknowledge(v.id)} style={{ padding: "0.25rem 0.5rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.25rem", fontSize: "11px", fontWeight: "bold", cursor: "pointer" }}>
+                        Acknowledge
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -253,6 +263,14 @@ export default function Jockey() {
     } catch (err: any) { setErrorMsg(err.message || "Failed to register for meeting."); }
   };
 
+  const handleAcknowledgeViolation = async (violationId: number) => {
+    try {
+      await api.post(`/jockey/violations/${violationId}/confirm`);
+      setSuccessMsg("Violation acknowledged successfully!");
+      fetchData();
+    } catch (err: any) { setErrorMsg(err.message || "Failed to acknowledge violation."); }
+  };
+
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Jockey Hub";
   const pendingInvitations = invitations.length;
 
@@ -266,7 +284,7 @@ export default function Jockey() {
       case "mounts":      return <MountsView mounts={mounts} loading={loading} />;
       case "calendar":    return <CalendarView meetings={meetings} />;
       case "invitations": return <InvitationsView invitations={invitations} onAccept={handleAcceptInvite} onReject={handleRejectInvite} />;
-      case "violations":  return <ViolationsView violations={violations} />;
+      case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;
       default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
     }
