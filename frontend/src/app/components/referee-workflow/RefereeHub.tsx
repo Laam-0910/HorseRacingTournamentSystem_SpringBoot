@@ -24,16 +24,20 @@ function Icon({ name, color }: { name: string; color?: string }) {
   return <span style={{ display: "inline-flex", color: color || "currentColor" }}>{icon}</span>;
 }
 
-function statusBadge(status: string) {
+function statusBadge(status: string, preCheckCompleted?: boolean) {
   if (!status) return null;
   const s = status.toUpperCase();
   const cfg: Record<string, { bg: string; color: string; label: string }> = {
     SCHEDULED:         { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: "Scheduled" },
     DECLARATION_OPEN:  { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: "Declaration Open" },
     DECLARATION_CLOSED:{ bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: "Declaration Closed" },
+    RACE_ASSIGNED:     preCheckCompleted
+      ? { bg: "rgba(16,185,129,0.1)", color: "#10b981", label: "Ready to Start" }
+      : { bg: "rgba(139,92,246,0.1)", color: "#a08cf6", label: "Race Assigned" },
     RUNNING:           { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: "Running" },
     FINISHED:          { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: "Finished" },
     OFFICIAL:          { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: "Official" },
+    STEWARDS_INQUIRY:  { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: "Stewards Inquiry" },
   };
   const c = cfg[s] ?? { bg: "rgba(255,255,255,0.05)", color: "#a0a0a0", label: status };
   return (
@@ -133,11 +137,25 @@ export default function RefereeHub() {
         raceId: selectedRace.id,
         entries: payloadEntries,
       });
-      alert("Pre-race check completed. Race is now RUNNING.");
-      // Go directly to live supervision
-      handleStartSupervise(selectedRace);
+      alert("Pre-race check completed. The race is now ready to start!");
+      setActiveView("list");
+      setSelectedRace(null);
+      fetchDashboard();
     } catch (err: any) {
       alert("Pre-check failed: " + err.message);
+      setLoading(false);
+    }
+  };
+
+  const handleStartRace = async (race: any) => {
+    setLoading(true);
+    try {
+      await api.post(`/referee/races/${race.id}/start`);
+      alert("Race started successfully. Now monitoring live!");
+      // Directly go to live supervision
+      handleStartSupervise(race);
+    } catch (err: any) {
+      alert("Failed to start race: " + err.message);
       setLoading(false);
     }
   };
@@ -733,6 +751,7 @@ export default function RefereeHub() {
                 const isPending = !["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status ?? "");
                 const isRunning = race.status === "RUNNING";
                 const isOfficial = race.status === "OFFICIAL";
+                const isStewardsInquiry = race.status === "STEWARDS_INQUIRY";
 
                 return (
                   <tr key={race.id} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}
@@ -749,10 +768,14 @@ export default function RefereeHub() {
                       <div style={{ fontSize: "0.875rem", color: "#f4f2ec" }}>{race.classLevel}</div>
                       <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>{race.distanceMeters}m · {race.trackType}</div>
                     </td>
-                    <td style={{ padding: "1rem" }}>{statusBadge(race.status)}</td>
+                    <td style={{ padding: "1rem" }}>{statusBadge(race.status, race.preCheckCompleted)}</td>
                     <td style={{ padding: "1rem", textAlign: "right" }}>
                       {isPending && !isRunning && (
-                        race.gatesFullySet ? (
+                        race.preCheckCompleted ? (
+                          <button onClick={() => handleStartRace(race)} style={{ padding: "0.375rem 0.75rem", background: "#10b981", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
+                            🟢 Start Race
+                          </button>
+                        ) : race.gatesFullySet ? (
                           <button onClick={() => handleStartCheck(race)} style={{ padding: "0.375rem 0.75rem", background: PURPLE, color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
                             ☑ Start Pre-Race Check
                           </button>
@@ -768,6 +791,25 @@ export default function RefereeHub() {
                       {isRunning && (
                         <button onClick={() => handleStartSupervise(race)} style={{ padding: "0.375rem 0.75rem", background: "#fbbf24", color: "#000", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
                           👁 Monitor & Record
+                        </button>
+                      )}
+                      {isStewardsInquiry && (
+                        <button
+                          onClick={() => handleStartSupervise(race)}
+                          style={{
+                            padding: "0.375rem 0.75rem",
+                            background: "rgba(239,68,68,0.15)",
+                            color: "#ef4444",
+                            fontSize: "0.7rem",
+                            fontFamily: "monospace",
+                            fontWeight: 700,
+                            borderRadius: "0.5rem",
+                            cursor: "pointer",
+                            border: "1px solid rgba(239,68,68,0.4)",
+                            animation: "pulse 1.5s infinite",
+                          }}
+                        >
+                          🔴 Confirm Results
                         </button>
                       )}
                       {isOfficial && (

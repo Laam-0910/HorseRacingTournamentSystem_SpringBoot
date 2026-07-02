@@ -30,12 +30,9 @@ public class RaceStatusScheduler {
             if ("SCHEDULED".equals(status) || "DECLARATION_OPEN".equals(status) || "DECLARATION_CLOSED".equals(status)) {
                 Timestamp regStart = race.getRegistrationStartTime();
                 Timestamp regEnd = race.getRegistrationEndTime();
-                Timestamp start = race.getStartTime();
 
                 String targetStatus = status;
-                if (start != null && current.compareTo(start) >= 0) {
-                    targetStatus = "RUNNING";
-                } else if (regEnd != null && current.compareTo(regEnd) >= 0) {
+                if (regEnd != null && current.compareTo(regEnd) >= 0) {
                     targetStatus = "DECLARATION_CLOSED";
                 } else if (regStart != null && current.compareTo(regStart) >= 0) {
                     targetStatus = "DECLARATION_OPEN";

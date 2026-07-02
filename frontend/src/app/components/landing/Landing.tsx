@@ -175,10 +175,27 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
     setWaiting(true);
     try {
       const data = await api.post<any>("/ai/chat", { message: msg, lang });
-      setMessages(prev => prev.filter(m => m.type !== "typing").concat({ id: `b-${Date.now()}`, type: "bot", text: data.success ? data.reply : CHAT_LANG[lang].error + (data.error || "") }));
+      const rawText = data.success ? data.reply : CHAT_LANG[lang].error + (data.error || "");
+      
+      const botMsgId = `b-${Date.now()}`;
+      setMessages(prev => prev.filter(m => m.type !== "typing").concat({ id: botMsgId, type: "bot", text: "" }));
+      
+      let currentText = "";
+      let charIdx = 0;
+      const timer = setInterval(() => {
+        if (charIdx < rawText.length) {
+          currentText += rawText[charIdx];
+          setMessages(prev => prev.map(m => m.id === botMsgId ? { ...m, text: currentText } : m));
+          charIdx++;
+        } else {
+          clearInterval(timer);
+          setWaiting(false);
+        }
+      }, 10); // Very fast and smooth typing (10ms per character)
     } catch {
       setMessages(prev => prev.filter(m => m.type !== "typing").concat({ id: `b-${Date.now()}`, type: "bot", text: CHAT_LANG[lang].noconn }));
-    } finally { setWaiting(false); }
+      setWaiting(false);
+    }
   };
 
   const L = CHAT_LANG[lang];

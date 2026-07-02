@@ -386,6 +386,13 @@ public class AdminUserService {
             }
             raceEntryRepository.save(entry);
         }
+
+        raceRepository.findById(raceId).ifPresent(race -> {
+            if ("DECLARATION_CLOSED".equals(race.getStatus())) {
+                race.setStatus("RACE_ASSIGNED");
+                raceRepository.save(race);
+            }
+        });
     }
 
     @Transactional
@@ -480,6 +487,23 @@ public class AdminUserService {
                 raceEntryRepository.save(entry);
             }
         }
+
+        raceRepository.findById(raceId).ifPresent(race -> {
+            if ("DECLARATION_CLOSED".equals(race.getStatus())) {
+                List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
+                boolean allAssigned = true;
+                for (RaceEntry entry : entries) {
+                    if ("APPROVED".equalsIgnoreCase(entry.getStatus()) && (entry.getGateNumber() == null || entry.getGateNumber() <= 0)) {
+                        allAssigned = false;
+                        break;
+                    }
+                }
+                if (allAssigned && !entries.isEmpty()) {
+                    race.setStatus("RACE_ASSIGNED");
+                    raceRepository.save(race);
+                }
+            }
+        });
     }
 
     @Transactional

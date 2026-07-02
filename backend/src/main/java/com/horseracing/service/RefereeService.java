@@ -73,6 +73,17 @@ public class RefereeService {
             }
         }
 
+        race.setStatus("RACE_ASSIGNED");
+        raceRepository.save(race);
+    }
+
+    @Transactional
+    public void startRace(Integer raceId) {
+        Race race = raceRepository.findById(raceId)
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+        if (!"RACE_ASSIGNED".equals(race.getStatus()) && !"DECLARATION_CLOSED".equals(race.getStatus())) {
+            throw new IllegalStateException("Race must be in RACE_ASSIGNED or DECLARATION_CLOSED status to start");
+        }
         race.setStatus("RUNNING");
         raceRepository.save(race);
     }
@@ -109,15 +120,28 @@ public class RefereeService {
 
         Violation savedViolation = violationRepository.save(violation);
 
+        // Trigger STEWARDS_INQUIRY if the race is RUNNING or FINISHED
+        if (dto.getRaceId() != null) {
+            Optional<Race> raceOpt = raceRepository.findById(dto.getRaceId());
+            if (raceOpt.isPresent()) {
+                Race race = raceOpt.get();
+                String raceStatus = race.getStatus();
+                if ("RUNNING".equals(raceStatus) || "FINISHED".equals(raceStatus)) {
+                    race.setStatus("STEWARDS_INQUIRY");
+                    raceRepository.save(race);
+                }
+            }
+        }
+
         Map<Integer, String> userMap = userRepository.findAll().stream()
                 .collect(Collectors.toMap(User::getId, User::getUsername));
         String horseName = horseRepository.findById(savedViolation.getHorseId())
                 .map(Horse::getName)
                 .orElse(null);
 
-        return violationMapper.toDTO(savedViolation, 
-                horseName, 
-                userMap.get(savedViolation.getJockeyId()), 
+        return violationMapper.toDTO(savedViolation,
+                horseName,
+                userMap.get(savedViolation.getJockeyId()),
                 userMap.get(savedViolation.getRefereeId()));
     }
 
@@ -177,6 +201,17 @@ public class RefereeService {
                     }
                 }
                 resolved.put("gatesFullySet", gatesFullySet);
+
+                boolean preCheckCompleted = false;
+                if (entries != null && !entries.isEmpty()) {
+                    for (RaceEntry entry : entries) {
+                        if (entry.getCarriedWeight() != null && entry.getCarriedWeight().compareTo(BigDecimal.ZERO) > 0) {
+                            preCheckCompleted = true;
+                            break;
+                        }
+                    }
+                }
+                resolved.put("preCheckCompleted", preCheckCompleted);
 
                 // Load entries details
                 List<Map<String, Object>> resolvedEntries = new java.util.ArrayList<>();
@@ -265,5 +300,49 @@ public class RefereeService {
                 .orElseThrow(() -> new IllegalArgumentException("Violation not found"));
         violation.setStatus("CONFIRMED");
         violationRepository.save(violation);
+
+        // If no more PENDING violations for this race, reset race to FINISHED
+        Integer raceId = violation.getRaceId();
+        if (raceId != null) {
+            List<Violation> remaining = violationRepository.findByRaceId(raceId);
+            boolean hasPending = remaining.stream()
+                    .anyMatch(v -> "PENDING".equals(v.getStatus()));
+            if (!hasPending) {
+                Optional<Race> raceOpt = raceRepository.findById(raceId);
+                if (raceOpt.isPresent()) {
+                    Race race = raceOpt.get();
+                    if ("STEWARDS_INQUIRY".equals(race.getStatus())) {
+                        race.setStatus("FINISHED");
+                        raceRepository.save(race);
+                    }
+                }
+            }
+        }
+    }
+
+    @Transactional
+    public void dismissViolation(Integer violationId) {
+        Violation violation = violationRepository.findById(violationId)
+                .orElseThrow(() -> new IllegalArgumentException("Violation not found"));
+        violation.setStatus("DISMISSED");
+        violationRepository.save(violation);
+
+        // If no more PENDING violations for this race, reset race from STEWARDS_INQUIRY back to FINISHED
+        Integer raceId = violation.getRaceId();
+        if (raceId != null) {
+            List<Violation> remaining = violationRepository.findByRaceId(raceId);
+            boolean hasPending = remaining.stream()
+                    .anyMatch(v -> "PENDING".equals(v.getStatus()));
+            if (!hasPending) {
+                Optional<Race> raceOpt = raceRepository.findById(raceId);
+                if (raceOpt.isPresent()) {
+                    Race race = raceOpt.get();
+                    if ("STEWARDS_INQUIRY".equals(race.getStatus())) {
+                        race.setStatus("FINISHED");
+                        raceRepository.save(race);
+                    }
+                }
+            }
+        }
     }
 }

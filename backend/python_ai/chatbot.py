@@ -852,6 +852,7 @@ INTENTS = [
 
     # Chinese
     (r"评分最高.*马|最优秀的马|推荐马匹|(?:马匹|马).*(排行|评分|顶级|最高|推荐)",    "top_horses"),
+    (r"(?:tìm ngựa tương tự|ngựa giống|ngựa tương tự như|tìm ngựa giống con|similar horses to|find horses like)\s+([A-Za-z0-9_\u4e00-\u9fff\u3040-\u30ff ]+)", "similar_horses"),
     (r"马\s+(.+)|(.+)\s*(的信息|这匹马|评分)",                               "horse_detail"),
     (r"最优秀.*骑师|优秀骑师|(?:骑师).*(排行|最优秀|顶级)|骑师.*(排行|顶级|前三)", "top_jockeys"),
     (r"骑师\s+(.+)|(.+)\s*(的信息|这个骑师)",                                 "jockey_detail"),
@@ -893,7 +894,7 @@ def detect_intent(text):
             return intent
     if any(w in text_lower for w in ["predict", "win", "dự đoán", "thắng", "予想", "予測", "预测"]):
         return "predict"
-    if any(w in text_lower for w in ["upcoming", "schedule", "sắp", "lịch", "予定", "日程", "赛程"]):
+    if any(w in text_lower for w in ["upcoming", "schedule", "sắp", "予定", "日程", "赛程"]) or ("lịch" in text_lower and "lịch sử" not in text_lower):
         return "upcoming"
     if any(w in text_lower for w in ["recent", "result", "kết quả", "结果", "勝者"]):
         return "recent"
@@ -911,6 +912,43 @@ def chat(user_message: str, lang: str = None) -> str:
     msg    = user_message.strip()
     lang   = lang or detect_lang(msg)
     intent = detect_intent(msg)
+
+    # SEMANTIC VECTOR MATCH (using TF-IDF + PCA + Dot Product)
+    if intent == "unknown":
+        try:
+            from semantic_matcher import find_semantic_answer
+            semantic_ans = find_semantic_answer(msg)
+            if semantic_ans:
+                return semantic_ans
+        except Exception as e:
+            print(f"[Semantic Matcher Error] {e}")
+
+        # LARGE-SCALE FAQ MATCH (using Ridge Regression + PCA + Dot Product on 1M Questions)
+        try:
+            from large_scale_faq import faq_engine
+            if any(w in msg.lower() for w in ["class", "rating", "nài", "ngựa", "giải", "khoảng cách"]):
+                faq_ans = faq_engine.ask(msg)
+                if faq_ans:
+                    return faq_ans
+        except Exception as e:
+            print(f"[Large-Scale FAQ Error] {e}")
+
+    # SIMILAR HORSES (Large scale vector match with PCA)
+    if intent == "similar_horses":
+        m = re.search(r"(?:tìm ngựa tương tự|ngựa giống|ngựa tương tự như|tìm ngựa giống con|similar horses to|find horses like)\s+([A-Za-z0-9_\u4e00-\u9fff\u3040-\u30ff ]+)", msg, re.IGNORECASE)
+        if m:
+            name = m.group(1).strip()
+            try:
+                from large_scale_search import matcher
+                similar = matcher.find_similar_horses(name, top_k=5)
+                if not similar:
+                    return f"Không tìm thấy ngựa nào tương tự hoặc không tìm thấy ngựa '{name}' trong cơ sở dữ liệu."
+                res = f"🏇 **Top 5 ngựa có đặc điểm phong độ tương tự '{name}' (Phân tích bằng Incremental PCA & Dot Product):**\n\n"
+                for idx, item in enumerate(similar, 1):
+                    res += f"{idx}. **{item['name']}** (Độ tương đồng đặc trưng: {item['similarity']*100:.2f}%)\n"
+                return res
+            except Exception as e:
+                return f"Lỗi phân tích vector quy mô lớn: {str(e)}"
 
     # GREETING
     if intent == "greeting":
