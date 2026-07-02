@@ -18,7 +18,7 @@ public class RaceMeetingDTO {
     private String seasonName; // Tên của Mùa giải để tiện hiển thị
     private String name;        // ví dụ: Spring Gold Cup Day
     
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "GMT+7")
     private Timestamp startDate;
     
     private String venue;

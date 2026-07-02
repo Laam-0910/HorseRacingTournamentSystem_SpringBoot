@@ -198,7 +198,7 @@ public class JockeyOwnerDashboardService {
         }
 
         List<Horse> myHorses = horseRepository.findByOwnerId(ownerId);
-        List<Horse> activeHorses = myHorses.stream().filter(h -> "ACTIVE".equalsIgnoreCase(h.getStatus())).toList();
+        List<Horse> activeHorses = myHorses.stream().filter(h -> h.getStatus() != null && "ACTIVE".equalsIgnoreCase(h.getStatus().trim())).toList();
 
         Map<Integer, List<Map<String, Object>>> meetingRegisteredHorses = new HashMap<>();
         Map<Integer, List<HorseDTO>> meetingUnregisteredHorses = new HashMap<>();
@@ -212,7 +212,7 @@ public class JockeyOwnerDashboardService {
                 if (hRegOpt.isPresent()) {
                     Map<String, Object> hRegMap = new HashMap<>();
                     hRegMap.put("horse", horseMapper.toDTO(horse, null));
-                    hRegMap.put("status", hRegOpt.get().getStatus());
+                    hRegMap.put("status", hRegOpt.get().getStatus() != null ? hRegOpt.get().getStatus().trim() : null);
                     hRegMap.put("regId", hRegOpt.get().getId());
                     regHorsesList.add(hRegMap);
                 } else {
@@ -230,6 +230,7 @@ public class JockeyOwnerDashboardService {
         response.put("meetingRegisteredHorses", meetingRegisteredHorses);
         response.put("meetingUnregisteredHorses", meetingUnregisteredHorses);
         response.put("activeHorses", activeHorses.stream().map(h -> horseMapper.toDTO(h, null)).toList());
+        response.put("totalHorses", activeHorses.size());
 
         return response;
     }

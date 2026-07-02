@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { api } from "../../../lib/api";
+import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
 
 interface InlineDatePickerProps {
   label: string;
@@ -169,23 +170,6 @@ export default function Season() {
   const [extendDateInput, setExtendDateInput] = useState<string>("");
   const [extendError, setExtendError] = useState<string>("");
 
-  const formatDateTime = (dateStr: string) => {
-    if (!dateStr) return "";
-    try {
-      const d = new Date(dateStr.replace(" ", "T"));
-      if (isNaN(d.getTime())) return dateStr;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      const hours = String(d.getHours()).padStart(2, '0');
-      const minutes = String(d.getMinutes()).padStart(2, '0');
-      const seconds = String(d.getSeconds()).padStart(2, '0');
-      return `${day}-${month}-${year} ${hours}-${minutes}-${seconds}`;
-    } catch {
-      return dateStr;
-    }
-  };
-
   const fetchSeasons = async () => {
     setLoading(true);
     setError("");
@@ -256,16 +240,14 @@ export default function Season() {
       return;
     }
 
-    const toDbFormat = (d: string) => {
-      const parts = d.split("-");
-      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-      return d;
-    };
+    const toDbFormat = (d: string) => d ? `${d} 00:00:00` : "";
 
     const dbStartDate = toDbFormat(extendStartDateInput);
     const dbEndDate = toDbFormat(extendDateInput);
 
-    if (new Date(dbStartDate) >= new Date(dbEndDate)) {
+    const startD = parseSafeDate(dbStartDate);
+    const endD = parseSafeDate(dbEndDate);
+    if (startD && endD && startD >= endD) {
       setExtendError("Start Date must be before End Date.");
       return;
     }
@@ -291,16 +273,14 @@ export default function Season() {
       return;
     }
 
-    const toDbFormat = (d: string) => {
-      const parts = d.split("-");
-      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-      return d;
-    };
+    const toDbFormat = (d: string) => d ? `${d} 00:00:00` : "";
 
     const dbStartDate = toDbFormat(newSeasonStartDate);
     const dbEndDate = toDbFormat(newSeasonEndDate);
 
-    if (new Date(dbStartDate) >= new Date(dbEndDate)) {
+    const startD = parseSafeDate(dbStartDate);
+    const endD = parseSafeDate(dbEndDate);
+    if (startD && endD && startD >= endD) {
       setError("Start Date must be before End Date.");
       return;
     }

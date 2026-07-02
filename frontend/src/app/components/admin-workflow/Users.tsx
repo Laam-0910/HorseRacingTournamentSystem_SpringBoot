@@ -3,12 +3,19 @@ import { api } from "../../../lib/api";
 
 export default function Users() {
   const [users, setUsers] = useState<any[]>([]);
-  const [pendingJockeys, setPendingJockeys] = useState<any[]>([]);
   const [horses, setHorses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [filterRole, setFilterRole] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const lang = localStorage.getItem("app-lang") || "vi";
+  const placeholderText = 
+    lang === "en" ? "Search username, email, or horse..." :
+    lang === "zh" ? "搜索用户名、邮箱或马匹..." :
+    lang === "ja" ? "ユーザー名、メール、または馬を検索..." :
+    "Tìm kiếm tên người dùng, email, hoặc ngựa...";
 
   // Create User Form State
   const [createUsername, setCreateUsername] = useState("");
@@ -31,9 +38,6 @@ export default function Users() {
     try {
       const allUsers = await api.get<any[]>("/admin/users");
       setUsers(allUsers);
-
-      const pendingData = await api.get<any>("/admin/pending-registrations");
-      setPendingJockeys(pendingData.pendingJockeyRegsData || []);
 
       const allHorses = await api.get<any[]>("/public/horses");
       setHorses(allHorses);
@@ -128,24 +132,6 @@ export default function Users() {
     }
   };
 
-  const handleJockeyApprove = async (id: number) => {
-    try {
-      await api.post(`/admin/jockey-reg/${id}/approve`);
-      fetchData();
-    } catch (err: any) {
-      alert("Approve failed: " + err.message);
-    }
-  };
-
-  const handleJockeyReject = async (id: number) => {
-    try {
-      await api.post(`/admin/jockey-reg/${id}/reject`);
-      fetchData();
-    } catch (err: any) {
-      alert("Reject failed: " + err.message);
-    }
-  };
-
   const handleEditRating = async (h: any) => {
     const val = prompt(`Enter new rating for horse "${h.name}":`, h.currentRating);
     if (val === null) return;
@@ -168,13 +154,31 @@ export default function Users() {
   };
 
   const filteredUsers = users.filter((u) => {
-    if (filterRole === "ALL") return true;
-    if (filterRole === "ADMIN") return u.roleId === 1;
-    if (filterRole === "OWNER") return u.roleId === 2;
-    if (filterRole === "JOCKEY") return u.roleId === 3;
-    if (filterRole === "SPECTATOR") return u.roleId === 4;
-    if (filterRole === "REFEREE") return u.roleId === 5;
-    return true;
+    let matchesRole = true;
+    if (filterRole === "ADMIN") matchesRole = (u.roleId === 1);
+    else if (filterRole === "OWNER") matchesRole = (u.roleId === 2);
+    else if (filterRole === "JOCKEY") matchesRole = (u.roleId === 3);
+    else if (filterRole === "SPECTATOR") matchesRole = (u.roleId === 4);
+    else if (filterRole === "REFEREE") matchesRole = (u.roleId === 5);
+
+    let matchesSearch = true;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const usernameMatch = (u.username || "").toLowerCase().includes(q);
+      const emailMatch = (u.email || "").toLowerCase().includes(q);
+      matchesSearch = usernameMatch || emailMatch;
+    }
+
+    return matchesRole && matchesSearch;
+  });
+
+  const filteredHorses = horses.filter((h) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const nameMatch = (h.name || "").toLowerCase().includes(q);
+    const breedMatch = (h.breed || "").toLowerCase().includes(q);
+    const ownerMatch = (h.ownerName || "").toLowerCase().includes(q);
+    return nameMatch || breedMatch || ownerMatch;
   });
 
   const getRoleName = (roleId: number) => {
@@ -241,32 +245,39 @@ export default function Users() {
         </form>
       </div>
 
-      {/* 2. Pending Jockey Approvals */}
-      <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-        <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Pending Jockey Availability Registrations</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Jockey availability sign-up submissions awaiting steward approval</p>
-        </div>
-        <div style={{ padding: "1.5rem" }}>
-          {pendingJockeys.length > 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              {pendingJockeys.map((j) => (
-                <div key={j.registration?.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.5rem" }}>
-                  <div>
-                    <h5 style={{ fontWeight: "bold", color: "#fff", fontSize: "13px" }}>{j.jockey?.username}</h5>
-                    <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "4px" }}>Email: {j.jockey?.email} | Target: {j.meeting?.name} | Weight: {j.jockey?.weight} kg</p>
-                  </div>
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button onClick={() => handleJockeyReject(j.registration?.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
-                    <button onClick={() => handleJockeyApprove(j.registration?.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>No pending jockey meeting registrations found.</p>
-          )}
-        </div>
+      {/* 2. Unified Directory Search Bar */}
+      <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", padding: "1rem 1.5rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <span style={{ fontSize: "1.1rem" }}>🔍</span>
+        <input 
+          type="text" 
+          value={searchQuery} 
+          onChange={(e) => setSearchQuery(e.target.value)} 
+          placeholder={placeholderText} 
+          style={{ 
+            flex: 1, 
+            background: "none", 
+            border: "none", 
+            color: "#f4f2ec", 
+            fontSize: "0.825rem", 
+            outline: "none",
+            fontFamily: "monospace"
+          }} 
+        />
+        {searchQuery && (
+          <button 
+            onClick={() => setSearchQuery("")} 
+            style={{ 
+              background: "none", 
+              border: "none", 
+              color: "rgba(255,255,255,0.4)", 
+              cursor: "pointer", 
+              fontSize: "11px",
+              fontFamily: "monospace" 
+            }}
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       {/* 3. Registered Users Directory */}
@@ -353,8 +364,8 @@ export default function Users() {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-sm">
-              {horses.length > 0 ? (
-                horses.map((h) => (
+              {filteredHorses.length > 0 ? (
+                filteredHorses.map((h) => (
                   <tr key={h.id} className="hover:bg-white/[0.015] transition-colors">
                     <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#f4f2ec" }}>{h.name}</td>
                     <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.8)" }}>{h.breed}</td>
@@ -368,7 +379,7 @@ export default function Users() {
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses in database.</td></tr>
+                <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses match the criteria.</td></tr>
               )}
             </tbody>
           </table>

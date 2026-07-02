@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
+import { parseSafeDate } from "../../utils/dateTimeHelper";
 import DashboardLayout from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
 
@@ -202,37 +203,72 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
   const [horseName, setHorseName] = useState("");
   const [breed, setBreed] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [avatar, setAvatar] = useState("");
   const [description, setDescription] = useState("");
   const [editingHorse, setEditingHorse] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
   const [editBreed, setEditBreed] = useState("");
   const [editDob, setEditDob] = useState("");
   const [editRating, setEditRating] = useState<number>(52);
-  const [editImageUrl, setEditImageUrl] = useState("");
+  const [editAvatar, setEditAvatar] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [msg, setMsg] = useState("");
+
+  const formatDobForApi = (dobStr: string): string => {
+    if (!dobStr) return "";
+    const parts = dobStr.split("-");
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]} 00:00:00`;
+    }
+    return dobStr;
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
+    setMsg("");
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1.5 * 1024 * 1024) {
+        setMsg("❌ Avatar image size must be less than 1.5MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          if (isEdit) {
+            setEditAvatar(event.target.result as string);
+          } else {
+            setAvatar(event.target.result as string);
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleRegisterHorse = async (e: React.FormEvent) => {
     e.preventDefault(); setMsg("");
     try {
-      await api.post("/horses", { name: horseName, breed, dateOfBirth, ownerId: user?.id, imageUrl, description, status: "PENDING" });
+      await api.post("/horses", { name: horseName, breed, dateOfBirth: formatDobForApi(dateOfBirth), ownerId: user?.id, avatar, description, status: "PENDING" });
       setMsg("✅ Horse declaration submitted for approval.");
-      setHorseName(""); setBreed(""); setDateOfBirth(""); setImageUrl(""); setDescription("");
+      setHorseName(""); setBreed(""); setDateOfBirth(""); setAvatar(""); setDescription("");
       onRefresh();
     } catch (err: any) { setMsg("❌ " + (err.message || "Failed to submit horse registration.")); }
   };
 
-  const startEdit = (h: any) => {
-    setEditingHorse(h); setEditName(h.name || ""); setEditBreed(h.breed || "");
-    setEditDob(h.dateOfBirth ? new Date(h.dateOfBirth).toISOString().split("T")[0] : "");
-    setEditRating(h.currentRating || 52); setEditImageUrl(h.imageUrl || ""); setEditDescription(h.description || "");
+  const startEdit = (item: any) => {
+    setEditingHorse(item.horse);
+    setEditName(item.horse.name || "");
+    setEditBreed(item.horse.breed || "");
+    setEditDob(item.horse.dateOfBirth ? (() => { const d = parseSafeDate(item.horse.dateOfBirth); return d ? d.toISOString().split("T")[0] : ""; })() : "");
+    setEditRating(item.horse.currentRating || 52);
+    setEditAvatar(item.horse.avatar || "");
+    setEditDescription(item.horse.description || "");
   };
 
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault(); if (!editingHorse) return;
     try {
-      await api.put(`/horses/${editingHorse.id}`, { name: editName, breed: editBreed, dateOfBirth: editDob, currentRating: editRating, imageUrl: editImageUrl, description: editDescription });
+      await api.put(`/horses/${editingHorse.id}`, { name: editName, breed: editBreed, dateOfBirth: formatDobForApi(editDob), currentRating: editRating, avatar: editAvatar, description: editDescription });
       setEditingHorse(null); onRefresh();
     } catch (err: any) { setMsg("❌ " + (err.message || "Failed to update horse.")); }
   };
@@ -246,22 +282,25 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
           {stable.length === 0
             ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No horses in stable yet.</p>
-            : stable.map((h: any) => (
-              <div key={h.id} className="rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column" }}>
-                {h.imageUrl
-                  ? <img src={h.imageUrl} alt={h.name} style={{ width: "100%", height: "11rem", objectFit: "cover" }} />
-                  : <div style={{ width: "100%", height: "11rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontWeight: 700, fontFamily: "monospace", fontSize: "0.7rem" }}>NO IMAGE</div>}
-                <div style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
-                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{h.name}</h4>
-                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Breed: {h.breed} · Age: {h.age ?? "N/A"}</p>
-                  <div style={{ borderTop: "1px solid #2a2825", paddingTop: "0.5rem", display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#a0a0a0" }}>
-                    <span>Rating: <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
-                    <span>Wins: <strong>{h.totalWins ?? 0}</strong>/{h.totalRaces ?? 0}</span>
+            : stable.map((item: any) => {
+                const h = item.horse;
+                return (
+                  <div key={h.id} className="rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column" }}>
+                    {h.avatar
+                      ? <img src={h.avatar} alt={h.name} style={{ width: "100%", height: "11rem", objectFit: "cover" }} />
+                      : <div style={{ width: "100%", height: "11rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontWeight: 700, fontFamily: "monospace", fontSize: "0.7rem" }}>NO IMAGE</div>}
+                    <div style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
+                      <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{h.name}</h4>
+                      <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Breed: {h.breed} · Status: <span style={{ color: h.status === "ACTIVE" ? "#4ade80" : "#fbbf24", fontWeight: 700 }}>{h.status}</span></p>
+                      <div style={{ borderTop: "1px solid #2a2825", paddingTop: "0.5rem", display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#a0a0a0" }}>
+                        <span>Rating: <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
+                        <span>Wins: <strong>{item.totalWins ?? 0}</strong>/{item.totalRaces ?? 0}</span>
+                      </div>
+                      <button onClick={() => startEdit(item)} style={{ width: "100%", padding: "0.5rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer" }}>Edit Details</button>
+                    </div>
                   </div>
-                  <button onClick={() => startEdit(h)} style={{ width: "100%", padding: "0.5rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer" }}>Edit Details</button>
-                </div>
-              </div>
-            ))}
+                );
+              })}
         </div>
       </div>
 
@@ -273,13 +312,19 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
             { lbl: "Horse Name", val: horseName, set: setHorseName, type: "text", ph: "E.g., Shadow Fax" },
             { lbl: "Breed",      val: breed,     set: setBreed,     type: "text", ph: "E.g., Arabian Thoroughbred" },
             { lbl: "Date of Birth", val: dateOfBirth, set: setDateOfBirth, type: "date", ph: "" },
-            { lbl: "Photo URL", val: imageUrl, set: setImageUrl, type: "text", ph: "Paste image URL" },
           ].map(f => (
             <div key={f.lbl}>
               <label style={labelStyle}>{f.lbl}</label>
-              <input type={f.type} required={f.lbl !== "Photo URL"} value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph} style={inputStyle} />
+              <input type={f.type} required value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph} style={inputStyle} />
             </div>
           ))}
+          <div>
+            <label style={labelStyle}>Horse Photo / Avatar</label>
+            <input type="file" accept="image/*" onChange={e => handleAvatarChange(e, false)} style={inputStyle} />
+            {avatar && (
+              <img src={avatar} alt="Preview" style={{ width: "100%", height: "8rem", objectFit: "cover", marginTop: "0.5rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.08)" }} />
+            )}
+          </div>
           <div>
             <label style={labelStyle}>Biography / Description</label>
             <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter horse details..." style={{ ...inputStyle, height: "5rem", resize: "none" }} />
@@ -299,13 +344,19 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
                 { lbl: "Horse Name", val: editName, set: setEditName, type: "text" },
                 { lbl: "Breed",      val: editBreed, set: setEditBreed, type: "text" },
                 { lbl: "Date of Birth", val: editDob, set: setEditDob, type: "date" },
-                { lbl: "Photo URL", val: editImageUrl, set: setEditImageUrl, type: "text" },
               ].map(f => (
                 <div key={f.lbl}>
                   <label style={labelStyle}>{f.lbl}</label>
-                  <input type={f.type} required={f.lbl !== "Photo URL"} value={f.val} onChange={e => f.set(e.target.value)} style={inputStyle} />
+                  <input type={f.type} required value={f.val} onChange={e => f.set(e.target.value)} style={inputStyle} />
                 </div>
               ))}
+              <div>
+                <label style={labelStyle}>Horse Photo / Avatar</label>
+                <input type="file" accept="image/*" onChange={e => handleAvatarChange(e, true)} style={inputStyle} />
+                {editAvatar && (
+                  <img src={editAvatar} alt="Preview" style={{ width: "100%", height: "8rem", objectFit: "cover", marginTop: "0.5rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.08)" }} />
+                )}
+              </div>
               <div>
                 <label style={labelStyle}>Rating</label>
                 <input type="number" value={editRating} disabled={editingHorse.totalRaces > 0} onChange={e => setEditRating(parseInt(e.target.value))} style={{ ...inputStyle, opacity: editingHorse.totalRaces > 0 ? 0.5 : 1 }} />

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
+import { formatDateTime, formatForDateTimeLocal, formatForApi } from "../../utils/dateTimeHelper";
 
 interface Meeting {
   id: number;
@@ -71,23 +72,6 @@ export default function Race() {
   // Referee assignment selections
   const [assignRefSelection, setAssignRefSelection] = useState<Record<number, string>>({});
 
-  const formatDateTime = (dateStr: string) => {
-    if (!dateStr) return "";
-    try {
-      const d = new Date(dateStr.replace(" ", "T"));
-      if (isNaN(d.getTime())) return dateStr;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      const hours = String(d.getHours()).padStart(2, '0');
-      const minutes = String(d.getMinutes()).padStart(2, '0');
-      const seconds = String(d.getSeconds()).padStart(2, '0');
-      return `${day}-${month}-${year} ${hours}-${minutes}-${seconds}`;
-    } catch {
-      return dateStr;
-    }
-  };
-
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -137,9 +121,9 @@ export default function Race() {
         raceMeetingId: parseInt(meetingId),
         classLevel,
         trackType,
-        startTime: startTime.replace("T", " ") + (startTime.length === 16 ? ":00" : ""),
-        registrationStartTime: regStartTime.replace("T", " ") + (regStartTime.length === 16 ? ":00" : ""),
-        registrationEndTime: regEndTime.replace("T", " ") + (regEndTime.length === 16 ? ":00" : ""),
+        startTime: startTime,
+        registrationStartTime: regStartTime,
+        registrationEndTime: regEndTime,
         distanceMeters: parseInt(distance),
         maxEntries: parseInt(maxEntries),
         purse: parseFloat(purse),
@@ -162,9 +146,9 @@ export default function Race() {
 
   const handleOpenEdit = (race: Race) => {
     setEditingRace(race);
-    setEditStartTime(race.startTime ? race.startTime.replace(" ", "T").substring(0, 16) : "");
-    setEditRegStartTime(race.registrationStartTime ? race.registrationStartTime.replace(" ", "T").substring(0, 16) : "");
-    setEditRegEndTime(race.registrationEndTime ? race.registrationEndTime.replace(" ", "T").substring(0, 16) : "");
+    setEditStartTime(race.startTime || "");
+    setEditRegStartTime(race.registrationStartTime || "");
+    setEditRegEndTime(race.registrationEndTime || "");
     setEditDistance(race.distanceMeters.toString());
     setEditTrackType(race.trackType);
     setEditPurse(race.purse.toString());
@@ -343,17 +327,17 @@ export default function Race() {
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Start Time</label>
-                <input type="datetime-local" step="1" value={startTime} onChange={e => setStartTime(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }} />
+                <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none", fontFamily: "monospace" }} />
               </div>
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#c9a227" }}>Registration Start</label>
-                <input type="datetime-local" step="1" value={regStartTime} onChange={e => setRegStartTime(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }} />
+                <input type="text" value={regStartTime} onChange={e => setRegStartTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none", fontFamily: "monospace" }} />
               </div>
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#c9a227" }}>Registration End</label>
-                <input type="datetime-local" step="1" value={regEndTime} onChange={e => setRegEndTime(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }} />
+                <input type="text" value={regEndTime} onChange={e => setRegEndTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none", fontFamily: "monospace" }} />
               </div>
 
               <div>
@@ -486,15 +470,15 @@ export default function Race() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
                 <div style={{ gridColumn: "span 2" }}>
                   <label style={labelStyle}>Start Time</label>
-                  <input type="datetime-local" step="1" value={editStartTime} onChange={e => setEditStartTime(e.target.value)} required style={inputStyle} />
+                  <input type="text" value={editStartTime} onChange={e => setEditStartTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ ...inputStyle, fontFamily: "monospace" }} />
                 </div>
                 <div>
                   <label style={{ ...labelStyle, color: "#c9a227" }}>Registration Start</label>
-                  <input type="datetime-local" step="1" value={editRegStartTime} onChange={e => setEditRegStartTime(e.target.value)} required style={inputStyle} />
+                  <input type="text" value={editRegStartTime} onChange={e => setEditRegStartTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ ...inputStyle, fontFamily: "monospace" }} />
                 </div>
                 <div>
                   <label style={{ ...labelStyle, color: "#c9a227" }}>Registration End</label>
-                  <input type="datetime-local" step="1" value={editRegEndTime} onChange={e => setEditRegEndTime(e.target.value)} required style={inputStyle} />
+                  <input type="text" value={editRegEndTime} onChange={e => setEditRegEndTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ ...inputStyle, fontFamily: "monospace" }} />
                 </div>
                 <div>
                   <label style={labelStyle}>Distance (m)</label>

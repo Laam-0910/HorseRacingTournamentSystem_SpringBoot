@@ -35,4 +35,6 @@ public class UserDTO {
     private Integer totalTop3Finishes;
 
     private Boolean requireOtp;
+
+    private String avatar;
 }

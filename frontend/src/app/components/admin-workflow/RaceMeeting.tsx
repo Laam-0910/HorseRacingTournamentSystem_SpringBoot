@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
+import { formatDateTime, formatForDateTimeLocal, formatForApi } from "../../utils/dateTimeHelper";
 
 export default function RaceMeeting() {
   const [meetings, setMeetings] = useState<any[]>([]);
@@ -12,44 +13,6 @@ export default function RaceMeeting() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [editingMeeting, setEditingMeeting] = useState<any | null>(null);
-
-  const formatDateTime = (dateStr: string) => {
-    if (!dateStr) return "";
-    try {
-      const d = new Date(dateStr.replace(" ", "T"));
-      if (isNaN(d.getTime())) return dateStr;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      const hours = String(d.getHours()).padStart(2, '0');
-      const minutes = String(d.getMinutes()).padStart(2, '0');
-      const seconds = String(d.getSeconds()).padStart(2, '0');
-      return `${day}-${month}-${year} ${hours}-${minutes}-${seconds}`;
-    } catch {
-      return dateStr;
-    }
-  };
-
-  const formatForDateTimeLocal = (dateStr: string) => {
-    if (!dateStr) return "";
-    try {
-      const cleanStr = dateStr.replace(" ", "T");
-      const d = new Date(cleanStr);
-      if (isNaN(d.getTime())) return "";
-      
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const year = d.getFullYear();
-      const month = pad(d.getMonth() + 1);
-      const day = pad(d.getDate());
-      const hours = pad(d.getHours());
-      const minutes = pad(d.getMinutes());
-      const seconds = pad(d.getSeconds());
-      
-      return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-    } catch {
-      return "";
-    }
-  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -79,7 +42,7 @@ export default function RaceMeeting() {
     setName(m.name || "");
     setVenue(m.venue || "");
     setSeasonId(m.seasonId ? m.seasonId.toString() : "");
-    setDate(formatForDateTimeLocal(m.startDate || m.date));
+    setDate(m.startDate || m.date || "");
     setError("");
     setSuccess("");
   };
@@ -122,7 +85,7 @@ export default function RaceMeeting() {
     try {
       const payload = {
         name,
-        startDate: date.replace("T", " ") + (date.length === 16 ? ":00" : ""),
+        startDate: date,
         venue,
         seasonId: parseInt(seasonId),
       };
@@ -234,12 +197,12 @@ export default function RaceMeeting() {
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">Date</label>
             <input
-              type="datetime-local"
-              step="1"
+              type="text"
               required
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs"
+              placeholder="dd-mm-yyyy hh:mm:ss"
+              className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs font-mono"
             />
           </div>
 

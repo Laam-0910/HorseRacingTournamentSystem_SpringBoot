@@ -6,6 +6,9 @@ export interface AuthUser {
   email: string;
   roleId: number;
   status?: string;
+  avatar?: string;
+  weight?: number;
+  requireOtp?: boolean;
 }
 
 interface AuthContextType {

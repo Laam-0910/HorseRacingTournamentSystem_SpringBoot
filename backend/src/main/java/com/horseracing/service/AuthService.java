@@ -226,22 +226,25 @@ public class AuthService {
         User user = userOpt.get();
         int roleId = user.getRoleId();
 
-        // Allow only Owner(2), Jockey(3), Spectator(4)
-        if (roleId == 2 || roleId == 3 || roleId == 4) {
+        // Allow any user role except Admin (1)
+        if (roleId != 1) {
             String otp = String.format("%06d", new Random().nextInt(999999));
             String otpTxId = UUID.randomUUID().toString();
 
             otpStorage.put(otpTxId, OtpSession.builder()
                     .otpCode(otp)
                     .creationTime(System.currentTimeMillis())
-                    .pendingData(user.getEmail())
+                    .pendingData(user.getUsername()) // Use username instead of email for unique lookup
                     .build());
 
-            emailSender.sendVerificationCode(user.getEmail(), otp, "FORGOT_PASSWORD");
+            boolean sent = emailSender.sendVerificationCode(user.getEmail(), otp, "FORGOT_PASSWORD");
+            if (!sent) {
+                throw new IllegalArgumentException("Failed to send OTP verification email. Please check SMTP configuration.");
+            }
 
             return Map.of("success", true, "otpTxId", otpTxId);
         } else {
-            throw new IllegalArgumentException("Your account role is not permitted to reset password this way");
+            throw new IllegalArgumentException("Admin password cannot be reset via email OTP");
         }
     }
 
@@ -258,8 +261,8 @@ public class AuthService {
             return Map.of("success", false, "error", "Verification code has expired");
         }
 
-        String email = (String) session.getPendingData();
-        Optional<User> userOpt = userRepository.findByEmail(email);
+        String username = (String) session.getPendingData();
+        Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
             otpStorage.remove(otpTxId);
             return Map.of("success", false, "error", "User not found");
@@ -283,5 +286,43 @@ public class AuthService {
         user.setRequireOtp(requireOtp);
         userRepository.save(user);
         return user.getRequireOtp();
+    }
+
+    @Transactional
+    public UserDTO updateProfile(UserDTO dto) {
+        User user = userRepository.findById(dto.getId())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (dto.getEmail() != null) {
+            String trimmedEmail = dto.getEmail().trim();
+            if (!trimmedEmail.isEmpty() && !trimmedEmail.equals(user.getEmail())) {
+                Optional<User> existing = userRepository.findByEmail(trimmedEmail);
+                if (existing.isPresent() && !existing.get().getId().equals(user.getId())) {
+                    throw new IllegalArgumentException("Email is already taken by another account");
+                }
+                user.setEmail(trimmedEmail);
+            }
+        }
+
+        if (dto.getWeight() != null) {
+            user.setWeight(dto.getWeight());
+        }
+
+        if (dto.getAvatar() != null) {
+            user.setAvatar(dto.getAvatar());
+        }
+
+        User saved = userRepository.save(user);
+
+        String roleName = "";
+        if (saved.getRoleId() == 1) roleName = "Admin";
+        else if (saved.getRoleId() == 2) roleName = "Owner";
+        else if (saved.getRoleId() == 3) roleName = "Jockey";
+        else if (saved.getRoleId() == 4) roleName = "Referee";
+        else if (saved.getRoleId() == 5) roleName = "Spectator";
+
+        UserDTO result = userMapper.toDTO(saved);
+        result.setRoleName(roleName);
+        return result;
     }
 }

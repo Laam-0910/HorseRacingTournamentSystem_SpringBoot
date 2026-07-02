@@ -17,13 +17,13 @@ public class RaceDTO {
     private Integer raceMeetingId;
     private String raceMeetingName; // Tên Ngày hội đua bổ trợ
     
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "GMT+7")
     private Timestamp startTime;
     
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "GMT+7")
     private Timestamp registrationStartTime;
     
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "GMT+7")
     private Timestamp registrationEndTime;
     
     private String status;          // SCHEDULED, DECLARATION_OPEN, DECLARATION_CLOSED, RUNNING, OFFICIAL, CANCELLED, etc.

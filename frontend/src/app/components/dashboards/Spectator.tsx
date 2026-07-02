@@ -142,8 +142,8 @@ export default function Spectator() {
                 ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No horses registered yet.</p>
                 : horses.map((h: any) => (
                   <div key={h.id} className="rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                    {h.imageUrl
-                      ? <img src={h.imageUrl} alt={h.name} style={{ width: "100%", height: "9rem", objectFit: "cover" }} />
+                    {h.avatar
+                      ? <img src={h.avatar} alt={h.name} style={{ width: "100%", height: "9rem", objectFit: "cover" }} />
                       : <div style={{ width: "100%", height: "9rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontFamily: "monospace", fontSize: "0.7rem" }}>NO IMAGE</div>}
                     <div style={{ padding: "0.875rem" }}>
                       <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "0.95rem" }}>{h.name}</h4>
