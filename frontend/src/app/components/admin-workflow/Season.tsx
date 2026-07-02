@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
 
 interface InlineDatePickerProps {
   label: string;
-  value: string; // format: dd-mm-yyyy
+  value: string; // format: dd-MM-yyyy
   onChange: (val: string) => void;
 }
 
@@ -29,34 +29,25 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
 
   const daysInMonth = new Date(currentDate.year, currentDate.month + 1, 0).getDate();
   let firstDay = new Date(currentDate.year, currentDate.month, 1).getDay();
-  firstDay = firstDay === 0 ? 6 : firstDay - 1; 
+  firstDay = firstDay === 0 ? 6 : firstDay - 1;
 
-  const months = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   const handlePrevMonth = () => {
-    setCurrentDate(prev => {
-      if (prev.month === 0) {
-        return { month: 11, year: prev.year - 1 };
-      }
-      return { month: prev.month - 1, year: prev.year };
-    });
+    setCurrentDate(prev =>
+      prev.month === 0 ? { month: 11, year: prev.year - 1 } : { month: prev.month - 1, year: prev.year }
+    );
   };
 
   const handleNextMonth = () => {
-    setCurrentDate(prev => {
-      if (prev.month === 11) {
-        return { month: 0, year: prev.year + 1 };
-      }
-      return { month: prev.month + 1, year: prev.year };
-    });
+    setCurrentDate(prev =>
+      prev.month === 11 ? { month: 0, year: prev.year + 1 } : { month: prev.month + 1, year: prev.year }
+    );
   };
 
   const handleSelectDay = (day: number) => {
-    const formattedDay = String(day).padStart(2, '0');
-    const formattedMonth = String(currentDate.month + 1).padStart(2, '0');
+    const formattedDay = String(day).padStart(2, "0");
+    const formattedMonth = String(currentDate.month + 1).padStart(2, "0");
     onChange(`${formattedDay}-${formattedMonth}-${currentDate.year}`);
     setIsOpen(false);
   };
@@ -66,7 +57,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
 
   return (
     <div className="relative">
-      <label className="text-[10px] font-semibold text-white/60 uppercase tracking-wider block mb-1.5 font-mono">
+      <label className="block text-[9px] font-mono uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>
         {label}
       </label>
       <div className="relative">
@@ -76,12 +67,13 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
           onClick={() => setIsOpen(!isOpen)}
           value={value}
           placeholder="dd-mm-yyyy"
-          className="w-full px-3.5 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-xs focus:border-amber-500/50 focus:outline-none cursor-pointer transition font-mono"
+          className="w-full rounded-lg px-3 py-2.5 text-xs text-[#f4f2ec] outline-none cursor-pointer font-mono"
+          style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)" }}
         />
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-amber-500 transition text-sm focus:outline-none"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-amber-500 transition text-sm focus:outline-none"
         >
           📅
         </button>
@@ -92,54 +84,24 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
           <div className="absolute top-[110%] left-0 w-64 bg-[#100f0c] border border-[#2a2825] rounded-xl p-3.5 shadow-2xl z-50 space-y-3 select-none">
             <div className="flex items-center justify-between text-xs font-mono">
-              <button 
-                type="button"
-                onClick={handlePrevMonth}
-                className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition"
-              >
-                ◀
-              </button>
-              <span className="font-bold text-white uppercase tracking-wider">
-                {months[currentDate.month]} {currentDate.year}
-              </span>
-              <button 
-                type="button"
-                onClick={handleNextMonth}
-                className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition"
-              >
-                ▶
-              </button>
+              <button type="button" onClick={handlePrevMonth} className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition">◀</button>
+              <span className="font-bold text-white uppercase tracking-wider">{months[currentDate.month]} {currentDate.year}</span>
+              <button type="button" onClick={handleNextMonth} className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition">▶</button>
             </div>
-
             <div className="grid grid-cols-7 text-center text-[9px] font-semibold text-white/40 uppercase font-mono">
-              <span>Mo</span>
-              <span>Tu</span>
-              <span>We</span>
-              <span>Th</span>
-              <span>Fr</span>
-              <span>Sa</span>
-              <span>Su</span>
+              {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d => <span key={d}>{d}</span>)}
             </div>
-
             <div className="grid grid-cols-7 gap-1">
-              {blanksArray.map(b => (
-                <div key={`blank-${b}`} className="h-7 w-7"></div>
-              ))}
+              {blanksArray.map(b => <div key={`blank-${b}`} className="h-7 w-7"></div>)}
               {daysArray.map(day => {
-                const isSelected = 
-                  selectedDay === day && 
-                  selectedMonth === currentDate.month && 
-                  selectedYear === currentDate.year;
-
+                const isSelected = selectedDay === day && selectedMonth === currentDate.month && selectedYear === currentDate.year;
                 return (
                   <button
                     key={`day-${day}`}
                     type="button"
                     onClick={() => handleSelectDay(day)}
                     className={`h-7 w-7 text-[10px] font-mono rounded-lg flex items-center justify-center transition ${
-                      isSelected 
-                        ? "bg-amber-500 text-black font-bold" 
-                        : "text-white/80 hover:bg-white/5 hover:text-amber-500"
+                      isSelected ? "bg-amber-500 text-black font-bold" : "text-white/80 hover:bg-white/5 hover:text-amber-500"
                     }`}
                   >
                     {day}
@@ -154,21 +116,43 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
   );
 }
 
+const DEFAULT_TEMPLATE_RULES = [
+  { classLevelName: "Class 1", minRating: 95, maxRating: null as number | null, minPrize: 300000, maxPrize: 1000000 },
+  { classLevelName: "Class 2", minRating: 80, maxRating: 94, minPrize: 200000, maxPrize: 299999 },
+  { classLevelName: "Class 3", minRating: 60, maxRating: 79, minPrize: 100000, maxPrize: 199999 },
+  { classLevelName: "Class 4", minRating: 40, maxRating: 59, minPrize: 50000, maxPrize: 99999 },
+  { classLevelName: "Class 5", minRating: 0,  maxRating: 39, minPrize: 20000, maxPrize: 49999 },
+];
+
 export default function Season() {
   const [seasons, setSeasons] = useState<any[]>([]);
   const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
   const [seasonRules, setSeasonRules] = useState<any[]>([]);
-  const [newSeasonName, setNewSeasonName] = useState("");
-  const [newSeasonStartDate, setNewSeasonStartDate] = useState("");
-  const [newSeasonEndDate, setNewSeasonEndDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  
-  // States for Extend Season Modal
+  const [success, setSuccess] = useState("");
+
+  // Create form states
+  const [newSeasonName, setNewSeasonName] = useState("2026–2027 Grand Prix Season");
+  const [newSeasonStartDate, setNewSeasonStartDate] = useState("");
+  const [newSeasonEndDate, setNewSeasonEndDate] = useState("");
+  const [classRuleMethod, setClassRuleMethod] = useState<"AUTOMATIC" | "MANUAL">("AUTOMATIC");
+  const [manualRules, setManualRules] = useState(DEFAULT_TEMPLATE_RULES.map(r => ({ ...r })));
+
+  // Extend modal states
   const [extendingSeason, setExtendingSeason] = useState<any | null>(null);
-  const [extendStartDateInput, setExtendStartDateInput] = useState<string>("");
-  const [extendDateInput, setExtendDateInput] = useState<string>("");
-  const [extendError, setExtendError] = useState<string>("");
+  const [extendStartDateInput, setExtendStartDateInput] = useState("");
+  const [extendDateInput, setExtendDateInput] = useState("");
+  const [extendError, setExtendError] = useState("");
+
+  const toDbFormat = (d: string) => d ? `${d} 00:00:00` : "";
+
+  const toDisplayFormat = (d: string) => {
+    if (!d) return "";
+    const parts = d.substring(0, 10).split("-");
+    if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    return d;
+  };
 
   const fetchSeasons = async () => {
     setLoading(true);
@@ -176,9 +160,7 @@ export default function Season() {
     try {
       const data = await api.get<any[]>("/races/seasons");
       setSeasons(data);
-      if (data.length > 0 && selectedSeasonId === null) {
-        setSelectedSeasonId(data[0].id);
-      }
+      if (data.length > 0 && selectedSeasonId === null) setSelectedSeasonId(data[0].id);
     } catch (err: any) {
       setError(err.message || "Failed to fetch seasons.");
     } finally {
@@ -195,15 +177,8 @@ export default function Season() {
     }
   };
 
-  useEffect(() => {
-    fetchSeasons();
-  }, []);
-
-  useEffect(() => {
-    if (selectedSeasonId !== null) {
-      fetchRules(selectedSeasonId);
-    }
-  }, [selectedSeasonId]);
+  useEffect(() => { fetchSeasons(); }, []);
+  useEffect(() => { if (selectedSeasonId !== null) fetchRules(selectedSeasonId); }, [selectedSeasonId]);
 
   const handleToggle = async (id: number) => {
     try {
@@ -215,19 +190,14 @@ export default function Season() {
   };
 
   const handleExtend = (season: any) => {
-    const rawStartDate = season.startDate ? season.startDate.substring(0, 10) : "";
-    const rawEndDate = season.endDate ? season.endDate.substring(0, 10) : "";
-    
-    const toDisplay = (d: string) => {
-      if (!d) return "";
-      const parts = d.split("-");
-      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-      return d;
-    };
-
     setExtendingSeason(season);
-    setExtendStartDateInput(toDisplay(rawStartDate));
-    setExtendDateInput(toDisplay(rawEndDate));
+    
+    // Safely extract the date part (yyyy-MM-dd) before displaying
+    const rawStart = season.startDate ? season.startDate.substring(0, 10) : "";
+    const rawEnd = season.endDate ? season.endDate.substring(0, 10) : "";
+
+    setExtendStartDateInput(toDisplayFormat(rawStart));
+    setExtendDateInput(toDisplayFormat(rawEnd));
     setExtendError("");
   };
 
@@ -240,23 +210,18 @@ export default function Season() {
       return;
     }
 
-    const toDbFormat = (d: string) => d ? `${d} 00:00:00` : "";
+    const dbStart = toDbFormat(extendStartDateInput);
+    const dbEnd = toDbFormat(extendDateInput);
 
-    const dbStartDate = toDbFormat(extendStartDateInput);
-    const dbEndDate = toDbFormat(extendDateInput);
-
-    const startD = parseSafeDate(dbStartDate);
-    const endD = parseSafeDate(dbEndDate);
+    const startD = parseSafeDate(dbStart);
+    const endD = parseSafeDate(dbEnd);
     if (startD && endD && startD >= endD) {
       setExtendError("Start Date must be before End Date.");
       return;
     }
 
     try {
-      await api.post(`/races/seasons/${extendingSeason.id}/extend`, {
-        startDate: dbStartDate,
-        endDate: dbEndDate
-      });
+      await api.post(`/races/seasons/${extendingSeason.id}/extend`, { startDate: dbStart, endDate: dbEnd });
       fetchSeasons();
       setExtendingSeason(null);
     } catch (err: any) {
@@ -267,217 +232,357 @@ export default function Season() {
   const handleCreateSeason = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     
     if (!newSeasonStartDate || !newSeasonEndDate) {
       setError("Please select both start and end dates.");
       return;
     }
 
-    const toDbFormat = (d: string) => d ? `${d} 00:00:00` : "";
+    const dbStart = toDbFormat(newSeasonStartDate);
+    const dbEnd = toDbFormat(newSeasonEndDate);
 
-    const dbStartDate = toDbFormat(newSeasonStartDate);
-    const dbEndDate = toDbFormat(newSeasonEndDate);
-
-    const startD = parseSafeDate(dbStartDate);
-    const endD = parseSafeDate(dbEndDate);
+    const startD = parseSafeDate(dbStart);
+    const endD = parseSafeDate(dbEnd);
     if (startD && endD && startD >= endD) {
       setError("Start Date must be before End Date.");
       return;
     }
 
+    const payload: any = { name: newSeasonName, startDate: dbStart, endDate: dbEnd, classRuleMethod, status: "PENDING" };
+    if (classRuleMethod === "MANUAL") {
+      payload.manualClasses = manualRules;
+    }
+
     try {
-      await api.post("/races/seasons", {
-        name: newSeasonName,
-        startDate: dbStartDate,
-        endDate: dbEndDate,
-        status: "PENDING",
-      });
-      setNewSeasonName("");
+      await api.post("/races/seasons", payload);
+      setSuccess("Season initialized successfully!");
+      setNewSeasonName("2026–2027 Grand Prix Season");
       setNewSeasonStartDate("");
       setNewSeasonEndDate("");
+      setClassRuleMethod("AUTOMATIC");
+      setManualRules(DEFAULT_TEMPLATE_RULES.map(r => ({ ...r })));
       fetchSeasons();
+      setTimeout(() => setSuccess(""), 4000);
     } catch (err: any) {
       setError("Failed to create season: " + err.message);
     }
   };
 
+  const updateManualRule = (index: number, field: string, value: string) => {
+    setManualRules(prev => prev.map((r, i) =>
+      i === index ? { ...r, [field]: field === "classLevelName" ? value : (value === "" ? null : Number(value)) } : r
+    ));
+  };
+
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Seasons list & creation */}
-      <div className="lg:col-span-2 space-y-6">
-        <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-          <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-          <span>Seasons Management</span>
-        </h3>
+    <div className="space-y-6">
+      {/* Alerts */}
+      {error && (
+        <div className="p-3 rounded-lg text-sm font-mono flex items-center gap-2" style={{ backgroundColor: "rgba(239,91,91,0.15)", color: "#ef5b5b", border: "1px solid rgba(239,91,91,0.3)" }}>
+          ⚠ {error}
+        </div>
+      )}
+      {success && (
+        <div className="p-3 rounded-lg text-sm font-mono flex items-center gap-2" style={{ backgroundColor: "rgba(74,157,111,0.15)", color: "#4a9d6f", border: "1px solid rgba(74,157,111,0.3)" }}>
+          ✓ {success}
+        </div>
+      )}
 
-        {error && (
-          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
-            {error}
+      {/* Create Season Form */}
+      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "rgba(201,162,39,0.10)" }}>
+          <div>
+            <p className="font-bold text-sm text-[#f4f2ec]" style={{ fontFamily: "'Roboto Slab', serif" }}>Initialize New Racing Season</p>
+            <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Configure the season framework and choose rule initialization method.</p>
           </div>
-        )}
+        </div>
 
-        <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden divide-y divide-white/5">
-          {loading ? (
-            <p className="p-6 text-sm text-white/40 text-center">Loading seasons...</p>
-          ) : seasons.length > 0 ? (
-            seasons.map((s) => (
-              <div
-                key={s.id}
-                onClick={() => setSelectedSeasonId(s.id)}
-                className={`p-4 flex items-center justify-between hover:bg-[#151310]/10 transition cursor-pointer ${selectedSeasonId === s.id ? "bg-amber-500/5" : ""}`}
-              >
-                <div>
-                  <h4 className="font-bold text-white">{s.name}</h4>
-                  <p className="text-xs text-white/60 mt-1">
-                    📅 {formatDateTime(s.startDate)} to {formatDateTime(s.endDate)}
-                  </p>
+        <div className="p-6">
+          <form onSubmit={handleCreateSeason} className="space-y-6">
+            {/* Season basic info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="md:col-span-2">
+                <label className="block text-[9px] font-mono uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>Season Name</label>
+                <input
+                  type="text"
+                  required
+                  value={newSeasonName}
+                  onChange={e => setNewSeasonName(e.target.value)}
+                  className="w-full rounded-lg px-3 py-2.5 text-xs text-[#f4f2ec] outline-none"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)" }}
+                  placeholder="e.g. 2026–2027 Grand Prix Season"
+                />
+              </div>
+              <InlineDatePicker label="Season Start Date" value={newSeasonStartDate} onChange={setNewSeasonStartDate} />
+              <InlineDatePicker label="Season End Date" value={newSeasonEndDate} onChange={setNewSeasonEndDate} />
+            </div>
+
+            {/* Class Rule Method */}
+            <div className="space-y-3">
+              <label className="block text-[9px] font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>Class Rule Setup Method</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Automatic */}
+                <div
+                  onClick={() => setClassRuleMethod("AUTOMATIC")}
+                  className="p-4 rounded-xl border cursor-pointer transition-all"
+                  style={{
+                    background: classRuleMethod === "AUTOMATIC" ? "rgba(201,162,39,0.06)" : "rgba(255,255,255,0.01)",
+                    borderColor: classRuleMethod === "AUTOMATIC" ? "rgba(201,162,39,0.4)" : "rgba(255,255,255,0.08)"
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      name="classRuleMethod"
+                      value="AUTOMATIC"
+                      checked={classRuleMethod === "AUTOMATIC"}
+                      onChange={() => setClassRuleMethod("AUTOMATIC")}
+                      className="mt-0.5 accent-[#c9a227]"
+                      onClick={e => e.stopPropagation()}
+                    />
+                    <div>
+                      <span className="block text-xs font-mono font-bold text-[#f4f2ec]">Automatic Class Rules</span>
+                      <span className="block text-[10px] font-mono mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
+                        TỰ ĐỘNG: Máy tự động thiết lập và áp dụng toàn bộ các Class mặc định (Class 1 - Class 5) vào Season này.
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <span className={`px-2.5 py-0.5 rounded text-[10px] font-semibold uppercase ${s.status === "ACTIVE" ? "bg-emerald-500/10 text-emerald-400" : "bg-white/10 text-white/60"}`}>
-                    {s.status}
-                  </span>
-                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggle(s.id);
-                    }}
-                    className={`px-3 py-1.5 border rounded-lg text-xs font-semibold transition ${s.status === "ACTIVE" ? "bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20"}`}
-                  >
-                    {s.status === "ACTIVE" ? "Deactivate" : "Activate"}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleExtend(s);
-                    }}
-                    className="px-3 py-1.5 border border-amber-500/20 rounded-lg text-xs font-semibold bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition"
-                  >
-                    Extend
-                  </button>
+
+                {/* Manual */}
+                <div
+                  onClick={() => setClassRuleMethod("MANUAL")}
+                  className="p-4 rounded-xl border cursor-pointer transition-all"
+                  style={{
+                    background: classRuleMethod === "MANUAL" ? "rgba(201,162,39,0.06)" : "rgba(255,255,255,0.01)",
+                    borderColor: classRuleMethod === "MANUAL" ? "rgba(201,162,39,0.4)" : "rgba(255,255,255,0.08)"
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <input
+                      type="radio"
+                      name="classRuleMethod"
+                      value="MANUAL"
+                      checked={classRuleMethod === "MANUAL"}
+                      onChange={() => setClassRuleMethod("MANUAL")}
+                      className="mt-0.5 accent-[#c9a227]"
+                      onClick={e => e.stopPropagation()}
+                    />
+                    <div>
+                      <span className="block text-xs font-mono font-bold text-[#f4f2ec]">Manual Setup</span>
+                      <span className="block text-[10px] font-mono mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
+                        THỦ CÔNG: Tự tay điều chỉnh trực tiếp điểm số và tiền thưởng cho cả 5 Class (Class 1 - Class 5) cho Season này.
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))
+            </div>
+
+            {/* Manual Class Rules Table */}
+            {classRuleMethod === "MANUAL" && (
+              <div className="rounded-xl p-5 border space-y-3" style={{ background: "rgba(255,255,255,0.015)", borderColor: "rgba(201,162,39,0.15)" }}>
+                <div>
+                  <p className="text-[9px] font-mono uppercase tracking-widest text-[#c9a227]">Configure Season Classes (Manual Mode)</p>
+                  <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Adjust ratings and prize ranges for the 5 season classes before initialization:</p>
+                </div>
+                <div className="overflow-x-auto pt-2">
+                  <table className="w-full text-xs font-mono text-left min-w-[600px]">
+                    <thead>
+                      <tr className="border-b pb-2" style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>
+                        <th className="py-2 pr-4 text-left">Class Level</th>
+                        <th className="py-2 px-4 text-left">Min Rating</th>
+                        <th className="py-2 px-4 text-left">Max Rating</th>
+                        <th className="py-2 px-4 text-left">Min Prize ($)</th>
+                        <th className="py-2 pl-4 text-left">Max Prize ($)</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+                      {manualRules.map((rule, index) => (
+                        <tr key={index}>
+                          <td className="py-3 pr-4 font-bold text-[#c9a227]">{rule.classLevelName}</td>
+                          <td className="py-2 px-4">
+                            <input
+                              type="number"
+                              value={rule.minRating ?? ""}
+                              onChange={e => updateManualRule(index, "minRating", e.target.value)}
+                              required
+                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-24"
+                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                            />
+                          </td>
+                          <td className="py-2 px-4">
+                            <input
+                              type="number"
+                              value={rule.maxRating ?? ""}
+                              onChange={e => updateManualRule(index, "maxRating", e.target.value)}
+                              placeholder="No limit"
+                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-24"
+                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                            />
+                          </td>
+                          <td className="py-2 px-4">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={rule.minPrize ?? ""}
+                              onChange={e => updateManualRule(index, "minPrize", e.target.value)}
+                              required
+                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-32"
+                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                            />
+                          </td>
+                          <td className="py-2 pl-4">
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={rule.maxPrize ?? ""}
+                              onChange={e => updateManualRule(index, "maxPrize", e.target.value)}
+                              required
+                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-32"
+                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3">
+              <button
+                type="submit"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-mono font-semibold transition-all hover:opacity-90 active:scale-95 cursor-pointer"
+                style={{ background: "#c9a227", color: "#0b0d11" }}
+              >
+                ✓ Initialize Season
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      {/* Historical Seasons Table */}
+      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
+        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "rgba(201,162,39,0.10)" }}>
+          <div>
+            <p className="font-bold text-sm text-[#f4f2ec]" style={{ fontFamily: "'Roboto Slab', serif" }}>Historical Seasons</p>
+            <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Previously completed and active racing seasons</p>
+          </div>
+        </div>
+
+        <div className="overflow-x-auto">
+          {loading ? (
+            <p className="p-8 text-sm text-center font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>Loading seasons...</p>
+          ) : seasons.length === 0 ? (
+            <p className="p-8 text-sm text-center font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>No seasons found.</p>
           ) : (
-            <p className="p-6 text-sm text-white/40 text-center">No seasons found.</p>
+            <table className="w-full text-sm min-w-[700px]">
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
+                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-left" style={{ color: "rgba(255,255,255,0.35)" }}>Season ID</th>
+                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-left" style={{ color: "rgba(255,255,255,0.35)" }}>Season Name</th>
+                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-left" style={{ color: "rgba(255,255,255,0.35)" }}>Date Range</th>
+                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-right" style={{ color: "rgba(255,255,255,0.35)" }}>Status / Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {seasons.map(season => (
+                  <tr
+                    key={season.id}
+                    onClick={() => setSelectedSeasonId(season.id)}
+                    className="cursor-pointer transition-colors hover:bg-white/[0.025]"
+                    style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", background: selectedSeasonId === season.id ? "rgba(201,162,39,0.04)" : "" }}
+                  >
+                    <td className="px-6 py-4">
+                      <span className="font-mono text-xs" style={{ color: "#c9a227" }}>S-{season.id}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <p className="text-xs text-[#f4f2ec]">{season.name}</p>
+                    </td>
+                    <td className="px-6 py-4 font-mono text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
+                      {formatDateTime(season.startDate).split(" ")[0]} – {formatDateTime(season.endDate).split(" ")[0]}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-3">
+                        {season.status === "ACTIVE" ? (
+                          <span className="text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded border inline-block" style={{ background: "#4a9d6f18", color: "#4a9d6f", borderColor: "#4a9d6f40" }}>Active</span>
+                        ) : (
+                          <span className="text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded border inline-block" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.12)" }}>Closed</span>
+                        )}
+                        <button
+                          onClick={e => { e.stopPropagation(); handleToggle(season.id); }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition hover:brightness-90"
+                          style={season.status === "ACTIVE"
+                            ? { background: "rgba(239,91,91,0.12)", color: "#ef5b5b", border: "1px solid rgba(239,91,91,0.35)" }
+                            : { background: "rgba(74,157,111,0.12)", color: "#4a9d6f", border: "1px solid rgba(74,157,111,0.35)" }}
+                        >
+                          {season.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); handleExtend(season); }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition hover:brightness-90"
+                          style={{ background: "rgba(201,162,39,0.10)", color: "#c9a227", border: "1px solid rgba(201,162,39,0.30)" }}
+                        >
+                          Extend
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
         </div>
 
-        {/* Create Season Form */}
-        <form onSubmit={handleCreateSeason} className="bg-white/[0.015] border border-white/10 rounded-2xl p-5 space-y-4">
-          <h4 className="font-bold text-white text-sm">Create New Season</h4>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="text-[10px] font-semibold text-white/60 uppercase tracking-wider block mb-1.5">Season Name</label>
-              <input
-                type="text"
-                required
-                value={newSeasonName}
-                onChange={(e) => setNewSeasonName(e.target.value)}
-                className="w-full px-3 py-2 bg-black/40 border border-white/5 rounded-lg text-white text-xs"
-                placeholder="E.g., Winter Season 2026"
-              />
-            </div>
-            <InlineDatePicker
-              label="Start Date"
-              value={newSeasonStartDate}
-              onChange={setNewSeasonStartDate}
-            />
-            <InlineDatePicker
-              label="End Date"
-              value={newSeasonEndDate}
-              onChange={setNewSeasonEndDate}
-            />
-          </div>
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition"
-            >
-              Add Season
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* Rules Column */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-bold text-white flex items-center space-x-2">
-          <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-          <span>Class Rating Rules</span>
-        </h3>
-        {selectedSeasonId !== null ? (
-          <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-4 space-y-4">
-            <div className="divide-y divide-white/5 text-xs">
-              {seasonRules.map((rule) => (
-                <div key={rule.id} className="py-2.5 flex justify-between">
-                  <span className="font-bold text-amber-500">{rule.classLevel}</span>
-                  <span className="text-white/80">Min: {rule.minRating} | Max: {rule.maxRating}</span>
+        {/* Season Class Rules Footer */}
+        {selectedSeasonId !== null && seasonRules.length > 0 && (
+          <div className="px-6 py-4 border-t" style={{ borderColor: "rgba(201,162,39,0.08)" }}>
+            <p className="text-[9px] font-mono uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.35)" }}>
+              Class Rules — Season S-{selectedSeasonId}
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {seasonRules.map(rule => (
+                <div key={rule.id} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(201,162,39,0.12)" }}>
+                  <p className="text-[10px] font-mono font-bold" style={{ color: "#c9a227" }}>{rule.classLevel}</p>
+                  <p className="text-[9px] font-mono mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>Rating: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
+                  <p className="text-[9px] font-mono" style={{ color: "rgba(255,255,255,0.4)" }}>Prize: ${rule.minPrize?.toLocaleString()} – ${rule.maxPrize?.toLocaleString()}</p>
                 </div>
               ))}
             </div>
           </div>
-        ) : (
-          <p className="text-sm text-white/40">Select a season to view its rules.</p>
         )}
       </div>
 
       {/* Extend Season Modal */}
       {extendingSeason && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-[#151310] border border-[#2a2825] rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4 animate-in-fade-in duration-200">
+          <div className="border rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4" style={{ background: "#151310", borderColor: "#2a2825" }}>
             <div className="flex items-center justify-between">
-              <h4 className="text-base font-bold text-white font-serif flex items-center space-x-2">
-                <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-                <span>Extend Season End Date</span>
+              <h4 className="text-base font-bold text-white flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-amber-500 inline-block"></span>
+                Extend Season
               </h4>
-              <button 
-                type="button"
-                onClick={() => setExtendingSeason(null)}
-                className="text-white/40 hover:text-white/80 text-lg transition focus:outline-none"
-              >
-                ✕
-              </button>
+              <button type="button" onClick={() => setExtendingSeason(null)} className="text-white/40 hover:text-white/80 text-lg transition">✕</button>
             </div>
-
             <div className="space-y-1">
               <span className="text-[10px] text-white/40 uppercase tracking-wider font-mono">Season Name</span>
               <p className="text-white text-sm font-semibold">{extendingSeason.name}</p>
             </div>
-
             <form onSubmit={handleExtendSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <InlineDatePicker
-                  label="New Start Date"
-                  value={extendStartDateInput}
-                  onChange={setExtendStartDateInput}
-                />
-                <InlineDatePicker
-                  label="New End Date"
-                  value={extendDateInput}
-                  onChange={setExtendDateInput}
-                />
+                <InlineDatePicker label="New Start Date" value={extendStartDateInput} onChange={setExtendStartDateInput} />
+                <InlineDatePicker label="New End Date" value={extendDateInput} onChange={setExtendDateInput} />
               </div>
-
               {extendError && (
-                <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">
-                  ⚠️ {extendError}
-                </p>
+                <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">⚠️ {extendError}</p>
               )}
-
-              <div className="flex justify-end space-x-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setExtendingSeason(null)}
-                  className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs font-semibold rounded-lg transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition"
-                >
-                  Extend Season
-                </button>
+              <div className="flex justify-end gap-3 pt-2">
+                <button type="button" onClick={() => setExtendingSeason(null)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs font-semibold rounded-lg transition">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition">Extend Season</button>
               </div>
             </form>
           </div>
