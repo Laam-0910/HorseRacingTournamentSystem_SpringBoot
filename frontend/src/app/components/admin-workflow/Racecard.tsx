@@ -153,6 +153,9 @@ export default function Racecard() {
     }
   };
 
+  const selectedRace = races.find((r) => r.id === selectedRaceId);
+  const isCompleted = selectedRace && (selectedRace.status === "OFFICIAL" || selectedRace.status === "FINISHED" || selectedRace.status === "CANCELLED");
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Selector Area */}
@@ -212,19 +215,22 @@ export default function Racecard() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={handleAutoAssignGates}
-                  className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition"
+                  disabled={isCompleted}
+                  className={`px-3.5 py-2 text-black text-xs font-bold rounded-lg transition ${isCompleted ? "bg-white/10 text-white/40 cursor-not-allowed" : "bg-amber-500 hover:bg-amber-400"}`}
                 >
                   Auto Gates
                 </button>
                 <button
                   onClick={handleAutoCalculateWeights}
-                  className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition"
+                  disabled={isCompleted}
+                  className={`px-3.5 py-2 text-black text-xs font-bold rounded-lg transition ${isCompleted ? "bg-white/10 text-white/40 cursor-not-allowed" : "bg-amber-500 hover:bg-amber-400"}`}
                 >
                   Auto Weights
                 </button>
                 <button
                   onClick={handleCancelRace}
-                  className="px-3.5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-bold rounded-lg transition"
+                  disabled={isCompleted}
+                  className={`px-3.5 py-2 text-xs font-bold rounded-lg transition ${isCompleted ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed" : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20"}`}
                 >
                   Cancel Race
                 </button>
@@ -269,18 +275,20 @@ export default function Racecard() {
                             type="number"
                             min="1"
                             max="12"
+                            disabled={isCompleted}
                             value={e.entry.gateNumber || ""}
                             onChange={(event) => handleGateChange(idx, event.target.value)}
-                            className="w-16 px-2 py-1 bg-black/60 border border-white/5 rounded text-center text-white text-xs"
+                            className="w-16 px-2 py-1 bg-black/60 border border-white/5 rounded text-center text-white text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                         </td>
                         <td className="px-6 py-4">
                           <input
                             type="number"
                             step="0.1"
+                            disabled={isCompleted}
                             value={e.entry.carriedWeight || ""}
                             onChange={(event) => handleWeightChange(idx, event.target.value)}
-                            className="w-20 px-2 py-1 bg-black/60 border border-white/5 rounded text-center text-white text-xs"
+                            className="w-20 px-2 py-1 bg-black/60 border border-white/5 rounded text-center text-white text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                           />
                         </td>
                       </tr>
@@ -296,7 +304,7 @@ export default function Racecard() {
               </table>
             </div>
 
-            {entries.length > 0 && (
+            {entries.length > 0 && !isCompleted && (
               <div className="flex justify-end">
                 <button
                   onClick={handleSaveRacecard}

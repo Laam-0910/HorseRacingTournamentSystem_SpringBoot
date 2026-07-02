@@ -81,6 +81,8 @@ public class AdminUserService {
                         .startTime(race.getStartTime())
                         .status(race.getStatus())
                         .classLevel(race.getClassLevel())
+                        .distanceMeters(race.getDistanceMeters())
+                        .trackType(race.getTrackType())
                         .build());
             } else {
                 map.put("race", null);
@@ -219,6 +221,21 @@ public class AdminUserService {
             pendingJockeyRegsData.add(map);
         }
 
+        // 3.5. Pending Owner Meeting Registrations
+        List<OwnerRaceMeetingRegistration> pendingOwnerRegs = ownerRegRepository.findAll().stream()
+                .filter(r -> "PENDING".equals(r.getStatus())).toList();
+        List<Map<String, Object>> pendingOwnerRegsData = new ArrayList<>();
+        for (OwnerRaceMeetingRegistration reg : pendingOwnerRegs) {
+            Map<String, Object> map = new HashMap<>();
+            User owner = userMap.get(reg.getOwnerId());
+            RaceMeeting meeting = meetingMap.get(reg.getRaceMeetingId());
+
+            map.put("registration", registrationMapper.toDTO(reg, owner != null ? owner.getUsername() : null, meeting != null ? meeting.getName() : null));
+            map.put("owner", userMapper.toDTO(owner));
+            map.put("meeting", meeting != null ? RaceMeetingDTO.builder().id(meeting.getId()).name(meeting.getName()).build() : null);
+            pendingOwnerRegsData.add(map);
+        }
+
         // 4. Pending System Horse Approvals
         List<Horse> pendingSystemHorses = horseRepository.findAll().stream()
                 .filter(h -> "PENDING".equals(h.getStatus())).toList();
@@ -231,12 +248,13 @@ public class AdminUserService {
             pendingSystemHorsesData.add(map);
         }
 
-        long totalPendingCount = pendingEntries.size() + pendingHorseRegs.size() + pendingJockeyRegs.size() + pendingSystemHorses.size();
+        long totalPendingCount = pendingEntries.size() + pendingHorseRegs.size() + pendingJockeyRegs.size() + pendingOwnerRegs.size() + pendingSystemHorses.size();
 
         Map<String, Object> response = new HashMap<>();
         response.put("entriesData", entriesData);
         response.put("pendingHorseRegsData", pendingHorseRegsData);
         response.put("pendingJockeyRegsData", pendingJockeyRegsData);
+        response.put("pendingOwnerRegsData", pendingOwnerRegsData);
         response.put("pendingSystemHorsesData", pendingSystemHorsesData);
         response.put("awaitingDecisionCount", totalPendingCount);
         response.put("approvedCount", 0);
@@ -423,21 +441,41 @@ public class AdminUserService {
         }
     }
 
+    private Integer parseInteger(Object val) {
+        if (val == null) return null;
+        String s = String.valueOf(val).trim();
+        if (s.isEmpty() || "null".equalsIgnoreCase(s) || "undefined".equalsIgnoreCase(s)) return null;
+        return Integer.parseInt(s);
+    }
+
+    private BigDecimal parseBigDecimal(Object val) {
+        if (val == null) return null;
+        String s = String.valueOf(val).trim();
+        if (s.isEmpty() || "null".equalsIgnoreCase(s) || "undefined".equalsIgnoreCase(s)) return null;
+        return new BigDecimal(s);
+    }
+
     @Transactional
     public void updateRacecard(Integer raceId, List<Map<String, Object>> body) {
         for (Map<String, Object> item : body) {
-            Integer entryId = Integer.parseInt(String.valueOf(item.get("entryId")));
+            Object idVal = item.get("entryId");
+            if (idVal == null) {
+                idVal = item.get("id");
+            }
+            Integer entryId = parseInteger(idVal);
+            if (entryId == null) continue;
+
             Optional<RaceEntry> entryOpt = raceEntryRepository.findById(entryId);
             if (entryOpt.isPresent()) {
                 RaceEntry entry = entryOpt.get();
-                if (item.get("gateNumber") != null) {
-                    entry.setGateNumber(Integer.parseInt(String.valueOf(item.get("gateNumber"))));
+                if (item.containsKey("gateNumber")) {
+                    entry.setGateNumber(parseInteger(item.get("gateNumber")));
                 }
-                if (item.get("handicapWeight") != null) {
-                    entry.setHandicapWeight(new BigDecimal(String.valueOf(item.get("handicapWeight"))));
+                if (item.containsKey("carriedWeight")) {
+                    entry.setCarriedWeight(parseBigDecimal(item.get("carriedWeight")));
                 }
-                if (item.get("carriedWeight") != null) {
-                    entry.setCarriedWeight(new BigDecimal(String.valueOf(item.get("carriedWeight"))));
+                if (item.containsKey("handicapWeight")) {
+                    entry.setHandicapWeight(parseBigDecimal(item.get("handicapWeight")));
                 }
                 raceEntryRepository.save(entry);
             }
@@ -474,6 +512,7 @@ public class AdminUserService {
         Race race = raceRepository.findById(raceId)
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
         race.setStatus("CANCELLED");
+        race.setYoutubeLiveUrl(null); // Automatically remove livestream URL when race is cancelled
         raceRepository.save(race);
 
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);

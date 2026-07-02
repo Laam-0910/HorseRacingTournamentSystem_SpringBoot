@@ -223,12 +223,39 @@ public class JockeyOwnerDashboardService {
             meetingUnregisteredHorses.put(meeting.getId(), unregHorsesList);
         }
 
+        Map<Integer, List<HorseDTO>> meetingHorses = new HashMap<>();
+        Map<Integer, List<UserDTO>> meetingJockeys = new HashMap<>();
+
+        for (RaceMeeting meeting : meetings) {
+            // Find approved horses for this meeting
+            List<HorseRaceMeetingRegistration> approvedHorseRegs = horseRegRepository.findAll().stream()
+                    .filter(r -> r.getRaceMeetingId().equals(meeting.getId()) && "APPROVED".equalsIgnoreCase(r.getStatus()))
+                    .toList();
+            List<HorseDTO> hList = new ArrayList<>();
+            for (HorseRaceMeetingRegistration reg : approvedHorseRegs) {
+                horseRepository.findById(reg.getHorseId()).ifPresent(h -> hList.add(horseMapper.toDTO(h, null)));
+            }
+            meetingHorses.put(meeting.getId(), hList);
+
+            // Find approved jockeys for this meeting
+            List<JockeyRaceMeetingRegistration> approvedJockeyRegs = jockeyRegRepository.findAll().stream()
+                    .filter(r -> r.getRaceMeetingId().equals(meeting.getId()) && "APPROVED".equalsIgnoreCase(r.getStatus()))
+                    .toList();
+            List<UserDTO> jList = new ArrayList<>();
+            for (JockeyRaceMeetingRegistration reg : approvedJockeyRegs) {
+                userRepository.findById(reg.getJockeyId()).ifPresent(u -> jList.add(userMapper.toDTO(u)));
+            }
+            meetingJockeys.put(meeting.getId(), jList);
+        }
+
         Map<String, Object> response = new HashMap<>();
         response.put("meetings", meetings.stream().map(m -> raceMeetingMapper.toDTO(m, null)).toList());
         response.put("registeredMeetingIds", registeredMeetingIds);
         response.put("regStatuses", regStatuses);
         response.put("meetingRegisteredHorses", meetingRegisteredHorses);
         response.put("meetingUnregisteredHorses", meetingUnregisteredHorses);
+        response.put("meetingHorses", meetingHorses);
+        response.put("meetingJockeys", meetingJockeys);
         response.put("activeHorses", activeHorses.stream().map(h -> horseMapper.toDTO(h, null)).toList());
 
         return response;

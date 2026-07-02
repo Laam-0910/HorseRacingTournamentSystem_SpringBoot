@@ -405,6 +405,8 @@ export default function Race() {
                 <tr><td colSpan={12} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>No races found.</td></tr>
               ) : races.map(race => {
                 const assigned = refereesMap[race.id] || [];
+                const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+
                 return (
                   <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
@@ -419,7 +421,9 @@ export default function Race() {
 
                     {/* Livestream */}
                     <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
-                      {race.youtubeLiveUrl ? (
+                      {isCompleted ? (
+                        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
+                      ) : race.youtubeLiveUrl ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
                           <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
@@ -444,24 +448,44 @@ export default function Race() {
                         {assigned.map(ref => (
                           <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.125rem 0.5rem", borderRadius: "0.25rem", border: "1px solid #2e2e33" }}>
                             <span>{ref.username}</span>
-                            <button onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }} title="Remove referee">×</button>
+                            {!isCompleted && (
+                              <button onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }} title="Remove referee">×</button>
+                            )}
                           </div>
                         ))}
-                        <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
-                          <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none" }}>
-                            <option value="">-- Assign Referee --</option>
-                            {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
-                              <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
-                            ))}
-                          </select>
-                          <button onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
-                        </div>
+                        {!isCompleted && (
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                            <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none" }}>
+                              <option value="">-- Assign Referee --</option>
+                              {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
+                                <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
+                              ))}
+                            </select>
+                            <button onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
+                          </div>
+                        )}
                       </div>
                     </td>
 
                     {/* Edit button */}
                     <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
-                      <button onClick={() => handleOpenEdit(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontFamily: "monospace", fontSize: "10px", fontWeight: "bold", cursor: "pointer" }}>Edit</button>
+                      <button
+                        disabled={isCompleted}
+                        onClick={() => handleOpenEdit(race)}
+                        style={{
+                          padding: "0.375rem 0.75rem",
+                          borderRadius: "0.25rem",
+                          background: isCompleted ? "rgba(255,255,255,0.05)" : "#c9a227",
+                          color: isCompleted ? "rgba(255,255,255,0.2)" : "#0c0a09",
+                          border: "none",
+                          fontFamily: "monospace",
+                          fontSize: "10px",
+                          fontWeight: "bold",
+                          cursor: isCompleted ? "not-allowed" : "pointer"
+                        }}
+                      >
+                        Edit
+                      </button>
                     </td>
                   </tr>
                 );

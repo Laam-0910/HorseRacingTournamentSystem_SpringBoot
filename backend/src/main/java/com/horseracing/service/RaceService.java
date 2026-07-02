@@ -5,10 +5,12 @@ import com.horseracing.backend.dto.RaceMeetingDTO;
 import com.horseracing.backend.entity.Race;
 import com.horseracing.backend.entity.RaceMeeting;
 import com.horseracing.backend.entity.Season;
+import com.horseracing.backend.entity.SeasonClassRule;
 import com.horseracing.backend.mapper.RaceMapper;
 import com.horseracing.backend.mapper.RaceMeetingMapper;
 import com.horseracing.backend.repository.RaceMeetingRepository;
 import com.horseracing.backend.repository.RaceRepository;
+import com.horseracing.backend.repository.SeasonClassRuleRepository;
 import com.horseracing.backend.repository.SeasonRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class RaceService {
     private final RaceRepository raceRepository;
     private final RaceMeetingRepository raceMeetingRepository;
     private final SeasonRepository seasonRepository;
+    private final SeasonClassRuleRepository seasonClassRuleRepository;
     private final RaceMapper raceMapper;
     private final RaceMeetingMapper raceMeetingMapper;
 
@@ -59,6 +62,29 @@ public class RaceService {
         }
 
         Race race = raceMapper.toEntity(dto);
+
+        // Auto-populate minRating and maxRating from SeasonClassRule
+        if (race.getRaceMeetingId() != null && race.getClassLevel() != null) {
+            Optional<RaceMeeting> meetingOpt = raceMeetingRepository.findById(race.getRaceMeetingId());
+            if (meetingOpt.isPresent()) {
+                Integer seasonId = meetingOpt.get().getSeasonId();
+                if (seasonId != null) {
+                    List<SeasonClassRule> rules = seasonClassRuleRepository.findBySeasonId(seasonId);
+                    String normalizedLevel = race.getClassLevel().trim().toLowerCase();
+                    if (!normalizedLevel.startsWith("class")) {
+                        normalizedLevel = "class " + normalizedLevel;
+                    }
+                    for (SeasonClassRule rule : rules) {
+                        String ruleLevel = rule.getClassLevel() != null ? rule.getClassLevel().trim().toLowerCase() : "";
+                        if (ruleLevel.equals(normalizedLevel)) {
+                            race.setMinRating(rule.getMinRating());
+                            race.setMaxRating(rule.getMaxRating());
+                            break;
+                        }
+                    }
+                }
+            }
+        }
 
         // Tự động tính toán hạn đăng ký: mở trước 14 ngày, đóng trước 3 ngày
         Calendar cal = Calendar.getInstance();
