@@ -17,62 +17,76 @@ const NAV_ITEMS = [
   { index: "05", icon: "award",             label: "Results & Earnings", view: "results"     },
 ];
 
-// ── Shared input/select styles ─────────────────────────────────────────────
 const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "0.625rem 0.875rem",
-  background: "rgba(14,12,9,0.8)",
-  border: "1px solid #2a2825",
-  borderRadius: "0.5rem",
-  color: "#f4f2ec",
-  fontSize: "0.8rem",
-  fontFamily: "monospace",
+  width: "100%", padding: "0.625rem 0.875rem",
+  background: "rgba(14,12,9,0.8)", border: "1px solid #2a2825",
+  borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "0.8rem", fontFamily: "monospace",
+};
+const labelStyle: React.CSSProperties = {
+  display: "block", fontSize: "0.6rem", fontFamily: "monospace",
+  textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0", marginBottom: "0.375rem",
 };
 
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "0.6rem",
-  fontFamily: "monospace",
-  textTransform: "uppercase",
-  letterSpacing: "0.1em",
-  color: "#a0a0a0",
-  marginBottom: "0.375rem",
+const formatDate = (d: string | null) => {
+  if (!d) return "—";
+  try {
+    const dt = new Date(d);
+    if (isNaN(dt.getTime())) return d;
+    return `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()} ${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
+  } catch { return d; }
+};
+
+const StatusBadge = ({ status }: { status: string }) => {
+  const map: Record<string, string> = {
+    APPROVED: "rgba(74,157,111,0.15)", ACTIVE: "rgba(74,157,111,0.15)",
+    PENDING: "rgba(201,162,39,0.15)", ACCEPTED: "rgba(74,157,111,0.15)",
+    REJECTED: "rgba(239,91,91,0.15)", DECLINED: "rgba(239,91,91,0.15)",
+    CLOSED: "rgba(255,255,255,0.08)", DECLARATION_OPEN: "rgba(201,162,39,0.15)",
+  };
+  const tc: Record<string, string> = {
+    APPROVED: "#4a9d6f", ACTIVE: "#4a9d6f",
+    PENDING: "#c9a227", ACCEPTED: "#4a9d6f",
+    REJECTED: "#ef5b5b", DECLINED: "#ef5b5b",
+    CLOSED: "rgba(255,255,255,0.4)", DECLARATION_OPEN: "#c9a227",
+  };
+  return (
+    <span style={{
+      fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase",
+      letterSpacing: "0.08em", fontWeight: 700, padding: "0.2rem 0.5rem",
+      borderRadius: "0.25rem", background: map[status] ?? "rgba(255,255,255,0.08)",
+      color: tc[status] ?? "rgba(255,255,255,0.6)",
+    }}>{status}</span>
+  );
 };
 
 // ── HubView ────────────────────────────────────────────────────────────────
 function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorses }: {
-  dashboard: any;
-  meetings: any[];
-  stable: any[];
+  dashboard: any; meetings: any[]; stable: any[];
   onRegisterOwner: (id: number) => void;
   onRegisterHorses: (meetingId: number, horseIds: number[]) => Promise<void>;
 }) {
   const [selectedHorses, setSelectedHorses] = useState<Record<number, number[]>>({});
 
-  const handleCheckboxChange = (meetingId: number, horseId: number) => {
-    setSelectedHorses((prev) => {
+  const handleCheckbox = (meetingId: number, horseId: number) => {
+    setSelectedHorses(prev => {
       const list = prev[meetingId] || [];
-      const newList = list.includes(horseId)
-        ? list.filter((id) => id !== horseId)
-        : [...list, horseId];
-      return { ...prev, [meetingId]: newList };
+      return { ...prev, [meetingId]: list.includes(horseId) ? list.filter(id => id !== horseId) : [...list, horseId] };
     });
   };
 
   const handleBulkRegister = async (meetingId: number) => {
     const list = selectedHorses[meetingId] || [];
-    if (list.length === 0) return;
+    if (!list.length) return;
     await onRegisterHorses(meetingId, list);
-    setSelectedHorses((prev) => ({ ...prev, [meetingId]: [] }));
+    setSelectedHorses(prev => ({ ...prev, [meetingId]: [] }));
   };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Stats */}
       {dashboard && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "1rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: "1rem" }}>
           {[
-            { label: "Total Horses",          value: dashboard.totalHorses ?? 0,         color: ROLE_COLOR },
+            { label: "Total Horses",          value: dashboard.totalHorses ?? 0,           color: ROLE_COLOR },
             { label: "Avg Place Position",    value: dashboard.averagePlace ? Number(dashboard.averagePlace).toFixed(1) : "N/A" },
             { label: "Total Prizes ($)",      value: `$${(dashboard.totalEarnings ?? 0).toLocaleString()}`, color: "#c9a227" },
             { label: "Pending Registrations", value: dashboard.pendingRegistrations ?? 0 },
@@ -85,119 +99,108 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
         </div>
       )}
 
-      {/* Available Race Meetings */}
       <div>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Available Race Meetings</h3>
-        <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>Register your stable for upcoming race day events to participate in races.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
-          {meetings.length === 0 ? (
-            <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>No upcoming meetings available.</p>
-          ) : meetings.map((m: any) => {
-            const isOwnerReg = dashboard?.registeredMeetingIds?.includes(m.id);
-            const unregHorses = dashboard?.meetingUnregisteredHorses?.[m.id] || [];
-            const regHorses = dashboard?.meetingRegisteredHorses?.[m.id] || [];
-            const selectedList = selectedHorses[m.id] || [];
+        <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Available Race Meetings</h3>
+        <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>Register your stable for upcoming race day events.</p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: "1rem" }}>
+          {meetings.length === 0
+            ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No upcoming meetings available.</p>
+            : meetings.map((m: any) => {
+                const isReg = dashboard?.registeredMeetingIds?.includes(m.id);
+                const regStatus = dashboard?.regStatuses?.[m.id];
+                const regHorses = dashboard?.meetingRegisteredHorses?.[m.id] || [];
+                const unregHorses = dashboard?.meetingUnregisteredHorses?.[m.id] || [];
+                const sel = selectedHorses[m.id] || [];
 
-            return (
-              <div key={m.id} className="rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
-                    <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
+                return (
+                  <div key={m.id} className="rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                      <h4 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
+                      {isReg ? <StatusBadge status={regStatus ?? "APPROVED"} /> : <StatusBadge status="UNREGISTERED" />}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                      <span>📅 {formatDate(m.startDate || m.date)}</span>
+                      <span>📍 {m.venue}</span>
+                      <span>💰 ${(m.totalBudget || 0).toLocaleString()}</span>
+                    </div>
+
+                    {!isReg && (
+                      <div>
+                        {stable.length === 0
+                          ? <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No active horses in stable.</p>
+                          : (
+                            <>
+                              <p style={{ ...labelStyle, marginBottom: "0.375rem" }}>Select Horses to Register:</p>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
+                                {stable.map((h: any) => (
+                                  <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
+                                    <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
+                                    {h.name} (Rating: {h.currentRating})
+                                  </label>
+                                ))}
+                              </div>
+                              <button
+                                onClick={() => sel.length ? handleBulkRegister(m.id) : onRegisterOwner(m.id)}
+                                disabled={sel.length === 0 && stable.length > 0}
+                                style={{ width: "100%", marginTop: "0.5rem", padding: "0.5rem", background: sel.length > 0 ? ROLE_COLOR : "rgba(74,157,111,0.3)", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: sel.length > 0 ? "pointer" : "not-allowed" }}
+                              >
+                                {sel.length > 0 ? `Register ${sel.length} Horse(s)` : "Register for Event"}
+                              </button>
+                            </>
+                          )}
+                      </div>
+                    )}
+
+                    {isReg && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        {regHorses.length > 0 && (
+                          <div>
+                            <p style={labelStyle}>Registered Horses:</p>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                              {regHorses.map((rh: any) => (
+                                <div key={rh.horse?.id ?? rh.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "0.375rem", padding: "0.375rem 0.5rem" }}>
+                                  <span style={{ fontSize: "0.75rem", color: "#f4f2ec", fontFamily: "monospace" }}>🐎 {rh.horse?.name ?? rh.name}</span>
+                                  <StatusBadge status={rh.status} />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {unregHorses.length > 0 && (
+                          <div>
+                            <p style={labelStyle}>Register Additional Horses:</p>
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
+                              {unregHorses.map((h: any) => (
+                                <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
+                                  <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
+                                  {h.name} (Rating: {h.currentRating})
+                                </label>
+                              ))}
+                            </div>
+                            <button
+                              onClick={() => handleBulkRegister(m.id)}
+                              disabled={sel.length === 0}
+                              style={{ width: "100%", marginTop: "0.5rem", padding: "0.4rem", background: sel.length > 0 ? "rgba(74,157,111,0.2)" : "rgba(255,255,255,0.05)", color: sel.length > 0 ? ROLE_COLOR : "#a0a0a0", border: `1px solid ${sel.length > 0 ? "rgba(74,157,111,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: sel.length > 0 ? "pointer" : "not-allowed" }}
+                            >
+                              Submit Additional Horses ({sel.length})
+                            </button>
+                          </div>
+                        )}
+                        {unregHorses.length === 0 && regHorses.length > 0 && (
+                          <p style={{ fontSize: "0.65rem", color: ROLE_COLOR, fontStyle: "italic", fontFamily: "monospace" }}>✓ All stable horses registered</p>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue}</p>
-                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📅 {m.startDate || m.date}</p>
-                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>💰 ${(m.totalBudget || 0).toLocaleString()}</p>
-                </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  {isOwnerReg ? (
-                    <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "#4a9d6f", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0" }}>
-                      ✓ Registered as Owner
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => onRegisterOwner(m.id)}
-                      style={{ width: "100%", padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
-                    >
-                      Register Stable Owner
-                    </button>
-                  )}
-
-                  {/* Registered Horses */}
-                  {regHorses.length > 0 && (
-                    <div style={{ marginTop: "0.25rem" }}>
-                      <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", marginBottom: "0.25rem" }}>Registered Horses:</p>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.25rem" }}>
-                        {regHorses.map((rh: any) => (
-                          <span key={rh.horse.id} style={{ fontSize: "0.65rem", fontFamily: "monospace", background: "rgba(74, 157, 111, 0.15)", border: "1px solid rgba(74, 157, 111, 0.3)", color: "#4a9d6f", padding: "0.125rem 0.375rem", borderRadius: "0.25rem" }}>
-                            🐎 {rh.horse.name} ({rh.status})
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Unregistered Horses with Checkboxes */}
-                  {stable.length === 0 ? (
-                    <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", marginTop: "0.25rem" }}>
-                      No active horses in stable. Go to "My Stable" to declare horses.
-                    </p>
-                  ) : unregHorses.length === 0 ? (
-                    <p style={{ fontSize: "0.65rem", color: "#4a9d6f", fontStyle: "italic", fontFamily: "monospace", marginTop: "0.25rem" }}>
-                      ✓ All stable horses registered
-                    </p>
-                  ) : (
-                    <div style={{ marginTop: "0.25rem", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem" }}>
-                      <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", marginBottom: "0.375rem" }}>Select Horses to Register:</p>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "120px", overflowY: "auto" }}>
-                        {unregHorses.map((h: any) => {
-                          const isChecked = selectedList.includes(h.id);
-                          return (
-                            <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => handleCheckboxChange(m.id, h.id)}
-                                style={{ accentColor: ROLE_COLOR, cursor: "pointer" }}
-                              />
-                              <span>{h.name}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-
-                      <button
-                        onClick={() => handleBulkRegister(m.id)}
-                        disabled={selectedList.length === 0}
-                        style={{
-                          width: "100%",
-                          marginTop: "0.75rem",
-                          padding: "0.5rem",
-                          background: selectedList.length === 0 ? "rgba(255,255,255,0.05)" : ROLE_COLOR,
-                          color: selectedList.length === 0 ? "#a0a0a0" : "#fff",
-                          border: "none",
-                          borderRadius: "0.5rem",
-                          fontFamily: "monospace",
-                          fontSize: "0.7rem",
-                          fontWeight: 700,
-                          cursor: selectedList.length === 0 ? "not-allowed" : "pointer",
-                          transition: "all 0.2s"
-                        }}
-                      >
-                        Register Selected Horses ({selectedList.length})
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
         </div>
       </div>
     </div>
   );
 }
 
-// ── StableView (My Stable + Declare Horse Form) ───────────────────────────
+// ── StableView ─────────────────────────────────────────────────────────────
 function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => void }) {
   const { user } = useAuth();
   const [horseName, setHorseName] = useState("");
@@ -274,7 +277,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(260px, 340px)", gap: "2rem", alignItems: "start" }}>
+    <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(260px,340px)", gap: "2rem", alignItems: "start" }}>
       {/* Stable List */}
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Horse Stable List</h3>
@@ -378,145 +381,281 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
   );
 }
 
-// ── InvitationsView ────────────────────────────────────────────────────────
-function InvitationsView({ invitations, stable, meetings, jockeys, races, setRaces, onSubmit }: {
-  invitations: any[]; stable: any[]; meetings: any[]; jockeys: any[];
-  races: any[]; setRaces: (r: any[]) => void; onSubmit: (form: any) => void;
+// ── CalendarView ───────────────────────────────────────────────────────────
+function CalendarView({ meetings, allRaces, seasons, dashboard, onSendInvitation }: {
+  meetings: any[]; allRaces: any[]; seasons: any[]; dashboard: any;
+  onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
 }) {
-  const [horseId, setHorseId] = useState("");
-  const [meetingId, setMeetingId] = useState("");
-  const [raceId, setRaceId] = useState("");
-  const [jockeyId, setJockeyId] = useState("");
+  const [seasonFilter, setSeasonFilter] = useState("");
 
-  useEffect(() => {
-    if (meetingId) api.get<any[]>(`/public/races?meetingId=${meetingId}`).then(setRaces).catch(() => setRaces([]));
-    else setRaces([]);
-    setRaceId("");
-  }, [meetingId]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({ horseId: parseInt(horseId), raceId: parseInt(raceId), jockeyId: parseInt(jockeyId) });
-    setHorseId(""); setMeetingId(""); setRaceId(""); setJockeyId("");
-  };
+  const filteredMeetings = seasonFilter
+    ? meetings.filter(m => String(m.seasonId) === seasonFilter)
+    : meetings;
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(260px, 340px)", gap: "2rem", alignItems: "start" }}>
-      {/* Sent Invitations List */}
-      <div>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Sent Rides Invitations</h3>
-        <div className="rounded-xl" style={{ border: "1px solid #2a2825", overflow: "hidden" }}>
-          {invitations.length === 0
-            ? <p style={{ padding: "1.5rem", color: "#a0a0a0", textAlign: "center", fontFamily: "monospace", fontSize: "0.875rem" }}>No invitations sent yet.</p>
-            : invitations.map((inv: any, i: number) => (
-              <div key={i} style={{ padding: "1rem", borderBottom: "1px solid #2a2825", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div>
-                  <h4 style={{ fontWeight: 700, color: "#f4f2ec", fontSize: "0.875rem" }}>Jockey ID #{inv.jockeyId}</h4>
-                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>Horse ID: #{inv.horseId} · Race ID: #{inv.raceId}</p>
-                </div>
-                <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", fontWeight: 700, padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: inv.status === "ACCEPTED" ? "rgba(74,222,128,0.1)" : "rgba(234,179,8,0.1)", color: inv.status === "ACCEPTED" ? "#4ade80" : "#eab308" }}>
-                  {inv.status}
-                </span>
-              </div>
-            ))}
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
+        <div>
+          <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Race Calendar</h3>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Select a race to invite an approved jockey. You must be registered for the meeting.</p>
         </div>
+        {seasons.length > 0 && (
+          <div style={{ background: "rgba(21,19,16,0.6)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.05)" }}>
+            <label style={labelStyle}>Filter by Season</label>
+            <select
+              value={seasonFilter}
+              onChange={e => setSeasonFilter(e.target.value)}
+              style={{ ...inputStyle, width: "220px", cursor: "pointer" }}
+            >
+              <option value="">-- All Seasons --</option>
+              {seasons.map(s => <option key={s.id} value={String(s.id)}>{s.name} ({s.status})</option>)}
+            </select>
+          </div>
+        )}
       </div>
 
-      {/* Invite Form */}
-      <div>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Invite Jockey to Ride</h3>
-        <form onSubmit={handleSubmit} style={{ background: "rgba(21,19,16,0.6)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {[
-            { lbl: "Select Horse",   val: horseId,   set: setHorseId,   opts: stable.map((h: any) => ({ v: h.id, l: h.name })) },
-            { lbl: "Select Meeting", val: meetingId, set: setMeetingId, opts: meetings.map((m: any) => ({ v: m.id, l: m.name })) },
-            { lbl: "Select Race",    val: raceId,    set: setRaceId,    opts: races.map((r: any) => ({ v: r.id, l: `${r.classLevel} — ${r.distanceMeters}m` })), disabled: !meetingId },
-            { lbl: "Select Jockey", val: jockeyId,  set: setJockeyId,  opts: jockeys.map((j: any) => ({ v: j.id, l: j.username })) },
-          ].map(f => (
-            <div key={f.lbl}>
-              <label style={labelStyle}>{f.lbl}</label>
-              <select value={f.val} onChange={e => f.set(e.target.value)} disabled={(f as any).disabled} style={{ ...inputStyle, cursor: (f as any).disabled ? "not-allowed" : "pointer" }}>
-                <option value="">-- Choose --</option>
-                {f.opts.map((o: any) => <option key={o.v} value={o.v}>{o.l}</option>)}
-              </select>
-            </div>
-          ))}
-          <button type="submit" style={{ width: "100%", padding: "0.75rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>Send Invitation</button>
-        </form>
-      </div>
+      {filteredMeetings.length === 0
+        ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No meetings found.</p>
+        : filteredMeetings.map((m: any) => {
+            const isReg = dashboard?.registeredMeetingIds?.includes(m.id);
+            const meetingRaces = allRaces.filter(r => r.raceMeetingId === m.id);
+            const meetingHorses = dashboard?.meetingHorses?.[m.id] || [];
+            const meetingJockeys = dashboard?.meetingJockeys?.[m.id] || [];
+
+            return (
+              <div key={m.id} className="rounded-xl" style={{ background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.06)", overflow: "hidden" }}>
+                {/* Meeting header */}
+                <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.01)", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
+                  <div>
+                    <h4 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, color: "#f4f2ec", marginBottom: "0.25rem" }}>{m.name}</h4>
+                    <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                      {formatDate(m.startDate)} · {m.venue}
+                    </p>
+                  </div>
+                  {isReg
+                    ? <span style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.6rem", borderRadius: "0.25rem", background: "rgba(74,157,111,0.12)", color: "#4a9d6f", border: "1px solid rgba(74,157,111,0.25)" }}>Event Registration Approved</span>
+                    : <span style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.6rem", borderRadius: "0.25rem", background: "rgba(239,91,91,0.12)", color: "#ef5b5b", border: "1px solid rgba(239,91,91,0.25)" }}>Event Registration Required</span>}
+                </div>
+
+                {/* Races */}
+                {meetingRaces.length === 0
+                  ? <p style={{ padding: "1.5rem", color: "#a0a0a0", textAlign: "center", fontFamily: "monospace", fontSize: "0.8rem" }}>No races scheduled for this meeting.</p>
+                  : meetingRaces.map((race: any) => {
+                      const eligibleHorses = meetingHorses.filter((h: any) => {
+                        const minOk = race.minRating == null || h.currentRating >= race.minRating;
+                        const maxOk = race.maxRating == null || h.currentRating <= race.maxRating;
+                        return minOk && maxOk;
+                      });
+
+                      return (
+                        <RaceRow
+                          key={race.id}
+                          race={race}
+                          isReg={isReg}
+                          eligibleHorses={eligibleHorses}
+                          jockeys={meetingJockeys}
+                          onSendInvitation={onSendInvitation}
+                        />
+                      );
+                    })}
+              </div>
+            );
+          })}
     </div>
   );
 }
 
-// ── CalendarView ───────────────────────────────────────────────────────────
-function CalendarView({ meetings }: { meetings: any[] }) {
+function RaceRow({ race, isReg, eligibleHorses, jockeys, onSendInvitation }: {
+  race: any; isReg: boolean; eligibleHorses: any[]; jockeys: any[];
+  onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
+}) {
+  const [horseId, setHorseId] = useState("");
+  const [jockeyId, setJockeyId] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!horseId || !jockeyId) return;
+    onSendInvitation({ horseId: parseInt(horseId), raceId: race.id, jockeyId: parseInt(jockeyId) });
+    setHorseId(""); setJockeyId("");
+  };
+
   return (
-    <div>
-      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Race Calendar</h3>
-      {meetings.length === 0
-        ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No upcoming meetings.</p>
-        : <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {meetings.map((m: any, i: number) => (
-            <div key={i} className="rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", padding: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.25rem" }}>📍 {m.venue} · 📅 {m.startDate || m.date}</p>
-              </div>
-              <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: `rgba(74,157,111,0.1)`, color: ROLE_COLOR }}>{m.status ?? "UPCOMING"}</span>
+    <div style={{ padding: "1.25rem", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", flexWrap: "wrap", gap: "1.5rem", justifyContent: "space-between" }}>
+      {/* Race info */}
+      <div style={{ flex: 1, minWidth: "260px", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ fontWeight: 700, color: "#f4f2ec", fontSize: "0.9rem" }}>{race.classLevel}</span>
+          <StatusBadge status={race.status} />
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(130px,1fr))", gap: "0.75rem" }}>
+          {[
+            { label: "Start Time",      value: formatDate(race.startTime) },
+            { label: "Distance & Track", value: `${race.distanceMeters}m (${race.trackType})` },
+            { label: "Rating Limits",   value: `${race.minRating ?? "0"} – ${race.maxRating ?? "∞"}` },
+            { label: "Purse",           value: `$${(race.purse || 0).toLocaleString()}`, color: "#4a9d6f" },
+          ].map(s => (
+            <div key={s.label}>
+              <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", marginBottom: "0.15rem" }}>{s.label}</p>
+              <p style={{ fontSize: "0.75rem", fontWeight: 600, color: s.color ?? "#f4f2ec", fontFamily: "monospace" }}>{s.value}</p>
             </div>
           ))}
-        </div>}
+        </div>
+        <div style={{ fontSize: "0.65rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+          <span><strong style={{ color: "rgba(201,162,39,0.8)" }}>Entries Open:</strong> {formatDate(race.registrationStartTime)}</span>
+          <span><strong style={{ color: "rgba(201,162,39,0.8)" }}>Close:</strong> {formatDate(race.registrationEndTime)}</span>
+        </div>
+      </div>
+
+      {/* Invitation form */}
+      {isReg && (
+        <div style={{ width: "260px", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "1rem", borderLeft: "1px solid rgba(255,255,255,0.05)" }}>
+          {race.status === "DECLARATION_OPEN" ? (
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <div>
+                <label style={labelStyle}>Select Horse</label>
+                <select value={horseId} onChange={e => setHorseId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
+                  <option value="">-- Select Horse --</option>
+                  {eligibleHorses.map((h: any) => <option key={h.id} value={h.id}>{h.name} (Rating: {h.currentRating})</option>)}
+                </select>
+              </div>
+              <div>
+                <label style={labelStyle}>Select Jockey</label>
+                <select value={jockeyId} onChange={e => setJockeyId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
+                  <option value="">-- Select Jockey --</option>
+                  {jockeys.map((j: any) => <option key={j.id} value={j.id}>{j.username} ({j.weight}kg)</option>)}
+                </select>
+              </div>
+              <button type="submit" style={{ width: "100%", padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}>
+                ✉ Send Invitation
+              </button>
+            </form>
+          ) : race.status === "SCHEDULED" ? (
+            <div style={{ textAlign: "center", padding: "1rem", border: "1px dashed rgba(255,255,255,0.08)", borderRadius: "0.5rem", background: "rgba(255,255,255,0.01)" }}>
+              <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontFamily: "monospace" }}>Registration opens at:</p>
+              <p style={{ fontSize: "0.7rem", color: "#c9a227", fontFamily: "monospace", fontWeight: 700 }}>{formatDate(race.registrationStartTime)}</p>
+            </div>
+          ) : (
+            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", textAlign: "center" }}>Declarations closed for this race.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── InvitationsView ────────────────────────────────────────────────────────
+function InvitationsView({ invitations }: { invitations: any[] }) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div>
+        <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Sent Invitations</h3>
+        <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Manage and track invitations sent to jockeys for various races.</p>
+      </div>
+      <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", background: "rgba(255,255,255,0.01)" }}>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "700px" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                {["ID", "Meeting", "Race", "Horse", "Jockey", "Status"].map(h => (
+                  <th key={h} style={{ padding: "0.75rem 1.25rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {invitations.length === 0
+                ? <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No invitations have been sent yet.</td></tr>
+                : invitations.map((inv: any) => (
+                  <tr key={inv.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                    <td style={{ padding: "0.875rem 1.25rem", fontFamily: "monospace", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>#{inv.id}</td>
+                    <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 600, color: "#f4f2ec" }}>{inv.meetingName ?? `Meeting #${inv.raceId}`}</td>
+                    <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                      {inv.classLevel ? `${inv.classLevel} · ${formatDate(inv.startTime)}` : `Race #${inv.raceId}`}
+                    </td>
+                    <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{inv.horseName ?? `Horse #${inv.horseId}`}</td>
+                    <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", color: "#f4f2ec" }}>{inv.jockeyName ?? `Jockey #${inv.jockeyId}`}</td>
+                    <td style={{ padding: "0.875rem 1.25rem" }}><StatusBadge status={inv.status} /></td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
 
 // ── ResultsView ────────────────────────────────────────────────────────────
-function ResultsView({ results }: { results: any[] }) {
+function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings: number }) {
   return (
-    <div>
-      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Results & Earnings</h3>
-      {results.length === 0
-        ? <div className="rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", padding: "3rem", textAlign: "center" }}>
-          <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No race results available yet.</p>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
+        <div>
+          <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Results & Earnings</h3>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Comprehensive record of all finished races and prize money won by your stable.</p>
         </div>
-        : <div className="rounded-xl overflow-x-auto" style={{ border: "1px solid #2a2825" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.6)", border: "1px solid rgba(74,157,111,0.2)", padding: "0.875rem 1.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <span style={{ fontSize: "1.5rem" }}>💰</span>
+          <div>
+            <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0" }}>Total Stable Earnings</p>
+            <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "#4a9d6f", fontFamily: "monospace" }}>${totalEarnings.toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", background: "rgba(255,255,255,0.01)" }}>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
             <thead>
-              <tr style={{ background: `rgba(74,157,111,0.08)`, borderBottom: "1px solid #2a2825" }}>
-                {["Race", "Horse", "Jockey", "Position", "Prize ($)"].map(h => (
-                  <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{h}</th>
+              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                {["Date", "Meeting", "Race Class", "Horse", "Pos", "Finish Time", "Rating Adj", "Prize"].map(h => (
+                   <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {results.map((r: any, i: number) => (
-                <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
-                  <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem" }}>{r.raceName ?? `Race #${r.raceId}`}</td>
-                  <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem", fontWeight: 700 }}>{r.horseName ?? `Horse #${r.horseId}`}</td>
-                  <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontSize: "0.8rem" }}>{r.jockeyName ?? `Jockey #${r.jockeyId}`}</td>
-                  <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontWeight: 700, color: r.position === 1 ? "#c9a227" : r.position <= 3 ? "#4ade80" : "#f4f2ec" }}>#{r.position}</td>
-                  <td style={{ padding: "0.75rem 1rem", color: "#4ade80", fontFamily: "monospace", fontWeight: 700 }}>${(r.prizeAmount || 0).toLocaleString()}</td>
-                </tr>
-              ))}
+              {results.length === 0
+                ? <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No race results available yet.</td></tr>
+                : results.map((r: any, i: number) => (
+                  <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDate(r.startTime)}</td>
+                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontWeight: 600, color: "#f4f2ec" }}>{r.meetingName ?? "—"}</td>
+                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0" }}>{r.classLevel ?? r.raceName ?? `Race #${r.raceId}`}</td>
+                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{r.horseName ?? `Horse #${r.horseId}`}</td>
+                    <td style={{ padding: "0.875rem 1rem" }}>
+                      <span style={{ fontFamily: "monospace", fontWeight: 700, padding: "0.2rem 0.5rem", borderRadius: "0.25rem", background: r.position === 1 ? "rgba(201,162,39,0.2)" : "rgba(255,255,255,0.05)", color: r.position === 1 ? "#c9a227" : "#f4f2ec" }}>
+                        {r.position ?? r.finalPosition ?? "—"}
+                      </span>
+                    </td>
+                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{r.finishTime ?? "—"}</td>
+                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", fontFamily: "monospace", color: r.ratingAdjustment > 0 ? "#4a9d6f" : r.ratingAdjustment < 0 ? "#ef5b5b" : "#a0a0a0" }}>
+                      {r.ratingAdjustment != null ? (r.ratingAdjustment > 0 ? `+${r.ratingAdjustment}` : r.ratingAdjustment) : "—"}
+                    </td>
+                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontFamily: "monospace", fontWeight: 700, color: "#4a9d6f" }}>
+                      ${(r.prizeMoney ?? r.prizeAmount ?? 0).toLocaleString()}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
-        </div>}
+        </div>
+      </div>
     </div>
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// ── Main Component ─────────────────────────────────────────────────────────
 export default function HorseOwner() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<OwnerTab>(() => {
-    const tabParam = new URLSearchParams(window.location.search).get("tab");
-    return (tabParam as OwnerTab) || "hub";
+    const p = new URLSearchParams(window.location.search).get("tab");
+    return (p as OwnerTab) || "hub";
   });
   const [dashboard, setDashboard] = useState<any>(null);
   const [stable, setStable] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<any[]>([]);
-  const [jockeys, setJockeys] = useState<any[]>([]);
-  const [races, setRaces] = useState<any[]>([]);
+  const [allRaces, setAllRaces] = useState<any[]>([]);
+  const [seasons, setSeasons] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -524,20 +663,22 @@ export default function HorseOwner() {
   const fetchData = async () => {
     if (!user) return;
     try {
-      const [stats, stableData, invites, allMeetings, activeJockeys, ownerResults] = await Promise.all([
+      const [stats, stableData, invites, allMeetings, ownerResults, allSeasonsData, racesData] = await Promise.all([
         api.get<any>(`/owner/${user.id}/dashboard`).catch(() => null),
         api.get<any[]>(`/owner/${user.id}/stable`).catch(() => []),
         api.get<any[]>(`/owner/${user.id}/invitations`).catch(() => []),
         api.get<any[]>("/public/meetings").catch(() => []),
-        api.get<any[]>("/public/users?roleId=3").catch(() => []),
         api.get<any[]>(`/owner/${user.id}/results`).catch(() => []),
+        api.get<any[]>("/races/seasons").catch(() => []),
+        api.get<any[]>("/races").catch(() => []),
       ]);
       setDashboard(stats);
       setStable(Array.isArray(stableData) ? stableData : []);
       setInvitations(Array.isArray(invites) ? invites : []);
       setMeetings(Array.isArray(allMeetings) ? allMeetings : []);
-      setJockeys(Array.isArray(activeJockeys) ? activeJockeys : []);
       setResults(Array.isArray(ownerResults) ? ownerResults : []);
+      setSeasons(Array.isArray(allSeasonsData) ? allSeasonsData : []);
+      setAllRaces(Array.isArray(racesData) ? racesData : []);
     } catch (err: any) { setErrorMsg(err.message || "Failed to load owner data."); }
   };
 
@@ -554,11 +695,8 @@ export default function HorseOwner() {
 
   const handleRegisterHorses = async (meetingId: number, horseIds: number[]) => {
     try {
-      setErrorMsg("");
-      setSuccessMsg("");
-      await Promise.all(
-        horseIds.map(horseId => api.post("/registrations/horse", { meetingId, horseId }))
-      );
+      setErrorMsg(""); setSuccessMsg("");
+      await Promise.all(horseIds.map(horseId => api.post("/registrations/horse", { meetingId, horseId })));
       setSuccessMsg(`Successfully registered ${horseIds.length} horse(s) for meeting.`);
       fetchData();
     } catch (err: any) { setErrorMsg(err.message || "Failed to register horse(s)."); }
@@ -573,12 +711,10 @@ export default function HorseOwner() {
     } catch (err: any) { setErrorMsg(err.message || "Failed to send invitation."); }
   };
 
+  const totalEarnings = results.reduce((sum: number, r: any) => sum + (r.prizeMoney ?? r.prizeAmount ?? 0), 0);
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Owner Hub";
-
-  const navItemsWithBadge = NAV_ITEMS.map(n =>
-    n.view === "invitations" ? { ...n, badge: pendingInvitations } : n
-  );
+  const navItemsWithBadge = NAV_ITEMS.map(n => n.view === "invitations" ? { ...n, badge: pendingInvitations } : n);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -587,11 +723,11 @@ export default function HorseOwner() {
       case "stable":
         return <StableView stable={stable} onRefresh={fetchData} />;
       case "calendar":
-        return <CalendarView meetings={meetings} />;
+        return <CalendarView meetings={meetings} allRaces={allRaces} seasons={seasons} dashboard={dashboard} onSendInvitation={handleSendInvitation} />;
       case "invitations":
-        return <InvitationsView invitations={invitations} stable={stable} meetings={meetings} jockeys={jockeys} races={races} setRaces={setRaces} onSubmit={handleSendInvitation} />;
+        return <InvitationsView invitations={invitations} />;
       case "results":
-        return <ResultsView results={results} />;
+        return <ResultsView results={results} totalEarnings={totalEarnings} />;
       case "profile":
         return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Horse Owner" />;
       default:

@@ -160,8 +160,9 @@ export default function LiveSettings() {
                     </button>
                     {r.youtubeLiveUrl && (
                       <button
+                        disabled={r.status !== "RUNNING"}
                         onClick={() => handleRemove(r.id)}
-                        className="px-3.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-bold rounded-lg transition"
+                        className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed" : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20"}`}
                       >
                         Remove
                       </button>

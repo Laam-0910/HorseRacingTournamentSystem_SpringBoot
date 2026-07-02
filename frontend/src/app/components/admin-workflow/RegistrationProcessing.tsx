@@ -6,6 +6,7 @@ export default function RegistrationProcessing() {
   const [pendingEntries, setPendingEntries] = useState<any[]>([]);
   const [pendingHorseRegs, setPendingHorseRegs] = useState<any[]>([]);
   const [pendingJockeyRegs, setPendingJockeyRegs] = useState<any[]>([]);
+  const [pendingOwnerRegs, setPendingOwnerRegs] = useState<any[]>([]);
   const [pendingSystemHorses, setPendingSystemHorses] = useState<any[]>([]);
 
   const [awaitingDecisionCount, setAwaitingDecisionCount] = useState(0);
@@ -31,6 +32,7 @@ export default function RegistrationProcessing() {
       setPendingEntries(data.entriesData || []);
       setPendingHorseRegs(data.pendingHorseRegsData || []);
       setPendingJockeyRegs(data.pendingJockeyRegsData || []);
+      setPendingOwnerRegs(data.pendingOwnerRegsData || []);
       setPendingSystemHorses(data.pendingSystemHorsesData || []);
       setAwaitingDecisionCount(data.awaitingDecisionCount || 0);
     } catch (err: any) {
@@ -112,6 +114,27 @@ export default function RegistrationProcessing() {
     }
   };
 
+  // 3.5. Owner Meeting Regs
+  const handleOwnerRegApprove = async (id: number) => {
+    try {
+      await api.post(`/admin/owner-reg/${id}/approve`);
+      showSuccess(`Approved owner meeting registration #${id}`);
+      fetchData();
+    } catch (err: any) {
+      alert("Approve failed: " + err.message);
+    }
+  };
+
+  const handleOwnerRegReject = async (id: number) => {
+    try {
+      await api.post(`/admin/owner-reg/${id}/reject`);
+      showSuccess(`Rejected owner meeting registration #${id}`);
+      fetchData();
+    } catch (err: any) {
+      alert("Reject failed: " + err.message);
+    }
+  };
+
   // 4. System Horse Approvals (New Horses)
   const handleSystemHorseApprove = async (id: number) => {
     try {
@@ -187,24 +210,24 @@ export default function RegistrationProcessing() {
               ) : pendingEntries.length === 0 ? (
                 <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No pending race entries found.</td></tr>
               ) : pendingEntries.map((e) => (
-                <tr key={e.id} className="hover:bg-white/[0.015] transition-colors">
-                  <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>REG-{e.id}</td>
+                <tr key={e.entry?.id} className="hover:bg-white/[0.015] transition-colors">
+                  <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>REG-{e.entry?.id}</td>
                   <td style={{ padding: "0.75rem 1rem" }}>
-                    <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.horseName}</div>
+                    <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.horse?.name}</div>
                     <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#c9a227", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", padding: "2px 6px", borderRadius: "3px", display: "inline-block", marginTop: "4px" }}>
-                      ⭐ Rating: {e.rating}
+                      ⭐ Rating: {e.horse?.currentRating}
                     </span>
                   </td>
-                  <td style={{ padding: "0.75rem 1rem", fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>{e.ownerName || `Owner #${e.ownerId}`}</td>
+                  <td style={{ padding: "0.75rem 1rem", fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>{e.owner?.username || `Owner #${e.horse?.ownerId}`}</td>
                   <td style={{ padding: "0.75rem 1rem" }}>
-                    <div style={{ fontSize: "12px", fontWeight: "semibold", color: "#3b82c4" }}>{e.jockeyName}</div>
-                    <div style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Weight: {e.carriedWeight} kg</div>
+                    <div style={{ fontSize: "12px", fontWeight: "semibold", color: "#3b82c4" }}>{e.jockey?.username}</div>
+                    <div style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Weight: {e.jockey?.weight} kg</div>
                   </td>
                   <td style={{ padding: "0.75rem 1rem" }}>
-                    <div style={{ fontSize: "12px", color: "#fff", fontWeight: "semibold" }}>{e.meetingName || `Race #${e.raceId}`}</div>
-                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Distance: {e.distanceMeters}m ({e.trackType})</div>
+                    <div style={{ fontSize: "12px", color: "#fff", fontWeight: "semibold" }}>{e.meeting?.name || `Race #${e.race?.id}`}</div>
+                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Distance: {e.race?.distanceMeters}m ({e.race?.trackType})</div>
                   </td>
-                  <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{e.carriedWeight} kg</td>
+                  <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{e.entry?.carriedWeight} kg</td>
                   <td style={{ padding: "0.75rem 1rem" }}>
                     <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: parseFloat(e.predictionScore) >= 70 ? "rgba(16,185,129,0.1)" : parseFloat(e.predictionScore) >= 40 ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.05)", color: parseFloat(e.predictionScore) >= 70 ? "#34d399" : parseFloat(e.predictionScore) >= 40 ? "#fbbf24" : "rgba(255,255,255,0.6)", border: `1px solid ${parseFloat(e.predictionScore) >= 70 ? "#34d39940" : parseFloat(e.predictionScore) >= 40 ? "#fbbf2440" : "transparent"}` }}>
                       {e.predictionScore}%
@@ -212,8 +235,8 @@ export default function RegistrationProcessing() {
                   </td>
                   <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
                     <div style={{ display: "inline-flex", gap: "0.5rem" }}>
-                      <button onClick={() => handleEntryReject(e.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
-                      <button onClick={() => handleEntryApprove(e.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
+                      <button onClick={() => handleEntryReject(e.entry?.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
+                      <button onClick={() => handleEntryApprove(e.entry?.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
                     </div>
                   </td>
                 </tr>
@@ -257,6 +280,48 @@ export default function RegistrationProcessing() {
                     <div style={{ display: "inline-flex", gap: "0.5rem" }}>
                       <button onClick={() => handleHorseRegReject(e.registration.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
                       <button onClick={() => handleHorseRegApprove(e.registration.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* 2.5. Pending Owner Meeting Registrations */}
+      <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+        <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
+          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Pending Owner Meeting Registrations</h4>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Horse Owner event registration requests awaiting steward approval</p>
+        </div>
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                {["Ref", "Owner", "Target Meeting", "Submitted", "Actions"].map((h, idx) => (
+                  <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 4 ? "right" : "left" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {loading ? (
+                <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+              ) : pendingOwnerRegs.length === 0 ? (
+                <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No pending owner meeting registrations found.</td></tr>
+              ) : pendingOwnerRegs.map((e) => (
+                <tr key={e.registration.id} className="hover:bg-white/[0.015] transition-colors">
+                  <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>REG-O-{e.registration.id}</td>
+                  <td style={{ padding: "0.75rem 1rem" }}>
+                    <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.owner?.username}</div>
+                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Email: {e.owner?.email}</div>
+                  </td>
+                  <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{e.meeting?.name}</td>
+                  <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{e.registration?.registeredAt}</td>
+                  <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
+                    <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                      <button onClick={() => handleOwnerRegReject(e.registration.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
+                      <button onClick={() => handleOwnerRegApprove(e.registration.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
                     </div>
                   </td>
                 </tr>

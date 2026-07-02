@@ -31,7 +31,14 @@ public class ProcessResultsService {
             Integer entryId = (Integer) res.get("entryId");
             Integer finalPosition = (Integer) res.get("finalPosition");
             String finishTime = (String) res.get("finishTime");
-            BigDecimal weighInWeight = new BigDecimal(res.get("weighInWeight").toString());
+            Object weightVal = res.get("weighInWeight");
+            BigDecimal weighInWeight = BigDecimal.ZERO;
+            if (weightVal != null) {
+                String ws = weightVal.toString().trim();
+                if (!ws.isEmpty() && !"null".equalsIgnoreCase(ws) && !"undefined".equalsIgnoreCase(ws)) {
+                    weighInWeight = new BigDecimal(ws);
+                }
+            }
 
             Optional<RaceEntry> entryOpt = raceEntryRepository.findById(entryId);
             if (entryOpt.isPresent()) {
@@ -101,6 +108,7 @@ public class ProcessResultsService {
 
         race.setStewardReport(stewardReport);
         race.setStatus("OFFICIAL");
+        race.setYoutubeLiveUrl(null); // Automatically remove livestream URL when race finishes
         raceRepository.save(race);
     }
 }

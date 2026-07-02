@@ -51,7 +51,17 @@ public class RefereeService {
         // Update weigh-out weights and status
         for (Map<String, Object> entryData : entriesData) {
             Integer entryId = (Integer) entryData.get("entryId");
-            BigDecimal weighOutWeight = new BigDecimal(entryData.get("weighOutWeight").toString());
+            Object weightVal = entryData.get("weighOutWeight");
+            if (weightVal == null) {
+                weightVal = entryData.get("carriedWeight");
+            }
+            BigDecimal weighOutWeight = BigDecimal.ZERO;
+            if (weightVal != null) {
+                String ws = weightVal.toString().trim();
+                if (!ws.isEmpty() && !"null".equalsIgnoreCase(ws) && !"undefined".equalsIgnoreCase(ws)) {
+                    weighOutWeight = new BigDecimal(ws);
+                }
+            }
             String status = (String) entryData.get("status"); // APPROVED, REJECTED (Scratched)
 
             Optional<RaceEntry> entryOpt = raceEntryRepository.findById(entryId);
@@ -239,6 +249,7 @@ public class RefereeService {
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
         race.setStatus("STOPPED");
         race.setStewardReport(stewardReport);
+        race.setYoutubeLiveUrl(null); // Automatically remove livestream URL on emergency stop
         raceRepository.save(race);
 
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
