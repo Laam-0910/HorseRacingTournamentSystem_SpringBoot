@@ -73,6 +73,7 @@ export default function RefereeHub() {
   const [violRunner, setViolRunner] = useState("");
   const [violDesc, setViolDesc] = useState("");
   const [violPenalty, setViolPenalty] = useState("");
+  const [isSevereDq, setIsSevereDq] = useState(false);
 
   // Steward Report Modal State
   const [showReportModal, setShowReportModal] = useState(false);
@@ -125,8 +126,8 @@ export default function RefereeHub() {
     try {
       const payloadEntries = raceEntries.map((item: any) => ({
         entryId: item.entry.id,
-        carriedWeight: parseFloat(weighedWeights[item.entry.id]),
-        status: vetChecks[item.entry.id] === "SCRATCH" ? "SCRATCHED" : "APPROVED",
+        weighOutWeight: parseFloat(weighedWeights[item.entry.id]),
+        status: vetChecks[item.entry.id] === "SCRATCH" ? "REJECTED" : "APPROVED",
       }));
       await api.post("/referee/pre-check", {
         raceId: selectedRace.id,
@@ -163,6 +164,7 @@ export default function RefereeHub() {
     e.preventDefault();
     if (!selectedRace || !violRunner) return;
     const [horseId, jockeyId] = violRunner.split("-").map(Number);
+    const finalPenalty = isSevereDq ? `DISQUALIFIED` : violPenalty;
     try {
       await api.post("/referee/violations", {
         raceId: selectedRace.id,
@@ -170,17 +172,33 @@ export default function RefereeHub() {
         jockeyId,
         refereeId: user?.id,
         description: violDesc,
-        penalty: violPenalty,
+        penalty: finalPenalty,
         status: "PENDING",
       });
-      alert("Incident violation logged successfully.");
+      alert(isSevereDq ? "Incident logged and runner DISQUALIFIED immediately!" : "Incident violation logged successfully.");
       setShowViolModal(false);
       setViolDesc("");
       setViolPenalty("");
+      setIsSevereDq(false);
       // Refresh supervision details
       handleStartSupervise(selectedRace);
     } catch (err: any) {
       alert("Failed to log violation: " + err.message);
+    }
+  };
+
+  const handleStopRace = async (stewardReport: string) => {
+    if (!selectedRace) return;
+    setLoading(true);
+    try {
+      await api.post(`/referee/races/${selectedRace.id}/stop`, { stewardReport });
+      alert("Emergency stop executed. Race status set to STOPPED.");
+      setActiveView("list");
+      setSelectedRace(null);
+      fetchDashboard();
+    } catch (err: any) {
+      alert("Failed to stop race: " + err.message);
+      setLoading(false);
     }
   };
 
@@ -257,6 +275,12 @@ export default function RefereeHub() {
           <div style={{ padding: "1rem", background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", borderRadius: "0.5rem", color: "#f87171", fontSize: "12px", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Icon name="alert-triangle" />
             <span><strong>Cảnh báo:</strong> Cổng xuất phát chưa được thiết lập đầy đủ cho tất cả nài/ngựa. Hãy yêu cầu Admin cấu hình cổng trước khi bắt đầu cuộc đua.</span>
+          </div>
+        )}
+
+        {isGatesFullySet && (
+          <div style={{ padding: "1rem", background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "0.5rem", color: "#34d399", fontSize: "12px", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span>💡 <strong>Thông tin:</strong> Trận đấu đã đầy đủ cổng xuất phát. Trọng tài có thể cho phép bắt đầu cuộc đua trước giờ bằng cách bấm Xác nhận kiểm tra phía dưới để đưa trạng thái trận đấu sang <strong>RUNNING</strong> ngay lập tức.</span>
           </div>
         )}
 
@@ -400,9 +424,20 @@ export default function RefereeHub() {
               </span>
             </p>
           </div>
-          <div>
-            <button onClick={() => setShowViolModal(true)} style={{ padding: "0.5rem 1rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              ⚠️ Record Rules Violation
+          <div style={{ display: "flex", gap: "0.75rem" }}>
+            <button
+              onClick={() => {
+                const reason = prompt("Nhập lý do tạm dừng/hoãn cuộc đua khẩn cấp (Steward's Report):");
+                if (reason && reason.trim()) {
+                  handleStopRace(reason);
+                }
+              }}
+              style={{ padding: "0.5rem 1.25rem", background: "#f59e0b", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
+            >
+              🛑 Dừng trận đấu khẩn cấp
+            </button>
+            <button onClick={() => setShowViolModal(true)} style={{ padding: "0.5rem 1.25rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}>
+              ⚠️ Ghi nhận vi phạm
             </button>
           </div>
         </div>
@@ -516,10 +551,16 @@ export default function RefereeHub() {
                 </div>
                 <div>
                   <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Assessed Penalty</label>
-                  <input type="text" value={violPenalty} onChange={e => setViolPenalty(e.target.value)} required placeholder="e.g. Fine $500, Suspended 3 Days..." style={{ width: "100%", padding: "0.5rem", outline: "none" }} />
+                  <input type="text" value={isSevereDq ? "DISQUALIFIED (LOẠI TRỰC TIẾP)" : violPenalty} disabled={isSevereDq} onChange={e => setViolPenalty(e.target.value)} required={!isSevereDq} placeholder="e.g. Fine $500, Suspended 3 Days..." style={{ width: "100%", padding: "0.5rem", outline: "none", opacity: isSevereDq ? 0.5 : 1 }} />
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <input type="checkbox" id="severeDq" checked={isSevereDq} onChange={e => setIsSevereDq(e.target.checked)} style={{ width: 16, height: 16, cursor: "pointer" }} />
+                  <label htmlFor="severeDq" style={{ fontSize: "11px", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>
+                    Vi phạm cực kỳ nghiêm trọng (Loại trực tiếp khỏi trận đấu ngay lập tức)
+                  </label>
                 </div>
                 <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
-                  <button type="button" onClick={() => setShowViolModal(false)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2d2d30", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
+                  <button type="button" onClick={() => { setShowViolModal(false); setIsSevereDq(false); }} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2d2d30", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
                   <button type="submit" style={{ padding: "0.5rem 1rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>Save Violation</button>
                 </div>
               </form>

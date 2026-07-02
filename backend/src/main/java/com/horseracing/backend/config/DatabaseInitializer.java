@@ -22,11 +22,19 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
             
-            // Check and add image_url to Horse table
+            // Check and add avatar to Horse table
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Horse') AND name = 'image_url') " +
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Horse') AND name = 'avatar') " +
                 "BEGIN " +
-                "    ALTER TABLE Horse ADD image_url NVARCHAR(500) NULL; " +
+                "    ALTER TABLE Horse ADD avatar VARCHAR(MAX) NULL; " +
+                "END"
+            );
+
+            // Check and add avatar to User table
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'avatar') " +
+                "BEGIN " +
+                "    ALTER TABLE [User] ADD avatar VARCHAR(MAX) NULL; " +
                 "END"
             );
             System.out.println("Database columns verified and added successfully if missing.");

@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
+import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
 
 interface InlineDatePickerProps {
   label: string;
-  value: string; // format: dd-mm-yyyy
+  value: string; // format: dd-MM-yyyy
   onChange: (val: string) => void;
 }
 
@@ -66,7 +67,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
           onClick={() => setIsOpen(!isOpen)}
           value={value}
           placeholder="dd-mm-yyyy"
-          className="w-full rounded-lg px-3 py-2.5 text-xs text-[#f4f2ec] outline-none cursor-pointer"
+          className="w-full rounded-lg px-3 py-2.5 text-xs text-[#f4f2ec] outline-none cursor-pointer font-mono"
           style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)" }}
         />
         <button
@@ -144,20 +145,7 @@ export default function Season() {
   const [extendDateInput, setExtendDateInput] = useState("");
   const [extendError, setExtendError] = useState("");
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "—";
-    try {
-      const d = new Date(dateStr.replace(" ", "T"));
-      if (isNaN(d.getTime())) return dateStr;
-      return `${String(d.getDate()).padStart(2,"0")}/${String(d.getMonth()+1).padStart(2,"0")}/${d.getFullYear()}`;
-    } catch { return dateStr; }
-  };
-
-  const toDbFormat = (d: string) => {
-    const parts = d.split("-");
-    if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    return d;
-  };
+  const toDbFormat = (d: string) => d ? `${d} 00:00:00` : "";
 
   const toDisplayFormat = (d: string) => {
     if (!d) return "";
@@ -203,18 +191,35 @@ export default function Season() {
 
   const handleExtend = (season: any) => {
     setExtendingSeason(season);
-    setExtendStartDateInput(toDisplayFormat(season.startDate || ""));
-    setExtendDateInput(toDisplayFormat(season.endDate || ""));
+    
+    // Safely extract the date part (yyyy-MM-dd) before displaying
+    const rawStart = season.startDate ? season.startDate.substring(0, 10) : "";
+    const rawEnd = season.endDate ? season.endDate.substring(0, 10) : "";
+
+    setExtendStartDateInput(toDisplayFormat(rawStart));
+    setExtendDateInput(toDisplayFormat(rawEnd));
     setExtendError("");
   };
 
   const handleExtendSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setExtendError("");
-    if (!extendStartDateInput || !extendDateInput) { setExtendError("Please select both start and end dates."); return; }
+    
+    if (!extendStartDateInput || !extendDateInput) {
+      setExtendError("Please select both start and end dates.");
+      return;
+    }
+
     const dbStart = toDbFormat(extendStartDateInput);
     const dbEnd = toDbFormat(extendDateInput);
-    if (new Date(dbStart) >= new Date(dbEnd)) { setExtendError("Start Date must be before End Date."); return; }
+
+    const startD = parseSafeDate(dbStart);
+    const endD = parseSafeDate(dbEnd);
+    if (startD && endD && startD >= endD) {
+      setExtendError("Start Date must be before End Date.");
+      return;
+    }
+
     try {
       await api.post(`/races/seasons/${extendingSeason.id}/extend`, { startDate: dbStart, endDate: dbEnd });
       fetchSeasons();
@@ -226,14 +231,28 @@ export default function Season() {
 
   const handleCreateSeason = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(""); setSuccess("");
-    if (!newSeasonStartDate || !newSeasonEndDate) { setError("Please select both start and end dates."); return; }
+    setError("");
+    setSuccess("");
+    
+    if (!newSeasonStartDate || !newSeasonEndDate) {
+      setError("Please select both start and end dates.");
+      return;
+    }
+
     const dbStart = toDbFormat(newSeasonStartDate);
     const dbEnd = toDbFormat(newSeasonEndDate);
-    if (new Date(dbStart) >= new Date(dbEnd)) { setError("Start Date must be before End Date."); return; }
 
-    const payload: any = { name: newSeasonName, startDate: dbStart, endDate: dbEnd, classRuleMethod };
-    if (classRuleMethod === "MANUAL") payload.manualClasses = manualRules;
+    const startD = parseSafeDate(dbStart);
+    const endD = parseSafeDate(dbEnd);
+    if (startD && endD && startD >= endD) {
+      setError("Start Date must be before End Date.");
+      return;
+    }
+
+    const payload: any = { name: newSeasonName, startDate: dbStart, endDate: dbEnd, classRuleMethod, status: "PENDING" };
+    if (classRuleMethod === "MANUAL") {
+      payload.manualClasses = manualRules;
+    }
 
     try {
       await api.post("/races/seasons", payload);
@@ -485,7 +504,7 @@ export default function Season() {
                       <p className="text-xs text-[#f4f2ec]">{season.name}</p>
                     </td>
                     <td className="px-6 py-4 font-mono text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
-                      {formatDate(season.startDate)} – {formatDate(season.endDate)}
+                      {formatDateTime(season.startDate).split(" ")[0]} – {formatDateTime(season.endDate).split(" ")[0]}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">

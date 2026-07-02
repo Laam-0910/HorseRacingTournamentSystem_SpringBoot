@@ -105,7 +105,12 @@ const TRANSLATIONS: Record<string, any> = {
   }
 };
 
-export default function ViewLive() {
+interface ViewLiveProps {
+  preselectedRaceId?: number | null;
+  onClearPreselect?: () => void;
+}
+
+export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLiveProps) {
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
   const { user } = useAuth();
@@ -137,6 +142,14 @@ export default function ViewLive() {
       setLiveRaces(activeRaces);
       
       if (activeRaces.length > 0) {
+        if (preselectedRaceId) {
+          const found = activeRaces.find(r => r.id === preselectedRaceId);
+          if (found) {
+            setSelectedRace(found);
+            if (onClearPreselect) onClearPreselect();
+            return;
+          }
+        }
         setSelectedRace(prev => {
           if (prev && activeRaces.some(r => r.id === prev.id)) {
             return activeRaces.find(r => r.id === prev.id) || activeRaces[0];

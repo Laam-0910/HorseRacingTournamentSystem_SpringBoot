@@ -198,7 +198,7 @@ public class JockeyOwnerDashboardService {
         }
 
         List<Horse> myHorses = horseRepository.findByOwnerId(ownerId);
-        List<Horse> activeHorses = myHorses.stream().filter(h -> "ACTIVE".equalsIgnoreCase(h.getStatus())).toList();
+        List<Horse> activeHorses = myHorses.stream().filter(h -> h.getStatus() != null && "ACTIVE".equalsIgnoreCase(h.getStatus().trim())).toList();
 
         Map<Integer, List<Map<String, Object>>> meetingRegisteredHorses = new HashMap<>();
         Map<Integer, List<HorseDTO>> meetingUnregisteredHorses = new HashMap<>();
@@ -212,7 +212,7 @@ public class JockeyOwnerDashboardService {
                 if (hRegOpt.isPresent()) {
                     Map<String, Object> hRegMap = new HashMap<>();
                     hRegMap.put("horse", horseMapper.toDTO(horse, null));
-                    hRegMap.put("status", hRegOpt.get().getStatus());
+                    hRegMap.put("status", hRegOpt.get().getStatus() != null ? hRegOpt.get().getStatus().trim() : null);
                     hRegMap.put("regId", hRegOpt.get().getId());
                     regHorsesList.add(hRegMap);
                 } else {
@@ -257,6 +257,7 @@ public class JockeyOwnerDashboardService {
         response.put("meetingHorses", meetingHorses);
         response.put("meetingJockeys", meetingJockeys);
         response.put("activeHorses", activeHorses.stream().map(h -> horseMapper.toDTO(h, null)).toList());
+        response.put("totalHorses", activeHorses.size());
 
         return response;
     }
@@ -317,6 +318,50 @@ public class JockeyOwnerDashboardService {
             map.put("totalPrize", totalPrize);
             map.put("avgPosition", finishedRaces > 0 ? (sumPos / finishedRaces) : 0.0);
             map.put("history", history);
+
+            resolved.add(map);
+        }
+
+        return resolved;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getJockeyViolations(Integer jockeyId) {
+        List<Violation> viols = violationRepository.findByJockeyId(jockeyId);
+        List<Map<String, Object>> resolved = new ArrayList<>();
+
+        Map<Integer, User> userMap = userRepository.findAll().stream().collect(Collectors.toMap(User::getId, u -> u));
+        Map<Integer, Horse> horseMap = horseRepository.findAll().stream().collect(Collectors.toMap(Horse::getId, h -> h));
+        Map<Integer, Race> raceMap = raceRepository.findAll().stream().collect(Collectors.toMap(Race::getId, r -> r));
+        Map<Integer, RaceMeeting> meetingMap = raceMeetingRepository.findAll().stream().collect(Collectors.toMap(RaceMeeting::getId, m -> m));
+
+        for (Violation v : viols) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", v.getId());
+            map.put("description", v.getDescription());
+            map.put("penalty", v.getPenalty());
+            map.put("status", v.getStatus() != null ? v.getStatus().trim() : null);
+            map.put("type", "Rules Violation");
+
+            Horse horse = horseMap.get(v.getHorseId());
+            map.put("horseName", horse != null ? horse.getName() : "Unknown Horse");
+
+            Race race = raceMap.get(v.getRaceId());
+            if (race != null) {
+                map.put("raceName", race.getClassLevel());
+                map.put("date", race.getStartTime() != null ? race.getStartTime().toString() : "N/A");
+                
+                RaceMeeting mt = meetingMap.get(race.getRaceMeetingId());
+                if (mt != null) {
+                    map.put("raceName", race.getClassLevel() + " at " + mt.getName());
+                }
+            } else {
+                map.put("raceName", "Unknown Race");
+                map.put("date", "N/A");
+            }
+
+            User ref = userMap.get(v.getRefereeId());
+            map.put("refereeName", ref != null ? ref.getUsername() : "Unknown Referee");
 
             resolved.add(map);
         }

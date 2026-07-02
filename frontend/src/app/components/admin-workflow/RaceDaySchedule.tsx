@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
+import { formatDateTime, formatForApi } from "../../utils/dateTimeHelper";
 
 export default function RaceDaySchedule() {
   const [meetings, setMeetings] = useState<any[]>([]);
@@ -75,22 +76,7 @@ export default function RaceDaySchedule() {
     ? seasons.find((s) => s.id === selectedMeeting.seasonId)
     : seasons.find((s) => s.status === "ACTIVE");
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return "";
-    try {
-      const d = new Date(dateStr.replace(" ", "T"));
-      if (isNaN(d.getTime())) return dateStr;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      const hours = String(d.getHours()).padStart(2, '0');
-      const minutes = String(d.getMinutes()).padStart(2, '0');
-      const seconds = String(d.getSeconds()).padStart(2, '0');
-      return `${day}-${month}-${year} ${hours}-${minutes}-${seconds}`;
-    } catch {
-      return dateStr;
-    }
-  };
+  const formatDate = formatDateTime;
 
   const handleScheduleRaceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,7 +100,7 @@ export default function RaceDaySchedule() {
         raceMeetingId: selectedMeetingId,
         classLevel,
         trackType,
-        startTime: startTime.replace("T", " ") + (startTime.length === 16 ? ":00" : ""),
+        startTime: startTime,
         distanceMeters: parseInt(distance),
         minEntries: minVal,
         maxEntries: maxVal,
@@ -391,7 +377,7 @@ export default function RaceDaySchedule() {
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Start Time</label>
-                <input type="datetime-local" step="1" value={startTime} onChange={e => setStartTime(e.target.value)} required style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px" }} />
+                <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace" }} />
               </div>
 
               <div>

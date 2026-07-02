@@ -14,15 +14,16 @@ public class UserMapper {
         }
         return UserDTO.builder()
                 .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .status(user.getStatus())
+                .username(user.getUsername() != null ? user.getUsername().trim() : null)
+                .email(user.getEmail() != null ? user.getEmail().trim() : null)
+                .status(user.getStatus() != null ? user.getStatus().trim() : null)
                 .roleId(user.getRoleId())
-                .roleName(roleName)
+                .roleName(roleName != null ? roleName.trim() : null)
                 .weight(user.getWeight())
                 .totalRacesParticipated(user.getTotalRacesParticipated())
                 .totalTop3Finishes(user.getTotalTop3Finishes())
                 .requireOtp(user.getRequireOtp())
+                .avatar(user.getAvatar() != null ? user.getAvatar().trim() : null)
                 .build();
     }
 
@@ -36,14 +37,15 @@ public class UserMapper {
         }
         User user = new User();
         user.setId(dto.getId());
-        user.setUsername(dto.getUsername());
-        user.setEmail(dto.getEmail());
-        user.setStatus(dto.getStatus());
+        user.setUsername(dto.getUsername() != null ? dto.getUsername().trim() : null);
+        user.setEmail(dto.getEmail() != null ? dto.getEmail().trim() : null);
+        user.setStatus(dto.getStatus() != null ? dto.getStatus().trim() : null);
         user.setRoleId(dto.getRoleId());
         user.setWeight(dto.getWeight());
         user.setTotalRacesParticipated(dto.getTotalRacesParticipated());
         user.setTotalTop3Finishes(dto.getTotalTop3Finishes());
         user.setRequireOtp(dto.getRequireOtp());
+        user.setAvatar(dto.getAvatar() != null ? dto.getAvatar().trim() : null);
         return user;
     }
 
@@ -52,8 +54,8 @@ public class UserMapper {
             return null;
         }
         User user = new User();
-        user.setUsername(dto.getUsername());
-        user.setEmail(dto.getEmail());
+        user.setUsername(dto.getUsername() != null ? dto.getUsername().trim() : null);
+        user.setEmail(dto.getEmail() != null ? dto.getEmail().trim() : null);
         user.setPasswordHash(dto.getPassword()); // Cần mã hóa sau đó ở Service
         user.setRoleId(dto.getRoleId());
         user.setWeight(dto.getWeight());

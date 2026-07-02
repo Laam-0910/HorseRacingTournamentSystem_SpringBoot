@@ -49,6 +49,9 @@ public class User implements Serializable {
     @Column(name = "require_otp")
     private Boolean requireOtp = false;
 
+    @Column(name = "avatar")
+    private String avatar;
+
 
 
 

@@ -64,6 +64,39 @@ function Icon({ name, size = 14, color }: { name: string; size?: number; color?:
   );
 }
 
+const translateLabel = (label: string, lang: string): string => {
+  const dict: Record<string, Record<string, string>> = {
+    "Owner Hub": { vi: "Trang của tôi", en: "Owner Hub", zh: "业主中心", ja: "オーナーハブ" },
+    "My Stable": { vi: "Chuồng ngựa của tôi", en: "My Stable", zh: "我的马房", ja: "マイ厩舎" },
+    "Race Calendar": { vi: "Lịch đua", en: "Race Calendar", zh: "赛事日历", ja: "レースカレンダー" },
+    "Invitations": { vi: "Lời mời", en: "Invitations", zh: "赛事邀请", ja: "招待状" },
+    "Results & Earnings": { vi: "Kết quả & Thu nhập", en: "Results & Earnings", zh: "比赛结果与收益", ja: "結果と収益" },
+    "Jockey Hub": { vi: "Trang của Jockey", en: "Jockey Hub", zh: "骑师中心", ja: "ジョッキーハブ" },
+    "Steward Board": { vi: "Bảng trọng tài", en: "Steward Board", zh: "裁判面板", ja: "審判ボード" },
+    "Violation Reports": { vi: "Báo cáo vi phạm", en: "Violation Reports", zh: "违规报告", ja: "違反レポート" },
+    "Spectator Hub": { vi: "Trang người xem", en: "Spectator Hub", zh: "观众主页", ja: "観客ハブ" },
+    "Horse Registry": { vi: "Danh mục ngựa", en: "Horse Registry", zh: "马匹注册", ja: "馬の登録" },
+    "System Dashboard": { vi: "Bảng điều khiển", en: "Dashboard", zh: "系统控制面板", ja: "ダッシュボード" },
+    "Seasons": { vi: "Mùa giải", en: "Seasons", zh: "赛季管理", ja: "シーズン管理" },
+    "Race Meetings": { vi: "Ngày hội đua", en: "Meetings", zh: "赛事日", ja: "レース開催日" },
+    "Races": { vi: "Trận đấu", en: "Races", zh: "比赛管理", ja: "レース管理" },
+    "Registrations": { vi: "Duyệt đăng ký", en: "Registrations", zh: "报名审核", ja: "登録管理" },
+    "Users": { vi: "Người dùng", en: "Users", zh: "用户与角色", ja: "ユーザー管理" },
+    "Rules": { vi: "Luật thi đấu", en: "Rules", zh: "规则设置", ja: "ルール設定" },
+    "profile": { vi: "Thông tin cá nhân", en: "Profile", zh: "个人资料", ja: "プロフィール" },
+    "Horse Owner": { vi: "Chủ ngựa", en: "Horse Owner", zh: "马主", ja: "馬主" },
+    "Jockey": { vi: "Nài ngựa", en: "Jockey", zh: "骑师", ja: "ジョッキー" },
+    "Referee": { vi: "Trọng tài", en: "Referee", zh: "裁判", ja: "審判" },
+    "Spectator": { vi: "Người xem", en: "Spectator", zh: "观众", ja: "観客" },
+    "Admin": { vi: "Quản trị viên", en: "Admin", zh: "管理员", ja: "管理者" }
+  };
+  const key = Object.keys(dict).find(k => k.toLowerCase() === label.toLowerCase());
+  if (key) {
+    return dict[key][lang] || dict[key]["en"] || label;
+  }
+  return label;
+};
+
 export default function DashboardLayout({
   roleLabel,
   roleColor,
@@ -179,7 +212,7 @@ export default function DashboardLayout({
           {/* Profile */}
           <div 
             onClick={() => onViewChange('profile')}
-            title="Go to Profile & 2FA"
+            title={lang === "vi" ? "Đến Trang cá nhân & 2FA" : lang === "zh" ? "前往个人中心与双重认证" : lang === "ja" ? "プロフィールと2FAへ" : "Go to Profile & 2FA"}
             style={{ 
               padding: '1rem 1.25rem', 
               borderBottom: '1px solid var(--sidebar-border)', 
@@ -191,13 +224,25 @@ export default function DashboardLayout({
             }}
             className="hover:bg-white/[0.04]"
           >
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: roleColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', fontFamily: 'monospace', fontWeight: 700, color: '#0e0c09', flexShrink: 0 }}>
-              {initials}
+            <div style={{ 
+              width: 36, height: 36, 
+              borderRadius: '50%', 
+              background: roleColor, 
+              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+              fontSize: '0.7rem', fontFamily: 'monospace', fontWeight: 700, 
+              color: '#0e0c09', flexShrink: 0,
+              overflow: 'hidden'
+            }}>
+              {user?.avatar ? (
+                <img src={user.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                initials
+              )}
             </div>
             {sidebarExpanded && (
               <div style={{ overflow: 'hidden', flex: 1 }} className="sidebar-text">
                 <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.username}</p>
-                <p style={{ fontSize: '0.6rem', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', color: roleColor }}>{roleLabel}</p>
+                <p style={{ fontSize: '0.6rem', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', color: roleColor }}>{translateLabel(roleLabel, lang)}</p>
               </div>
             )}
           </div>
@@ -206,7 +251,7 @@ export default function DashboardLayout({
           <nav style={{ flex: 1, padding: '0.75rem', overflowY: 'auto' }} className="scrollbar-hide">
             {sidebarExpanded && (
               <p style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0 0.75rem', marginBottom: '0.5rem' }}>
-                Workflow
+                {lang === "vi" ? "Tiến trình" : lang === "zh" ? "工作流" : lang === "ja" ? "ワークフロー" : "Workflow"}
               </p>
             )}
             {navItems.map((item) => {
@@ -245,7 +290,7 @@ export default function DashboardLayout({
                   </span>
                   {sidebarExpanded && (
                     <span style={{ flex: 1, fontSize: '0.75rem', color: isActive ? roleColor : 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="sidebar-text">
-                      {item.label}
+                      {translateLabel(item.label, lang)}
                     </span>
                   )}
                   {sidebarExpanded && item.badge && item.badge > 0 && (
@@ -265,14 +310,14 @@ export default function DashboardLayout({
               style={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '0.75rem' : 0, justifyContent: sidebarExpanded ? 'flex-start' : 'center', width: 'calc(100% - 1.5rem)', margin: '0 0.75rem', padding: '0.625rem 0.75rem', borderRadius: '0.25rem', background: 'transparent', border: 'none', color: 'var(--muted-foreground)', fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
             >
               <Icon name="home" size={16} />
-              {sidebarExpanded && <span className="sidebar-text">Back to Home</span>}
+              {sidebarExpanded && <span className="sidebar-text">{lang === "vi" ? "Về trang chủ" : lang === "zh" ? "返回首页" : lang === "ja" ? "ホームに戻る" : "Back to Home"}</span>}
             </button>
             <button
               onClick={() => { logout(); navigate('/login'); }}
               style={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '0.75rem' : 0, justifyContent: sidebarExpanded ? 'flex-start' : 'center', width: 'calc(100% - 1.5rem)', margin: '0 0.75rem 0.5rem', padding: '0.625rem 0.75rem', borderRadius: '0.25rem', background: 'transparent', border: 'none', color: 'var(--muted-foreground)', fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
             >
               <Icon name="log-out" size={16} />
-              {sidebarExpanded && <span className="sidebar-text">Sign out</span>}
+              {sidebarExpanded && <span className="sidebar-text">{lang === "vi" ? "Đăng xuất" : lang === "zh" ? "退出登录" : lang === "ja" ? "ログアウト" : "Sign out"}</span>}
             </button>
           </div>
         </div>
@@ -283,9 +328,9 @@ export default function DashboardLayout({
         {/* Topbar */}
         <header style={{ height: '3.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem', background: 'rgba(21,19,16,0.4)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: '0.9rem', color: 'var(--foreground)' }}>{activeLabel}</h2>
+            <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: '0.9rem', color: 'var(--foreground)' }}>{translateLabel(activeLabel, lang)}</h2>
             <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0.125rem 0.5rem', borderRadius: '0.25rem', background: `${roleColor}22`, color: roleColor }}>
-              {roleLabel}
+              {translateLabel(roleLabel, lang)}
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>

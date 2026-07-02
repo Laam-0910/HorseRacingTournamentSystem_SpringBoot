@@ -45,6 +45,12 @@ public class Horse implements Serializable {
     @Column(name = "total_wins")
     private Integer totalWins;
 
+    @Column(name = "avatar", columnDefinition = "VARCHAR(MAX)")
+    private String avatar;
+
+    @Column(name = "description")
+    private String description;
+
 
 
 

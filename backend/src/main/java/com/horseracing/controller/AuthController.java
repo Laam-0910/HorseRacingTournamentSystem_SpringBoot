@@ -83,6 +83,16 @@ public class AuthController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/update-profile")
+    public ResponseEntity<?> updateProfile(@RequestBody UserDTO userDTO) {
+        try {
+            UserDTO updated = authService.updateProfile(userDTO);
+            return ResponseEntity.ok(Map.of("success", true, "user", updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/toggle-otp")
     public ResponseEntity<?> toggleOtp(@RequestBody Map<String, Object> request) {
         String username = (String) request.get("username");

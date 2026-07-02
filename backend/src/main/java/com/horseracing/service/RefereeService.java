@@ -35,7 +35,15 @@ public class RefereeService {
         // Validate that all participating entries have a gate number assigned
         List<RaceEntry> dbEntries = raceEntryRepository.findByRaceId(raceId);
         for (RaceEntry e : dbEntries) {
-            if (!"REJECTED".equals(e.getStatus()) && (e.getGateNumber() == null || e.getGateNumber() <= 0)) {
+            String targetStatus = e.getStatus();
+            for (Map<String, Object> entryData : entriesData) {
+                Integer entryId = (Integer) entryData.get("entryId");
+                if (e.getId().equals(entryId)) {
+                    targetStatus = (String) entryData.get("status");
+                    break;
+                }
+            }
+            if (!"REJECTED".equalsIgnoreCase(targetStatus) && (e.getGateNumber() == null || e.getGateNumber() <= 0)) {
                 throw new IllegalArgumentException("Cannot start race. Some horses do not have valid gate numbers.");
             }
         }
@@ -73,6 +81,32 @@ public class RefereeService {
     public ViolationDTO logViolation(ViolationDTO dto) {
         Violation violation = violationMapper.toEntity(dto);
         violation.setStatus("PENDING");
+
+        // If severe violation, update RaceEntry status to DISQUALIFIED immediately
+        if (dto.getPenalty() != null && (dto.getPenalty().contains("DQ") || dto.getPenalty().contains("DISQUALIFIED"))) {
+            List<RaceEntry> entries = raceEntryRepository.findByRaceId(dto.getRaceId());
+            for (RaceEntry entry : entries) {
+                if (entry.getHorseId().equals(dto.getHorseId()) && entry.getJockeyId().equals(dto.getJockeyId())) {
+                    entry.setStatus("DISQUALIFIED");
+                    entry.setFinalPosition(null);
+                    entry.setFinishTime("DQ");
+                    entry.setRatingAdjustment(-2);
+                    raceEntryRepository.save(entry);
+
+                    // Update Horse rating (-2)
+                    Optional<Horse> horseOpt = horseRepository.findById(dto.getHorseId());
+                    if (horseOpt.isPresent()) {
+                        Horse horse = horseOpt.get();
+                        int curRating = horse.getCurrentRating() != null ? horse.getCurrentRating() : 52;
+                        horse.setCurrentRating(Math.max(0, curRating - 2));
+                        horseRepository.save(horse);
+                    }
+                    break;
+                }
+            }
+            violation.setStatus("DISQUALIFIED_IMMEDIATELY");
+        }
+
         Violation savedViolation = violationRepository.save(violation);
 
         Map<Integer, String> userMap = userRepository.findAll().stream()
@@ -223,5 +257,13 @@ public class RefereeService {
             entry.setStatus("STOPPED");
             raceEntryRepository.save(entry);
         }
+    }
+
+    @Transactional
+    public void confirmViolation(Integer violationId) {
+        Violation violation = violationRepository.findById(violationId)
+                .orElseThrow(() -> new IllegalArgumentException("Violation not found"));
+        violation.setStatus("CONFIRMED");
+        violationRepository.save(violation);
     }
 }

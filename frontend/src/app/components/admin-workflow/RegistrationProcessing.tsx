@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
+import { parseSafeDate } from "../../utils/dateTimeHelper";
 
 export default function RegistrationProcessing() {
   const [pendingEntries, setPendingEntries] = useState<any[]>([]);
@@ -15,16 +16,12 @@ export default function RegistrationProcessing() {
 
   const formatSimpleDate = (dateStr: string) => {
     if (!dateStr) return "";
-    try {
-      const d = new Date(dateStr.replace(" ", "T"));
-      if (isNaN(d.getTime())) return dateStr;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      return `${day}-${month}-${year}`;
-    } catch {
-      return dateStr;
-    }
+    const d = parseSafeDate(dateStr);
+    if (!d || isNaN(d.getTime())) return dateStr;
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
   };
 
   const fetchData = async () => {

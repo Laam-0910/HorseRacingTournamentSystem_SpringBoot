@@ -15,10 +15,10 @@ public class SeasonDTO {
     private Integer id;
     private String name;
     
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "GMT+7")
     private Date startDate;
     
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "GMT+7")
     private Date endDate;
     
     private String status; // ACTIVE, CLOSED

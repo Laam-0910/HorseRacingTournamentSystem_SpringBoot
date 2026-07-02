@@ -3,12 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
+import { parseSafeDate } from "../../utils/dateTimeHelper";
 
 
 // ─────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────
-type SubView = "home" | "live" | "racecard" | "results" | "fixtures" | "statistics" | "horses" | "jockeys_owners" | "incident" | "about";
+type SubView = "home" | "live" | "racecard" | "results" | "fixtures" | "statistics" | "horses" | "jockeys_owners" | "incident" | "about" | "search";
 
 interface Season { id: number; name: string; startDate: string; endDate: string; status?: string; }
 interface Meeting { id: number; name: string; venue: string; startDate: string; totalBudget: number; }
@@ -235,6 +236,294 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
 // ─────────────────────────────────────────────
 // Sub-view components
 // ─────────────────────────────────────────────
+const SEARCH_TRANSLATIONS: Record<string, any> = {
+  vi: {
+    title: "Kết quả tìm kiếm",
+    foundResults: (count: number, query: string) => `Tìm thấy ${count} kết quả cho từ khóa "${query}"`,
+    closeSearch: "✕ Đóng tìm kiếm",
+    tabAll: "Tất cả",
+    tabHorses: "Ngựa đua",
+    tabPeople: "Nài & Chủ ngựa",
+    tabRaces: "Ngày hội & Trận đấu",
+    noHorses: "Không tìm thấy chiến mã nào.",
+    noPeople: "Không tìm thấy nài ngựa hay chủ ngựa nào.",
+    noRaces: "Không tìm thấy ngày hội hay cuộc đua nào.",
+    labelBreed: "Giống",
+    labelOwner: "Chủ ngựa",
+    labelRaces: "Số trận",
+    labelWins: "thắng",
+    labelEmail: "Email",
+    labelWeight: "Cân nặng",
+    labelVenue: "Địa điểm",
+    labelTime: "Thời gian",
+    labelTrack: "Đường chạy",
+    labelMaxEntries: "Số ngựa tối đa",
+    labelPurse: "Purse",
+    labelMeetingHeader: "📅 Ngày hội đua",
+    labelRaceHeader: "🏁 Trận đấu / Cuộc đua",
+    labelUnknown: "Không rõ"
+  },
+  en: {
+    title: "Search Results",
+    foundResults: (count: number, query: string) => `Found ${count} results for keyword "${query}"`,
+    closeSearch: "✕ Close Search",
+    tabAll: "All",
+    tabHorses: "Horses",
+    tabPeople: "Jockeys & Owners",
+    tabRaces: "Meetings & Races",
+    noHorses: "No horses found.",
+    noPeople: "No jockeys or owners found.",
+    noRaces: "No meetings or races found.",
+    labelBreed: "Breed",
+    labelOwner: "Owner",
+    labelRaces: "Races",
+    labelWins: "wins",
+    labelEmail: "Email",
+    labelWeight: "Weight",
+    labelVenue: "Venue",
+    labelTime: "Time",
+    labelTrack: "Track",
+    labelMaxEntries: "Max Entries",
+    labelPurse: "Purse",
+    labelMeetingHeader: "📅 Race Meetings",
+    labelRaceHeader: "🏁 Races / Matches",
+    labelUnknown: "Unknown"
+  },
+  zh: {
+    title: "搜索结果",
+    foundResults: (count: number, query: string) => `找到关于 "${query}" 的 ${count} 条结果`,
+    closeSearch: "✕ 关闭搜索",
+    tabAll: "全部",
+    tabHorses: "马匹",
+    tabPeople: "骑师与马主",
+    tabRaces: "赛事与赛马日",
+    noHorses: "未找到马匹。",
+    noPeople: "未找到骑师或马主。",
+    noRaces: "未找到赛事或赛马日。",
+    labelBreed: "品种",
+    labelOwner: "马主",
+    labelRaces: "出赛次数",
+    labelWins: "胜出",
+    labelEmail: "电子邮箱",
+    labelWeight: "体重",
+    labelVenue: "场地",
+    labelTime: "时间",
+    labelTrack: "跑道",
+    labelMaxEntries: "最大参赛马匹数",
+    labelPurse: "奖金",
+    labelMeetingHeader: "赛马日",
+    labelRaceHeader: "赛事 / 比赛",
+    labelUnknown: "未知"
+  },
+  ja: {
+    title: "検索結果",
+    foundResults: (count: number, query: string) => `キーワード "${query}" に対して ${count} 件の結果が見つかりました`,
+    closeSearch: "✕ 検索を閉じる",
+    tabAll: "すべて",
+    tabHorses: "競走馬",
+    tabPeople: "騎手 & 馬主",
+    tabRaces: "開催日 & レース",
+    noHorses: "競走馬が見つかりませんでした。",
+    noPeople: "騎手または馬主が見つかりませんでした。",
+    noRaces: "開催日またはレースが見つかりませんでした。",
+    labelBreed: "品種",
+    labelOwner: "馬主",
+    labelRaces: "出走回数",
+    labelWins: "勝利",
+    labelEmail: "メール",
+    labelWeight: "体重",
+    labelVenue: "開催地",
+    labelTime: "時間",
+    labelTrack: "馬場",
+    labelMaxEntries: "最大出走頭数",
+    labelPurse: "賞金",
+    labelMeetingHeader: "レース開催日",
+    labelRaceHeader: "レース / 競走",
+    labelUnknown: "不明"
+  }
+};
+
+interface SearchViewProps {
+  query: string;
+  horses: any[];
+  people: any[];
+  meetings: any[];
+  races: any[];
+  t: any;
+  setView: (v: SubView) => void;
+  lang: string;
+}
+
+function SearchView({ query, horses, people, meetings, races, t, setView, lang }: SearchViewProps) {
+  const [activeTab, setActiveTab] = useState<"all" | "horses" | "people" | "races">("all");
+
+  const st = SEARCH_TRANSLATIONS[lang] || SEARCH_TRANSLATIONS.vi;
+  const totalMatches = horses.length + people.length + meetings.length + races.length;
+
+  return (
+    <div style={{ color: "#f0f0f0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
+        <div>
+          <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0" }}>
+            {st.title}
+          </h2>
+          <p style={{ color: "#a0a0a0", fontSize: "0.875rem", fontFamily: "monospace", marginTop: "0.25rem" }}>
+            {st.foundResults(totalMatches, query)}
+          </p>
+        </div>
+        <button 
+          onClick={() => { setView("home"); }} 
+          style={{ padding: "0.5rem 1rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "12px", cursor: "pointer", fontFamily: "monospace" }}
+        >
+          {st.closeSearch}
+        </button>
+      </div>
+
+      {/* Categories Tabs */}
+      <div style={{ display: "flex", borderBottom: "1px solid #2a2825", marginBottom: "2rem", gap: "1rem" }}>
+        {[
+          { id: "all", label: st.tabAll, count: totalMatches },
+          { id: "horses", label: st.tabHorses, count: horses.length },
+          { id: "people", label: st.tabPeople, count: people.length },
+          { id: "races", label: st.tabRaces, count: meetings.length + races.length }
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id as any)}
+            style={{
+              padding: "0.75rem 1rem",
+              background: "none",
+              border: "none",
+              borderBottom: activeTab === tab.id ? "2px solid #c9a227" : "2px solid transparent",
+              color: activeTab === tab.id ? "#c9a227" : "#a0a0a0",
+              fontWeight: activeTab === tab.id ? "bold" : "normal",
+              fontSize: "0.825rem",
+              fontFamily: "monospace",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.375rem",
+              transition: "all 0.2s"
+            }}
+          >
+            {tab.label} <span style={{ fontSize: "0.7rem", background: activeTab === tab.id ? "rgba(201,162,39,0.15)" : "rgba(255,255,255,0.05)", padding: "0.1rem 0.4rem", borderRadius: "999px" }}>{tab.count}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Results Container */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+        
+        {/* HORSES SECTION */}
+        {(activeTab === "all" || activeTab === "horses") && (
+          <div>
+            {(activeTab === "all") && <h3 style={{ color: "#c9a227", fontSize: "0.95rem", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", fontFamily: "monospace" }}>{st.tabHorses} ({horses.length})</h3>}
+            {horses.length === 0 ? (
+              activeTab === "horses" && <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "13px" }}>{st.noHorses}</p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+                {horses.map(h => (
+                  <div key={h.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem", padding: "1.25rem", position: "relative" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+                      <h4 style={{ fontWeight: "bold", fontSize: "1rem", color: "#f0f0f0" }}>🐴 {h.name}</h4>
+                      <span style={{ fontSize: "0.75rem", fontWeight: "bold", color: "#fbbf24", background: "rgba(251,191,36,0.1)", padding: "0.2rem 0.5rem", borderRadius: "0.25rem" }}>Rating {h.currentRating || h.rating}</span>
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "#a0a0a0", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                      <p>🧬 {st.labelBreed}: <span style={{ color: "#fff" }}>{h.breed}</span></p>
+                      <p>👤 {st.labelOwner}: <span style={{ color: "#fff" }}>{h.ownerName || st.labelUnknown}</span></p>
+                      <p>📊 {st.labelRaces}: <span style={{ color: "#fff" }}>{h.totalRaces || h.races || 0} {st.labelRaces.toLowerCase()} ({h.totalWins || h.wins || 0} {st.labelWins})</span></p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PEOPLE SECTION */}
+        {(activeTab === "all" || activeTab === "people") && (
+          <div>
+            {(activeTab === "all") && <h3 style={{ color: "#c9a227", fontSize: "0.95rem", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", fontFamily: "monospace" }}>{st.tabPeople} ({people.length})</h3>}
+            {people.length === 0 ? (
+              activeTab === "people" && <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "13px" }}>{st.noPeople}</p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+                {people.map(p => (
+                  <div key={p.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem", padding: "1.25rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                      <h4 style={{ fontWeight: "bold", fontSize: "1rem", color: "#f0f0f0" }}>👤 {p.username}</h4>
+                      <span style={{ fontSize: "0.65rem", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", color: p.roleId === 3 ? "#34d399" : p.roleId === 2 ? "#60a5fa" : "#fb7171", background: p.roleId === 3 ? "rgba(52,211,153,0.1)" : p.roleId === 2 ? "rgba(96,165,250,0.1)" : "rgba(251,113,113,0.1)", padding: "0.2rem 0.5rem", borderRadius: "0.25rem" }}>
+                        {p.roleId === 3 ? "Jockey" : p.roleId === 2 ? "Owner" : "Referee"}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>
+                      <p>✉️ {st.labelEmail}: <span style={{ color: "#fff" }}>{p.email}</span></p>
+                      {p.roleId === 3 && <p>⚖️ {st.labelWeight}: <span style={{ color: "#fff" }}>{p.weight || "N/A"} kg</span></p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* MEETINGS & RACES SECTION */}
+        {(activeTab === "all" || activeTab === "races") && (
+          <div>
+            {(activeTab === "all") && <h3 style={{ color: "#c9a227", fontSize: "0.95rem", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "1rem", fontFamily: "monospace" }}>{st.tabRaces} ({meetings.length + races.length})</h3>}
+            {meetings.length === 0 && races.length === 0 ? (
+              activeTab === "races" && <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "13px" }}>{st.noRaces}</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                {/* Meetings */}
+                {meetings.length > 0 && (
+                  <div>
+                    <h5 style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", fontFamily: "monospace", textTransform: "uppercase", marginBottom: "0.75rem" }}>{st.labelMeetingHeader} ({meetings.length})</h5>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+                      {meetings.map(m => (
+                        <div key={m.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem", padding: "1.25rem" }}>
+                          <h4 style={{ fontWeight: "bold", fontSize: "0.95rem", color: "#f0f0f0", marginBottom: "0.5rem" }}>🏆 {m.name}</h4>
+                          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>📍 {st.labelVenue}: <span style={{ color: "#fff" }}>{m.venue}</span></p>
+                          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>📅 {st.labelTime}: <span style={{ color: "#fff" }}>{m.startDate || m.date}</span></p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Races */}
+                {races.length > 0 && (
+                  <div>
+                    <h5 style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.5)", fontFamily: "monospace", textTransform: "uppercase", marginBottom: "0.75rem" }}>{st.labelRaceHeader} ({races.length})</h5>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+                      {races.map(r => (
+                        <div key={r.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem", padding: "1.25rem" }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
+                            <h4 style={{ fontWeight: "bold", fontSize: "0.95rem", color: "#f0f0f0" }}>🏁 {st.labelRaceHeader.split(" ")[1]} #{r.id} ({r.classLevel})</h4>
+                            <span style={{ fontSize: "0.65rem", fontWeight: "bold", textTransform: "uppercase", color: r.status === "OFFICIAL" ? "#34d399" : "#fbbf24", background: r.status === "OFFICIAL" ? "rgba(52,211,153,0.1)" : "rgba(251,191,36,0.1)", padding: "0.2rem 0.5rem", borderRadius: "0.25rem" }}>
+                              {r.status}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>
+                            <p>🛣️ {st.labelTrack}: <span style={{ color: "#fff" }}>{r.trackType} ({r.distanceMeters}m)</span></p>
+                            <p>💰 {st.labelPurse}: <span style={{ color: "#4a9d6f", fontWeight: "bold" }}>${r.purse?.toLocaleString()}</span></p>
+                            <p>🐎 {st.labelMaxEntries}: <span style={{ color: "#fff" }}>{r.maxEntries}</span></p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
 function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeting[]; t: any }) {
   return (
     <div>
@@ -251,16 +540,10 @@ function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeti
             {seasons.map(s => {
               const formatSeasonDate = (rawStr: string) => {
                 if (!rawStr) return "";
-                try {
-                  const datePart = rawStr.substring(0, 10);
-                  const parts = datePart.split("-");
-                  if (parts.length === 3) {
-                    return `${parts[2]}-${parts[1]}-${parts[0]}`;
-                  }
-                  return datePart;
-                } catch {
-                  return rawStr;
-                }
+                const d = parseSafeDate(rawStr);
+                if (!d || isNaN(d.getTime())) return rawStr;
+                const pad = (n: number) => String(n).padStart(2, '0');
+                return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
               };
 
               return (
@@ -289,22 +572,12 @@ function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeti
             {meetings.map(m => {
               const formatDateTime = (rawStr: string) => {
                 if (!rawStr) return { date: "", time: "" };
-                try {
-                  const cleanStr = rawStr.replace("T", " ");
-                  const parts = cleanStr.split(" ");
-                  const dateParts = parts[0].split("-");
-                  const dateFormatted = dateParts.length === 3 
-                    ? `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}` 
-                    : parts[0];
-                  let timeFormatted = "";
-                  if (parts[1]) {
-                    const timeParts = parts[1].split(":");
-                    timeFormatted = timeParts.slice(0, 2).join(":");
-                  }
-                  return { date: dateFormatted, time: timeFormatted };
-                } catch {
-                  return { date: rawStr, time: "" };
-                }
+                const d = parseSafeDate(rawStr);
+                if (!d || isNaN(d.getTime())) return { date: rawStr, time: "" };
+                const pad = (n: number) => String(n).padStart(2, '0');
+                const dateFormatted = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()}`;
+                const timeFormatted = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                return { date: dateFormatted, time: timeFormatted };
               };
               const { date, time } = formatDateTime(m.startDate);
 
@@ -420,6 +693,7 @@ export default function Landing() {
   const [users, setUsers] = useState<any[]>([]); // Resolve jockey/owner details
   const [violations, setViolations] = useState<any[]>([]);
   const [liveRaces, setLiveRaces] = useState<any[]>([]);
+  const [races, setRaces] = useState<any[]>([]);
 
   // Selected states for Racecard & Results
   const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null);
@@ -430,18 +704,20 @@ export default function Landing() {
   // Fetch initial background data
   const fetchData = async () => {
     try {
-      const [seasonsData, meetingsData, usersData, horsesData, violationsData] = await Promise.all([
+      const [seasonsData, meetingsData, usersData, horsesData, violationsData, racesData] = await Promise.all([
         api.get<any[]>("/races/seasons").catch(() => []),
         api.get<any[]>("/public/meetings").catch(() => []),
         api.get<any[]>("/public/users").catch(() => []),
         api.get<any[]>("/public/horses").catch(() => []),
         api.get<any[]>("/public/violations").catch(() => []),
+        api.get<any[]>("/public/races").catch(() => []),
       ]);
       setSeasons(seasonsData);
       setMeetings(meetingsData);
       setUsers(usersData);
       setHorses(horsesData);
       setViolations(violationsData);
+      setRaces(racesData);
       if (meetingsData.length > 0) {
         setSelectedMeetingId(meetingsData[0].id);
       }
@@ -745,6 +1021,40 @@ export default function Landing() {
         );
       case "incident":
         return <GenericTableView title="Violation Incident Reports" data={violations} columns={[{ key: "id", label: "Report ID" }, { key: "raceId", label: "Race ID" }, { key: "horseId", label: "Horse ID" }, { key: "jockeyId", label: "Jockey ID" }, { key: "description", label: "Description" }, { key: "penalty", label: "Penalty" }, { key: "status", label: "Status" }]} />;
+      case "search": {
+        const q = searchQuery.toLowerCase().trim();
+        const matchedHorses = horses.filter(h =>
+          (h.name || "").toLowerCase().includes(q) ||
+          (h.breed || "").toLowerCase().includes(q)
+        );
+        const matchedPeople = users.filter(u =>
+          (u.roleId === 2 || u.roleId === 3 || u.roleId === 5) && (
+            (u.username || "").toLowerCase().includes(q) ||
+            (u.email || "").toLowerCase().includes(q)
+          )
+        );
+        const matchedMeetings = meetings.filter(m =>
+          (m.name || "").toLowerCase().includes(q) ||
+          (m.venue || "").toLowerCase().includes(q)
+        );
+        const matchedRaces = races.filter(r =>
+          (r.classLevel || "").toLowerCase().includes(q) ||
+          (r.trackType || "").toLowerCase().includes(q) ||
+          (r.status || "").toLowerCase().includes(q)
+        );
+        return (
+          <SearchView
+            query={searchQuery}
+            horses={matchedHorses}
+            people={matchedPeople}
+            meetings={matchedMeetings}
+            races={matchedRaces}
+            t={t}
+            setView={setView}
+            lang={lang}
+          />
+        );
+      }
       case "about":
         return <AboutView />;
       default:
@@ -781,10 +1091,31 @@ export default function Landing() {
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" strokeWidth="2" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={e => {
+                const val = e.target.value;
+                setSearchQuery(val);
+                if (val.trim()) {
+                  setView("search");
+                } else {
+                  setView("home");
+                }
+              }}
+              onKeyDown={e => {
+                if (e.key === "Enter" && searchQuery.trim()) {
+                  setView("search");
+                }
+              }}
               placeholder={t.searchPlaceholder}
-              style={{ width: "100%", paddingLeft: "2.25rem", paddingRight: "1rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", fontSize: "0.75rem", background: "rgba(21,19,16,0.8)", borderRadius: "0.375rem", color: "#f0f0f0" }}
+              style={{ width: "100%", paddingLeft: "2.25rem", paddingRight: "1.75rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", fontSize: "0.75rem", background: "rgba(21,19,16,0.8)", borderRadius: "0.375rem", color: "#f0f0f0", border: "1px solid rgba(255,255,255,0.08)", outline: "none" }}
             />
+            {searchQuery && (
+              <button 
+                onClick={() => { setSearchQuery(""); setView("home"); }}
+                style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "10px" }}
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           {/* Right Controls */}
@@ -959,7 +1290,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(201,162,39,0.1)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          👤 {lang === "vi" ? "Hồ sơ" : "Profile"}
+                          👤 {lang === "vi" ? "Hồ sơ" : lang === "zh" ? "个人中心" : lang === "ja" ? "プロフィール" : "Profile"}
                         </button>
                         <button
                           onClick={() => {
