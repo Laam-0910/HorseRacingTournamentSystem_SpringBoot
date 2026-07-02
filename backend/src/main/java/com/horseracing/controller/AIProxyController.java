@@ -7,21 +7,25 @@ import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 @RestController
-@RequestMapping("/ai")
+@RequestMapping({"/api/ai", "/ai"})
 @CrossOrigin(origins = "*")
 public class AIProxyController {
 
     private static final String AI_BASE_URL = "http://localhost:5000";
     private final RestTemplate restTemplate = new RestTemplate();
 
-    @GetMapping("/**")
-    public ResponseEntity<String> getProxy(HttpServletRequest request) {
-        String path = request.getRequestURI().substring(request.getContextPath().length() + 3); // removes /ai prefix
-        String url = AI_BASE_URL + path;
+    private String buildUrl(HttpServletRequest request) {
+        String path = request.getRequestURI().replaceFirst("^/api/ai", "").replaceFirst("^/ai", "");
+        String url = AI_BASE_URL + (path.startsWith("/") ? path : "/" + path);
         if (request.getQueryString() != null) {
             url += "?" + request.getQueryString();
         }
+        return url;
+    }
 
+    @GetMapping("/**")
+    public ResponseEntity<String> getProxy(HttpServletRequest request) {
+        String url = buildUrl(request);
         try {
             return restTemplate.getForEntity(url, String.class);
         } catch (HttpStatusCodeException e) {
@@ -36,12 +40,7 @@ public class AIProxyController {
 
     @PostMapping("/**")
     public ResponseEntity<String> postProxy(@RequestBody(required = false) String body, HttpServletRequest request) {
-        String path = request.getRequestURI().substring(request.getContextPath().length() + 3);
-        String url = AI_BASE_URL + path;
-        if (request.getQueryString() != null) {
-            url += "?" + request.getQueryString();
-        }
-
+        String url = buildUrl(request);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<String> entity = new HttpEntity<>(body, headers);

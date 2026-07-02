@@ -129,4 +129,233 @@ public class PublicDataController {
     public ResponseEntity<List<Violation>> getViolations() {
         return ResponseEntity.ok(violationRepository.findAll());
     }
+
+    @GetMapping("/users/{id}/profile")
+    public ResponseEntity<?> getUserProfile(@PathVariable Integer id) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        User user = userOpt.get();
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", user.getId());
+        response.put("username", user.getUsername());
+        response.put("email", user.getEmail());
+        response.put("roleId", user.getRoleId());
+        response.put("avatar", user.getAvatar());
+        response.put("biography", "Professional participant registered under the Horse Racing Tournament System.");
+
+        if (user.getRoleId() == 3) {
+            // Jockey Profile
+            response.put("weight", user.getWeight());
+
+            List<RaceEntry> entries = raceEntryRepository.findByJockeyId(id);
+            long totalRides = entries.stream()
+                .filter(e -> "FINISHED".equalsIgnoreCase(e.getStatus()) || "DISQUALIFIED".equalsIgnoreCase(e.getStatus()))
+                .count();
+            long wins = entries.stream()
+                .filter(e -> "FINISHED".equalsIgnoreCase(e.getStatus()) && Integer.valueOf(1).equals(e.getFinalPosition()))
+                .count();
+            long top3 = entries.stream()
+                .filter(e -> "FINISHED".equalsIgnoreCase(e.getStatus()) && e.getFinalPosition() != null && e.getFinalPosition() <= 3)
+                .count();
+
+            double winRate = totalRides > 0 ? (wins * 100.0) / totalRides : 0.0;
+            double top3Rate = totalRides > 0 ? (top3 * 100.0) / totalRides : 0.0;
+
+            response.put("totalRides", totalRides);
+            response.put("wins", wins);
+            response.put("top3", top3);
+            response.put("winRate", winRate);
+            response.put("top3Rate", top3Rate);
+
+            // Recent history
+            List<Map<String, Object>> history = new ArrayList<>();
+            List<RaceEntry> sortedEntries = new ArrayList<>(entries);
+            sortedEntries.sort((e1, e2) -> {
+                Optional<Race> r1 = raceRepository.findById(e1.getRaceId());
+                Optional<Race> r2 = raceRepository.findById(e2.getRaceId());
+                if (r1.isPresent() && r2.isPresent() && r1.get().getStartTime() != null && r2.get().getStartTime() != null) {
+                    return r2.get().getStartTime().compareTo(r1.get().getStartTime());
+                }
+                return e2.getId().compareTo(e1.getId());
+            });
+
+            int limit = Math.min(10, sortedEntries.size());
+            for (int i = 0; i < limit; i++) {
+                RaceEntry entry = sortedEntries.get(i);
+                Map<String, Object> hMap = new HashMap<>();
+                hMap.put("position", entry.getFinalPosition() != null ? String.valueOf(entry.getFinalPosition()) : (entry.getFinishTime() != null ? entry.getFinishTime() : "—"));
+                hMap.put("finishTime", entry.getFinishTime());
+                hMap.put("prizeMoney", entry.getPrizeMoney());
+                
+                Optional<Horse> horse = horseRepository.findById(entry.getHorseId());
+                hMap.put("horseName", horse.map(Horse::getName).orElse("Unknown"));
+
+                Optional<Race> race = raceRepository.findById(entry.getRaceId());
+                if (race.isPresent()) {
+                    hMap.put("classLevel", race.get().getClassLevel());
+                    hMap.put("startTime", race.get().getStartTime());
+                    Optional<RaceMeeting> meeting = raceMeetingRepository.findById(race.get().getRaceMeetingId());
+                    hMap.put("meetingName", meeting.map(RaceMeeting::getName).orElse("—"));
+                }
+                history.add(hMap);
+            }
+            response.put("history", history);
+
+        } else if (user.getRoleId() == 2) {
+            // Owner Profile
+            List<Horse> horses = horseRepository.findByOwnerId(id);
+            List<Horse> activeHorses = horses.stream()
+                .filter(h -> "ACTIVE".equalsIgnoreCase(h.getStatus()))
+                .toList();
+            response.put("stableSize", activeHorses.size());
+
+            double totalEarnings = 0.0;
+            double sumPos = 0.0;
+            int finishedRaces = 0;
+            List<RaceEntry> ownerEntries = new ArrayList<>();
+
+            for (Horse h : horses) {
+                List<RaceEntry> hEntries = raceEntryRepository.findByHorseId(h.getId());
+                ownerEntries.addAll(hEntries);
+                for (RaceEntry e : hEntries) {
+                    if ("FINISHED".equalsIgnoreCase(e.getStatus())) {
+                        finishedRaces++;
+                        if (e.getFinalPosition() != null) {
+                            sumPos += e.getFinalPosition();
+                        }
+                        if (e.getPrizeMoney() != null) {
+                            totalEarnings += e.getPrizeMoney().doubleValue();
+                        }
+                    }
+                }
+            }
+
+            double avgPosition = finishedRaces > 0 ? sumPos / finishedRaces : 0.0;
+            response.put("totalEarnings", totalEarnings);
+            response.put("avgPosition", avgPosition);
+
+            // Active horses list
+            List<Map<String, Object>> activeHorsesList = new ArrayList<>();
+            for (Horse h : activeHorses) {
+                Map<String, Object> hMap = new HashMap<>();
+                hMap.put("id", h.getId());
+                hMap.put("name", h.getName());
+                hMap.put("breed", h.getBreed());
+                hMap.put("currentRating", h.getCurrentRating());
+                activeHorsesList.add(hMap);
+            }
+            response.put("activeHorses", activeHorsesList);
+
+            // Recent history of stable
+            List<Map<String, Object>> history = new ArrayList<>();
+            ownerEntries.sort((e1, e2) -> {
+                Optional<Race> r1 = raceRepository.findById(e1.getRaceId());
+                Optional<Race> r2 = raceRepository.findById(e2.getRaceId());
+                if (r1.isPresent() && r2.isPresent() && r1.get().getStartTime() != null && r2.get().getStartTime() != null) {
+                    return r2.get().getStartTime().compareTo(r1.get().getStartTime());
+                }
+                return e2.getId().compareTo(e1.getId());
+            });
+
+            int limit = Math.min(10, ownerEntries.size());
+            for (int i = 0; i < limit; i++) {
+                RaceEntry entry = ownerEntries.get(i);
+                Map<String, Object> hMap = new HashMap<>();
+                hMap.put("position", entry.getFinalPosition() != null ? String.valueOf(entry.getFinalPosition()) : (entry.getFinishTime() != null ? entry.getFinishTime() : "—"));
+                hMap.put("finishTime", entry.getFinishTime());
+                hMap.put("prizeMoney", entry.getPrizeMoney());
+                
+                Optional<Horse> horse = horseRepository.findById(entry.getHorseId());
+                hMap.put("horseName", horse.map(Horse::getName).orElse("—"));
+
+                Optional<Race> race = raceRepository.findById(entry.getRaceId());
+                if (race.isPresent()) {
+                    hMap.put("classLevel", race.get().getClassLevel());
+                    hMap.put("startTime", race.get().getStartTime());
+                    Optional<RaceMeeting> meeting = raceMeetingRepository.findById(race.get().getRaceMeetingId());
+                    hMap.put("meetingName", meeting.map(RaceMeeting::getName).orElse("—"));
+                }
+                history.add(hMap);
+            }
+            response.put("history", history);
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/horses/{horseId}/performance")
+    public ResponseEntity<?> getHorsePerformance(@PathVariable Integer horseId) {
+        Optional<Horse> horseOpt = horseRepository.findById(horseId);
+        if (horseOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Horse horse = horseOpt.get();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("horseId", horse.getId());
+        response.put("horseName", horse.getName());
+        response.put("breed", horse.getBreed());
+        response.put("currentRating", horse.getCurrentRating());
+        response.put("totalRaces", horse.getTotalRaces());
+        response.put("totalWins", horse.getTotalWins());
+
+        List<RaceEntry> entries = raceEntryRepository.findByHorseId(horseId);
+
+        List<Map<String, Object>> history = new ArrayList<>();
+        for (RaceEntry entry : entries) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("raceId", entry.getRaceId());
+            item.put("finalPosition", entry.getFinalPosition());
+            item.put("finishTime", entry.getFinishTime());
+            item.put("ratingAdjustment", entry.getRatingAdjustment());
+            item.put("prizeMoney", entry.getPrizeMoney());
+            item.put("status", entry.getStatus());
+            item.put("gateNumber", entry.getGateNumber());
+
+            // Jockey name
+            if (entry.getJockeyId() != null) {
+                userRepository.findById(entry.getJockeyId())
+                        .ifPresent(u -> item.put("jockeyName", u.getUsername()));
+            }
+            if (!item.containsKey("jockeyName")) {
+                item.put("jockeyName", null);
+            }
+
+            // Race details
+            if (entry.getRaceId() != null) {
+                Optional<Race> raceOpt = raceRepository.findById(entry.getRaceId());
+                if (raceOpt.isPresent()) {
+                    Race race = raceOpt.get();
+                    item.put("classLevel", race.getClassLevel());
+                    item.put("startTime", race.getStartTime());
+                    item.put("raceMeetingId", race.getRaceMeetingId());
+                    if (race.getRaceMeetingId() != null) {
+                        raceMeetingRepository.findById(race.getRaceMeetingId())
+                                .ifPresent(m -> item.put("meetingName", m.getName()));
+                    }
+                }
+            }
+            if (!item.containsKey("classLevel")) item.put("classLevel", null);
+            if (!item.containsKey("startTime")) item.put("startTime", null);
+            if (!item.containsKey("raceMeetingId")) item.put("raceMeetingId", null);
+            if (!item.containsKey("meetingName")) item.put("meetingName", null);
+
+            history.add(item);
+        }
+
+        // Sort by startTime descending (nulls last)
+        history.sort((a, b) -> {
+            Object st1 = a.get("startTime");
+            Object st2 = b.get("startTime");
+            if (st1 == null && st2 == null) return 0;
+            if (st1 == null) return 1;
+            if (st2 == null) return -1;
+            return ((Comparable) st2).compareTo(st1);
+        });
+
+        response.put("raceHistory", history);
+        return ResponseEntity.ok(response);
+    }
 }
