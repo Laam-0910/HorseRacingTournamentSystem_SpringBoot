@@ -203,6 +203,15 @@ CREATE TABLE Violation (
 );
 GO
 
+CREATE TABLE ChatMessage (
+    id            INT IDENTITY(1,1) PRIMARY KEY,
+    race_id       INT NOT NULL,
+    username      VARCHAR(100) NOT NULL,
+    message_text  NVARCHAR(MAX) NOT NULL,
+    sent_at       DATETIME DEFAULT GETDATE()
+);
+GO
+
 -- ==========================================
 -- FOREIGN KEY CONSTRAINTS
 -- ==========================================
@@ -241,6 +250,7 @@ ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Race    FOREIGN KEY (race_id)    RE
 ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Horse   FOREIGN KEY (horse_id)   REFERENCES Horse(id);
 ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Jockey  FOREIGN KEY (jockey_id)  REFERENCES [User](id);
 ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Referee FOREIGN KEY (referee_id) REFERENCES [User](id);
+ALTER TABLE ChatMessage ADD CONSTRAINT FK_Chat_Race   FOREIGN KEY (race_id)    REFERENCES Race(id);
 GO
 
 -- ==========================================

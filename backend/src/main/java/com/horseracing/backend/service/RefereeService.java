@@ -81,8 +81,8 @@ public class RefereeService {
     public void startRace(Integer raceId) {
         Race race = raceRepository.findById(raceId)
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
-        if (!"RACE_ASSIGNED".equals(race.getStatus()) && !"DECLARATION_CLOSED".equals(race.getStatus())) {
-            throw new IllegalStateException("Race must be in RACE_ASSIGNED or DECLARATION_CLOSED status to start");
+        if (!"RACE_ASSIGNED".equals(race.getStatus())) {
+            throw new IllegalStateException("Race must be in RACE_ASSIGNED status to start (Pre-Race check must be completed first)");
         }
         race.setStatus("RUNNING");
         raceRepository.save(race);
@@ -202,15 +202,7 @@ public class RefereeService {
                 }
                 resolved.put("gatesFullySet", gatesFullySet);
 
-                boolean preCheckCompleted = false;
-                if (entries != null && !entries.isEmpty()) {
-                    for (RaceEntry entry : entries) {
-                        if (entry.getCarriedWeight() != null && entry.getCarriedWeight().compareTo(BigDecimal.ZERO) > 0) {
-                            preCheckCompleted = true;
-                            break;
-                        }
-                    }
-                }
+                boolean preCheckCompleted = "RACE_ASSIGNED".equalsIgnoreCase(race.getStatus());
                 resolved.put("preCheckCompleted", preCheckCompleted);
 
                 // Load entries details

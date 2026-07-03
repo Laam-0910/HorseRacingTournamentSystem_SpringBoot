@@ -242,14 +242,23 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
 
                     {!isReg && (
                       <div>
-                        {stable.length === 0
-                          ? <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No active horses in stable.</p>
+                        {unregHorses.length === 0
+                          ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                              <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No unregistered horses available.</p>
+                              <button
+                                onClick={() => onRegisterOwner(m.id)}
+                                style={{ width: "100%", padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                              >
+                                Register for Event
+                              </button>
+                            </div>
+                          )
                           : (
                             <>
                               <p style={{ ...labelStyle, marginBottom: "0.375rem" }}>Select Horses to Register:</p>
                               <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
-                                {stable.map((item: any) => {
-                                  const h = item.horse;
+                                {unregHorses.map((h: any) => {
                                   return (
                                     <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
                                       <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
@@ -260,7 +269,7 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                               </div>
                               <button
                                 onClick={() => sel.length ? handleBulkRegister(m.id) : onRegisterOwner(m.id)}
-                                disabled={sel.length === 0 && stable.length > 0}
+                                disabled={sel.length === 0 && unregHorses.length > 0}
                                 style={{ width: "100%", marginTop: "0.5rem", padding: "0.5rem", background: sel.length > 0 ? ROLE_COLOR : "rgba(74,157,111,0.3)", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: sel.length > 0 ? "pointer" : "not-allowed" }}
                               >
                                 {sel.length > 0 ? `Register ${sel.length} Horse(s)` : "Register for Event"}
@@ -829,6 +838,11 @@ export default function HorseOwner() {
   const handleRegisterHorses = async (meetingId: number, horseIds: number[]) => {
     try {
       setErrorMsg(""); setSuccessMsg("");
+      // Automatically register owner if not registered yet
+      const isOwnerReg = dashboard?.registeredMeetingIds?.includes(meetingId);
+      if (!isOwnerReg && user) {
+        await api.post("/registrations/owner", { meetingId, ownerId: user.id });
+      }
       await Promise.all(horseIds.map(horseId => api.post("/registrations/horse", { meetingId, horseId })));
       setSuccessMsg(`Successfully registered ${horseIds.length} horse(s) for meeting.`);
       fetchData();

@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.horseracing.backend.utils.DateTimeParser;
+
 @Service
 @RequiredArgsConstructor
 public class SeasonService {
@@ -38,11 +40,9 @@ public class SeasonService {
         String name = (String) body.get("name");
         String startStr = (String) body.get("startDate");
         String endStr = (String) body.get("endDate");
-        if (startStr != null && startStr.contains("T")) startStr = startStr.substring(0, 10);
-        if (endStr != null && endStr.contains("T")) endStr = endStr.substring(0, 10);
 
-        java.sql.Date startDate = java.sql.Date.valueOf(startStr);
-        java.sql.Date endDate = java.sql.Date.valueOf(endStr);
+        java.sql.Date startDate = DateTimeParser.parseDate(startStr);
+        java.sql.Date endDate = DateTimeParser.parseDate(endStr);
         String classRuleMethod = (String) body.get("classRuleMethod");
 
         Season season = new Season();
@@ -116,18 +116,12 @@ public class SeasonService {
                 .orElseThrow(() -> new IllegalArgumentException("Season not found"));
         
         if (newStartDateStr != null && !newStartDateStr.trim().isEmpty()) {
-            if (newStartDateStr.contains("T")) {
-                newStartDateStr = newStartDateStr.substring(0, 10);
-            }
-            java.sql.Date newStartDate = java.sql.Date.valueOf(newStartDateStr);
+            java.sql.Date newStartDate = DateTimeParser.parseDate(newStartDateStr);
             season.setStartDate(newStartDate);
         }
 
         if (newEndDateStr != null && !newEndDateStr.trim().isEmpty()) {
-            if (newEndDateStr.contains("T")) {
-                newEndDateStr = newEndDateStr.substring(0, 10);
-            }
-            java.sql.Date newEndDate = java.sql.Date.valueOf(newEndDateStr);
+            java.sql.Date newEndDate = DateTimeParser.parseDate(newEndDateStr);
             season.setEndDate(newEndDate);
         }
 

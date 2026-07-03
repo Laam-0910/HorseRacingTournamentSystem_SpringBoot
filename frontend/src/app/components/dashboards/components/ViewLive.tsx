@@ -123,6 +123,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
   const [chatMessages, setChatMessages] = useState<{ user: string; text: string; time: string }[]>([]);
   const [newMsg, setNewMsg] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [connectionState, setConnectionState] = useState<"connecting" | "connected" | "disconnected">("connecting");
   const [isTheaterMode, setIsTheaterMode] = useState(false);
 
   // Generate or retrieve persistent guest username
@@ -184,21 +185,33 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
   useEffect(() => {
     if (!selectedRace) {
       setSocket(null);
+      setConnectionState("disconnected");
       return;
     }
+
+    // Reset messages for the new race
+    setChatMessages([
+      { user: "System", text: `Welcome to the live chat for Race #${selectedRace.id}!`, time: "" }
+    ]);
+    setConnectionState("connecting");
 
     let ws: WebSocket | null = null;
     let reconnectTimeout: number;
     let isComponentMounted = true;
 
     const connect = () => {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+      const hostPart = apiBase.replace(/^https?:\/\//, "").split("/")[0];
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//localhost:8080/ws/chat/${selectedRace.id}`;
+      const wsUrl = `${protocol}//${hostPart}/ws/chat/${selectedRace.id}`;
       
       ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         console.log("WebSocket connected to dashboard race chat: " + selectedRace.id);
+        if (isComponentMounted) {
+          setConnectionState("connected");
+        }
       };
 
       ws.onmessage = (event) => {
@@ -222,12 +235,16 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
       ws.onclose = () => {
         console.log("WebSocket connection closed for dashboard race chat: " + selectedRace.id);
         if (isComponentMounted) {
+          setConnectionState("connecting");
           reconnectTimeout = window.setTimeout(connect, 3000);
         }
       };
 
       ws.onerror = (err) => {
         console.error("WebSocket dashboard chat connection error", err);
+        if (isComponentMounted) {
+          setConnectionState("disconnected");
+        }
         if (ws) ws.close();
       };
 
@@ -382,9 +399,22 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                 <h5 className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider">
                   {t.chatHeader}
                 </h5>
-                <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px] font-mono uppercase">
-                  {t.online}
-                </span>
+                {connectionState === "connected" ? (
+                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px] font-mono uppercase flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+                    {t.online}
+                  </span>
+                ) : connectionState === "connecting" ? (
+                  <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[9px] font-mono uppercase flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-amber-500 animate-bounce"></span>
+                    Connecting
+                  </span>
+                ) : (
+                  <span className="bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded text-[9px] font-mono uppercase flex items-center gap-1.5">
+                    <span className="w-1 h-1 rounded-full bg-rose-500"></span>
+                    Offline
+                  </span>
+                )}
               </div>
               
               <div className="flex-1 p-3 overflow-y-auto space-y-3 scrollbar-hide text-xs">
