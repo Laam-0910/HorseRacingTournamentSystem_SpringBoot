@@ -317,6 +317,10 @@ public class AuthService {
             user.setWeight(dto.getWeight());
         }
 
+        if (dto.getFullName() != null) {
+            user.setFullName(dto.getFullName().trim());
+        }
+
         if (dto.getAvatar() != null) {
             user.setAvatar(dto.getAvatar());
         }

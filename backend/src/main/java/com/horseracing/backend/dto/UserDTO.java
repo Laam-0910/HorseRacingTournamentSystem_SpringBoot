@@ -37,4 +37,5 @@ public class UserDTO {
     private Boolean requireOtp;
 
     private String avatar;
+    private String fullName;
 }

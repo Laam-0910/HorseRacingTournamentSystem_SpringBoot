@@ -1210,7 +1210,7 @@ export default function Landing() {
 
         {/* ── SUB NAV BAR */}
         <div style={{ background: "#0e0c09", borderBottom: "1px solid #2a2825", position: "relative" }}>
-          <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", height: "46px", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", height: "48px", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             
             {/* Hamburger Dropdown Menu (Always Visible) */}
             <div style={{ position: "relative", flexShrink: 0 }}>
@@ -1393,7 +1393,7 @@ export default function Landing() {
                     }}
                     className="hover-lift hover-scale"
                     style={{
-                      padding: "0.375rem 0.75rem", borderRadius: "0.375rem", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer",
+                      padding: "0.35rem 0.65rem", borderRadius: "0.375rem", fontSize: "0.72rem", fontFamily: "monospace", cursor: "pointer",
                       border: active ? "1px solid rgba(201,162,39,0.4)" : "1px solid rgba(201,162,39,0.05)",
                       background: active ? "rgba(201,162,39,0.15)" : "rgba(21,19,16,0.4)",
                       color: active ? "#c9a227" : "#a0a0a0",
@@ -1403,7 +1403,7 @@ export default function Landing() {
                       transition: "all 0.2s",
                     }}
                   >
-                    {n.icon} {n.label}
+                    {n.label}
                   </button>
                 );
               })}

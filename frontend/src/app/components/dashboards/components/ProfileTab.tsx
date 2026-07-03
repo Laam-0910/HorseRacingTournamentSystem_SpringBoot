@@ -21,6 +21,7 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
     twoFactorDesc: "Khi được bật, mã OTP gồm 6 chữ số sẽ được gửi đến email của bạn mỗi khi đăng nhập. Cung cấp một lớp bảo mật bổ sung cho tài khoản của bạn.",
     noteAdmin: "Lưu ý: Tài khoản Admin và Trọng tài theo mặc định bỏ qua 2FA. Hãy đảm bảo địa chỉ email của bạn chính xác trước khi bật tính năng này.",
     upload: "Tải ảnh",
+    fullName: "Họ và tên",
     weight: "Cân nặng (kg)",
     verCode: "Mã xác minh (từ Email)",
     enterOtp: "Nhập mã OTP 6 chữ số",
@@ -49,6 +50,7 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
     twoFactorDesc: "When enabled, a 6-digit OTP code will be sent to your email each time you log in. Provides an extra layer of security for your account.",
     noteAdmin: "Note: Admin and Referee accounts bypass 2FA by default. Make sure your email address is correct before enabling this feature.",
     upload: "Upload",
+    fullName: "Full Name",
     weight: "Weight (kg)",
     verCode: "Verification Code (from Email)",
     enterOtp: "Enter 6-digit OTP code",
@@ -77,6 +79,7 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
     twoFactorDesc: "启用后，每次登录时都会向您的电子邮箱发送一个6位数的 OTP 验证码。为您的帐户提供额外的安全保障。",
     noteAdmin: "注意：管理员和裁判帐户默认绕过 2FA。在启用此功能之前，请确保您的电子邮箱地址正确无误。",
     upload: "上传头像",
+    fullName: "姓名",
     weight: "体重 (kg)",
     verCode: "验证码 (来自邮箱)",
     enterOtp: "输入6位数OTP验证码",
@@ -105,6 +108,7 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
     twoFactorDesc: "有効にすると、ログインするたびに6桁 of OTPコードがメールに送信されます。アカウントにセキュリティレイヤーを追加します。",
     noteAdmin: "注意: 管理者および審判のアカウントはデフォルトで2FAをバイパスします。この機能を有効にする前に、メールアドレスが正しいことを確認してください。",
     upload: "アップロード",
+    fullName: "氏名",
     weight: "体重 (kg)",
     verCode: "認証コード (メールから)",
     enterOtp: "6桁のOTPコードを入力してください",
@@ -129,6 +133,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const st = PROFILE_TRANSLATIONS[lang] || PROFILE_TRANSLATIONS.vi;
   
   // Profile state
+  const [fullName, setFullName] = useState(user?.fullName || user?.username || "");
   const [email, setEmail] = useState(user?.email || "");
   const [weight, setWeight] = useState(user?.weight?.toString() || "");
   const [avatar, setAvatar] = useState(user?.avatar || "");
@@ -184,6 +189,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
       const parsedWeight = user?.roleId === 3 ? parseFloat(weight) || null : null;
       const res = await api.post<any>("/auth/update-profile", {
         id: user?.id,
+        fullName: fullName.trim(),
         email: email.trim(),
         weight: parsedWeight,
         avatar: avatar || null
@@ -192,6 +198,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
       if (res.success && res.user) {
         setUser({
           ...user,
+          fullName: res.user.fullName,
           email: res.user.email,
           weight: res.user.weight,
           avatar: res.user.avatar
@@ -377,6 +384,18 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                   🏷️ {lang === "vi" ? (roleLabel === "Admin" ? "Quản trị viên" : roleLabel === "Horse Owner" ? "Chủ ngựa" : roleLabel === "Jockey" ? "Nài ngựa" : roleLabel === "Referee" ? "Trọng tài" : "Người xem") : lang === "zh" ? (roleLabel === "Admin" ? "管理员" : roleLabel === "Horse Owner" ? "马主" : roleLabel === "Jockey" ? "骑师" : roleLabel === "Referee" ? "裁判" : "观众") : lang === "ja" ? (roleLabel === "Admin" ? "管理者" : roleLabel === "Horse Owner" ? "馬主" : roleLabel === "Jockey" ? "ジョッキー" : roleLabel === "Referee" ? "審判" : "観客") : roleLabel}
                 </p>
               </div>
+            </div>
+
+            {/* Full Name field */}
+            <div>
+              <label style={labelStyle}>{st.fullName}</label>
+              <input 
+                type="text" 
+                required 
+                value={fullName} 
+                onChange={e => setFullName(e.target.value)} 
+                style={inputStyle} 
+              />
             </div>
 
             {/* Email field */}
