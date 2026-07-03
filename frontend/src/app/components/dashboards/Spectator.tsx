@@ -71,6 +71,7 @@ export default function Spectator() {
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const [sessionId] = useState(() => "session-" + Math.random().toString(36).substr(2, 9));
 
   useEffect(() => {
     Promise.all([
@@ -122,13 +123,34 @@ export default function Spectator() {
     setChatLoading(true);
 
     try {
-      const res = await api.post<any>("/public/chat", { message: messageText, lang });
-      const aiMsg: ChatMessage = {
+      const res = await api.post<any>("/ai/chat", { 
+        message: messageText, 
+        lang, 
+        sessionId: sessionId 
+      });
+      
+      const rawText = res.reply || res.data?.reply || "I couldn't process that response.";
+      
+      const botMsgId = `b-${Date.now()}`;
+      setChatMessages(prev => [...prev, {
         sender: "ai",
-        text: res.reply || res.data?.reply || "I couldn't process that response.",
-        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-      };
-      setChatMessages(prev => [...prev, aiMsg]);
+        text: "",
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        id: botMsgId
+      } as any]);
+
+      let currentText = "";
+      let charIdx = 0;
+      const timer = setInterval(() => {
+        if (charIdx < rawText.length) {
+          currentText += rawText[charIdx];
+          setChatMessages(prev => prev.map(m => (m as any).id === botMsgId ? { ...m, text: currentText } : m));
+          charIdx++;
+        } else {
+          clearInterval(timer);
+          setChatLoading(false);
+        }
+      }, 10); // mượt mà 10ms từng ký tự giống Landing
     } catch (err: any) {
       const errorReply: ChatMessage = {
         sender: "ai",
@@ -138,7 +160,6 @@ export default function Spectator() {
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       };
       setChatMessages(prev => [...prev, errorReply]);
-    } finally {
       setChatLoading(false);
     }
   };
@@ -434,38 +455,91 @@ export default function Spectator() {
           : ["Who has the highest rating?", "Predict the upcoming Class 2 race", "Give me top jockey stats"];
 
         return (
-          <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 12rem)", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.2)", borderRadius: "1rem", overflow: "hidden" }}>
+          <div style={{ 
+            display: "flex", 
+            flexDirection: "column", 
+            height: "calc(100vh - 12rem)", 
+            background: "radial-gradient(circle at 50% 50%, #1e1b18 0%, #110f0e 100%)", 
+            borderRadius: "1.25rem", 
+            overflow: "hidden",
+            border: "1px solid rgba(201,162,39,0.12)",
+            boxShadow: "0 12px 40px rgba(0,0,0,0.6)"
+          }}>
             {/* Header */}
-            <div style={{ padding: "1rem 1.5rem", background: "rgba(21,19,16,0.6)", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ 
+              padding: "1.25rem 2rem", 
+              background: "rgba(17,15,14,0.75)", 
+              backdropFilter: "blur(12px)",
+              borderBottom: "1px solid rgba(201,162,39,0.1)", 
+              display: "flex", 
+              justifyContent: "space-between", 
+              alignItems: "center" 
+            }}>
               <div>
-                <h4 style={{ fontWeight: "bold", color: "#fff", display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "14px" }}>
-                  🤖 {lang === "vi" ? "Trợ lý ảo AI Đua Ngựa" : "AI Horse Racing Assistant"}
+                <h4 style={{ 
+                  fontWeight: 800, 
+                  color: "#fff", 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: "0.625rem", 
+                  fontSize: "15px",
+                  letterSpacing: "0.5px"
+                }}>
+                  <span style={{
+                    background: "linear-gradient(45deg, #c9a227, #f3d06c)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent"
+                  }}>✦ Gemini HKJC Assistant</span>
                 </h4>
-                <p style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "2px" }}>
-                  {lang === "vi" ? "Tìm kiếm thông tin, tỷ lệ thắng, phong độ thời gian thực." : "Search ratings, win rates, and current form in real-time."}
+                <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>
+                  {lang === "vi" ? "Trí tuệ nhân tạo phân tích phong độ và thống kê thời gian thực" : "Generative AI form analysis and real-time statistics"}
                 </p>
               </div>
             </div>
 
             {/* Chat Messages */}
-            <div style={{ flex: 1, padding: "1.5rem", overflowY: "auto", display: "flex", flexDirection: "column", gap: "1rem" }} className="scrollbar-hide">
+            <div style={{ 
+              flex: 1, 
+              padding: "2rem", 
+              overflowY: "auto", 
+              display: "flex", 
+              flexDirection: "column", 
+              gap: "1.5rem" 
+            }} className="scrollbar-hide">
               {chatMessages.map((msg, idx) => {
                 const isAI = msg.sender === "ai";
                 return (
-                  <div key={idx} style={{ display: "flex", justifyContent: isAI ? "flex-start" : "flex-end" }}>
-                    <div style={{ maxWidth: "75%", display: "flex", flexDirection: "column", alignItems: isAI ? "flex-start" : "flex-end" }}>
-                      <div style={{ fontSize: "10px", color: "#888", marginBottom: "0.25rem", fontFamily: "monospace" }}>
-                        {isAI ? "AI Assistant" : "You"} · {msg.time}
+                  <div key={idx} style={{ 
+                    display: "flex", 
+                    justifyContent: isAI ? "flex-start" : "flex-end",
+                    animation: "fadeIn 0.3s ease-out"
+                  }}>
+                    <div style={{ 
+                      maxWidth: "80%", 
+                      display: "flex", 
+                      flexDirection: "column", 
+                      alignItems: isAI ? "flex-start" : "flex-end" 
+                    }}>
+                      <div style={{ 
+                        fontSize: "10px", 
+                        color: isAI ? "#c9a227" : "#888", 
+                        marginBottom: "0.35rem", 
+                        fontFamily: "monospace",
+                        fontWeight: "bold",
+                        letterSpacing: "0.5px"
+                      }}>
+                        {isAI ? "✦ GEMINI HKJC" : "YOU"} · {msg.time}
                       </div>
                       <div style={{
-                        padding: "0.75rem 1rem",
-                        borderRadius: "0.75rem",
-                        background: isAI ? "rgba(255,255,255,0.03)" : "rgba(239,68,68,0.1)",
-                        border: isAI ? "1px solid rgba(255,255,255,0.06)" : "1px solid rgba(239,68,68,0.2)",
-                        color: "#f4f2ec",
-                        fontSize: "13px",
-                        lineHeight: "1.5",
-                        whiteSpace: "pre-line"
+                        padding: "1rem 1.25rem",
+                        borderRadius: isAI ? "0 1.25rem 1.25rem 1.25rem" : "1.25rem 0 1.25rem 1.25rem",
+                        background: isAI ? "rgba(255,255,255,0.03)" : "linear-gradient(135deg, #c9a227 0%, #a4811a 100%)",
+                        border: isAI ? "1px solid rgba(255,255,255,0.06)" : "none",
+                        color: isAI ? "#f4f2ec" : "#110f0e",
+                        fontSize: "13.5px",
+                        lineHeight: "1.6",
+                        whiteSpace: "pre-line",
+                        boxShadow: isAI ? "none" : "0 4px 15px rgba(201,162,39,0.2)"
                       }}>
                         {msg.text}
                       </div>
@@ -475,8 +549,9 @@ export default function Spectator() {
               })}
               {chatLoading && (
                 <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                  <div style={{ padding: "0.75rem 1rem", borderRadius: "0.75rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", color: "#a0a0a0", fontSize: "12px", fontFamily: "monospace" }}>
-                    ● ● ● AI is analyzing...
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem 1.25rem", borderRadius: "0 1.25rem 1.25rem 1.25rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c9a227", animation: "pulse 1.2s infinite alternate" }} />
+                    <span style={{ fontSize: "11px", color: "#888", fontFamily: "monospace" }}>Gemini is thinking...</span>
                   </div>
                 </div>
               )}
@@ -484,25 +559,38 @@ export default function Spectator() {
             </div>
 
             {/* Suggestions */}
-            <div style={{ padding: "0.5rem 1.5rem", display: "flex", gap: "0.5rem", overflowX: "auto", borderTop: "1px solid rgba(255,255,255,0.03)" }} className="scrollbar-hide">
-              {SUGGESTIONS.map((s, i) => (
+            <div style={{ 
+              padding: "0.75rem 2rem", 
+              display: "flex", 
+              gap: "0.75rem", 
+              overflowX: "auto", 
+              borderTop: "1px solid rgba(255,255,255,0.03)",
+              background: "rgba(17,15,14,0.4)" 
+            }} className="scrollbar-hide">
+              {SUGGESTIONS.map((s: string, i: number) => (
                 <button
                   key={i}
                   onClick={() => handleSendChatMessage(s)}
                   disabled={chatLoading}
                   style={{
-                    padding: "0.35rem 0.75rem",
-                    background: "rgba(201,162,39,0.08)",
-                    border: "1px solid rgba(201,162,39,0.15)",
-                    borderRadius: "0.5rem",
-                    color: "#c9a227",
-                    fontSize: "11px",
+                    padding: "0.5rem 1rem",
+                    background: "rgba(201,162,39,0.06)",
+                    border: "1px solid rgba(201,162,39,0.12)",
+                    borderRadius: "2rem",
+                    color: "#f3d06c",
+                    fontSize: "11.5px",
                     cursor: "pointer",
                     whiteSpace: "nowrap",
-                    transition: "all 0.2s"
+                    transition: "all 0.25s ease"
                   }}
-                  onMouseEnter={e => e.currentTarget.style.background = "rgba(201,162,39,0.15)"}
-                  onMouseLeave={e => e.currentTarget.style.background = "rgba(201,162,39,0.08)"}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "rgba(201,162,39,0.12)";
+                    e.currentTarget.style.borderColor = "rgba(201,162,39,0.3)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "rgba(201,162,39,0.06)";
+                    e.currentTarget.style.borderColor = "rgba(201,162,39,0.12)";
+                  }}
                 >
                   {s}
                 </button>
@@ -515,40 +603,57 @@ export default function Spectator() {
                 e.preventDefault();
                 handleSendChatMessage(chatInput);
               }}
-              style={{ padding: "1rem 1.5rem", background: "#151310", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", gap: "0.75rem" }}
+              style={{ 
+                padding: "1.25rem 2rem", 
+                background: "#110f0e", 
+                borderTop: "1px solid rgba(255,255,255,0.04)", 
+                display: "flex", 
+                gap: "0.75rem",
+                alignItems: "center"
+              }}
             >
               <input
                 type="text"
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 disabled={chatLoading}
-                placeholder={lang === "vi" ? "Hỏi trợ lý ảo AI đua ngựa..." : "Ask AI Assistant..."}
+                placeholder={lang === "vi" ? "Hỏi Gemini về cuộc đua, ngựa, nài..." : "Ask Gemini about races, horses, jockeys..."}
                 style={{
                   flex: 1,
-                  background: "rgba(0,0,0,0.4)",
+                  background: "rgba(255,255,255,0.03)",
                   border: "1px solid rgba(255,255,255,0.08)",
-                  borderRadius: "0.5rem",
-                  padding: "0.625rem 0.875rem",
+                  borderRadius: "2rem",
+                  padding: "0.75rem 1.25rem",
                   color: "#fff",
                   outline: "none",
-                  fontSize: "13px"
+                  fontSize: "13.5px",
+                  transition: "border 0.2s",
                 }}
+                onFocus={e => e.currentTarget.style.borderColor = "rgba(201,162,39,0.4)"}
+                onBlur={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"}
               />
               <button
                 type="submit"
                 disabled={chatLoading || !chatInput.trim()}
                 style={{
-                  background: "#ef4444",
-                  color: "#fff",
+                  background: "linear-gradient(45deg, #c9a227, #f3d06c)",
+                  color: "#110f0e",
                   border: "none",
-                  borderRadius: "0.5rem",
-                  padding: "0.625rem 1.25rem",
+                  borderRadius: "50%",
+                  width: "40px",
+                  height: "40px",
                   fontWeight: "bold",
                   cursor: "pointer",
-                  fontSize: "13px"
+                  fontSize: "15px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "transform 0.2s"
                 }}
+                onMouseEnter={e => e.currentTarget.style.transform = "scale(1.05)"}
+                onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
               >
-                {lang === "vi" ? "Gửi" : "Send"}
+                ➤
               </button>
             </form>
           </div>
