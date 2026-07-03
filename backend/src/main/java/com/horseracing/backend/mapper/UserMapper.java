@@ -24,6 +24,7 @@ public class UserMapper {
                 .totalTop3Finishes(user.getTotalTop3Finishes())
                 .requireOtp(user.getRequireOtp())
                 .avatar(user.getAvatar() != null ? user.getAvatar().trim() : null)
+                .fullName(user.getFullName() != null ? user.getFullName().trim() : null)
                 .build();
     }
 
@@ -46,6 +47,7 @@ public class UserMapper {
         user.setTotalTop3Finishes(dto.getTotalTop3Finishes());
         user.setRequireOtp(dto.getRequireOtp());
         user.setAvatar(dto.getAvatar() != null ? dto.getAvatar().trim() : null);
+        user.setFullName(dto.getFullName() != null ? dto.getFullName().trim() : null);
         return user;
     }
 
@@ -63,6 +65,7 @@ public class UserMapper {
         user.setRequireOtp(false);
         user.setTotalRacesParticipated(0);
         user.setTotalTop3Finishes(0);
+        user.setFullName(dto.getUsername() != null ? dto.getUsername().trim() : null);
         return user;
     }
 }

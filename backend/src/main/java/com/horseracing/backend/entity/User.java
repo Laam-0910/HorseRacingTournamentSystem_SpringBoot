@@ -52,6 +52,9 @@ public class User implements Serializable {
     @Column(name = "avatar")
     private String avatar;
 
+    @Column(name = "full_name")
+    private String fullName;
+
 
 
 

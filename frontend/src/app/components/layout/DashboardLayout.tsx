@@ -248,7 +248,7 @@ export default function DashboardLayout({
             </div>
             {sidebarExpanded && (
               <div style={{ overflow: 'hidden', flex: 1 }} className="sidebar-text">
-                <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.username}</p>
+                <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.fullName || user?.username}</p>
                 <p style={{ fontSize: '0.6rem', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', color: roleColor }}>{translateLabel(roleLabel, lang)}</p>
               </div>
             )}
@@ -287,18 +287,19 @@ export default function DashboardLayout({
                     transition: 'all 0.25s',
                   }}
                 >
-                  {sidebarExpanded && (
-                    <span style={{ fontFamily: 'monospace', fontSize: '0.5rem', width: 20, textAlign: 'right', flexShrink: 0, color: isActive ? roleColor : 'rgba(255,255,255,0.25)' }}>
+                  {!sidebarExpanded ? (
+                    <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', fontWeight: 700, color: isActive ? roleColor : 'rgba(255,255,255,0.4)', width: '100%', textAlign: 'center' }}>
                       {item.index}
                     </span>
-                  )}
-                  <span style={{ color: isActive ? roleColor : 'rgba(255,255,255,0.4)', display: 'flex' }}>
-                    <Icon name={item.icon} size={14} />
-                  </span>
-                  {sidebarExpanded && (
-                    <span style={{ flex: 1, fontSize: '0.75rem', color: isActive ? roleColor : 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="sidebar-text">
-                      {translateLabel(item.label, lang)}
-                    </span>
+                  ) : (
+                    <>
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', width: 20, textAlign: 'right', flexShrink: 0, color: isActive ? roleColor : 'rgba(255,255,255,0.25)' }}>
+                        {item.index}
+                      </span>
+                      <span style={{ flex: 1, fontSize: '0.75rem', color: isActive ? roleColor : 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="sidebar-text">
+                        {translateLabel(item.label, lang)}
+                      </span>
+                    </>
                   )}
                   {sidebarExpanded && item.badge && item.badge > 0 && (
                     <span style={{ background: roleColor, color: '#0b0d11', fontSize: '0.5rem', fontFamily: 'monospace', fontWeight: 700, padding: '0.125rem 0.375rem', borderRadius: '9999px' }}>

@@ -49,6 +49,7 @@ CREATE TABLE [User] (
     total_top3_finishes         INT NULL DEFAULT 0,         -- Lịch sử thi đấu: Tổng số lần lọt top 3
     require_otp                 BIT NOT NULL DEFAULT 0,
     avatar                      VARCHAR(MAX) NULL,          -- Lưu ảnh đại diện dạng Base64
+    full_name                   NVARCHAR(100) NULL,         -- Tên hiển thị người dùng
     CONSTRAINT CK_User_Status CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 GO

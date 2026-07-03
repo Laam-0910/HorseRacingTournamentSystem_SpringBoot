@@ -7,6 +7,7 @@ export interface AuthUser {
   roleId: number;
   status?: string;
   avatar?: string;
+  fullName?: string;
   weight?: number;
   requireOtp?: boolean;
 }
