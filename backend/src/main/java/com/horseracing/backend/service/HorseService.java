@@ -92,6 +92,9 @@ public class HorseService {
 
         horse.setName(dto.getName());
         horse.setBreed(dto.getBreed());
+        horse.setDateOfBirth(dto.getDateOfBirth());
+        horse.setAvatar(dto.getAvatar());
+        horse.setDescription(dto.getDescription());
 
         if (dto.getCurrentRating() != null && !dto.getCurrentRating().equals(horse.getCurrentRating())) {
             if (roleId == 1) {

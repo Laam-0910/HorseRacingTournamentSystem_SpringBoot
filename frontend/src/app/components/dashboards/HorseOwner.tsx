@@ -1,9 +1,125 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
-import { parseSafeDate } from "../../utils/dateTimeHelper";
+import { parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
 import DashboardLayout from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
+import ProfileModal from "./components/ProfileModal";
+
+interface InlineDatePickerProps {
+  label: string;
+  value: string; // format: dd-MM-yyyy
+  onChange: (val: string) => void;
+}
+
+function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentDate, setCurrentDate] = useState(() => {
+    const today = new Date();
+    return { month: today.getMonth(), year: today.getFullYear() };
+  });
+
+  const datePattern = /^(\d{2})-(\d{2})-(\d{4})$/;
+  const match = value.match(datePattern);
+  const selectedDay = match ? parseInt(match[1]) : null;
+  const selectedMonth = match ? parseInt(match[2]) - 1 : null;
+  const selectedYear = match ? parseInt(match[3]) : null;
+
+  useEffect(() => {
+    if (isOpen && selectedMonth !== null && selectedYear !== null) {
+      setCurrentDate({ month: selectedMonth, year: selectedYear });
+    }
+  }, [isOpen, selectedMonth, selectedYear]);
+
+  const daysInMonth = new Date(currentDate.year, currentDate.month + 1, 0).getDate();
+  let firstDay = new Date(currentDate.year, currentDate.month, 1).getDay();
+  firstDay = firstDay === 0 ? 6 : firstDay - 1;
+
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  const handlePrevMonth = () => {
+    setCurrentDate(prev =>
+      prev.month === 0 ? { month: 11, year: prev.year - 1 } : { month: prev.month - 1, year: prev.year }
+    );
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(prev =>
+      prev.month === 11 ? { month: 0, year: prev.year + 1 } : { month: prev.month + 1, year: prev.year }
+    );
+  };
+
+  const handleSelectDay = (day: number) => {
+    const formattedDay = String(day).padStart(2, "0");
+    const formattedMonth = String(currentDate.month + 1).padStart(2, "0");
+    onChange(`${formattedDay}-${formattedMonth}-${currentDate.year}`);
+    setIsOpen(false);
+  };
+
+  const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  const blanksArray = Array.from({ length: firstDay }, (_, i) => i);
+
+  return (
+    <div className="relative">
+      <label style={labelStyle}>
+        {label}
+      </label>
+      <div className="relative">
+        <input
+          type="text"
+          readOnly
+          onClick={() => setIsOpen(!isOpen)}
+          value={value}
+          placeholder="dd-mm-yyyy"
+          style={inputStyle}
+          className="cursor-pointer"
+        />
+        <button
+          type="button"
+          onClick={() => setIsOpen(!isOpen)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-amber-500 transition text-sm focus:outline-none"
+        >
+          📅
+        </button>
+      </div>
+
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
+          <div className="absolute top-[110%] left-0 w-64 bg-[#100f0c] border border-[#2a2825] rounded-xl p-3.5 shadow-2xl z-50 space-y-3 select-none">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <button type="button" onClick={handlePrevMonth} className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition">◀</button>
+              <span className="font-bold text-white uppercase tracking-wider">{months[currentDate.month]} {currentDate.year}</span>
+              <button type="button" onClick={handleNextMonth} className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition">▶</button>
+            </div>
+            <div className="grid grid-cols-7 text-center text-[9px] font-semibold text-white/40 uppercase font-mono">
+              {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d => <span key={d}>{d}</span>)}
+            </div>
+            <div className="grid grid-cols-7 gap-1">
+              {blanksArray.map(b => <div key={`blank-${b}`} className="h-7 w-7"></div>)}
+              {daysArray.map(day => {
+                const isSelected = selectedDay === day && selectedMonth === currentDate.month && selectedYear === currentDate.year;
+                return (
+                  <button
+                    key={`day-${day}`}
+                    type="button"
+                    onClick={() => handleSelectDay(day)}
+                    className={`h-7 w-7 text-[10px] font-mono rounded-lg flex items-center justify-center transition ${
+                      isSelected ? "bg-amber-500 text-black font-bold" : "text-white/80 hover:bg-white/5 hover:text-amber-500"
+                    }`}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 
 type OwnerTab = "hub" | "stable" | "calendar" | "invitations" | "results" | "profile";
 
@@ -132,12 +248,15 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                             <>
                               <p style={{ ...labelStyle, marginBottom: "0.375rem" }}>Select Horses to Register:</p>
                               <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
-                                {stable.map((h: any) => (
-                                  <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
-                                    <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
-                                    {h.name} (Rating: {h.currentRating})
-                                  </label>
-                                ))}
+                                {stable.map((item: any) => {
+                                  const h = item.horse;
+                                  return (
+                                    <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
+                                      <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
+                                      {h.name} (Rating: {h.currentRating})
+                                    </label>
+                                  );
+                                })}
                               </div>
                               <button
                                 onClick={() => sel.length ? handleBulkRegister(m.id) : onRegisterOwner(m.id)}
@@ -218,12 +337,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
   const [msg, setMsg] = useState("");
 
   const formatDobForApi = (dobStr: string): string => {
-    if (!dobStr) return "";
-    const parts = dobStr.split("-");
-    if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]} 00:00:00`;
-    }
-    return dobStr;
+    return dobStr ? `${dobStr} 00:00:00` : "";
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
@@ -262,7 +376,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
     setEditingHorse(item.horse);
     setEditName(item.horse.name || "");
     setEditBreed(item.horse.breed || "");
-    setEditDob(item.horse.dateOfBirth ? (() => { const d = parseSafeDate(item.horse.dateOfBirth); return d ? d.toISOString().split("T")[0] : ""; })() : "");
+    setEditDob(item.horse.dateOfBirth ? formatDateTime(item.horse.dateOfBirth).split(" ")[0] : "");
     setEditRating(item.horse.currentRating || 52);
     setEditAvatar(item.horse.avatar || "");
     setEditDescription(item.horse.description || "");
@@ -314,13 +428,13 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
           {[
             { lbl: "Horse Name", val: horseName, set: setHorseName, type: "text", ph: "E.g., Shadow Fax" },
             { lbl: "Breed",      val: breed,     set: setBreed,     type: "text", ph: "E.g., Arabian Thoroughbred" },
-            { lbl: "Date of Birth", val: dateOfBirth, set: setDateOfBirth, type: "date", ph: "" },
           ].map(f => (
             <div key={f.lbl}>
               <label style={labelStyle}>{f.lbl}</label>
               <input type={f.type} required value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph} style={inputStyle} />
             </div>
           ))}
+          <InlineDatePicker label="Date of Birth" value={dateOfBirth} onChange={setDateOfBirth} />
           <div>
             <label style={labelStyle}>Horse Photo / Avatar</label>
             <input type="file" accept="image/*" onChange={e => handleAvatarChange(e, false)} style={inputStyle} />
@@ -346,13 +460,13 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
               {[
                 { lbl: "Horse Name", val: editName, set: setEditName, type: "text" },
                 { lbl: "Breed",      val: editBreed, set: setEditBreed, type: "text" },
-                { lbl: "Date of Birth", val: editDob, set: setEditDob, type: "date" },
               ].map(f => (
                 <div key={f.lbl}>
                   <label style={labelStyle}>{f.lbl}</label>
                   <input type={f.type} required value={f.val} onChange={e => f.set(e.target.value)} style={inputStyle} />
                 </div>
               ))}
+              <InlineDatePicker label="Date of Birth" value={editDob} onChange={setEditDob} />
               <div>
                 <label style={labelStyle}>Horse Photo / Avatar</label>
                 <input type="file" accept="image/*" onChange={e => handleAvatarChange(e, true)} style={inputStyle} />
@@ -382,9 +496,10 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
 }
 
 // ── CalendarView ───────────────────────────────────────────────────────────
-function CalendarView({ meetings, allRaces, seasons, dashboard, onSendInvitation }: {
+function CalendarView({ meetings, allRaces, seasons, dashboard, onSendInvitation, onViewProfile }: {
   meetings: any[]; allRaces: any[]; seasons: any[]; dashboard: any;
   onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
+  onViewProfile: (id: number) => void;
 }) {
   const [seasonFilter, setSeasonFilter] = useState("");
 
@@ -455,6 +570,7 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, onSendInvitation
                           eligibleHorses={eligibleHorses}
                           jockeys={meetingJockeys}
                           onSendInvitation={onSendInvitation}
+                          onViewProfile={onViewProfile}
                         />
                       );
                     })}
@@ -465,9 +581,10 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, onSendInvitation
   );
 }
 
-function RaceRow({ race, isReg, eligibleHorses, jockeys, onSendInvitation }: {
+function RaceRow({ race, isReg, eligibleHorses, jockeys, onSendInvitation, onViewProfile }: {
   race: any; isReg: boolean; eligibleHorses: any[]; jockeys: any[];
   onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
+  onViewProfile: (id: number) => void;
 }) {
   const [horseId, setHorseId] = useState("");
   const [jockeyId, setJockeyId] = useState("");
@@ -520,10 +637,17 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, onSendInvitation }: {
               </div>
               <div>
                 <label style={labelStyle}>Select Jockey</label>
-                <select value={jockeyId} onChange={e => setJockeyId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
-                  <option value="">-- Select Jockey --</option>
-                  {jockeys.map((j: any) => <option key={j.id} value={j.id}>{j.username} ({j.weight}kg)</option>)}
-                </select>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                  <select value={jockeyId} onChange={e => setJockeyId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
+                    <option value="">-- Select Jockey --</option>
+                    {jockeys.map((j: any) => <option key={j.id} value={j.id}>{j.username} ({j.weight}kg)</option>)}
+                  </select>
+                  {jockeyId && (
+                    <button type="button" onClick={() => onViewProfile(parseInt(jockeyId))} style={{ background: "none", border: "none", color: "#fbbf24", fontSize: "0.65rem", fontFamily: "monospace", textDecoration: "underline", cursor: "pointer", alignSelf: "flex-start", padding: 0 }}>
+                      🔍 View Jockey Profile
+                    </button>
+                  )}
+                </div>
               </div>
               <button type="submit" style={{ width: "100%", padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}>
                 ✉ Send Invitation
@@ -544,7 +668,7 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, onSendInvitation }: {
 }
 
 // ── InvitationsView ────────────────────────────────────────────────────────
-function InvitationsView({ invitations }: { invitations: any[] }) {
+function InvitationsView({ invitations, onViewProfile }: { invitations: any[]; onViewProfile: (id: number) => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div>
@@ -572,7 +696,15 @@ function InvitationsView({ invitations }: { invitations: any[] }) {
                       {inv.classLevel ? `${inv.classLevel} · ${formatDate(inv.startTime)}` : `Race #${inv.raceId}`}
                     </td>
                     <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{inv.horseName ?? `Horse #${inv.horseId}`}</td>
-                    <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", color: "#f4f2ec" }}>{inv.jockeyName ?? `Jockey #${inv.jockeyId}`}</td>
+                    <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", color: "#f4f2ec" }}>
+                      <button 
+                        type="button" 
+                        onClick={() => onViewProfile(inv.jockeyId)} 
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontSize: "0.8rem", fontFamily: "monospace" }}
+                      >
+                        {inv.jockeyName ?? `Jockey #${inv.jockeyId}`}
+                      </button>
+                    </td>
                     <td style={{ padding: "0.875rem 1.25rem" }}><StatusBadge status={inv.status} /></td>
                   </tr>
                 ))}
@@ -646,6 +778,7 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
 // ── Main Component ─────────────────────────────────────────────────────────
 export default function HorseOwner() {
   const { user } = useAuth();
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<OwnerTab>(() => {
     const p = new URLSearchParams(window.location.search).get("tab");
     return (p as OwnerTab) || "hub";
@@ -723,9 +856,9 @@ export default function HorseOwner() {
       case "stable":
         return <StableView stable={stable} onRefresh={fetchData} />;
       case "calendar":
-        return <CalendarView meetings={meetings} allRaces={allRaces} seasons={seasons} dashboard={dashboard} onSendInvitation={handleSendInvitation} />;
+        return <CalendarView meetings={meetings} allRaces={allRaces} seasons={seasons} dashboard={dashboard} onSendInvitation={handleSendInvitation} onViewProfile={setSelectedProfileId} />;
       case "invitations":
-        return <InvitationsView invitations={invitations} />;
+        return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} />;
       case "results":
         return <ResultsView results={results} totalEarnings={totalEarnings} />;
       case "profile":
@@ -736,17 +869,22 @@ export default function HorseOwner() {
   };
 
   return (
-    <DashboardLayout
-      roleLabel="Horse Owner"
-      roleColor={ROLE_COLOR}
-      activeLabel={activeLabel}
-      currentView={activeTab}
-      navItems={navItemsWithBadge}
-      onViewChange={v => { setActiveTab(v as OwnerTab); setSuccessMsg(""); setErrorMsg(""); }}
-      successMsg={successMsg}
-      errorMsg={errorMsg}
-    >
-      {renderContent()}
-    </DashboardLayout>
+    <>
+      <DashboardLayout
+        roleLabel="Horse Owner"
+        roleColor={ROLE_COLOR}
+        activeLabel={activeLabel}
+        currentView={activeTab}
+        navItems={navItemsWithBadge}
+        onViewChange={v => { setActiveTab(v as OwnerTab); setSuccessMsg(""); setErrorMsg(""); }}
+        successMsg={successMsg}
+        errorMsg={errorMsg}
+      >
+        {renderContent()}
+      </DashboardLayout>
+      {selectedProfileId !== null && (
+        <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
+      )}
+    </>
   );
 }

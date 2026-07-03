@@ -4,6 +4,8 @@ import { api } from "../../../lib/api";
 import DashboardLayout, { Icon } from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
 import ViewLive from "./components/ViewLive";
+import ProfileModal from "./components/ProfileModal";
+import HorsePerformanceModal from "./components/HorsePerformanceModal";
 
 type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "profile";
 
@@ -42,6 +44,13 @@ export default function Spectator() {
 
   // Live stream cross-navigation state
   const [selectedLiveRaceId, setSelectedLiveRaceId] = useState<number | null>(null);
+
+  // Profile modal state (for jockey profiles)
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+
+  // Horse performance modal state
+  const [selectedHorseId, setSelectedHorseId] = useState<number | null>(null);
+  const [selectedHorseName, setSelectedHorseName] = useState<string>("");
 
   // Expandable Racecard State
   const [expandedRaceId, setExpandedRaceId] = useState<number | null>(null);
@@ -293,7 +302,14 @@ export default function Spectator() {
                                       <div key={idx} style={{ background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "0.5rem" }}>
                                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.35rem", fontSize: "12px" }}>
                                           <span style={{ fontWeight: 600, color: "#f4f2ec" }}>
-                                            Gate #{item.entry?.gateNumber || "N/A"} · {item.horse?.name} ({item.jockey?.username})
+                                            Gate #{item.entry?.gateNumber || "N/A"} · {item.horse?.name} (
+                                            <button
+                                              onClick={e => { e.stopPropagation(); setSelectedProfileId(item.jockey?.id); }}
+                                              style={{ background: "none", border: "none", cursor: "pointer", color: "#fbbf24", textDecoration: "underline", fontWeight: "bold", padding: 0, fontSize: "inherit" }}
+                                            >
+                                              {item.jockey?.username}
+                                            </button>
+                                            )
                                           </span>
                                           <span style={{ fontFamily: "monospace", color: "#c9a227", fontWeight: "bold" }}>
                                             {prob.toFixed(1)}%
@@ -363,7 +379,14 @@ export default function Spectator() {
               {horses.length === 0
                 ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{lang === "vi" ? "Không tìm thấy ngựa đã đăng ký." : "No horses registered yet."}</p>
                 : horses.map((h: any) => (
-                  <div key={h.id} className="rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <div
+                    key={h.id}
+                    className="rounded-xl overflow-hidden"
+                    style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer", transition: "border-color 0.2s, transform 0.15s" }}
+                    onClick={() => { setSelectedHorseId(h.id); setSelectedHorseName(h.name); }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,162,39,0.4)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.08)"; (e.currentTarget as HTMLElement).style.transform = "translateY(0)"; }}
+                  >
                     {h.avatar
                       ? <img src={h.avatar} alt={h.name} style={{ width: "100%", height: "9rem", objectFit: "cover" }} />
                       : <div style={{ width: "100%", height: "9rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontFamily: "monospace", fontSize: "0.7rem" }}>NO IMAGE</div>}
@@ -374,6 +397,7 @@ export default function Spectator() {
                         <span style={{ color: "#a0a0a0", fontFamily: "monospace" }}>Rating: <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
                         <span style={{ color: "#a0a0a0", fontFamily: "monospace" }}>W: {h.totalWins ?? 0}</span>
                       </div>
+                      <p style={{ fontSize: "0.6rem", color: "#c9a227", fontFamily: "monospace", marginTop: "0.4rem", textAlign: "center" }}>Click to view performance →</p>
                     </div>
                   </div>
                 ))}
@@ -539,17 +563,29 @@ export default function Spectator() {
   };
 
   return (
-    <DashboardLayout
-      roleLabel="Spectator"
-      roleColor={ROLE_COLOR}
-      activeLabel={activeLabel}
-      currentView={activeTab}
-      navItems={NAV_ITEMS}
-      onViewChange={v => { setActiveTab(v as SpectatorTab); setSuccessMsg(""); setErrorMsg(""); }}
-      successMsg={successMsg}
-      errorMsg={errorMsg}
-    >
-      {renderContent()}
-    </DashboardLayout>
+    <>
+      <DashboardLayout
+        roleLabel="Spectator"
+        roleColor={ROLE_COLOR}
+        activeLabel={activeLabel}
+        currentView={activeTab}
+        navItems={NAV_ITEMS}
+        onViewChange={v => { setActiveTab(v as SpectatorTab); setSuccessMsg(""); setErrorMsg(""); }}
+        successMsg={successMsg}
+        errorMsg={errorMsg}
+      >
+        {renderContent()}
+      </DashboardLayout>
+      {selectedProfileId !== null && (
+        <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
+      )}
+      {selectedHorseId !== null && (
+        <HorsePerformanceModal
+          horseId={selectedHorseId}
+          horseName={selectedHorseName}
+          onClose={() => { setSelectedHorseId(null); setSelectedHorseName(""); }}
+        />
+      )}
+    </>
   );
 }

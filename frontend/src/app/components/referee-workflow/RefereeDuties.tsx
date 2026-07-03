@@ -8,9 +8,11 @@ function statusBadge(status: string) {
     SCHEDULED:          { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: "Scheduled" },
     DECLARATION_OPEN:   { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: "Declaration Open" },
     DECLARATION_CLOSED: { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: "Declaration Closed" },
+    RACE_ASSIGNED:      { bg: "rgba(139,92,246,0.1)",  color: "#a08cf6", label: "Race Assigned" },
     RUNNING:            { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: "Running" },
     FINISHED:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: "Finished" },
     OFFICIAL:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: "Official" },
+    STEWARDS_INQUIRY:   { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: "Stewards Inquiry" },
   };
   const c = cfg[s] ?? { bg: "rgba(255,255,255,0.05)", color: "#a0a0a0", label: status };
   return (

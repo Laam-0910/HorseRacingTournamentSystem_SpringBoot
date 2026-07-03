@@ -3,6 +3,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import DashboardLayout from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
+import ProfileModal from "./components/ProfileModal";
 
 type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "profile";
 
@@ -103,7 +104,7 @@ function MountsView({ mounts, loading }: { mounts: any[]; loading: boolean }) {
   );
 }
 
-function InvitationsView({ invitations, onAccept, onReject }: { invitations: any[]; onAccept: (id: number) => void; onReject: (id: number) => void }) {
+function InvitationsView({ invitations, onAccept, onReject, onViewProfile }: { invitations: any[]; onAccept: (id: number) => void; onReject: (id: number) => void; onViewProfile: (id: number) => void }) {
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Pending Ride Offers</h3>
@@ -114,7 +115,16 @@ function InvitationsView({ invitations, onAccept, onReject }: { invitations: any
           {invitations.map((inv: any) => (
             <div key={inv.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "1rem" }}>
               <div>
-                <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>Offer from Stable Owner #{inv.ownerId}</h4>
+                <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>
+                  Offer from Stable Owner{" "}
+                  <button 
+                    type="button" 
+                    onClick={() => onViewProfile(inv.ownerId)} 
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontWeight: "bold" }}
+                  >
+                    #{inv.ownerId}
+                  </button>
+                </h4>
                 <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.5rem" }}>Horse ID: #{inv.horseId} | Race ID: #{inv.raceId}</p>
                 <p style={{ fontSize: "0.7rem", color: "#a0a0a0" }}>Status: {inv.status}</p>
               </div>
@@ -202,6 +212,7 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function Jockey() {
   const { user } = useAuth();
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<JockeyTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as JockeyTab) || "hub";
@@ -272,18 +283,21 @@ export default function Jockey() {
   };
 
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Jockey Hub";
-  const pendingInvitations = invitations.length;
+  const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
+  const pendingViolations = violations.filter(v => v.status === "PENDING").length;
 
-  const navItemsWithBadge = NAV_ITEMS.map(n =>
-    n.view === "invitations" ? { ...n, badge: pendingInvitations } : n
-  );
+  const navItemsWithBadge = NAV_ITEMS.map(n => {
+    if (n.view === "invitations") return { ...n, badge: pendingInvitations };
+    if (n.view === "violations") return { ...n, badge: pendingViolations };
+    return n;
+  });
 
   const renderContent = () => {
     switch (activeTab) {
       case "hub":         return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
       case "mounts":      return <MountsView mounts={mounts} loading={loading} />;
       case "calendar":    return <CalendarView meetings={meetings} />;
-      case "invitations": return <InvitationsView invitations={invitations} onAccept={handleAcceptInvite} onReject={handleRejectInvite} />;
+      case "invitations": return <InvitationsView invitations={invitations.filter((i: any) => i.status === "PENDING")} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} />;
       case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;
       default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
@@ -291,17 +305,22 @@ export default function Jockey() {
   };
 
   return (
-    <DashboardLayout
-      roleLabel="Jockey"
-      roleColor={ROLE_COLOR}
-      activeLabel={activeLabel}
-      currentView={activeTab}
-      navItems={navItemsWithBadge}
-      onViewChange={v => { setActiveTab(v as JockeyTab); setSuccessMsg(""); setErrorMsg(""); }}
-      successMsg={successMsg}
-      errorMsg={errorMsg}
-    >
-      {renderContent()}
-    </DashboardLayout>
+    <>
+      <DashboardLayout
+        roleLabel="Jockey"
+        roleColor={ROLE_COLOR}
+        activeLabel={activeLabel}
+        currentView={activeTab}
+        navItems={navItemsWithBadge}
+        onViewChange={v => { setActiveTab(v as JockeyTab); setSuccessMsg(""); setErrorMsg(""); }}
+        successMsg={successMsg}
+        errorMsg={errorMsg}
+      >
+        {renderContent()}
+      </DashboardLayout>
+      {selectedProfileId !== null && (
+        <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
+      )}
+    </>
   );
 }
