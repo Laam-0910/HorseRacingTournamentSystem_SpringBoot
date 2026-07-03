@@ -154,6 +154,7 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
   const [input, setInput] = useState("");
   const [waiting, setWaiting] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [sessionId] = useState(() => "session-" + Math.random().toString(36).substr(2, 9));
 
   useEffect(() => {
     setMessages(prev => prev.map(m => m.id === "welcome" ? { ...m, text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.vi.welcome } : m));
@@ -174,7 +175,7 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
     setMessages(prev => [...prev, userMsg, typingMsg]);
     setWaiting(true);
     try {
-      const data = await api.post<any>("/ai/chat", { message: msg, lang });
+      const data = await api.post<any>("/ai/chat", { message: msg, lang, sessionId });
       const rawText = data.success ? data.reply : CHAT_LANG[lang].error + (data.error || "");
       
       const botMsgId = `b-${Date.now()}`;

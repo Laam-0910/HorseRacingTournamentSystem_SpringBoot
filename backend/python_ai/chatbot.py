@@ -894,7 +894,7 @@ def detect_intent(text):
             return intent
     if any(w in text_lower for w in ["predict", "win", "dự đoán", "thắng", "予想", "予測", "预测"]):
         return "predict"
-    if any(w in text_lower for w in ["upcoming", "schedule", "sắp", "予定", "日程", "赛程"]) or ("lịch" in text_lower and "lịch sử" not in text_lower):
+    if any(w in text_lower for w in ["upcoming", "schedule", "sắp", "予定", "日程", "赛程"]) or ("lịch" in text_lower and "lịch sử" not in text_lower and "lịch sử thắng" not in text_lower):
         return "upcoming"
     if any(w in text_lower for w in ["recent", "result", "kết quả", "结果", "勝者"]):
         return "recent"

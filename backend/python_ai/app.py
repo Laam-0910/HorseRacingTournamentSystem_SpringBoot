@@ -2,20 +2,73 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from chatbot import chat
 from predictor import predict_race, train_model
+from session_memory import memory
+from rag_engine import rag_engine
 
 app = Flask(__name__)
 app.json.ensure_ascii = False
 CORS(app)
 
+# ── CONFIG CHATBOT RAG / LLM ─────────────────────────────────────────────────
+# ⚠️ Thay đổi sang True và dán API key của bạn vào đây nếu muốn dùng Gemini API
+USE_GEMINI = False
+GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
+
+rag_engine.use_gemini = USE_GEMINI
+rag_engine.gemini_api_key = GEMINI_API_KEY
+
 @app.route("/chat", methods=["POST"])
 def chatbot():
-    data = request.json
+    data = request.json or {}
     message = data.get("message", "").strip()
     lang = data.get("lang", None)
+    session_id = data.get("sessionId", "default-user-session")
+
     if not message:
         return jsonify({"success": False, "error": "message is required"}), 400
-    reply = chat(message, lang)
-    return jsonify({"success": True, "reply": reply})
+
+    # ── BẢO MẬT: Chặn yêu cầu nhạy cảm liên quan đến tài khoản mật khẩu
+    blocked_keywords = ["password", "mật khẩu", "passwd", "pass", "tài khoản", "account", "danh sách user", "admin credential", "username", "email", "phone"]
+    msg_lower = message.lower()
+    if any(kw in msg_lower for kw in blocked_keywords):
+        reply = (
+            "⚠️ Tôi không được phép chia sẻ thông tin tài khoản, mật khẩu hoặc dữ liệu cá nhân của người dùng. Vui lòng liên hệ quản trị viên."
+            if lang != "en" else
+            "⚠️ I am not authorized to share account credentials, passwords, or personal information. Please contact the administrator."
+        )
+        return jsonify({"success": True, "reply": reply})
+
+    # 1. Cập nhật ngữ cảnh hội thoại (Dialogue State Memory) từ tin nhắn mới
+    memory.update_state_from_text(session_id, message)
+    session = memory.get_session(session_id)
+    state = session["state"]
+
+    # 2. RAG: Lấy thông tin thực tế từ Database dựa trên state hiện tại
+    db_context = rag_engine.retrieve_db_context(state)
+
+    # 3. Lấy chuỗi lịch sử trò chuyện để làm ngữ cảnh
+    chat_history = memory.get_history_context(session_id)
+
+    # 4. Tạo phản hồi sử dụng LLM (Gemini hoặc Ollama local)
+    # Nếu chưa bật Gemini hoặc không kết nối được Ollama, ta sẽ tự động fallback sang Chatbot rule-based gốc
+    reply = ""
+    try:
+        reply = rag_engine.generate_answer(message, chat_history, db_context, lang)
+    except Exception as e:
+        print(f"[RAG Error] Fallback to Rule-based Chatbot due to: {e}")
+        
+    # Fallback dự phòng nếu LLM không trả về kết quả
+    if not reply or "Lỗi" in reply or "connection error" in reply.lower():
+        reply = chat(message, lang)
+
+    # 5. Lưu tin nhắn vào lịch sử session memory
+    memory.add_message(session_id, message, reply)
+
+    return jsonify({
+        "success": True, 
+        "reply": reply,
+        "dialogueState": state
+    })
 
 @app.route("/predict/<int:race_id>", methods=["GET"])
 def predict(race_id):

@@ -24,8 +24,21 @@ export default function VerifyForgot() {
     setError("");
     setSuccess("");
 
+    const lang = localStorage.getItem("app-lang") || "vi";
+
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(lang === "vi" ? "Mật khẩu xác nhận không khớp." : "Passwords do not match.");
+      return;
+    }
+
+    // Kiểm tra độ phức tạp mật khẩu
+    const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!pwdRegex.test(newPassword)) {
+      setError(
+        lang === "vi"
+          ? "Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)"
+          : "New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (@$!%*?&)"
+      );
       return;
     }
 

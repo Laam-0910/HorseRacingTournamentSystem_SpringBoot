@@ -9,17 +9,33 @@ export default function Register() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const lang = localStorage.getItem("app-lang") || "vi";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
+      setError(lang === "vi" ? "Mật khẩu xác nhận không khớp" : "Passwords do not match");
       return;
     }
+    // Kiểm tra độ phức tạp của mật khẩu (Chữ hoa, số, ký tự đặc biệt)
+    const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!pwdRegex.test(form.password)) {
+      setError(
+        lang === "vi"
+          ? "Mật khẩu phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)"
+          : "Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (@$!%*?&)"
+      );
+      return;
+    }
+
     setError(""); setLoading(true);
     try {
-      await api.post("/auth/register", { username: form.fullName, email: form.email, password: form.password });
-      navigate("/verify-register", { state: { email: form.email } });
+      const res = await api.post<any>("/auth/register", { username: form.fullName, email: form.email, password: form.password });
+      if (res.requireOtp) {
+        navigate(`/verify-register?otpTxId=${res.otpTxId}`, { state: { email: form.email } });
+      } else {
+        navigate("/login");
+      }
     } catch (err: any) {
       setError(err.message || "Registration failed");
     } finally { setLoading(false); }
