@@ -293,13 +293,13 @@ export default function RefereeHub() {
         {!isGatesFullySet && (
           <div style={{ padding: "1rem", background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", borderRadius: "0.5rem", color: "#f87171", fontSize: "12px", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Icon name="alert-triangle" />
-            <span><strong>Cảnh báo:</strong> Cổng xuất phát chưa được thiết lập đầy đủ cho tất cả nài/ngựa. Hãy yêu cầu Admin cấu hình cổng trước khi bắt đầu cuộc đua.</span>
+            <span><strong>Warning:</strong> Starting gates have not been fully configured for all horse/jockey entries. Please request the Admin to configure gates before starting the race.</span>
           </div>
         )}
 
         {isGatesFullySet && (
           <div style={{ padding: "1rem", background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "0.5rem", color: "#34d399", fontSize: "12px", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span>💡 <strong>Thông tin:</strong> Trận đấu đã đầy đủ cổng xuất phát. Trọng tài có thể cho phép bắt đầu cuộc đua trước giờ bằng cách bấm Xác nhận kiểm tra phía dưới để đưa trạng thái trận đấu sang <strong>RUNNING</strong> ngay lập tức.</span>
+            <span>💡 <strong>Info:</strong> Starting gates are fully configured. The referee can allow the race to start early by clicking "Confirm Pre-Race Check" below to set the race status to <strong>RUNNING</strong> immediately.</span>
           </div>
         )}
 
@@ -446,17 +446,17 @@ export default function RefereeHub() {
           <div style={{ display: "flex", gap: "0.75rem" }}>
             <button
               onClick={() => {
-                const reason = prompt("Nhập lý do tạm dừng/hoãn cuộc đua khẩn cấp (Steward's Report):");
+                const reason = prompt("Enter reason for emergency race stop (Steward's Report):");
                 if (reason && reason.trim()) {
                   handleStopRace(reason);
                 }
               }}
               style={{ padding: "0.5rem 1.25rem", background: "#f59e0b", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
             >
-              🛑 Dừng trận đấu khẩn cấp
+              🛑 Emergency Stop
             </button>
             <button onClick={() => setShowViolModal(true)} style={{ padding: "0.5rem 1.25rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}>
-              ⚠️ Ghi nhận vi phạm
+              ⚠️ Record Violation
             </button>
           </div>
         </div>

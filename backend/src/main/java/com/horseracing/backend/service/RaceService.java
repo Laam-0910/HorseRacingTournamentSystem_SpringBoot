@@ -87,16 +87,20 @@ public class RaceService {
             }
         }
 
-        // Tự động tính toán hạn đăng ký: mở trước 14 ngày, đóng trước 3 ngày
-        Calendar cal = Calendar.getInstance();
-        
-        cal.setTime(race.getStartTime());
-        cal.add(Calendar.DAY_OF_YEAR, -14);
-        race.setRegistrationStartTime(new Timestamp(cal.getTimeInMillis()));
+        // Tự động tính toán hạn đăng ký nếu người dùng không điền: mở trước 14 ngày, đóng trước 3 ngày
+        if (race.getRegistrationStartTime() == null) {
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(race.getStartTime());
+            cal.add(Calendar.DAY_OF_YEAR, -14);
+            race.setRegistrationStartTime(new Timestamp(cal.getTimeInMillis()));
+        }
 
-        cal.setTime(race.getStartTime());
-        cal.add(Calendar.DAY_OF_YEAR, -3);
-        race.setRegistrationEndTime(new Timestamp(cal.getTimeInMillis()));
+        if (race.getRegistrationEndTime() == null) {
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(race.getStartTime());
+            cal.add(Calendar.DAY_OF_YEAR, -3);
+            race.setRegistrationEndTime(new Timestamp(cal.getTimeInMillis()));
+        }
 
         race.setStatus("SCHEDULED");
         Race savedRace = raceRepository.save(race);

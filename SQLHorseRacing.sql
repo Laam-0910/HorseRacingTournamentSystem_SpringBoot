@@ -352,5 +352,20 @@ INSERT INTO Violation (race_id, horse_id, jockey_id, referee_id, description, pe
 (1, 3, 7, 10, 'Jockey cut off lane at turn 2', 'Fine $500');
 GO
 
+-- Table for Horse Retirement Requests
+CREATE TABLE HorseRetirementRequest (
+    id            INT IDENTITY(1,1) PRIMARY KEY,
+    horse_id      INT NOT NULL,
+    owner_id      INT NOT NULL,
+    reason        NVARCHAR(MAX) NOT NULL,
+    status        VARCHAR(30) NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
+    admin_remarks NVARCHAR(MAX) NULL,
+    created_at    DATETIME DEFAULT GETDATE(),
+    processed_at  DATETIME NULL,
+    CONSTRAINT FK_Retire_Horse FOREIGN KEY (horse_id) REFERENCES Horse(id),
+    CONSTRAINT FK_Retire_Owner FOREIGN KEY (owner_id) REFERENCES [User](id)
+);
+GO
+
 PRINT 'HorseRacingDB created successfully: full_name column added, all sample users have display names.';
 GO
