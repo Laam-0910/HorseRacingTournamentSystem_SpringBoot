@@ -649,7 +649,7 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, onSendInvitation, onVie
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                   <select value={jockeyId} onChange={e => setJockeyId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
                     <option value="">-- Select Jockey --</option>
-                    {jockeys.map((j: any) => <option key={j.id} value={j.id}>{j.username} ({j.weight}kg)</option>)}
+                    {jockeys.map((j: any) => <option key={j.id} value={j.id}>{j.fullName || j.username} ({j.weight}kg)</option>)}
                   </select>
                   {jockeyId && (
                     <button type="button" onClick={() => onViewProfile(parseInt(jockeyId))} style={{ background: "none", border: "none", color: "#fbbf24", fontSize: "0.65rem", fontFamily: "monospace", textDecoration: "underline", cursor: "pointer", alignSelf: "flex-start", padding: 0 }}>

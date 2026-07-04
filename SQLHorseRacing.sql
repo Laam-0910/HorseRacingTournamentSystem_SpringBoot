@@ -1,6 +1,7 @@
 -- ==========================================
 -- HORSE RACING DATABASE - Microsoft SQL Server
--- Updated: Thêm cột avatar (VARCHAR(MAX)) vào bảng [User] và Horse
+-- Updated: Thêm cột full_name (NVARCHAR(100)) và avatar (VARCHAR(MAX)) vào bảng [User]
+--          Đăng nhập bằng username (hoặc email), full_name là tên hiển thị có thể thay đổi
 -- ==========================================
 
 USE master;
@@ -40,16 +41,16 @@ GO
 CREATE TABLE [User] (
     id                          INT IDENTITY(1,1) PRIMARY KEY,
     role_id                     INT NOT NULL,
-    username                    VARCHAR(100) NOT NULL UNIQUE,
+    username                    VARCHAR(100) NOT NULL UNIQUE,    -- Tài khoản đăng nhập (KHÔNG thay đổi)
     password_hash               VARCHAR(255) NOT NULL,
     email                       VARCHAR(150) NOT NULL UNIQUE,
     status                      VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',  -- ACTIVE, INACTIVE
-    weight                      DECIMAL(5,2) NULL,          -- kg, phục vụ tính tạ gánh cho Jockey
-    total_races_participated    INT NULL DEFAULT 0,         -- Lịch sử thi đấu: Tổng số trận tham gia
-    total_top3_finishes         INT NULL DEFAULT 0,         -- Lịch sử thi đấu: Tổng số lần lọt top 3
+    weight                      DECIMAL(5,2) NULL,              -- kg, phục vụ tính tạ gánh cho Jockey
+    total_races_participated    INT NULL DEFAULT 0,             -- Lịch sử thi đấu: Tổng số trận tham gia
+    total_top3_finishes         INT NULL DEFAULT 0,             -- Lịch sử thi đấu: Tổng số lần lọt top 3
     require_otp                 BIT NOT NULL DEFAULT 0,
-    avatar                      VARCHAR(MAX) NULL,          -- Lưu ảnh đại diện dạng Base64
-    full_name                   NVARCHAR(100) NULL,         -- Tên hiển thị người dùng
+    avatar                      VARCHAR(MAX) NULL,              -- Lưu ảnh đại diện dạng Base64
+    full_name                   NVARCHAR(100) NULL,             -- Tên hiển thị người dùng (CÓ THỂ thay đổi)
     CONSTRAINT CK_User_Status CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 GO
@@ -137,7 +138,7 @@ CREATE TABLE Race (
     purse                   DECIMAL(18,2) NOT NULL DEFAULT 0.00,
     max_entries             INT NOT NULL DEFAULT 14,
     steward_report          NVARCHAR(MAX) NULL,        -- Báo cáo/biên bản giám sát của Trọng tài sau trận
-    youtube_live_url        VARCHAR(500) NULL,          -- Đường dẫn YouTube Livestream (tạm thời, Admin nhập khi LIVE và xóa khi kết thúc)
+    youtube_live_url        VARCHAR(500) NULL,          -- Đường dẫn YouTube Livestream
     CONSTRAINT CK_Race_Status CHECK (status IN ('SCHEDULED', 'DECLARATION_OPEN', 'DECLARATION_CLOSED', 'RACE_ASSIGNED', 'RUNNING', 'STEWARDS_INQUIRY', 'OFFICIAL', 'CANCELLED', 'RACE_EVENT_ENDED'))
 );
 GO
@@ -176,7 +177,7 @@ CREATE TABLE RaceEntry (
     gate_number         INT NOT NULL,
     status              VARCHAR(30) NOT NULL DEFAULT 'PENDING_ADMIN', -- PENDING_ADMIN, APPROVED, RUNNING, FINISHED, DISQUALIFIED, REJECTED
     final_position      INT NULL,                           -- Kết quả thi đấu cá nhân
-    finish_time         VARCHAR(20) NULL,                           -- Kết quả thi đấu cá nhân
+    finish_time         VARCHAR(20) NULL,                   -- Kết quả thi đấu cá nhân
     prize_money         DECIMAL(18,2) NULL DEFAULT 0,
     carried_weight      DECIMAL(5,2) NULL,
     rating_adjustment   INT NULL,
@@ -231,7 +232,6 @@ ALTER TABLE JockeyRaceMeetingRegistration ADD CONSTRAINT FK_JRMR_Jockey FOREIGN 
 ALTER TABLE OwnerRaceMeetingRegistration ADD CONSTRAINT FK_ORMR_Meeting FOREIGN KEY (race_meeting_id) REFERENCES RaceMeeting(id);
 ALTER TABLE OwnerRaceMeetingRegistration ADD CONSTRAINT FK_ORMR_Owner FOREIGN KEY (owner_id) REFERENCES [User](id);
 
--- Khóa ngoại kết nối cho bảng đăng ký ngựa tham gia sự kiện Ngày Đua
 ALTER TABLE HorseRaceMeetingRegistration ADD CONSTRAINT FK_HRMR_Meeting FOREIGN KEY (race_meeting_id) REFERENCES RaceMeeting(id);
 ALTER TABLE HorseRaceMeetingRegistration ADD CONSTRAINT FK_HRMR_Horse FOREIGN KEY (horse_id) REFERENCES Horse(id);
 
@@ -268,18 +268,20 @@ GO
 INSERT INTO Role (role_name) VALUES ('Admin'), ('Owner'), ('Jockey'), ('Spectator'), ('Referee');
 GO
 
-INSERT INTO [User] (role_id, username, password_hash, email, status, weight, total_races_participated, total_top3_finishes) VALUES
-(1, 'admin_root',      'hash_admin_001', 'admin@horserace.com',  'ACTIVE', NULL, NULL, NULL),
-(2, 'owner_jackson',   'hash_own_001',   'jackson@owners.com',   'ACTIVE', NULL, NULL, NULL),
-(2, 'owner_miller',    'hash_own_002',   'miller@owners.com',    'ACTIVE', NULL, NULL, NULL),
-(2, 'owner_chen',      'hash_own_003',   'chen@owners.com',      'ACTIVE', NULL, NULL, NULL),
-(3, 'jockey_ryan',     'hash_joc_001',   'ryan@jockeys.com',     'ACTIVE', 58.5, 45, 20),
-(3, 'jockey_emma',     'hash_joc_002',   'emma@jockeys.com',     'ACTIVE', 52.0, 20, 8),
-(3, 'jockey_carlos',   'hash_joc_003',   'carlos@jockeys.com',   'ACTIVE', 55.3, 80, 35),
-(3, 'jockey_naomi',    'hash_joc_004',   'naomi@jockeys.com',    'ACTIVE', 53.7, 4,  1),
-(4, 'fan_oliver',      'hash_fan_001',   'oliver@fans.com',      'ACTIVE', NULL, NULL, NULL),
-(5, 'referee_harris',  'hash_ref_001',   'harris@referees.com',  'ACTIVE', NULL, NULL, NULL),
-(5, 'referee_scott',   'hash_ref_002',   'scott@referees.com',   'ACTIVE', NULL, NULL, NULL);
+-- Cột full_name = tên hiển thị trên trang (có thể đổi)
+-- Cột username  = tài khoản đăng nhập       (KHÔNG thay đổi)
+INSERT INTO [User] (role_id, username, password_hash, email, status, weight, total_races_participated, total_top3_finishes, full_name) VALUES
+(1, 'admin_root',      'hash_admin_001', 'admin@horserace.com',  'ACTIVE', NULL, NULL, NULL, N'Administrator'),
+(2, 'owner_jackson',   'hash_own_001',   'jackson@owners.com',   'ACTIVE', NULL, NULL, NULL, N'James Jackson'),
+(2, 'owner_miller',    'hash_own_002',   'miller@owners.com',    'ACTIVE', NULL, NULL, NULL, N'Robert Miller'),
+(2, 'owner_chen',      'hash_own_003',   'chen@owners.com',      'ACTIVE', NULL, NULL, NULL, N'Chen Wei'),
+(3, 'jockey_ryan',     'hash_joc_001',   'ryan@jockeys.com',     'ACTIVE', 58.5, 45, 20,    N'Ryan Thompson'),
+(3, 'jockey_emma',     'hash_joc_002',   'emma@jockeys.com',     'ACTIVE', 52.0, 20, 8,     N'Emma Clarke'),
+(3, 'jockey_carlos',   'hash_joc_003',   'carlos@jockeys.com',   'ACTIVE', 55.3, 80, 35,    N'Carlos Rivera'),
+(3, 'jockey_naomi',    'hash_joc_004',   'naomi@jockeys.com',    'ACTIVE', 53.7, 4,  1,     N'Naomi Watanabe'),
+(4, 'fan_oliver',      'hash_fan_001',   'oliver@fans.com',      'ACTIVE', NULL, NULL, NULL, N'Oliver Bennett'),
+(5, 'referee_harris',  'hash_ref_001',   'harris@referees.com',  'ACTIVE', NULL, NULL, NULL, N'Michael Harris'),
+(5, 'referee_scott',   'hash_ref_002',   'scott@referees.com',   'ACTIVE', NULL, NULL, NULL, N'David Scott');
 GO
 
 INSERT INTO Season (name, start_date, end_date, status) VALUES
@@ -324,7 +326,6 @@ INSERT INTO Horse (owner_id, name, breed, date_of_birth, status, current_rating,
 (4, 'Iron Blaze',    'Hanoverian',   '2019-03-14', 'ACTIVE',  78, 14, 3);
 GO
 
--- Chèn mẫu dữ liệu đăng ký Ngựa tham gia Ngày Đua 2
 INSERT INTO HorseRaceMeetingRegistration (race_meeting_id, horse_id, status) VALUES
 (2, 1, 'APPROVED'), (2, 2, 'APPROVED'), (2, 3, 'APPROVED'), (2, 5, 'APPROVED'), (2, 6, 'APPROVED');
 GO
@@ -351,5 +352,5 @@ INSERT INTO Violation (race_id, horse_id, jockey_id, referee_id, description, pe
 (1, 3, 7, 10, 'Jockey cut off lane at turn 2', 'Fine $500');
 GO
 
-PRINT 'HorseRacingDB revised: added HorseRaceMeetingRegistration table, avatar columns, and updated sample data successfully.';
+PRINT 'HorseRacingDB created successfully: full_name column added, all sample users have display names.';
 GO

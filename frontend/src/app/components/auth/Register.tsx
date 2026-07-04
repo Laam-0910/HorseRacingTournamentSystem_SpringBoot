@@ -4,7 +4,7 @@ import { api } from "../../../lib/api";
 
 export default function Register() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ fullName: "", email: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState({ fullName: "", username: "", email: "", password: "", confirmPassword: "" });
   const [showPwd, setShowPwd] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState("");
@@ -13,6 +13,23 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Validate fullName
+    if (!form.fullName.trim()) {
+      setError(lang === "vi" ? "Vui lòng nhập họ và tên đầy đủ" : "Please enter your full name");
+      return;
+    }
+    if (form.fullName.trim().length < 3) {
+      setError(lang === "vi" ? "Họ và tên phải có ít nhất 3 ký tự" : "Full name must be at least 3 characters");
+      return;
+    }
+    if (!form.username.trim()) {
+      setError(lang === "vi" ? "Vui lòng nhập username đăng nhập" : "Please enter a username for login");
+      return;
+    }
+    if (form.username.trim().length < 3) {
+      setError(lang === "vi" ? "Username phải có ít nhất 3 ký tự" : "Username must be at least 3 characters");
+      return;
+    }
     if (form.password !== form.confirmPassword) {
       setError(lang === "vi" ? "Mật khẩu xác nhận không khớp" : "Passwords do not match");
       return;
@@ -30,7 +47,7 @@ export default function Register() {
 
     setError(""); setLoading(true);
     try {
-      const res = await api.post<any>("/auth/register", { username: form.fullName, email: form.email, password: form.password });
+      const res = await api.post<any>("/auth/register", { username: form.username.trim(), fullName: form.fullName.trim(), email: form.email, password: form.password });
       if (res.requireOtp) {
         navigate(`/verify-register?otpTxId=${res.otpTxId}`, { state: { email: form.email } });
       } else {
@@ -78,6 +95,12 @@ export default function Register() {
               <div>
                 <label style={{ display: "block", fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Full Name</label>
                 <input type="text" value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} placeholder="Nguyen Van A" required style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.25rem", fontSize: "0.875rem" }} />
+              </div>
+
+              {/* Username */}
+              <div>
+                <label style={{ display: "block", fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Username <span style={{ color: "#c9a227" }}>(for login)</span></label>
+                <input type="text" value={form.username} onChange={e => setForm({...form, username: e.target.value})} placeholder="e.g. nguyenvana99" required style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.25rem", fontSize: "0.875rem" }} />
               </div>
 
               {/* Email */}

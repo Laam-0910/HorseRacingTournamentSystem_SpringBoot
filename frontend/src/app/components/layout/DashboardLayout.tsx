@@ -158,7 +158,7 @@ export default function DashboardLayout({
   };
 
   const sidebarExpanded = !collapsed || hovering;
-  const initials = (user?.username || 'U').substring(0, 2).toUpperCase();
+  const initials = ((user?.fullName || user?.username) || 'U').substring(0, 2).toUpperCase();
 
   return (
     <div

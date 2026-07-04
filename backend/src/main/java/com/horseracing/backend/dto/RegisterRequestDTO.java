@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 @Builder
 public class RegisterRequestDTO {
     private String username;
+    private String fullName;     // Tên hiển thị (khác với username đăng nhập)
     private String password;
     private String email;
     private Integer roleId;

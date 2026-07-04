@@ -469,7 +469,7 @@ function SearchView({ query, horses, people, meetings, races, t, setView, lang }
                 {people.map(p => (
                   <div key={p.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem", padding: "1.25rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-                      <h4 style={{ fontWeight: "bold", fontSize: "1rem", color: "#f0f0f0" }}>👤 {p.username}</h4>
+                      <h4 style={{ fontWeight: "bold", fontSize: "1rem", color: "#f0f0f0" }}>👤 {p.fullName || p.username}</h4>
                       <span style={{ fontSize: "0.65rem", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", color: p.roleId === 3 ? "#34d399" : p.roleId === 2 ? "#60a5fa" : "#fb7171", background: p.roleId === 3 ? "rgba(52,211,153,0.1)" : p.roleId === 2 ? "rgba(96,165,250,0.1)" : "rgba(251,113,113,0.1)", padding: "0.2rem 0.5rem", borderRadius: "0.25rem" }}>
                         {p.roleId === 3 ? "Jockey" : p.roleId === 2 ? "Owner" : "Referee"}
                       </span>
@@ -788,6 +788,11 @@ export default function Landing() {
     return map[roleId] || "MEMBER";
   };
 
+  const getRoleColor = (roleId?: number) => {
+    const map: Record<number, string> = { 1: "#c0392b", 2: "#2980b9", 3: "#27ae60", 4: "#8e44ad", 5: "#d35400" };
+    return map[roleId ?? 0] || "#c9a227";
+  };
+
   const handleDashboard = () => {
     if (!user) return;
     if (user.roleId === 1) navigate("/dashboard/admin");
@@ -926,8 +931,8 @@ export default function Landing() {
                               <tr key={idx} style={{ borderBottom: "1px solid rgba(42,40,37,0.3)" }}>
                                 <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>#{e.entry?.gateNumber || idx + 1}</td>
                                 <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
-                                <td style={{ padding: "0.5rem" }}>{e.jockey?.username}</td>
-                                <td style={{ padding: "0.5rem" }}>{e.owner?.username}</td>
+                                <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
+                                <td style={{ padding: "0.5rem" }}>{e.owner?.fullName || e.owner?.username}</td>
                                 <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.horse?.currentRating}</td>
                                 <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.carriedWeight} kg</td>
                               </tr>
@@ -993,8 +998,8 @@ export default function Landing() {
                                   {e.entry?.finalPosition === 1 ? "🥇 1st" : e.entry?.finalPosition === 2 ? "🥈 2nd" : e.entry?.finalPosition === 3 ? "🥉 3rd" : `${e.entry?.finalPosition}th`}
                                 </td>
                                 <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
-                                <td style={{ padding: "0.5rem" }}>{e.jockey?.username}</td>
-                                <td style={{ padding: "0.5rem" }}>{e.owner?.username}</td>
+                                <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
+                                <td style={{ padding: "0.5rem" }}>{e.owner?.fullName || e.owner?.username}</td>
                                 <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
                                 <td style={{ padding: "0.5rem", fontFamily: "monospace", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</td>
                               </tr>
@@ -1020,7 +1025,7 @@ export default function Landing() {
         return (
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-2">
             <GenericTableView title="Leading Horses (Top Rating)" data={[...horses].sort((a,b) => (b.currentRating - a.currentRating)).slice(0, 10)} columns={[{ key: "name", label: "Horse Name" }, { key: "breed", label: "Breed" }, { key: "currentRating", label: "Rating" }]} />
-            <GenericTableView title="Leading Jockeys" data={users.filter(u => u.roleId === 3).slice(0, 10)} columns={[{ key: "username", label: "Jockey Username" }, { key: "email", label: "Email" }, { key: "status", label: "Status" }]} />
+            <GenericTableView title="Leading Jockeys" data={users.filter(u => u.roleId === 3).slice(0, 10)} columns={[{ key: "fullName", label: "Jockey Name" }, { key: "email", label: "Email" }, { key: "status", label: "Status" }]} />
           </div>
         );
       case "horses":
@@ -1032,8 +1037,8 @@ export default function Landing() {
               <button onClick={() => setView("jockeys_owners")} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontWeight: "bold" }}>Directories Overview</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-2">
-              <GenericTableView title="Jockeys" data={users.filter(u => u.roleId === 3)} columns={[{ key: "id", label: "ID" }, { key: "username", label: "Jockey" }, { key: "email", label: "Email" }, { key: "weight", label: "Weight" }]} />
-              <GenericTableView title="Horse Owners" data={users.filter(u => u.roleId === 2)} columns={[{ key: "id", label: "ID" }, { key: "username", label: "Owner" }, { key: "email", label: "Email" }]} />
+              <GenericTableView title="Jockeys" data={users.filter(u => u.roleId === 3)} columns={[{ key: "id", label: "ID" }, { key: "fullName", label: "Jockey" }, { key: "email", label: "Email" }, { key: "weight", label: "Weight" }]} />
+              <GenericTableView title="Horse Owners" data={users.filter(u => u.roleId === 2)} columns={[{ key: "id", label: "ID" }, { key: "fullName", label: "Owner" }, { key: "email", label: "Email" }]} />
             </div>
           </div>
         );
@@ -1186,12 +1191,24 @@ export default function Landing() {
             {/* Auth Controls */}
             {user ? (
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
-                <div style={{ width: 36, height: 36, borderRadius: "50%", background: "#c0392b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, color: "#fff" }}>
-                  {user.username?.charAt(0).toUpperCase()}
+                {/* Avatar circle with role-color ring */}
+                <div style={{
+                  width: 36, height: 36, borderRadius: "50%",
+                  border: `2px solid ${getRoleColor(user.roleId)}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700,
+                  color: user.avatar ? undefined : "#fff",
+                  background: user.avatar ? "transparent" : getRoleColor(user.roleId),
+                  overflow: "hidden", flexShrink: 0
+                }}>
+                  {user.avatar
+                    ? <img src={user.avatar} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    : (user.fullName || user.username)?.charAt(0).toUpperCase()
+                  }
                 </div>
                 <div>
-                  <p style={{ fontSize: "0.75rem", color: "#f0f0f0" }}>{user.username}</p>
-                  <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c0392b" }}>{getRoleLabel(user.roleId)}</p>
+                  <p style={{ fontSize: "0.75rem", color: "#f0f0f0" }}>{user.fullName || user.username}</p>
+                  <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: getRoleColor(user.roleId) }}>{getRoleLabel(user.roleId)}</p>
                 </div>
                 <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>{t.signout}</button>
               </div>

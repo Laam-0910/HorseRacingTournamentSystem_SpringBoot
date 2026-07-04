@@ -65,7 +65,9 @@ public class UserMapper {
         user.setRequireOtp(false);
         user.setTotalRacesParticipated(0);
         user.setTotalTop3Finishes(0);
-        user.setFullName(dto.getUsername() != null ? dto.getUsername().trim() : null);
+        String fullName = dto.getFullName() != null && !dto.getFullName().isBlank()
+                ? dto.getFullName().trim() : (dto.getUsername() != null ? dto.getUsername().trim() : null);
+        user.setFullName(fullName);
         return user;
     }
 }
