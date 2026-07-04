@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { formatDateTime, formatForDateTimeLocal, formatForApi } from "../../utils/dateTimeHelper";
+import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 
 interface Meeting {
   id: number;
@@ -146,9 +147,9 @@ export default function Race() {
 
   const handleOpenEdit = (race: Race) => {
     setEditingRace(race);
-    setEditStartTime(race.startTime || "");
-    setEditRegStartTime(race.registrationStartTime || "");
-    setEditRegEndTime(race.registrationEndTime || "");
+    setEditStartTime(formatDateTime(race.startTime));
+    setEditRegStartTime(formatDateTime(race.registrationStartTime));
+    setEditRegEndTime(formatDateTime(race.registrationEndTime));
     setEditDistance(race.distanceMeters.toString());
     setEditTrackType(race.trackType);
     setEditPurse(race.purse.toString());
@@ -327,17 +328,17 @@ export default function Race() {
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Start Time</label>
-                <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none", fontFamily: "monospace" }} />
+                <InlineDateTimePicker value={startTime} onChange={setStartTime} />
               </div>
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#c9a227" }}>Registration Start</label>
-                <input type="text" value={regStartTime} onChange={e => setRegStartTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none", fontFamily: "monospace" }} />
+                <InlineDateTimePicker value={regStartTime} onChange={setRegStartTime} />
               </div>
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#c9a227" }}>Registration End</label>
-                <input type="text" value={regEndTime} onChange={e => setRegEndTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none", fontFamily: "monospace" }} />
+                <InlineDateTimePicker value={regEndTime} onChange={setRegEndTime} />
               </div>
 
               <div>
@@ -494,15 +495,15 @@ export default function Race() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
                 <div style={{ gridColumn: "span 2" }}>
                   <label style={labelStyle}>Start Time</label>
-                  <input type="text" value={editStartTime} onChange={e => setEditStartTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ ...inputStyle, fontFamily: "monospace" }} />
+                  <InlineDateTimePicker value={editStartTime} onChange={setEditStartTime} />
                 </div>
                 <div>
                   <label style={{ ...labelStyle, color: "#c9a227" }}>Registration Start</label>
-                  <input type="text" value={editRegStartTime} onChange={e => setEditRegStartTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ ...inputStyle, fontFamily: "monospace" }} />
+                  <InlineDateTimePicker value={editRegStartTime} onChange={setEditRegStartTime} />
                 </div>
                 <div>
                   <label style={{ ...labelStyle, color: "#c9a227" }}>Registration End</label>
-                  <input type="text" value={editRegEndTime} onChange={e => setEditRegEndTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ ...inputStyle, fontFamily: "monospace" }} />
+                  <InlineDateTimePicker value={editRegEndTime} onChange={setEditRegEndTime} />
                 </div>
                 <div>
                   <label style={labelStyle}>Distance (m)</label>

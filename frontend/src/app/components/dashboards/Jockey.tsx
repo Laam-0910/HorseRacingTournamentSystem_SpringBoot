@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { parseSafeDate, formatDateTime, formatDate } from "../../utils/dateTimeHelper";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import DashboardLayout from "../layout/DashboardLayout";
@@ -28,6 +29,44 @@ function StatsCard({ label, value, color }: { label: string; value: any; color?:
   );
 }
 
+function StatusBadge({ status }: { status: string }) {
+  const s = status?.toUpperCase() ?? "PENDING";
+  let bg = "rgba(195,162,39,0.12)";
+  let fg = "#c9a227";
+  let bc = "rgba(195,162,39,0.3)";
+
+  if (s === "APPROVED") {
+    bg = "rgba(74,222,128,0.12)";
+    fg = "#4ade80";
+    bc = "rgba(74,222,128,0.3)";
+  } else if (s === "REJECTED") {
+    bg = "rgba(239,91,91,0.12)";
+    fg = "#ef5b5b";
+    bc = "rgba(239,91,91,0.3)";
+  } else if (s === "UNREGISTERED") {
+    bg = "rgba(255,255,255,0.05)";
+    fg = "#a0a0a0";
+    bc = "rgba(255,255,255,0.12)";
+  }
+
+  return (
+    <span style={{
+      fontSize: "9px",
+      fontFamily: "monospace",
+      fontWeight: "bold",
+      textTransform: "uppercase",
+      letterSpacing: "0.05em",
+      padding: "0.25rem 0.5rem",
+      borderRadius: "0.375rem",
+      background: bg,
+      color: fg,
+      border: `1px solid ${bc}`
+    }}>
+      {s}
+    </span>
+  );
+}
+
 function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -47,21 +86,38 @@ function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
           {meetings.length === 0 ? (
             <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>No upcoming meetings available.</p>
-          ) : meetings.map((m: any) => (
-            <div key={m.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <div>
-                <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.5rem" }}>📍 {m.venue}</p>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📅 {m.startDate || m.date}</p>
+          ) : meetings.map((m: any) => {
+            const isReg = dashboard?.registeredMeetingIds?.includes(m.id);
+            const regStatus = dashboard?.regStatuses?.[m.id];
+
+            return (
+              <div key={m.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
+                  {isReg ? <StatusBadge status={regStatus ?? "APPROVED"} /> : <StatusBadge status="UNREGISTERED" />}
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                  <span>📍 {m.venue}</span>
+                  <span>📅 {formatDate(m.startDate || m.date)}</span>
+                </div>
+                {isReg ? (
+                  <button
+                    disabled
+                    style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "not-allowed" }}
+                  >
+                    Already Registered
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onRegister(m.id)}
+                    style={{ width: "100%", padding: "0.625rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
+                  >
+                    Register as Jockey
+                  </button>
+                )}
               </div>
-              <button
-                onClick={() => onRegister(m.id)}
-                style={{ width: "100%", padding: "0.625rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
-              >
-                Register as Jockey
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

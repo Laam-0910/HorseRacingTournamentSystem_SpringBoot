@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
-import { formatDateTime, formatForApi } from "../../utils/dateTimeHelper";
+import { formatDateTime, formatDate, formatForApi } from "../../utils/dateTimeHelper";
+import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 
 export default function RaceDaySchedule() {
   const [meetings, setMeetings] = useState<any[]>([]);
@@ -76,7 +77,6 @@ export default function RaceDaySchedule() {
     ? seasons.find((s) => s.id === selectedMeeting.seasonId)
     : seasons.find((s) => s.status === "ACTIVE");
 
-  const formatDate = formatDateTime;
 
   const handleScheduleRaceSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +163,7 @@ export default function RaceDaySchedule() {
         <div style={cardStyle}>
           <p style={cardLabelStyle}>Race Date</p>
           <p style={{ ...cardValStyle, fontFamily: "monospace" }}>
-            {selectedMeeting ? formatDate(selectedMeeting.date) : "N/A"}
+            {selectedMeeting ? formatDate(selectedMeeting.startDate || selectedMeeting.date) : "N/A"}
           </p>
           <p style={cardSubStyle}>
             Total Events: {enrichedRaces.length}
@@ -233,7 +233,7 @@ export default function RaceDaySchedule() {
                         <span style={{ fontSize: "14px", fontWeight: "bold", color: "#f4f2ec" }}>{r.classLevel}</span>
                       </div>
                       <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
-                        Time: {formatDate(r.startTime)} | Distance: {r.distanceMeters}m | Track: {r.trackType} | Purse: ${r.purse.toLocaleString()}
+                        Time: {formatDateTime(r.startTime)} | Distance: {r.distanceMeters}m | Track: {r.trackType} | Purse: ${r.purse.toLocaleString()}
                       </p>
                     </div>
                     <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -377,7 +377,7 @@ export default function RaceDaySchedule() {
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Start Time</label>
-                <input type="text" value={startTime} onChange={e => setStartTime(e.target.value)} required placeholder="dd-mm-yyyy hh:mm:ss" style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace" }} />
+                <InlineDateTimePicker value={startTime} onChange={setStartTime} />
               </div>
 
               <div>

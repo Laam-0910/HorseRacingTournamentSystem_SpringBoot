@@ -28,6 +28,22 @@ export const parseSafeDate = (str: string): Date | null => {
 };
 
 /**
+ * Formats a Date object or string into dd-MM-yyyy
+ */
+export const formatDate = (dateInput: Date | string | null | undefined): string => {
+  if (!dateInput) return "";
+  const d = typeof dateInput === "string" ? parseSafeDate(dateInput) : dateInput;
+  if (!d || isNaN(d.getTime())) return typeof dateInput === "string" ? dateInput.split(" ")[0] : "";
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const day = pad(d.getDate());
+  const month = pad(d.getMonth() + 1);
+  const year = d.getFullYear();
+
+  return `${day}-${month}-${year}`;
+};
+
+/**
  * Formats a Date object or string into dd-MM-yyyy HH:mm:ss
  */
 export const formatDateTime = (dateInput: Date | string | null | undefined): string => {

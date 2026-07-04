@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import com.horseracing.backend.utils.DateTimeParser;
 
 @Service
 @RequiredArgsConstructor
@@ -113,19 +114,13 @@ public class RaceService {
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
 
         if (body.get("startTime") != null) {
-            String st = ((String) body.get("startTime")).replace('T', ' ');
-            if (st.length() == 16) st += ":00";
-            race.setStartTime(Timestamp.valueOf(st));
+            race.setStartTime(DateTimeParser.parseTimestamp((String) body.get("startTime")));
         }
         if (body.get("registrationStartTime") != null) {
-            String rst = ((String) body.get("registrationStartTime")).replace('T', ' ');
-            if (rst.length() == 16) rst += ":00";
-            race.setRegistrationStartTime(Timestamp.valueOf(rst));
+            race.setRegistrationStartTime(DateTimeParser.parseTimestamp((String) body.get("registrationStartTime")));
         }
         if (body.get("registrationEndTime") != null) {
-            String ret = ((String) body.get("registrationEndTime")).replace('T', ' ');
-            if (ret.length() == 16) ret += ":00";
-            race.setRegistrationEndTime(Timestamp.valueOf(ret));
+            race.setRegistrationEndTime(DateTimeParser.parseTimestamp((String) body.get("registrationEndTime")));
         }
         if (body.get("distanceMeters") != null) {
             race.setDistanceMeters(Integer.parseInt(String.valueOf(body.get("distanceMeters"))));
