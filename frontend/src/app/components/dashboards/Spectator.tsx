@@ -577,7 +577,7 @@ export default function Spectator() {
                     background: "linear-gradient(45deg, #c9a227, #f3d06c)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent"
-                  }}>{lang === "vi" ? "✦ Trợ lý ảo AI giải đấu HKJC" : "✦ HKJC Tournament AI Assistant"}</span>
+                  }}>{lang === "vi" ? "✦ Trợ lý ảo AI giải đấu" : "✦ Tournament AI Assistant"}</span>
                 </h4>
                 <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>
                   {lang === "vi" ? "Trợ lý AI nội bộ phân tích phong độ và thống kê thời gian thực" : "Internal AI assistant for form analysis and real-time statistics"}
@@ -616,7 +616,7 @@ export default function Spectator() {
                         fontWeight: "bold",
                         letterSpacing: "0.5px"
                       }}>
-                        {isAI ? (lang === "vi" ? "✦ TRỢ LÝ AI HKJC" : "✦ HKJC AI ASSISTANT") : "YOU"} · {msg.time}
+                        {isAI ? (lang === "vi" ? "✦ TRỢ LÝ AI HỆ THỐNG" : "✦ SYSTEM AI ASSISTANT") : "YOU"} · {msg.time}
                       </div>
                        <div style={{
                         padding: "1rem 1.25rem",

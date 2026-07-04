@@ -136,6 +136,7 @@ export default function DashboardLayout({
     setLang(code);
     localStorage.setItem('app-lang', code);
     setShowLangMenu(false);
+    window.location.reload();
   };
 
   // Close lang dropdown on outside click
