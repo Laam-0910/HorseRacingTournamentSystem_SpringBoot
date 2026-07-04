@@ -13,8 +13,15 @@ class RAGEngine:
     def __init__(self, use_gemini=False, gemini_api_key=None, ollama_url="http://localhost:11434/api/generate"):
         self.use_gemini = use_gemini
         self.gemini_api_key = gemini_api_key
+        self.gemini_api_keys = []
+        self.current_key_idx = 0
         self.ollama_url = ollama_url
         self.model_name = "gemini-2.5-flash"
+        # Groq fallback (khi tất cả Gemini key hết quota)
+        self.groq_api_key = ""
+        self.groq_api_keys = []
+        self.current_groq_key_idx = 0
+        self.groq_model = "llama-3.3-70b-versatile"  # Miễn phí, 14400 req/ngày
 
     def retrieve_db_context(self, state: dict) -> str:
         """
@@ -184,36 +191,139 @@ class RAGEngine:
         conn.close()
         return "\n".join(context_parts) if context_parts else "Không tìm thấy dữ liệu liên quan cụ thể trong Database giải đấu."
 
-    def call_gemini(self, prompt: str) -> str:
-        if not self.gemini_api_key:
-            return "Lỗi: Chưa cấu hình API Key cho dịch vụ AI."
-        
-        try:
-            import google.generativeai as genai
-            genai.configure(api_key=self.gemini_api_key)
-            model = genai.GenerativeModel(self.model_name)
-            response = model.generate_content(prompt)
-            if response and response.text:
-                return response.text
-            return "Lỗi: Không nhận được phản hồi từ dịch vụ AI."
-        except Exception as e:
-            # Fallback về REST API dùng x-goog-api-key header (giúp hỗ trợ mã khóa dạng AQ. mới của Google)
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent"
+    def get_current_api_key(self) -> str:
+        if self.gemini_api_keys:
+            self.current_key_idx = self.current_key_idx % len(self.gemini_api_keys)
+            return self.gemini_api_keys[self.current_key_idx]
+        return self.gemini_api_key
+
+    def rotate_api_key(self) -> None:
+        if self.gemini_api_keys:
+            self.current_key_idx = (self.current_key_idx + 1) % len(self.gemini_api_keys)
+            print(f"[API Key Rotator] Rotated to key index: {self.current_key_idx}")
+
+    def get_current_groq_key(self) -> str:
+        """Lấy Groq API key hiện tại (có rotation)."""
+        if self.groq_api_keys:
+            return self.groq_api_keys[self.current_groq_key_idx % len(self.groq_api_keys)]
+        return self.groq_api_key
+
+    def call_groq(self, prompt: str, system_instruction: str = None) -> str:
+        """
+        Gọi Groq API (OpenAI-compatible) - miễn phí 14,400 req/ngày.
+        Tự động thay thế Gemini khi hết quota.
+        """
+        keys = self.groq_api_keys if self.groq_api_keys else ([self.groq_api_key] if self.groq_api_key else [])
+        if not keys:
+            return ""
+
+        for i, key in enumerate(keys):
+            url = "https://api.groq.com/openai/v1/chat/completions"
             headers = {
                 "Content-Type": "application/json",
-                "x-goog-api-key": self.gemini_api_key
+                "Authorization": f"Bearer {key}"
             }
+            messages = []
+            if system_instruction:
+                messages.append({"role": "system", "content": system_instruction})
+            messages.append({"role": "user", "content": prompt})
             payload = {
-                "contents": [{"parts": [{"text": prompt}]}]
+                "model": self.groq_model,
+                "messages": messages,
+                "temperature": 0.7,
+                "max_tokens": 1024
             }
             try:
-                res = requests.post(url, headers=headers, json=payload, timeout=15)
+                res = requests.post(url, headers=headers, json=payload, timeout=20)
                 if res.status_code == 200:
-                    data = res.json()
-                    return data["contents"][0]["parts"][0]["text"]
-                return f"Lỗi kết nối dịch vụ AI (HTTP {res.status_code})"
-            except Exception as ex:
-                return f"Lỗi gọi dịch vụ AI: {str(ex)}"
+                    text = res.json()["choices"][0]["message"]["content"]
+                    print(f"[Groq Fallback] ✅ Key {i} OK - {len(text)} chars")
+                    return text
+                err = res.json().get("error", {}).get("message", f"HTTP {res.status_code}")[:100]
+                print(f"[Groq Fallback] Key {i} failed: {err}")
+                if "429" in str(res.status_code) or "rate" in err.lower():
+                    self.current_groq_key_idx = (self.current_groq_key_idx + 1) % max(len(keys), 1)
+                    continue
+            except Exception as e:
+                print(f"[Groq Fallback] Exception key {i}: {e}")
+        return ""
+
+    def call_gemini(self, prompt: str, system_instruction: str = None) -> str:
+        keys_count = len(self.gemini_api_keys) if self.gemini_api_keys else 1
+        
+        for attempt in range(keys_count):
+            api_key = self.get_current_api_key()
+            if not api_key:
+                return "Lỗi: Chưa cấu hình API Key cho dịch vụ AI."
+            
+            print(f"[RAG Engine] Attempt {attempt + 1}: Using key index {self.current_key_idx if self.gemini_api_keys else 0} ({api_key[:10]}...)")
+            
+            try:
+                import google.generativeai as genai
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel(self.model_name, system_instruction=system_instruction)
+                response = model.generate_content(prompt)
+                if response and response.text:
+                    return response.text
+                raise Exception("Empty response from genai SDK")
+            except Exception as e:
+                error_msg = str(e)
+                print(f"[RAG Engine SDK Error] {error_msg}")
+                
+                # Fallback về REST API dùng x-goog-api-key header
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent"
+                headers = {
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": api_key
+                }
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}]
+                }
+                if system_instruction:
+                    payload["systemInstruction"] = {
+                        "parts": [{"text": system_instruction}]
+                    }
+                try:
+                    res = requests.post(url, headers=headers, json=payload, timeout=20)
+                    if res.status_code == 200:
+                        data = res.json()
+                        # ⚠️ Đúng path: candidates[0]["content"]["parts"][0]["text"]
+                        text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                        if text:
+                            return text
+                        raise Exception("Empty candidates text from REST API")
+                    
+                    error_msg = f"HTTP {res.status_code}"
+                except Exception as ex:
+                    error_msg = f"Request failed: {str(ex)}"
+                
+                print(f"[RAG Engine REST Error] {error_msg}")
+                
+                # Kiểm tra xem có phải lỗi rate limit/quota hay không để xoay key
+                is_quota_error = any(w in error_msg.lower() for w in ["429", "resourceexhausted", "quota", "limit"])
+                if is_quota_error and self.gemini_api_keys and attempt < keys_count - 1:
+                    print(f"[RAG Engine] Rate limit hit on key index {self.current_key_idx}. Rotating key...")
+                    self.rotate_api_key()
+                    continue
+                else:
+                    # Thử Groq fallback ngay lập tức nếu là lỗi quota
+                    if is_quota_error:
+                        groq_reply = self.call_groq(prompt, system_instruction)
+                        if groq_reply:
+                            print("[Fallback Chain] Gemini → Groq ✅")
+                            return groq_reply
+                    return f"Lỗi kết nối dịch vụ AI ({error_msg})"
+                    
+        # Tất cả Gemini key đều hết - thử Groq làm fallback cuối
+        return self._gemini_all_quota_exhausted(prompt, system_instruction)
+
+    def _gemini_all_quota_exhausted(self, prompt: str, system_instruction: str = None) -> str:
+        """Khi tất cả Gemini keys bị 429, thử Groq trước khi báo lỗi."""
+        groq_reply = self.call_groq(prompt, system_instruction)
+        if groq_reply:
+            print("[Fallback Chain] Gemini exhausted → Groq ✅")
+            return groq_reply
+        return "Lỗi kết nối dịch vụ AI (HTTP 429 - Tất cả API Key đều hết lượt)"
 
     def call_ollama(self, prompt: str) -> str:
         payload = {
@@ -236,14 +346,16 @@ class RAGEngine:
         """
         # Cấu hình mặc định
         system_instruction = (
-            "Bạn là Trợ lý AI nội bộ của Hệ thống quản lý giải đấu đua ngựa (do đội ngũ phát triển dự án xây dựng).\n"
-            "Tuyệt đối KHÔNG được nhận mình là của Google hay tự xưng là Gemini. Nếu được hỏi về nguồn gốc, hãy trả lời bạn là Trợ lý AI tích hợp sẵn của hệ thống.\n"
-            "Khi người dùng hỏi về giải đấu, hãy dùng 'Thông tin giải đấu thực tế' được cung cấp để trả lời chính xác, trung thực.\n"
-            "ĐỐI VỚI CÁC CÂU HỎI NGOÀI LỀ (không liên quan đến đua ngựa, ngựa, nài ngựa, giải đấu): Hãy khéo léo lái câu trả lời liên đới về hệ thống hoặc chủ đề đua ngựa một cách dí dỏm. Ví dụ:\n"
-            "- Nếu hỏi cách để thông minh hơn: Khuyên họ đọc nhiều sách chăn nuôi, chăm sóc ngựa để cung cấp chiến mã chất lượng cho giải đấu.\n"
-            "- Nếu yêu cầu lập trình/viết code: Hãy nói khéo là bạn không hỗ trợ lập trình nhưng có thể hướng dẫn họ tìm các con AI chuyên lập trình khác.\n"
-            "- Đối với các câu hỏi tán gẫu khác: Hãy tìm cách ví von hoặc liên kết hài hước với giải đua ngựa, việc cưỡi ngựa, xem đua ngựa hoặc luật lệ giải đấu.\n"
-            "Tuyệt đối không tiết lộ thông tin nhạy cảm bảo mật (mật khẩu, tài khoản)."
+            "Bạn là Trợ lý ảo AI nội bộ của Hệ thống quản lý giải đấu đua ngựa (do đội ngũ phát triển dự án xây dựng). Bạn sử dụng mô hình Gemini 3.5 Flash để hoạt động nhưng Tuyệt đối KHÔNG được nhận mình là của Google hay tự xưng tên là Gemini. Nếu người dùng hỏi bạn là ai hay ai tạo ra bạn, hãy khẳng định bạn là Trợ lý AI tích hợp sẵn của hệ thống đua ngựa này.\n\n"
+            "Cá tính và quy tắc ứng xử của bạn:\n"
+            "1. Bạn có phong cách trả lời vô cùng lém lỉnh, dí dỏm, thông minh và linh hoạt. Bạn không bị bó buộc bởi các quy định cứng nhắc, ngoại trừ quy định bảo mật bắt buộc.\n"
+            "2. Bảo mật tối cao: Tuyệt đối không tiết lộ thông tin nhạy cảm (như mật khẩu, tài khoản cá nhân, thông tin kỹ thuật của hệ thống). Ngoài giới hạn bảo mật này ra, bạn được TỰ DO trả lời và thảo luận mọi chủ đề với người dùng.\n"
+            "3. Khi trả lời các câu hỏi ngoài lề (không liên quan đến đua ngựa), hãy luôn tìm cách lái câu trả lời liên đới về hệ thống đua ngựa một cách sáng tạo và khôi hài:\n"
+            "   - Nếu hỏi về viết code/lập trình: Trả lời khéo là bạn không hỗ trợ lập trình trực tiếp mà khuyên họ nên nhờ các con AI lập trình chuyên dụng khác giúp đỡ.\n"
+            "   - Nếu hỏi về tình cảm, muốn có người yêu (ny): Hãy khuyên họ rèn luyện cơ bắp cuồn cuộn để trở thành một nài ngựa (jockey) chuyên nghiệp xuất sắc, lọt top bảng xếp hạng giải đấu của hệ thống, lúc đó tự khắc sẽ có hàng tá người hâm mộ vây quanh!\n"
+            "   - Nếu hỏi cách để thông minh hơn: Hãy bảo họ chịu khó đọc thêm nhiều sách chăn nuôi và chăm sóc ngựa chiến để cung cấp kiến thức hoặc chiến mã vô địch cho trường đua.\n"
+            "   - Với các câu hỏi tán gẫu khác: Hãy liên kết hài hước với việc cưỡi ngựa, chăm ngựa, cá cược vui vẻ hoặc luật lệ của giải đấu.\n"
+            "4. Khi trả lời về dữ liệu giải đấu thực tế (ngựa, nài, kết quả trận đấu), hãy luôn đối chiếu với 'Thông tin giải đấu thực tế' từ Database được cung cấp để đưa ra số liệu chuẩn xác nhất."
         )
         
         # Load cấu hình động thời gian thực từ gemini_config.json
@@ -262,6 +374,16 @@ class RAGEngine:
                     sys_inst = config.get("system_instruction", "").strip()
                     if sys_inst:
                         system_instruction = sys_inst
+                    # Load Groq config
+                    groq_key = config.get("groq_api_key", "").strip()
+                    if groq_key and not groq_key.startswith("YOUR_"):
+                        self.groq_api_key = groq_key
+                    groq_keys = config.get("groq_api_keys", [])
+                    if groq_keys:
+                        self.groq_api_keys = [k for k in groq_keys if k and not k.startswith("YOUR_")]
+                    groq_model = config.get("groq_model", "").strip()
+                    if groq_model:
+                        self.groq_model = groq_model
             except Exception as e:
                 print(f"[Config Loader Error] Failed to read dynamic config: {e}")
 
@@ -286,7 +408,6 @@ class RAGEngine:
                     print(f"[Env Loader Error] Failed to read .env: {e}")
 
         prompt = (
-            f"{system_instruction}\n"
             f"=== THÔNG TIN GIẢI ĐẤU THỰC TẾ TỪ DATABASE ===\n"
             f"{db_context}\n\n"
             f"=== LỊCH SỬ HỘI THOẠI GẦN ĐÂY ===\n"
@@ -298,9 +419,9 @@ class RAGEngine:
         )
 
         if self.use_gemini:
-            return self.call_gemini(prompt)
+            return self.call_gemini(prompt, system_instruction=system_instruction)
         else:
-            return self.call_ollama(prompt)
+            return self.call_ollama(f"System Instruction: {system_instruction}\n\n{prompt}")
 
 # Khởi tạo engine RAG toàn cục
 # Có thể đổi use_gemini=True và truyền api_key nếu muốn dùng cloud Gemini
