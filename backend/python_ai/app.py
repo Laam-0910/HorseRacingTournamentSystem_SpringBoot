@@ -28,7 +28,7 @@ def chatbot():
         return jsonify({"success": False, "error": "message is required"}), 400
 
     # ── BẢO MẬT: Chặn yêu cầu nhạy cảm liên quan đến tài khoản mật khẩu
-    blocked_keywords = ["password", "mật khẩu", "passwd", "pass", "tài khoản", "account", "danh sách user", "admin credential", "username", "email", "phone"]
+    blocked_keywords = ["password", "mật khẩu", "passwd", "admin credential", "danh sách user", "danh sách tài khoản", "user credentials"]
     msg_lower = message.lower()
     if any(kw in msg_lower for kw in blocked_keywords):
         reply = (
@@ -55,10 +55,11 @@ def chatbot():
     try:
         reply = rag_engine.generate_answer(message, chat_history, db_context, lang)
     except Exception as e:
-        print(f"[RAG Error] Fallback to Rule-based Chatbot due to: {e}")
+        reply = f"EXCEPTION: {str(e)}"
         
-    # Fallback dự phòng nếu LLM không trả về kết quả
-    if not reply or "Lỗi" in reply or "connection error" in reply.lower():
+    # Fallback dự phòng nếu LLM không trả về kết quả hoặc lỗi API
+    is_fallback = not reply or "Lỗi kết nối Gemini API" in reply or "Lỗi gọi Gemini API" in reply or "connection error" in reply.lower() or reply.startswith("EXCEPTION:")
+    if is_fallback:
         reply = chat(message, lang)
 
     # 5. Lưu tin nhắn vào lịch sử session memory

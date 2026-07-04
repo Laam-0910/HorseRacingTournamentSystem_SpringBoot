@@ -8,7 +8,11 @@ import sys
 sys.stdout.reconfigure(encoding="utf-8")
 
 from flask import Flask, request, jsonify
-import pyodbc, os, re
+import pyodbc, os, re, json
+from dotenv import load_dotenv
+import google.generativeai as genai
+
+load_dotenv()
 
 app = Flask(__name__)
 
@@ -227,6 +231,65 @@ def respond(it, lang):
             "• 🏆 Recent results\n• 📊 Statistics\n"
             "• 🐴 Horse info (e.g. 'horse Thunder King')")
 
+# ── Gemini Self-Training Configuration & Grounding ───────────────────────────
+def load_gemini_config():
+    config_path = os.path.join(os.path.dirname(__file__), "gemini_config.json")
+    default_config = {
+        "model_name": "gemini-1.5-flash",
+        "temperature": 0.3,
+        "top_p": 0.95,
+        "top_k": 40,
+        "system_instruction": "You are the Gemini HKJC Assistant, an expert AI chatbot designed for the Hong Kong Jockey Club (HKJC) Horse Racing Tournament System. Your job is to answer spectator questions about horses, ratings, jockeys, upcoming/live races, and race results using ONLY the database context provided in the user prompt."
+    }
+    if not os.path.exists(config_path):
+        return default_config
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"[Config Error] Failed to read config: {e}")
+        return default_config
+
+def get_db_grounding_context(user_msg):
+    horses = top_horses()
+    jockeys = top_jockeys()
+    upcoming = upcoming_races()
+    running = running_races()
+    results = recent_results()
+    st = stats()
+
+    horse_info = ""
+    m2 = re.search(r"(?:ngựa|horse|con)\s+([A-Za-zÀ-ỹ0-9\s]+)", user_msg, re.IGNORECASE)
+    if m2:
+        name = m2.group(1).strip()
+        h = get_horse(name)
+        if h:
+            horse_info = f"\n- Specific Horse Queried ({name}): Name: {h['name']}, Breed: {h.get('breed','—')}, Rating: {h.get('currentRating','—')}, Wins/Races: {h.get('totalWins',0)}/{h.get('totalRaces',0)}"
+
+    context = f"""[DATABASE REAL-TIME CONTEXT]
+1. General Stats:
+   - Official Completed Races: {st.get('races', 0)}
+   - Active Horses: {st.get('horses', 0)}
+   - Active Jockeys: {st.get('jockeys', 0)}
+
+2. Top 5 Rated Horses:
+{json.dumps(horses, ensure_ascii=False, indent=2)}
+
+3. Top 5 Jockeys by Wins:
+{json.dumps(jockeys, ensure_ascii=False, indent=2)}
+
+4. Upcoming Scheduled Races:
+{json.dumps(upcoming, ensure_ascii=False, indent=2)}
+
+5. Live Running Races:
+{json.dumps(running, ensure_ascii=False, indent=2)}
+
+6. Recent Official Race Results:
+{json.dumps(results, ensure_ascii=False, indent=2)}
+{horse_info}
+[END OF DATABASE CONTEXT]"""
+    return context
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -235,7 +298,7 @@ def chat():
     lang = data.get("lang", "vi")
 
     if not msg:
-        return jsonify({"success": False, "reply": "Tin nhắn trống."})
+        return jsonify({"success": False, "reply": "Tin nhắn trống." if lang != "en" else "Empty message."})
 
     if is_blocked(msg):
         reply = ("⚠️ Tôi không được phép chia sẻ thông tin tài khoản hoặc mật khẩu. Liên hệ quản trị viên."
@@ -243,9 +306,44 @@ def chat():
                  "⚠️ I cannot share account or password information. Please contact the administrator.")
         return jsonify({"success": False, "reply": reply})
 
-    it    = intent(msg)
-    reply = respond(it, lang)
-    return jsonify({"success": True, "reply": reply})
+    config = load_gemini_config()
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if not api_key:
+        print("[AI Service] GEMINI_API_KEY not found. Falling back to rule-based responder.")
+        it = intent(msg)
+        reply = respond(it, lang)
+        hint = "\n\n*(Chế độ dự phòng: Hãy cấu hình GEMINI_API_KEY trong file .env để kích hoạt trợ lý AI Gemini)*" if lang != "en" else "\n\n*(Fallback mode: Configure GEMINI_API_KEY in .env to activate Gemini AI Assistant)*"
+        return jsonify({"success": True, "reply": reply + hint})
+
+    try:
+        db_context = get_db_grounding_context(msg)
+        
+        generation_config = {
+            "temperature": config.get("temperature", 0.3),
+            "top_p": config.get("top_p", 0.95),
+            "top_k": config.get("top_k", 40),
+        }
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            model_name=config.get("model_name", "gemini-1.5-flash"),
+            system_instruction=config.get("system_instruction"),
+            generation_config=generation_config
+        )
+        
+        prompt = f"{db_context}\n\nUser Question: {msg}\nAnswer:"
+        response = model.generate_content(prompt)
+        
+        reply = response.text if response.text else "Sorry, I couldn't generate a reply."
+        return jsonify({"success": True, "reply": reply})
+        
+    except Exception as e:
+        print(f"[Gemini API Error] {e}")
+        it = intent(msg)
+        reply = respond(it, lang)
+        error_hint = f"\n\n*(Lỗi kết nối Gemini API: {str(e)}. Sử dụng câu trả lời dự phòng)*" if lang != "en" else f"\n\n*(Gemini API connection error: {str(e)}. Using fallback response)*"
+        return jsonify({"success": True, "reply": reply + error_hint})
 
 @app.route("/health")
 def health():

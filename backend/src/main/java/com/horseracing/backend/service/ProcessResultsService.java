@@ -44,6 +44,23 @@ public class ProcessResultsService {
             if (entryOpt.isPresent()) {
                 RaceEntry entry = entryOpt.get();
                 
+                // Nếu ngựa đã bị loại trong trận (DISQUALIFIED do vi phạm), giữ nguyên trạng thái
+                if ("DISQUALIFIED".equals(entry.getStatus())) {
+                    entry.setFinalPosition(null);
+                    entry.setFinishTime("DQ");
+                    entry.setPrizeMoney(BigDecimal.ZERO);
+                    
+                    // Chỉ tăng số trận tham gia của ngựa, không trừ thêm điểm rating (rating đã được trừ khi ghi nhận vi phạm)
+                    Optional<Horse> horseOpt = horseRepository.findById(entry.getHorseId());
+                    if (horseOpt.isPresent()) {
+                        Horse horse = horseOpt.get();
+                        horse.setTotalRaces(horse.getTotalRaces() + 1);
+                        horseRepository.save(horse);
+                    }
+                    raceEntryRepository.save(entry);
+                    continue;
+                }
+                
                 // Kiểm tra chênh lệch cân nặng sau trận đấu (Weighing-in underweight check)
                 // Nếu cân nặng thực tế sau trận (weigh-in) nhẹ hơn mức đăng ký (carriedWeight) quá 0.5kg
                 BigDecimal diff = entry.getCarriedWeight().subtract(weighInWeight);
@@ -60,13 +77,14 @@ public class ProcessResultsService {
                     // Phân chia tiền thưởng: Hạng 1 (60%), Hạng 2 (25%), Hạng 3 (15%)
                     BigDecimal prize = BigDecimal.ZERO;
                     int ratingAdj = 0;
-                    if (finalPosition == 1) {
+                    int fPos = finalPosition != null ? finalPosition.intValue() : 0;
+                    if (fPos == 1) {
                         prize = purse.multiply(new BigDecimal("0.60"));
                         ratingAdj = 6;
-                    } else if (finalPosition == 2) {
+                    } else if (fPos == 2) {
                         prize = purse.multiply(new BigDecimal("0.25"));
                         ratingAdj = 3;
-                    } else if (finalPosition == 3) {
+                    } else if (fPos == 3) {
                         prize = purse.multiply(new BigDecimal("0.15"));
                         ratingAdj = 1;
                     } else {

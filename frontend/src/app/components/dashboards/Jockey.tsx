@@ -161,18 +161,60 @@ function MountsView({ mounts, loading }: { mounts: any[]; loading: boolean }) {
 }
 
 function InvitationsView({ invitations, onAccept, onReject, onViewProfile }: { invitations: any[]; onAccept: (id: number) => void; onReject: (id: number) => void; onViewProfile: (id: number) => void }) {
+  const lang = localStorage.getItem("app-lang") || "vi";
+  const t = {
+    vi: {
+      offersTitle: "Lời mời nài ngựa",
+      noOffers: "Hiện tại không có lời mời nào dành cho bạn.",
+      offerFrom: "Lời mời từ chủ Stable ",
+      horse: "Chiến mã",
+      race: "Trận đấu",
+      meeting: "Ngày đua",
+      venue: "Địa điểm",
+      startTime: "Khởi tranh",
+      status: "Trạng thái",
+      accept: "Chấp nhận",
+      reject: "Từ chối",
+    },
+    en: {
+      offersTitle: "Pending Ride Offers",
+      noOffers: "No pending ride offers currently.",
+      offerFrom: "Offer from Stable Owner ",
+      horse: "Horse",
+      race: "Race ID",
+      meeting: "Meeting",
+      venue: "Venue",
+      startTime: "Start Time",
+      status: "Status",
+      accept: "Accept Offer",
+      reject: "Reject",
+    }
+  }[lang] || {
+    offersTitle: "Pending Ride Offers",
+    noOffers: "No pending ride offers currently.",
+    offerFrom: "Offer from Stable Owner ",
+    horse: "Horse",
+    race: "Race ID",
+    meeting: "Meeting",
+    venue: "Venue",
+    startTime: "Start Time",
+    status: "Status",
+    accept: "Accept Offer",
+    reject: "Reject",
+  };
+
   return (
     <div>
-      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Pending Ride Offers</h3>
+      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{t.offersTitle}</h3>
       {invitations.length === 0 ? (
-        <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No pending ride offers currently.</p>
+        <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{t.noOffers}</p>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
           {invitations.map((inv: any) => (
             <div key={inv.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "1rem" }}>
               <div>
                 <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>
-                  Offer from Stable Owner{" "}
+                  {t.offerFrom}{" "}
                   <button 
                     type="button" 
                     onClick={() => onViewProfile(inv.ownerId)} 
@@ -181,12 +223,26 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile }: { i
                     {inv.ownerFullName || inv.ownerName || `#${inv.ownerId}`}
                   </button>
                 </h4>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.5rem" }}>Horse: {inv.horseName || `#${inv.horseId}`} · Race ID: #{inv.raceId}</p>
-                <p style={{ fontSize: "0.7rem", color: "#a0a0a0" }}>Status: {inv.status}</p>
+                <p style={{ fontSize: "0.75rem", color: "#f4f2ec", marginTop: "0.5rem" }}>
+                  <strong>{t.horse}:</strong> {inv.horseName || `#${inv.horseId}`}
+                </p>
+                {inv.meetingName && (
+                  <p style={{ fontSize: "0.75rem", color: "#fbbf24", marginTop: "0.25rem" }}>
+                    🏆 <strong>{inv.meetingName}</strong> ({inv.classLevel})
+                  </p>
+                )}
+                {inv.venue && (
+                  <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
+                    📍 {inv.venue} · 📅 {inv.startTime}
+                  </p>
+                )}
+                <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.25rem" }}>
+                  <strong>{t.status}:</strong> {inv.status}
+                </p>
               </div>
               <div style={{ display: "flex", gap: "0.5rem" }}>
-                <button onClick={() => onAccept(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>Accept Offer</button>
-                <button onClick={() => onReject(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "rgba(192,57,43,0.1)", color: "#ef4444", border: "1px solid rgba(192,57,43,0.2)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>Reject</button>
+                <button onClick={() => onAccept(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.accept}</button>
+                <button onClick={() => onReject(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "rgba(192,57,43,0.1)", color: "#ef4444", border: "1px solid rgba(192,57,43,0.2)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.reject}</button>
               </div>
             </div>
           ))}

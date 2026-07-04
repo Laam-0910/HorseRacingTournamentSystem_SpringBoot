@@ -316,13 +316,30 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
           <div className={`${isTheaterMode ? "w-full" : "lg:col-span-2"} space-y-4`}>
             {/* Embedded Stream */}
             <div className="relative w-full pb-[56.25%] h-0 rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black">
-              <iframe
-                className="absolute top-0 left-0 w-full h-full border-none"
-                src={`${embedUrl}?autoplay=1&mute=1&rel=0`}
-                title={selectedRace.classLevel}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-              ></iframe>
+              {selectedRace.youtubeLiveUrl && (
+                selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
+                selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
+                selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
+                selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
+                selectedRace.youtubeLiveUrl.toLowerCase().includes("/stream") ||
+                selectedRace.youtubeLiveUrl.toLowerCase().includes(".mp4?")
+              ) ? (
+                <video
+                  className="absolute top-0 left-0 w-full h-full border-none"
+                  src={selectedRace.youtubeLiveUrl}
+                  controls
+                  autoPlay
+                  muted
+                />
+              ) : (
+                <iframe
+                  className="absolute top-0 left-0 w-full h-full border-none"
+                  src={embedUrl && embedUrl.includes("?") ? embedUrl : `${embedUrl}?autoplay=1&mute=1&rel=0`}
+                  title={selectedRace.classLevel}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                ></iframe>
+              )}
             </div>
 
             {/* Info details */}

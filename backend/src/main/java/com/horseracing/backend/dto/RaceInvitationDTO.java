@@ -19,4 +19,8 @@ public class RaceInvitationDTO {
     private Integer jockeyId;
     private String jockeyName;      // Tên nài ngựa bổ trợ
     private String status;          // PENDING, ACCEPTED, REJECTED, EXPIRED
+    private String meetingName;     // Tên ngày hội đua bổ trợ
+    private String startTime;       // Thời gian bắt đầu trận đấu bổ trợ
+    private String classLevel;      // Hạng đấu bổ trợ
+    private String venue;           // Địa điểm thi đấu bổ trợ
 }

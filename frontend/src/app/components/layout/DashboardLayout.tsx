@@ -95,7 +95,10 @@ const translateLabel = (label: string, lang: string): string => {
     "Jockey": { vi: "Nài ngựa", en: "Jockey", zh: "骑师", ja: "ジョッキー" },
     "Referee": { vi: "Trọng tài", en: "Referee", zh: "裁判", ja: "審判" },
     "Spectator": { vi: "Người xem", en: "Spectator", zh: "观众", ja: "観客" },
-    "Admin": { vi: "Quản trị viên", en: "Admin", zh: "管理员", ja: "管理者" }
+    "Admin": { vi: "Quản trị viên", en: "Admin", zh: "管理员", ja: "管理者" },
+    "Referee Hub": { vi: "Bảng trọng tài", en: "Referee Hub", zh: "裁判面板", ja: "審判ボード" },
+    "Incidents": { vi: "Lịch sử sự cố", en: "Incidents", zh: "违规记录", ja: "インシデント" },
+    "Duties": { vi: "Lịch trình trọng tài", en: "Duties", zh: "值勤日程", ja: "任務" }
   };
   const key = Object.keys(dict).find(k => k.toLowerCase() === label.toLowerCase());
   if (key) {
@@ -301,7 +304,7 @@ export default function DashboardLayout({
                       </span>
                     </>
                   )}
-                  {sidebarExpanded && item.badge && item.badge > 0 && (
+                  {sidebarExpanded && item.badge !== undefined && item.badge !== null && item.badge > 0 && (
                     <span style={{ background: roleColor, color: '#0b0d11', fontSize: '0.5rem', fontFamily: 'monospace', fontWeight: 700, padding: '0.125rem 0.375rem', borderRadius: '9999px' }}>
                       {item.badge}
                     </span>

@@ -6,14 +6,25 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import com.horseracing.backend.entity.ChatMessage;
+import com.horseracing.backend.repository.ChatMessageRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler {
+
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Map of raceId to session lists
     private final Map<String, List<WebSocketSession>> raceSessions = new ConcurrentHashMap<>();
@@ -24,6 +35,21 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         if (raceId != null) {
             raceSessions.computeIfAbsent(raceId, k -> new CopyOnWriteArrayList<>()).add(session);
             System.out.println("WebSocket Connected: Session " + session.getId() + " joined Race " + raceId);
+
+            // Load and send chat history
+            try {
+                Integer rId = Integer.parseInt(raceId);
+                List<ChatMessage> history = chatMessageRepository.findByRaceIdOrderBySentAtAsc(rId);
+                for (ChatMessage msg : history) {
+                    Map<String, String> payload = new HashMap<>();
+                    payload.put("user", msg.getUsername());
+                    payload.put("text", msg.getMessageText());
+                    payload.put("time", msg.getSentAt() != null ? new java.text.SimpleDateFormat("HH:mm").format(msg.getSentAt()) : "");
+                    session.sendMessage(new TextMessage(objectMapper.writeValueAsString(payload)));
+                }
+            } catch (Exception e) {
+                System.err.println("Error loading chat history for race " + raceId + ": " + e.getMessage());
+            }
         } else {
             session.close(CloseStatus.BAD_DATA);
         }
@@ -33,6 +59,21 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         String raceId = getRaceId(session);
         if (raceId != null) {
+            // Save to DB first
+            try {
+                Map<String, String> payload = objectMapper.readValue(message.getPayload(), Map.class);
+                if (payload != null && payload.containsKey("user") && payload.containsKey("text")) {
+                    ChatMessage chatMessage = new ChatMessage();
+                    chatMessage.setRaceId(Integer.parseInt(raceId));
+                    chatMessage.setUsername(payload.get("user"));
+                    chatMessage.setMessageText(payload.get("text"));
+                    chatMessage.setSentAt(new Timestamp(System.currentTimeMillis()));
+                    chatMessageRepository.save(chatMessage);
+                }
+            } catch (Exception e) {
+                System.err.println("Error saving chat message for race " + raceId + ": " + e.getMessage());
+            }
+
             List<WebSocketSession> sessions = raceSessions.get(raceId);
             if (sessions != null) {
                 // Broadcast to all sessions in the same race (including sender)

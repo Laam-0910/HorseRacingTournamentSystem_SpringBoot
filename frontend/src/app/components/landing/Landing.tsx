@@ -864,7 +864,24 @@ export default function Landing() {
                         </div>
                         {embedUrl ? (
                           <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "0.5rem", border: "1px solid #2a2825" }}>
-                            <iframe src={embedUrl} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }} allowFullScreen></iframe>
+                            {r.youtubeLiveUrl && (
+                              r.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
+                              r.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
+                              r.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
+                              r.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
+                              r.youtubeLiveUrl.toLowerCase().includes("/stream") ||
+                              r.youtubeLiveUrl.toLowerCase().includes(".mp4?")
+                            ) ? (
+                              <video
+                                src={r.youtubeLiveUrl}
+                                controls
+                                autoPlay
+                                muted
+                                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                              />
+                            ) : (
+                              <iframe src={embedUrl} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }} allowFullScreen></iframe>
+                            )}
                           </div>
                         ) : (
                           <div style={{ height: 260, background: "#111", borderRadius: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #2a2825" }}>
@@ -995,7 +1012,15 @@ export default function Landing() {
                             {selectedRaceEntries.map((e, idx) => (
                               <tr key={idx} style={{ borderBottom: "1px solid rgba(42,40,37,0.3)", background: e.entry?.finalPosition === 1 ? "rgba(201,162,39,0.05)" : "transparent" }}>
                                 <td style={{ padding: "0.5rem", fontWeight: "bold" }}>
-                                  {e.entry?.finalPosition === 1 ? "🥇 1st" : e.entry?.finalPosition === 2 ? "🥈 2nd" : e.entry?.finalPosition === 3 ? "🥉 3rd" : `${e.entry?.finalPosition}th`}
+                                  {e.entry?.finalPosition === 1
+                                    ? "🥇 1st"
+                                    : e.entry?.finalPosition === 2
+                                      ? "🥈 2nd"
+                                      : e.entry?.finalPosition === 3
+                                        ? "🥉 3rd"
+                                        : (e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ" || !e.entry?.finalPosition)
+                                          ? "DQ"
+                                          : `${e.entry?.finalPosition}th`}
                                 </td>
                                 <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
                                 <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>

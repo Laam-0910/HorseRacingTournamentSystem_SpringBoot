@@ -139,7 +139,7 @@ CREATE TABLE Race (
     max_entries             INT NOT NULL DEFAULT 14,
     steward_report          NVARCHAR(MAX) NULL,        -- Báo cáo/biên bản giám sát của Trọng tài sau trận
     youtube_live_url        VARCHAR(500) NULL,          -- Đường dẫn YouTube Livestream
-    CONSTRAINT CK_Race_Status CHECK (status IN ('SCHEDULED', 'DECLARATION_OPEN', 'DECLARATION_CLOSED', 'RACE_ASSIGNED', 'RUNNING', 'STEWARDS_INQUIRY', 'OFFICIAL', 'CANCELLED', 'RACE_EVENT_ENDED'))
+    CONSTRAINT CK_Race_Status CHECK (status IN ('SCHEDULED', 'DECLARATION_OPEN', 'DECLARATION_CLOSED', 'RACE_ASSIGNED', 'RUNNING', 'STEWARDS_INQUIRY', 'OFFICIAL', 'CANCELLED', 'RACE_EVENT_ENDED', 'STOPPED'))
 );
 GO
 
@@ -182,7 +182,7 @@ CREATE TABLE RaceEntry (
     carried_weight      DECIMAL(5,2) NULL,
     rating_adjustment   INT NULL,
     handicap_weight     DECIMAL(5,2) NULL,
-    CONSTRAINT CK_RaceEntry_Status CHECK (status IN ('PENDING_ADMIN', 'APPROVED', 'RUNNING', 'FINISHED', 'DISQUALIFIED', 'REJECTED'))
+    CONSTRAINT CK_RaceEntry_Status CHECK (status IN ('PENDING_ADMIN', 'APPROVED', 'RUNNING', 'FINISHED', 'DISQUALIFIED', 'REJECTED', 'STOPPED'))
 );
 GO
 
