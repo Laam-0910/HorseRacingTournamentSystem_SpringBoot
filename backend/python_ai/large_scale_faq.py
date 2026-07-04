@@ -159,6 +159,8 @@ class LargeScaleFAQEngine:
             
         # 1. Chuyển câu hỏi sang vector thưa
         user_tfidf = self.vectorizer.transform([user_question])
+        if user_tfidf.nnz == 0:
+            return None
         
         # 2. Sử dụng bộ Hồi quy để dự đoán tọa độ PCA ngữ nghĩa liên tục
         user_projected_pca = np.zeros(self.n_components)

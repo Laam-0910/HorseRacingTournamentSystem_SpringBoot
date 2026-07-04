@@ -920,9 +920,10 @@ INTENTS = [
     (r"biên\s+bản\s+giám\s+sát\s+race\s+(\d+)|báo\s+cáo\s+trọng\s+tài\s+race\s+(\d+)|báo\s+cáo\s+trận\s+(\d+)|biên\s+bản\s+trận\s+(\d+)", "steward_report"),
     (r"quy\s+định\s+phân\s+hạng|luật\s+phân\s+hạng|quy\s+định\s+hạng|quy\s+định\s+rating", "class_rules"),
     (r"cấu\s+hình\s+hệ\s+thống|quy\s+định\s+tạ\s+gánh|quy\s+định\s+cân\s+nặng", "system_config"),
-    (r"xin ch[àa]o|hello|hi\b|ch[àa]o",                                          "greeting"),
+    (r"xin ch[àa]o|hello|hi\b|ch[àa]o|hé lo|helo|alo|a lô|hế lô",                                          "greeting"),
     (r"c[ảa]m [ơo]n|thanks|thank you",                                           "thanks"),
     (r"b[ạa]n l[àa] ai|b[ạa]n c[óo] th[ểe]|gi[úu]p|h[ướ]ng d[ẫa]n",          "help"),
+    (r"^(ừ|ừm|ờ|ô|ờm|uhm|uh|hmm|hm|ok|okay|fine|sure|alright|okie|rồi|vâng|dạ|thế|vậy|thôi|được rồi|ok rồi|rồi sao|rồi sao nữa|sao nữa|thế thì|ừ nhỉ|thế à|vậy à|à|ạ|uh huh)$", "chitchat"),
 
     # Japanese
     (r"評価|人気|おすすめ.*馬|(最高|レーティング|高|一番).*馬|馬.*(ランキング|上位|一番強い|評価)", "top_horses"),
@@ -1095,6 +1096,23 @@ def chat(user_message: str, lang: str = None) -> str:
                     "- Vi phạm, mùa giải (ví dụ: 'Vi phạm gần đây')\n"
                     "- Danh sách chủ ngựa & Luật phân hạng (ví dụ: 'Danh sách chủ ngựa', 'Quy định phân hạng')\n"
                     "- Lịch sử chiến thắng của ngựa/nài (ví dụ: 'Lịch sử thắng của ngựa Thunder King')")
+
+    # CHITCHAT - Các câu phản hồi ngắn tán gẫu như 'ừ', 'rồi sao nữa', 'ok'
+    if intent == "chitchat":
+        import random
+        responses_vi = [
+            "🐎 Haha! Bạn đang tán gẫu với chatbot đua ngựa đấy nhé! Hỏi tôi về race, ngựa hoặc nài ngựa để tôi khoe kiến thức nhé!",
+            "🏇 Ừ ừ tôi nghe! Bạn muốn hỏi gì về giải đấu đua ngựa không? Tôi biết hết mọi chuyện ở trường đua đấy!",
+            "😄 Dạ bạn ơi! Nếu không có gì muốn hỏi về giải đua ngựa thì tôi đề xuất bạn cứ ghé xem kết quả race mới nhất cho vui nhé!",
+        ]
+        responses_en = [
+            "🐎 Haha! You're chatting with a horse racing AI! Ask me about races, horses, or jockeys — I know it all!",
+            "🏇 Got it! Anything you want to know about the tournament? I'm all ears (well, hooves)! 🤣",
+        ]
+        if lang == 'en':
+            return random.choice(responses_en)
+        else:
+            return random.choice(responses_vi)
 
     # THANKS
     if intent == "thanks":
@@ -1448,6 +1466,26 @@ def chat(user_message: str, lang: str = None) -> str:
         elif lang == 'zh': prefix = "系统负重及配置参数：\n"
         else: prefix = "Cấu hình quy định tạ gánh hệ thống:\n"
         return prefix + format_system_config(df, lang=lang)
+
+    # CHITCHAT FALLBACKS
+    msg_lower = msg.lower()
+    if any(w in msg_lower for w in ["người yêu", "ny", "tình yêu", "bạn gái", "bạn trai", "crush"]):
+        if lang == 'en':
+            return "🐎 In my world, the greatest love is for championship horses and the race track! If you want a partner as loyal and strong as a racehorse, you have to train hard! 😉"
+        else:
+            return "🐎 Trong thế giới của tôi, tình yêu lớn nhất là dành cho những chú ngựa chiến và tiếng còi khai cuộc! Muốn tìm một người yêu bền bỉ, trung thành như chiến mã thì bạn phải kiên nhẫn tập luyện đấy nhé! 😉"
+            
+    if any(w in msg_lower for w in ["thông minh", "smart", "học giỏi"]):
+        if lang == 'en':
+            return "📚 Want to get smarter? Read more horse breeding and training books to provide top-quality horses for our tournaments! 🏇"
+        else:
+            return "📚 Muốn thông minh vượt trội à? Hãy đọc nhiều sách chăn nuôi và huấn luyện ngựa để cung cấp các chiến mã đẳng cấp nhất cho giải đấu của chúng tôi nhé! 🏇"
+
+    if any(w in msg_lower for w in ["code", "lập trình", "viết code", "program"]):
+        if lang == 'en':
+            return "💻 I specialize in horse racing data and statistics, not programming. You should guide yourself to use other specialized programming AI tools! 🚀"
+        else:
+            return "💻 Tôi chuyên về phân tích và số liệu đua ngựa, không biết lập trình đâu. Bạn nên sử dụng một con AI chuyên biệt về viết code khác nhé! 🚀"
 
     # UNKNOWN fallback
     if lang == 'en':
