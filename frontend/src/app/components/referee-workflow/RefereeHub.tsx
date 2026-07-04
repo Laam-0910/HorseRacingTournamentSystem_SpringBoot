@@ -227,10 +227,11 @@ export default function RefereeHub() {
     const wMap: Record<number, string> = {};
     const dqMap: Record<number, boolean> = {};
     raceEntries.forEach((item: any, idx: number) => {
-      posMap[item.entry.id] = (idx + 1).toString();
-      tMap[item.entry.id] = "";
-      wMap[item.entry.id] = (item.entry.carriedWeight || 52.0).toString();
-      dqMap[item.entry.id] = false;
+      const isAlreadyDq = item.entry.status === "DISQUALIFIED";
+      posMap[item.entry.id] = isAlreadyDq ? "" : (idx + 1).toString();
+      tMap[item.entry.id] = isAlreadyDq ? "DQ" : "";
+      wMap[item.entry.id] = isAlreadyDq ? "" : (item.entry.carriedWeight || 52.0).toString();
+      dqMap[item.entry.id] = isAlreadyDq;
     });
     setFinalPositions(posMap);
     setFinishTimes(tMap);
@@ -590,6 +591,7 @@ export default function RefereeHub() {
   }
 
   if (activeView === "confirm" && selectedRace) {
+    const lang = localStorage.getItem("app-lang") || "vi";
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         <div style={{ marginBottom: "0.5rem" }}>
@@ -622,6 +624,7 @@ export default function RefereeHub() {
                 <tbody>
                   {raceEntries.map((item, idx) => {
                     const entryId = item.entry.id;
+                    const isAlreadyDq = item.entry.status === "DISQUALIFIED";
                     const isDq = disqualifiedList[entryId] || false;
                     const weighedOut = item.entry.carriedWeight || 52.0;
                     const weighedIn = parseFloat(weighInWeights[entryId]) || 0;
@@ -651,26 +654,47 @@ export default function RefereeHub() {
                           <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>Weighed Out: {item.entry.carriedWeight || "52.0"} kg</div>
                         </td>
                         <td style={{ padding: "1rem" }}>
-                          <input type="number" required={!isDq} disabled={isDq} value={isDq ? "" : finalPositions[entryId] || ""} onChange={e => setFinalPositions(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: 70, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                          {isAlreadyDq ? (
+                            <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem" }}>
+                              {lang === "vi" ? "BỊ LOẠI" : "DISQUALIFIED"}
+                            </span>
+                          ) : (
+                            <input type="number" required={!isDq} disabled={isDq} value={isDq ? "" : finalPositions[entryId] || ""} onChange={e => setFinalPositions(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: 70, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                          )}
                         </td>
                         <td style={{ padding: "1rem" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                            <input type="number" step="0.1" required value={weighInWeights[entryId] || ""} disabled={isDq} onChange={e => {
-                              const v = parseFloat(e.target.value);
-                              setWeighInWeights(prev => ({ ...prev, [entryId]: e.target.value }));
-                              if (!isNaN(v) && v - weighedOut < -0.5) {
-                                setDisqualifiedList(prev => ({ ...prev, [entryId]: true }));
-                              }
-                            }} style={{ width: 75, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
-                            <span style={{ fontSize: "11px", color: "#a0a0a0" }}>kg</span>
-                          </div>
-                          {!isDq && <div style={{ fontSize: "10px", fontWeight: "bold", color: wiColor, marginTop: "4px" }}>{wiText}</div>}
+                          {isAlreadyDq ? (
+                            <span style={{ fontSize: "11px", color: "#a0a0a0" }}>—</span>
+                          ) : (
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <input type="number" step="0.1" required={!isDq} value={weighInWeights[entryId] || ""} disabled={isDq} onChange={e => {
+                                const v = parseFloat(e.target.value);
+                                setWeighInWeights(prev => ({ ...prev, [entryId]: e.target.value }));
+                                if (!isNaN(v) && v - weighedOut < -0.5) {
+                                  setDisqualifiedList(prev => ({ ...prev, [entryId]: true }));
+                                }
+                              }} style={{ width: 75, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                              <span style={{ fontSize: "11px", color: "#a0a0a0" }}>kg</span>
+                            </div>
+                          )}
+                          {!isDq && !isAlreadyDq && <div style={{ fontSize: "10px", fontWeight: "bold", color: wiColor, marginTop: "4px" }}>{wiText}</div>}
                         </td>
                         <td style={{ padding: "1rem" }}>
-                          <input type="text" required={!isDq} placeholder="e.g. 1:48.35" value={isDq ? "DQ" : finishTimes[entryId] || ""} disabled={isDq} onChange={e => setFinishTimes(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: 120, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                          {isAlreadyDq ? (
+                            <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f87171", fontFamily: "monospace" }}>
+                              DQ
+                            </span>
+                          ) : (
+                            <input type="text" required={!isDq} placeholder="e.g. 1:48.35" value={isDq ? "DQ" : finishTimes[entryId] || ""} disabled={isDq} onChange={e => setFinishTimes(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: 120, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                          )}
                         </td>
                         <td style={{ padding: "1rem", textAlign: "center" }}>
-                          <input type="checkbox" checked={isDq} onChange={e => setDisqualifiedList(prev => ({ ...prev, [entryId]: e.target.checked }))} style={{ width: 16, height: 16, cursor: "pointer" }} />
+                          <input type="checkbox" checked={isDq} disabled={isAlreadyDq} onChange={e => setDisqualifiedList(prev => ({ ...prev, [entryId]: e.target.checked }))} style={{ width: 16, height: 16, cursor: isAlreadyDq ? "not-allowed" : "pointer" }} />
+                          {isAlreadyDq && (
+                            <div style={{ fontSize: "9px", color: "#f87171", marginTop: "4px", fontWeight: "bold" }}>
+                              {lang === "vi" ? "Vi phạm" : "Violation"}
+                            </div>
+                          )}
                         </td>
                       </tr>
                     );
@@ -697,14 +721,62 @@ export default function RefereeHub() {
     );
   }
 
+  const lang = localStorage.getItem("app-lang") || "vi";
+  const t = {
+    vi: {
+      stat1: "Nhiệm vụ được giao",
+      stat2: "Đang chờ xử lý",
+      stat3: "Đã hoàn thành",
+      title: "Danh sách trận đấu được giao",
+      sub: "Theo dõi, giám sát và xác nhận kết quả các trận đấu được phân công cho bạn.",
+      hId: "ID Trận",
+      hMeeting: "Ngày hội & Địa điểm",
+      hTime: "Thời gian",
+      hDetails: "Chi tiết",
+      hStatus: "Trạng thái",
+      hActions: "Hành động",
+      loading: "Đang tải danh sách trận đấu...",
+      noRaces: "Hiện tại không có trận đấu nào được phân công cho bạn.",
+    },
+    en: {
+      stat1: "Total Assignments",
+      stat2: "Pending Check/Supervision",
+      stat3: "Completed Races",
+      title: "Assigned Races & Duties",
+      sub: "Inspect, monitor, and finalize results for races assigned to you.",
+      hId: "Race ID",
+      hMeeting: "Race Meeting & Venue",
+      hTime: "Start Time",
+      hDetails: "Details",
+      hStatus: "Status",
+      hActions: "Actions",
+      loading: "Loading assigned races...",
+      noRaces: "No races assigned to you at the moment.",
+    }
+  }[lang] || {
+    stat1: "Total Assignments",
+    stat2: "Pending Check/Supervision",
+    stat3: "Completed Races",
+    title: "Assigned Races & Duties",
+    sub: "Inspect, monitor, and finalize results for races assigned to you.",
+    hId: "Race ID",
+    hMeeting: "Race Meeting & Venue",
+    hTime: "Start Time",
+    hDetails: "Details",
+    hStatus: "Status",
+    hActions: "Actions",
+    loading: "Loading assigned races...",
+    noRaces: "No races assigned to you at the moment.",
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Stats Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1.5rem" }}>
         {[
-          { label: "Total Assignments",       value: completedCount + pendingCount, color: PURPLE,    bg: `rgba(139,92,246,0.1)`,  icon: "📋" },
-          { label: "Pending Check/Supervision", value: pendingCount,   color: "#eab308",  bg: "rgba(234,179,8,0.1)",   icon: "⏱" },
-          { label: "Completed Races",          value: completedCount,  color: "#4ade80",  bg: "rgba(74,222,128,0.1)",  icon: "✅" },
+          { label: t.stat1, value: completedCount + pendingCount, color: PURPLE,    bg: `rgba(139,92,246,0.1)`,  icon: "📋" },
+          { label: t.stat2, value: pendingCount,   color: "#eab308",  bg: "rgba(234,179,8,0.1)",   icon: "⏱" },
+          { label: t.stat3, value: completedCount,  color: "#4ade80",  bg: "rgba(74,222,128,0.1)",  icon: "✅" },
         ].map(s => (
           <div key={s.label} className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem", background: "rgba(21,19,16,0.5)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
@@ -722,28 +794,28 @@ export default function RefereeHub() {
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
         <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>Assigned Races & Duties</h3>
-            <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>Inspect, monitor, and finalize results for races assigned to you.</p>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{t.title}</h3>
+            <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{t.sub}</p>
           </div>
         </div>
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                {["Race ID", "Race Meeting & Venue", "Start Time", "Details", "Status", "Actions"].map((h, i) => (
+                {[t.hId, t.hMeeting, t.hTime, t.hDetails, t.hStatus, t.hActions].map((h, i) => (
                   <th key={h} style={{ padding: "0.75rem 1rem", textAlign: i === 5 ? "right" : "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>Loading assigned races...</td></tr>
+                <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loading}</td></tr>
               ) : assignedRaces.length === 0 ? (
                 <tr>
                   <td colSpan={6} style={{ padding: "3rem", textAlign: "center" }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
                       <span style={{ fontSize: "2rem" }}>📭</span>
-                      <span style={{ color: "#a0a0a0", fontSize: "0.875rem" }}>No races assigned to you at the moment.</span>
+                      <span style={{ color: "#a0a0a0", fontSize: "0.875rem" }}>{t.noRaces}</span>
                     </div>
                   </td>
                 </tr>

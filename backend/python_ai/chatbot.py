@@ -99,6 +99,38 @@ def get_recent_results():
         ORDER BY r.start_time DESC
     """)
 
+def get_results_by_query(search_term):
+    if search_term.isdigit():
+        return query("""
+            SELECT
+                r.id as race_id, r.class_level, r.distance_meters,
+                rm.name as meeting_name, rm.venue,
+                h.name as horse_name, re.final_position, re.finish_time, re.prize_money,
+                u.username as jockey, re.status as entry_status
+            FROM RaceEntry re
+            JOIN Race r ON re.race_id = r.id
+            JOIN RaceMeeting rm ON r.race_meeting_id = rm.id
+            JOIN Horse h ON re.horse_id = h.id
+            JOIN [User] u ON re.jockey_id = u.id
+            WHERE r.id = ?
+            ORDER BY CASE WHEN re.final_position IS NULL THEN 999 ELSE re.final_position END ASC
+        """, params=[int(search_term)])
+    else:
+        return query("""
+            SELECT
+                r.id as race_id, r.class_level, r.distance_meters,
+                rm.name as meeting_name, rm.venue,
+                h.name as horse_name, re.final_position, re.finish_time, re.prize_money,
+                u.username as jockey, re.status as entry_status
+            FROM RaceEntry re
+            JOIN Race r ON re.race_id = r.id
+            JOIN RaceMeeting rm ON r.race_meeting_id = rm.id
+            JOIN Horse h ON re.horse_id = h.id
+            JOIN [User] u ON re.jockey_id = u.id
+            WHERE rm.name LIKE ? OR rm.venue LIKE ?
+            ORDER BY r.id ASC, CASE WHEN re.final_position IS NULL THEN 999 ELSE re.final_position END ASC
+        """, params=[f"%{search_term}%", f"%{search_term}%"])
+
 def get_race_prediction(race_id=None):
     if race_id:
         df = query("""
@@ -452,6 +484,68 @@ def format_results(df, lang='vi'):
             )
     return "\n".join(lines)
 
+def format_grouped_results(df, lang='vi'):
+    if df is None or df.empty:
+        if lang == 'en': return "No results found for your query."
+        elif lang == 'ja': return "クエリに一致する結果が見つかりませんでした。"
+        elif lang == 'zh': return "未找到符合您查询的结果。"
+        else: return "Không tìm thấy kết quả phù hợp với truy vấn."
+
+    races = {}
+    for _, r in df.iterrows():
+        race_id = r['race_id']
+        if race_id not in races:
+            races[race_id] = {
+                'meeting_name': r['meeting_name'],
+                'venue': r['venue'],
+                'class_level': r['class_level'],
+                'distance_meters': r['distance_meters'],
+                'entries': []
+            }
+        races[race_id]['entries'].append(r)
+
+    lines = []
+    for race_id, info in races.items():
+        if lang == 'en':
+            lines.append(f"🏁 **Race #{race_id} ({info['class_level']} - {info['distance_meters']}m)** | Meeting: {info['meeting_name']} ({info['venue']})")
+        elif lang == 'ja':
+            lines.append(f"🏁 **レース #{race_id} ({info['class_level']} - {info['distance_meters']}m)** | 開催: {info['meeting_name']} ({info['venue']})")
+        elif lang == 'zh':
+            lines.append(f"🏁 **比赛 #{race_id} ({info['class_level']} - {info['distance_meters']}米)** | 赛事: {info['meeting_name']} ({info['venue']})")
+        else:
+            lines.append(f"🏁 **Trận #{race_id} ({info['class_level']} - {info['distance_meters']}m)** | Ngày hội: {info['meeting_name']} ({info['venue']})")
+
+        for entry in info['entries']:
+            pos = entry['final_position']
+            time = entry['finish_time'] or "--:--"
+            prize = entry['prize_money'] or 0.0
+            status = entry['entry_status']
+            
+            if status == 'DISQUALIFIED' or time == 'DQ':
+                pos_str = "DQ"
+            elif pos == 1:
+                pos_str = "🥇 1st"
+            elif pos == 2:
+                pos_str = "🥈 2nd"
+            elif pos == 3:
+                pos_str = "🥉 3rd"
+            elif pos is not None:
+                pos_str = f"{int(pos)}th"
+            else:
+                pos_str = "—"
+
+            if lang == 'en':
+                lines.append(f"  - {pos_str}: {entry['horse_name']} (Jockey: {entry['jockey']}) | Time: {time} | Prize: ${prize:,.0f}")
+            elif lang == 'ja':
+                lines.append(f"  - {pos_str}: {entry['horse_name']} (騎手: {entry['jockey']}) | タイム: {time} | 賞金: ${prize:,.0f}")
+            elif lang == 'zh':
+                lines.append(f"  - {pos_str}: {entry['horse_name']} (骑师: {entry['jockey']}) | 时间: {time} | 奖金: ${prize:,.0f}")
+            else:
+                lines.append(f"  - {pos_str}: {entry['horse_name']} (Nài ngựa: {entry['jockey']}) | Thời gian: {time} | Giải thưởng: ${prize:,.0f}")
+        lines.append("")
+
+    return "\n".join(lines).strip()
+
 def format_prediction(df, race_id, lang='vi'):
     if df is None or df.empty:
         if lang == 'en': return f"No data found for race #{race_id}."
@@ -784,6 +878,7 @@ INTENTS = [
     (r"horse\s+([A-Za-z0-9_ ]+?)(\s+info|\s+detail|\s+rating|\?|$)",      "horse_detail"),
     (r"top.*(jockey|rider)|best.*(jockey|rider)",                          "top_jockeys"),
     (r"jockey\s+([A-Za-z0-9_]+)",                                          "jockey_detail"),
+    (r"result.*(?:race|meeting|of)\s+([A-Za-z0-9_]+)|(?:race|meeting)\s+([A-Za-z0-9_]+)\s+result", "race_results"),
     (r"predict|who.*(win|top3|finish)|forecast",                           "predict"),
     (r"upcoming|next.*(race|event)|schedule",                              "upcoming"),
     (r"recent.*(result|win)|latest.*(result|winner)",                      "recent"),
@@ -809,7 +904,8 @@ INTENTS = [
     (r"n[àa]i.*(t[ốo]t|gi[ỏo]i|h[àa]ng đ[àa]u|xu[ấa]t s[ắa]c|top)",          "top_jockeys"),
     (r"n[àa]i\s+(.+?)(\s+th[ôo]ng tin|\s+l[àa]|\?|$)",                           "jockey_detail"),
     (r"th[ôo]ng tin.*(n[àa]i)\s+(.+)",                                            "jockey_detail"),
-    (r"d[ựu] [đo][oa][á]n|d[ựu] [đo][oa][á]|k[ếe]t qu[ảa]|ai th[ắa]ng",       "predict"),
+    (r"k[ếe]t qu[ảa].*cu[ộo]c\s+[đo]ua\s+([A-Za-z0-9_]+)|k[ếe]t qu[ảa].*race\s+([A-Za-z0-9_]+)|cu[ộo]c\s+[đo]ua\s+([A-Za-z0-9_]+)\s+k[ếe]t qu[ảa]", "race_results"),
+    (r"d[ựu] [đo][oa][áa]n|ai th[ắa]ng",                                         "predict"),
     (r"race.*(s[ắa]p|t[ới]i|[đo][oa]ng|sap)",                                    "upcoming"),
     (r"(l[ịi]ch|s[ắa]p|t[ớo]i).*(race|thi [đo][ấa]u|[đo]ua)",                  "upcoming"),
     (r"k[ếe]t qu[ảa].*(g[àa]n|m[ớo]i|v[ừu]a)",                                  "recent"),
@@ -835,6 +931,7 @@ INTENTS = [
     (r"騎手\s+(.+)|(.+)\s*(の情報|という騎手)",                               "jockey_detail"),
     (r"予測|予想|だれが勝つ|誰が勝つ",                                         "predict"),
     (r"予定|今後のレース|スケジュール|次.*レース",                            "upcoming"),
+    (r"レース\s*([A-Za-z0-9_]+)\s*(?:の結果|結果)",                            "race_results"),
     (r"最近の結果|勝者|直近結果|レース結果",                                   "recent"),
     (r"反則|違反|ペナルティ|事件",                                             "violations"),
     (r"シーズン|大会|リーグ",                                                 "season"),
@@ -896,6 +993,12 @@ def detect_intent(text):
         return "predict"
     if any(w in text_lower for w in ["upcoming", "schedule", "sắp", "予定", "日程", "赛程"]) or ("lịch" in text_lower and "lịch sử" not in text_lower and "lịch sử thắng" not in text_lower):
         return "upcoming"
+    # Detect race_results before recent: if user mentions "kết quả" + a non-time keyword (not "gần", "mới", "vừa")
+    has_result_kw = any(w in text_lower for w in ["kết quả", "result", "結果", "结果"])
+    has_recent_kw = any(w in text_lower for w in ["gần", "mới", "vừa", "recent", "latest", "最近", "直近", "最新"])
+    has_race_kw   = any(w in text_lower for w in ["race", "cuộc đua", "trận", "meeting", "レース", "比赛"])
+    if has_result_kw and has_race_kw and not has_recent_kw:
+        return "race_results"
     if any(w in text_lower for w in ["recent", "result", "kết quả", "结果", "勝者"]):
         return "recent"
     if any(w in text_lower for w in ["violation", "penalty", "vi phạm", "phạt", "反則", "违规"]):
@@ -1120,6 +1223,42 @@ def chat(user_message: str, lang: str = None) -> str:
         elif lang == 'zh': prefix = "即将进行的比赛：\n"
         else: prefix = "Race sắp diễn ra:\n"
         return prefix + format_races(df, lang=lang)
+
+    # RACE RESULTS (search by meeting name or race ID)
+    if intent == "race_results":
+        # Extract race ID or meeting name keyword from message
+        search_term = None
+        # Try match race id: "race 5", "trận 5", "cuộc đua 5"
+        m = re.search(r"(?:race|trận|cu[ộo]c\s+[đo]ua|レース|比赛)\s*#?\s*(\d+)", msg, re.IGNORECASE)
+        if m:
+            search_term = m.group(1)
+        else:
+            # Try match meeting name keyword after keywords like "cuộc đua", "race", "result of"
+            m = re.search(
+                r"(?:k[ếe]t qu[ảa].*cu[ộo]c\s+[đo]ua|k[ếe]t qu[ảa].*race|result.*race|result.*of|race\s+result)\s+([A-Za-z0-9_]+)",
+                msg, re.IGNORECASE)
+            if m:
+                search_term = m.group(1)
+            else:
+                # Last resort: extract any standalone word after trigger keywords
+                m = re.search(
+                    r"(?:cu[ộo]c\s+[đo]ua|race|meeting|trận)\s+([A-Za-z0-9_]{2,})",
+                    msg, re.IGNORECASE)
+                if m:
+                    search_term = m.group(1)
+
+        if not search_term:
+            if lang == 'en': return "Please specify a race ID or meeting name (e.g. 'result of race pdfosg' or 'race 5 result')."
+            elif lang == 'ja': return "レースIDまたは開催名を指定してください (例: 'レース5の結果')."
+            elif lang == 'zh': return "请指定比赛ID或赛事名称 (例如: '比赛5结果')."
+            else: return "Vui lòng nhập ID trận hoặc tên cuộc đua (ví dụ: 'kết quả cuộc đua pdfosg' hoặc 'kết quả race 5')."
+
+        df = get_results_by_query(search_term)
+        if lang == 'en': prefix = f"Results for '{search_term}':\n"
+        elif lang == 'ja': prefix = f"'{search_term}' の結果：\n"
+        elif lang == 'zh': prefix = f"'{search_term}' 的比赛结果：\n"
+        else: prefix = f"Kết quả cuộc đua '{search_term}':\n"
+        return prefix + format_grouped_results(df, lang=lang)
 
     # RECENT
     if intent == "recent":

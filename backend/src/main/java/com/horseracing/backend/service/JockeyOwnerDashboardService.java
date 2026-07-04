@@ -227,13 +227,15 @@ public class JockeyOwnerDashboardService {
         Map<Integer, List<UserDTO>> meetingJockeys = new HashMap<>();
 
         for (RaceMeeting meeting : meetings) {
-            // Find approved horses for this meeting
+            // Find approved horses for this meeting belonging to this owner
             List<HorseRaceMeetingRegistration> approvedHorseRegs = horseRegRepository.findAll().stream()
                     .filter(r -> r.getRaceMeetingId().equals(meeting.getId()) && "APPROVED".equalsIgnoreCase(r.getStatus()))
                     .toList();
             List<HorseDTO> hList = new ArrayList<>();
             for (HorseRaceMeetingRegistration reg : approvedHorseRegs) {
-                horseRepository.findById(reg.getHorseId()).ifPresent(h -> hList.add(horseMapper.toDTO(h, null)));
+                horseRepository.findById(reg.getHorseId())
+                        .filter(h -> h.getOwnerId() != null && h.getOwnerId().equals(ownerId))
+                        .ifPresent(h -> hList.add(horseMapper.toDTO(h, null)));
             }
             meetingHorses.put(meeting.getId(), hList);
 

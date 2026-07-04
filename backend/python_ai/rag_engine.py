@@ -1,6 +1,7 @@
 import pandas as pd
 import requests
 import json
+import os
 from db_connector import get_connection
 
 class RAGEngine:
@@ -13,6 +14,7 @@ class RAGEngine:
         self.use_gemini = use_gemini
         self.gemini_api_key = gemini_api_key
         self.ollama_url = ollama_url
+        self.model_name = "gemini-2.5-flash"
 
     def retrieve_db_context(self, state: dict) -> str:
         """
@@ -75,19 +77,32 @@ class RAGEngine:
         if not self.gemini_api_key:
             return "Lỗi: Chưa cấu hình GEMINI_API_KEY."
         
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.gemini_api_key}"
-        headers = {"Content-Type": "application/json"}
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}]
-        }
         try:
-            res = requests.post(url, headers=headers, json=payload, timeout=15)
-            if res.status_code == 200:
-                data = res.json()
-                return data["contents"][0]["parts"][0]["text"]
-            return f"Lỗi kết nối Gemini API (HTTP {res.status_code})"
+            import google.generativeai as genai
+            genai.configure(api_key=self.gemini_api_key)
+            model = genai.GenerativeModel(self.model_name)
+            response = model.generate_content(prompt)
+            if response and response.text:
+                return response.text
+            return "Lỗi: Không nhận được phản hồi từ Gemini API."
         except Exception as e:
-            return f"Lỗi gọi Gemini API: {str(e)}"
+            # Fallback về REST API dùng x-goog-api-key header (giúp hỗ trợ mã khóa dạng AQ. mới của Google)
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent"
+            headers = {
+                "Content-Type": "application/json",
+                "x-goog-api-key": self.gemini_api_key
+            }
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}]
+            }
+            try:
+                res = requests.post(url, headers=headers, json=payload, timeout=15)
+                if res.status_code == 200:
+                    data = res.json()
+                    return data["contents"][0]["parts"][0]["text"]
+                return f"Lỗi kết nối Gemini API (HTTP {res.status_code})"
+            except Exception as ex:
+                return f"Lỗi gọi Gemini API: {str(ex)}"
 
     def call_ollama(self, prompt: str) -> str:
         payload = {
@@ -108,14 +123,54 @@ class RAGEngine:
         Ghép dữ liệu thật thu được từ Database + Lịch sử trò chuyện + Câu hỏi của User
         để tạo Prompt tối ưu nhất cho LLM.
         """
+        # Cấu hình mặc định
         system_instruction = (
-            "Bạn là trợ lý AI chuyên nghiệp cho hệ thống Đua ngựa HKJC (Hong Kong Jockey Club).\n"
+            "Bạn là trợ lý AI chuyên nghiệp cho Hệ thống quản lý đua ngựa.\n"
             "Hãy sử dụng 'Thông tin giải đấu thực tế' dưới đây (được trích xuất trực tiếp từ Database hệ thống) "
             "để trả lời câu hỏi của người dùng một cách chính xác, tự nhiên và ngắn gọn.\n"
             "Không tự bịa đặt thông tin không có trong phần dữ liệu thực tế được cung cấp.\n"
-            "Nếu người dùng hỏi các câu hỏi chung chung hoặc ngoài lề, hãy trả lời lịch sự dựa trên vai trò trợ lý HKJC.\n"
+            "Nếu người dùng hỏi các câu hỏi chung chung hoặc ngoài lề, hãy trả lời lịch sự dựa trên vai trò trợ lý của Hệ thống quản lý đua ngựa.\n"
         )
         
+        # Load cấu hình động thời gian thực từ gemini_config.json
+        config_path = os.path.join(os.path.dirname(__file__), "gemini_config.json")
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, "r", encoding="utf-8") as f:
+                    config = json.load(f)
+                    api_key = config.get("gemini_api_key", "").strip()
+                    if api_key and not api_key.startswith("YOUR_") and not api_key.startswith("Điền_"):
+                        self.gemini_api_key = api_key
+                        self.use_gemini = True
+                    model_n = config.get("model_name", "").strip()
+                    if model_n:
+                        self.model_name = model_n
+                    sys_inst = config.get("system_instruction", "").strip()
+                    if sys_inst:
+                        system_instruction = sys_inst
+            except Exception as e:
+                print(f"[Config Loader Error] Failed to read dynamic config: {e}")
+
+        # Bảo mật: Nếu chưa có key trong gemini_config.json, thử đọc từ file .env riêng tư (không chia sẻ)
+        if not self.gemini_api_key or self.gemini_api_key.startswith("YOUR_"):
+            env_path = os.path.join(os.path.dirname(__file__), ".env")
+            if os.path.exists(env_path):
+                try:
+                    with open(env_path, "r", encoding="utf-8") as f:
+                        for line in f:
+                            line = line.strip()
+                            if line and not line.startswith("#") and "=" in line:
+                                k, v = line.split("=", 1)
+                                if k.strip() == "GEMINI_API_KEY":
+                                    val = v.strip()
+                                    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                                        val = val[1:-1]
+                                    if val and not val.startswith("YOUR_"):
+                                        self.gemini_api_key = val
+                                        self.use_gemini = True
+                except Exception as e:
+                    print(f"[Env Loader Error] Failed to read .env: {e}")
+
         prompt = (
             f"{system_instruction}\n"
             f"=== THÔNG TIN GIẢI ĐẤU THỰC TẾ TỪ DATABASE ===\n"

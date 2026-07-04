@@ -10,6 +10,8 @@ import com.horseracing.backend.repository.HorseRepository;
 import com.horseracing.backend.repository.RaceEntryRepository;
 import com.horseracing.backend.repository.RaceInvitationRepository;
 import com.horseracing.backend.repository.UserRepository;
+import com.horseracing.backend.repository.RaceRepository;
+import com.horseracing.backend.repository.RaceMeetingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +30,8 @@ public class InvitationService {
     private final RaceEntryRepository raceEntryRepository;
     private final UserRepository userRepository;
     private final HorseRepository horseRepository;
+    private final RaceRepository raceRepository;
+    private final RaceMeetingRepository raceMeetingRepository;
     private final RaceInvitationMapper invitationMapper;
 
     public List<RaceInvitationDTO> getInvitations(Integer jockeyId, Integer ownerId) {
@@ -41,15 +45,34 @@ public class InvitationService {
         }
 
         Map<Integer, String> userMap = userRepository.findAll().stream()
-                .collect(Collectors.toMap(User::getId, User::getUsername));
+                .collect(Collectors.toMap(User::getId, u -> u.getFullName() != null && !u.getFullName().isBlank() ? u.getFullName() : u.getUsername()));
         Map<Integer, String> horseMap = horseRepository.findAll().stream()
                 .collect(Collectors.toMap(Horse::getId, Horse::getName));
 
+        java.util.Map<Integer, com.horseracing.backend.entity.Race> raceMap = raceRepository.findAll().stream()
+                .collect(Collectors.toMap(com.horseracing.backend.entity.Race::getId, r -> r));
+        java.util.Map<Integer, com.horseracing.backend.entity.RaceMeeting> meetingMap = raceMeetingRepository.findAll().stream()
+                .collect(Collectors.toMap(com.horseracing.backend.entity.RaceMeeting::getId, m -> m));
+
         return invitations.stream()
-                .map(i -> invitationMapper.toDTO(i, 
-                        horseMap.get(i.getHorseId()), 
-                        userMap.get(i.getOwnerId()), 
-                        userMap.get(i.getJockeyId())))
+                .map(i -> {
+                    RaceInvitationDTO dto = invitationMapper.toDTO(i, 
+                            horseMap.get(i.getHorseId()), 
+                            userMap.get(i.getOwnerId()), 
+                            userMap.get(i.getJockeyId()));
+                    
+                    com.horseracing.backend.entity.Race race = raceMap.get(i.getRaceId());
+                    if (race != null) {
+                        dto.setClassLevel(race.getClassLevel());
+                        dto.setStartTime(race.getStartTime() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(race.getStartTime()) : null);
+                        com.horseracing.backend.entity.RaceMeeting meeting = meetingMap.get(race.getRaceMeetingId());
+                        if (meeting != null) {
+                            dto.setMeetingName(meeting.getName());
+                            dto.setVenue(meeting.getVenue());
+                        }
+                    }
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
@@ -73,11 +96,12 @@ public class InvitationService {
             throw new IllegalArgumentException("This jockey has already accepted an invitation for this race.");
         }
 
-        // 3. Kiểm tra xem chủ ngựa đã gửi lời mời đang chờ nào cho jockey này trong trận đua này chưa
-        List<RaceInvitation> existingPending = invitationRepository.findByJockeyIdAndRaceIdAndStatus(jockeyId, raceId, "PENDING");
-        boolean hasPendingForHorse = existingPending.stream().anyMatch(i -> i.getHorseId().equals(horseId));
-        if (hasPendingForHorse) {
-            throw new IllegalArgumentException("You have already sent a pending invitation to this jockey for this horse in this race.");
+        // 3. Kiểm tra xem chủ ngựa đã gửi lời mời đang chờ hoặc đã chấp nhận nào cho jockey này đối với con ngựa này chưa
+        List<RaceInvitation> existingInvites = invitationRepository.findByJockeyIdAndRaceIdAndHorseId(jockeyId, raceId, horseId);
+        boolean hasActive = existingInvites.stream()
+                .anyMatch(i -> "PENDING".equalsIgnoreCase(i.getStatus()) || "ACCEPTED".equalsIgnoreCase(i.getStatus()));
+        if (hasActive) {
+            throw new IllegalArgumentException("You have already sent an active invitation for this horse to this jockey in this race.");
         }
 
         RaceInvitation invite = invitationMapper.toEntity(dto);
