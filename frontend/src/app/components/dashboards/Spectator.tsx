@@ -6,6 +6,7 @@ import ProfileTab from "./components/ProfileTab";
 import ViewLive from "./components/ViewLive";
 import ProfileModal from "./components/ProfileModal";
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
+import { parseMarkdownToHtml } from "../../utils/markdownParser";
 
 type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "profile";
 
@@ -143,14 +144,14 @@ export default function Spectator() {
       let charIdx = 0;
       const timer = setInterval(() => {
         if (charIdx < rawText.length) {
-          currentText += rawText[charIdx];
+          currentText += rawText.substring(charIdx, charIdx + 5);
           setChatMessages(prev => prev.map(m => (m as any).id === botMsgId ? { ...m, text: currentText } : m));
-          charIdx++;
+          charIdx += 5;
         } else {
           clearInterval(timer);
           setChatLoading(false);
         }
-      }, 10); // mượt mà 10ms từng ký tự giống Landing
+      }, 10); // mượt mà 5 ký tự mỗi 10ms giống Landing
     } catch (err: any) {
       const errorReply: ChatMessage = {
         sender: "ai",
@@ -617,7 +618,7 @@ export default function Spectator() {
                       }}>
                         {isAI ? "✦ GEMINI HKJC" : "YOU"} · {msg.time}
                       </div>
-                      <div style={{
+                       <div style={{
                         padding: "1rem 1.25rem",
                         borderRadius: isAI ? "0 1.25rem 1.25rem 1.25rem" : "1.25rem 0 1.25rem 1.25rem",
                         background: isAI ? "rgba(255,255,255,0.03)" : "linear-gradient(135deg, #c9a227 0%, #a4811a 100%)",
@@ -625,10 +626,14 @@ export default function Spectator() {
                         color: isAI ? "#f4f2ec" : "#110f0e",
                         fontSize: "13.5px",
                         lineHeight: "1.6",
-                        whiteSpace: "pre-line",
+                        whiteSpace: isAI ? undefined : "pre-line",
                         boxShadow: isAI ? "none" : "0 4px 15px rgba(201,162,39,0.2)"
                       }}>
-                        {msg.text}
+                        {isAI ? (
+                          <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHtml(msg.text) }} />
+                        ) : (
+                          msg.text
+                        )}
                       </div>
                     </div>
                   </div>

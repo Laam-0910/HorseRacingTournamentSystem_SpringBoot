@@ -10,9 +10,21 @@ app.json.ensure_ascii = False
 CORS(app)
 
 # ── CONFIG CHATBOT RAG / LLM ─────────────────────────────────────────────────
-# ⚠️ Thay đổi sang True và dán API key của bạn vào đây nếu muốn dùng Gemini API
-USE_GEMINI = False
-GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
+import os, json
+USE_GEMINI = True
+GEMINI_API_KEY = "AQ.Ab8RN6IZfv4v5ic1ylYRrCy9Hl36wbt0g66fvdcBmuEMp8A0UQ"
+
+# Thử load động từ file cấu hình
+config_path = os.path.join(os.path.dirname(__file__), "gemini_config.json")
+if os.path.exists(config_path):
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+            api_key = config.get("gemini_api_key", "").strip()
+            if api_key and not api_key.startswith("YOUR_") and not api_key.startswith("Điền_"):
+                GEMINI_API_KEY = api_key
+    except Exception as e:
+        print(f"[Config Loader Error] {e}")
 
 rag_engine.use_gemini = USE_GEMINI
 rag_engine.gemini_api_key = GEMINI_API_KEY
