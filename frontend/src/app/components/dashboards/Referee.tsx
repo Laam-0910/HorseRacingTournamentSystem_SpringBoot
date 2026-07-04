@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "../../../context/AuthContext";
 import DashboardLayout from "../layout/DashboardLayout";
 import RefereeHub from "../referee-workflow/RefereeHub";
 import RefereeIncidents from "../referee-workflow/RefereeIncidents";
@@ -9,13 +10,31 @@ type RefereeTab = "hub" | "incidents" | "duties" | "profile";
 
 const ROLE_COLOR = "#8b5cf6";
 
-const NAV_ITEMS = [
-  { index: "01", icon: "layout-dashboard", label: "Referee Hub",   view: "hub"       },
-  { index: "02", icon: "alert-triangle",   label: "Incidents",     view: "incidents" },
-  { index: "03", icon: "clipboard-check",  label: "Duties",        view: "duties"    },
-];
+const TRANSLATIONS: Record<string, Record<string, string>> = {
+  vi: {
+    refereeHub: "Bảng trọng tài",
+    incidents: "Nhật ký sự cố",
+    duties: "Lịch phân công",
+  },
+  en: {
+    refereeHub: "Referee Hub",
+    incidents: "Incidents",
+    duties: "Duties",
+  },
+  ja: {
+    refereeHub: "審判ハブ",
+    incidents: "インシデント",
+    duties: "任務",
+  },
+  zh: {
+    refereeHub: "裁判中心",
+    incidents: "事件记录",
+    duties: "职责",
+  }
+};
 
 export default function Referee() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<RefereeTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as RefereeTab) || "hub";
@@ -23,7 +42,16 @@ export default function Referee() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Referee Hub";
+  const lang = localStorage.getItem("app-lang") || "vi";
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+
+  const navItems = [
+    { index: "01", icon: "layout-dashboard", label: t.refereeHub,   view: "hub"       },
+    { index: "02", icon: "alert-triangle",   label: t.incidents,     view: "incidents" },
+    { index: "03", icon: "clipboard-check",  label: t.duties,        view: "duties"    },
+  ];
+
+  const activeLabel = navItems.find(n => n.view === activeTab)?.label ?? t.refereeHub;
 
   const handleViewChange = (view: string) => {
     setActiveTab(view as RefereeTab);
@@ -47,7 +75,7 @@ export default function Referee() {
       roleColor={ROLE_COLOR}
       activeLabel={activeLabel}
       currentView={activeTab}
-      navItems={NAV_ITEMS}
+      navItems={navItems}
       onViewChange={handleViewChange}
       successMsg={successMsg}
       errorMsg={errorMsg}

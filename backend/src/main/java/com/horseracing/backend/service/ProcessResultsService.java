@@ -28,8 +28,22 @@ public class ProcessResultsService {
         BigDecimal purse = race.getPurse() != null ? race.getPurse() : BigDecimal.ZERO;
 
         for (Map<String, Object> res : entriesResults) {
-            Integer entryId = (Integer) res.get("entryId");
-            Integer finalPosition = (Integer) res.get("finalPosition");
+            Object entryIdObj = res.get("entryId");
+            Integer entryId = entryIdObj != null ? Integer.parseInt(entryIdObj.toString()) : null;
+
+            Integer finalPosition = null;
+            Object fpObj = res.get("finalPosition");
+            if (fpObj != null) {
+                String fps = fpObj.toString().trim();
+                if (!fps.isEmpty() && !"null".equalsIgnoreCase(fps) && !"undefined".equalsIgnoreCase(fps)) {
+                    try {
+                        finalPosition = Integer.parseInt(fps);
+                    } catch (NumberFormatException e) {
+                        // ignore
+                    }
+                }
+            }
+
             String finishTime = (String) res.get("finishTime");
             Object weightVal = res.get("weighInWeight");
             BigDecimal weighInWeight = BigDecimal.ZERO;
@@ -77,14 +91,13 @@ public class ProcessResultsService {
                     // Phân chia tiền thưởng: Hạng 1 (60%), Hạng 2 (25%), Hạng 3 (15%)
                     BigDecimal prize = BigDecimal.ZERO;
                     int ratingAdj = 0;
-                    int fPos = finalPosition != null ? finalPosition.intValue() : 0;
-                    if (fPos == 1) {
+                    if (finalPosition != null && finalPosition == 1) {
                         prize = purse.multiply(new BigDecimal("0.60"));
                         ratingAdj = 6;
-                    } else if (fPos == 2) {
+                    } else if (finalPosition != null && finalPosition == 2) {
                         prize = purse.multiply(new BigDecimal("0.25"));
                         ratingAdj = 3;
-                    } else if (fPos == 3) {
+                    } else if (finalPosition != null && finalPosition == 3) {
                         prize = purse.multiply(new BigDecimal("0.15"));
                         ratingAdj = 1;
                     } else {

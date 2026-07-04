@@ -96,17 +96,15 @@ public class HorseService {
         horse.setAvatar(dto.getAvatar());
         horse.setDescription(dto.getDescription());
 
+        if (roleId == 1 && dto.getStatus() != null) {
+            horse.setStatus(dto.getStatus());
+        }
+
         if (dto.getCurrentRating() != null && !dto.getCurrentRating().equals(horse.getCurrentRating())) {
             if (roleId == 1) {
                 horse.setCurrentRating(dto.getCurrentRating());
-            } else if (roleId == 2) {
-                if (horse.getTotalRaces() == null || horse.getTotalRaces() == 0) {
-                    horse.setCurrentRating(dto.getCurrentRating());
-                } else {
-                    throw new IllegalArgumentException("Cannot change rating of a horse that has already raced. Only Admin can perform this action.");
-                }
             } else {
-                throw new SecurityException("Unauthorized to change rating");
+                throw new SecurityException("Unauthorized to change rating. Only Admin can modify horse rating.");
             }
         }
 

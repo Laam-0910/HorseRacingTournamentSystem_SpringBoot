@@ -207,15 +207,34 @@ export default function Livestream() {
       return;
     }
 
-    // Reset messages for the new race
-    setChatMessages([
-      { user: "System", text: `Welcome to the live chat for Race #${selectedRace.id}!`, time: "" }
-    ]);
+    let isComponentMounted = true;
+
+    // Load history and initialize welcome message
+    api.get<any[]>(`/public/chat/history?raceId=${selectedRace.id}`)
+      .then(history => {
+        if (isComponentMounted) {
+          setChatMessages([
+            { user: "System", text: `Welcome to the live chat for Race #${selectedRace.id}!`, time: "" },
+            ...(history || []).map(h => ({
+              user: h.user,
+              text: h.text,
+              time: h.time
+            }))
+          ]);
+        }
+      })
+      .catch(() => {
+        if (isComponentMounted) {
+          setChatMessages([
+            { user: "System", text: `Welcome to the live chat for Race #${selectedRace.id}!`, time: "" }
+          ]);
+        }
+      });
+
     setConnectionState("connecting");
 
     let ws: WebSocket | null = null;
     let reconnectTimeout: number;
-    let isComponentMounted = true;
 
     const connect = () => {
       const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
@@ -297,6 +316,7 @@ export default function Livestream() {
   };
 
   const embedUrl = selectedRace ? getYouTubeEmbedUrl(selectedRace.youtubeLiveUrl) : null;
+  const iframeSrc = embedUrl ? (embedUrl.includes("youtube.com") ? `${embedUrl}?autoplay=1&mute=0&rel=0&modestbranding=1` : embedUrl) : "";
 
   return (
     <div className="min-h-screen bg-[#0e0c09] text-[#f0f0f0] font-sans">
@@ -363,7 +383,7 @@ export default function Livestream() {
                 ) : (
                   <iframe
                     className="absolute top-0 left-0 w-full h-full border-none"
-                    src={embedUrl && embedUrl.includes("?") ? embedUrl : `${embedUrl}?autoplay=1&mute=0&rel=0&modestbranding=1`}
+                    src={iframeSrc}
                     title={selectedRace.classLevel}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen

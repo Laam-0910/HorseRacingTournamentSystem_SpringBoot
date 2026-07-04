@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import DashboardLayout, { Icon } from "../layout/DashboardLayout";
@@ -375,17 +375,104 @@ export default function Spectator() {
                   </tr>
                 </thead>
                 <tbody>
-                  {races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL").length === 0
-                    ? <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>{lang === "vi" ? "Chưa có trận đấu nào hoàn thành." : "No completed races yet."}</td></tr>
-                    : races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL").map((r: any, i: number) => (
-                      <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
-                        <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem", fontWeight: 700 }}>{r.classLevel ?? `Race #${r.id}`}</td>
-                        <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.75rem" }}>{r.distanceMeters}m</td>
-                        <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontSize: "0.75rem" }}>{r.trackType}</td>
-                        <td style={{ padding: "0.75rem 1rem" }}><span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,222,128,0.1)", color: "#4ade80" }}>{r.status}</span></td>
-                        <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.7rem" }}>{r.startTime}</td>
-                      </tr>
-                    ))}
+                  {races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL").length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>
+                        {lang === "vi" ? "Chưa có trận đấu nào hoàn thành." : "No completed races yet."}
+                      </td>
+                    </tr>
+                  ) : (
+                    races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL").map((r: any) => {
+                      const isExpanded = expandedRaceId === r.id;
+                      const entries = raceDetails[r.id] || [];
+                      const loading = loadingDetails[r.id];
+                      
+                      // Sort entries by finalPosition ascending
+                      const sortedStandings = [...entries].sort((a, b) => {
+                        const posA = a.entry?.finalPosition ?? 999;
+                        const posB = b.entry?.finalPosition ?? 999;
+                        return posA - posB;
+                      });
+
+                      return (
+                        <Fragment key={r.id}>
+                          <tr 
+                            onClick={() => handleToggleRaceDetails(r.id)} 
+                            style={{ borderBottom: "1px solid rgba(42,40,37,0.5)", cursor: "pointer", background: isExpanded ? "rgba(255,255,255,0.02)" : "transparent" }}
+                            className="hover:bg-white/[0.01]"
+                          >
+                            <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem", fontWeight: 700 }}>
+                              <span style={{ marginRight: "0.5rem" }}>{isExpanded ? "▼" : "▶"}</span>
+                              {r.classLevel ?? `Race #${r.id}`}
+                            </td>
+                            <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.75rem" }}>{r.distanceMeters}m</td>
+                            <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontSize: "0.75rem" }}>{r.trackType}</td>
+                            <td style={{ padding: "0.75rem 1rem" }}>
+                              <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: r.status === "OFFICIAL" ? "rgba(52,211,153,0.1)" : "rgba(251,191,36,0.1)", color: r.status === "OFFICIAL" ? "#34d399" : "#fbbf24" }}>
+                                {r.status}
+                              </span>
+                            </td>
+                            <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.7rem" }}>{r.startTime}</td>
+                          </tr>
+                          {isExpanded && (
+                            <tr>
+                              <td colSpan={5} style={{ padding: "1.25rem", background: "rgba(0,0,0,0.2)", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
+                                {loading ? (
+                                  <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontFamily: "monospace" }}>
+                                    {lang === "vi" ? "Đang tải bảng kết quả về đích..." : "Loading finishing standings..."}
+                                  </div>
+                                ) : sortedStandings.length === 0 ? (
+                                  <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontStyle: "italic" }}>
+                                    {lang === "vi" ? "Chưa có kết quả chính thức nào được lưu cho trận này." : "No finishing results recorded for this race yet."}
+                                  </div>
+                                ) : (
+                                  <div style={{ overflowX: "auto" }}>
+                                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                                      <thead>
+                                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", color: "#c9a227", textAlign: "left" }}>
+                                          <th style={{ padding: "0.5rem" }}>Pos</th>
+                                          <th style={{ padding: "0.5rem" }}>Gate</th>
+                                          <th style={{ padding: "0.5rem" }}>Horse</th>
+                                          <th style={{ padding: "0.5rem" }}>Jockey</th>
+                                          <th style={{ padding: "0.5rem" }}>Owner</th>
+                                          <th style={{ padding: "0.5rem" }}>Finish Time</th>
+                                          <th style={{ padding: "0.5rem" }}>Prize</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {sortedStandings.map((e: any, idx: number) => {
+                                          const pos = e.entry?.finalPosition;
+                                          const isDQ = e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ";
+                                          
+                                          let posText = `${pos}th`;
+                                          if (pos === 1) posText = "🥇 1st";
+                                          else if (pos === 2) posText = "🥈 2nd";
+                                          else if (pos === 3) posText = "🥉 3rd";
+                                          else if (isDQ || !pos) posText = "❌ DQ";
+
+                                          return (
+                                            <tr key={idx} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)", background: pos === 1 ? "rgba(201,162,39,0.03)" : "transparent" }}>
+                                              <td style={{ padding: "0.5rem", fontWeight: "bold", color: pos <= 3 ? "#f4f2ec" : "#a0a0a0" }}>{posText}</td>
+                                              <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>#{e.entry?.gateNumber || "-"}</td>
+                                              <td style={{ padding: "0.5rem", fontWeight: "bold", color: "#fff" }}>{e.horse?.name}</td>
+                                              <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
+                                              <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{e.owner?.fullName || e.owner?.username}</td>
+                                              <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
+                                              <td style={{ padding: "0.5rem", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>

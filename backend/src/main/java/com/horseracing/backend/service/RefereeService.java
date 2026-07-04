@@ -32,6 +32,15 @@ public class RefereeService {
         Race race = raceRepository.findById(raceId)
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
 
+        // Validate minimum entries
+        long activeCount = entriesData.stream()
+                .filter(e -> !"REJECTED".equalsIgnoreCase((String) e.get("status")))
+                .count();
+        int minEntries = race.getMinEntries() != null ? race.getMinEntries() : 3;
+        if (activeCount < minEntries) {
+            throw new IllegalArgumentException("Cannot start race. Active entries (" + activeCount + ") is below minimum allowed (" + minEntries + ").");
+        }
+
         // Validate that all participating entries have a gate number assigned
         List<RaceEntry> dbEntries = raceEntryRepository.findByRaceId(raceId);
         for (RaceEntry e : dbEntries) {
@@ -67,6 +76,16 @@ public class RefereeService {
             Optional<RaceEntry> entryOpt = raceEntryRepository.findById(entryId);
             if (entryOpt.isPresent()) {
                 RaceEntry entry = entryOpt.get();
+                if (!"REJECTED".equalsIgnoreCase(status)) {
+                    BigDecimal reqWeight = entry.getCarriedWeight() != null ? entry.getCarriedWeight() : new BigDecimal("52.0");
+                    BigDecimal diff = weighOutWeight.subtract(reqWeight);
+                    if (diff.compareTo(BigDecimal.ZERO) < 0) {
+                        throw new IllegalArgumentException("Cannot confirm pre-check. Weighed weight (" + weighOutWeight + " kg) cannot be less than required weight (" + reqWeight + " kg) for entry ID " + entryId + ".");
+                    }
+                    if (diff.compareTo(new BigDecimal("1.0")) > 0) {
+                        throw new IllegalArgumentException("Cannot confirm pre-check. Weighed weight (" + weighOutWeight + " kg) exceeds required weight (" + reqWeight + " kg) by more than 1.0 kg limit for entry ID " + entryId + ".");
+                    }
+                }
                 entry.setCarriedWeight(weighOutWeight);
                 entry.setStatus(status);
                 raceEntryRepository.save(entry);
@@ -274,14 +293,14 @@ public class RefereeService {
     public void stopRace(Integer raceId, String stewardReport) {
         Race race = raceRepository.findById(raceId)
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
-        race.setStatus("STOPPED");
+        race.setStatus("CANCELLED");
         race.setStewardReport(stewardReport);
         race.setYoutubeLiveUrl(null); // Automatically remove livestream URL on emergency stop
         raceRepository.save(race);
 
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
         for (RaceEntry entry : entries) {
-            entry.setStatus("STOPPED");
+            entry.setStatus("REJECTED");
             raceEntryRepository.save(entry);
         }
     }

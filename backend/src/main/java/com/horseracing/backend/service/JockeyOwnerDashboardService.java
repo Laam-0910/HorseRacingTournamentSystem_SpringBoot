@@ -138,6 +138,8 @@ public class JockeyOwnerDashboardService {
         for (RaceEntry entry : entries) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", entry.getId());
+            map.put("horseId", entry.getHorseId());
+            map.put("raceId", entry.getRaceId());
             map.put("gateNumber", entry.getGateNumber());
             map.put("carriedWeight", entry.getCarriedWeight());
             map.put("status", entry.getStatus());

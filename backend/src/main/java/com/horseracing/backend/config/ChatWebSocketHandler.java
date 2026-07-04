@@ -1,5 +1,9 @@
 package com.horseracing.backend.config;
 
+import com.horseracing.backend.entity.ChatMessage;
+import com.horseracing.backend.repository.ChatMessageRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -19,11 +23,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
+@RequiredArgsConstructor
 public class ChatWebSocketHandler extends TextWebSocketHandler {
 
-    @Autowired
-    private ChatMessageRepository chatMessageRepository;
-
+    private final ChatMessageRepository chatMessageRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     // Map of raceId to session lists
