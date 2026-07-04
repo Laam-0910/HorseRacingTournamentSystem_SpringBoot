@@ -360,7 +360,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                   <img src={avatar} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
                   <span style={{ fontSize: "1.25rem", fontWeight: 700, color: roleColor, fontFamily: "monospace" }}>
-                    {getInitials(user?.username)}
+                    {getInitials(user?.fullName || user?.username)}
                   </span>
                 )}
                 <div style={{
@@ -379,7 +379,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                 style={{ display: "none" }} 
               />
               <div>
-                <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#f4f2ec" }}>{user?.username}</p>
+                <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#f4f2ec" }}>{user?.fullName || user?.username}</p>
                 <p style={{ fontSize: "0.65rem", fontFamily: "monospace", background: "rgba(255,255,255,0.05)", padding: "0.15rem 0.45rem", borderRadius: "0.25rem", display: "inline-block", marginTop: "0.25rem", border: "1px solid rgba(255,255,255,0.08)" }}>
                   🏷️ {lang === "vi" ? (roleLabel === "Admin" ? "Quản trị viên" : roleLabel === "Horse Owner" ? "Chủ ngựa" : roleLabel === "Jockey" ? "Nài ngựa" : roleLabel === "Referee" ? "Trọng tài" : "Người xem") : lang === "zh" ? (roleLabel === "Admin" ? "管理员" : roleLabel === "Horse Owner" ? "马主" : roleLabel === "Jockey" ? "骑师" : roleLabel === "Referee" ? "裁判" : "观众") : lang === "ja" ? (roleLabel === "Admin" ? "管理者" : roleLabel === "Horse Owner" ? "馬主" : roleLabel === "Jockey" ? "ジョッキー" : roleLabel === "Referee" ? "審判" : "観客") : roleLabel}
                 </p>

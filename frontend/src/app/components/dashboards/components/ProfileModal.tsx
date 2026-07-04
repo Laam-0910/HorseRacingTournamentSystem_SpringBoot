@@ -77,7 +77,7 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
               {profile.avatar ? (
                 <img 
                   src={profile.avatar} 
-                  alt={profile.username} 
+                  alt={profile.fullName || profile.username} 
                   className="w-20 h-20 md:w-24 md:h-24 rounded-full object-cover border-2 border-amber-500/30"
                 />
               ) : (
@@ -85,13 +85,13 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                   className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-3xl font-bold font-mono border-2 border-amber-500/20"
                   style={{ background: "rgba(255,255,255,0.02)", color: "#c9a227" }}
                 >
-                  {profile.username?.charAt(0).toUpperCase()}
+                  {(profile.fullName || profile.username)?.charAt(0).toUpperCase()}
                 </div>
               )}
               <div className="flex-1 text-center md:text-left space-y-2">
                 <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
                   <h2 className="text-xl md:text-2xl font-bold text-[#f4f2ec]" style={{ fontFamily: "'Roboto Slab', serif" }}>
-                    {profile.username}
+                    {profile.fullName || profile.username}
                   </h2>
                   <span 
                     className="text-[9px] font-mono font-bold uppercase tracking-widest px-2.5 py-1 rounded border inline-block"

@@ -178,10 +178,10 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile }: { i
                     onClick={() => onViewProfile(inv.ownerId)} 
                     style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontWeight: "bold" }}
                   >
-                    #{inv.ownerId}
+                    {inv.ownerFullName || inv.ownerName || `#${inv.ownerId}`}
                   </button>
                 </h4>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.5rem" }}>Horse ID: #{inv.horseId} | Race ID: #{inv.raceId}</p>
+                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.5rem" }}>Horse: {inv.horseName || `#${inv.horseId}`} · Race ID: #{inv.raceId}</p>
                 <p style={{ fontSize: "0.7rem", color: "#a0a0a0" }}>Status: {inv.status}</p>
               </div>
               <div style={{ display: "flex", gap: "0.5rem" }}>

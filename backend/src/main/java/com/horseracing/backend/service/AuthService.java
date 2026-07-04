@@ -172,6 +172,10 @@ public class AuthService {
         pendingUser.setStatus("ACTIVE");
         pendingUser.setTotalRacesParticipated(0);
         pendingUser.setTotalTop3Finishes(0);
+        // Full name: use provided fullName or fall back to username
+        String fullName = request.getFullName() != null && !request.getFullName().isBlank()
+                ? request.getFullName().trim() : request.getUsername();
+        pendingUser.setFullName(fullName);
 
         if (roleId == 1 || roleId == 5) {
             // Admin and Referee bypass email verification
