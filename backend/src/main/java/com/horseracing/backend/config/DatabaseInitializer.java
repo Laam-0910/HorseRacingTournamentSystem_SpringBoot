@@ -38,13 +38,6 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            // Check and add min_entries to Race table
-            jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'min_entries') " +
-                "BEGIN " +
-                "    ALTER TABLE Race ADD min_entries INT NOT NULL DEFAULT 3; " +
-                "END"
-            );
 
             // Check and create ChatMessage table if missing
             jdbcTemplate.execute(
