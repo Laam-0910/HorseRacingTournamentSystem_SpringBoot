@@ -87,7 +87,7 @@ const translateLabel = (label: string, lang: string): string => {
     "Overview": { vi: "Tổng quan", en: "Overview", zh: "总览", ja: "概要" },
     "Live Watch": { vi: "Xem trực tiếp", en: "Live Watch", zh: "实况直播", ja: "ライブ視聴" },
     "Racecard": { vi: "Thẻ đua (Racecard)", en: "Racecard", zh: "排位表", ja: "出馬表" },
-    "Results": { vi: "Kết quả", en: "Results", zh: "比赛赛果", ja: "レース kết quả" },
+    "Results": { vi: "Kết quả", en: "Results", zh: "比赛赛果", ja: "レース結果" },
     "Horses": { vi: "Danh sách ngựa", en: "Horses", zh: "参赛马匹", ja: "競走馬リスト" },
     "Statistics": { vi: "Bảng thống kê", en: "Statistics", zh: "统计数据", ja: "統計データ" },
     "AI Assistant": { vi: "Trợ lý ảo AI", en: "AI Assistant", zh: "AI 助手", ja: "AIアシスタント" },
@@ -136,6 +136,7 @@ export default function DashboardLayout({
     setLang(code);
     localStorage.setItem('app-lang', code);
     setShowLangMenu(false);
+    window.location.reload();
   };
 
   // Close lang dropdown on outside click

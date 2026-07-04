@@ -55,7 +55,7 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
         {loading ? (
           <div className="flex flex-col items-center justify-center p-12 space-y-4">
             <span className="animate-spin text-2xl text-amber-500">⏳</span>
-            <p className="text-white/60 text-xs font-mono">Retrieving HKJC registry profile...</p>
+            <p className="text-white/60 text-xs font-mono">Retrieving registry profile...</p>
           </div>
         ) : error ? (
           <div className="p-8 text-center space-y-4">

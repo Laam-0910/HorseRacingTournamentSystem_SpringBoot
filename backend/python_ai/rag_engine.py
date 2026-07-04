@@ -186,7 +186,7 @@ class RAGEngine:
 
     def call_gemini(self, prompt: str) -> str:
         if not self.gemini_api_key:
-            return "Lỗi: Chưa cấu hình GEMINI_API_KEY."
+            return "Lỗi: Chưa cấu hình API Key cho dịch vụ AI."
         
         try:
             import google.generativeai as genai
@@ -195,7 +195,7 @@ class RAGEngine:
             response = model.generate_content(prompt)
             if response and response.text:
                 return response.text
-            return "Lỗi: Không nhận được phản hồi từ Gemini API."
+            return "Lỗi: Không nhận được phản hồi từ dịch vụ AI."
         except Exception as e:
             # Fallback về REST API dùng x-goog-api-key header (giúp hỗ trợ mã khóa dạng AQ. mới của Google)
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent"
@@ -211,9 +211,9 @@ class RAGEngine:
                 if res.status_code == 200:
                     data = res.json()
                     return data["contents"][0]["parts"][0]["text"]
-                return f"Lỗi kết nối Gemini API (HTTP {res.status_code})"
+                return f"Lỗi kết nối dịch vụ AI (HTTP {res.status_code})"
             except Exception as ex:
-                return f"Lỗi gọi Gemini API: {str(ex)}"
+                return f"Lỗi gọi dịch vụ AI: {str(ex)}"
 
     def call_ollama(self, prompt: str) -> str:
         payload = {
@@ -236,13 +236,13 @@ class RAGEngine:
         """
         # Cấu hình mặc định
         system_instruction = (
-            "Bạn là Trợ lý AI nội bộ của Hệ thống quản lý giải đấu đua ngựa HKJC (do đội ngũ phát triển dự án xây dựng).\n"
+            "Bạn là Trợ lý AI nội bộ của Hệ thống quản lý giải đấu đua ngựa (do đội ngũ phát triển dự án xây dựng).\n"
             "Tuyệt đối KHÔNG được nhận mình là của Google hay tự xưng là Gemini. Nếu được hỏi về nguồn gốc, hãy trả lời bạn là Trợ lý AI tích hợp sẵn của hệ thống.\n"
             "Khi người dùng hỏi về giải đấu, hãy dùng 'Thông tin giải đấu thực tế' được cung cấp để trả lời chính xác, trung thực.\n"
             "ĐỐI VỚI CÁC CÂU HỎI NGOÀI LỀ (không liên quan đến đua ngựa, ngựa, nài ngựa, giải đấu): Hãy khéo léo lái câu trả lời liên đới về hệ thống hoặc chủ đề đua ngựa một cách dí dỏm. Ví dụ:\n"
             "- Nếu hỏi cách để thông minh hơn: Khuyên họ đọc nhiều sách chăn nuôi, chăm sóc ngựa để cung cấp chiến mã chất lượng cho giải đấu.\n"
             "- Nếu yêu cầu lập trình/viết code: Hãy nói khéo là bạn không hỗ trợ lập trình nhưng có thể hướng dẫn họ tìm các con AI chuyên lập trình khác.\n"
-            "- Đối với các câu hỏi tán gẫu khác: Hãy tìm cách ví von hoặc liên kết hài hước với giải đua ngựa, việc cưỡi ngựa, xem đua ngựa hoặc luật lệ giải đấu HKJC.\n"
+            "- Đối với các câu hỏi tán gẫu khác: Hãy tìm cách ví von hoặc liên kết hài hước với giải đua ngựa, việc cưỡi ngựa, xem đua ngựa hoặc luật lệ giải đấu.\n"
             "Tuyệt đối không tiết lộ thông tin nhạy cảm bảo mật (mật khẩu, tài khoản)."
         )
         

@@ -313,7 +313,7 @@ def chat():
         print("[AI Service] GEMINI_API_KEY not found. Falling back to rule-based responder.")
         it = intent(msg)
         reply = respond(it, lang)
-        hint = "\n\n*(Chế độ dự phòng: Hãy cấu hình GEMINI_API_KEY trong file .env để kích hoạt trợ lý AI Gemini)*" if lang != "en" else "\n\n*(Fallback mode: Configure GEMINI_API_KEY in .env to activate Gemini AI Assistant)*"
+        hint = "\n\n*(Chế độ dự phòng: Hãy cấu hình API Key trong file .env để kích hoạt trợ lý ảo AI)*" if lang != "en" else "\n\n*(Fallback mode: Configure API Key in .env to activate AI Assistant)*"
         return jsonify({"success": True, "reply": reply + hint})
 
     try:
@@ -342,7 +342,7 @@ def chat():
         print(f"[Gemini API Error] {e}")
         it = intent(msg)
         reply = respond(it, lang)
-        error_hint = f"\n\n*(Lỗi kết nối Gemini API: {str(e)}. Sử dụng câu trả lời dự phòng)*" if lang != "en" else f"\n\n*(Gemini API connection error: {str(e)}. Using fallback response)*"
+        error_hint = f"\n\n*(Lỗi kết nối dịch vụ AI: {str(e)}. Sử dụng câu trả lời dự phòng)*" if lang != "en" else f"\n\n*(AI Service connection error: {str(e)}. Using fallback response)*"
         return jsonify({"success": True, "reply": reply + error_hint})
 
 @app.route("/health")

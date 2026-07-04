@@ -489,7 +489,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
               <div>
                 <label style={labelStyle}>Rating</label>
                 <input type="number" value={editRating} disabled style={{ ...inputStyle, opacity: 0.5 }} />
-                <span style={{ fontSize: "0.65rem", color: "#a0a0a0" }}>* Horse rating is officially managed by HKJC/Admin.</span>
+                <span style={{ fontSize: "0.65rem", color: "#a0a0a0" }}>* Horse rating is officially managed by System/Admin.</span>
               </div>
               <div>
                 <label style={labelStyle}>Biography</label>
