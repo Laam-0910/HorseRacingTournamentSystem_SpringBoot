@@ -70,7 +70,7 @@ def chatbot():
         reply = f"EXCEPTION: {str(e)}"
         
     # Fallback dự phòng nếu LLM không trả về kết quả hoặc lỗi API
-    is_fallback = not reply or "Lỗi kết nối Gemini API" in reply or "Lỗi gọi Gemini API" in reply or "connection error" in reply.lower() or reply.startswith("EXCEPTION:")
+    is_fallback = not reply or "Lỗi kết nối dịch vụ AI" in reply or "Lỗi gọi dịch vụ AI" in reply or "connection error" in reply.lower() or reply.startswith("EXCEPTION:")
     if is_fallback:
         reply = chat(message, lang)
 

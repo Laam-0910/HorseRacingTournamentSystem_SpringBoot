@@ -186,7 +186,7 @@ class RAGEngine:
 
     def call_gemini(self, prompt: str) -> str:
         if not self.gemini_api_key:
-            return "Lỗi: Chưa cấu hình GEMINI_API_KEY."
+            return "Lỗi: Chưa cấu hình API Key cho dịch vụ AI."
         
         try:
             import google.generativeai as genai
@@ -195,7 +195,7 @@ class RAGEngine:
             response = model.generate_content(prompt)
             if response and response.text:
                 return response.text
-            return "Lỗi: Không nhận được phản hồi từ Gemini API."
+            return "Lỗi: Không nhận được phản hồi từ dịch vụ AI."
         except Exception as e:
             # Fallback về REST API dùng x-goog-api-key header (giúp hỗ trợ mã khóa dạng AQ. mới của Google)
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model_name}:generateContent"
@@ -211,9 +211,9 @@ class RAGEngine:
                 if res.status_code == 200:
                     data = res.json()
                     return data["contents"][0]["parts"][0]["text"]
-                return f"Lỗi kết nối Gemini API (HTTP {res.status_code})"
+                return f"Lỗi kết nối dịch vụ AI (HTTP {res.status_code})"
             except Exception as ex:
-                return f"Lỗi gọi Gemini API: {str(ex)}"
+                return f"Lỗi gọi dịch vụ AI: {str(ex)}"
 
     def call_ollama(self, prompt: str) -> str:
         payload = {

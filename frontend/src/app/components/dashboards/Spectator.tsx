@@ -577,10 +577,10 @@ export default function Spectator() {
                     background: "linear-gradient(45deg, #c9a227, #f3d06c)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent"
-                  }}>✦ Gemini HKJC Assistant</span>
+                  }}>{lang === "vi" ? "✦ Trợ lý ảo AI giải đấu HKJC" : "✦ HKJC Tournament AI Assistant"}</span>
                 </h4>
                 <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>
-                  {lang === "vi" ? "Trí tuệ nhân tạo phân tích phong độ và thống kê thời gian thực" : "Generative AI form analysis and real-time statistics"}
+                  {lang === "vi" ? "Trợ lý AI nội bộ phân tích phong độ và thống kê thời gian thực" : "Internal AI assistant for form analysis and real-time statistics"}
                 </p>
               </div>
             </div>
@@ -616,7 +616,7 @@ export default function Spectator() {
                         fontWeight: "bold",
                         letterSpacing: "0.5px"
                       }}>
-                        {isAI ? "✦ GEMINI HKJC" : "YOU"} · {msg.time}
+                        {isAI ? (lang === "vi" ? "✦ TRỢ LÝ AI HKJC" : "✦ HKJC AI ASSISTANT") : "YOU"} · {msg.time}
                       </div>
                        <div style={{
                         padding: "1rem 1.25rem",
@@ -643,7 +643,7 @@ export default function Spectator() {
                 <div style={{ display: "flex", justifyContent: "flex-start" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem 1.25rem", borderRadius: "0 1.25rem 1.25rem 1.25rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c9a227", animation: "pulse 1.2s infinite alternate" }} />
-                    <span style={{ fontSize: "11px", color: "#888", fontFamily: "monospace" }}>Gemini is thinking...</span>
+                    <span style={{ fontSize: "11px", color: "#888", fontFamily: "monospace" }}>{lang === "vi" ? "Trợ lý AI đang trả lời..." : "AI Assistant is thinking..."}</span>
                   </div>
                 </div>
               )}
@@ -709,7 +709,7 @@ export default function Spectator() {
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 disabled={chatLoading}
-                placeholder={lang === "vi" ? "Hỏi Gemini về cuộc đua, ngựa, nài..." : "Ask Gemini about races, horses, jockeys..."}
+                placeholder={lang === "vi" ? "Hỏi Trợ lý AI về cuộc đua, ngựa, nài..." : "Ask AI Assistant about races, horses, jockeys..."}
                 style={{
                   flex: 1,
                   background: "rgba(255,255,255,0.03)",
