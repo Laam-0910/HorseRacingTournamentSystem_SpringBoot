@@ -2,65 +2,84 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 
+const TRANSLATIONS: Record<string, Record<string, string>> = {
+  vi: {
+    stewardIncidentLog: "Nhật ký sự cố cuộc đua",
+    incidentSub: "Danh sách lịch sử các vi phạm quy tắc và hình phạt đã được bạn ghi nhận.",
+    id: "ID",
+    raceMeeting: "Trận đấu & Ngày hội đua",
+    horse: "Chiến mã",
+    jockey: "Nài ngựa",
+    violationDetails: "Chi tiết vi phạm",
+    assessedPenalty: "Hình phạt áp dụng",
+    loadingIncidents: "Đang tải dữ liệu...",
+    noViolations: "Bạn chưa ghi nhận vi phạm nào.",
+    hReport: "Báo cáo cuộc đua",
+    viewReport: "Xem báo cáo",
+    close: "Đóng",
+    stewardReportTitle: "📄 Báo cáo giám sát chính thức",
+  },
+  en: {
+    stewardIncidentLog: "Steward Incident Log",
+    incidentSub: "Historical list of rule violations and penalties issued by you.",
+    id: "ID",
+    raceMeeting: "Race & Meeting",
+    horse: "Horse",
+    jockey: "Jockey",
+    violationDetails: "Violation Details",
+    assessedPenalty: "Assessed Penalty",
+    loadingIncidents: "Loading incidents...",
+    noViolations: "No violations logged by you yet.",
+    hReport: "Steward Report",
+    viewReport: "View Report",
+    close: "Close",
+    stewardReportTitle: "📄 Steward's Official Report",
+  },
+  ja: {
+    stewardIncidentLog: "審判インシデントログ",
+    incidentSub: "あなたが発行したルール違反およびペナルティの履歴リスト。",
+    id: "ID",
+    raceMeeting: "レースと開催",
+    horse: "競走馬",
+    jockey: "騎手",
+    violationDetails: "違反詳細",
+    assessedPenalty: "適用されたペナルティ",
+    loadingIncidents: "インシデントを読み込み中...",
+    noViolations: "あなたが記録した違反はまだありません。",
+    hReport: "報告書",
+    viewReport: "報告書を表示",
+    close: "閉じる",
+    stewardReportTitle: "📄 審判公式報告書",
+  },
+  zh: {
+    stewardIncidentLog: "裁判事件日志",
+    incidentSub: "您所记录的违反规则行为及处罚的历史列表。",
+    id: "ID",
+    raceMeeting: "比赛与赛事",
+    horse: "马匹",
+    jockey: "骑师",
+    violationDetails: "违规详情",
+    assessedPenalty: "所处处罚",
+    loadingIncidents: "正在加载事件...",
+    noViolations: "您尚未记录 any 违规行为。",
+    hReport: "裁判报告",
+    viewReport: "查看报告",
+    close: "关闭",
+    stewardReportTitle: "📄 裁判官方报告",
+  }
+};
+
 export default function RefereeIncidents() {
   const { user } = useAuth();
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   // Steward report modal state
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
 
   const lang = localStorage.getItem("app-lang") || "vi";
-  const t: Record<string, any> = {
-    vi: {
-      title: "Nhật ký sự cố cuộc đua",
-      sub: "Danh sách lịch sử các vi phạm quy tắc và hình phạt đã được bạn ghi nhận.",
-      loading: "Đang tải dữ liệu...",
-      noViolations: "Bạn chưa ghi nhận vi phạm nào.",
-      hId: "ID",
-      hRace: "Trận đấu & Ngày hội đua",
-      hHorse: "Chiến mã",
-      hJockey: "Nài ngựa",
-      hDetails: "Chi tiết vi phạm",
-      hPenalty: "Hình phạt áp dụng",
-      hReport: "Báo cáo cuộc đua",
-      viewReport: "Xem báo cáo",
-      close: "Đóng",
-      stewardReportTitle: "📄 Báo cáo giám sát chính thức",
-    },
-    en: {
-      title: "Steward Incident Log",
-      sub: "Historical list of rule violations and penalties issued by you.",
-      loading: "Loading incidents...",
-      noViolations: "No violations logged by you yet.",
-      hId: "ID",
-      hRace: "Race & Meeting",
-      hHorse: "Horse",
-      hJockey: "Jockey",
-      hDetails: "Violation Details",
-      hPenalty: "Assessed Penalty",
-      hReport: "Steward Report",
-      viewReport: "View Report",
-      close: "Close",
-      stewardReportTitle: "📄 Steward's Official Report",
-    }
-  }[lang] || {
-    title: "Steward Incident Log",
-    sub: "Historical list of rule violations and penalties issued by you.",
-    loading: "Loading incidents...",
-    noViolations: "No violations logged by you yet.",
-    hId: "ID",
-    hRace: "Race & Meeting",
-    hHorse: "Horse",
-    hJockey: "Jockey",
-    hDetails: "Violation Details",
-    hPenalty: "Assessed Penalty",
-    hReport: "Steward Report",
-    viewReport: "View Report",
-    close: "Close",
-    stewardReportTitle: "📄 Steward's Official Report",
-  };
+  const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
 
   useEffect(() => {
     if (!user) return;
@@ -91,8 +110,8 @@ export default function RefereeIncidents() {
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
         {/* Header */}
         <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)" }}>
-          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{t.title}</h3>
-          <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{t.sub}</p>
+          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{t.stewardIncidentLog}</h3>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{t.incidentSub}</p>
         </div>
 
         {/* Table */}
@@ -100,14 +119,14 @@ export default function RefereeIncidents() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                {[t.hId, t.hRace, t.hHorse, t.hJockey, t.hDetails, t.hPenalty, t.hReport].map(h => (
+                {[t.id, t.raceMeeting, t.horse, t.jockey, t.violationDetails, t.assessedPenalty, t.hReport].map(h => (
                   <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loading}</td></tr>
+                <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loadingIncidents}</td></tr>
               ) : incidents.length === 0 ? (
                 <tr>
                   <td colSpan={7} style={{ padding: "3rem", textAlign: "center" }}>
@@ -161,7 +180,7 @@ export default function RefereeIncidents() {
       {/* Steward Report Modal */}
       {selectedReport && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }} className="flex items-center justify-center">
-          <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "32rem", overflow: "hidden" }}>
+          <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "32rem", overflow: "hidden", margin: "auto" }}>
             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 {t.stewardReportTitle}

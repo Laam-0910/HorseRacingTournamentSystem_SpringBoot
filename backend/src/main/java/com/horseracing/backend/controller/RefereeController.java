@@ -66,7 +66,7 @@ public class RefereeController {
         try {
             String stewardReport = body.get("stewardReport");
             refereeService.stopRace(raceId, stewardReport);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Emergency stop executed. Race status set to STOPPED."));
+            return ResponseEntity.ok(Map.of("success", true, "message", "Emergency stop executed. Race status set to CANCELLED."));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }

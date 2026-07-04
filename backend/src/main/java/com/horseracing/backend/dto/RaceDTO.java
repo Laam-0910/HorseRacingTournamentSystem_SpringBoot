@@ -33,6 +33,7 @@ public class RaceDTO {
     private Integer distanceMeters;
     private String trackType;
     private BigDecimal purse;
+    private Integer minEntries;
     private Integer maxEntries;
     private String stewardReport;   // Báo cáo của Trọng tài sau trận (cột mới thêm)
     private String youtubeLiveUrl;  // Đường dẫn Youtube livestream

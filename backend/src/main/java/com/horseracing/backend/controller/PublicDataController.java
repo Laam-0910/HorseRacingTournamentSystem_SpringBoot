@@ -126,8 +126,37 @@ public class PublicDataController {
     }
 
     @GetMapping("/violations")
-    public ResponseEntity<List<Violation>> getViolations() {
-        return ResponseEntity.ok(violationRepository.findAll());
+    public ResponseEntity<?> getViolations(@RequestParam(required = false) Integer raceId) {
+        List<Violation> list;
+        if (raceId != null) {
+            list = violationRepository.findByRaceId(raceId);
+        } else {
+            list = violationRepository.findAll();
+        }
+
+        List<Map<String, Object>> resolved = new ArrayList<>();
+        Map<Integer, User> userMap = new HashMap<>();
+        for (User u : userRepository.findAll()) {
+            userMap.put(u.getId(), u);
+        }
+        Map<Integer, Horse> horseMap = new HashMap<>();
+        for (Horse h : horseRepository.findAll()) {
+            horseMap.put(h.getId(), h);
+        }
+
+        for (Violation v : list) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("violation", v);
+
+            Horse horse = horseMap.get(v.getHorseId());
+            map.put("horseName", horse != null ? horse.getName() : "Unknown");
+
+            User jockey = userMap.get(v.getJockeyId());
+            map.put("jockeyName", jockey != null ? jockey.getUsername() : "Unknown");
+
+            resolved.add(map);
+        }
+        return ResponseEntity.ok(resolved);
     }
 
     @GetMapping("/users/{id}/profile")

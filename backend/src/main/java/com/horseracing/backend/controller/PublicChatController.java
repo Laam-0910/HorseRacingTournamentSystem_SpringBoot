@@ -1,12 +1,19 @@
 package com.horseracing.backend.controller;
 
+import com.horseracing.backend.entity.ChatMessage;
+import com.horseracing.backend.repository.ChatMessageRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/public")
+@CrossOrigin(origins = "*")
 public class PublicChatController {
+
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
 
     @PostMapping("/chat")
     public ResponseEntity<?> chat(@RequestBody Map<String, String> request) {
@@ -45,5 +52,21 @@ public class PublicChatController {
         }
 
         return ResponseEntity.ok(Map.of("success", true, "reply", reply));
+    }
+
+    @GetMapping("/chat/history")
+    public ResponseEntity<List<Map<String, String>>> getChatHistory(@RequestParam Integer raceId) {
+        List<ChatMessage> list = chatMessageRepository.findByRaceIdOrderBySentAtAsc(raceId);
+        List<Map<String, String>> history = new ArrayList<>();
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm");
+
+        for (ChatMessage msg : list) {
+            Map<String, String> m = new HashMap<>();
+            m.put("user", msg.getUsername());
+            m.put("text", msg.getMessageText());
+            m.put("time", msg.getSentAt() != null ? sdf.format(msg.getSentAt()) : "");
+            history.add(m);
+        }
+        return ResponseEntity.ok(history);
     }
 }

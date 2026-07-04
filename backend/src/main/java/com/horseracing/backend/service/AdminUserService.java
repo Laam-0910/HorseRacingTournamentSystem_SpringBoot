@@ -83,6 +83,7 @@ public class AdminUserService {
                         .classLevel(race.getClassLevel())
                         .distanceMeters(race.getDistanceMeters())
                         .trackType(race.getTrackType())
+                        .minEntries(race.getMinEntries())
                         .build());
             } else {
                 map.put("race", null);

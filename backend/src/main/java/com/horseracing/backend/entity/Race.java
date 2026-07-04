@@ -55,6 +55,9 @@ public class Race implements Serializable {
     @Column(name = "purse")
     private BigDecimal purse;
 
+    @Column(name = "min_entries")
+    private Integer minEntries;
+
     @Column(name = "max_entries")
     private Integer maxEntries;
 

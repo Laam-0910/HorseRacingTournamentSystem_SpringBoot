@@ -5,6 +5,7 @@ import { parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
 import DashboardLayout from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
 import ProfileModal from "./components/ProfileModal";
+import HorsePerformanceModal from "./components/HorsePerformanceModal";
 
 interface InlineDatePickerProps {
   label: string;
@@ -145,11 +146,9 @@ const labelStyle: React.CSSProperties = {
 
 const formatDate = (d: string | null) => {
   if (!d) return "—";
-  try {
-    const dt = new Date(d);
-    if (isNaN(dt.getTime())) return d;
-    return `${String(dt.getDate()).padStart(2,"0")}/${String(dt.getMonth()+1).padStart(2,"0")}/${dt.getFullYear()} ${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
-  } catch { return d; }
+  const dt = parseSafeDate(d);
+  if (!dt) return d;
+  return `${String(dt.getDate()).padStart(2,"0")}-${String(dt.getMonth()+1).padStart(2,"0")}-${dt.getFullYear()} ${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
 };
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -343,6 +342,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
   const [editRating, setEditRating] = useState<number>(52);
   const [editAvatar, setEditAvatar] = useState("");
   const [editDescription, setEditDescription] = useState("");
+  const [selectedHorse, setSelectedHorse] = useState<{ id: number; name: string } | null>(null);
   const [msg, setMsg] = useState("");
 
   const formatDobForApi = (dobStr: string): string => {
@@ -422,7 +422,10 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
                         <span>Rating: <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
                         <span>Wins: <strong>{item.totalWins ?? 0}</strong>/{item.totalRaces ?? 0}</span>
                       </div>
-                      <button onClick={() => startEdit(item)} style={{ width: "100%", padding: "0.5rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer" }}>Edit Details</button>
+                      <div style={{ display: "flex", gap: "0.5rem", marginTop: "auto" }}>
+                        <button type="button" onClick={() => setSelectedHorse({ id: h.id, name: h.name })} style={{ flex: 1, padding: "0.5rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.5rem", color: "#c9a227", fontSize: "0.75rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}>📈 History</button>
+                        <button type="button" onClick={() => startEdit(item)} style={{ flex: 1, padding: "0.5rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "0.75rem", fontFamily: "monospace", cursor: "pointer" }}>Edit</button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -485,8 +488,8 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
               </div>
               <div>
                 <label style={labelStyle}>Rating</label>
-                <input type="number" value={editRating} disabled={editingHorse.totalRaces > 0} onChange={e => setEditRating(parseInt(e.target.value))} style={{ ...inputStyle, opacity: editingHorse.totalRaces > 0 ? 0.5 : 1 }} />
-                {editingHorse.totalRaces > 0 && <span style={{ fontSize: "0.65rem", color: "#a0a0a0" }}>* Horse has raced — only Admin may change Rating.</span>}
+                <input type="number" value={editRating} disabled style={{ ...inputStyle, opacity: 0.5 }} />
+                <span style={{ fontSize: "0.65rem", color: "#a0a0a0" }}>* Horse rating is officially managed by HKJC/Admin.</span>
               </div>
               <div>
                 <label style={labelStyle}>Biography</label>
@@ -500,13 +503,20 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
           </div>
         </div>
       )}
+      {selectedHorse && (
+        <HorsePerformanceModal
+          horseId={selectedHorse.id}
+          horseName={selectedHorse.name}
+          onClose={() => setSelectedHorse(null)}
+        />
+      )}
     </div>
   );
 }
 
 // ── CalendarView ───────────────────────────────────────────────────────────
-function CalendarView({ meetings, allRaces, seasons, dashboard, onSendInvitation, onViewProfile }: {
-  meetings: any[]; allRaces: any[]; seasons: any[]; dashboard: any;
+function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onSendInvitation, onViewProfile }: {
+  meetings: any[]; allRaces: any[]; seasons: any[]; dashboard: any; invitations: any[];
   onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
   onViewProfile: (id: number) => void;
 }) {
@@ -578,6 +588,7 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, onSendInvitation
                           isReg={isReg}
                           eligibleHorses={eligibleHorses}
                           jockeys={meetingJockeys}
+                          invitations={invitations}
                           onSendInvitation={onSendInvitation}
                           onViewProfile={onViewProfile}
                         />
@@ -590,13 +601,37 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, onSendInvitation
   );
 }
 
-function RaceRow({ race, isReg, eligibleHorses, jockeys, onSendInvitation, onViewProfile }: {
-  race: any; isReg: boolean; eligibleHorses: any[]; jockeys: any[];
+function RaceRow({ race, isReg, eligibleHorses, jockeys, invitations, onSendInvitation, onViewProfile }: {
+  race: any; isReg: boolean; eligibleHorses: any[]; jockeys: any[]; invitations: any[];
   onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
   onViewProfile: (id: number) => void;
 }) {
   const [horseId, setHorseId] = useState("");
   const [jockeyId, setJockeyId] = useState("");
+
+  const filteredJockeys = jockeys.filter((j: any) => {
+    if (!horseId) return true;
+    const hasPending = (invitations || []).some(
+      (inv: any) =>
+        inv.raceId === race.id &&
+        inv.horseId === parseInt(horseId) &&
+        inv.jockeyId === j.id &&
+        inv.status === "PENDING"
+    );
+    return !hasPending;
+  });
+
+  const filteredHorses = eligibleHorses.filter((h: any) => {
+    if (!jockeyId) return true;
+    const hasPending = (invitations || []).some(
+      (inv: any) =>
+        inv.raceId === race.id &&
+        inv.horseId === h.id &&
+        inv.jockeyId === parseInt(jockeyId) &&
+        inv.status === "PENDING"
+    );
+    return !hasPending;
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -641,7 +676,7 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, onSendInvitation, onVie
                 <label style={labelStyle}>Select Horse</label>
                 <select value={horseId} onChange={e => setHorseId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
                   <option value="">-- Select Horse --</option>
-                  {eligibleHorses.map((h: any) => <option key={h.id} value={h.id}>{h.name} (Rating: {h.currentRating})</option>)}
+                  {filteredHorses.map((h: any) => <option key={h.id} value={h.id}>{h.name} (Rating: {h.currentRating})</option>)}
                 </select>
               </div>
               <div>
@@ -649,7 +684,7 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, onSendInvitation, onVie
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                   <select value={jockeyId} onChange={e => setJockeyId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
                     <option value="">-- Select Jockey --</option>
-                    {jockeys.map((j: any) => <option key={j.id} value={j.id}>{j.fullName || j.username} ({j.weight}kg)</option>)}
+                    {filteredJockeys.map((j: any) => <option key={j.id} value={j.id}>{j.fullName || j.username} ({j.weight}kg)</option>)}
                   </select>
                   {jockeyId && (
                     <button type="button" onClick={() => onViewProfile(parseInt(jockeyId))} style={{ background: "none", border: "none", color: "#fbbf24", fontSize: "0.65rem", fontFamily: "monospace", textDecoration: "underline", cursor: "pointer", alignSelf: "flex-start", padding: 0 }}>
@@ -870,7 +905,7 @@ export default function HorseOwner() {
       case "stable":
         return <StableView stable={stable} onRefresh={fetchData} />;
       case "calendar":
-        return <CalendarView meetings={meetings} allRaces={allRaces} seasons={seasons} dashboard={dashboard} onSendInvitation={handleSendInvitation} onViewProfile={setSelectedProfileId} />;
+        return <CalendarView meetings={meetings} allRaces={allRaces} seasons={seasons} dashboard={dashboard} invitations={invitations} onSendInvitation={handleSendInvitation} onViewProfile={setSelectedProfileId} />;
       case "invitations":
         return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} />;
       case "results":

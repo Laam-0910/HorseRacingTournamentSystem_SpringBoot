@@ -21,13 +21,13 @@ public class ChatMessage implements Serializable {
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "race_id")
+    @Column(name = "race_id", nullable = false)
     private Integer raceId;
 
-    @Column(name = "username")
+    @Column(name = "username", nullable = false, length = 100)
     private String username;
 
-    @Column(name = "message_text")
+    @Column(name = "message_text", nullable = false, columnDefinition = "NVARCHAR(MAX)")
     private String messageText;
 
     @Column(name = "sent_at")

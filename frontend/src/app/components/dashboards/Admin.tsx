@@ -7,6 +7,7 @@ import ProfileTab from "./components/ProfileTab";
 
 // Sub-modules
 import Users from "../admin-workflow/Users";
+import Horses from "../admin-workflow/Horses";
 import SystemConfig from "../admin-workflow/SystemConfig";
 import Season from "../admin-workflow/Season";
 import RaceMeeting from "../admin-workflow/RaceMeeting";
@@ -27,6 +28,7 @@ type AdminTab =
   | "schedule"
   | "results"
   | "users"
+  | "horses"
   | "config"
   | "live-settings"
   | "profile";
@@ -43,8 +45,9 @@ const NAV_ITEMS = [
   { index: "07", icon: "clipboard-list",   label: "Race Day Schedule",         view: "schedule"      },
   { index: "08", icon: "award",            label: "Process Results & Close",   view: "results"       },
   { index: "09", icon: "user-cog",         label: "User & Role Management",    view: "users"         },
-  { index: "10", icon: "settings",         label: "System Configuration",      view: "config"        },
-  { index: "11", icon: "tv",               label: "Live Setting",              view: "live-settings" },
+  { index: "10", icon: "flag",             label: "Horse Registry Directory",  view: "horses"        },
+  { index: "11", icon: "settings",         label: "System Configuration",      view: "config"        },
+  { index: "12", icon: "tv",               label: "Live Setting",              view: "live-settings" },
 ];
 
 // ─── AdminWelcome Component (matches AdminWelcome.jsp exactly) ────────────────
@@ -249,6 +252,7 @@ export default function Admin() {
       case "schedule":      return <RaceDaySchedule />;
       case "results":       return <Results />;
       case "users":         return <Users />;
+      case "horses":        return <Horses />;
       case "config":        return <SystemConfig />;
       case "live-settings": return <LiveSettings />;
       case "profile":       return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Admin" />;

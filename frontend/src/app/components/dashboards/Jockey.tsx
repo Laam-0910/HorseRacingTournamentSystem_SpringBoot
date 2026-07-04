@@ -5,6 +5,7 @@ import { api } from "../../../lib/api";
 import DashboardLayout from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
 import ProfileModal from "./components/ProfileModal";
+import HorsePerformanceModal from "./components/HorsePerformanceModal";
 
 type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "profile";
 
@@ -124,7 +125,7 @@ function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings
   );
 }
 
-function MountsView({ mounts, loading }: { mounts: any[]; loading: boolean }) {
+function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: boolean; onViewHorse: (horse: { id: number; name: string }) => void }) {
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>My Mounts</h3>
@@ -145,7 +146,15 @@ function MountsView({ mounts, loading }: { mounts: any[]; loading: boolean }) {
             ) : mounts.map((m, i) => (
               <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
                 <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", color: "#a0a0a0" }}>#{m.raceId}</td>
-                <td style={{ padding: "0.75rem 1rem", fontWeight: 700, color: "#f4f2ec" }}>Horse #{m.horseId}</td>
+                <td style={{ padding: "0.75rem 1rem", fontWeight: 700, color: "#f4f2ec" }}>
+                  <button
+                    type="button"
+                    onClick={() => onViewHorse({ id: m.horseId, name: m.horseName || `Horse #${m.horseId}` })}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontWeight: "bold" }}
+                  >
+                    {m.horseName || `Horse #${m.horseId}`}
+                  </button>
+                </td>
                 <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", color: "#c9a227", fontWeight: 700 }}>{m.gateNumber ?? "TBD"}</td>
                 <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec" }}>{m.carriedWeight ?? "TBD"} kg</td>
                 <td style={{ padding: "0.75rem 1rem" }}>
@@ -160,7 +169,7 @@ function MountsView({ mounts, loading }: { mounts: any[]; loading: boolean }) {
   );
 }
 
-function InvitationsView({ invitations, onAccept, onReject, onViewProfile }: { invitations: any[]; onAccept: (id: number) => void; onReject: (id: number) => void; onViewProfile: (id: number) => void }) {
+function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onViewHorse }: { invitations: any[]; onAccept: (id: number) => void; onReject: (id: number) => void; onViewProfile: (id: number) => void; onViewHorse: (horse: { id: number; name: string }) => void }) {
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = {
     vi: {
@@ -224,7 +233,14 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile }: { i
                   </button>
                 </h4>
                 <p style={{ fontSize: "0.75rem", color: "#f4f2ec", marginTop: "0.5rem" }}>
-                  <strong>{t.horse}:</strong> {inv.horseName || `#${inv.horseId}`}
+                  <strong>{t.horse}:</strong>{" "}
+                  <button 
+                    type="button" 
+                    onClick={() => onViewHorse({ id: inv.horseId, name: inv.horseName || `Horse #${inv.horseId}` })} 
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontWeight: "bold" }}
+                  >
+                    {inv.horseName || `#${inv.horseId}`}
+                  </button>
                 </p>
                 {inv.meetingName && (
                   <p style={{ fontSize: "0.75rem", color: "#fbbf24", marginTop: "0.25rem" }}>
@@ -325,6 +341,7 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
 export default function Jockey() {
   const { user } = useAuth();
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+  const [selectedHorse, setSelectedHorse] = useState<{ id: number; name: string } | null>(null);
   const [activeTab, setActiveTab] = useState<JockeyTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as JockeyTab) || "hub";
@@ -407,9 +424,9 @@ export default function Jockey() {
   const renderContent = () => {
     switch (activeTab) {
       case "hub":         return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
-      case "mounts":      return <MountsView mounts={mounts} loading={loading} />;
+      case "mounts":      return <MountsView mounts={mounts} loading={loading} onViewHorse={setSelectedHorse} />;
       case "calendar":    return <CalendarView meetings={meetings} />;
-      case "invitations": return <InvitationsView invitations={invitations.filter((i: any) => i.status === "PENDING")} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} />;
+      case "invitations": return <InvitationsView invitations={invitations.filter((i: any) => i.status === "PENDING")} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} />;
       case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;
       default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
@@ -432,6 +449,9 @@ export default function Jockey() {
       </DashboardLayout>
       {selectedProfileId !== null && (
         <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
+      )}
+      {selectedHorse !== null && (
+        <HorsePerformanceModal horseId={selectedHorse.id} horseName={selectedHorse.name} onClose={() => setSelectedHorse(null)} />
       )}
     </>
   );
