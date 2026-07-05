@@ -52,6 +52,7 @@ public class HorseService {
 
     @Transactional
     public HorseDTO registerHorse(HorseDTO dto) {
+        validateHorseAgeAndSex(dto.getDateOfBirth(), dto.getSex());
         Horse horse = horseMapper.toEntity(dto);
         horse.setStatus("PENDING"); // Ngựa mới đăng ký ở trạng thái PENDING
         horse.setCurrentRating(52);  // Điểm rating khởi điểm
@@ -83,6 +84,7 @@ public class HorseService {
 
     @Transactional
     public HorseDTO updateHorse(Integer id, HorseDTO dto, Integer userId, Integer roleId) {
+        validateHorseAgeAndSex(dto.getDateOfBirth(), dto.getSex());
         Horse horse = horseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Horse not found"));
 
@@ -92,6 +94,7 @@ public class HorseService {
 
         horse.setName(dto.getName());
         horse.setBreed(dto.getBreed());
+        horse.setSex(dto.getSex());
         horse.setDateOfBirth(dto.getDateOfBirth());
         horse.setAvatar(dto.getAvatar());
         horse.setDescription(dto.getDescription());
@@ -113,5 +116,28 @@ public class HorseService {
                 .map(User::getUsername)
                 .orElse(null);
         return horseMapper.toDTO(saved, ownerName);
+    }
+
+    private void validateHorseAgeAndSex(java.sql.Date dob, String sex) {
+        if (dob == null || sex == null) return;
+        java.time.LocalDate birthDate = dob.toLocalDate();
+        java.time.LocalDate currentDate = java.time.LocalDate.now();
+        int age = java.time.Period.between(birthDate, currentDate).getYears();
+
+        if (age >= 4) {
+            if ("Colt".equalsIgnoreCase(sex)) {
+                throw new IllegalArgumentException("A Colt must be under 4 years old. For uncastrated male horses 4 years or older, please select 'Horse'.");
+            }
+            if ("Filly".equalsIgnoreCase(sex)) {
+                throw new IllegalArgumentException("A Filly must be under 4 years old. For female horses 4 years or older, please select 'Mare'.");
+            }
+        } else {
+            if ("Horse".equalsIgnoreCase(sex)) {
+                throw new IllegalArgumentException("A Horse (uncastrated male) must be 4 years or older. For uncastrated male horses under 4 years, please select 'Colt'.");
+            }
+            if ("Mare".equalsIgnoreCase(sex)) {
+                throw new IllegalArgumentException("A Mare must be 4 years or older. For female horses under 4 years, please select 'Filly'.");
+            }
+        }
     }
 }

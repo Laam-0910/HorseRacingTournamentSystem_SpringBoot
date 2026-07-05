@@ -406,6 +406,8 @@ public class AdminUserService {
                 .map(c -> Double.parseDouble(c.getConfigValue())).orElse(52.0);
         double weightPerPoint = systemConfigRepository.findById("WEIGHT_PER_POINT")
                 .map(c -> Double.parseDouble(c.getConfigValue())).orElse(0.5);
+        double sexAllowance = systemConfigRepository.findById("SEX_ALLOWANCE")
+                .map(c -> Double.parseDouble(c.getConfigValue())).orElse(1.5);
 
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
         if (entries == null || entries.isEmpty()) return;
@@ -434,7 +436,11 @@ public class AdminUserService {
                 Optional<User> jockeyOpt = userRepository.findById(entry.getJockeyId());
 
                 int rating = horseOpt.map(h -> h.getCurrentRating() != null ? h.getCurrentRating() : 0).orElse(0);
+                String sex = horseOpt.map(Horse::getSex).orElse("Gelding");
                 double handicap = maxTopWeight - (rMax - rating) * weightPerPoint;
+                if ("Filly".equalsIgnoreCase(sex) || "Mare".equalsIgnoreCase(sex)) {
+                    handicap -= sexAllowance;
+                }
                 if (handicap < minBottomWeight) {
                     handicap = minBottomWeight;
                 }
@@ -509,6 +515,39 @@ public class AdminUserService {
 
     @Transactional
     public void assignReferee(Integer raceId, Integer refereeId) {
+        Race targetRace = raceRepository.findById(raceId)
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+
+        if (targetRace.getStartTime() == null) {
+            throw new IllegalArgumentException("Target race does not have a start time scheduled yet.");
+        }
+
+        // 1. Check if already assigned to this race
+        List<RaceReferee> assignedToCurrentRace = raceRefereeRepository.findByRaceId(raceId);
+        boolean isAlreadyAssigned = assignedToCurrentRace.stream()
+                .anyMatch(rr -> rr.getRefereeId().equals(refereeId));
+        if (isAlreadyAssigned) {
+            throw new IllegalArgumentException("Referee is already assigned to this race.");
+        }
+
+        // 2. Check for time conflicts (overlapping races at the exact same start time, excluding cancelled races)
+        List<RaceReferee> refereeAssignments = raceRefereeRepository.findByRefereeId(refereeId);
+        for (RaceReferee assignment : refereeAssignments) {
+            if (assignment.getRaceId().equals(raceId)) {
+                continue;
+            }
+            Optional<Race> otherRaceOpt = raceRepository.findById(assignment.getRaceId());
+            if (otherRaceOpt.isPresent()) {
+                Race otherRace = otherRaceOpt.get();
+                if (otherRace.getStartTime() != null && otherRace.getStartTime().equals(targetRace.getStartTime())) {
+                    if (!"CANCELLED".equalsIgnoreCase(otherRace.getStatus()) && !"CANCELLED".equalsIgnoreCase(targetRace.getStatus())) {
+                        throw new IllegalArgumentException("Referee is already assigned to another race starting at the exact same time (" 
+                                + new java.text.SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(targetRace.getStartTime()) + ").");
+                    }
+                }
+            }
+        }
+
         RaceReferee rr = new RaceReferee();
         rr.setRaceId(raceId);
         rr.setRefereeId(refereeId);

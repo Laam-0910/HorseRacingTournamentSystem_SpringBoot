@@ -31,6 +31,7 @@ interface Race {
   distanceMeters: number;
   trackType: string;
   purse: number;
+  minEntries?: number;
   maxEntries: number;
   minEntries: number;
   youtubeLiveUrl?: string;
@@ -155,7 +156,7 @@ export default function Race() {
     setEditDistance(race.distanceMeters.toString());
     setEditTrackType(race.trackType);
     setEditPurse(race.purse.toString());
-    setEditMinEntries(race.minEntries ? race.minEntries.toString() : "3");
+    setEditMinEntries((race.minEntries || 3).toString());
     setEditMaxEntries(race.maxEntries.toString());
   };
 
@@ -241,12 +242,12 @@ export default function Race() {
     try {
       const res = await api.post<any>(`/admin/races/${raceId}/referee`, { refereeId: parseInt(refId) });
       if (res.success) {
-        setSuccess("Referee assigned successfully.");
+        alert("Referee assigned successfully.");
         setAssignRefSelection(prev => ({ ...prev, [raceId]: "" }));
         fetchData();
       }
     } catch (err: any) {
-      setError(err.message || "Failed to assign referee.");
+      alert(err.message || "Failed to assign referee.");
     }
   };
 
@@ -256,11 +257,11 @@ export default function Race() {
     try {
       const res = await api.post<any>(`/admin/races/${raceId}/referee/remove`, { refereeId: refId });
       if (res.success) {
-        setSuccess("Referee removed.");
+        alert("Referee removed successfully.");
         fetchData();
       }
     } catch (err: any) {
-      setError(err.message || "Failed to remove referee.");
+      alert(err.message || "Failed to remove referee.");
     }
   };
 

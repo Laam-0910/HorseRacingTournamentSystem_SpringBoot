@@ -25,6 +25,14 @@ public class ProcessResultsService {
         Race race = raceRepository.findById(raceId)
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
 
+        // Validate that the race is in a valid state to have results confirmed (has started running/finished)
+        java.util.List<String> ineligibleStatuses = java.util.Arrays.asList(
+                "SCHEDULED", "DECLARATION_OPEN", "DECLARATION_CLOSED", "RACE_ASSIGNED", "OFFICIAL", "CANCELLED"
+        );
+        if (ineligibleStatuses.contains(race.getStatus())) {
+            throw new IllegalArgumentException("Cannot confirm results. The race is in status '" + race.getStatus() + "' and cannot be processed.");
+        }
+
         BigDecimal purse = race.getPurse() != null ? race.getPurse() : BigDecimal.ZERO;
 
         for (Map<String, Object> res : entriesResults) {

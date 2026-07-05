@@ -17,6 +17,7 @@ interface RaceRecord {
 interface HorsePerf {
   name: string;
   breed: string;
+  sex?: string;
   currentRating: number;
   totalRaces: number;
   totalWins: number;
@@ -251,7 +252,7 @@ function HorsePerformanceModal({
                     </span>
                   </div>
                   <p style={{ color: "#a0a0a0", fontSize: "0.8rem", margin: "0.25rem 0 0", fontFamily: "monospace" }}>
-                    {perf?.breed ?? ""}
+                    Breed: {perf?.breed ?? "—"} &nbsp;·&nbsp; Sex: {perf?.sex ?? "Gelding"}
                   </p>
                 </div>
               </div>

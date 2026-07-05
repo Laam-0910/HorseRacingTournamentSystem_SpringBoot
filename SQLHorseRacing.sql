@@ -149,6 +149,7 @@ CREATE TABLE Horse (
     owner_id        INT NOT NULL,
     name            VARCHAR(150) NOT NULL,
     breed           VARCHAR(100) NULL,
+    sex             VARCHAR(20) NULL,           -- Gelding, Colt, Horse, Filly, Mare
     date_of_birth   DATE NOT NULL,
     status          VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
     current_rating  INT NOT NULL DEFAULT 52,
@@ -263,7 +264,8 @@ INSERT INTO SystemConfig (config_key, config_value, description) VALUES
 ('MAX_TOP_WEIGHT',         '60.0', N'Mức tạ gánh tối đa (kg)'),
 ('MIN_BOTTOM_WEIGHT',      '52.0', N'Mức tạ gánh tối thiểu (kg)'),
 ('WEIGHT_PER_POINT',       '0.5',  N'Số kg biến động cho mỗi 1 điểm chênh lệch Rating'),
-('MAX_OVERWEIGHT_ALLOWED', '1.0',  N'Số kg vượt mức tối đa cho phép đối với Nài ngựa (kg)');
+('MAX_OVERWEIGHT_ALLOWED', '1.0',  N'Số kg vượt mức tối đa cho phép đối với Nài ngựa (kg)'),
+('SEX_ALLOWANCE',          '1.5',  N'Mức trợ tạ gánh cho ngựa cái (Fillies/Mares) (kg)');
 GO
 
 INSERT INTO Role (role_name) VALUES ('Admin'), ('Owner'), ('Jockey'), ('Spectator'), ('Referee');
@@ -318,13 +320,13 @@ INSERT INTO Race (race_meeting_id, start_time, registration_start_time, registra
 (2, '2026-08-15 15:30:00', '2026-08-01 08:00:00', '2026-08-12 18:00:00', 'SCHEDULED',         'Class 1', 95,  NULL, 2000, 'Turf', 800000.00, 14);
 GO
 
-INSERT INTO Horse (owner_id, name, breed, date_of_birth, status, current_rating, total_races, total_wins) VALUES
-(2, 'Thunder King', 'Thoroughbred', '2018-04-10', 'ACTIVE',  88, 15, 6),
-(2, 'Silver Arrow',  'Arabian',      '2019-07-22', 'ACTIVE',  75, 10, 2),
-(3, 'Storm Runner',  'Quarter Horse','2017-11-05', 'ACTIVE',  82, 12, 4),
-(3, 'Dark Phantom',  'Thoroughbred', '2020-02-18', 'INJURED', 65, 8,  1),
-(4, 'Golden Flash',  'Akhal-Teke',   '2018-09-30', 'ACTIVE',  91, 18, 8),
-(4, 'Iron Blaze',    'Hanoverian',   '2019-03-14', 'ACTIVE',  78, 14, 3);
+INSERT INTO Horse (owner_id, name, breed, sex, date_of_birth, status, current_rating, total_races, total_wins) VALUES
+(2, 'Thunder King', 'Thoroughbred', 'Gelding', '2018-04-10', 'ACTIVE',  88, 15, 6),
+(2, 'Silver Arrow',  'Arabian',      'Horse',   '2019-07-22', 'ACTIVE',  75, 10, 2),
+(3, 'Storm Runner',  'Quarter Horse','Gelding', '2017-11-05', 'ACTIVE',  82, 12, 4),
+(3, 'Dark Phantom',  'Thoroughbred', 'Mare',    '2020-02-18', 'INJURED', 65, 8,  1),
+(4, 'Golden Flash',  'Akhal-Teke',   'Mare',    '2018-09-30', 'ACTIVE',  91, 18, 8),
+(4, 'Iron Blaze',    'Hanoverian',   'Colt',    '2019-03-14', 'ACTIVE',  78, 14, 3);
 GO
 
 INSERT INTO HorseRaceMeetingRegistration (race_meeting_id, horse_id, status) VALUES

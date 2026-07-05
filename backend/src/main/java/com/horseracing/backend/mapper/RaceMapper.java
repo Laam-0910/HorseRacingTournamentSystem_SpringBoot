@@ -53,8 +53,8 @@ public class RaceMapper {
         race.setDistanceMeters(dto.getDistanceMeters());
         race.setTrackType(dto.getTrackType());
         race.setPurse(dto.getPurse());
-        race.setMinEntries(dto.getMinEntries());
-        race.setMaxEntries(dto.getMaxEntries());
+        race.setMinEntries(dto.getMinEntries() != null ? dto.getMinEntries() : 3);
+        race.setMaxEntries(dto.getMaxEntries() != null ? dto.getMaxEntries() : 14);
         race.setStewardReport(dto.getStewardReport());
         race.setYoutubeLiveUrl(dto.getYoutubeLiveUrl());
         return race;

@@ -67,8 +67,9 @@ export default function Results() {
         api.get<ClassRule[]>("/races/seasons/1/rules").catch(() => []),
       ]);
       setMeetings(meetingsData);
-      // Filter races to process (not OFFICIAL and not CANCELLED)
-      setRaces((racesData || []).filter(r => r.status !== "OFFICIAL" && r.status !== "CANCELLED"));
+      // Filter races to process (only show races that have run/finished/inquiry; filter out pre-race and official/cancelled statuses)
+      const ineligibleStatuses = ["SCHEDULED", "DECLARATION_OPEN", "DECLARATION_CLOSED", "RACE_ASSIGNED", "OFFICIAL", "CANCELLED"];
+      setRaces((racesData || []).filter(r => !ineligibleStatuses.includes(r.status)));
       setClassRules(rulesData);
     } catch (err: any) {
       setError(err.message || "Failed to load data.");

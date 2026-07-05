@@ -345,12 +345,14 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
   const { user } = useAuth();
   const [horseName, setHorseName] = useState("");
   const [breed, setBreed] = useState("");
+  const [sex, setSex] = useState("Gelding");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [avatar, setAvatar] = useState("");
   const [description, setDescription] = useState("");
   const [editingHorse, setEditingHorse] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
   const [editBreed, setEditBreed] = useState("");
+  const [editSex, setEditSex] = useState("Gelding");
   const [editDob, setEditDob] = useState("");
   const [editRating, setEditRating] = useState<number>(52);
   const [editAvatar, setEditAvatar] = useState("");
@@ -399,12 +401,52 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
     }
   };
 
+  const validateAgeAndSex = (dobStr: string, sexVal: string): boolean => {
+    if (!dobStr || !sexVal) return true;
+    const parts = dobStr.split("-");
+    if (parts.length !== 3) return true;
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    
+    const birthDate = new Date(year, month, day);
+    const today = new Date();
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    if (age >= 4) {
+      if (sexVal === "Colt") {
+        alert("A Colt must be under 4 years old. For uncastrated male horses 4 years or older, please select 'Horse'.");
+        return false;
+      }
+      if (sexVal === "Filly") {
+        alert("A Filly must be under 4 years old. For female horses 4 years or older, please select 'Mare'.");
+        return false;
+      }
+    } else {
+      if (sexVal === "Horse") {
+        alert("A Horse (uncastrated male) must be 4 years or older. For uncastrated male horses under 4 years, please select 'Colt'.");
+        return false;
+      }
+      if (sexVal === "Mare") {
+        alert("A Mare must be 4 years or older. For female horses under 4 years, please select 'Filly'.");
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleRegisterHorse = async (e: React.FormEvent) => {
     e.preventDefault(); setMsg("");
+    if (!validateAgeAndSex(dateOfBirth, sex)) return;
     try {
-      await api.post("/horses", { name: horseName, breed, dateOfBirth: formatDobForApi(dateOfBirth), ownerId: user?.id, avatar, description, status: "PENDING" });
+      await api.post("/horses", { name: horseName, breed, sex, dateOfBirth: formatDobForApi(dateOfBirth), ownerId: user?.id, avatar, description, status: "PENDING" });
       setMsg("✅ Horse declaration submitted for approval.");
-      setHorseName(""); setBreed(""); setDateOfBirth(""); setAvatar(""); setDescription("");
+      setHorseName(""); setBreed(""); setSex("Gelding"); setDateOfBirth(""); setAvatar(""); setDescription("");
       onRefresh();
     } catch (err: any) { setMsg("❌ " + (err.message || "Failed to submit horse registration.")); }
   };
@@ -413,6 +455,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
     setEditingHorse(item.horse);
     setEditName(item.horse.name || "");
     setEditBreed(item.horse.breed || "");
+    setEditSex(item.horse.sex || "Gelding");
     setEditDob(item.horse.dateOfBirth ? formatDateTime(item.horse.dateOfBirth).split(" ")[0] : "");
     setEditRating(item.horse.currentRating || 52);
     setEditAvatar(item.horse.avatar || "");
@@ -421,8 +464,9 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
 
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault(); if (!editingHorse) return;
+    if (!validateAgeAndSex(editDob, editSex)) return;
     try {
-      await api.put(`/horses/${editingHorse.id}`, { name: editName, breed: editBreed, dateOfBirth: formatDobForApi(editDob), currentRating: editRating, avatar: editAvatar, description: editDescription });
+      await api.put(`/horses/${editingHorse.id}`, { name: editName, breed: editBreed, sex: editSex, dateOfBirth: formatDobForApi(editDob), currentRating: editRating, avatar: editAvatar, description: editDescription });
       setEditingHorse(null); onRefresh();
     } catch (err: any) { setMsg("❌ " + (err.message || "Failed to update horse.")); }
   };
@@ -456,7 +500,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
           : <div style={{ width: "100%", height: "8rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontWeight: 700, fontFamily: "monospace", fontSize: "0.7rem" }}>NO IMAGE</div>}
         <div style={{ padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.4rem", flex: 1 }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.name}</h4>
-          <p style={{ fontSize: "0.65rem", color: "#a0a0a0" }}>Breed: {h.breed} · Status: <span style={{ color: h.status === "ACTIVE" ? "#4ade80" : h.status === "RETIRED" ? "#ef4444" : h.status === "REJECTED" ? "#f87171" : "#fbbf24", fontWeight: 700 }}>{h.status}</span></p>
+          <p style={{ fontSize: "0.65rem", color: "#a0a0a0" }}>Breed: {h.breed} · Sex: {h.sex || "Gelding"} · Status: <span style={{ color: h.status === "ACTIVE" ? "#4ade80" : h.status === "RETIRED" ? "#ef4444" : h.status === "REJECTED" ? "#f87171" : "#fbbf24", fontWeight: 700 }}>{h.status}</span></p>
           <div style={{ borderTop: "1px solid #2a2825", paddingTop: "0.4rem", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#a0a0a0" }}>
             <span>Rating: <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
             <span>Wins: <strong>{item.totalWins ?? 0}</strong>/{item.totalRaces ?? 0}</span>
@@ -470,6 +514,10 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
               </>
             )}
           </div>
+        </div>
+      </div>
+    );
+  };
         </div>
       </div>
     );
@@ -543,7 +591,16 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
                 <label style={labelStyle}>{f.lbl}</label>
                 <input type={f.type} required value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph} style={inputStyle} />
               </div>
-            ))}
+            ))}          <div>
+            <label style={labelStyle}>Gender / Sex</label>
+            <select value={sex} onChange={e => setSex(e.target.value)} style={inputStyle}>
+              <option value="Gelding">Gelding (Thiến)</option>
+              <option value="Colt">Colt (Đực non)</option>
+              <option value="Horse">Horse (Đực trưởng thành)</option>
+              <option value="Filly">Filly (Cái non)</option>
+              <option value="Mare">Mare (Cái trưởng thành)</option>
+            </select>
+          </div>
             <InlineDatePicker label="Date of Birth" value={dateOfBirth} onChange={setDateOfBirth} />
             <div>
               <label style={labelStyle}>Horse Photo / Avatar</label>
@@ -622,6 +679,16 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
                   <input type={f.type} required value={f.val} onChange={e => f.set(e.target.value)} style={inputStyle} />
                 </div>
               ))}
+              <div>
+                <label style={labelStyle}>Gender / Sex</label>
+                <select value={editSex} onChange={e => setEditSex(e.target.value)} style={inputStyle}>
+                  <option value="Gelding">Gelding (Thiến)</option>
+                  <option value="Colt">Colt (Đực non)</option>
+                  <option value="Horse">Horse (Đực trưởng thành)</option>
+                  <option value="Filly">Filly (Cái non)</option>
+                  <option value="Mare">Mare (Cái trưởng thành)</option>
+                </select>
+              </div>
               <InlineDatePicker label="Date of Birth" value={editDob} onChange={setEditDob} />
               <div>
                 <label style={labelStyle}>Horse Photo / Avatar</label>

@@ -56,10 +56,10 @@ public class Race implements Serializable {
     private BigDecimal purse;
 
     @Column(name = "min_entries")
-    private Integer minEntries;
+    private Integer minEntries = 3;
 
     @Column(name = "max_entries")
-    private Integer maxEntries;
+    private Integer maxEntries = 14;
 
     @Column(name = "steward_report")
     private String stewardReport;

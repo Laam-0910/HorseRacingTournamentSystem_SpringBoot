@@ -135,6 +135,9 @@ public class RaceService {
         if (body.get("purse") != null) {
             race.setPurse(new java.math.BigDecimal(String.valueOf(body.get("purse"))));
         }
+        if (body.get("minEntries") != null) {
+            race.setMinEntries(Integer.parseInt(String.valueOf(body.get("minEntries"))));
+        }
         if (body.get("maxEntries") != null) {
             race.setMaxEntries(Integer.parseInt(String.valueOf(body.get("maxEntries"))));
         }
