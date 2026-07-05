@@ -33,6 +33,7 @@ interface Race {
   purse: number;
   minEntries?: number;
   maxEntries: number;
+  minEntries: number;
   youtubeLiveUrl?: string;
   raceMeetingName?: string;
 }

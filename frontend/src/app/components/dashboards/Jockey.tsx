@@ -249,7 +249,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                 )}
                 {inv.venue && (
                   <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
-                    📍 {inv.venue} · 📅 {inv.startTime}
+                    📍 {inv.venue} · 📅 {formatDate(inv.startTime)}
                   </p>
                 )}
                 <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.25rem" }}>
@@ -280,7 +280,7 @@ function CalendarView({ meetings }: { meetings: any[] }) {
             <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
                 <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue} · 📅 {m.startDate || m.date}</p>
+                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue} · 📅 {formatDate(m.startDate || m.date)}</p>
               </div>
               <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: `rgba(59,130,196,0.1)`, color: ROLE_COLOR }}>{m.status ?? "UPCOMING"}</span>
             </div>

@@ -38,6 +38,56 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
+            // Check and add min_entries to Race table
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'min_entries') " +
+                "BEGIN " +
+                "    ALTER TABLE Race ADD min_entries INT NOT NULL DEFAULT 3; " +
+                "END"
+            );
+
+            // Check and add max_entries to Race table
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'max_entries') " +
+                "BEGIN " +
+                "    ALTER TABLE Race ADD max_entries INT NOT NULL DEFAULT 14; " +
+                "END"
+            );
+
+            // Check and add steward_report to Race table
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'steward_report') " +
+                "BEGIN " +
+                "    ALTER TABLE Race ADD steward_report NVARCHAR(MAX) NULL; " +
+                "END"
+            );
+
+            // Check and add youtube_live_url to Race table
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'youtube_live_url') " +
+                "BEGIN " +
+                "    ALTER TABLE Race ADD youtube_live_url VARCHAR(500) NULL; " +
+                "END"
+            );
+
+            // Check and create HorseRetirementRequest table if it does not exist
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('HorseRetirementRequest') AND type = 'U') " +
+                "BEGIN " +
+                "    CREATE TABLE HorseRetirementRequest ( " +
+                "        id INT IDENTITY(1,1) PRIMARY KEY, " +
+                "        horse_id INT NOT NULL, " +
+                "        owner_id INT NOT NULL, " +
+                "        reason NVARCHAR(MAX) NOT NULL, " +
+                "        status VARCHAR(30) NOT NULL DEFAULT 'PENDING', " +
+                "        admin_remarks NVARCHAR(MAX) NULL, " +
+                "        created_at DATETIME DEFAULT GETDATE(), " +
+                "        processed_at DATETIME NULL, " +
+                "        CONSTRAINT FK_Retire_Horse FOREIGN KEY (horse_id) REFERENCES Horse(id), " +
+                "        CONSTRAINT FK_Retire_Owner FOREIGN KEY (owner_id) REFERENCES [User](id) " +
+                "    ); " +
+                "END"
+            );
 
             // Check and create ChatMessage table if missing
             jdbcTemplate.execute(
@@ -53,8 +103,8 @@ public class DatabaseInitializer implements InitializingBean {
                 "    ); " +
                 "END"
             );
-            
-            System.out.println("Database columns verified and added successfully if missing.");
+
+            System.out.println("Database columns, ChatMessage table, and HorseRetirementRequest table verified and added successfully if missing.");
         } catch (Exception e) {
             System.err.println("Failed to update database schema: " + e.getMessage());
         }
