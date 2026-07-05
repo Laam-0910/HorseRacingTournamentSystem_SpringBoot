@@ -474,10 +474,6 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
       </div>
     );
   };
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
@@ -681,7 +677,6 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
           horseName={selectedHorse.name}
           onClose={() => setSelectedHorse(null)}
         />
->>>>>>> origin/main
       )}
     </div>
   );
