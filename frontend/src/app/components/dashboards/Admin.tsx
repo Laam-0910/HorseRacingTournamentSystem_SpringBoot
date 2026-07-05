@@ -17,6 +17,7 @@ import Racecard from "../admin-workflow/Racecard";
 import LiveSettings from "../admin-workflow/LiveSettings";
 import Race from "../admin-workflow/Race";
 import Results from "../admin-workflow/Results";
+import AdminHorseRetirement from "../admin-workflow/AdminHorseRetirement";
 
 type AdminTab =
   | "welcome"
@@ -31,6 +32,7 @@ type AdminTab =
   | "horses"
   | "config"
   | "live-settings"
+  | "retirement"
   | "profile";
 
 const ROLE_COLOR = "#c9a227";
@@ -48,6 +50,7 @@ const NAV_ITEMS = [
   { index: "10", icon: "flag",             label: "Horse Registry Directory",  view: "horses"        },
   { index: "11", icon: "settings",         label: "System Configuration",      view: "config"        },
   { index: "12", icon: "tv",               label: "Live Setting",              view: "live-settings" },
+  { index: "13", icon: "heart-off",        label: "Horse Retirement",          view: "retirement"    },
 ];
 
 // ─── AdminWelcome Component (matches AdminWelcome.jsp exactly) ────────────────
@@ -255,6 +258,7 @@ export default function Admin() {
       case "horses":        return <Horses />;
       case "config":        return <SystemConfig />;
       case "live-settings": return <LiveSettings />;
+      case "retirement":    return <AdminHorseRetirement />;
       case "profile":       return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Admin" />;
       default:              return <AdminWelcome onViewChange={setActiveTab} />;
     }

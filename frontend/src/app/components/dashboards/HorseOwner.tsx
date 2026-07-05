@@ -146,9 +146,22 @@ const labelStyle: React.CSSProperties = {
 
 const formatDate = (d: string | null) => {
   if (!d) return "—";
-  const dt = parseSafeDate(d);
-  if (!dt) return d;
-  return `${String(dt.getDate()).padStart(2,"0")}-${String(dt.getMonth()+1).padStart(2,"0")}-${dt.getFullYear()} ${String(dt.getHours()).padStart(2,"0")}:${String(dt.getMinutes()).padStart(2,"0")}`;
+  try {
+    const dt = parseSafeDate(d);
+    if (!dt || isNaN(dt.getTime())) return d;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const datePart = `${pad(dt.getDate())}-${pad(dt.getMonth() + 1)}-${dt.getFullYear()}`;
+    
+    const hasTime = d.includes(":") || d.includes(" ");
+    if (hasTime) {
+      const hasSeconds = d.split(":").length > 2;
+      const timePart = hasSeconds
+        ? `${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`
+        : `${pad(dt.getHours())}:${pad(dt.getMinutes())}`;
+      return `${datePart} ${timePart}`;
+    }
+    return datePart;
+  } catch { return d; }
 };
 
 const StatusBadge = ({ status }: { status: string }) => {
@@ -345,6 +358,21 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
   const [selectedHorse, setSelectedHorse] = useState<{ id: number; name: string } | null>(null);
   const [msg, setMsg] = useState("");
 
+  const [retiringHorse, setRetiringHorse] = useState<any | null>(null);
+  const [retireReason, setRetireReason] = useState("");
+  const [retireRequests, setRetireRequests] = useState<any[]>([]);
+
+  const fetchRetireRequests = async () => {
+    try {
+      const list = await api.get<any[]>("/retirement/requests");
+      setRetireRequests(list);
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchRetireRequests();
+  }, []);
+
   const formatDobForApi = (dobStr: string): string => {
     return dobStr ? `${dobStr} 00:00:00` : "";
   };
@@ -399,67 +427,183 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
     } catch (err: any) { setMsg("❌ " + (err.message || "Failed to update horse.")); }
   };
 
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(260px,340px)", gap: "2rem", alignItems: "start" }}>
-      {/* Stable List */}
-      <div>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Horse Stable List</h3>
-        {msg && <p style={{ marginBottom: "1rem", fontSize: "0.8rem", color: msg.startsWith("✅") ? "#4ade80" : "#ef4444" }}>{msg}</p>}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
-          {stable.length === 0
-            ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No horses in stable yet.</p>
-            : stable.map((item: any) => {
-                const h = item.horse;
-                return (
-                  <div key={h.id} className="rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column" }}>
-                    {h.avatar
-                      ? <img src={h.avatar} alt={h.name} style={{ width: "100%", height: "11rem", objectFit: "cover" }} />
-                      : <div style={{ width: "100%", height: "11rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontWeight: 700, fontFamily: "monospace", fontSize: "0.7rem" }}>NO IMAGE</div>}
-                    <div style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem", flex: 1 }}>
-                      <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{h.name}</h4>
-                      <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Breed: {h.breed} · Status: <span style={{ color: h.status === "ACTIVE" ? "#4ade80" : "#fbbf24", fontWeight: 700 }}>{h.status}</span></p>
-                      <div style={{ borderTop: "1px solid #2a2825", paddingTop: "0.5rem", display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#a0a0a0" }}>
-                        <span>Rating: <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
-                        <span>Wins: <strong>{item.totalWins ?? 0}</strong>/{item.totalRaces ?? 0}</span>
-                      </div>
-                      <div style={{ display: "flex", gap: "0.5rem", marginTop: "auto" }}>
-                        <button type="button" onClick={() => setSelectedHorse({ id: h.id, name: h.name })} style={{ flex: 1, padding: "0.5rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.5rem", color: "#c9a227", fontSize: "0.75rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}>📈 History</button>
-                        <button type="button" onClick={() => startEdit(item)} style={{ flex: 1, padding: "0.5rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "0.75rem", fontFamily: "monospace", cursor: "pointer" }}>Edit</button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-        </div>
-      </div>
+  const handleRequestRetirement = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!retiringHorse) return;
+    setMsg("");
+    try {
+      await api.post("/retirement/request", { horseId: retiringHorse.id, reason: retireReason });
+      setMsg("✅ Retirement request submitted for horse " + retiringHorse.name);
+      setRetiringHorse(null);
+      setRetireReason("");
+      fetchRetireRequests();
+      onRefresh();
+    } catch (err: any) {
+      setMsg("❌ " + (err.message || "Failed to submit retirement request."));
+    }
+  };
 
-      {/* Declare Horse Form */}
-      <div>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Declare New Horse</h3>
-        <form onSubmit={handleRegisterHorse} style={{ background: "rgba(21,19,16,0.6)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {[
-            { lbl: "Horse Name", val: horseName, set: setHorseName, type: "text", ph: "E.g., Shadow Fax" },
-            { lbl: "Breed",      val: breed,     set: setBreed,     type: "text", ph: "E.g., Arabian Thoroughbred" },
-          ].map(f => (
-            <div key={f.lbl}>
-              <label style={labelStyle}>{f.lbl}</label>
-              <input type={f.type} required value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph} style={inputStyle} />
-            </div>
-          ))}
-          <InlineDatePicker label="Date of Birth" value={dateOfBirth} onChange={setDateOfBirth} />
-          <div>
-            <label style={labelStyle}>Horse Photo / Avatar</label>
-            <input type="file" accept="image/*" onChange={e => handleAvatarChange(e, false)} style={inputStyle} />
-            {avatar && (
-              <img src={avatar} alt="Preview" style={{ width: "100%", height: "8rem", objectFit: "cover", marginTop: "0.5rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.08)" }} />
+  const activeHorses = stable.filter((item: any) => item.horse.status !== "RETIRED" && item.horse.status !== "REJECTED");
+  const rejectedHorses = stable.filter((item: any) => item.horse.status === "REJECTED");
+  const retiredHorses = stable.filter((item: any) => item.horse.status === "RETIRED");
+
+  const renderHorseCard = (item: any) => {
+    const h = item.horse;
+    return (
+      <div key={h.id} className="rounded-xl overflow-hidden" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", minWidth: 0 }}>
+        {h.avatar
+          ? <img src={h.avatar} alt={h.name} style={{ width: "100%", height: "8rem", objectFit: "cover" }} />
+          : <div style={{ width: "100%", height: "8rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontWeight: 700, fontFamily: "monospace", fontSize: "0.7rem" }}>NO IMAGE</div>}
+        <div style={{ padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.4rem", flex: 1 }}>
+          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "0.85rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.name}</h4>
+          <p style={{ fontSize: "0.65rem", color: "#a0a0a0" }}>Breed: {h.breed} · Status: <span style={{ color: h.status === "ACTIVE" ? "#4ade80" : h.status === "RETIRED" ? "#ef4444" : h.status === "REJECTED" ? "#f87171" : "#fbbf24", fontWeight: 700 }}>{h.status}</span></p>
+          <div style={{ borderTop: "1px solid #2a2825", paddingTop: "0.4rem", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#a0a0a0" }}>
+            <span>Rating: <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
+            <span>Wins: <strong>{item.totalWins ?? 0}</strong>/{item.totalRaces ?? 0}</span>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "auto", flexDirection: "column" }}>
+            <button type="button" onClick={() => setSelectedHorse({ id: h.id, name: h.name })} style={{ width: "100%", padding: "0.45rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.375rem", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}>📈 History</button>
+            {h.status !== "RETIRED" && h.status !== "REJECTED" && (
+              <>
+                <button type="button" onClick={() => startEdit(item)} style={{ width: "100%", padding: "0.45rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.375rem", color: "#f4f2ec", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer" }}>Edit Details</button>
+                <button type="button" onClick={() => setRetiringHorse(h)} style={{ width: "100%", padding: "0.45rem", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "0.375rem", color: "#f87171", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer" }}>Request Retirement</button>
+              </>
             )}
           </div>
-          <div>
-            <label style={labelStyle}>Biography / Description</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter horse details..." style={{ ...inputStyle, height: "5rem", resize: "none" }} />
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+      {msg && <p style={{ fontSize: "0.8rem", color: msg.startsWith("✅") ? "#4ade80" : "#ef4444", marginBottom: "0.5rem" }}>{msg}</p>}
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(260px,320px)", gap: "2rem", alignItems: "start" }}>
+        
+        {/* Three Lanes stacked vertically */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          
+          {/* Lane 1: Active & Pending */}
+          <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.3)", border: "1px solid rgba(255,255,255,0.04)", padding: "1.25rem" }}>
+            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#4ade80", borderBottom: "1px solid rgba(74,222,128,0.2)", paddingBottom: "0.5rem", marginBottom: "1rem", display: "flex", justifyContent: "space-between" }}>
+              <span>🟢 Active & Pending</span>
+              <span style={{ fontSize: "0.75rem", background: "rgba(74,222,128,0.1)", padding: "0.05rem 0.4rem", borderRadius: "0.25rem" }}>{activeHorses.length}</span>
+            </h4>
+            {activeHorses.length === 0 ? (
+              <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.7rem" }}>No active or pending horses.</p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+                {activeHorses.map(item => renderHorseCard(item))}
+              </div>
+            )}
           </div>
-          <button type="submit" style={{ width: "100%", padding: "0.75rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>Declare Horse</button>
-        </form>
+
+          {/* Lane 2: Rejected */}
+          <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.3)", border: "1px solid rgba(255,255,255,0.04)", padding: "1.25rem" }}>
+            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f87171", borderBottom: "1px solid rgba(248,113,113,0.2)", paddingBottom: "0.5rem", marginBottom: "1rem", display: "flex", justifyContent: "space-between" }}>
+              <span>🔴 Rejected Declarations</span>
+              <span style={{ fontSize: "0.75rem", background: "rgba(248,113,113,0.1)", padding: "0.05rem 0.4rem", borderRadius: "0.25rem" }}>{rejectedHorses.length}</span>
+            </h4>
+            {rejectedHorses.length === 0 ? (
+              <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.7rem" }}>No rejected declarations.</p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+                {rejectedHorses.map(item => renderHorseCard(item))}
+              </div>
+            )}
+          </div>
+
+          {/* Lane 3: Retired */}
+          <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.3)", border: "1px solid rgba(255,255,255,0.04)", padding: "1.25rem" }}>
+            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#ef4444", borderBottom: "1px solid rgba(239,68,68,0.2)", paddingBottom: "0.5rem", marginBottom: "1rem", display: "flex", justifyContent: "space-between" }}>
+              <span>⚪ Retired</span>
+              <span style={{ fontSize: "0.75rem", background: "rgba(239,68,68,0.1)", padding: "0.05rem 0.4rem", borderRadius: "0.25rem" }}>{retiredHorses.length}</span>
+            </h4>
+            {retiredHorses.length === 0 ? (
+              <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.7rem" }}>No retired horses.</p>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+                {retiredHorses.map(item => renderHorseCard(item))}
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* Declare Horse Form */}
+        <div>
+          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Declare New Horse</h3>
+          <form onSubmit={handleRegisterHorse} style={{ background: "rgba(21,19,16,0.6)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {[
+              { lbl: "Horse Name", val: horseName, set: setHorseName, type: "text", ph: "E.g., Shadow Fax" },
+              { lbl: "Breed",      val: breed,     set: setBreed,     type: "text", ph: "E.g., Arabian Thoroughbred" },
+            ].map(f => (
+              <div key={f.lbl}>
+                <label style={labelStyle}>{f.lbl}</label>
+                <input type={f.type} required value={f.val} onChange={e => f.set(e.target.value)} placeholder={f.ph} style={inputStyle} />
+              </div>
+            ))}
+            <InlineDatePicker label="Date of Birth" value={dateOfBirth} onChange={setDateOfBirth} />
+            <div>
+              <label style={labelStyle}>Horse Photo / Avatar</label>
+              <input type="file" accept="image/*" onChange={e => handleAvatarChange(e, false)} style={inputStyle} />
+              {avatar && (
+                <img src={avatar} alt="Preview" style={{ width: "100%", height: "8rem", objectFit: "cover", marginTop: "0.5rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.08)" }} />
+              )}
+            </div>
+            <div>
+              <label style={labelStyle}>Biography / Description</label>
+              <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Enter horse details..." style={{ ...inputStyle, height: "5rem", resize: "none" }} />
+            </div>
+            <button type="submit" style={{ width: "100%", padding: "0.75rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontWeight: 700, fontSize: "0.8rem", cursor: "pointer" }}>Declare Horse</button>
+          </form>
+        </div>
+
+      </div>
+
+      {/* Retirement Request History */}
+      <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem" }}>
+        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec", marginBottom: "1rem" }}>Retirement Request History</h3>
+        {retireRequests.length === 0 ? (
+          <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.75rem" }}>No retirement requests submitted yet.</p>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem", fontFamily: "monospace", textAlign: "left" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#a0a0a0" }}>
+                  <th style={{ padding: "0.5rem" }}>Horse Name</th>
+                  <th style={{ padding: "0.5rem" }}>Reason</th>
+                  <th style={{ padding: "0.5rem" }}>Status</th>
+                  <th style={{ padding: "0.5rem" }}>Admin Remarks</th>
+                  <th style={{ padding: "0.5rem" }}>Submitted At</th>
+                </tr>
+              </thead>
+              <tbody>
+                {retireRequests.map((req: any) => (
+                  <tr key={req.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                    <td style={{ padding: "0.5rem", color: "#f4f2ec", fontWeight: "bold" }}>{req.horseName}</td>
+                    <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.reason}</td>
+                    <td style={{ padding: "0.5rem" }}>
+                      <span style={{
+                        padding: "0.15rem 0.4rem",
+                        borderRadius: "0.25rem",
+                        fontSize: "0.65rem",
+                        fontWeight: "bold",
+                        background: req.status === "APPROVED" ? "rgba(74,222,128,0.1)" : req.status === "REJECTED" ? "rgba(239,68,68,0.1)" : "rgba(251,191,36,0.1)",
+                        color: req.status === "APPROVED" ? "#4ade80" : req.status === "REJECTED" ? "#ef4444" : "#fbbf24"
+                      }}>
+                        {req.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.adminRemarks || "—"}</td>
+                    <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{formatDate(req.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Edit Horse Modal */}
@@ -503,6 +647,30 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
           </div>
         </div>
       )}
+
+      {/* Request Retirement Modal */}
+      {retiringHorse && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 50, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#121010", border: "1px solid rgba(239,68,68,0.18)", borderRadius: "1rem", padding: "1.5rem", width: "100%", maxWidth: "26rem", position: "relative" }}>
+            <button onClick={() => setRetiringHorse(null)} style={{ position: "absolute", right: "1rem", top: "1rem", background: "transparent", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "1.25rem" }}>✕</button>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", marginBottom: "1rem" }}>Request Retirement</h3>
+            <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>
+              Are you sure you want to request retirement for <strong>{retiringHorse.name}</strong>? Once approved, this horse will be marked as <strong>RETIRED</strong> and cannot be registered for any future races.
+            </p>
+            <form onSubmit={handleRequestRetirement} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div>
+                <label style={labelStyle}>Reason for Retirement</label>
+                <textarea required value={retireReason} onChange={e => setRetireReason(e.target.value)} placeholder="Please explain why this horse is retiring (e.g. voluntary retirement, age, health)..." style={{ ...inputStyle, height: "5rem", resize: "none" }} />
+              </div>
+              <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                <button type="button" onClick={() => setRetiringHorse(null)} style={{ padding: "0.5rem 1rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.5rem", color: "#f4f2ec", fontFamily: "monospace", fontSize: "0.75rem", cursor: "pointer" }}>Cancel</button>
+                <button type="submit" style={{ padding: "0.5rem 1rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>Submit Request</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {selectedHorse && (
         <HorsePerformanceModal
           horseId={selectedHorse.id}

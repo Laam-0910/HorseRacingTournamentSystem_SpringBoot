@@ -67,6 +67,13 @@ public class RegistrationService {
 
     @Transactional
     public HorseRaceMeetingRegistrationDTO registerHorse(Integer meetingId, Integer horseId) {
+        Horse horse = horseRepository.findById(horseId)
+                .orElseThrow(() -> new IllegalArgumentException("Horse not found"));
+
+        if ("RETIRED".equalsIgnoreCase(horse.getStatus())) {
+            throw new IllegalArgumentException("Retired horses cannot be registered for race meetings");
+        }
+
         if (horseRegRepository.findByRaceMeetingIdAndHorseId(meetingId, horseId).isPresent()) {
             throw new IllegalArgumentException("Horse is already registered for this meeting");
         }

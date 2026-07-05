@@ -236,7 +236,7 @@ public class JockeyOwnerDashboardService {
             List<HorseDTO> hList = new ArrayList<>();
             for (HorseRaceMeetingRegistration reg : approvedHorseRegs) {
                 horseRepository.findById(reg.getHorseId())
-                        .filter(h -> h.getOwnerId() != null && h.getOwnerId().equals(ownerId))
+                        .filter(h -> h.getOwnerId() != null && h.getOwnerId().equals(ownerId) && !"RETIRED".equalsIgnoreCase(h.getStatus()))
                         .ifPresent(h -> hList.add(horseMapper.toDTO(h, null)));
             }
             meetingHorses.put(meeting.getId(), hList);

@@ -32,6 +32,7 @@ interface Race {
   trackType: string;
   purse: number;
   maxEntries: number;
+  minEntries: number;
   youtubeLiveUrl?: string;
   raceMeetingName?: string;
 }
@@ -126,6 +127,7 @@ export default function Race() {
         registrationStartTime: regStartTime,
         registrationEndTime: regEndTime,
         distanceMeters: parseInt(distance),
+        minEntries: parseInt(minEntries),
         maxEntries: parseInt(maxEntries),
         purse: parseFloat(purse),
       });
@@ -153,6 +155,7 @@ export default function Race() {
     setEditDistance(race.distanceMeters.toString());
     setEditTrackType(race.trackType);
     setEditPurse(race.purse.toString());
+    setEditMinEntries(race.minEntries ? race.minEntries.toString() : "3");
     setEditMaxEntries(race.maxEntries.toString());
   };
 
@@ -185,6 +188,7 @@ export default function Race() {
         distanceMeters: parseInt(editDistance),
         trackType: editTrackType,
         purse: parseFloat(editPurse),
+        minEntries: parseInt(editMinEntries),
         maxEntries: parseInt(editMaxEntries),
       });
       if (res.success) {
