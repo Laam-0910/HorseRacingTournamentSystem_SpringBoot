@@ -224,8 +224,15 @@ export default function RegistrationProcessing() {
                     <div style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Weight: {e.jockey?.weight} kg</div>
                   </td>
                   <td style={{ padding: "0.75rem 1rem" }}>
-                    <div style={{ fontSize: "12px", color: "#fff", fontWeight: "semibold" }}>{e.meeting?.name || `Race #${e.race?.id}`}</div>
-                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Distance: {e.race?.distanceMeters}m ({e.race?.trackType})</div>
+                    <div style={{ fontSize: "12px", color: "#fff", fontWeight: "semibold", display: "flex", alignItems: "center", gap: "0.375rem", flexWrap: "wrap" }}>
+                      <span>{e.meeting?.name || `Race #${e.race?.id}`}</span>
+                      {e.race?.classLevel && (
+                        <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#fbbf24", background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)", padding: "1px 5px", borderRadius: "3px" }}>
+                          {e.race.classLevel}
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "3px" }}>Distance: {e.race?.distanceMeters}m ({e.race?.trackType})</div>
                   </td>
                   <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{e.entry?.carriedWeight} kg</td>
                   <td style={{ padding: "0.75rem 1rem" }}>

@@ -10,12 +10,28 @@ app.json.ensure_ascii = False
 CORS(app)
 
 # ── CONFIG CHATBOT RAG / LLM ─────────────────────────────────────────────────
-# ⚠️ Thay đổi sang True và dán API key của bạn vào đây nếu muốn dùng Gemini API
-USE_GEMINI = False
-GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"
+import os, json
+USE_GEMINI = True
+GEMINI_API_KEY = "AQ.Ab8RN6IZfv4v5ic1ylYRrCy9Hl36wbt0g66fvdcBmuEMp8A0UQ"
+
+# Thử load động từ file cấu hình
+config_path = os.path.join(os.path.dirname(__file__), "gemini_config.json")
+gemini_api_keys = []
+if os.path.exists(config_path):
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
+            api_key = config.get("gemini_api_key", "").strip()
+            if api_key and not api_key.startswith("YOUR_") and not api_key.startswith("Điền_"):
+                GEMINI_API_KEY = api_key
+            gemini_api_keys = config.get("gemini_api_keys", [])
+    except Exception as e:
+        print(f"[Config Loader Error] {e}")
 
 rag_engine.use_gemini = USE_GEMINI
 rag_engine.gemini_api_key = GEMINI_API_KEY
+if gemini_api_keys:
+    rag_engine.gemini_api_keys = gemini_api_keys
 
 @app.route("/chat", methods=["POST"])
 def chatbot():
@@ -58,9 +74,27 @@ def chatbot():
         reply = f"EXCEPTION: {str(e)}"
         
     # Fallback dự phòng nếu LLM không trả về kết quả hoặc lỗi API
-    is_fallback = not reply or "Lỗi kết nối Gemini API" in reply or "Lỗi gọi Gemini API" in reply or "connection error" in reply.lower() or reply.startswith("EXCEPTION:")
+    is_fallback = (
+        not reply
+        or reply.startswith("EXCEPTION:")
+        or "Lỗi kết nối dịch vụ AI" in reply
+        or "Lỗi gọi dịch vụ AI" in reply
+        or "connection error" in reply.lower()
+        or "Lỗi: Chưa cấu hình" in reply
+        or "Chưa có API Key" in reply
+    )
     if is_fallback:
-        reply = chat(message, lang)
+        has_429 = "429" in reply or "hết lượt" in reply.lower()
+        if has_429:
+            if lang != "en":
+                if any(w in message.lower() for w in ["người yêu", "ny", "tình yêu", "crush", "bạn gái", "bạn trai"]):
+                    reply = "🐎 Ôi, câu hỏi về tình duyên làm tôi hồi hộp đến mức nghẹt thở luôn rồi (Lỗi 429 - Lượt yêu cầu quá nhanh)! Tìm người yêu cũng cần kiên nhẫn như khi huấn luyện chiến mã vậy, hãy đợi vài giây rồi thử hỏi lại tôi nhé! 😉"
+                else:
+                    reply = "🏇 Trợ lý AI đang chạy nước rút trên đường đua nên tạm thời hụt hơi (Lỗi 429 - Quá số lượt yêu cầu). Vui lòng đợi vài giây và gửi lại câu hỏi nhé!"
+            else:
+                reply = "🏇 The AI assistant is temporarily busy coordinating jockeys in the stable (Rate Limit 429). Please wait a few seconds and try again!"
+        else:
+            reply = chat(message, lang)
 
     # 5. Lưu tin nhắn vào lịch sử session memory
     memory.add_message(session_id, message, reply)

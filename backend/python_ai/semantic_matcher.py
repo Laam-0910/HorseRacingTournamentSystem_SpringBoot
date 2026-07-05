@@ -12,7 +12,7 @@ FAQ_DATA = [
             "how are horses classified", "what are race classes", "rules for race classes"
         ],
         "answer": (
-            "📌 **Quy định phân hạng của HKJC:**\n"
+            "📌 **Quy định phân hạng trong Hệ thống:**\n"
             "Các trận đấu được phân hạng dựa trên điểm Rating của ngựa:\n"
             "• **Class 1:** Rating >= 95 (Hạng cao nhất)\n"
             "• **Class 2:** Rating 80-95\n"
@@ -64,10 +64,10 @@ FAQ_DATA = [
             "tournament structure", "season scheduling"
         ],
         "answer": (
-            "📅 **Cấu trúc Giải đấu (HKJC Standard):**\n"
+            "📅 **Cấu trúc Giải đấu:**\n"
             "Giải đấu được tổ chức theo cấu trúc hình cây:\n"
             "• **Mùa giải (Season):** Kéo dài từ tháng 9 năm trước đến tháng 6 năm sau.\n"
-            "• **Hội đua (Race Meeting):** Tổ chức tại các địa điểm cụ thể (Sha Tin, Happy Valley...) gồm nhiều trận đua trong ngày.\n"
+            "• **Hội đua (Race Meeting):** Tổ chức tại các địa điểm cụ thể gồm nhiều trận đua trong ngày.\n"
             "• **Trận đua (Race):** Mỗi trận đấu phân lớp cụ thể (Class 1-5, khoảng cách, loại sân cỏ/cát)."
         )
     },
@@ -122,15 +122,23 @@ norms = np.linalg.norm(pca_matrix, axis=1, keepdims=True)
 norms[norms == 0] = 1.0
 normalized_pca_matrix = pca_matrix / norms
 
-def find_semantic_answer(user_query: str, threshold: float = 0.35) -> str:
+def find_semantic_answer(user_query: str, threshold: float = 0.80) -> str:
     """
     Sử dụng toán vector tích vô hướng (Dot Product) và PCA để tìm câu trả lời FAQ phù hợp.
+    Threshold cao (0.80) để tránh khớp sai các câu ngắn, tán gẫu không liên quan.
     """
     if not user_query.strip():
+        return None
+    
+    # Lọc các câu quá ngắn (dưới 3 từ) ra khỏi hệ thống FAQ để tránh khớp sai
+    words = user_query.strip().split()
+    if len(words) < 3:
         return None
 
     # 1. Chuyển đổi câu hỏi của user thành vector TF-IDF
     user_tfidf = vectorizer.transform([user_query]).toarray()
+    if np.sum(user_tfidf) == 0:
+        return None
     
     # 2. Chiếu vector qua không gian PCA đã huấn luyện
     user_pca = pca.transform(user_tfidf)

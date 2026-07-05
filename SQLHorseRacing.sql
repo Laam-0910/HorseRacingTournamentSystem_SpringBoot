@@ -136,6 +136,7 @@ CREATE TABLE Race (
     distance_meters         INT NULL,
     track_type              VARCHAR(20) NULL,
     purse                   DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+    min_entries             INT NOT NULL DEFAULT 3,
     max_entries             INT NOT NULL DEFAULT 14,
     steward_report          NVARCHAR(MAX) NULL,        -- Báo cáo/biên bản giám sát của Trọng tài sau trận
     youtube_live_url        VARCHAR(500) NULL,          -- Đường dẫn YouTube Livestream

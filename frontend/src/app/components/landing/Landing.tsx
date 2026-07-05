@@ -4,6 +4,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
 import { parseSafeDate } from "../../utils/dateTimeHelper";
+import { parseMarkdownToHtml } from "../../utils/markdownParser";
 
 
 // ─────────────────────────────────────────────
@@ -185,14 +186,14 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
       let charIdx = 0;
       const timer = setInterval(() => {
         if (charIdx < rawText.length) {
-          currentText += rawText[charIdx];
+          currentText += rawText.substring(charIdx, charIdx + 5);
           setMessages(prev => prev.map(m => m.id === botMsgId ? { ...m, text: currentText } : m));
-          charIdx++;
+          charIdx += 5;
         } else {
           clearInterval(timer);
           setWaiting(false);
         }
-      }, 10); // Very fast and smooth typing (10ms per character)
+      }, 10); // Very fast and smooth typing (5 characters every 10ms)
     } catch {
       setMessages(prev => prev.filter(m => m.type !== "typing").concat({ id: `b-${Date.now()}`, type: "bot", text: CHAT_LANG[lang].noconn }));
       setWaiting(false);
@@ -234,9 +235,35 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
 
           {/* Messages */}
           <div style={{ flex: 1, overflowY: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 8, background: "#1a1a1a" }}>
-            {messages.map(m => (
-              <div key={m.id} style={{ maxWidth: "86%", padding: "8px 12px", borderRadius: 10, fontSize: 13, lineHeight: 1.55, wordBreak: "break-word", whiteSpace: "pre-wrap", alignSelf: m.type === "user" ? "flex-end" : "flex-start", background: m.type === "user" ? "#C9A84C" : "#242424", color: m.type === "user" ? "#111" : (m.type === "typing" ? "#666" : "#ddd"), fontWeight: m.type === "user" ? 500 : 400, fontStyle: m.type === "typing" ? "italic" : "normal", border: m.type !== "user" ? "1px solid #2e2e2e" : "none" }}>{m.text}</div>
-            ))}
+            {messages.map(m => {
+              const isUser = m.type === "user";
+              const isTyping = m.type === "typing";
+              return (
+                <div
+                  key={m.id}
+                  style={{
+                    maxWidth: "86%",
+                    padding: "8px 12px",
+                    borderRadius: 10,
+                    fontSize: 13,
+                    lineHeight: 1.55,
+                    wordBreak: "break-word",
+                    alignSelf: isUser ? "flex-end" : "flex-start",
+                    background: isUser ? "#C9A84C" : "#242424",
+                    color: isUser ? "#111" : (isTyping ? "#666" : "#ddd"),
+                    fontWeight: isUser ? 500 : 400,
+                    fontStyle: isTyping ? "italic" : "normal",
+                    border: !isUser ? "1px solid #2e2e2e" : "none"
+                  }}
+                >
+                  {isUser || isTyping ? (
+                    m.text
+                  ) : (
+                    <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHtml(m.text) }} />
+                  )}
+                </div>
+              );
+            })}
             <div ref={messagesEndRef} />
           </div>
 

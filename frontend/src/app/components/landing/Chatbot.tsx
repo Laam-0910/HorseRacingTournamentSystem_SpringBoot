@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../../lib/api";
+import { parseMarkdownToHtml } from "../../utils/markdownParser";
 
 interface Message {
   sender: "user" | "bot";
@@ -20,6 +21,7 @@ export default function Chatbot() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [sessionId] = useState(() => "session-" + Math.random().toString(36).substr(2, 9));
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -40,7 +42,7 @@ export default function Chatbot() {
 
     try {
       // Calls Spring Boot proxy -> Python Chatbot App
-      const res = await api.post<any>("/ai/chat", { message: userMessage, lang: "vi" });
+      const res = await api.post<any>("/ai/chat", { message: userMessage, lang: "vi", sessionId });
       if (res.success && res.reply) {
         setMessages((prev) => [...prev, { sender: "bot", text: res.reply, isHtml: true }]);
       } else {
@@ -94,10 +96,10 @@ export default function Chatbot() {
                     : "bg-[#151310]/50 border-white/10 text-slate-100 rounded-bl-none overflow-x-auto"
                 }`}
               >
-                {m.isHtml ? (
+                {m.sender === "bot" ? (
                   <div
                     className="prose prose-invert max-w-none chatbot-response"
-                    dangerouslySetInnerHTML={{ __html: m.text }}
+                    dangerouslySetInnerHTML={{ __html: parseMarkdownToHtml(m.text) }}
                   />
                 ) : (
                   <p>{m.text}</p>

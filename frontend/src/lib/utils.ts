@@ -48,5 +48,11 @@ export function getYouTubeId(url: string): string | null {
 export function getYouTubeEmbedUrl(url: string): string | null {
   if (!url) return null;
   const id = getYouTubeId(url);
-  return id ? `https://www.youtube.com/embed/${id}` : url;
+  if (id) {
+    return `https://www.youtube.com/embed/${id}`;
+  }
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+  return null;
 }

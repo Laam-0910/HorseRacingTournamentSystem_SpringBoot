@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Fragment } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import DashboardLayout, { Icon } from "../layout/DashboardLayout";
@@ -6,6 +6,7 @@ import ProfileTab from "./components/ProfileTab";
 import ViewLive from "./components/ViewLive";
 import ProfileModal from "./components/ProfileModal";
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
+import { parseMarkdownToHtml } from "../../utils/markdownParser";
 
 type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "profile";
 
@@ -143,14 +144,14 @@ export default function Spectator() {
       let charIdx = 0;
       const timer = setInterval(() => {
         if (charIdx < rawText.length) {
-          currentText += rawText[charIdx];
+          currentText += rawText.substring(charIdx, charIdx + 5);
           setChatMessages(prev => prev.map(m => (m as any).id === botMsgId ? { ...m, text: currentText } : m));
-          charIdx++;
+          charIdx += 5;
         } else {
           clearInterval(timer);
           setChatLoading(false);
         }
-      }, 10); // mượt mà 10ms từng ký tự giống Landing
+      }, 10); // mượt mà 5 ký tự mỗi 10ms giống Landing
     } catch (err: any) {
       const errorReply: ChatMessage = {
         sender: "ai",
@@ -375,17 +376,104 @@ export default function Spectator() {
                   </tr>
                 </thead>
                 <tbody>
-                  {races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL").length === 0
-                    ? <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>{lang === "vi" ? "Chưa có trận đấu nào hoàn thành." : "No completed races yet."}</td></tr>
-                    : races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL").map((r: any, i: number) => (
-                      <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
-                        <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem", fontWeight: 700 }}>{r.classLevel ?? `Race #${r.id}`}</td>
-                        <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.75rem" }}>{r.distanceMeters}m</td>
-                        <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontSize: "0.75rem" }}>{r.trackType}</td>
-                        <td style={{ padding: "0.75rem 1rem" }}><span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,222,128,0.1)", color: "#4ade80" }}>{r.status}</span></td>
-                        <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.7rem" }}>{r.startTime}</td>
-                      </tr>
-                    ))}
+                  {races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL").length === 0 ? (
+                    <tr>
+                      <td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>
+                        {lang === "vi" ? "Chưa có trận đấu nào hoàn thành." : "No completed races yet."}
+                      </td>
+                    </tr>
+                  ) : (
+                    races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL").map((r: any) => {
+                      const isExpanded = expandedRaceId === r.id;
+                      const entries = raceDetails[r.id] || [];
+                      const loading = loadingDetails[r.id];
+                      
+                      // Sort entries by finalPosition ascending
+                      const sortedStandings = [...entries].sort((a, b) => {
+                        const posA = a.entry?.finalPosition ?? 999;
+                        const posB = b.entry?.finalPosition ?? 999;
+                        return posA - posB;
+                      });
+
+                      return (
+                        <Fragment key={r.id}>
+                          <tr 
+                            onClick={() => handleToggleRaceDetails(r.id)} 
+                            style={{ borderBottom: "1px solid rgba(42,40,37,0.5)", cursor: "pointer", background: isExpanded ? "rgba(255,255,255,0.02)" : "transparent" }}
+                            className="hover:bg-white/[0.01]"
+                          >
+                            <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem", fontWeight: 700 }}>
+                              <span style={{ marginRight: "0.5rem" }}>{isExpanded ? "▼" : "▶"}</span>
+                              {r.classLevel ?? `Race #${r.id}`}
+                            </td>
+                            <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.75rem" }}>{r.distanceMeters}m</td>
+                            <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontSize: "0.75rem" }}>{r.trackType}</td>
+                            <td style={{ padding: "0.75rem 1rem" }}>
+                              <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: r.status === "OFFICIAL" ? "rgba(52,211,153,0.1)" : "rgba(251,191,36,0.1)", color: r.status === "OFFICIAL" ? "#34d399" : "#fbbf24" }}>
+                                {r.status}
+                              </span>
+                            </td>
+                            <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.7rem" }}>{r.startTime}</td>
+                          </tr>
+                          {isExpanded && (
+                            <tr>
+                              <td colSpan={5} style={{ padding: "1.25rem", background: "rgba(0,0,0,0.2)", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
+                                {loading ? (
+                                  <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontFamily: "monospace" }}>
+                                    {lang === "vi" ? "Đang tải bảng kết quả về đích..." : "Loading finishing standings..."}
+                                  </div>
+                                ) : sortedStandings.length === 0 ? (
+                                  <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontStyle: "italic" }}>
+                                    {lang === "vi" ? "Chưa có kết quả chính thức nào được lưu cho trận này." : "No finishing results recorded for this race yet."}
+                                  </div>
+                                ) : (
+                                  <div style={{ overflowX: "auto" }}>
+                                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
+                                      <thead>
+                                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", color: "#c9a227", textAlign: "left" }}>
+                                          <th style={{ padding: "0.5rem" }}>Pos</th>
+                                          <th style={{ padding: "0.5rem" }}>Gate</th>
+                                          <th style={{ padding: "0.5rem" }}>Horse</th>
+                                          <th style={{ padding: "0.5rem" }}>Jockey</th>
+                                          <th style={{ padding: "0.5rem" }}>Owner</th>
+                                          <th style={{ padding: "0.5rem" }}>Finish Time</th>
+                                          <th style={{ padding: "0.5rem" }}>Prize</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {sortedStandings.map((e: any, idx: number) => {
+                                          const pos = e.entry?.finalPosition;
+                                          const isDQ = e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ";
+                                          
+                                          let posText = `${pos}th`;
+                                          if (pos === 1) posText = "🥇 1st";
+                                          else if (pos === 2) posText = "🥈 2nd";
+                                          else if (pos === 3) posText = "🥉 3rd";
+                                          else if (isDQ || !pos) posText = "❌ DQ";
+
+                                          return (
+                                            <tr key={idx} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)", background: pos === 1 ? "rgba(201,162,39,0.03)" : "transparent" }}>
+                                              <td style={{ padding: "0.5rem", fontWeight: "bold", color: pos <= 3 ? "#f4f2ec" : "#a0a0a0" }}>{posText}</td>
+                                              <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>#{e.entry?.gateNumber || "-"}</td>
+                                              <td style={{ padding: "0.5rem", fontWeight: "bold", color: "#fff" }}>{e.horse?.name}</td>
+                                              <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
+                                              <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{e.owner?.fullName || e.owner?.username}</td>
+                                              <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
+                                              <td style={{ padding: "0.5rem", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</td>
+                                            </tr>
+                                          );
+                                        })}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -489,10 +577,10 @@ export default function Spectator() {
                     background: "linear-gradient(45deg, #c9a227, #f3d06c)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent"
-                  }}>✦ Gemini HKJC Assistant</span>
+                  }}>{lang === "vi" ? "✦ Trợ lý ảo AI giải đấu" : "✦ Tournament AI Assistant"}</span>
                 </h4>
                 <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>
-                  {lang === "vi" ? "Trí tuệ nhân tạo phân tích phong độ và thống kê thời gian thực" : "Generative AI form analysis and real-time statistics"}
+                  {lang === "vi" ? "Trợ lý AI nội bộ phân tích phong độ và thống kê thời gian thực" : "Internal AI assistant for form analysis and real-time statistics"}
                 </p>
               </div>
             </div>
@@ -528,9 +616,9 @@ export default function Spectator() {
                         fontWeight: "bold",
                         letterSpacing: "0.5px"
                       }}>
-                        {isAI ? "✦ GEMINI HKJC" : "YOU"} · {msg.time}
+                        {isAI ? (lang === "vi" ? "✦ TRỢ LÝ AI HỆ THỐNG" : "✦ SYSTEM AI ASSISTANT") : "YOU"} · {msg.time}
                       </div>
-                      <div style={{
+                       <div style={{
                         padding: "1rem 1.25rem",
                         borderRadius: isAI ? "0 1.25rem 1.25rem 1.25rem" : "1.25rem 0 1.25rem 1.25rem",
                         background: isAI ? "rgba(255,255,255,0.03)" : "linear-gradient(135deg, #c9a227 0%, #a4811a 100%)",
@@ -538,10 +626,14 @@ export default function Spectator() {
                         color: isAI ? "#f4f2ec" : "#110f0e",
                         fontSize: "13.5px",
                         lineHeight: "1.6",
-                        whiteSpace: "pre-line",
+                        whiteSpace: isAI ? undefined : "pre-line",
                         boxShadow: isAI ? "none" : "0 4px 15px rgba(201,162,39,0.2)"
                       }}>
-                        {msg.text}
+                        {isAI ? (
+                          <div dangerouslySetInnerHTML={{ __html: parseMarkdownToHtml(msg.text) }} />
+                        ) : (
+                          msg.text
+                        )}
                       </div>
                     </div>
                   </div>
@@ -551,7 +643,7 @@ export default function Spectator() {
                 <div style={{ display: "flex", justifyContent: "flex-start" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem 1.25rem", borderRadius: "0 1.25rem 1.25rem 1.25rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c9a227", animation: "pulse 1.2s infinite alternate" }} />
-                    <span style={{ fontSize: "11px", color: "#888", fontFamily: "monospace" }}>Gemini is thinking...</span>
+                    <span style={{ fontSize: "11px", color: "#888", fontFamily: "monospace" }}>{lang === "vi" ? "Trợ lý AI đang trả lời..." : "AI Assistant is thinking..."}</span>
                   </div>
                 </div>
               )}
@@ -617,7 +709,7 @@ export default function Spectator() {
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 disabled={chatLoading}
-                placeholder={lang === "vi" ? "Hỏi Gemini về cuộc đua, ngựa, nài..." : "Ask Gemini about races, horses, jockeys..."}
+                placeholder={lang === "vi" ? "Hỏi Trợ lý AI về cuộc đua, ngựa, nài..." : "Ask AI Assistant about races, horses, jockeys..."}
                 style={{
                   flex: 1,
                   background: "rgba(255,255,255,0.03)",

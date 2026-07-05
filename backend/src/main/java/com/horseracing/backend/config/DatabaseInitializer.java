@@ -57,7 +57,22 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            System.out.println("Database columns and HorseRetirementRequest table verified and added successfully if missing.");
+            // Check and create ChatMessage table if missing
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ChatMessage') AND type = 'U') " +
+                "BEGIN " +
+                "    CREATE TABLE ChatMessage ( " +
+                "        id INT IDENTITY(1,1) PRIMARY KEY, " +
+                "        race_id INT NOT NULL, " +
+                "        username NVARCHAR(100) NOT NULL, " +
+                "        message_text NVARCHAR(MAX) NOT NULL, " +
+                "        sent_at DATETIME NOT NULL DEFAULT GETDATE(), " +
+                "        CONSTRAINT FK_ChatMessage_Race FOREIGN KEY (race_id) REFERENCES Race(id) ON DELETE CASCADE " +
+                "    ); " +
+                "END"
+            );
+
+            System.out.println("Database columns, ChatMessage table, and HorseRetirementRequest table verified and added successfully if missing.");
         } catch (Exception e) {
             System.err.println("Failed to update database schema: " + e.getMessage());
         }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../../lib/api";
+import { parseSafeDate } from "../../../utils/dateTimeHelper";
 
 interface RaceRecord {
   startTime: string;
@@ -54,13 +55,9 @@ function HorsePerformanceModal({
 
   const formatDate = (dStr: string) => {
     if (!dStr) return "—";
-    try {
-      const d = new Date(dStr);
-      if (isNaN(d.getTime())) return dStr;
-      return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-    } catch {
-      return dStr;
-    }
+    const d = parseSafeDate(dStr);
+    if (!d) return dStr;
+    return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
   };
 
   const positionBadge = (position: string) => {
