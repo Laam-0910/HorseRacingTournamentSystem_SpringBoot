@@ -17,6 +17,7 @@ public class HorseDTO {
     private String ownerName;       // Tên chủ ngựa hiển thị
     private String name;
     private String breed;
+    private String sex;
 
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "GMT+7")
     private Date dateOfBirth;

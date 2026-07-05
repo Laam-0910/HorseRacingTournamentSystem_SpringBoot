@@ -131,6 +131,7 @@ export default function Horses() {
   const [editDob, setEditDob] = useState("");
   const [editRating, setEditRating] = useState<number>(52);
   const [editStatus, setEditStatus] = useState("ACTIVE");
+  const [editSex, setEditSex] = useState("Gelding");
   const [editAvatar, setEditAvatar] = useState("");
   const [editDescription, setEditDescription] = useState("");
 
@@ -178,6 +179,7 @@ export default function Horses() {
     setEditingHorse(h);
     setEditName(h.name || "");
     setEditBreed(h.breed || "");
+    setEditSex(h.sex || "Gelding");
     setEditDob(h.dateOfBirth ? formatDateTime(h.dateOfBirth).split(" ")[0] : "");
     setEditRating(h.currentRating || 52);
     setEditStatus(h.status || "ACTIVE");
@@ -185,9 +187,49 @@ export default function Horses() {
     setEditDescription(h.description || "");
   };
 
+  const validateAgeAndSex = (dobStr: string, sexVal: string): boolean => {
+    if (!dobStr || !sexVal) return true;
+    const parts = dobStr.split("-");
+    if (parts.length !== 3) return true;
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const year = parseInt(parts[2], 10);
+    
+    const birthDate = new Date(year, month, day);
+    const today = new Date();
+    
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    if (age >= 4) {
+      if (sexVal === "Colt") {
+        alert("A Colt must be under 4 years old. For uncastrated male horses 4 years or older, please select 'Horse'.");
+        return false;
+      }
+      if (sexVal === "Filly") {
+        alert("A Filly must be under 4 years old. For female horses 4 years or older, please select 'Mare'.");
+        return false;
+      }
+    } else {
+      if (sexVal === "Horse") {
+        alert("A Horse (uncastrated male) must be 4 years or older. For uncastrated male horses under 4 years, please select 'Colt'.");
+        return false;
+      }
+      if (sexVal === "Mare") {
+        alert("A Mare must be 4 years or older. For female horses under 4 years, please select 'Filly'.");
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingHorse) return;
+    if (!validateAgeAndSex(editDob, editSex)) return;
     setError("");
     setSuccess("");
     try {
@@ -195,6 +237,7 @@ export default function Horses() {
       const body = {
         name: editName,
         breed: editBreed,
+        sex: editSex,
         dateOfBirth: formattedDob,
         currentRating: editRating,
         status: editStatus,
@@ -282,14 +325,14 @@ export default function Horses() {
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                {["Horse", "Breed", "Current Rating", "Owner ID", "Status", "Races Run", "Actions"].map((h, idx) => (
-                  <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 6 ? "right" : "left" }}>{h}</th>
+                {["Horse", "Breed", "Sex", "Current Rating", "Owner ID", "Status", "Races Run", "Actions"].map((h, idx) => (
+                  <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 7 ? "right" : "left" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5 text-sm">
               {loading ? (
-                <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading horses data...</td></tr>
+                <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading horses data...</td></tr>
               ) : filteredHorses.length > 0 ? (
                 filteredHorses.map((h) => {
                   let statusColor = "#a0a0a0";
@@ -311,6 +354,7 @@ export default function Horses() {
                         </div>
                       </td>
                       <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.8)" }}>{h.breed}</td>
+                      <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.8)" }}>{h.sex || "Gelding"}</td>
                       <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#fbbf24" }}>{h.currentRating}</td>
                       <td style={{ padding: "0.75rem 1.5rem", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>Owner #{h.ownerId}</td>
                       <td style={{ padding: "0.75rem 1.5rem" }}>
@@ -345,7 +389,7 @@ export default function Horses() {
             </div>
             <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
                 <div>
                   <label style={labelStyle}>Horse Name</label>
                   <input type="text" required value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} />
@@ -353,6 +397,16 @@ export default function Horses() {
                 <div>
                   <label style={labelStyle}>Breed</label>
                   <input type="text" required value={editBreed} onChange={e => setEditBreed(e.target.value)} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>Gender / Sex</label>
+                  <select value={editSex} onChange={e => setEditSex(e.target.value)} style={selectStyle}>
+                    <option value="Gelding">Gelding</option>
+                    <option value="Colt">Colt</option>
+                    <option value="Horse">Horse</option>
+                    <option value="Filly">Filly</option>
+                    <option value="Mare">Mare</option>
+                  </select>
                 </div>
               </div>
 

@@ -31,6 +31,7 @@ interface Race {
   distanceMeters: number;
   trackType: string;
   purse: number;
+  minEntries?: number;
   maxEntries: number;
   youtubeLiveUrl?: string;
   raceMeetingName?: string;
@@ -126,6 +127,7 @@ export default function Race() {
         registrationStartTime: regStartTime,
         registrationEndTime: regEndTime,
         distanceMeters: parseInt(distance),
+        minEntries: parseInt(minEntries),
         maxEntries: parseInt(maxEntries),
         purse: parseFloat(purse),
       });
@@ -153,6 +155,7 @@ export default function Race() {
     setEditDistance(race.distanceMeters.toString());
     setEditTrackType(race.trackType);
     setEditPurse(race.purse.toString());
+    setEditMinEntries((race.minEntries || 3).toString());
     setEditMaxEntries(race.maxEntries.toString());
   };
 
@@ -185,6 +188,7 @@ export default function Race() {
         distanceMeters: parseInt(editDistance),
         trackType: editTrackType,
         purse: parseFloat(editPurse),
+        minEntries: parseInt(editMinEntries),
         maxEntries: parseInt(editMaxEntries),
       });
       if (res.success) {
@@ -237,12 +241,12 @@ export default function Race() {
     try {
       const res = await api.post<any>(`/admin/races/${raceId}/referee`, { refereeId: parseInt(refId) });
       if (res.success) {
-        setSuccess("Referee assigned successfully.");
+        alert("Referee assigned successfully.");
         setAssignRefSelection(prev => ({ ...prev, [raceId]: "" }));
         fetchData();
       }
     } catch (err: any) {
-      setError(err.message || "Failed to assign referee.");
+      alert(err.message || "Failed to assign referee.");
     }
   };
 
@@ -252,11 +256,11 @@ export default function Race() {
     try {
       const res = await api.post<any>(`/admin/races/${raceId}/referee/remove`, { refereeId: refId });
       if (res.success) {
-        setSuccess("Referee removed.");
+        alert("Referee removed successfully.");
         fetchData();
       }
     } catch (err: any) {
-      setError(err.message || "Failed to remove referee.");
+      alert(err.message || "Failed to remove referee.");
     }
   };
 

@@ -30,6 +30,9 @@ public class Horse implements Serializable {
     @Column(name = "breed")
     private String breed;
 
+    @Column(name = "sex")
+    private String sex;
+
     @Column(name = "date_of_birth")
     private Date dateOfBirth;
 

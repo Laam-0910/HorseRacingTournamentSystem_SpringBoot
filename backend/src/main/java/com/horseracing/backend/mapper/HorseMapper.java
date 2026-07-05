@@ -17,6 +17,7 @@ public class HorseMapper {
                 .ownerName(ownerName != null ? ownerName.trim() : null)
                 .name(horse.getName() != null ? horse.getName().trim() : null)
                 .breed(horse.getBreed() != null ? horse.getBreed().trim() : null)
+                .sex(horse.getSex() != null ? horse.getSex().trim() : null)
                 .dateOfBirth(horse.getDateOfBirth())
                 .status(horse.getStatus() != null ? horse.getStatus().trim() : null)
                 .currentRating(horse.getCurrentRating())
@@ -40,6 +41,7 @@ public class HorseMapper {
         horse.setOwnerId(dto.getOwnerId());
         horse.setName(dto.getName() != null ? dto.getName().trim() : null);
         horse.setBreed(dto.getBreed() != null ? dto.getBreed().trim() : null);
+        horse.setSex(dto.getSex() != null ? dto.getSex().trim() : null);
         horse.setDateOfBirth(dto.getDateOfBirth());
         horse.setStatus(dto.getStatus() != null ? dto.getStatus().trim() : null);
         horse.setCurrentRating(dto.getCurrentRating());
