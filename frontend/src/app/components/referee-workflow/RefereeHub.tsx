@@ -511,6 +511,7 @@ export default function RefereeHub() {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportModalContent, setReportModalContent] = useState("");
   const [reportModalRaceId, setReportModalRaceId] = useState("");
+  const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
   const fetchDashboard = () => {
     if (!user) return;
@@ -667,30 +668,39 @@ export default function RefereeHub() {
   };
 
   const handleStopEntry = async (entryId: number) => {
+    setActionLoadingId(entryId);
     try {
       await api.post(`/referee/entry/${entryId}/stop`);
       refreshSupervisionData();
     } catch (err: any) {
       alert(err.response?.data?.error || err.message || "Failed to stop horse.");
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
   const handleResumeEntry = async (entryId: number) => {
+    setActionLoadingId(entryId);
     try {
       await api.post(`/referee/entry/${entryId}/resume`);
       refreshSupervisionData();
     } catch (err: any) {
       alert(err.response?.data?.error || err.message || "Failed to resume horse.");
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
   const handleDisqualifyEntry = async (entryId: number) => {
     if (!window.confirm("Are you sure you want to disqualify this horse?")) return;
+    setActionLoadingId(entryId);
     try {
       await api.post(`/referee/entry/${entryId}/disqualify`);
       refreshSupervisionData();
     } catch (err: any) {
       alert(err.response?.data?.error || err.message || "Failed to disqualify horse.");
+    } finally {
+      setActionLoadingId(null);
     }
   };
 
@@ -1074,12 +1084,60 @@ export default function RefereeHub() {
                       <td style={{ padding: "1rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
                         <button onClick={() => { setViolRunner(`${item.horse.id}-${item.jockey.id}`); setShowViolModal(true); }} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>Report</button>
                         {item.entry.status === "RUNNING" && (
-                          <button onClick={() => handleStopEntry(item.entry.id)} style={{ padding: "0.2rem 0.5rem", background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "0.25rem", color: "#f59e0b", cursor: "pointer", fontSize: "11px", fontWeight: "bold" }}>Stop</button>
+                          <button 
+                            onClick={() => handleStopEntry(item.entry.id)} 
+                            disabled={actionLoadingId !== null}
+                            style={{ 
+                              padding: "0.2rem 0.5rem", 
+                              background: "rgba(245,158,11,0.15)", 
+                              border: "1px solid rgba(245,158,11,0.3)", 
+                              borderRadius: "0.25rem", 
+                              color: "#f59e0b", 
+                              cursor: actionLoadingId !== null ? "not-allowed" : "pointer", 
+                              opacity: actionLoadingId !== null ? 0.5 : 1,
+                              fontSize: "11px", 
+                              fontWeight: "bold" 
+                            }}
+                          >
+                            Stop
+                          </button>
                         )}
                         {item.entry.status === "STOPPED" && (
                           <>
-                            <button onClick={() => handleResumeEntry(item.entry.id)} style={{ padding: "0.2rem 0.5rem", background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "0.25rem", color: "#10b981", cursor: "pointer", fontSize: "11px", fontWeight: "bold" }}>Resume</button>
-                            <button onClick={() => handleDisqualifyEntry(item.entry.id)} style={{ padding: "0.2rem 0.5rem", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "0.25rem", color: "#ef4444", cursor: "pointer", fontSize: "11px", fontWeight: "bold" }}>DQ</button>
+                            <button 
+                              onClick={() => handleResumeEntry(item.entry.id)} 
+                              disabled={actionLoadingId !== null}
+                              style={{ 
+                                padding: "0.2rem 0.5rem", 
+                                background: "rgba(16,185,129,0.15)", 
+                                border: "1px solid rgba(16,185,129,0.3)", 
+                                borderRadius: "0.25rem", 
+                                color: "#10b981", 
+                                cursor: actionLoadingId !== null ? "not-allowed" : "pointer", 
+                                opacity: actionLoadingId !== null ? 0.5 : 1,
+                                fontSize: "11px", 
+                                fontWeight: "bold" 
+                              }}
+                            >
+                              Resume
+                            </button>
+                            <button 
+                              onClick={() => handleDisqualifyEntry(item.entry.id)} 
+                              disabled={actionLoadingId !== null}
+                              style={{ 
+                                padding: "0.2rem 0.5rem", 
+                                background: "rgba(239,68,68,0.15)", 
+                                border: "1px solid rgba(239,68,68,0.3)", 
+                                borderRadius: "0.25rem", 
+                                color: "#ef4444", 
+                                cursor: actionLoadingId !== null ? "not-allowed" : "pointer", 
+                                opacity: actionLoadingId !== null ? 0.5 : 1,
+                                fontSize: "11px", 
+                                fontWeight: "bold" 
+                              }}
+                            >
+                              DQ
+                            </button>
                           </>
                         )}
                       </td>

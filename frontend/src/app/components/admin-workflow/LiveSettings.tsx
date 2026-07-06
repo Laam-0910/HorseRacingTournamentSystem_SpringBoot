@@ -60,7 +60,12 @@ export default function LiveSettings() {
   const handleSave = async (raceId: number) => {
     setError("");
     setSuccess("");
-    const url = youtubeUrls[raceId] || "";
+    const url = (youtubeUrls[raceId] || "").trim();
+
+    if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+      setError("URL must start with http:// or https://");
+      return;
+    }
 
     try {
       await api.post(`/admin/races/${raceId}/live`, { youtubeLiveUrl: url });
