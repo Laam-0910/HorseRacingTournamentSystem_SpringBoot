@@ -53,6 +53,7 @@ public class HorseService {
     @Transactional
     public HorseDTO registerHorse(HorseDTO dto) {
         validateHorseAgeAndSex(dto.getDateOfBirth(), dto.getSex());
+        validateAvatarSize(dto.getAvatar());
         Horse horse = horseMapper.toEntity(dto);
         horse.setStatus("PENDING"); // Ngựa mới đăng ký ở trạng thái PENDING
         horse.setCurrentRating(52);  // Điểm rating khởi điểm
@@ -85,6 +86,7 @@ public class HorseService {
     @Transactional
     public HorseDTO updateHorse(Integer id, HorseDTO dto, Integer userId, Integer roleId) {
         validateHorseAgeAndSex(dto.getDateOfBirth(), dto.getSex());
+        validateAvatarSize(dto.getAvatar());
         Horse horse = horseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Horse not found"));
 
@@ -138,6 +140,12 @@ public class HorseService {
             if ("Mare".equalsIgnoreCase(sex)) {
                 throw new IllegalArgumentException("A Mare must be 4 years or older. For female horses under 4 years, please select 'Filly'.");
             }
+        }
+    }
+
+    private void validateAvatarSize(String avatar) {
+        if (avatar != null && avatar.length() > 2097152) {
+            throw new IllegalArgumentException("Avatar image size exceeds 1.5MB limit");
         }
     }
 }

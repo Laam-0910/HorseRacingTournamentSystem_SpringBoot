@@ -253,10 +253,16 @@ export default function Race() {
   };
 
   const handleGoLive = async (raceId: number) => {
-    const url = liveUrls[raceId];
+    const url = (liveUrls[raceId] || "").trim();
     if (!url) return;
     setError("");
     setSuccess("");
+
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      setError("URL must start with http:// or https://");
+      return;
+    }
+
     try {
       const res = await api.post<any>(`/admin/races/${raceId}/live`, { youtubeLiveUrl: url });
       if (res.success) {

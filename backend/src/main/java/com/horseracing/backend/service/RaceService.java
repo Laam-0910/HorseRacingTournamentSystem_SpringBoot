@@ -62,6 +62,7 @@ public class RaceService {
             throw new IllegalArgumentException("Start time is required");
         }
         validateRaceTimeMatchesMeeting(dto.getStartTime(), dto.getRaceMeetingId());
+        validateLiveUrl(dto.getYoutubeLiveUrl());
 
         Race race = raceMapper.toEntity(dto);
 
@@ -145,7 +146,9 @@ public class RaceService {
             race.setMaxEntries(Integer.parseInt(String.valueOf(body.get("maxEntries"))));
         }
         if (body.get("youtubeLiveUrl") != null) {
-            race.setYoutubeLiveUrl((String) body.get("youtubeLiveUrl"));
+            String liveUrl = (String) body.get("youtubeLiveUrl");
+            validateLiveUrl(liveUrl);
+            race.setYoutubeLiveUrl(liveUrl);
         }
         if (body.containsKey("stewardReport")) {
             race.setStewardReport((String) body.get("stewardReport"));
@@ -278,6 +281,15 @@ public class RaceService {
                 java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd-MM-yyyy");
                 throw new IllegalArgumentException("Race start time must be on the same date as the selected Race Meeting (" 
                         + sdf.format(meeting.getStartDate()) + ")");
+            }
+        }
+    }
+
+    private void validateLiveUrl(String url) {
+        if (url != null && !url.trim().isEmpty()) {
+            String trimmed = url.trim();
+            if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+                throw new IllegalArgumentException("Invalid livestream URL. It must start with http:// or https://");
             }
         }
     }
