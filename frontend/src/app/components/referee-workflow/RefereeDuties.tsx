@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
+import { formatDateTime } from "../../utils/dateTimeHelper";
 
 const statusLabels: Record<string, Record<string, string>> = {
   SCHEDULED:          { vi: "Lịch trình", en: "Scheduled", zh: "已排程", ja: "予定" },
@@ -134,7 +135,7 @@ export default function RefereeDuties() {
                   onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
                 >
                   <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.8rem", color: "#f4f2ec" }}>
-                    {race.startTime ?? item.startTime ?? "—"}
+                    {formatDateTime(race.startTime ?? item.startTime) || "—"}
                   </td>
                   <td style={{ padding: "1rem" }}>
                     <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{meeting.name ?? item.meetingName ?? "—"}</div>

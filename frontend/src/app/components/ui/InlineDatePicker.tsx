@@ -124,9 +124,55 @@ export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM
           {/* Month navigation */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
             <button type="button" onClick={prevMonth} style={{ background: "none", border: "none", color: "#c9a227", cursor: "pointer", fontSize: "1rem", padding: "0.125rem 0.375rem" }}>‹</button>
-            <span style={{ color: "#f4f2ec", fontFamily: "monospace", fontSize: "0.8rem", fontWeight: 700 }}>
-              {MONTHS[view.getMonth()]} {view.getFullYear()}
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <select
+                value={view.getMonth()}
+                onChange={(e) => setView(new Date(view.getFullYear(), parseInt(e.target.value), 1))}
+                style={{
+                  background: "transparent",
+                  color: "#f4f2ec",
+                  fontWeight: 700,
+                  fontFamily: "monospace",
+                  border: "1px solid rgba(201,162,39,0.25)",
+                  borderRadius: "4px",
+                  padding: "2px 4px",
+                  outline: "none",
+                  cursor: "pointer",
+                  fontSize: "0.75rem",
+                  textTransform: "uppercase",
+                  colorScheme: "dark",
+                }}
+              >
+                {MONTHS.map((m, idx) => (
+                  <option key={m} value={idx} style={{ background: "#1a1c24", color: "#f4f2ec" }}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={view.getFullYear()}
+                onChange={(e) => setView(new Date(parseInt(e.target.value), view.getMonth(), 1))}
+                style={{
+                  background: "transparent",
+                  color: "#f4f2ec",
+                  fontWeight: 700,
+                  fontFamily: "monospace",
+                  border: "1px solid rgba(201,162,39,0.25)",
+                  borderRadius: "4px",
+                  padding: "2px 4px",
+                  outline: "none",
+                  cursor: "pointer",
+                  fontSize: "0.75rem",
+                  colorScheme: "dark",
+                }}
+              >
+                {Array.from({ length: 70 }, (_, i) => new Date().getFullYear() - 50 + i).map(yr => (
+                  <option key={yr} value={yr} style={{ background: "#1a1c24", color: "#f4f2ec" }}>
+                    {yr}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button type="button" onClick={nextMonth} style={{ background: "none", border: "none", color: "#c9a227", cursor: "pointer", fontSize: "1rem", padding: "0.125rem 0.375rem" }}>›</button>
           </div>
 
