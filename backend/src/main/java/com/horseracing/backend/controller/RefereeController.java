@@ -101,4 +101,34 @@ public class RefereeController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
+
+    @PostMapping("/entry/{entryId}/stop")
+    public ResponseEntity<?> stopEntry(@PathVariable Integer entryId) {
+        try {
+            refereeService.stopEntry(entryId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Horse has been stopped."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/entry/{entryId}/resume")
+    public ResponseEntity<?> resumeEntry(@PathVariable Integer entryId) {
+        try {
+            refereeService.resumeEntry(entryId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Horse has resumed running."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/entry/{entryId}/disqualify")
+    public ResponseEntity<?> disqualifyEntry(@PathVariable Integer entryId) {
+        try {
+            refereeService.disqualifyEntry(entryId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Horse has been disqualified."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
 }

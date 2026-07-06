@@ -356,4 +356,46 @@ public class RefereeService {
             }
         }
     }
+
+    @Transactional
+    public void stopEntry(Integer entryId) {
+        RaceEntry entry = raceEntryRepository.findById(entryId)
+                .orElseThrow(() -> new IllegalArgumentException("Race entry not found"));
+        if (!"APPROVED".equalsIgnoreCase(entry.getStatus()) && !"RUNNING".equalsIgnoreCase(entry.getStatus())) {
+            throw new IllegalStateException("Entry must be APPROVED or RUNNING to stop");
+        }
+        entry.setStatus("STOPPED");
+        raceEntryRepository.save(entry);
+    }
+
+    @Transactional
+    public void resumeEntry(Integer entryId) {
+        RaceEntry entry = raceEntryRepository.findById(entryId)
+                .orElseThrow(() -> new IllegalArgumentException("Race entry not found"));
+        if (!"STOPPED".equalsIgnoreCase(entry.getStatus())) {
+            throw new IllegalStateException("Entry must be STOPPED to resume");
+        }
+        entry.setStatus("RUNNING");
+        raceEntryRepository.save(entry);
+    }
+
+    @Transactional
+    public void disqualifyEntry(Integer entryId) {
+        RaceEntry entry = raceEntryRepository.findById(entryId)
+                .orElseThrow(() -> new IllegalArgumentException("Race entry not found"));
+        entry.setStatus("DISQUALIFIED");
+        entry.setFinalPosition(null);
+        entry.setFinishTime("DQ");
+        entry.setRatingAdjustment(-2);
+        raceEntryRepository.save(entry);
+
+        // Update Horse rating (-2)
+        Optional<Horse> horseOpt = horseRepository.findById(entry.getHorseId());
+        if (horseOpt.isPresent()) {
+            Horse horse = horseOpt.get();
+            int curRating = horse.getCurrentRating() != null ? horse.getCurrentRating() : 52;
+            horse.setCurrentRating(Math.max(0, curRating - 2));
+            horseRepository.save(horse);
+        }
+    }
 }

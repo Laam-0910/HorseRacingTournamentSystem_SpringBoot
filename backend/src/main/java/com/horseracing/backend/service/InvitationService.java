@@ -54,6 +54,8 @@ public class InvitationService {
         java.util.Map<Integer, com.horseracing.backend.entity.RaceMeeting> meetingMap = raceMeetingRepository.findAll().stream()
                 .collect(Collectors.toMap(com.horseracing.backend.entity.RaceMeeting::getId, m -> m));
 
+        java.util.List<RaceEntry> allEntries = raceEntryRepository.findAll();
+
         return invitations.stream()
                 .map(i -> {
                     RaceInvitationDTO dto = invitationMapper.toDTO(i, 
@@ -71,6 +73,18 @@ public class InvitationService {
                             dto.setVenue(meeting.getVenue());
                         }
                     }
+
+                    // Match with a RaceEntry
+                    Optional<RaceEntry> matchingEntry = allEntries.stream()
+                            .filter(e -> e.getRaceId().equals(i.getRaceId()) 
+                                      && e.getHorseId().equals(i.getHorseId()) 
+                                      && e.getJockeyId().equals(i.getJockeyId()))
+                            .findFirst();
+                    if (matchingEntry.isPresent()) {
+                        dto.setEntryId(matchingEntry.get().getId());
+                        dto.setEntryStatus(matchingEntry.get().getStatus());
+                    }
+                    
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -177,6 +191,17 @@ public class InvitationService {
                 }
             }
         }
+    }
+
+    @Transactional
+    public void resubmitRaceEntry(Integer entryId) {
+        RaceEntry entry = raceEntryRepository.findById(entryId)
+                .orElseThrow(() -> new IllegalArgumentException("Race entry not found"));
+        if (!"REJECTED".equalsIgnoreCase(entry.getStatus())) {
+            throw new IllegalArgumentException("Only rejected entries can be resubmitted");
+        }
+        entry.setStatus("PENDING_ADMIN");
+        raceEntryRepository.save(entry);
     }
 
     @Transactional

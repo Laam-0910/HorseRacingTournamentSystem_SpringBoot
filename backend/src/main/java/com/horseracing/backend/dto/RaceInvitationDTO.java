@@ -23,4 +23,6 @@ public class RaceInvitationDTO {
     private String startTime;       // Thời gian bắt đầu trận đấu bổ trợ
     private String classLevel;      // Hạng đấu bổ trợ
     private String venue;           // Địa điểm thi đấu bổ trợ
+    private Integer entryId;        // ID của đăng ký đua tương ứng
+    private String entryStatus;     // Trạng thái của đăng ký đua tương ứng
 }
