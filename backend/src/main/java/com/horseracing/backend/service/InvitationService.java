@@ -200,6 +200,22 @@ public class InvitationService {
         if (!"REJECTED".equalsIgnoreCase(entry.getStatus())) {
             throw new IllegalArgumentException("Only rejected entries can be resubmitted");
         }
+
+        com.horseracing.backend.entity.Race race = raceRepository.findById(entry.getRaceId())
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+
+        if (!"DECLARATION_OPEN".equalsIgnoreCase(race.getStatus())) {
+            throw new IllegalStateException("REGISTRATION_CLOSED");
+        }
+
+        java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+        if (race.getRegistrationStartTime() != null && now.before(race.getRegistrationStartTime())) {
+            throw new IllegalStateException("REGISTRATION_NOT_STARTED");
+        }
+        if (race.getRegistrationEndTime() != null && now.after(race.getRegistrationEndTime())) {
+            throw new IllegalStateException("REGISTRATION_CLOSED");
+        }
+
         entry.setStatus("PENDING_ADMIN");
         raceEntryRepository.save(entry);
     }

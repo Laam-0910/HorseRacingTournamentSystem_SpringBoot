@@ -1182,12 +1182,26 @@ export default function HorseOwner() {
   };
 
   const handleResubmitEntry = async (entryId: number) => {
+    const lang = localStorage.getItem("app-lang") || "vi";
     try {
       setErrorMsg(""); setSuccessMsg("");
       await api.post(`/invitations/entry/${entryId}/resubmit`);
-      setSuccessMsg("Successfully resubmitted race entry.");
+      setSuccessMsg(lang === "vi" ? "Gửi lại đăng ký chạy thành công." : "Successfully resubmitted race entry.");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to resubmit race entry."); }
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || err.message || "";
+      if (errMsg.includes("REGISTRATION_CLOSED")) {
+        setErrorMsg(lang === "vi" 
+          ? "Hạn đăng ký cho trận đấu này đã kết thúc, không thể nộp lại đăng ký." 
+          : "Registration period for this race has closed.");
+      } else if (errMsg.includes("REGISTRATION_NOT_STARTED")) {
+        setErrorMsg(lang === "vi" 
+          ? "Thời gian đăng ký cho trận đấu này chưa bắt đầu." 
+          : "Registration period for this race has not started yet.");
+      } else {
+        setErrorMsg(err.message || (lang === "vi" ? "Không thể gửi lại đăng ký chạy." : "Failed to resubmit race entry."));
+      }
+    }
   };
 
   const totalEarnings = results.reduce((sum: number, r: any) => sum + (r.prizeMoney ?? r.prizeAmount ?? 0), 0);
