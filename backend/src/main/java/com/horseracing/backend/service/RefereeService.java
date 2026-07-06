@@ -105,6 +105,15 @@ public class RefereeService {
         }
         race.setStatus("RUNNING");
         raceRepository.save(race);
+
+        // Transition all APPROVED entries of this race to RUNNING
+        List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
+        for (RaceEntry entry : entries) {
+            if ("APPROVED".equalsIgnoreCase(entry.getStatus())) {
+                entry.setStatus("RUNNING");
+                raceEntryRepository.save(entry);
+            }
+        }
     }
 
     @Transactional
