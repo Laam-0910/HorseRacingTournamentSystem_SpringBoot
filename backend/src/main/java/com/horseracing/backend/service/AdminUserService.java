@@ -509,6 +509,17 @@ public class AdminUserService {
             }
         }
 
+        // Validate unique gate numbers for all APPROVED entries in this race
+        List<RaceEntry> currentEntries = raceEntryRepository.findByRaceId(raceId);
+        java.util.Set<Integer> assignedGates = new java.util.HashSet<>();
+        for (RaceEntry entry : currentEntries) {
+            if ("APPROVED".equalsIgnoreCase(entry.getStatus()) && entry.getGateNumber() != null && entry.getGateNumber() > 0) {
+                if (!assignedGates.add(entry.getGateNumber())) {
+                    throw new IllegalArgumentException("DUPLICATE_GATE_NUMBER");
+                }
+            }
+        }
+
         raceRepository.findById(raceId).ifPresent(race -> {
             if ("DECLARATION_CLOSED".equals(race.getStatus())) {
                 List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);

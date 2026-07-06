@@ -10,6 +10,7 @@ export default function Racecard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const lang = localStorage.getItem("app-lang") || "vi";
 
   const fetchMeetings = async () => {
     setLoading(true);
@@ -145,11 +146,18 @@ export default function Racecard() {
       }));
       const res = await api.post<any>(`/admin/races/${selectedRaceId}/racecard`, payload);
       if (res.success) {
-        setSuccess("Racecard saved successfully.");
+        setSuccess(lang === "vi" ? "Lưu thông tin Racecard thành công." : "Racecard saved successfully.");
         fetchEntries(selectedRaceId);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to save racecard.");
+      const errMsg = err.response?.data?.error || err.message || "";
+      if (errMsg.includes("DUPLICATE_GATE_NUMBER")) {
+        setError(lang === "vi" 
+          ? "Cổng xuất phát không được trùng nhau giữa các ngựa hoạt động trong cùng một trận đấu." 
+          : "Gate numbers must be unique within the same race.");
+      } else {
+        setError(err.message || (lang === "vi" ? "Không thể lưu thông tin Racecard." : "Failed to save racecard."));
+      }
     }
   };
 
