@@ -7,38 +7,35 @@
  */
 export const parseSafeDate = (str: string): Date | null => {
   if (!str) return null;
+  const cleanStr = str.trim();
+  
+  // Try standard parsing first (handles ISO 8601 like yyyy-MM-ddTHH:mm:ss.sssZ, etc.)
+  const parsed = new Date(cleanStr);
+  if (!isNaN(parsed.getTime())) {
+    return parsed;
+  }
   
   // Try matching dd-MM-yyyy HH:mm:ss or dd-MM-yyyy HH:mm
-  const dmyMatch = str.match(/^(\d{2})[-/](\d{2})[-/](\d{4})[ T](\d{2})[-:](\d{2})(?:[-:](\d{2}))?/);
+  const dmyMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})[ T](\d{2})[-:](\d{2})(?:[-:](\d{2}))?/);
   if (dmyMatch) {
     const [_, day, month, year, hours, minutes, seconds] = dmyMatch;
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), seconds ? parseInt(seconds) : 0);
   }
 
-  // Try matching yyyy-MM-dd HH:mm:ss or yyyy-MM-ddTHH:mm:ss
-  const ymdMatch = str.match(/^(\d{4})[-/](\d{2})[-/](\d{2})[ T](\d{2})[-:](\d{2})(?:[-:](\d{2}))?/);
-  if (ymdMatch) {
-    const [_, year, month, day, hours, minutes, seconds] = ymdMatch;
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), seconds ? parseInt(seconds) : 0);
-  }
-
   // Try matching dd-MM-yyyy or dd/MM/yyyy (date only)
-  const dmyDateMatch = str.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+  const dmyDateMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
   if (dmyDateMatch) {
     const [_, day, month, year] = dmyDateMatch;
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   }
 
-  // Try matching yyyy-MM-dd or yyyy/MM/dd (date only)
-  const ymdDateMatch = str.match(/^(\d{4})[-/](\d{2})[-/](\d{2})$/);
-  if (ymdDateMatch) {
-    const [_, year, month, day] = ymdDateMatch;
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  // Fallback for custom yyyy-MM-dd HH:mm:ss if standard parser failed
+  if (cleanStr.includes(" ")) {
+    const spaceD = new Date(cleanStr.replace(" ", "T"));
+    if (!isNaN(spaceD.getTime())) return spaceD;
   }
 
-  // Fallback
-  const d = new Date(str.replace(" ", "T"));
-  return isNaN(d.getTime()) ? null : d;
+  return null;
 };
 
 /**
@@ -103,4 +100,13 @@ export const formatForApi = (htmlInputStr: string): string => {
   const d = new Date(htmlInputStr.replace(" ", "T"));
   if (isNaN(d.getTime())) return htmlInputStr;
   return formatDateTime(d);
+};
+
+/**
+ * Formats class level string to "Class X" if it is a number
+ */
+export const formatClassLevel = (level: string | null | undefined): string => {
+  if (!level) return "—";
+  const trimmed = level.trim();
+  return /^\d+$/.test(trimmed) ? `Class ${trimmed}` : trimmed;
 };

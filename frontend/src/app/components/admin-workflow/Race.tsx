@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
-import { formatDateTime, formatForDateTimeLocal, formatForApi } from "../../utils/dateTimeHelper";
+import { formatDateTime, formatForDateTimeLocal, formatForApi, formatClassLevel, parseSafeDate } from "../../utils/dateTimeHelper";
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 
 interface Meeting {
@@ -48,7 +48,7 @@ export default function Race() {
 
   // Create Form State
   const [meetingId, setMeetingId] = useState("");
-  const [classLevel, setClassLevel] = useState("1");
+  const [classLevel, setClassLevel] = useState("Class 1");
   const [trackType, setTrackType] = useState("Turf");
   const [startTime, setStartTime] = useState("");
   const [regStartTime, setRegStartTime] = useState("");
@@ -98,6 +98,23 @@ export default function Race() {
     fetchData();
   }, []);
 
+  const handleSelectMeeting = (idStr: string) => {
+    setMeetingId(idStr);
+    if (!idStr) {
+      setStartTime("");
+      return;
+    }
+    const meeting = meetings.find(m => m.id === parseInt(idStr));
+    if (meeting) {
+      const dt = parseSafeDate(meeting.startDate);
+      if (dt) {
+        const pad = (n: number) => String(n).padStart(2, "0");
+        const dateStr = `${pad(dt.getDate())}-${pad(dt.getMonth() + 1)}-${dt.getFullYear()}`;
+        setStartTime(`${dateStr} 13:00:00`);
+      }
+    }
+  };
+
   const handleCreateRace = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -116,6 +133,22 @@ export default function Race() {
     if (maxVal < minVal) {
       setError("Max entries must be greater than or equal to Min entries.");
       return;
+    }
+
+    const selectedMeeting = meetings.find(m => m.id === parseInt(meetingId));
+    if (selectedMeeting) {
+      const meetDate = parseSafeDate(selectedMeeting.startDate);
+      const raceDate = parseSafeDate(startTime);
+      if (meetDate && raceDate) {
+        if (meetDate.getFullYear() !== raceDate.getFullYear() ||
+            meetDate.getMonth() !== raceDate.getMonth() ||
+            meetDate.getDate() !== raceDate.getDate()) {
+          const pad = (n: number) => String(n).padStart(2, '0');
+          const formattedMeetDate = `${pad(meetDate.getDate())}-${pad(meetDate.getMonth() + 1)}-${meetDate.getFullYear()}`;
+          setError(`Race start time must be on the same date as the selected Race Meeting (${formattedMeetDate}).`);
+          return;
+        }
+      }
     }
 
     try {
@@ -178,6 +211,22 @@ export default function Race() {
     if (maxVal < minVal) {
       alert("Max entries must be greater than or equal to Min entries.");
       return;
+    }
+
+    const selectedMeeting = meetings.find(m => m.id === editingRace.raceMeetingId);
+    if (selectedMeeting) {
+      const meetDate = parseSafeDate(selectedMeeting.startDate);
+      const raceDate = parseSafeDate(editStartTime);
+      if (meetDate && raceDate) {
+        if (meetDate.getFullYear() !== raceDate.getFullYear() ||
+            meetDate.getMonth() !== raceDate.getMonth() ||
+            meetDate.getDate() !== raceDate.getDate()) {
+          const pad = (n: number) => String(n).padStart(2, '0');
+          const formattedMeetDate = `${pad(meetDate.getDate())}-${pad(meetDate.getMonth() + 1)}-${meetDate.getFullYear()}`;
+          alert(`Race start time must be on the same date as the selected Race Meeting (${formattedMeetDate}).`);
+          return;
+        }
+      }
     }
 
     try {
@@ -302,7 +351,7 @@ export default function Race() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem", marginBottom: "1.5rem" }}>
               <div style={{ gridColumn: "span 2" }}>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Select Race Meeting</label>
-                <select value={meetingId} onChange={e => setMeetingId(e.target.value)} required style={{ width: "100%", padding: "0.75rem", background: "#c9a22712", border: "1px solid #c9a22740", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.875rem", outline: "none" }}>
+                <select value={meetingId} onChange={e => handleSelectMeeting(e.target.value)} required style={{ width: "100%", padding: "0.75rem", background: "#c9a22712", border: "1px solid #c9a22740", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.875rem", outline: "none" }}>
                   <option value="" style={{ background: "#12141a", color: "#fff" }}>-- Choose Meeting --</option>
                   {meetings.map(m => (
                     <option key={m.id} value={m.id} style={{ background: "#12141a", color: "#fff" }}>{m.name}</option>
@@ -313,11 +362,11 @@ export default function Race() {
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Class Level</label>
                 <select value={classLevel} onChange={e => setClassLevel(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }}>
-                  <option value="1" style={{ background: "#12141a", color: "#fff" }}>Class 1 (Rating 95+)</option>
-                  <option value="2" style={{ background: "#12141a", color: "#fff" }}>Class 2 (Rating 80-94)</option>
-                  <option value="3" style={{ background: "#12141a", color: "#fff" }}>Class 3 (Rating 60-79)</option>
-                  <option value="4" style={{ background: "#12141a", color: "#fff" }}>Class 4 (Rating 40-59)</option>
-                  <option value="5" style={{ background: "#12141a", color: "#fff" }}>Class 5 (Rating 0-39)</option>
+                  <option value="Class 1" style={{ background: "#12141a", color: "#fff" }}>Class 1 (Rating 95+)</option>
+                  <option value="Class 2" style={{ background: "#12141a", color: "#fff" }}>Class 2 (Rating 80-94)</option>
+                  <option value="Class 3" style={{ background: "#12141a", color: "#fff" }}>Class 3 (Rating 60-79)</option>
+                  <option value="Class 4" style={{ background: "#12141a", color: "#fff" }}>Class 4 (Rating 40-59)</option>
+                  <option value="Class 5" style={{ background: "#12141a", color: "#fff" }}>Class 5 (Rating 0-39)</option>
                 </select>
               </div>
 
@@ -400,7 +449,7 @@ export default function Race() {
                   <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                     <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
                     <td style={{ padding: "1rem 1.5rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>
-                    <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{race.classLevel}</span></td>
+                    <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
                     <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>
                     <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.distanceMeters}m</td>
                     <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{formatDateTime(race.startTime)}</td>

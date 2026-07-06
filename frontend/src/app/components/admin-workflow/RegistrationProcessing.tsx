@@ -10,6 +10,8 @@ export default function RegistrationProcessing() {
   const [pendingSystemHorses, setPendingSystemHorses] = useState<any[]>([]);
 
   const [awaitingDecisionCount, setAwaitingDecisionCount] = useState(0);
+  const [approvedCount, setApprovedCount] = useState(0);
+  const [rejectedCount, setRejectedCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -35,6 +37,8 @@ export default function RegistrationProcessing() {
       setPendingOwnerRegs(data.pendingOwnerRegsData || []);
       setPendingSystemHorses(data.pendingSystemHorsesData || []);
       setAwaitingDecisionCount(data.awaitingDecisionCount || 0);
+      setApprovedCount(data.approvedCount || 0);
+      setRejectedCount(data.rejectedCount || 0);
     } catch (err: any) {
       setError(err.message || "Failed to load registrations.");
     } finally {
@@ -167,12 +171,12 @@ export default function RegistrationProcessing() {
         </div>
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(74,157,111,0.14)", padding: "1.25rem" }}>
           <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>Approved</p>
-          <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#4ade80" }}>-</h3>
+          <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#4ade80" }}>{approvedCount}</h3>
           <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>cleared to race</p>
         </div>
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(239,68,68,0.14)", padding: "1.25rem" }}>
           <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>Rejected</p>
-          <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#f87171" }}>-</h3>
+          <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#f87171" }}>{rejectedCount}</h3>
           <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>entry denied</p>
         </div>
       </div>
