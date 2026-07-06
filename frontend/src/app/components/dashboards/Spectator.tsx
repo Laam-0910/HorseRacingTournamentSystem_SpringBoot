@@ -428,6 +428,26 @@ export default function Spectator() {
                                   </div>
                                 ) : (
                                   <div style={{ overflowX: "auto" }}>
+                                    {r.status === "FINISHED" && (
+                                      <div 
+                                        className="bg-amber-950/20 border border-amber-500/20 text-amber-500 font-bold uppercase tracking-wider text-center py-2 rounded-lg mb-3 animate-pulse"
+                                        style={{ animationDuration: "1.5s", fontSize: "11px" }}
+                                      >
+                                        {lang === "vi" 
+                                          ? "Kết quả chưa chính thức (Đang chờ trọng tài xác nhận)"
+                                          : "Unofficial Results (Awaiting referee official declaration)"}
+                                      </div>
+                                    )}
+                                    {r.status === "STEWARDS_INQUIRY" && (
+                                      <div 
+                                        className="bg-rose-950/40 border border-rose-500/30 text-rose-500 font-bold uppercase tracking-wider text-center py-2 rounded-lg mb-3 animate-pulse"
+                                        style={{ animationDuration: "1.5s", fontSize: "11px" }}
+                                      >
+                                        {lang === "vi" 
+                                          ? "⚠️ Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)"
+                                          : "⚠️ Stewards' Inquiry - Race under investigation by Stewards (Official results pending)"}
+                                      </div>
+                                    )}
                                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                                       <thead>
                                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", color: "#c9a227", textAlign: "left" }}>
@@ -436,6 +456,7 @@ export default function Spectator() {
                                           <th style={{ padding: "0.5rem" }}>Horse</th>
                                           <th style={{ padding: "0.5rem" }}>Jockey</th>
                                           <th style={{ padding: "0.5rem" }}>Owner</th>
+                                          <th style={{ padding: "0.5rem" }}>Weight (Out/In)</th>
                                           <th style={{ padding: "0.5rem" }}>Finish Time</th>
                                           <th style={{ padding: "0.5rem" }}>Prize</th>
                                         </tr>
@@ -458,6 +479,9 @@ export default function Spectator() {
                                               <td style={{ padding: "0.5rem", fontWeight: "bold", color: "#fff" }}>{e.horse?.name}</td>
                                               <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
                                               <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{e.owner?.fullName || e.owner?.username}</td>
+                                              <td style={{ padding: "0.5rem", fontFamily: "monospace", color: "#a0a0a0" }}>
+                                                {e.entry?.carriedWeight ? `${e.entry.carriedWeight}kg` : "-"} / {e.entry?.weighInWeight ? `${e.entry.weighInWeight}kg` : "-"}
+                                              </td>
                                               <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
                                               <td style={{ padding: "0.5rem", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</td>
                                             </tr>

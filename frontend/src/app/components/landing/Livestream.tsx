@@ -352,6 +352,21 @@ export default function Livestream() {
         )}
       </header>
 
+      {/* Stewards' Inquiry Flashing Banner */}
+      {selectedRace && selectedRace.status === "STEWARDS_INQUIRY" && (
+        <div 
+          className="bg-rose-950/40 border-b border-rose-500/30 px-6 py-3 flex items-center justify-center space-x-3 text-rose-500 font-bold uppercase tracking-wider text-sm text-center animate-pulse"
+          style={{ animationDuration: "1.5s" }}
+        >
+          <span className="text-xl">⚠️</span>
+          <span>
+            {lang === "vi" 
+              ? "Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)"
+              : "Stewards' Inquiry - Race under investigation by Stewards (Official results pending)"}
+          </span>
+        </div>
+      )}
+
       {/* Content Container */}
       <main className={`max-w-7xl mx-auto p-4 md:p-6 gap-6 ${isTheaterMode ? "flex flex-col" : "grid grid-cols-1 lg:grid-cols-3"}`}>
         
