@@ -12,6 +12,8 @@ import com.horseracing.backend.repository.RaceInvitationRepository;
 import com.horseracing.backend.repository.UserRepository;
 import com.horseracing.backend.repository.RaceRepository;
 import com.horseracing.backend.repository.RaceMeetingRepository;
+import com.horseracing.backend.repository.JockeyRaceMeetingRegistrationRepository;
+import com.horseracing.backend.repository.HorseRaceMeetingRegistrationRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,8 @@ public class InvitationService {
     private final RaceRepository raceRepository;
     private final RaceMeetingRepository raceMeetingRepository;
     private final RaceInvitationMapper invitationMapper;
+    private final JockeyRaceMeetingRegistrationRepository jockeyRegRepository;
+    private final HorseRaceMeetingRegistrationRepository horseRegRepository;
 
     public List<RaceInvitationDTO> getInvitations(Integer jockeyId, Integer ownerId) {
         List<RaceInvitation> invitations;
@@ -117,6 +121,27 @@ public class InvitationService {
         if (hasActive) {
             throw new IllegalArgumentException("You have already sent an active invitation for this horse to this jockey in this race.");
         }
+
+        // 4. Kiểm tra nài ngựa có đăng ký buổi đua này và đã được duyệt hay chưa
+        com.horseracing.backend.entity.Race race = raceRepository.findById(raceId)
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+        Integer meetingId = race.getRaceMeetingId();
+
+        jockeyRegRepository.findByRaceMeetingIdAndJockeyId(meetingId, jockeyId)
+                .filter(reg -> "APPROVED".equalsIgnoreCase(reg.getStatus()))
+                .orElseThrow(() -> new IllegalArgumentException("JOCKEY_NOT_APPROVED"));
+
+        // 5. Kiểm tra chiến mã có được kích hoạt (ACTIVE) hay chưa
+        Horse horse = horseRepository.findById(horseId)
+                .orElseThrow(() -> new IllegalArgumentException("Horse not found"));
+        if (!"ACTIVE".equalsIgnoreCase(horse.getStatus())) {
+            throw new IllegalArgumentException("HORSE_NOT_ACTIVE");
+        }
+
+        // 6. Kiểm tra chiến mã có đăng ký buổi đua này và đã được duyệt hay chưa
+        horseRegRepository.findByRaceMeetingIdAndHorseId(meetingId, horseId)
+                .filter(reg -> "APPROVED".equalsIgnoreCase(reg.getStatus()))
+                .orElseThrow(() -> new IllegalArgumentException("HORSE_NOT_APPROVED"));
 
         RaceInvitation invite = invitationMapper.toEntity(dto);
         invite.setStatus("PENDING");
