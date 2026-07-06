@@ -85,7 +85,32 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
           <div className="absolute top-[110%] left-0 w-64 bg-[#100f0c] border border-[#2a2825] rounded-xl p-3.5 shadow-2xl z-50 space-y-3 select-none">
             <div className="flex items-center justify-between text-xs font-mono">
               <button type="button" onClick={handlePrevMonth} className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition">◀</button>
-              <span className="font-bold text-white uppercase tracking-wider">{months[currentDate.month]} {currentDate.year}</span>
+              <div className="flex items-center gap-1">
+                <select
+                  value={currentDate.month}
+                  onChange={(e) => setCurrentDate(prev => ({ ...prev, month: parseInt(e.target.value) }))}
+                  className="bg-transparent text-white font-bold uppercase tracking-wider border border-[#2a2825] rounded px-1.5 py-0.5 outline-none cursor-pointer hover:border-amber-500 hover:text-amber-500 transition text-[10px]"
+                  style={{ colorScheme: "dark" }}
+                >
+                  {months.map((m, idx) => (
+                    <option key={m} value={idx} className="bg-[#100f0c] text-white">
+                      {m}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={currentDate.year}
+                  onChange={(e) => setCurrentDate(prev => ({ ...prev, year: parseInt(e.target.value) }))}
+                  className="bg-transparent text-white font-bold border border-[#2a2825] rounded px-1.5 py-0.5 outline-none cursor-pointer hover:border-amber-500 hover:text-amber-500 transition text-[10px]"
+                  style={{ colorScheme: "dark" }}
+                >
+                  {Array.from({ length: 30 }, (_, i) => new Date().getFullYear() - 25 + i).map(yr => (
+                    <option key={yr} value={yr} className="bg-[#100f0c] text-white">
+                      {yr}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button type="button" onClick={handleNextMonth} className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition">▶</button>
             </div>
             <div className="grid grid-cols-7 text-center text-[9px] font-semibold text-white/40 uppercase font-mono">

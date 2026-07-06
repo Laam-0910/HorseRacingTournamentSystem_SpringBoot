@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
+import { formatDateTime } from "../../utils/dateTimeHelper";
 
 const PURPLE = "#8b5cf6";
 
@@ -810,7 +811,7 @@ export default function RefereeHub() {
             <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f4f2ec", fontFamily: "'Roboto Slab', serif", marginTop: "0.25rem" }}>{selectedRace.meetingName} - Race #{selectedRace.id}</h2>
             <p style={{ fontSize: "12px", color: "#a0a0a0", display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
               <span>📍 {selectedRace.venue}</span>
-              <span>📅 {selectedRace.startTime}</span>
+              <span>📅 {formatDateTime(selectedRace.startTime)}</span>
             </p>
           </div>
           <div style={{ display: "flex", gap: "1rem", fontSize: "11px", fontFamily: "monospace" }}>
@@ -1329,7 +1330,7 @@ export default function RefereeHub() {
                       <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{race.meetingName}</div>
                       <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>📍 {race.venue}</div>
                     </td>
-                    <td style={{ padding: "1rem", fontSize: "0.8rem", color: "#a0a0a0", fontFamily: "monospace" }}>{race.startTime}</td>
+                    <td style={{ padding: "1rem", fontSize: "0.8rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDateTime(race.startTime)}</td>
                     <td style={{ padding: "1rem" }}>
                       <div style={{ fontSize: "0.875rem", color: "#f4f2ec" }}>{race.classLevel}</div>
                       <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>{race.distanceMeters}m · {race.trackType}</div>
