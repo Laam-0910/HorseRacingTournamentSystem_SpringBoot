@@ -974,7 +974,7 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
 }
 
 // ── InvitationsView ────────────────────────────────────────────────────────
-function InvitationsView({ invitations, onViewProfile }: { invitations: any[]; onViewProfile: (id: number) => void }) {
+function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitations: any[]; onViewProfile: (id: number) => void; onResubmit: (entryId: number) => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div>
@@ -994,26 +994,52 @@ function InvitationsView({ invitations, onViewProfile }: { invitations: any[]; o
             <tbody>
               {invitations.length === 0
                 ? <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No invitations have been sent yet.</td></tr>
-                : invitations.map((inv: any) => (
-                  <tr key={inv.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                    <td style={{ padding: "0.875rem 1.25rem", fontFamily: "monospace", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>#{inv.id}</td>
-                    <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 600, color: "#f4f2ec" }}>{inv.meetingName ?? `Meeting #${inv.raceId}`}</td>
-                    <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
-                      {inv.classLevel ? `${inv.classLevel} · ${formatDate(inv.startTime)}` : `Race #${inv.raceId}`}
-                    </td>
-                    <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{inv.horseName ?? `Horse #${inv.horseId}`}</td>
-                    <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", color: "#f4f2ec" }}>
-                      <button 
-                        type="button" 
-                        onClick={() => onViewProfile(inv.jockeyId)} 
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontSize: "0.8rem", fontFamily: "monospace" }}
-                      >
-                        {inv.jockeyName ?? `Jockey #${inv.jockeyId}`}
-                      </button>
-                    </td>
-                    <td style={{ padding: "0.875rem 1.25rem" }}><StatusBadge status={inv.status} /></td>
-                  </tr>
-                ))}
+                : invitations.map((inv: any) => {
+                  const displayStatus = (inv.status === "ACCEPTED" && inv.entryStatus) ? inv.entryStatus : inv.status;
+                  return (
+                    <tr key={inv.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                      <td style={{ padding: "0.875rem 1.25rem", fontFamily: "monospace", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>#{inv.id}</td>
+                      <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 600, color: "#f4f2ec" }}>{inv.meetingName ?? `Meeting #${inv.raceId}`}</td>
+                      <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                        {inv.classLevel ? `${inv.classLevel} · ${formatDate(inv.startTime)}` : `Race #${inv.raceId}`}
+                      </td>
+                      <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{inv.horseName ?? `Horse #${inv.horseId}`}</td>
+                      <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", color: "#f4f2ec" }}>
+                        <button 
+                          type="button" 
+                          onClick={() => onViewProfile(inv.jockeyId)} 
+                          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontSize: "0.8rem", fontFamily: "monospace" }}
+                        >
+                          {inv.jockeyName ?? `Jockey #${inv.jockeyId}`}
+                        </button>
+                      </td>
+                      <td style={{ padding: "0.875rem 1.25rem" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <StatusBadge status={displayStatus} />
+                          {inv.status === "ACCEPTED" && inv.entryStatus === "REJECTED" && (
+                            <button
+                              type="button"
+                              onClick={() => onResubmit(inv.entryId)}
+                              style={{
+                                padding: "0.2rem 0.5rem",
+                                background: "rgba(201,162,39,0.15)",
+                                border: "1px solid rgba(201,162,39,0.3)",
+                                borderRadius: "0.25rem",
+                                color: "#c9a227",
+                                fontSize: "0.6rem",
+                                fontFamily: "monospace",
+                                fontWeight: 700,
+                                cursor: "pointer"
+                              }}
+                            >
+                              Resubmit
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
             </tbody>
           </table>
         </div>
@@ -1155,6 +1181,15 @@ export default function HorseOwner() {
     } catch (err: any) { setErrorMsg(err.message || "Failed to send invitation."); }
   };
 
+  const handleResubmitEntry = async (entryId: number) => {
+    try {
+      setErrorMsg(""); setSuccessMsg("");
+      await api.post(`/invitations/entry/${entryId}/resubmit`);
+      setSuccessMsg("Successfully resubmitted race entry.");
+      fetchData();
+    } catch (err: any) { setErrorMsg(err.message || "Failed to resubmit race entry."); }
+  };
+
   const totalEarnings = results.reduce((sum: number, r: any) => sum + (r.prizeMoney ?? r.prizeAmount ?? 0), 0);
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Owner Hub";
@@ -1169,7 +1204,7 @@ export default function HorseOwner() {
       case "calendar":
         return <CalendarView meetings={meetings} allRaces={allRaces} seasons={seasons} dashboard={dashboard} invitations={invitations} onSendInvitation={handleSendInvitation} onViewProfile={setSelectedProfileId} />;
       case "invitations":
-        return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} />;
+        return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} />;
       case "results":
         return <ResultsView results={results} totalEarnings={totalEarnings} />;
       case "profile":

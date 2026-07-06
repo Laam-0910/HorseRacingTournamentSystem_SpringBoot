@@ -14,5 +14,5 @@ public interface RaceInvitationRepository extends JpaRepository<RaceInvitation, 
     List<RaceInvitation> findByRaceId(Integer raceId);
     List<RaceInvitation> findByJockeyIdAndRaceIdAndHorseId(Integer jockeyId, Integer raceId, Integer horseId);
     List<RaceInvitation> findByJockeyIdAndRaceIdAndStatus(Integer jockeyId, Integer raceId, String status);
-
+    List<RaceInvitation> findByStatus(String status);
 }

@@ -52,4 +52,14 @@ public class InvitationController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
+
+    @PostMapping("/entry/{entryId}/resubmit")
+    public ResponseEntity<?> resubmitRaceEntry(@PathVariable Integer entryId) {
+        try {
+            invitationService.resubmitRaceEntry(entryId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Entry resubmitted successfully."));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
 }

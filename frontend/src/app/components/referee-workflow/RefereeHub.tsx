@@ -34,7 +34,12 @@ const statusLabels: Record<string, Record<string, string>> = {
   FINISHED:           { vi: "Đã kết thúc", en: "Finished", zh: "已结束", ja: "終了" },
   OFFICIAL:           { vi: "Chính thức", en: "Official", zh: "官方确认", ja: "確定" },
   STEWARDS_INQUIRY:   { vi: "Trọng tài xem xét", en: "Stewards Inquiry", zh: "裁判审查", ja: "審判調査中" },
-  CANCELLED:          { vi: "Đã hủy", en: "Cancelled", zh: "已取消", ja: "中止" }
+  CANCELLED:          { vi: "Đã hủy", en: "Cancelled", zh: "已取消", ja: "中止" },
+  PENDING_ADMIN:      { vi: "Chờ duyệt", en: "Pending Admin", zh: "等待审核", ja: "承認待ち" },
+  APPROVED:           { vi: "Đã duyệt", en: "Approved", zh: "已批准", ja: "承認済み" },
+  DISQUALIFIED:       { vi: "Bị loại", en: "Disqualified", zh: "取消资格", ja: "失格" },
+  REJECTED:           { vi: "Từ chối", en: "Rejected", zh: "已拒绝", ja: "拒否" },
+  STOPPED:            { vi: "Tạm dừng", en: "Stopped", zh: "已暂停", ja: "一時停止" }
 };
 
 function statusBadge(status: string, preCheckCompleted?: boolean) {
@@ -51,6 +56,11 @@ function statusBadge(status: string, preCheckCompleted?: boolean) {
     OFFICIAL:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.OFFICIAL[lang] || statusLabels.OFFICIAL.vi },
     STEWARDS_INQUIRY:   { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.STEWARDS_INQUIRY[lang] || statusLabels.STEWARDS_INQUIRY.vi },
     CANCELLED:          { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.CANCELLED[lang] || statusLabels.CANCELLED.vi },
+    PENDING_ADMIN:      { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: statusLabels.PENDING_ADMIN[lang] || statusLabels.PENDING_ADMIN.vi },
+    APPROVED:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.APPROVED[lang] || statusLabels.APPROVED.vi },
+    DISQUALIFIED:       { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.DISQUALIFIED[lang] || statusLabels.DISQUALIFIED.vi },
+    REJECTED:           { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.REJECTED[lang] || statusLabels.REJECTED.vi },
+    STOPPED:            { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: statusLabels.STOPPED[lang] || statusLabels.STOPPED.vi },
   };
   const c = cfg[s] ?? { bg: "rgba(255,255,255,0.05)", color: "#a0a0a0", label: status };
   return (
@@ -642,6 +652,48 @@ export default function RefereeHub() {
     }
   };
 
+  const refreshSupervisionData = async () => {
+    if (!selectedRace) return;
+    try {
+      const [entriesData, violationsData] = await Promise.all([
+        api.get<any[]>(`/public/results?raceId=${selectedRace.id}`),
+        api.get<any[]>(`/public/violations?raceId=${selectedRace.id}`).catch(() => []),
+      ]);
+      setRaceEntries(entriesData || []);
+      setViolations(violationsData || []);
+    } catch (err) {
+      console.error("Failed to refresh supervision data.", err);
+    }
+  };
+
+  const handleStopEntry = async (entryId: number) => {
+    try {
+      await api.post(`/referee/entry/${entryId}/stop`);
+      refreshSupervisionData();
+    } catch (err: any) {
+      alert(err.response?.data?.error || err.message || "Failed to stop horse.");
+    }
+  };
+
+  const handleResumeEntry = async (entryId: number) => {
+    try {
+      await api.post(`/referee/entry/${entryId}/resume`);
+      refreshSupervisionData();
+    } catch (err: any) {
+      alert(err.response?.data?.error || err.message || "Failed to resume horse.");
+    }
+  };
+
+  const handleDisqualifyEntry = async (entryId: number) => {
+    if (!window.confirm("Are you sure you want to disqualify this horse?")) return;
+    try {
+      await api.post(`/referee/entry/${entryId}/disqualify`);
+      refreshSupervisionData();
+    } catch (err: any) {
+      alert(err.response?.data?.error || err.message || "Failed to disqualify horse.");
+    }
+  };
+
   const handleSaveViolation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRace || !violRunner) return;
@@ -1000,7 +1052,7 @@ export default function RefereeHub() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                    {[t.gate, t.horseDetails, t.jockeyDetails, t.jockeyWeight, "Action"].map(h => (
+                    {[t.gate, t.horseDetails, t.jockeyDetails, t.jockeyWeight, t.status, "Action"].map(h => (
                       <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
                     ))}
                   </tr>
@@ -1017,7 +1069,19 @@ export default function RefereeHub() {
                       <td style={{ padding: "1rem", color: "#a0a0a0", fontSize: "12px" }}>{item.jockey?.username}</td>
                       <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "12px", color: "#f4f2ec" }}>{item.entry.carriedWeight} kg</td>
                       <td style={{ padding: "1rem" }}>
+                        {statusBadge(item.entry.status)}
+                      </td>
+                      <td style={{ padding: "1rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
                         <button onClick={() => { setViolRunner(`${item.horse.id}-${item.jockey.id}`); setShowViolModal(true); }} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>Report</button>
+                        {item.entry.status === "RUNNING" && (
+                          <button onClick={() => handleStopEntry(item.entry.id)} style={{ padding: "0.2rem 0.5rem", background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: "0.25rem", color: "#f59e0b", cursor: "pointer", fontSize: "11px", fontWeight: "bold" }}>Stop</button>
+                        )}
+                        {item.entry.status === "STOPPED" && (
+                          <>
+                            <button onClick={() => handleResumeEntry(item.entry.id)} style={{ padding: "0.2rem 0.5rem", background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "0.25rem", color: "#10b981", cursor: "pointer", fontSize: "11px", fontWeight: "bold" }}>Resume</button>
+                            <button onClick={() => handleDisqualifyEntry(item.entry.id)} style={{ padding: "0.2rem 0.5rem", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "0.25rem", color: "#ef4444", cursor: "pointer", fontSize: "11px", fontWeight: "bold" }}>DQ</button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}
