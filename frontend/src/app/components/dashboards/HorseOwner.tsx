@@ -1174,11 +1174,30 @@ export default function HorseOwner() {
 
   const handleSendInvitation = async (form: { horseId: number; raceId: number; jockeyId: number }) => {
     if (!user) return;
+    const lang = localStorage.getItem("app-lang") || "vi";
     try {
+      setErrorMsg(""); setSuccessMsg("");
       await api.post("/invitations", { ...form, ownerId: user.id, status: "PENDING" });
-      setSuccessMsg("Invitation sent to jockey.");
+      setSuccessMsg(lang === "vi" ? "Đã gửi lời mời tới nài ngựa." : "Invitation sent to jockey.");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to send invitation."); }
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || err.message || "";
+      if (errMsg.includes("JOCKEY_NOT_APPROVED")) {
+        setErrorMsg(lang === "vi"
+          ? "Nài ngựa này chưa được phê duyệt đăng ký tham gia buổi đua này."
+          : "This jockey has not been approved for this race meeting yet.");
+      } else if (errMsg.includes("HORSE_NOT_ACTIVE")) {
+        setErrorMsg(lang === "vi"
+          ? "Chiến mã được chọn đang không ở trạng thái hoạt động (ACTIVE)."
+          : "The selected horse is not active.");
+      } else if (errMsg.includes("HORSE_NOT_APPROVED")) {
+        setErrorMsg(lang === "vi"
+          ? "Chiến mã được chọn chưa được duyệt tham gia buổi đua này."
+          : "The selected horse has not been approved for this race meeting yet.");
+      } else {
+        setErrorMsg(err.message || (lang === "vi" ? "Gửi lời mời thất bại." : "Failed to send invitation."));
+      }
+    }
   };
 
   const handleResubmitEntry = async (entryId: number) => {
