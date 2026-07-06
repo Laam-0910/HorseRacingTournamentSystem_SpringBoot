@@ -282,6 +282,21 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
 
   return (
     <div className="space-y-6">
+      {/* Stewards' Inquiry Flashing Banner */}
+      {selectedRace && selectedRace.status === "STEWARDS_INQUIRY" && (
+        <div 
+          className="bg-rose-950/40 border border-rose-500/20 text-rose-500 font-bold uppercase tracking-wider text-xs px-4 py-3 rounded-xl flex items-center space-x-2.5 animate-pulse"
+          style={{ animationDuration: "1.5s" }}
+        >
+          <span className="text-base">⚠️</span>
+          <span>
+            {lang === "vi" 
+              ? "Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)"
+              : "Stewards' Inquiry - Race under investigation by Stewards (Official results pending)"}
+          </span>
+        </div>
+      )}
+
       {error && (
         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
           {error}
