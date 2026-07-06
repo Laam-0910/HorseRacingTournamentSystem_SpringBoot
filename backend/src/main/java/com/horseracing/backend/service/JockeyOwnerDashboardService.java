@@ -252,6 +252,84 @@ public class JockeyOwnerDashboardService {
             meetingJockeys.put(meeting.getId(), jList);
         }
 
+        // Compute bookedJockeysMap and bookedHorsesMap for each race to filter out busy entities
+        List<RaceEntry> allEntries = raceEntryRepository.findAll();
+        List<Race> allRaces = raceRepository.findAll();
+        Map<Integer, Race> allRacesMap = allRaces.stream().collect(Collectors.toMap(Race::getId, r -> r));
+
+        Map<Integer, List<RaceEntry>> activeEntriesByRace = allEntries.stream()
+                .filter(e -> !"REJECTED".equalsIgnoreCase(e.getStatus()) && e.getJockeyId() != null)
+                .collect(Collectors.groupingBy(RaceEntry::getRaceId));
+
+        Map<Integer, List<RaceEntry>> approvedEntriesByJockey = allEntries.stream()
+                .filter(e -> ("APPROVED".equalsIgnoreCase(e.getStatus()) || "CONFIRMED".equalsIgnoreCase(e.getStatus())) && e.getJockeyId() != null)
+                .collect(Collectors.groupingBy(RaceEntry::getJockeyId));
+
+        Map<Integer, List<RaceEntry>> activeEntriesByRaceForHorse = allEntries.stream()
+                .filter(e -> !"REJECTED".equalsIgnoreCase(e.getStatus()) && e.getHorseId() != null)
+                .collect(Collectors.groupingBy(RaceEntry::getRaceId));
+
+        Map<Integer, List<RaceEntry>> approvedEntriesByHorse = allEntries.stream()
+                .filter(e -> ("APPROVED".equalsIgnoreCase(e.getStatus()) || "CONFIRMED".equalsIgnoreCase(e.getStatus())) && e.getHorseId() != null)
+                .collect(Collectors.groupingBy(RaceEntry::getHorseId));
+
+        Map<Integer, List<Integer>> bookedJockeysMap = new HashMap<>();
+        Map<Integer, List<Integer>> bookedHorsesMap = new HashMap<>();
+
+        for (Race race : allRaces) {
+            Set<Integer> bookedJockeyIds = new HashSet<>();
+            Set<Integer> bookedHorseIds = new HashSet<>();
+
+            // 1. Jockeys with active entries in this race (e.g. accepted invite waiting for admin approval)
+            List<RaceEntry> raceEntries = activeEntriesByRace.getOrDefault(race.getId(), Collections.emptyList());
+            for (RaceEntry entry : raceEntries) {
+                bookedJockeyIds.add(entry.getJockeyId());
+            }
+
+            // 2. Jockeys with approved entries in other races at the same time
+            if (race.getStartTime() != null) {
+                for (Map.Entry<Integer, List<RaceEntry>> entry : approvedEntriesByJockey.entrySet()) {
+                    Integer jockeyId = entry.getKey();
+                    for (RaceEntry e : entry.getValue()) {
+                        if (!e.getRaceId().equals(race.getId())) {
+                            Race otherRace = allRacesMap.get(e.getRaceId());
+                            if (otherRace != null && otherRace.getStartTime() != null &&
+                                    otherRace.getStartTime().equals(race.getStartTime())) {
+                                bookedJockeyIds.add(jockeyId);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 3. Horses with active entries in this race
+            List<RaceEntry> horseRaceEntries = activeEntriesByRaceForHorse.getOrDefault(race.getId(), Collections.emptyList());
+            for (RaceEntry entry : horseRaceEntries) {
+                bookedHorseIds.add(entry.getHorseId());
+            }
+
+            // 4. Horses with approved entries in other races at the same time
+            if (race.getStartTime() != null) {
+                for (Map.Entry<Integer, List<RaceEntry>> entry : approvedEntriesByHorse.entrySet()) {
+                    Integer horseId = entry.getKey();
+                    for (RaceEntry e : entry.getValue()) {
+                        if (!e.getRaceId().equals(race.getId())) {
+                            Race otherRace = allRacesMap.get(e.getRaceId());
+                            if (otherRace != null && otherRace.getStartTime() != null &&
+                                    otherRace.getStartTime().equals(race.getStartTime())) {
+                                bookedHorseIds.add(horseId);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            bookedJockeysMap.put(race.getId(), new ArrayList<>(bookedJockeyIds));
+            bookedHorsesMap.put(race.getId(), new ArrayList<>(bookedHorseIds));
+        }
+
         Map<String, Object> response = new HashMap<>();
         response.put("meetings", meetings.stream().map(m -> raceMeetingMapper.toDTO(m, null)).toList());
         response.put("registeredMeetingIds", registeredMeetingIds);
@@ -262,6 +340,8 @@ public class JockeyOwnerDashboardService {
         response.put("meetingJockeys", meetingJockeys);
         response.put("activeHorses", activeHorses.stream().map(h -> horseMapper.toDTO(h, null)).toList());
         response.put("totalHorses", activeHorses.size());
+        response.put("bookedJockeysMap", bookedJockeysMap);
+        response.put("bookedHorsesMap", bookedHorsesMap);
 
         return response;
     }

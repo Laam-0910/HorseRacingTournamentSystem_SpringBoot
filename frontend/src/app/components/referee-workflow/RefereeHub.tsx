@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
-import { formatDateTime } from "../../utils/dateTimeHelper";
+import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
 
 const PURPLE = "#8b5cf6";
 
@@ -817,7 +817,7 @@ export default function RefereeHub() {
           <div style={{ display: "flex", gap: "1rem", fontSize: "11px", fontFamily: "monospace" }}>
             <div style={{ background: "rgba(21,19,16,0.6)", padding: "0.5rem 1rem", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.375rem" }}>
               <span style={{ fontSize: "8px", color: "#a0a0a0", display: "block" }}>{t.classLevel}</span>
-              <strong style={{ color: "#f4f2ec" }}>{selectedRace.classLevel}</strong>
+              <strong style={{ color: "#f4f2ec" }}>{formatClassLevel(selectedRace.classLevel)}</strong>
             </div>
             <div style={{ background: "rgba(21,19,16,0.6)", padding: "0.5rem 1rem", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.375rem" }}>
               <span style={{ fontSize: "8px", color: "#a0a0a0", display: "block" }}>{t.distance}</span>
@@ -1332,7 +1332,7 @@ export default function RefereeHub() {
                     </td>
                     <td style={{ padding: "1rem", fontSize: "0.8rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDateTime(race.startTime)}</td>
                     <td style={{ padding: "1rem" }}>
-                      <div style={{ fontSize: "0.875rem", color: "#f4f2ec" }}>{race.classLevel}</div>
+                      <div style={{ fontSize: "0.875rem", color: "#f4f2ec" }}>{formatClassLevel(race.classLevel)}</div>
                       <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>{race.distanceMeters}m · {race.trackType}</div>
                     </td>
                     <td style={{ padding: "1rem" }}>{statusBadge(race.status, race.preCheckCompleted)}</td>

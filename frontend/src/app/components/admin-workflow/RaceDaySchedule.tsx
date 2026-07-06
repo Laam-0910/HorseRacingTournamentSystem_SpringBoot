@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
-import { formatDateTime, formatDate, formatForApi } from "../../utils/dateTimeHelper";
+import { formatDateTime, formatDate, formatForApi, parseSafeDate } from "../../utils/dateTimeHelper";
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 
 export default function RaceDaySchedule() {
@@ -95,6 +95,22 @@ export default function RaceDaySchedule() {
       return;
     }
 
+    const selectedMeeting = meetings.find(m => m.id === selectedMeetingId);
+    if (selectedMeeting) {
+      const meetDate = parseSafeDate(selectedMeeting.startDate);
+      const raceDate = parseSafeDate(startTime);
+      if (meetDate && raceDate) {
+        if (meetDate.getFullYear() !== raceDate.getFullYear() ||
+            meetDate.getMonth() !== raceDate.getMonth() ||
+            meetDate.getDate() !== raceDate.getDate()) {
+          const pad = (n: number) => String(n).padStart(2, '0');
+          const formattedMeetDate = `${pad(meetDate.getDate())}-${pad(meetDate.getMonth() + 1)}-${meetDate.getFullYear()}`;
+          alert(`Race start time must be on the same date as the selected Race Meeting (${formattedMeetDate}).`);
+          return;
+        }
+      }
+    }
+
     try {
       await api.post("/races", {
         raceMeetingId: selectedMeetingId,
@@ -112,6 +128,23 @@ export default function RaceDaySchedule() {
     } catch (err: any) {
       alert("Failed to schedule race: " + err.message);
     }
+  };
+
+  const handleOpenScheduleModal = () => {
+    if (!selectedMeetingId) {
+      alert("Please select a race meeting first.");
+      return;
+    }
+    const meeting = meetings.find(m => m.id === selectedMeetingId);
+    if (meeting) {
+      const dt = parseSafeDate(meeting.startDate);
+      if (dt) {
+        const pad = (n: number) => String(n).padStart(2, "0");
+        const dateStr = `${pad(dt.getDate())}-${pad(dt.getMonth() + 1)}-${dt.getFullYear()}`;
+        setStartTime(`${dateStr} 13:00:00`);
+      }
+    }
+    setShowScheduleModal(true);
   };
 
   const handleCancelRace = async (raceId: number) => {
@@ -182,7 +215,7 @@ export default function RaceDaySchedule() {
           </div>
           <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
             <button
-              onClick={() => setShowScheduleModal(true)}
+              onClick={handleOpenScheduleModal}
               style={{
                 padding: "0.5rem 1rem",
                 background: "#c9a227",

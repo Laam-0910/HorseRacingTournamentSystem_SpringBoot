@@ -251,6 +251,20 @@ public class AdminUserService {
 
         long totalPendingCount = pendingEntries.size() + pendingHorseRegs.size() + pendingJockeyRegs.size() + pendingOwnerRegs.size() + pendingSystemHorses.size();
 
+        long approvedCount = 
+                raceEntryRepository.findAll().stream().filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()) || "CONFIRMED".equalsIgnoreCase(e.getStatus())).count() +
+                horseRegRepository.findAll().stream().filter(r -> "APPROVED".equalsIgnoreCase(r.getStatus())).count() +
+                jockeyRegRepository.findAll().stream().filter(r -> "APPROVED".equalsIgnoreCase(r.getStatus())).count() +
+                ownerRegRepository.findAll().stream().filter(r -> "APPROVED".equalsIgnoreCase(r.getStatus())).count() +
+                horseRepository.findAll().stream().filter(h -> "ACTIVE".equalsIgnoreCase(h.getStatus())).count();
+
+        long rejectedCount = 
+                raceEntryRepository.findAll().stream().filter(e -> "REJECTED".equalsIgnoreCase(e.getStatus())).count() +
+                horseRegRepository.findAll().stream().filter(r -> "REJECTED".equalsIgnoreCase(r.getStatus())).count() +
+                jockeyRegRepository.findAll().stream().filter(r -> "REJECTED".equalsIgnoreCase(r.getStatus())).count() +
+                ownerRegRepository.findAll().stream().filter(r -> "REJECTED".equalsIgnoreCase(r.getStatus())).count() +
+                horseRepository.findAll().stream().filter(h -> "REJECTED".equalsIgnoreCase(h.getStatus())).count();
+
         Map<String, Object> response = new HashMap<>();
         response.put("entriesData", entriesData);
         response.put("pendingHorseRegsData", pendingHorseRegsData);
@@ -258,8 +272,8 @@ public class AdminUserService {
         response.put("pendingOwnerRegsData", pendingOwnerRegsData);
         response.put("pendingSystemHorsesData", pendingSystemHorsesData);
         response.put("awaitingDecisionCount", totalPendingCount);
-        response.put("approvedCount", 0);
-        response.put("rejectedCount", 0);
+        response.put("approvedCount", approvedCount);
+        response.put("rejectedCount", rejectedCount);
 
         return response;
     }

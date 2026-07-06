@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
-import { parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
+import { parseSafeDate, formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
 import DashboardLayout from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
 import ProfileModal from "./components/ProfileModal";
@@ -831,7 +831,9 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
                 {meetingRaces.length === 0
                   ? <p style={{ padding: "1.5rem", color: "#a0a0a0", textAlign: "center", fontFamily: "monospace", fontSize: "0.8rem" }}>No races scheduled for this meeting.</p>
                   : meetingRaces.map((race: any) => {
+                      const bookedHorseIds = dashboard?.bookedHorsesMap?.[race.id] || [];
                       const eligibleHorses = meetingHorses.filter((h: any) => {
+                        if (bookedHorseIds.includes(h.id)) return false;
                         const minOk = race.minRating == null || h.currentRating >= race.minRating;
                         const maxOk = race.maxRating == null || h.currentRating <= race.maxRating;
                         return minOk && maxOk;
@@ -844,6 +846,7 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
                           isReg={isReg}
                           eligibleHorses={eligibleHorses}
                           jockeys={meetingJockeys}
+                          bookedJockeysMap={dashboard?.bookedJockeysMap}
                           invitations={invitations}
                           onSendInvitation={onSendInvitation}
                           onViewProfile={onViewProfile}
@@ -857,8 +860,8 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
   );
 }
 
-function RaceRow({ race, isReg, eligibleHorses, jockeys, invitations, onSendInvitation, onViewProfile }: {
-  race: any; isReg: boolean; eligibleHorses: any[]; jockeys: any[]; invitations: any[];
+function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invitations, onSendInvitation, onViewProfile }: {
+  race: any; isReg: boolean; eligibleHorses: any[]; jockeys: any[]; bookedJockeysMap?: Record<number, number[]>; invitations: any[];
   onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
   onViewProfile: (id: number) => void;
 }) {
@@ -866,13 +869,16 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, invitations, onSendInvi
   const [jockeyId, setJockeyId] = useState("");
 
   const filteredJockeys = jockeys.filter((j: any) => {
+    const bookedIds = bookedJockeysMap?.[race.id] || [];
+    if (bookedIds.includes(j.id)) return false;
+
     if (!horseId) return true;
     const hasPending = (invitations || []).some(
       (inv: any) =>
-        inv.raceId === race.id &&
-        inv.horseId === parseInt(horseId) &&
-        inv.jockeyId === j.id &&
-        inv.status === "PENDING"
+        Number(inv.raceId) === Number(race.id) &&
+        Number(inv.horseId) === Number(horseId) &&
+        Number(inv.jockeyId) === Number(j.id) &&
+        (inv.status || "").trim().toUpperCase() === "PENDING"
     );
     return !hasPending;
   });
@@ -881,10 +887,10 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, invitations, onSendInvi
     if (!jockeyId) return true;
     const hasPending = (invitations || []).some(
       (inv: any) =>
-        inv.raceId === race.id &&
-        inv.horseId === h.id &&
-        inv.jockeyId === parseInt(jockeyId) &&
-        inv.status === "PENDING"
+        Number(inv.raceId) === Number(race.id) &&
+        Number(inv.horseId) === Number(h.id) &&
+        Number(inv.jockeyId) === Number(jockeyId) &&
+        (inv.status || "").trim().toUpperCase() === "PENDING"
     );
     return !hasPending;
   });
@@ -901,7 +907,7 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, invitations, onSendInvi
       {/* Race info */}
       <div style={{ flex: 1, minWidth: "260px", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontWeight: 700, color: "#f4f2ec", fontSize: "0.9rem" }}>{race.classLevel}</span>
+          <span style={{ fontWeight: 700, color: "#f4f2ec", fontSize: "0.9rem" }}>{formatClassLevel(race.classLevel)}</span>
           <StatusBadge status={race.status} />
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(130px,1fr))", gap: "0.75rem" }}>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
-import { formatDateTime } from "../../utils/dateTimeHelper";
+import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
 
 const statusLabels: Record<string, Record<string, string>> = {
   SCHEDULED:          { vi: "Lịch trình", en: "Scheduled", zh: "已排程", ja: "予定" },
@@ -146,7 +146,7 @@ export default function RefereeDuties() {
                   <td style={{ padding: "1rem" }}>
                     <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>Race #{race.id ?? item.raceId}</div>
                     <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
-                      {race.classLevel} · {race.distanceMeters}m · {race.trackType}
+                      {formatClassLevel(race.classLevel)} · {race.distanceMeters}m · {race.trackType}
                     </div>
                   </td>
                   <td style={{ padding: "1rem" }}>{statusBadge(race.status ?? item.status)}</td>

@@ -61,6 +61,7 @@ public class RaceService {
         if (dto.getStartTime() == null) {
             throw new IllegalArgumentException("Start time is required");
         }
+        validateRaceTimeMatchesMeeting(dto.getStartTime(), dto.getRaceMeetingId());
 
         Race race = raceMapper.toEntity(dto);
 
@@ -118,7 +119,9 @@ public class RaceService {
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
 
         if (body.get("startTime") != null) {
-            race.setStartTime(DateTimeParser.parseTimestamp((String) body.get("startTime")));
+            Timestamp newTime = DateTimeParser.parseTimestamp((String) body.get("startTime"));
+            validateRaceTimeMatchesMeeting(newTime, race.getRaceMeetingId());
+            race.setStartTime(newTime);
         }
         if (body.get("registrationStartTime") != null) {
             race.setRegistrationStartTime(DateTimeParser.parseTimestamp((String) body.get("registrationStartTime")));
@@ -254,5 +257,28 @@ public class RaceService {
                 .filter(r -> r.getYoutubeLiveUrl() != null && !r.getYoutubeLiveUrl().trim().isEmpty())
                 .map(r -> raceMapper.toDTO(r, meetingMap.get(r.getRaceMeetingId())))
                 .collect(Collectors.toList());
+    }
+
+    private void validateRaceTimeMatchesMeeting(Timestamp raceTime, Integer meetingId) {
+        if (raceTime == null || meetingId == null) return;
+        RaceMeeting meeting = raceMeetingRepository.findById(meetingId)
+                .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found"));
+        
+        if (meeting.getStartDate() != null) {
+            Calendar cal1 = Calendar.getInstance();
+            cal1.setTime(raceTime);
+            
+            Calendar cal2 = Calendar.getInstance();
+            cal2.setTime(meeting.getStartDate());
+            
+            if (cal1.get(Calendar.YEAR) != cal2.get(Calendar.YEAR) ||
+                cal1.get(Calendar.MONTH) != cal2.get(Calendar.MONTH) ||
+                cal1.get(Calendar.DAY_OF_MONTH) != cal2.get(Calendar.DAY_OF_MONTH)) {
+                
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd-MM-yyyy");
+                throw new IllegalArgumentException("Race start time must be on the same date as the selected Race Meeting (" 
+                        + sdf.format(meeting.getStartDate()) + ")");
+            }
+        }
     }
 }
