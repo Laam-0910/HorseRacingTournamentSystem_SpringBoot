@@ -1077,7 +1077,30 @@ export default function Landing() {
         return (
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-2">
             <GenericTableView title="Leading Horses (Top Rating)" data={[...horses].sort((a,b) => (b.currentRating - a.currentRating)).slice(0, 10)} columns={[{ key: "name", label: "Horse Name" }, { key: "breed", label: "Breed" }, { key: "currentRating", label: "Rating" }]} />
-            <GenericTableView title="Leading Jockeys" data={users.filter(u => u.roleId === 3).slice(0, 10)} columns={[{ key: "fullName", label: "Jockey Name" }, { key: "email", label: "Email" }, { key: "status", label: "Status" }]} />
+            <GenericTableView 
+              title="Leading Jockeys" 
+              data={[...users]
+                .filter(u => u.roleId === 3)
+                .map(u => {
+                  const races = u.totalRacesParticipated || 0;
+                  const top3 = u.totalTop3Finishes || 0;
+                  const rate = races > 0 ? `${Math.round((top3 / races) * 100)}%` : "0%";
+                  return {
+                    ...u,
+                    racesRun: races,
+                    top3Finishes: top3,
+                    top3Rate: rate
+                  };
+                })
+                .sort((a, b) => b.top3Finishes - a.top3Finishes || b.racesRun - a.racesRun)
+                .slice(0, 10)} 
+              columns={[
+                { key: "fullName", label: "Jockey Name" },
+                { key: "racesRun", label: "Races Run" },
+                { key: "top3Finishes", label: "Top-3 Finishes" },
+                { key: "top3Rate", label: "Top-3 Rate" }
+              ]} 
+            />
           </div>
         );
       case "horses":
@@ -1089,13 +1112,61 @@ export default function Landing() {
               <button onClick={() => setView("jockeys_owners")} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontWeight: "bold" }}>Directories Overview</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-2">
-              <GenericTableView title="Jockeys" data={users.filter(u => u.roleId === 3)} columns={[{ key: "id", label: "ID" }, { key: "fullName", label: "Jockey" }, { key: "email", label: "Email" }, { key: "weight", label: "Weight" }]} />
+              <GenericTableView 
+                title="Jockeys" 
+                data={users
+                  .filter(u => u.roleId === 3)
+                  .map(u => {
+                    const races = u.totalRacesParticipated || 0;
+                    const top3 = u.totalTop3Finishes || 0;
+                    const rate = races > 0 ? `${Math.round((top3 / races) * 100)}%` : "0%";
+                    return {
+                      ...u,
+                      racesRun: races,
+                      top3Finishes: top3,
+                      top3Rate: rate,
+                      jockeyWeight: u.weight ? `${u.weight} kg` : "—"
+                    };
+                  })
+                  .sort((a, b) => b.top3Finishes - a.top3Finishes || b.racesRun - a.racesRun)} 
+                columns={[
+                  { key: "id", label: "ID" },
+                  { key: "fullName", label: "Jockey" },
+                  { key: "email", label: "Email" },
+                  { key: "jockeyWeight", label: "Weight" },
+                  { key: "racesRun", label: "Races Run" },
+                  { key: "top3Finishes", label: "Top-3 Finishes" },
+                  { key: "top3Rate", label: "Top-3 Rate" }
+                ]} 
+              />
               <GenericTableView title="Horse Owners" data={users.filter(u => u.roleId === 2)} columns={[{ key: "id", label: "ID" }, { key: "fullName", label: "Owner" }, { key: "email", label: "Email" }]} />
             </div>
           </div>
         );
       case "incident":
-        return <GenericTableView title="Violation Incident Reports" data={violations} columns={[{ key: "id", label: "Report ID" }, { key: "raceId", label: "Race ID" }, { key: "horseId", label: "Horse ID" }, { key: "jockeyId", label: "Jockey ID" }, { key: "description", label: "Description" }, { key: "penalty", label: "Penalty" }, { key: "status", label: "Status" }]} />;
+        return (
+          <GenericTableView 
+            title="Violation Incident Reports" 
+            data={violations.map((v: any) => ({
+              id: v.violation?.id,
+              raceId: v.violation?.raceId,
+              horseName: v.horseName || `Horse #${v.violation?.horseId}`,
+              jockeyName: v.jockeyName || `Jockey #${v.violation?.jockeyId}`,
+              description: v.violation?.description || "—",
+              penalty: v.violation?.penalty || "Pending Decision",
+              status: v.violation?.status || "PENDING"
+            }))} 
+            columns={[
+              { key: "id", label: "Report ID" },
+              { key: "raceId", label: "Race ID" },
+              { key: "horseName", label: "Horse" },
+              { key: "jockeyName", label: "Jockey" },
+              { key: "description", label: "Description" },
+              { key: "penalty", label: "Penalty" },
+              { key: "status", label: "Status" }
+            ]} 
+          />
+        );
       case "search": {
         const q = searchQuery.toLowerCase().trim();
         const matchedHorses = horses.filter(h =>

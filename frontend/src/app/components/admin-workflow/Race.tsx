@@ -45,6 +45,7 @@ export default function Race() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [editError, setEditError] = useState("");
 
   // Create Form State
   const [meetingId, setMeetingId] = useState("");
@@ -176,11 +177,19 @@ export default function Race() {
         throw new Error(res.error || "Failed to create race.");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to create race.");
+      const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
+      if (err.message?.includes("DUPLICATE_RACE_TIME")) {
+        setError(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
+      } else {
+        setError(err.message || "Failed to create race.");
+      }
     }
   };
 
   const handleOpenEdit = (race: Race) => {
+    setError("");
+    setSuccess("");
+    setEditError("");
     setEditingRace(race);
     setEditStartTime(formatDateTime(race.startTime));
     setEditRegStartTime(formatDateTime(race.registrationStartTime));
@@ -197,6 +206,7 @@ export default function Race() {
     if (!editingRace) return;
     setError("");
     setSuccess("");
+    setEditError("");
 
     const minVal = parseInt(editMinEntries, 10);
     const maxVal = parseInt(editMaxEntries, 10);
@@ -248,7 +258,12 @@ export default function Race() {
         throw new Error(res.error || "Failed to update race.");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to update race.");
+      const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
+      if (err.message?.includes("DUPLICATE_RACE_TIME")) {
+        setEditError(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
+      } else {
+        setEditError(err.message || "Failed to update race.");
+      }
     }
   };
 
@@ -548,9 +563,14 @@ export default function Race() {
           <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "32rem", position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(201,162,39,0.1)", paddingBottom: "0.75rem", marginBottom: "1.25rem" }}>
               <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Edit Race Schedule</h3>
-              <button onClick={() => setEditingRace(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.5rem", fontWeight: "bold" }}>&times;</button>
+              <button onClick={() => { setEditingRace(null); setEditError(""); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.5rem", fontWeight: "bold" }}>&times;</button>
             </div>
             <form onSubmit={handleSaveEdit}>
+              {editError && (
+                <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", padding: "0.75rem", borderRadius: "0.375rem", fontSize: "12px", marginBottom: "1rem" }}>
+                  {editError}
+                </div>
+              )}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
                 <div style={{ gridColumn: "span 2" }}>
                   <label style={labelStyle}>Start Time</label>
@@ -590,7 +610,7 @@ export default function Race() {
                 </div>
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", borderTop: "1px solid rgba(201,162,39,0.1)", paddingTop: "1rem" }}>
-                <button type="button" onClick={() => setEditingRace(null)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
+                <button type="button" onClick={() => { setEditingRace(null); setEditError(""); }} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
                 <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>Save Changes</button>
               </div>
             </form>

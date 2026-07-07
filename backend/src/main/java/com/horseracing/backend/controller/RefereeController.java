@@ -72,6 +72,27 @@ public class RefereeController {
         }
     }
 
+    @PostMapping("/races/{raceId}/suspend")
+    public ResponseEntity<?> suspendRace(@PathVariable Integer raceId, @RequestBody Map<String, String> body) {
+        try {
+            String stewardReport = body.get("stewardReport");
+            refereeService.suspendRace(raceId, stewardReport);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Race has been suspended. Status set to STOPPED."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/races/{raceId}/resume")
+    public ResponseEntity<?> resumeRace(@PathVariable Integer raceId) {
+        try {
+            refereeService.resumeRace(raceId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Race has resumed. Status set to RUNNING."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/races/{raceId}/start")
     public ResponseEntity<?> startRace(@PathVariable Integer raceId) {
         try {

@@ -252,4 +252,39 @@ public class InvitationService {
         invite.setStatus("REJECTED");
         invitationRepository.save(invite);
     }
+
+    @Transactional
+    public void withdrawInvitation(Integer id, Integer ownerId) {
+        RaceInvitation invite = invitationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
+        if (!invite.getOwnerId().equals(ownerId)) {
+            throw new IllegalArgumentException("You do not own this invitation");
+        }
+
+        com.horseracing.backend.entity.Race race = raceRepository.findById(invite.getRaceId())
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+
+        if (!"DECLARATION_OPEN".equalsIgnoreCase(race.getStatus())) {
+            throw new IllegalStateException("REGISTRATION_CLOSED");
+        }
+
+        java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
+        if (race.getRegistrationEndTime() != null && now.after(race.getRegistrationEndTime())) {
+            throw new IllegalStateException("REGISTRATION_CLOSED");
+        }
+
+        // If invitation has been accepted and has a corresponding entry, delete the entry
+        if ("ACCEPTED".equalsIgnoreCase(invite.getStatus())) {
+            List<RaceEntry> entries = raceEntryRepository.findByRaceId(invite.getRaceId());
+            Optional<RaceEntry> entryOpt = entries.stream()
+                    .filter(e -> e.getHorseId().equals(invite.getHorseId()) && e.getJockeyId().equals(invite.getJockeyId()))
+                    .findFirst();
+            if (entryOpt.isPresent()) {
+                raceEntryRepository.delete(entryOpt.get());
+            }
+        }
+
+        invite.setStatus("REJECTED");
+        invitationRepository.save(invite);
+    }
 }

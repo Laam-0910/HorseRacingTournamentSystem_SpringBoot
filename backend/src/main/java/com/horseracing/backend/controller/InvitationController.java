@@ -62,4 +62,14 @@ public class InvitationController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
+
+    @PostMapping("/{id}/withdraw")
+    public ResponseEntity<?> withdrawInvitation(@PathVariable Integer id, @RequestParam Integer ownerId) {
+        try {
+            invitationService.withdrawInvitation(id, ownerId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Invitation withdrawn successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
 }

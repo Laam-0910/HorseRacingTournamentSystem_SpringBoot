@@ -62,6 +62,7 @@ public class RaceService {
             throw new IllegalArgumentException("Start time is required");
         }
         validateRaceTimeMatchesMeeting(dto.getStartTime(), dto.getRaceMeetingId());
+        validateUniqueRaceTime(dto.getStartTime(), dto.getRaceMeetingId(), null);
         validateLiveUrl(dto.getYoutubeLiveUrl());
 
         Race race = raceMapper.toEntity(dto);
@@ -122,6 +123,7 @@ public class RaceService {
         if (body.get("startTime") != null) {
             Timestamp newTime = DateTimeParser.parseTimestamp((String) body.get("startTime"));
             validateRaceTimeMatchesMeeting(newTime, race.getRaceMeetingId());
+            validateUniqueRaceTime(newTime, race.getRaceMeetingId(), id);
             race.setStartTime(newTime);
         }
         if (body.get("registrationStartTime") != null) {
@@ -290,6 +292,22 @@ public class RaceService {
             String trimmed = url.trim();
             if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
                 throw new IllegalArgumentException("Invalid livestream URL. It must start with http:// or https://");
+            }
+        }
+    }
+
+    private void validateUniqueRaceTime(Timestamp raceTime, Integer meetingId, Integer excludeRaceId) {
+        if (raceTime == null || meetingId == null) return;
+        List<Race> existingRaces = raceRepository.findByRaceMeetingId(meetingId);
+        for (Race r : existingRaces) {
+            if (excludeRaceId != null && r.getId().equals(excludeRaceId)) {
+                continue;
+            }
+            if ("CANCELLED".equalsIgnoreCase(r.getStatus())) {
+                continue;
+            }
+            if (r.getStartTime() != null && r.getStartTime().equals(raceTime)) {
+                throw new IllegalArgumentException("DUPLICATE_RACE_TIME");
             }
         }
     }
