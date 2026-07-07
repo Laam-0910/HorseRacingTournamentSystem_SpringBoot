@@ -9,24 +9,24 @@ export const parseSafeDate = (str: string): Date | null => {
   if (!str) return null;
   const cleanStr = str.trim();
   
-  // Try standard parsing first (handles ISO 8601 like yyyy-MM-ddTHH:mm:ss.sssZ, etc.)
-  const parsed = new Date(cleanStr);
-  if (!isNaN(parsed.getTime())) {
-    return parsed;
-  }
-  
-  // Try matching dd-MM-yyyy HH:mm:ss or dd-MM-yyyy HH:mm
+  // Try matching dd-MM-yyyy HH:mm:ss or dd-MM-yyyy HH:mm first
   const dmyMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})[ T](\d{2})[-:](\d{2})(?:[-:](\d{2}))?/);
   if (dmyMatch) {
     const [_, day, month, year, hours, minutes, seconds] = dmyMatch;
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), seconds ? parseInt(seconds) : 0);
   }
 
-  // Try matching dd-MM-yyyy or dd/MM/yyyy (date only)
+  // Try matching dd-MM-yyyy or dd/MM/yyyy (date only) first
   const dmyDateMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
   if (dmyDateMatch) {
     const [_, day, month, year] = dmyDateMatch;
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+
+  // Try standard parsing (handles ISO 8601 like yyyy-MM-ddTHH:mm:ss.sssZ, etc.)
+  const parsed = new Date(cleanStr);
+  if (!isNaN(parsed.getTime())) {
+    return parsed;
   }
 
   // Fallback for custom yyyy-MM-dd HH:mm:ss if standard parser failed

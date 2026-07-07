@@ -974,7 +974,8 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
 }
 
 // ── InvitationsView ────────────────────────────────────────────────────────
-function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitations: any[]; onViewProfile: (id: number) => void; onResubmit: (entryId: number) => void }) {
+function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }: { invitations: any[]; onViewProfile: (id: number) => void; onResubmit: (entryId: number) => void; onWithdraw: (invitationId: number) => void }) {
+  const lang = localStorage.getItem("app-lang") || "vi";
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div>
@@ -1006,9 +1007,9 @@ function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitatio
                       <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{inv.horseName ?? `Horse #${inv.horseId}`}</td>
                       <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", color: "#f4f2ec" }}>
                         <button 
-                          type="button" 
-                          onClick={() => onViewProfile(inv.jockeyId)} 
-                          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontSize: "0.8rem", fontFamily: "monospace" }}
+                           type="button" 
+                           onClick={() => onViewProfile(inv.jockeyId)} 
+                           style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontSize: "0.8rem", fontFamily: "monospace" }}
                         >
                           {inv.jockeyName ?? `Jockey #${inv.jockeyId}`}
                         </button>
@@ -1033,6 +1034,25 @@ function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitatio
                               }}
                             >
                               Resubmit
+                            </button>
+                          )}
+                          {(inv.status === "PENDING" || (inv.status === "ACCEPTED" && (inv.entryStatus === "PENDING_ADMIN" || inv.entryStatus === "APPROVED"))) && (
+                            <button
+                              type="button"
+                              onClick={() => onWithdraw(inv.id)}
+                              style={{
+                                padding: "0.2rem 0.5rem",
+                                background: "rgba(239,68,68,0.15)",
+                                border: "1px solid rgba(239,68,68,0.3)",
+                                borderRadius: "0.25rem",
+                                color: "#f87171",
+                                fontSize: "0.6rem",
+                                fontFamily: "monospace",
+                                fontWeight: 700,
+                                cursor: "pointer"
+                              }}
+                            >
+                              {lang === "vi" ? "Rút đăng ký" : "Withdraw"}
                             </button>
                           )}
                         </div>
@@ -1223,6 +1243,26 @@ export default function HorseOwner() {
     }
   };
 
+  const handleWithdrawInvitation = async (id: number) => {
+    if (!user) return;
+    const lang = localStorage.getItem("app-lang") || "vi";
+    try {
+      setErrorMsg(""); setSuccessMsg("");
+      await api.post(`/invitations/${id}/withdraw?ownerId=${user.id}`);
+      setSuccessMsg(lang === "vi" ? "Đã rút lời mời/đăng ký thành công." : "Successfully withdrew invitation/entry.");
+      fetchData();
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || err.message || "";
+      if (errMsg.includes("REGISTRATION_CLOSED")) {
+        setErrorMsg(lang === "vi"
+          ? "Hạn đăng ký cho trận đấu này đã kết thúc, không thể rút đăng ký."
+          : "Registration period for this race has closed.");
+      } else {
+        setErrorMsg(err.message || (lang === "vi" ? "Không thể rút đăng ký." : "Failed to withdraw registration."));
+      }
+    }
+  };
+
   const totalEarnings = results.reduce((sum: number, r: any) => sum + (r.prizeMoney ?? r.prizeAmount ?? 0), 0);
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Owner Hub";
@@ -1237,7 +1277,7 @@ export default function HorseOwner() {
       case "calendar":
         return <CalendarView meetings={meetings} allRaces={allRaces} seasons={seasons} dashboard={dashboard} invitations={invitations} onSendInvitation={handleSendInvitation} onViewProfile={setSelectedProfileId} />;
       case "invitations":
-        return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} />;
+        return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} onWithdraw={handleWithdrawInvitation} />;
       case "results":
         return <ResultsView results={results} totalEarnings={totalEarnings} />;
       case "profile":

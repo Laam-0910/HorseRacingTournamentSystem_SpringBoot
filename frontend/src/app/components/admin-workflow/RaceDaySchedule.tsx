@@ -44,14 +44,27 @@ export default function RaceDaySchedule() {
   const fetchRacesDetails = async (meetingId: number) => {
     setLoadingRaces(true);
     try {
-      const racesData = await api.get<any[]>(`/public/races?meetingId=${meetingId}`);
+      const [racesData, refereesMap] = await Promise.all([
+        api.get<any[]>(`/public/races?meetingId=${meetingId}`),
+        api.get<any>("/admin/races/referees").catch(() => ({}))
+      ]);
+
       const enriched = await Promise.all(
         racesData.map(async (race) => {
-          const [entries, referees] = await Promise.all([
-            api.get<any[]>(`/public/races/${race.id}/entries`).catch(() => []),
-            api.get<any[]>(`/admin/races/${race.id}/referees`).catch(() => []),
-          ]);
-          return { race, entries, referees };
+          const resultsData = await api.get<any[]>(`/public/results?raceId=${race.id}`).catch(() => []);
+          const mappedEntries = resultsData.map((item: any) => ({
+            id: item.entry.id,
+            gateNumber: item.entry.gateNumber,
+            horseName: item.horse?.name || "Unknown",
+            horseRating: item.horse?.currentRating || 0,
+            jockeyName: item.jockey?.fullName || item.jockey?.username || "Unknown",
+            jockeyWeight: item.jockey?.weight || 0,
+            carriedWeight: item.entry.carriedWeight
+          }));
+
+          const raceReferees = refereesMap[race.id] || [];
+
+          return { race, entries: mappedEntries, referees: raceReferees };
         })
       );
       setEnrichedRaces(enriched);
@@ -126,7 +139,12 @@ export default function RaceDaySchedule() {
       setStartTime("");
       fetchRacesDetails(selectedMeetingId);
     } catch (err: any) {
-      alert("Failed to schedule race: " + err.message);
+      const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
+      if (err.message?.includes("DUPLICATE_RACE_TIME")) {
+        alert(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
+      } else {
+        alert("Failed to schedule race: " + err.message);
+      }
     }
   };
 
