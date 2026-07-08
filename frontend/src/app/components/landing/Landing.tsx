@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
-import { parseSafeDate } from "../../utils/dateTimeHelper";
+import { parseSafeDate, formatDate } from "../../utils/dateTimeHelper";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
 
 
@@ -551,7 +551,6 @@ function SearchView({ query, horses, people, meetings, races, t, setView, lang }
                           </div>
                           <div style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>
                             <p>🛣️ {st.labelTrack}: <span style={{ color: "#fff" }}>{r.trackType} ({r.distanceMeters}m)</span></p>
-                            <p>💰 {st.labelPurse}: <span style={{ color: "#4a9d6f", fontWeight: "bold" }}>${r.purse?.toLocaleString()}</span></p>
                             <p>🐎 {st.labelMaxEntries}: <span style={{ color: "#fff" }}>{r.maxEntries}</span></p>
                           </div>
                         </div>
@@ -634,7 +633,6 @@ function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeti
                   {time && (
                     <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>🕒 Time: {time}</p>
                   )}
-                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>💰 Budget: ${m.totalBudget?.toLocaleString()}</p>
                 </div>
               );
             })}
@@ -745,6 +743,206 @@ export default function Landing() {
   const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
   const [selectedRaceEntries, setSelectedRaceEntries] = useState<any[]>([]);
   const [meetingRaces, setMeetingRaces] = useState<any[]>([]);
+
+  const [clearedNotifications, setClearedNotifications] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("cleared-notifications") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  const getDynamicNotifications = () => {
+    const list: any[] = [];
+    const lang = localStorage.getItem("app-lang") || "vi";
+
+    // Common/Fallback Notification: Active Season
+    const activeSeason = seasons.find(s => s.status === "ACTIVE");
+    if (activeSeason) {
+      list.push({
+        id: `season-${activeSeason.id}`,
+        icon: "🏆",
+        color: "#c9a227",
+        bg: "rgba(201,162,39,0.1)",
+        title: lang === "vi" ? "Mùa Giải Hoạt Động" : "Active Tournament Season",
+        desc: lang === "vi" 
+          ? `Mùa giải ${activeSeason.name} đang diễn ra! Đăng ký tham gia ngay.`
+          : `Season ${activeSeason.name} is currently active! Register now.`,
+        time: lang === "vi" ? "Đang diễn ra" : "Ongoing"
+      });
+    }
+
+    if (!user) {
+      // 1. GUEST: Upcoming Meetings Notification
+      const now = new Date();
+      const upcomingMeeting = meetings
+        .filter(m => {
+          const mDate = parseSafeDate(m.startDate);
+          return mDate && mDate > now;
+        })
+        .sort((a, b) => {
+          const da = parseSafeDate(a.startDate)?.getTime() || 0;
+          const db = parseSafeDate(b.startDate)?.getTime() || 0;
+          return da - db;
+        })[0];
+
+      if (upcomingMeeting) {
+        list.push({
+          id: `meeting-${upcomingMeeting.id}`,
+          icon: "📅",
+          color: "#60a5fa",
+          bg: "rgba(96,165,250,0.1)",
+          title: lang === "vi" ? "Sự kiện sắp khởi tranh" : "Upcoming Race Meeting",
+          desc: lang === "vi"
+            ? `${upcomingMeeting.name} sẽ bắt đầu tại ${upcomingMeeting.venue}.`
+            : `${upcomingMeeting.name} starts soon at ${upcomingMeeting.venue}.`,
+          time: formatDate(upcomingMeeting.startDate)
+        });
+      }
+    } else if (user.roleId === 1) {
+      // 2. ADMIN: Pending violations decision
+      const pendingViolations = violations.filter((v: any) => !v.violation?.penalty || v.violation?.status === "PENDING");
+      if (pendingViolations.length > 0) {
+        list.push({
+          id: `admin-viol-pending`,
+          icon: "🛡",
+          color: "#ef4444",
+          bg: "rgba(239,68,68,0.1)",
+          title: lang === "vi" ? "Sự cố chờ quyết định" : "Pending Violation Decision",
+          desc: lang === "vi"
+            ? `Có ${pendingViolations.length} sự cố vi phạm đang chờ xử lý quyết định phạt.`
+            : `There are ${pendingViolations.length} violation reports awaiting penalty decision.`,
+          time: "Admin Alert"
+        });
+      }
+      // - Races that are finished but not official yet
+      const unprocessRaces = races.filter(r => r.status === "FINISHED" || r.status === "RACE_EVENT_ENDED");
+      if (unprocessRaces.length > 0) {
+        list.push({
+          id: `admin-races-unprocessed`,
+          icon: "⚙️",
+          color: "#fbbf24",
+          bg: "rgba(251,191,36,0.1)",
+          title: lang === "vi" ? "Trận đua cần xử lý kết quả" : "Races to Process",
+          desc: lang === "vi"
+            ? `Có ${unprocessRaces.length} trận đua đã kết thúc cần được duyệt kết quả chính thức.`
+            : `There are ${unprocessRaces.length} finished races awaiting official results processing.`,
+          time: "Action Required"
+        });
+      }
+    } else if (user.roleId === 2) {
+      // 3. HORSE OWNER: If owner's horses are involved in a violation
+      const ownerViolations = violations.filter((v: any) => 
+        (v.ownerName === user.fullName || v.ownerName === user.username || v.violation?.ownerId === user.id)
+      );
+      if (ownerViolations.length > 0) {
+        const latestOwnerViol = ownerViolations[ownerViolations.length - 1];
+        list.push({
+          id: `owner-viol-${latestOwnerViol.violation?.id || latestOwnerViol.id}`,
+          icon: "⚠️",
+          color: "#ef4444",
+          bg: "rgba(239,68,68,0.1)",
+          title: lang === "vi" ? "Cảnh báo vi phạm của Ngựa" : "Horse Violation Warning",
+          desc: lang === "vi"
+            ? `Ngựa ${latestOwnerViol.horseName || "của bạn"} bị báo cáo lỗi: ${latestOwnerViol.violation?.description || "Vi phạm luật chạy"}`
+            : `Your horse ${latestOwnerViol.horseName || ""} was reported for: ${latestOwnerViol.violation?.description || "Rule violation"}`,
+          time: "Alert"
+        });
+      }
+
+      // - General upcoming meeting notification
+      const now = new Date();
+      const upcomingMeeting = meetings
+        .filter(m => {
+          const mDate = parseSafeDate(m.startDate);
+          return mDate && mDate > now;
+        })
+        .sort((a, b) => {
+          const da = parseSafeDate(a.startDate)?.getTime() || 0;
+          const db = parseSafeDate(b.startDate)?.getTime() || 0;
+          return da - db;
+        })[0];
+      if (upcomingMeeting) {
+        list.push({
+          id: `owner-meeting-${upcomingMeeting.id}`,
+          icon: "📅",
+          color: "#60a5fa",
+          bg: "rgba(96,165,250,0.1)",
+          title: lang === "vi" ? "Sự kiện sắp khởi tranh" : "Upcoming Race Meeting",
+          desc: lang === "vi"
+            ? `Đăng ký ngựa của bạn cho sự kiện ${upcomingMeeting.name} tại ${upcomingMeeting.venue}.`
+            : `Register your horses for ${upcomingMeeting.name} at ${upcomingMeeting.venue}.`,
+          time: formatDate(upcomingMeeting.startDate)
+        });
+      }
+    } else if (user.roleId === 3) {
+      // 4. JOCKEY: Violation where this jockey is involved
+      const jockeyViolations = violations.filter((v: any) => 
+        (v.jockeyName === user.fullName || v.jockeyName === user.username || v.violation?.jockeyId === user.id)
+      );
+      if (jockeyViolations.length > 0) {
+        const latestJockeyViol = jockeyViolations[jockeyViolations.length - 1];
+        list.push({
+          id: `jockey-viol-${latestJockeyViol.violation?.id || latestJockeyViol.id}`,
+          icon: "⚠️",
+          color: "#ef4444",
+          bg: "rgba(239,68,68,0.1)",
+          title: lang === "vi" ? "Bạn có báo cáo vi phạm" : "Violation Warning",
+          desc: lang === "vi"
+            ? `Bạn bị báo cáo vi phạm: ${latestJockeyViol.violation?.description || "Vi phạm luật thi đấu"}`
+            : `You have been reported for: ${latestJockeyViol.violation?.description || "Rule violation"}`,
+          time: "Alert"
+        });
+      }
+
+      // - General upcoming race alert for jockey
+      const now = new Date();
+      const upcomingMeeting = meetings
+        .filter(m => {
+          const mDate = parseSafeDate(m.startDate);
+          return mDate && mDate > now;
+        })
+        .sort((a, b) => {
+          const da = parseSafeDate(a.startDate)?.getTime() || 0;
+          const db = parseSafeDate(b.startDate)?.getTime() || 0;
+          return da - db;
+        })[0];
+      if (upcomingMeeting) {
+        list.push({
+          id: `jockey-meeting-${upcomingMeeting.id}`,
+          icon: "🏃‍♂️",
+          color: "#60a5fa",
+          bg: "rgba(96,165,250,0.1)",
+          title: lang === "vi" ? "Sự kiện sắp khởi tranh" : "Upcoming Race Meeting",
+          desc: lang === "vi"
+            ? `Buổi đua ${upcomingMeeting.name} sắp diễn ra. Hãy kiểm tra các lượt đăng ký cưỡi ngựa.`
+            : `Meeting ${upcomingMeeting.name} starts soon. Check available rides.`,
+          time: formatDate(upcomingMeeting.startDate)
+        });
+      }
+    } else if (user.roleId === 4) {
+      // 5. REFEREE: Races assigned to this referee that are upcoming
+      const assignedRaces = races.filter(r => 
+        (r.refereeId === user.id || r.assignedReferee === user.username || r.assignedReferee === user.fullName) &&
+        r.status === "SCHEDULED"
+      );
+      if (assignedRaces.length > 0) {
+        list.push({
+          id: `referee-races-assigned`,
+          icon: "🏁",
+          color: "#38bdf8",
+          bg: "rgba(56,189,248,0.1)",
+          title: lang === "vi" ? "Lượt đua được phân công" : "Assigned Races Today",
+          desc: lang === "vi"
+            ? `Bạn được phân công làm trọng tài cho ${assignedRaces.length} lượt đua sắp tới.`
+            : `You are assigned as referee for ${assignedRaces.length} upcoming races.`,
+          time: "Referee Assignment"
+        });
+      }
+    }
+
+    return list.filter(n => !clearedNotifications.includes(n.id));
+  };
 
   // Fetch initial background data
   const fetchData = async () => {
@@ -1032,7 +1230,6 @@ export default function Landing() {
                               <th style={{ padding: "0.5rem" }}>Jockey</th>
                               <th style={{ padding: "0.5rem" }}>Owner</th>
                               <th style={{ padding: "0.5rem" }}>Finish Time</th>
-                              <th style={{ padding: "0.5rem" }}>Prize Money</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -1053,11 +1250,10 @@ export default function Landing() {
                                 <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
                                 <td style={{ padding: "0.5rem" }}>{e.owner?.fullName || e.owner?.username}</td>
                                 <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
-                                <td style={{ padding: "0.5rem", fontFamily: "monospace", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</td>
                               </tr>
                             ))}
                             {selectedRaceEntries.length === 0 && (
-                              <tr><td colSpan={6} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No entry logs available.</td></tr>
+                              <tr><td colSpan={5} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No entry logs available.</td></tr>
                             )}
                           </tbody>
                         </table>
@@ -1072,7 +1268,16 @@ export default function Landing() {
           </div>
         );
       case "fixtures":
-        return <GenericTableView title="Race Fixtures / Meetings" data={meetings} columns={[{ key: "id", label: "ID" }, { key: "name", label: "Meeting" }, { key: "venue", label: "Venue" }, { key: "startDate", label: "Start Date" }, { key: "totalBudget", label: "Budget" }]} />;
+        return (
+          <GenericTableView 
+            title="Race Fixtures / Meetings" 
+            data={meetings.map(m => ({
+              ...m,
+              startDate: formatDate(m.startDate)
+            }))} 
+            columns={[{ key: "id", label: "ID" }, { key: "name", label: "Meeting" }, { key: "venue", label: "Venue" }, { key: "startDate", label: "Start Date" }]} 
+          />
+        );
       case "statistics":
         return (
           <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-2">
@@ -1282,33 +1487,51 @@ export default function Landing() {
 
             {/* Bell */}
             <div style={{ position: "relative" }}>
-              <button onClick={() => setShowNotifications(v => !v)} style={{ position: "relative", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", display: "flex", padding: "0.25rem" }}>
-                🔔
-                <span style={{ position: "absolute", top: 0, right: 0, width: 8, height: 8, borderRadius: "50%", background: "#c9a227" }} />
-              </button>
-              {showNotifications && (
-                <div style={{ position: "absolute", right: 0, marginTop: "0.75rem", width: "20rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.5rem", zIndex: 50, overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
-                  <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #2a2825", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#1a1815" }}>
-                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#fff", fontFamily: "'Roboto Slab', serif" }}>{t.notifications}</span>
-                    <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", cursor: "pointer" }}>{t.clearAll}</button>
-                  </div>
-                  {[
-                    { icon: "🏆", color: "#c9a227", bg: "rgba(201,162,39,0.1)", title: "Tournament Season 2026", desc: "Registrations are now open for Jockeys and Owners!", time: "10 mins ago" },
-                    { icon: "📅", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", title: "Upcoming Race Meeting", desc: "Gold Cup Championship starts Sunday at 3:00 PM.", time: "2 hours ago" },
-                    { icon: "🛡", color: "#4ade80", bg: "rgba(74,222,128,0.1)", title: "System Update", desc: "Database integration verified and performance optimized.", time: "1 day ago" },
-                  ].map((n, i) => (
-                    <div key={i} style={{ padding: "0.875rem", display: "flex", gap: "0.75rem", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
-                      <div style={{ width: 28, height: 28, borderRadius: "50%", background: n.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.875rem", flexShrink: 0 }}>{n.icon}</div>
-                      <div>
-                        <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 500 }}>{n.title}</p>
-                        <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.5)", marginTop: "0.25rem" }}>{n.desc}</p>
-                        <span style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{n.time}</span>
+              {(() => {
+                const dynamicNotifications = getDynamicNotifications();
+                const handleClearAll = () => {
+                  const allIds = dynamicNotifications.map(n => n.id);
+                  setClearedNotifications(prev => {
+                    const next = [...prev, ...allIds];
+                    localStorage.setItem("cleared-notifications", JSON.stringify(next));
+                    return next;
+                  });
+                };
+
+                return (
+                  <>
+                    <button onClick={() => setShowNotifications(v => !v)} style={{ position: "relative", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", display: "flex", padding: "0.25rem" }}>
+                      🔔
+                      {dynamicNotifications.length > 0 && (
+                        <span style={{ position: "absolute", top: 0, right: 0, width: 8, height: 8, borderRadius: "50%", background: "#c9a227" }} />
+                      )}
+                    </button>
+                    {showNotifications && (
+                      <div style={{ position: "absolute", right: 0, marginTop: "0.75rem", width: "20rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.5rem", zIndex: 50, overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
+                        <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #2a2825", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#1a1815" }}>
+                          <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#fff", fontFamily: "'Roboto Slab', serif" }}>{t.notifications}</span>
+                          {dynamicNotifications.length > 0 && (
+                            <button onClick={handleClearAll} style={{ background: "none", border: "none", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", cursor: "pointer" }}>{t.clearAll}</button>
+                          )}
+                        </div>
+                        {dynamicNotifications.map((n, i) => (
+                          <div key={i} style={{ padding: "0.875rem", display: "flex", gap: "0.75rem", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
+                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: n.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.875rem", flexShrink: 0 }}>{n.icon}</div>
+                            <div>
+                              <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 500 }}>{n.title}</p>
+                              <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.5)", marginTop: "0.25rem" }}>{n.desc}</p>
+                              <span style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{n.time}</span>
+                            </div>
+                          </div>
+                        ))}
+                        {dynamicNotifications.length === 0 && (
+                          <div style={{ padding: "1.5rem 1rem", textAlign: "center", background: "#1a1815", fontSize: "0.65rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{t.noNotifications}</div>
+                        )}
                       </div>
-                    </div>
-                  ))}
-                  <div style={{ padding: "0.5rem 1rem", textAlign: "center", background: "#1a1815", fontSize: "0.6rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{t.noNotifications}</div>
-                </div>
-              )}
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             {/* Auth Controls */}

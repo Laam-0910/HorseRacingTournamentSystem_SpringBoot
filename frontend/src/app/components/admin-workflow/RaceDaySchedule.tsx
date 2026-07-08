@@ -19,7 +19,7 @@ export default function RaceDaySchedule() {
   const [distance, setDistance] = useState("1200");
   const [minEntries, setMinEntries] = useState("3");
   const [maxEntries, setMaxEntries] = useState("12");
-  const [purse, setPurse] = useState("100000");
+  const [purse, setPurse] = useState("0");
 
   const fetchData = async () => {
     setLoading(true);
@@ -284,7 +284,7 @@ export default function RaceDaySchedule() {
                         <span style={{ fontSize: "14px", fontWeight: "bold", color: "#f4f2ec" }}>{r.classLevel}</span>
                       </div>
                       <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
-                        Time: {formatDateTime(r.startTime)} | Distance: {r.distanceMeters}m | Track: {r.trackType} | Purse: ${r.purse.toLocaleString()}
+                        Time: {formatDateTime(r.startTime)} | Distance: {r.distanceMeters}m | Track: {r.trackType}
                       </p>
                     </div>
                     <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -445,11 +445,6 @@ export default function RaceDaySchedule() {
                   <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Max Entries</label>
                   <input type="number" min="1" value={maxEntries} onChange={e => setMaxEntries(e.target.value)} required style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px" }} />
                 </div>
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Purse Amount (USD)</label>
-                <input type="number" min="1" value={purse} onChange={e => setPurse(e.target.value)} required style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px" }} />
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>

@@ -7,6 +7,7 @@ import ViewLive from "./components/ViewLive";
 import ProfileModal from "./components/ProfileModal";
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
+import { formatDate, parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
 
 type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "profile";
 
@@ -40,6 +41,7 @@ export default function Spectator() {
   const [meetings, setMeetings] = useState<any[]>([]);
   const [races, setRaces] = useState<any[]>([]);
   const [horses, setHorses] = useState<any[]>([]);
+  const [seasons, setSeasons] = useState<any[]>([]);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -79,10 +81,12 @@ export default function Spectator() {
       api.get<any[]>("/public/meetings").catch(() => []),
       api.get<any[]>("/public/races").catch(() => []),
       api.get<any[]>("/public/horses").catch(() => []),
-    ]).then(([m, r, h]) => {
+      api.get<any[]>("/races/seasons").catch(() => []),
+    ]).then(([m, r, h, s]) => {
       setMeetings(Array.isArray(m) ? m : []);
       setRaces(Array.isArray(r) ? r : []);
       setHorses(Array.isArray(h) ? h : []);
+      setSeasons(Array.isArray(s) ? s : []);
     });
   }, []);
 
@@ -229,8 +233,7 @@ export default function Spectator() {
                         <span style={{ fontSize: "0.55rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.2rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,157,111,0.15)", color: "#4a9d6f", whiteSpace: "nowrap" }}>Active</span>
                       </div>
                       <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue}</p>
-                      <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>📅 {m.startDate || m.date}</p>
-                      {m.totalBudget && <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>💰 ${(m.totalBudget).toLocaleString()}</p>}
+                      <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>📅 {formatDate(m.startDate || m.date)}</p>
                     </div>
                   ))}
                 </div>}
@@ -262,7 +265,16 @@ export default function Spectator() {
                       >
                         <div>
                           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "1rem" }}>{r.classLevel ?? `Race #${r.id}`}</h4>
-                          <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.25rem" }}>{r.distanceMeters}m · {r.trackType} · {r.startTime}</p>
+                          {(() => {
+                            const meeting = meetings.find(m => m.id === r.raceMeetingId);
+                            const season = seasons.find(s => s.id === meeting?.seasonId);
+                            return (
+                              <p style={{ fontSize: "0.65rem", color: "#c9a227", fontFamily: "monospace", marginTop: "0.15rem" }}>
+                                🏆 {season?.name || "N/A"} · {meeting?.name || "N/A"}
+                              </p>
+                            );
+                          })()}
+                          <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.25rem" }}>{r.distanceMeters}m · {r.trackType} · 📅 {formatDateTime(r.startTime)}</p>
                         </div>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                           <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", fontWeight: 700, padding: "0.25rem 0.625rem", borderRadius: "0.25rem", background: r.status === "RUNNING" ? "rgba(239,68,68,0.12)" : r.status === "FINISHED" ? "rgba(74,222,128,0.1)" : "rgba(201,162,39,0.1)", color: r.status === "RUNNING" ? "#ef4444" : r.status === "FINISHED" ? "#4ade80" : "#c9a227" }}>
@@ -403,8 +415,21 @@ export default function Spectator() {
                             className="hover:bg-white/[0.01]"
                           >
                             <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem", fontWeight: 700 }}>
-                              <span style={{ marginRight: "0.5rem" }}>{isExpanded ? "▼" : "▶"}</span>
-                              {r.classLevel ?? `Race #${r.id}`}
+                              <div style={{ display: "flex", flexDirection: "column" }}>
+                                <div>
+                                  <span style={{ marginRight: "0.5rem" }}>{isExpanded ? "▼" : "▶"}</span>
+                                  {r.classLevel ?? `Race #${r.id}`}
+                                </div>
+                                {(() => {
+                                  const meeting = meetings.find(m => m.id === r.raceMeetingId);
+                                  const season = seasons.find(s => s.id === meeting?.seasonId);
+                                  return (
+                                    <span style={{ fontSize: "10px", color: "#c9a227", fontWeight: "normal", fontFamily: "monospace", marginLeft: "1.25rem", marginTop: "2px" }}>
+                                      🏆 {season?.name || "N/A"} · {meeting?.name || "N/A"}
+                                    </span>
+                                  );
+                                })()}
+                              </div>
                             </td>
                             <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.75rem" }}>{r.distanceMeters}m</td>
                             <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontSize: "0.75rem" }}>{r.trackType}</td>
@@ -413,7 +438,7 @@ export default function Spectator() {
                                 {r.status}
                               </span>
                             </td>
-                            <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.7rem" }}>{r.startTime}</td>
+                            <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.7rem" }}>{formatDateTime(r.startTime)}</td>
                           </tr>
                           {isExpanded && (
                             <tr>
@@ -458,7 +483,6 @@ export default function Spectator() {
                                           <th style={{ padding: "0.5rem" }}>Owner</th>
                                           <th style={{ padding: "0.5rem" }}>Weight (Out/In)</th>
                                           <th style={{ padding: "0.5rem" }}>Finish Time</th>
-                                          <th style={{ padding: "0.5rem" }}>Prize</th>
                                         </tr>
                                       </thead>
                                       <tbody>
@@ -483,7 +507,6 @@ export default function Spectator() {
                                                 {e.entry?.carriedWeight ? `${e.entry.carriedWeight}kg` : "-"} / {e.entry?.weighInWeight ? `${e.entry.weighInWeight}kg` : "-"}
                                               </td>
                                               <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
-                                              <td style={{ padding: "0.5rem", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</td>
                                             </tr>
                                           );
                                         })}

@@ -330,6 +330,29 @@ public class JockeyOwnerDashboardService {
             bookedHorsesMap.put(race.getId(), new ArrayList<>(bookedHorseIds));
         }
 
+        double sumPositions = 0.0;
+        int finishedEntriesCount = 0;
+        for (Horse h : activeHorses) {
+            List<RaceEntry> entries = raceEntryRepository.findByHorseId(h.getId());
+            for (RaceEntry e : entries) {
+                if ("FINISHED".equalsIgnoreCase(e.getStatus())) {
+                    if (e.getFinalPosition() != null) {
+                        sumPositions += e.getFinalPosition();
+                        finishedEntriesCount++;
+                    }
+                }
+            }
+        }
+        double averagePlace = finishedEntriesCount > 0 ? (sumPositions / finishedEntriesCount) : 0.0;
+
+        long pendingRegsCount = horseRegRepository.findAll().stream()
+                .filter(r -> "PENDING".equalsIgnoreCase(r.getStatus()))
+                .filter(r -> {
+                    Optional<Horse> h = horseRepository.findById(r.getHorseId());
+                    return h.isPresent() && h.get().getOwnerId().equals(ownerId);
+                })
+                .count();
+
         Map<String, Object> response = new HashMap<>();
         response.put("meetings", meetings.stream().map(m -> raceMeetingMapper.toDTO(m, null)).toList());
         response.put("registeredMeetingIds", registeredMeetingIds);
@@ -340,6 +363,9 @@ public class JockeyOwnerDashboardService {
         response.put("meetingJockeys", meetingJockeys);
         response.put("activeHorses", activeHorses.stream().map(h -> horseMapper.toDTO(h, null)).toList());
         response.put("totalHorses", activeHorses.size());
+        response.put("averagePlace", averagePlace > 0 ? averagePlace : null);
+        response.put("pendingRegistrations", pendingRegsCount);
+        response.put("racesCompleted", finishedEntriesCount);
         response.put("bookedJockeysMap", bookedJockeysMap);
         response.put("bookedHorsesMap", bookedHorsesMap);
 
@@ -451,5 +477,54 @@ public class JockeyOwnerDashboardService {
         }
 
         return resolved;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getOwnerResults(Integer ownerId) {
+        List<Horse> horses = horseRepository.findByOwnerId(ownerId);
+        List<Map<String, Object>> resultsList = new ArrayList<>();
+
+        Map<Integer, Race> raceMap = raceRepository.findAll().stream().collect(Collectors.toMap(Race::getId, r -> r));
+        Map<Integer, RaceMeeting> meetingMap = raceMeetingRepository.findAll().stream().collect(Collectors.toMap(RaceMeeting::getId, m -> m));
+
+        for (Horse h : horses) {
+            List<RaceEntry> entries = raceEntryRepository.findByHorseId(h.getId());
+            for (RaceEntry e : entries) {
+                if ("FINISHED".equalsIgnoreCase(e.getStatus())) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("startTime", null);
+                    map.put("meetingName", "—");
+                    map.put("classLevel", "—");
+                    
+                    Race race = raceMap.get(e.getRaceId());
+                    if (race != null) {
+                        map.put("startTime", race.getStartTime());
+                        map.put("classLevel", race.getClassLevel());
+                        RaceMeeting mt = meetingMap.get(race.getRaceMeetingId());
+                        if (mt != null) {
+                            map.put("meetingName", mt.getName());
+                        }
+                    }
+                    map.put("horseName", h.getName());
+                    map.put("horseId", h.getId());
+                    map.put("position", e.getFinalPosition());
+                    map.put("finishTime", e.getFinishTime());
+                    map.put("ratingAdjustment", e.getRatingAdjustment());
+                    map.put("prizeMoney", e.getPrizeMoney() != null ? e.getPrizeMoney().doubleValue() : 0.0);
+                    resultsList.add(map);
+                }
+            }
+        }
+
+        resultsList.sort((r1, r2) -> {
+            Object t1 = r1.get("startTime");
+            Object t2 = r2.get("startTime");
+            if (t1 == null && t2 == null) return 0;
+            if (t1 == null) return 1;
+            if (t2 == null) return -1;
+            return t2.toString().compareTo(t1.toString());
+        });
+
+        return resultsList;
     }
 }

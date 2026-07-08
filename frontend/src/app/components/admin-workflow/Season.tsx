@@ -174,8 +174,14 @@ export default function Season() {
 
   const toDisplayFormat = (d: string) => {
     if (!d) return "";
-    const parts = d.substring(0, 10).split("-");
-    if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    const parts = d.substring(0, 10).replace(/\//g, "-").split("-");
+    if (parts.length === 3) {
+      if (parts[0].length === 4) {
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      } else {
+        return `${parts[0]}-${parts[1]}-${parts[2]}`;
+      }
+    }
     return d;
   };
 

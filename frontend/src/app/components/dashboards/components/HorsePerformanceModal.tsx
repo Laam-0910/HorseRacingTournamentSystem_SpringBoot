@@ -398,12 +398,12 @@ function HorsePerformanceModal({
                           background: "rgba(255,255,255,0.01)",
                         }}
                       >
-                        {["Date", "Meeting", "Class", "Gate", "Jockey", "Pos", "Finish Time", "Rating Δ", "Prize"].map((h) => (
+                        {["Date", "Meeting", "Class", "Gate", "Jockey", "Pos", "Finish Time", "Rating Δ"].map((h) => (
                           <th
                             key={h}
                             style={{
                               padding: "0.75rem 1rem",
-                              textAlign: h === "Pos" || h === "Rating Δ" || h === "Prize" ? "center" : "left",
+                              textAlign: h === "Pos" || h === "Rating Δ" ? "center" : "left",
                               fontSize: "0.55rem",
                               fontFamily: "monospace",
                               textTransform: "uppercase",
@@ -421,7 +421,7 @@ function HorsePerformanceModal({
                       {!perf?.history || perf.history.length === 0 ? (
                         <tr>
                           <td
-                            colSpan={9}
+                            colSpan={8}
                             style={{
                               padding: "2.5rem",
                               textAlign: "center",
@@ -482,9 +482,6 @@ function HorsePerformanceModal({
                                 >
                                   {adj > 0 ? "+" : ""}{adj}
                                 </span>
-                              </td>
-                              <td style={{ padding: "0.75rem 1rem", textAlign: "center", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, color: "#4ade80" }}>
-                                {r.prizeMoney > 0 ? `$${r.prizeMoney.toLocaleString()}` : "—"}
                               </td>
                             </tr>
                           );

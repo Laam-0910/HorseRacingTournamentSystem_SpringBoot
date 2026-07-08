@@ -656,7 +656,7 @@ export default function RefereeHub() {
       await api.post(`/referee/races/${race.id}/start`);
       alert("Race started successfully. Now monitoring live!");
       // Directly go to live supervision
-      handleStartSupervise(race);
+      handleStartSupervise({ ...race, status: "RUNNING" });
     } catch (err: any) {
       alert("Failed to start race: " + err.message);
       setLoading(false);

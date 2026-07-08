@@ -156,7 +156,7 @@ const NAV_ITEMS = [
   { index: "02", icon: "book-open",         label: "My Stable",          view: "stable"      },
   { index: "03", icon: "calendar",          label: "Race Calendar",      view: "calendar"    },
   { index: "04", icon: "mail",              label: "Invitations",        view: "invitations" },
-  { index: "05", icon: "award",             label: "Results & Earnings", view: "results"     },
+  { index: "05", icon: "award",             label: "Stable Race History", view: "results"     },
 ];
 
 const inputStyle: React.CSSProperties = {
@@ -240,8 +240,8 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: "1rem" }}>
           {[
             { label: "Total Horses",          value: dashboard.totalHorses ?? 0,           color: ROLE_COLOR },
-            { label: "Avg Place Position",    value: dashboard.averagePlace ? Number(dashboard.averagePlace).toFixed(1) : "N/A" },
-            { label: "Total Prizes ($)",      value: `$${(dashboard.totalEarnings ?? 0).toLocaleString()}`, color: "#c9a227" },
+            { label: "Stable Avg Rank",       value: dashboard.averagePlace ? Number(dashboard.averagePlace).toFixed(1) : "N/A" },
+            { label: "Races Completed",       value: dashboard.racesCompleted ?? 0,         color: "#c9a227" },
             { label: "Pending Registrations", value: dashboard.pendingRegistrations ?? 0 },
           ].map(s => (
             <div key={s.label} className="rounded-xl" style={{ background: "rgba(21,19,16,0.6)", border: "1px solid rgba(255,255,255,0.08)", padding: "1rem", textAlign: "center" }}>
@@ -274,7 +274,6 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                     <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                       <span>📅 {formatDate(m.startDate || m.date)}</span>
                       <span>📍 {m.venue}</span>
-                      <span>💰 ${(m.totalBudget || 0).toLocaleString()}</span>
                     </div>
 
                     {!isReg && (
@@ -528,7 +527,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
           <p style={{ fontSize: "0.65rem", color: "#a0a0a0" }}>Breed: {h.breed} · Sex: {h.sex || "Gelding"} · Status: <span style={{ color: h.status === "ACTIVE" ? "#4ade80" : h.status === "RETIRED" ? "#ef4444" : h.status === "REJECTED" ? "#f87171" : "#fbbf24", fontWeight: 700 }}>{h.status}</span></p>
           <div style={{ borderTop: "1px solid #2a2825", paddingTop: "0.4rem", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#a0a0a0" }}>
             <span>Rating: <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
-            <span>Wins: <strong>{item.totalWins ?? 0}</strong>/{item.totalRaces ?? 0}</span>
+            <span>Wins / Races: <strong style={{ color: "#f4f2ec" }}>{item.totalWins ?? 0}</strong> / <strong>{item.totalRaces ?? 0}</strong></span>
           </div>
           <div style={{ display: "flex", gap: "0.5rem", marginTop: "auto", flexDirection: "column" }}>
             <button type="button" onClick={() => setSelectedHorse({ id: h.id, name: h.name })} style={{ width: "100%", padding: "0.45rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.375rem", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}>📈 History</button>
@@ -915,11 +914,10 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
             { label: "Start Time",      value: formatDate(race.startTime) },
             { label: "Distance & Track", value: `${race.distanceMeters}m (${race.trackType})` },
             { label: "Rating Limits",   value: `${race.minRating ?? "0"} – ${race.maxRating ?? "∞"}` },
-            { label: "Purse",           value: `$${(race.purse || 0).toLocaleString()}`, color: "#4a9d6f" },
           ].map(s => (
             <div key={s.label}>
               <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", marginBottom: "0.15rem" }}>{s.label}</p>
-              <p style={{ fontSize: "0.75rem", fontWeight: 600, color: s.color ?? "#f4f2ec", fontFamily: "monospace" }}>{s.value}</p>
+              <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#f4f2ec", fontFamily: "monospace" }}>{s.value}</p>
             </div>
           ))}
         </div>
@@ -1069,20 +1067,13 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }:
 }
 
 // ── ResultsView ────────────────────────────────────────────────────────────
-function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings: number }) {
+function ResultsView({ results }: { results: any[] }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
         <div>
-          <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Results & Earnings</h3>
-          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Comprehensive record of all finished races and prize money won by your stable.</p>
-        </div>
-        <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.6)", border: "1px solid rgba(74,157,111,0.2)", padding: "0.875rem 1.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <span style={{ fontSize: "1.5rem" }}>💰</span>
-          <div>
-            <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0" }}>Total Stable Earnings</p>
-            <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "#4a9d6f", fontFamily: "monospace" }}>${totalEarnings.toLocaleString()}</p>
-          </div>
+          <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Stable Race History</h3>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Comprehensive record of all finished races and performance metrics of your stable.</p>
         </div>
       </div>
 
@@ -1091,14 +1082,14 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                {["Date", "Meeting", "Race Class", "Horse", "Pos", "Finish Time", "Rating Adj", "Prize"].map(h => (
+                {["Date", "Meeting", "Race Class", "Horse", "Pos", "Finish Time", "Rating Adj"].map(h => (
                    <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {results.length === 0
-                ? <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No race results available yet.</td></tr>
+                ? <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No race results available yet.</td></tr>
                 : results.map((r: any, i: number) => (
                   <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDate(r.startTime)}</td>
@@ -1113,9 +1104,6 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
                     <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{r.finishTime ?? "—"}</td>
                     <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", fontFamily: "monospace", color: r.ratingAdjustment > 0 ? "#4a9d6f" : r.ratingAdjustment < 0 ? "#ef5b5b" : "#a0a0a0" }}>
                       {r.ratingAdjustment != null ? (r.ratingAdjustment > 0 ? `+${r.ratingAdjustment}` : r.ratingAdjustment) : "—"}
-                    </td>
-                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontFamily: "monospace", fontWeight: 700, color: "#4a9d6f" }}>
-                      ${(r.prizeMoney ?? r.prizeAmount ?? 0).toLocaleString()}
                     </td>
                   </tr>
                 ))}
@@ -1263,7 +1251,6 @@ export default function HorseOwner() {
     }
   };
 
-  const totalEarnings = results.reduce((sum: number, r: any) => sum + (r.prizeMoney ?? r.prizeAmount ?? 0), 0);
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Owner Hub";
   const navItemsWithBadge = NAV_ITEMS.map(n => n.view === "invitations" ? { ...n, badge: pendingInvitations } : n);
@@ -1279,7 +1266,7 @@ export default function HorseOwner() {
       case "invitations":
         return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} onWithdraw={handleWithdrawInvitation} />;
       case "results":
-        return <ResultsView results={results} totalEarnings={totalEarnings} />;
+        return <ResultsView results={results} />;
       case "profile":
         return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Horse Owner" />;
       default:
