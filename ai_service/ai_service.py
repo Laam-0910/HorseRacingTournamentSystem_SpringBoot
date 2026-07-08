@@ -76,47 +76,52 @@ def is_blocked(msg):
 # ── Lấy dữ liệu thật ──────────────────────────────────────────────────────────
 def top_horses():
     return query(
-        "SELECT TOP 5 name, currentRating, totalWins, totalRaces, breed "
-        "FROM horses WHERE status='ACTIVE' ORDER BY currentRating DESC"
+        "SELECT TOP 5 name, current_rating AS currentRating, total_wins AS totalWins, total_races AS totalRaces, breed "
+        "FROM [Horse] WHERE status='ACTIVE' ORDER BY current_rating DESC"
     )
 
 def top_jockeys():
     return query(
-        "SELECT TOP 5 username, totalRacesParticipated, totalWins, totalTop3Finishes, weight "
-        "FROM users WHERE roleId=3 AND status='ACTIVE' ORDER BY totalWins DESC"
+        "SELECT TOP 5 u.username, u.total_races_participated AS totalRacesParticipated, "
+        "COALESCE(w.wins, 0) AS totalWins, u.total_top3_finishes AS totalTop3Finishes, u.weight "
+        "FROM [User] u LEFT JOIN ("
+        "  SELECT jockey_id, COUNT(*) AS wins FROM [RaceEntry] WHERE final_position = 1 GROUP BY jockey_id"
+        ") w ON u.id = w.jockey_id "
+        "WHERE u.role_id=3 AND u.status='ACTIVE' "
+        "ORDER BY totalWins DESC"
     )
 
 def upcoming_races():
     return query(
-        "SELECT TOP 5 r.classLevel, r.distanceMeters, r.trackType, r.startTime, rm.name as meetingName "
-        "FROM races r LEFT JOIN race_meetings rm ON r.raceMeetingId=rm.id "
+        "SELECT TOP 5 r.class_level AS classLevel, r.distance_meters AS distanceMeters, r.track_type AS trackType, r.start_time AS startTime, rm.name as meetingName "
+        "FROM [Race] r LEFT JOIN [RaceMeeting] rm ON r.race_meeting_id=rm.id "
         "WHERE r.status IN ('SCHEDULED','DECLARATION_OPEN','DECLARATION_CLOSED','RACE_ASSIGNED') "
-        "ORDER BY r.startTime ASC"
+        "ORDER BY r.start_time ASC"
     )
 
 def running_races():
     return query(
-        "SELECT r.id, r.classLevel, rm.name as meetingName "
-        "FROM races r LEFT JOIN race_meetings rm ON r.raceMeetingId=rm.id "
+        "SELECT r.id, r.class_level AS classLevel, rm.name as meetingName "
+        "FROM [Race] r LEFT JOIN [RaceMeeting] rm ON r.race_meeting_id=rm.id "
         "WHERE r.status='RUNNING'"
     )
 
 def recent_results():
     return query(
-        "SELECT TOP 5 r.classLevel, r.startTime, rm.name as meetingName, "
-        "h.name as horseName, re.finalPosition, re.finishTime, re.prizeMoney "
-        "FROM race_entries re "
-        "JOIN races r ON re.raceId=r.id "
-        "JOIN race_meetings rm ON r.raceMeetingId=rm.id "
-        "JOIN horses h ON re.horseId=h.id "
-        "WHERE r.status='OFFICIAL' AND re.finalPosition IS NOT NULL "
-        "ORDER BY r.startTime DESC"
+        "SELECT TOP 5 r.class_level AS classLevel, r.start_time AS startTime, rm.name as meetingName, "
+        "h.name as horseName, re.final_position AS finalPosition, re.finish_time AS finishTime, re.prize_money AS prizeMoney "
+        "FROM [RaceEntry] re "
+        "JOIN [Race] r ON re.race_id=r.id "
+        "JOIN [RaceMeeting] rm ON r.race_meeting_id=rm.id "
+        "JOIN [Horse] h ON re.horse_id=h.id "
+        "WHERE r.status='OFFICIAL' AND re.final_position IS NOT NULL "
+        "ORDER BY r.start_time DESC"
     )
 
 def get_horse(name):
     rows = query(
-        "SELECT name, currentRating, totalWins, totalRaces, breed "
-        "FROM horses WHERE name LIKE ? AND status='ACTIVE'",
+        "SELECT name, current_rating AS currentRating, total_wins AS totalWins, total_races AS totalRaces, breed "
+        "FROM [Horse] WHERE name LIKE ? AND status='ACTIVE'",
         (f"%{name}%",)
     )
     return rows[0] if rows else None
@@ -126,9 +131,9 @@ def stats():
         r = query(sql)
         return list(r[0].values())[0] if r else 0
     return {
-        "races":   n("SELECT COUNT(*) FROM races WHERE status='OFFICIAL'"),
-        "horses":  n("SELECT COUNT(*) FROM horses WHERE status='ACTIVE'"),
-        "jockeys": n("SELECT COUNT(*) FROM users WHERE roleId=3 AND status='ACTIVE'"),
+        "races":   n("SELECT COUNT(*) FROM [Race] WHERE status='OFFICIAL'"),
+        "horses":  n("SELECT COUNT(*) FROM [Horse] WHERE status='ACTIVE'"),
+        "jockeys": n("SELECT COUNT(*) FROM [User] WHERE role_id=3 AND status='ACTIVE'"),
     }
 
 # ── Phân tích ý định ──────────────────────────────────────────────────────────
@@ -273,19 +278,19 @@ def get_db_grounding_context(user_msg):
    - Active Jockeys: {st.get('jockeys', 0)}
 
 2. Top 5 Rated Horses:
-{json.dumps(horses, ensure_ascii=False, indent=2)}
+{json.dumps(horses, default=str, ensure_ascii=False, indent=2)}
 
 3. Top 5 Jockeys by Wins:
-{json.dumps(jockeys, ensure_ascii=False, indent=2)}
+{json.dumps(jockeys, default=str, ensure_ascii=False, indent=2)}
 
 4. Upcoming Scheduled Races:
-{json.dumps(upcoming, ensure_ascii=False, indent=2)}
+{json.dumps(upcoming, default=str, ensure_ascii=False, indent=2)}
 
 5. Live Running Races:
-{json.dumps(running, ensure_ascii=False, indent=2)}
+{json.dumps(running, default=str, ensure_ascii=False, indent=2)}
 
 6. Recent Official Race Results:
-{json.dumps(results, ensure_ascii=False, indent=2)}
+{json.dumps(results, default=str, ensure_ascii=False, indent=2)}
 {horse_info}
 [END OF DATABASE CONTEXT]"""
     return context

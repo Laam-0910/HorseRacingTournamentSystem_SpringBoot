@@ -1,7 +1,9 @@
 # Horse Racing System - Start All Services
 # Cach dung: .\start.ps1
 
-$env:JAVA_HOME = "C:\Users\caonh\.jdks\ms-17.0.19"
+if (-not $env:JAVA_HOME) {
+    $env:JAVA_HOME = "D:\AndroidStudio\jbr"
+}
 $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
 
 Write-Host ""
@@ -12,7 +14,7 @@ Write-Host ""
 
 # Backend (Spring Boot tu start Python AI)
 Write-Host "[1/2] Starting Backend..." -ForegroundColor Yellow
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "`$env:JAVA_HOME='C:\Users\caonh\.jdks\ms-17.0.19'; `$env:PATH=`"`$env:JAVA_HOME\bin;`$env:PATH`"; cd '$PSScriptRoot\backend'; .\mvnw.cmd spring-boot:run"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "if (-not `$env:JAVA_HOME) { `$env:JAVA_HOME = 'D:\AndroidStudio\jbr' }; `$env:PATH=`"`$env:JAVA_HOME\bin;`$env:PATH`"; cd '$PSScriptRoot\backend'; .\mvnw.cmd spring-boot:run"
 
 Start-Sleep -Seconds 3
 
