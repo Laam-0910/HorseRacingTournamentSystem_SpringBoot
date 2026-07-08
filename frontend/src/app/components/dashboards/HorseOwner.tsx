@@ -156,7 +156,7 @@ const NAV_ITEMS = [
   { index: "02", icon: "book-open",         label: "My Stable",          view: "stable"      },
   { index: "03", icon: "calendar",          label: "Race Calendar",      view: "calendar"    },
   { index: "04", icon: "mail",              label: "Invitations",        view: "invitations" },
-  { index: "05", icon: "award",             label: "Results & Earnings", view: "results"     },
+  { index: "05", icon: "award",             label: "Stable Race History", view: "results"     },
 ];
 
 const inputStyle: React.CSSProperties = {
@@ -240,8 +240,8 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: "1rem" }}>
           {[
             { label: "Total Horses",          value: dashboard.totalHorses ?? 0,           color: ROLE_COLOR },
-            { label: "Avg Place Position",    value: dashboard.averagePlace ? Number(dashboard.averagePlace).toFixed(1) : "N/A" },
-            { label: "Total Prizes ($)",      value: `$${(dashboard.totalEarnings ?? 0).toLocaleString()}`, color: "#c9a227" },
+            { label: "Stable Avg Rank",       value: dashboard.averagePlace ? Number(dashboard.averagePlace).toFixed(1) : "N/A" },
+            { label: "Races Completed",       value: dashboard.racesCompleted ?? 0,         color: "#c9a227" },
             { label: "Pending Registrations", value: dashboard.pendingRegistrations ?? 0 },
           ].map(s => (
             <div key={s.label} className="rounded-xl" style={{ background: "rgba(21,19,16,0.6)", border: "1px solid rgba(255,255,255,0.08)", padding: "1rem", textAlign: "center" }}>
@@ -274,7 +274,6 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                     <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                       <span>📅 {formatDate(m.startDate || m.date)}</span>
                       <span>📍 {m.venue}</span>
-                      <span>💰 ${(m.totalBudget || 0).toLocaleString()}</span>
                     </div>
 
                     {!isReg && (
@@ -539,7 +538,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
           <p style={{ fontSize: "0.65rem", color: "#a0a0a0" }}>Breed: {h.breed} · Sex: {h.sex || "Gelding"} · Status: <span style={{ color: h.status === "ACTIVE" ? "#4ade80" : h.status === "RETIRED" ? "#ef4444" : h.status === "REJECTED" ? "#f87171" : "#fbbf24", fontWeight: 700 }}>{h.status}</span></p>
           <div style={{ borderTop: "1px solid #2a2825", paddingTop: "0.4rem", display: "flex", justifyContent: "space-between", fontSize: "0.65rem", color: "#a0a0a0" }}>
             <span>Rating: <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
-            <span>Wins: <strong>{item.totalWins ?? 0}</strong>/{item.totalRaces ?? 0}</span>
+            <span>Wins / Races: <strong style={{ color: "#f4f2ec" }}>{item.totalWins ?? 0}</strong> / <strong>{item.totalRaces ?? 0}</strong></span>
           </div>
           <div style={{ display: "flex", gap: "0.5rem", marginTop: "auto", flexDirection: "column" }}>
             <button type="button" onClick={() => setSelectedHorse({ id: h.id, name: h.name })} style={{ width: "100%", padding: "0.45rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.375rem", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}>📈 History</button>
@@ -926,11 +925,10 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
             { label: "Start Time",      value: formatDate(race.startTime) },
             { label: "Distance & Track", value: `${race.distanceMeters}m (${race.trackType})` },
             { label: "Rating Limits",   value: `${race.minRating ?? "0"} – ${race.maxRating ?? "∞"}` },
-            { label: "Purse",           value: `$${(race.purse || 0).toLocaleString()}`, color: "#4a9d6f" },
           ].map(s => (
             <div key={s.label}>
               <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", marginBottom: "0.15rem" }}>{s.label}</p>
-              <p style={{ fontSize: "0.75rem", fontWeight: 600, color: s.color ?? "#f4f2ec", fontFamily: "monospace" }}>{s.value}</p>
+              <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "#f4f2ec", fontFamily: "monospace" }}>{s.value}</p>
             </div>
           ))}
         </div>
@@ -985,7 +983,8 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
 }
 
 // ── InvitationsView ────────────────────────────────────────────────────────
-function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitations: any[]; onViewProfile: (id: number) => void; onResubmit: (entryId: number) => void }) {
+function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }: { invitations: any[]; onViewProfile: (id: number) => void; onResubmit: (entryId: number) => void; onWithdraw: (invitationId: number) => void }) {
+  const lang = localStorage.getItem("app-lang") || "vi";
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -993,19 +992,17 @@ function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitatio
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Sent Invitations</h3>
         <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Manage and track invitations sent to jockeys for various races.</p>
       </div>
-
       {isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           {invitations.length === 0 ? (
             <div className="rounded-xl border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.01)", padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>
-              No invitations have been sent yet.
+              {lang === "vi" ? "Chưa gửi lời mời nào." : "No invitations have been sent yet."}
             </div>
           ) : (
             invitations.map((inv: any) => {
@@ -1031,13 +1028,32 @@ function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitatio
                             border: "1px solid rgba(201,162,39,0.3)",
                             borderRadius: "0.25rem",
                             color: "#c9a227",
-                            fontSize: "0.6rem",
+                            fontSize: "0.65rem",
                             fontFamily: "monospace",
                             fontWeight: 700,
                             cursor: "pointer"
                           }}
                         >
-                          Resubmit
+                          {lang === "vi" ? "Nộp lại" : "Resubmit"}
+                        </button>
+                      )}
+                      {(inv.status === "PENDING" || (inv.status === "ACCEPTED" && (inv.entryStatus === "PENDING_ADMIN" || inv.entryStatus === "APPROVED"))) && (
+                        <button
+                          type="button"
+                          onClick={() => onWithdraw(inv.id)}
+                          style={{
+                            padding: "0.2rem 0.5rem",
+                            background: "rgba(239,68,68,0.15)",
+                            border: "1px solid rgba(239,68,68,0.3)",
+                            borderRadius: "0.25rem",
+                            color: "#f87171",
+                            fontSize: "0.65rem",
+                            fontFamily: "monospace",
+                            fontWeight: 700,
+                            cursor: "pointer"
+                          }}
+                        >
+                          {lang === "vi" ? "Rút đăng ký" : "Withdraw"}
                         </button>
                       )}
                     </div>
@@ -1079,7 +1095,7 @@ function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitatio
               </thead>
               <tbody>
                 {invitations.length === 0
-                  ? <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No invitations have been sent yet.</td></tr>
+                  ? <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>{lang === "vi" ? "Chưa gửi lời mời nào." : "No invitations have been sent yet."}</td></tr>
                   : invitations.map((inv: any) => {
                     const displayStatus = (inv.status === "ACCEPTED" && inv.entryStatus) ? inv.entryStatus : inv.status;
                     return (
@@ -1112,13 +1128,32 @@ function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitatio
                                   border: "1px solid rgba(201,162,39,0.3)",
                                   borderRadius: "0.25rem",
                                   color: "#c9a227",
+                                  fontSize: "0.65rem",
+                                  fontFamily: "monospace",
+                                  fontWeight: 700,
+                                  cursor: "pointer"
+                                }}
+                              >
+                                {lang === "vi" ? "Nộp lại" : "Resubmit"}
+                              </button>
+                            )}
+                            {(inv.status === "PENDING" || (inv.status === "ACCEPTED" && (inv.entryStatus === "PENDING_ADMIN" || inv.entryStatus === "APPROVED"))) && (
+                              <button
+                                type="button"
+                                onClick={() => onWithdraw(inv.id)}
+                                style={{
+                                  padding: "0.2rem 0.5rem",
+                                  background: "rgba(239,68,68,0.15)",
+                                  border: "1px solid rgba(239,68,68,0.3)",
+                                  borderRadius: "0.25rem",
+                                  color: "#f87171",
                                   fontSize: "0.6rem",
                                   fontFamily: "monospace",
                                   fontWeight: 700,
                                   cursor: "pointer"
                                 }}
                               >
-                                Resubmit
+                                {lang === "vi" ? "Rút đăng ký" : "Withdraw"}
                               </button>
                             )}
                           </div>
@@ -1136,7 +1171,7 @@ function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitatio
 }
 
 // ── ResultsView ────────────────────────────────────────────────────────────
-function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings: number }) {
+function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings?: number }) {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -1144,20 +1179,12 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
         <div>
-          <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Results & Earnings</h3>
-          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Comprehensive record of all finished races and prize money won by your stable.</p>
-        </div>
-        <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.6)", border: "1px solid rgba(74,157,111,0.2)", padding: "0.875rem 1.25rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <span style={{ fontSize: "1.5rem" }}>💰</span>
-          <div>
-            <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0" }}>Total Stable Earnings</p>
-            <p style={{ fontSize: "1.25rem", fontWeight: 700, color: "#4a9d6f", fontFamily: "monospace" }}>${totalEarnings.toLocaleString()}</p>
-          </div>
+          <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Stable Race History</h3>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Comprehensive record of all finished races and performance metrics of your stable.</p>
         </div>
       </div>
 
@@ -1365,7 +1392,26 @@ export default function HorseOwner() {
     }
   };
 
-  const totalEarnings = results.reduce((sum: number, r: any) => sum + (r.prizeMoney ?? r.prizeAmount ?? 0), 0);
+  const handleWithdrawInvitation = async (id: number) => {
+    if (!user) return;
+    const lang = localStorage.getItem("app-lang") || "vi";
+    try {
+      setErrorMsg(""); setSuccessMsg("");
+      await api.post(`/invitations/${id}/withdraw?ownerId=${user.id}`);
+      setSuccessMsg(lang === "vi" ? "Đã rút lời mời/đăng ký thành công." : "Successfully withdrew invitation/entry.");
+      fetchData();
+    } catch (err: any) {
+      const errMsg = err.response?.data?.error || err.message || "";
+      if (errMsg.includes("REGISTRATION_CLOSED")) {
+        setErrorMsg(lang === "vi"
+          ? "Hạn đăng ký cho trận đấu này đã kết thúc, không thể rút đăng ký."
+          : "Registration period for this race has closed.");
+      } else {
+        setErrorMsg(err.message || (lang === "vi" ? "Không thể rút đăng ký." : "Failed to withdraw registration."));
+      }
+    }
+  };
+
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Owner Hub";
   const navItemsWithBadge = NAV_ITEMS.map(n => n.view === "invitations" ? { ...n, badge: pendingInvitations } : n);
@@ -1379,9 +1425,9 @@ export default function HorseOwner() {
       case "calendar":
         return <CalendarView meetings={meetings} allRaces={allRaces} seasons={seasons} dashboard={dashboard} invitations={invitations} onSendInvitation={handleSendInvitation} onViewProfile={setSelectedProfileId} />;
       case "invitations":
-        return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} />;
+        return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} onWithdraw={handleWithdrawInvitation} />;
       case "results":
-        return <ResultsView results={results} totalEarnings={totalEarnings} />;
+        return <ResultsView results={results} />;
       case "profile":
         return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Horse Owner" />;
       default:

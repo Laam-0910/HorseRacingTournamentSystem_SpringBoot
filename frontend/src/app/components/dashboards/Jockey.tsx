@@ -323,23 +323,114 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
   );
 }
 
-function CalendarView({ meetings }: { meetings: any[] }) {
+function RaceRow({ race }: { race: any }) {
+  const [expanded, setExpanded] = useState(false);
+  const [entries, setEntries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (expanded && entries.length === 0) {
+      setLoading(true);
+      api.get<any[]>(`/public/results?raceId=${race.id}`)
+        .then(data => {
+          // Filter to show only APPROVED entries
+          const approved = data.filter((e: any) => e.entry?.status === "APPROVED");
+          setEntries(approved);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }
+  }, [expanded, race.id]);
+
+  return (
+    <div style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", padding: "1rem 0" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => setExpanded(!expanded)}>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", color: "#3b82c4" }}>Race #{race.id}</span>
+            <span style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{race.classLevel}</span>
+          </div>
+          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
+            Time: {formatDateTime(race.startTime)} | Distance: {race.distanceMeters}m | Track: {race.trackType}
+          </p>
+        </div>
+        <button style={{ background: "none", border: "none", color: "#3b82c4", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
+          {expanded ? "▲ Collapse" : "▼ View Entries"}
+        </button>
+      </div>
+
+      {expanded && (
+        <div style={{ marginTop: "0.75rem", background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "0.5rem", padding: "0.75rem" }}>
+          <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>Approved Race Entries</p>
+          {loading ? (
+            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>Loading entries...</p>
+          ) : entries.length === 0 ? (
+            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No approved entries for this race yet.</p>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#a0a0a0", textAlign: "left" }}>
+                  <th style={{ padding: "0.25rem" }}>Gate</th>
+                  <th style={{ padding: "0.25rem" }}>Horse</th>
+                  <th style={{ padding: "0.25rem" }}>Jockey</th>
+                  <th style={{ padding: "0.25rem" }}>Owner</th>
+                  <th style={{ padding: "0.25rem" }}>Weight</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((e, idx) => (
+                  <tr key={idx} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
+                    <td style={{ padding: "0.375rem 0.25rem", fontFamily: "monospace", color: "#c9a227", fontWeight: "bold" }}>{e.entry?.gateNumber != null ? `#${e.entry.gateNumber}` : "TBD"}</td>
+                    <td style={{ padding: "0.375rem 0.25rem", fontWeight: "bold", color: "#f4f2ec" }}>{e.horse?.name}</td>
+                    <td style={{ padding: "0.375rem 0.25rem", color: "rgba(255,255,255,0.8)" }}>{e.jockey?.fullName || e.jockey?.username}</td>
+                    <td style={{ padding: "0.375rem 0.25rem", color: "rgba(255,255,255,0.6)" }}>{e.owner?.fullName || e.owner?.username}</td>
+                    <td style={{ padding: "0.375rem 0.25rem", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{e.entry?.carriedWeight != null ? `${e.entry.carriedWeight} kg` : "TBD"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[] }) {
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Race Calendar</h3>
       {meetings.length === 0 ? (
         <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No upcoming race meetings scheduled.</p>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {meetings.map((m: any, i: number) => (
-            <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div>
-                <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue} · 📅 {formatDate(m.startDate || m.date)}</p>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          {meetings.map((m: any, i: number) => {
+            const meetingRaces = allRaces.filter(r => r.raceMeetingId === m.id);
+
+            return (
+              <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.01)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+                {/* Meeting Header */}
+                <div style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "1rem 1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
+                  <div>
+                    <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
+                    <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue} · 📅 {formatDate(m.startDate || m.date)}</p>
+                  </div>
+                  <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: `rgba(59,130,196,0.1)`, color: ROLE_COLOR }}>{m.status ?? "UPCOMING"}</span>
+                </div>
+
+                {/* Races List */}
+                <div style={{ padding: "0.75rem 1.25rem" }}>
+                  {meetingRaces.length === 0 ? (
+                    <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", padding: "0.5rem 0" }}>No races scheduled for this meeting.</p>
+                  ) : (
+                    meetingRaces.map((race: any) => (
+                      <RaceRow key={race.id} race={race} />
+                    ))
+                  )}
+                </div>
               </div>
-              <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: `rgba(59,130,196,0.1)`, color: ROLE_COLOR }}>{m.status ?? "UPCOMING"}</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -406,6 +497,7 @@ export default function Jockey() {
   const [invitations, setInvitations] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<any[]>([]);
   const [violations, setViolations] = useState<any[]>([]);
+  const [allRaces, setAllRaces] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -414,18 +506,20 @@ export default function Jockey() {
     if (!user) return;
     setLoading(true);
     try {
-      const [stats, mountData, invites, allMeetings, viols] = await Promise.all([
+      const [stats, mountData, invites, allMeetings, viols, racesData] = await Promise.all([
         api.get<any>(`/jockey/${user.id}/dashboard`).catch(() => null),
         api.get<any[]>(`/jockey/${user.id}/mounts`).catch(() => []),
         api.get<any[]>(`/invitations?jockeyId=${user.id}`).catch(() => []),
         api.get<any[]>("/public/meetings").catch(() => []),
         api.get<any[]>(`/jockey/${user.id}/violations`).catch(() => []),
+        api.get<any[]>("/public/races").catch(() => []),
       ]);
       setDashboard(stats);
       setMounts(mountData);
       setInvitations(Array.isArray(invites) ? invites.filter(i => i.status === "PENDING") : []);
       setMeetings(Array.isArray(allMeetings) ? allMeetings : []);
       setViolations(Array.isArray(viols) ? viols : []);
+      setAllRaces(Array.isArray(racesData) ? racesData : []);
     } catch (err: any) {
       setErrorMsg(err.message || "Failed to load jockey data.");
     } finally { setLoading(false); }
@@ -480,7 +574,7 @@ export default function Jockey() {
     switch (activeTab) {
       case "hub":         return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
       case "mounts":      return <MountsView mounts={mounts} loading={loading} onViewHorse={setSelectedHorse} />;
-      case "calendar":    return <CalendarView meetings={meetings} />;
+      case "calendar":    return <CalendarView meetings={meetings} allRaces={allRaces} />;
       case "invitations": return <InvitationsView invitations={invitations.filter((i: any) => i.status === "PENDING")} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} />;
       case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;

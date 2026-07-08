@@ -132,7 +132,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     gate: "Cổng",
     jockeyDetails: "Thông tin Nài",
     horseDetails: "Thông tin Ngựa",
-    jockeyWeight: "Cân nài (kg)",
+    jockeyWeight: "Cân nặng trước đua (Weigh-Out) (kg)",
     requiredWeight: "Cân nặng yêu cầu",
     vetCheck: "Khám y tế & An toàn",
     status: "Trạng thái",
@@ -141,7 +141,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     weighInPassed: "Cân sau đua đạt",
     underweightDiscrepancy: "SAI LỆCH THIẾU CÂN",
     finalPosition: "Thứ hạng chung cuộc",
-    weighInWeight: "Cân sau đua (kg)",
+    weighInWeight: "Cân nặng sau đua (Weigh-In) (kg)",
     finishTime: "Thời gian chạy",
     dq: "Loại (DQ)",
     stewardReportModalTitle: "Báo cáo chính thức của Trọng tài",
@@ -154,7 +154,14 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     selectRunner: "-- Chọn Thí sinh --",
     violationLoggedSuccess: "Đã ghi nhận vi phạm thành công.",
     disqualifiedImmediately: "Đã ghi nhận vi phạm và LOẠI TRỰC TIẾP thí sinh ngay lập tức!",
-    failedLogViolation: "Ghi nhận vi phạm thất bại: "
+    failedLogViolation: "Ghi nhận vi phạm thất bại: ",
+    suspendRace: "Tạm hoãn cuộc đua",
+    resumeRace: "Khôi phục cuộc đua",
+    suspendReasonPrompt: "Nhập lý do tạm hoãn cuộc đua (Steward's Report):",
+    suspendRaceSuccess: "Đã tạm hoãn cuộc đua. Trạng thái chuyển thành STOPPED.",
+    failedSuspendRace: "Không thể tạm hoãn cuộc đua: ",
+    resumeRaceSuccess: "Đã khôi phục cuộc đua. Trạng thái chuyển thành RUNNING.",
+    failedResumeRace: "Không thể khôi phục cuộc đua: "
   },
   en: {
     totalAssignments: "Total Assignments",
@@ -216,7 +223,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     gate: "Gate",
     jockeyDetails: "Jockey Details",
     horseDetails: "Horse Details",
-    jockeyWeight: "Jockey Weight (kg)",
+    jockeyWeight: "Weigh-Out Weight (kg)",
     requiredWeight: "Required Weight",
     vetCheck: "Vet & Safety Check",
     status: "Status",
@@ -238,7 +245,14 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     selectRunner: "-- Select Runner --",
     violationLoggedSuccess: "Incident violation logged successfully.",
     disqualifiedImmediately: "Incident logged and runner DISQUALIFIED immediately!",
-    failedLogViolation: "Failed to log violation: "
+    failedLogViolation: "Failed to log violation: ",
+    suspendRace: "Suspend Race",
+    resumeRace: "Resume Race",
+    suspendReasonPrompt: "Enter the reason for race suspension (Steward's Report):",
+    suspendRaceSuccess: "Race suspended. Status set to STOPPED.",
+    failedSuspendRace: "Failed to suspend race: ",
+    resumeRaceSuccess: "Race resumed. Status set to RUNNING.",
+    failedResumeRace: "Failed to resume race: "
   },
   ja: {
     totalAssignments: "総割り当て数",
@@ -322,7 +336,14 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     selectRunner: "-- 出走馬を選択 --",
     violationLoggedSuccess: "インシデント違反が正常に記録されました。",
     disqualifiedImmediately: "インシデントが記録され、該当馬は直ちに失格となりました！",
-    failedLogViolation: "違反の記録に失敗しました: "
+    failedLogViolation: "違反の記録に失敗しました: ",
+    suspendRace: "レース一時中断",
+    resumeRace: "レース再開",
+    suspendReasonPrompt: "レース一時中断 of 理由を入力してください (審判レポート):",
+    suspendRaceSuccess: "レースを一時中断しました。ステータスは STOPPED です。",
+    failedSuspendRace: "レースを一時中断できませんでした: ",
+    resumeRaceSuccess: "レースを再開しました。ステータスは RUNNING です。",
+    failedResumeRace: "レースを再開できませんでした: "
   },
   zh: {
     totalAssignments: "总指派数",
@@ -406,7 +427,14 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     selectRunner: "-- 选择参赛马匹 --",
     violationLoggedSuccess: "事件违规行为已成功记录。",
     disqualifiedImmediately: "事件已记录，且该马匹已被立即取消比赛资格！",
-    failedLogViolation: "记录违规行为失败: "
+    failedLogViolation: "记录违规行为失败: ",
+    suspendRace: "暂停比赛",
+    resumeRace: "恢复比赛",
+    suspendReasonPrompt: "请输入暂停比赛的原因 (裁判报告):",
+    suspendRaceSuccess: "比赛已暂停。状态已设为 STOPPED。",
+    failedSuspendRace: "无法暂停比赛: ",
+    resumeRaceSuccess: "比赛已恢复。状态已设为 RUNNING。",
+    failedResumeRace: "无法恢复比赛: "
   }
 };
 
@@ -639,7 +667,7 @@ export default function RefereeHub() {
       await api.post(`/referee/races/${race.id}/start`);
       alert("Race started successfully. Now monitoring live!");
       // Directly go to live supervision
-      handleStartSupervise(race);
+      handleStartSupervise({ ...race, status: "RUNNING" });
     } catch (err: any) {
       alert("Failed to start race: " + err.message);
       setLoading(false);
@@ -757,6 +785,50 @@ export default function RefereeHub() {
     }
   };
 
+  const handleSuspendRace = async (stewardReport: string) => {
+    if (!selectedRace || !user) return;
+    setLoading(true);
+    try {
+      await api.post(`/referee/races/${selectedRace.id}/suspend`, { stewardReport });
+      alert(t.suspendRaceSuccess);
+      const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
+      setAssignedRaces(dashboardRes.assignedRaces || []);
+      setCompletedCount(dashboardRes.completedCount || 0);
+      setPendingCount(dashboardRes.pendingCount || 0);
+      const updatedRace = (dashboardRes.assignedRaces || []).find((r: any) => r.id === selectedRace.id);
+      if (updatedRace) {
+        handleStartSupervise(updatedRace);
+      } else {
+        fetchDashboard();
+      }
+    } catch (err: any) {
+      alert(t.failedSuspendRace + err.message);
+      setLoading(false);
+    }
+  };
+
+  const handleResumeRace = async () => {
+    if (!selectedRace || !user) return;
+    setLoading(true);
+    try {
+      await api.post(`/referee/races/${selectedRace.id}/resume`);
+      alert(t.resumeRaceSuccess);
+      const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
+      setAssignedRaces(dashboardRes.assignedRaces || []);
+      setCompletedCount(dashboardRes.completedCount || 0);
+      setPendingCount(dashboardRes.pendingCount || 0);
+      const updatedRace = (dashboardRes.assignedRaces || []).find((r: any) => r.id === selectedRace.id);
+      if (updatedRace) {
+        handleStartSupervise(updatedRace);
+      } else {
+        fetchDashboard();
+      }
+    } catch (err: any) {
+      alert(t.failedResumeRace + err.message);
+      setLoading(false);
+    }
+  };
+
   const handleStartConfirmResults = () => {
     if (!selectedRace) return;
     const posMap: Record<number, string> = {};
@@ -805,6 +877,13 @@ export default function RefereeHub() {
             alert(isVi 
               ? `Vui lòng nhập thời gian về đích cho ngựa "${item.horse?.name}" hoặc đánh dấu loại bỏ (DQ).`
               : `Please enter finishing time for horse "${item.horse?.name}" or mark as DQ.`);
+            setLoading(false);
+            return;
+          }
+          if (!/^\d+:\d+(\.\d+)?$/.test(time.trim())) {
+            alert(isVi 
+              ? `Thời gian của ngựa "${item.horse?.name}" phải nhập đúng định dạng phút:giây (ví dụ 1:48.35 hoặc 1:48), không được nhập số thường hay dấu phẩy.`
+              : `Finishing time for horse "${item.horse?.name}" must be in the format MM:SS or MM:SS.ms (e.g. 1:48.35 or 1:48).`);
             setLoading(false);
             return;
           }
@@ -1140,15 +1219,48 @@ export default function RefereeHub() {
         <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.4)", padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em" }}>{t.liveSupervision}</span>
-            <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f4f2ec", fontFamily: "'Roboto Slab', serif", marginTop: "0.25rem" }}>{selectedRace.meetingName} - Race #{selectedRace.id}</h2>
+            <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f4f2ec", fontFamily: "'Roboto Slab', serif", marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+              {selectedRace.meetingName} - Race #{selectedRace.id}
+              <span style={{
+                fontSize: "10px",
+                padding: "0.2rem 0.5rem",
+                borderRadius: "0.25rem",
+                background: selectedRace.status === "STOPPED" ? "rgba(234,179,8,0.15)" : "rgba(16,185,129,0.15)",
+                color: selectedRace.status === "STOPPED" ? "#fbbf24" : "#34d399",
+                border: selectedRace.status === "STOPPED" ? "1px solid rgba(234,179,8,0.3)" : "1px solid rgba(16,185,129,0.3)"
+              }}>
+                {selectedRace.status}
+              </span>
+            </h2>
             <p style={{ fontSize: "12px", color: "#a0a0a0", display: "flex", gap: "1rem", marginTop: "0.5rem", alignItems: "center" }}>
               <span>📍 {selectedRace.venue}</span>
-              <span style={{ color: "#eab308", display: "flex", alignItems: "center", gap: "4px" }}>
-                <Icon name="activity" /> {t.raceInProgress}
+              <span style={{ color: selectedRace.status === "STOPPED" ? "#fbbf24" : "#eab308", display: "flex", alignItems: "center", gap: "4px" }}>
+                <Icon name="activity" /> {selectedRace.status === "STOPPED" ? (lang === "vi" ? "Trận đấu đang tạm dừng" : "Race is suspended") : t.raceInProgress}
               </span>
             </p>
           </div>
-          <div style={{ display: "flex", gap: "0.75rem" }}>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+            {(selectedRace.status === "RUNNING" || selectedRace.status === "STEWARDS_INQUIRY") && (
+              <button
+                onClick={() => {
+                  const reason = prompt(t.suspendReasonPrompt);
+                  if (reason && reason.trim()) {
+                    handleSuspendRace(reason);
+                  }
+                }}
+                style={{ padding: "0.5rem 1.25rem", background: "#fbbf24", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
+              >
+                ⏸️ {t.suspendRace}
+              </button>
+            )}
+            {selectedRace.status === "STOPPED" && (
+              <button
+                onClick={handleResumeRace}
+                style={{ padding: "0.5rem 1.25rem", background: "#10b981", color: "#fff", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
+              >
+                ▶️ {t.resumeRace}
+              </button>
+            )}
             <button
               onClick={() => {
                 const reason = prompt(t.stopReasonPrompt);

@@ -210,6 +210,8 @@ public class RefereeService {
                 resolved.put("distanceMeters", race.getDistanceMeters());
                 resolved.put("trackType", race.getTrackType());
                 resolved.put("purse", race.getPurse());
+                resolved.put("minEntries", race.getMinEntries());
+                resolved.put("maxEntries", race.getMaxEntries());
 
                 RaceMeeting meeting = meetingMap.get(race.getRaceMeetingId());
                 resolved.put("meetingName", meeting != null ? meeting.getName() : "Unknown Meeting");
@@ -406,5 +408,28 @@ public class RefereeService {
             horse.setCurrentRating(Math.max(0, curRating - 2));
             horseRepository.save(horse);
         }
+    }
+
+    @Transactional
+    public void suspendRace(Integer raceId, String stewardReport) {
+        Race race = raceRepository.findById(raceId)
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+        if (!"RUNNING".equals(race.getStatus()) && !"STEWARDS_INQUIRY".equals(race.getStatus())) {
+            throw new IllegalStateException("Race must be RUNNING or STEWARDS_INQUIRY to suspend");
+        }
+        race.setStatus("STOPPED");
+        race.setStewardReport(stewardReport);
+        raceRepository.save(race);
+    }
+
+    @Transactional
+    public void resumeRace(Integer raceId) {
+        Race race = raceRepository.findById(raceId)
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+        if (!"STOPPED".equals(race.getStatus())) {
+            throw new IllegalStateException("Race must be STOPPED to resume");
+        }
+        race.setStatus("RUNNING");
+        raceRepository.save(race);
     }
 }

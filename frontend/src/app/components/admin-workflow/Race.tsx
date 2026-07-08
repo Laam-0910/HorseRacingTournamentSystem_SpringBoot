@@ -55,6 +55,7 @@ export default function Race() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [editError, setEditError] = useState("");
 
   // Create Form State
   const [meetingId, setMeetingId] = useState("");
@@ -66,7 +67,7 @@ export default function Race() {
   const [distance, setDistance] = useState("1200");
   const [maxEntries, setMaxEntries] = useState("12");
   const [minEntries, setMinEntries] = useState("3");
-  const [purse, setPurse] = useState("100000");
+  const [purse, setPurse] = useState("0");
 
   // Edit Modal State
   const [editingRace, setEditingRace] = useState<Race | null>(null);
@@ -75,7 +76,7 @@ export default function Race() {
   const [editRegEndTime, setEditRegEndTime] = useState("");
   const [editDistance, setEditDistance] = useState("1200");
   const [editTrackType, setEditTrackType] = useState("Turf");
-  const [editPurse, setEditPurse] = useState("100000");
+  const [editPurse, setEditPurse] = useState("0");
   const [editMaxEntries, setEditMaxEntries] = useState("12");
   const [editMinEntries, setEditMinEntries] = useState("3");
 
@@ -186,11 +187,19 @@ export default function Race() {
         throw new Error(res.error || "Failed to create race.");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to create race.");
+      const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
+      if (err.message?.includes("DUPLICATE_RACE_TIME")) {
+        setError(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
+      } else {
+        setError(err.message || "Failed to create race.");
+      }
     }
   };
 
   const handleOpenEdit = (race: Race) => {
+    setError("");
+    setSuccess("");
+    setEditError("");
     setEditingRace(race);
     setEditStartTime(formatDateTime(race.startTime));
     setEditRegStartTime(formatDateTime(race.registrationStartTime));
@@ -207,6 +216,7 @@ export default function Race() {
     if (!editingRace) return;
     setError("");
     setSuccess("");
+    setEditError("");
 
     const minVal = parseInt(editMinEntries, 10);
     const maxVal = parseInt(editMaxEntries, 10);
@@ -258,7 +268,12 @@ export default function Race() {
         throw new Error(res.error || "Failed to update race.");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to update race.");
+      const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
+      if (err.message?.includes("DUPLICATE_RACE_TIME")) {
+        setEditError(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
+      } else {
+        setEditError(err.message || "Failed to update race.");
+      }
     }
   };
 
@@ -424,11 +439,6 @@ export default function Race() {
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Max Entries</label>
                 <input type="number" min="1" value={maxEntries} onChange={e => setMaxEntries(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }} />
               </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Purse Amount (USD)</label>
-                <input type="number" value={purse} onChange={e => setPurse(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }} />
-              </div>
             </div>
             <button type="submit" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.625rem 1.25rem", borderRadius: "0.5rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, border: "none", background: "#c9a227", color: "#0b0d11", cursor: "pointer", transition: "transform 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.95)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}>
               Create Race
@@ -460,87 +470,79 @@ export default function Race() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227", fontWeight: "bold" }}>R-{race.id}</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#c9a227", background: "rgba(201,162,39,0.1)", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold" }}>{formatClassLevel(race.classLevel)}</span>
+                      <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#c9a227", background: "rgba(201,162,39,0.15)", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold" }}>{formatClassLevel(race.classLevel)}</span>
                       {statusBadge(race.status)}
                     </div>
                   </div>
 
-                  {/* Meeting & venue details */}
-                  <div>
-                    <div style={{ fontSize: "13px", fontWeight: "bold", color: "#f4f2ec" }}>{meetingName}</div>
-                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px", fontFamily: "monospace" }}>
-                      📅 {formatDateTime(race.startTime)}
+                  {/* Mid details */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "12px" }}>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Race Meeting</span>
+                      <span style={{ color: "#f4f2ec", fontWeight: 500 }}>{meetingName}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Track Type</span>
+                      <span style={{ color: "#f4f2ec", fontFamily: "monospace" }}>{race.trackType}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Purse & Rating</span>
+                      <span style={{ color: "#4a9d6f", fontWeight: "bold" }}>${race.purse.toLocaleString()}</span>
+                      <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "10px", display: "block" }}>({race.minRating}-{race.maxRating})</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Start Time</span>
+                      <span style={{ color: "rgba(255,255,255,0.6)", fontFamily: "monospace" }}>{formatDateTime(race.startTime)}</span>
                     </div>
                   </div>
 
-                  {/* Specifications Grid */}
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", background: "rgba(0,0,0,0.15)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.03)" }}>
-                    <div style={{ fontSize: "11px" }}>
-                      <span style={{ color: "rgba(255,255,255,0.45)" }}>Track / Distance:</span>
-                      <div style={{ color: "#fff", fontFamily: "monospace", marginTop: "2px" }}>{race.trackType} / {race.distanceMeters}m</div>
-                    </div>
-                    <div style={{ fontSize: "11px" }}>
-                      <span style={{ color: "rgba(255,255,255,0.45)" }}>Rating Range:</span>
-                      <div style={{ color: "#fff", fontFamily: "monospace", marginTop: "2px" }}>{race.minRating} – {race.maxRating}</div>
-                    </div>
-                    <div style={{ fontSize: "11px", gridColumn: "span 2", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
-                      <span style={{ color: "rgba(255,255,255,0.45)" }}>Purse (Prize):</span>
-                      <div style={{ color: "#4a9d6f", fontFamily: "monospace", fontSize: "13px", fontWeight: "bold", marginTop: "2px" }}>${race.purse.toLocaleString()}</div>
-                    </div>
-                  </div>
-
-                  {/* Livestream Controls */}
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    <span style={{ fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Livestream:</span>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      {isCompleted ? (
-                        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
-                      ) : race.youtubeLiveUrl ? (
-                        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-                          <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
-                          </span>
-                          <button onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>End Live</button>
-                        </div>
-                      ) : (
-                        race.status === "RUNNING" ? (
-                          <div style={{ display: "flex", gap: "4px", alignItems: "center", width: "100%" }}>
-                            <input type="text" placeholder="YouTube URL" value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.375rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", flex: 1 }} />
-                            <button onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.375rem 0.75rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>Go Live</button>
-                          </div>
-                        ) : (
-                          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>Awaiting race status "RUNNING" to stream</span>
-                        )
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Assigned Referee Section */}
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    <span style={{ fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Assigned Referee:</span>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
+                  {/* Assigned Referee Mobile List */}
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "10px", display: "block" }}>Referees Assigned ({assigned.length})</span>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                       {assigned.map(ref => (
                         <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.125rem 0.5rem", borderRadius: "0.25rem", border: "1px solid #2e2e33" }}>
                           <span>{ref.username}</span>
                           {!isCompleted && (
-                            <button onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }}>×</button>
+                            <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }}>×</button>
                           )}
                         </div>
                       ))}
-                      {assigned.length === 0 && <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>No referee assigned yet</span>}
+                      {assigned.length === 0 && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px", fontStyle: "italic" }}>No referee assigned yet</span>}
                     </div>
                     {!isCompleted && (
-                      <div style={{ display: "flex", gap: "4px", marginTop: "4px" }}>
-                        <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.375rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none", flex: 1 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                        <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none", flex: 1 }}>
                           <option value="">-- Assign Referee --</option>
                           {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
                             <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
                           ))}
                         </select>
-                        <button onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.375rem 0.75rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
+                        <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
                       </div>
                     )}
                   </div>
+
+                  {/* Livestream Controls Mobile */}
+                  {!isCompleted && (
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", flexDirection: "column", gap: "4px" }}>
+                      {race.youtubeLiveUrl ? (
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
+                          </span>
+                          <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>End Live</button>
+                        </div>
+                      ) : (
+                        race.status === "RUNNING" && (
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <input type="text" placeholder="YouTube URL" value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", flex: 1 }} />
+                            <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>Go Live</button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
 
                   {/* Action Row */}
                   <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.75rem", display: "flex", justifyContent: "flex-end" }}>
@@ -606,13 +608,13 @@ export default function Race() {
                             <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                               <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
                             </span>
-                            <button onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>End Live</button>
+                            <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>End Live</button>
                           </div>
                         ) : (
                           race.status === "RUNNING" ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
                               <input type="text" placeholder="YouTube URL" value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", width: 110 }} />
-                              <button onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>Go Live</button>
+                              <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>Go Live</button>
                             </div>
                           ) : (
                             <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
@@ -627,7 +629,7 @@ export default function Race() {
                             <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.125rem 0.5rem", borderRadius: "0.25rem", border: "1px solid #2e2e33" }}>
                               <span>{ref.username}</span>
                               {!isCompleted && (
-                                <button onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }} title="Remove referee">×</button>
+                                <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }} title="Remove referee">×</button>
                               )}
                             </div>
                           ))}
@@ -639,7 +641,7 @@ export default function Race() {
                                   <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
                                 ))}
                               </select>
-                              <button onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
+                              <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
                             </div>
                           )}
                         </div>
@@ -683,9 +685,14 @@ export default function Race() {
           <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "32rem", position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(201,162,39,0.1)", paddingBottom: "0.75rem", marginBottom: "1.25rem" }}>
               <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Edit Race Schedule</h3>
-              <button onClick={() => setEditingRace(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.5rem", fontWeight: "bold" }}>&times;</button>
+              <button onClick={() => { setEditingRace(null); setEditError(""); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.5rem", fontWeight: "bold" }}>&times;</button>
             </div>
             <form onSubmit={handleSaveEdit}>
+              {editError && (
+                <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", padding: "0.75rem", borderRadius: "0.375rem", fontSize: "12px", marginBottom: "1rem" }}>
+                  {editError}
+                </div>
+              )}
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
                 <div style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
                   <label style={labelStyle}>Start Time</label>
@@ -711,10 +718,6 @@ export default function Race() {
                     <option value="Synthetic">Synthetic</option>
                   </select>
                 </div>
-                <div>
-                  <label style={labelStyle}>Purse ($)</label>
-                  <input type="number" value={editPurse} onChange={e => setEditPurse(e.target.value)} required style={inputStyle} />
-                </div>
                  <div>
                   <label style={labelStyle}>Min Entries</label>
                   <input type="number" min="1" value={editMinEntries} onChange={e => setEditMinEntries(e.target.value)} required style={inputStyle} />
@@ -725,7 +728,7 @@ export default function Race() {
                 </div>
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", borderTop: "1px solid rgba(201,162,39,0.1)", paddingTop: "1rem" }}>
-                <button type="button" onClick={() => setEditingRace(null)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
+                <button type="button" onClick={() => { setEditingRace(null); setEditError(""); }} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
                 <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>Save Changes</button>
               </div>
             </form>

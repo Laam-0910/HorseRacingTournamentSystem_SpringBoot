@@ -19,7 +19,7 @@ export default function RaceDaySchedule() {
   const [distance, setDistance] = useState("1200");
   const [minEntries, setMinEntries] = useState("3");
   const [maxEntries, setMaxEntries] = useState("12");
-  const [purse, setPurse] = useState("100000");
+  const [purse, setPurse] = useState("0");
 
   const fetchData = async () => {
     setLoading(true);
@@ -44,14 +44,27 @@ export default function RaceDaySchedule() {
   const fetchRacesDetails = async (meetingId: number) => {
     setLoadingRaces(true);
     try {
-      const racesData = await api.get<any[]>(`/public/races?meetingId=${meetingId}`);
+      const [racesData, refereesMap] = await Promise.all([
+        api.get<any[]>(`/public/races?meetingId=${meetingId}`),
+        api.get<any>("/admin/races/referees").catch(() => ({}))
+      ]);
+
       const enriched = await Promise.all(
         racesData.map(async (race) => {
-          const [entries, referees] = await Promise.all([
-            api.get<any[]>(`/public/races/${race.id}/entries`).catch(() => []),
-            api.get<any[]>(`/admin/races/${race.id}/referees`).catch(() => []),
-          ]);
-          return { race, entries, referees };
+          const resultsData = await api.get<any[]>(`/public/results?raceId=${race.id}`).catch(() => []);
+          const mappedEntries = resultsData.map((item: any) => ({
+            id: item.entry.id,
+            gateNumber: item.entry.gateNumber,
+            horseName: item.horse?.name || "Unknown",
+            horseRating: item.horse?.currentRating || 0,
+            jockeyName: item.jockey?.fullName || item.jockey?.username || "Unknown",
+            jockeyWeight: item.jockey?.weight || 0,
+            carriedWeight: item.entry.carriedWeight
+          }));
+
+          const raceReferees = refereesMap[race.id] || [];
+
+          return { race, entries: mappedEntries, referees: raceReferees };
         })
       );
       setEnrichedRaces(enriched);
@@ -126,7 +139,12 @@ export default function RaceDaySchedule() {
       setStartTime("");
       fetchRacesDetails(selectedMeetingId);
     } catch (err: any) {
-      alert("Failed to schedule race: " + err.message);
+      const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
+      if (err.message?.includes("DUPLICATE_RACE_TIME")) {
+        alert(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
+      } else {
+        alert("Failed to schedule race: " + err.message);
+      }
     }
   };
 
@@ -266,7 +284,7 @@ export default function RaceDaySchedule() {
                         <span style={{ fontSize: "14px", fontWeight: "bold", color: "#f4f2ec" }}>{r.classLevel}</span>
                       </div>
                       <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
-                        Time: {formatDateTime(r.startTime)} | Distance: {r.distanceMeters}m | Track: {r.trackType} | Purse: ${r.purse.toLocaleString()}
+                        Time: {formatDateTime(r.startTime)} | Distance: {r.distanceMeters}m | Track: {r.trackType}
                       </p>
                     </div>
                     <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -427,11 +445,6 @@ export default function RaceDaySchedule() {
                   <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Max Entries</label>
                   <input type="number" min="1" value={maxEntries} onChange={e => setMaxEntries(e.target.value)} required style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px" }} />
                 </div>
-              </div>
-
-              <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Purse Amount (USD)</label>
-                <input type="number" min="1" value={purse} onChange={e => setPurse(e.target.value)} required style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px" }} />
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>

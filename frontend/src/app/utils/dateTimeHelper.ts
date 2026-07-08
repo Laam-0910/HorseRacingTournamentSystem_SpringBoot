@@ -8,7 +8,6 @@
 export const parseSafeDate = (str: string): Date | null => {
   if (!str) return null;
   const cleanStr = str.trim();
-
   // Try matching dd-MM-yyyy HH:mm:ss or dd-MM-yyyy HH:mm FIRST
   // (Must check before native Date() which misreads dd-MM-yyyy as MM-DD-YYYY)
   const dmyMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})[ T](\d{2})[-:](\d{2})(?:[-:](\d{2}))?/);
@@ -17,7 +16,7 @@ export const parseSafeDate = (str: string): Date | null => {
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), seconds ? parseInt(seconds) : 0);
   }
 
-  // Try matching dd-MM-yyyy or dd/MM/yyyy (date only)
+  // Try matching dd-MM-yyyy or dd/MM/yyyy (date only) first
   const dmyDateMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
   if (dmyDateMatch) {
     const [_, day, month, year] = dmyDateMatch;
