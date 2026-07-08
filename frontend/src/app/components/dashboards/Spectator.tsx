@@ -42,6 +42,8 @@ export default function Spectator() {
   const [races, setRaces] = useState<any[]>([]);
   const [horses, setHorses] = useState<any[]>([]);
   const [seasons, setSeasons] = useState<any[]>([]);
+  const [extraStats, setExtraStats] = useState<any>(null);
+  const [statsSubTab, setStatsSubTab] = useState<"leaderboards" | "analysis">("leaderboards");
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -82,11 +84,13 @@ export default function Spectator() {
       api.get<any[]>("/public/races").catch(() => []),
       api.get<any[]>("/public/horses").catch(() => []),
       api.get<any[]>("/races/seasons").catch(() => []),
-    ]).then(([m, r, h, s]) => {
+      api.get<any>("/public/stats").catch(() => null),
+    ]).then(([m, r, h, s, es]) => {
       setMeetings(Array.isArray(m) ? m : []);
       setRaces(Array.isArray(r) ? r : []);
       setHorses(Array.isArray(h) ? h : []);
       setSeasons(Array.isArray(s) ? s : []);
+      setExtraStats(es);
     });
   }, []);
 
@@ -562,10 +566,56 @@ export default function Spectator() {
         );
 
       case "stats":
+        const statsData = extraStats || {
+          activeSeason: "N/A",
+          seasonsCompleted: 0,
+          totalRacesRun: 0,
+          totalPrizeDistributed: 0,
+          totalActiveHorses: 0,
+          totalActiveJockeys: 0
+        };
+
+        // Leaderboards calculation
+        const topWinsHorses = [...horses]
+          .sort((a, b) => (b.totalWins || 0) - (a.totalWins || 0))
+          .slice(0, 5);
+        const maxWins = Math.max(...topWinsHorses.map(h => h.totalWins || 0), 1);
+
+        const topRatingHorses = [...horses]
+          .sort((a, b) => (b.currentRating || 0) - (a.currentRating || 0))
+          .slice(0, 5);
+        const maxRating = Math.max(...topRatingHorses.map(h => h.currentRating || 0), 1);
+
+        // Analysis calculations
+        const classCounts: Record<string, number> = {};
+        races.forEach(r => {
+          const cls = r.classLevel || (lang === "vi" ? "Khác" : "Other");
+          classCounts[cls] = (classCounts[cls] || 0) + 1;
+        });
+        const classList = Object.entries(classCounts).sort((a, b) => b[1] - a[1]);
+        const maxClassCount = Math.max(...classList.map(c => c[1]), 1);
+
+        const trackCounts: Record<string, number> = {};
+        races.forEach(r => {
+          const trk = r.trackType || (lang === "vi" ? "Chưa xác định" : "Unknown");
+          trackCounts[trk] = (trackCounts[trk] || 0) + 1;
+        });
+        const totalRacesWithTrack = Object.values(trackCounts).reduce((a, b) => a + b, 0) || 1;
+
         return (
-          <div>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{lang === "vi" ? "Thống kê tổng quan" : "Statistics"}</h3>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", paddingBottom: "3rem" }}>
+            {/* Page Header */}
+            <div>
+              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>
+                {lang === "vi" ? "Thống kê tổng quan" : "Statistics"}
+              </h3>
+              <p style={{ color: "#a0a0a0", fontSize: "0.75rem", fontFamily: "monospace" }}>
+                {lang === "vi" ? "Số liệu trực quan và kết quả phân tích giải đấu giải đua ngựa" : "Visual insights and tournament metrics for the horse racing series"}
+              </p>
+            </div>
+
+            {/* Core KPI Grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "1rem" }}>
               {[
                 { label: lang === "vi" ? "Tổng buổi đua" : "Total Meetings", value: meetings.length, color: "#c9a227" },
                 { label: lang === "vi" ? "Tổng trận đấu" : "Total Races",    value: races.length,    color: "#ef4444" },
@@ -578,9 +628,311 @@ export default function Spectator() {
                 </div>
               ))}
             </div>
-            <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.6)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem", textAlign: "center" }}>
-              <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>📊 Detailed statistics and charts coming soon.</p>
+
+            {/* Special System KPI Grid (Extra stats from backend) */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
+              {/* Active Season Banner */}
+              <div className="rounded-xl" style={{ 
+                background: "linear-gradient(135deg, rgba(168,85,247,0.1) 0%, rgba(21,19,16,0.6) 100%)", 
+                border: "1px solid rgba(168,85,247,0.25)", 
+                padding: "1.25rem", 
+                display: "flex", 
+                alignItems: "center",
+                gap: "1rem"
+              }}>
+                <div style={{ fontSize: "2rem" }}>🏆</div>
+                <div style={{ minWidth: 0 }}>
+                  <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", display: "block" }}>
+                    {lang === "vi" ? "Mùa giải hiện tại" : "Active Season"}
+                  </span>
+                  <span style={{ fontSize: "1rem", fontWeight: 800, color: "#fff", fontFamily: "'Roboto Slab', serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+                    {statsData.activeSeason || "N/A"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Total Prize Money */}
+              <div className="rounded-xl" style={{ 
+                background: "linear-gradient(135deg, rgba(10,185,129,0.1) 0%, rgba(21,19,16,0.6) 100%)", 
+                border: "1px solid rgba(16,185,129,0.25)", 
+                padding: "1.25rem", 
+                display: "flex", 
+                alignItems: "center",
+                gap: "1rem"
+              }}>
+                <div style={{ fontSize: "2rem" }}>💰</div>
+                <div>
+                  <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", display: "block" }}>
+                    {lang === "vi" ? "Tổng tiền thưởng đã phát" : "Total Prize Distributed"}
+                  </span>
+                  <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "#10b981", fontFamily: "monospace" }}>
+                    ${(statsData.totalPrizeDistributed || 0).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* Active Jockeys */}
+              <div className="rounded-xl" style={{ 
+                background: "linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(21,19,16,0.6) 100%)", 
+                border: "1px solid rgba(245,158,11,0.25)", 
+                padding: "1.25rem", 
+                display: "flex", 
+                alignItems: "center",
+                gap: "1rem"
+              }}>
+                <div style={{ fontSize: "2rem" }}>🏇</div>
+                <div>
+                  <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", display: "block" }}>
+                    {lang === "vi" ? "Nài ngựa hoạt động" : "Active Jockeys"}
+                  </span>
+                  <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "#f59e0b", fontFamily: "monospace" }}>
+                    {statsData.totalActiveJockeys || 0}
+                  </span>
+                </div>
+              </div>
             </div>
+
+            {/* Sub-tab selection */}
+            <div style={{ 
+              display: "flex", 
+              gap: "0.5rem", 
+              borderBottom: "1px solid rgba(255,255,255,0.08)", 
+              marginTop: "0.5rem",
+              paddingBottom: "0.25rem"
+            }}>
+              <button 
+                onClick={() => setStatsSubTab("leaderboards")}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: statsSubTab === "leaderboards" ? "#c9a227" : "#a0a0a0",
+                  borderBottom: statsSubTab === "leaderboards" ? "2px solid #c9a227" : "none",
+                  padding: "0.5rem 1rem",
+                  fontFamily: "'Roboto Slab', serif",
+                  fontWeight: 700,
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                🏆 {lang === "vi" ? "Bảng Xếp Hạng Ngựa" : "Horse Leaderboards"}
+              </button>
+              <button 
+                onClick={() => setStatsSubTab("analysis")}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: statsSubTab === "analysis" ? "#c9a227" : "#a0a0a0",
+                  borderBottom: statsSubTab === "analysis" ? "2px solid #c9a227" : "none",
+                  padding: "0.5rem 1rem",
+                  fontFamily: "'Roboto Slab', serif",
+                  fontWeight: 700,
+                  fontSize: "0.9rem",
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                📊 {lang === "vi" ? "Phân Tích Giải Đấu" : "Tournament Analysis"}
+              </button>
+            </div>
+
+            {/* Sub-tab Content Panels */}
+            {statsSubTab === "leaderboards" ? (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.5rem" }}>
+                {/* Wins Leaderboard */}
+                <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
+                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between" }}>
+                    <span>🥇 {lang === "vi" ? "Chiến Mã Thắng Nhiều Nhất" : "Most Winning Horses"}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#c9a227", fontFamily: "monospace" }}>wins</span>
+                  </h4>
+                  {topWinsHorses.length === 0 ? (
+                    <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>
+                      {lang === "vi" ? "Chưa có dữ liệu chiến mã." : "No horse data available."}
+                    </p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      {topWinsHorses.map((h, index) => {
+                        const pct = ((h.totalWins || 0) / maxWins) * 100;
+                        return (
+                          <div key={h.id} style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+                              <span style={{ fontWeight: 600, color: "#e0dcd3" }}>
+                                {index + 1}. {h.name} <span style={{ fontSize: "0.7rem", color: "#706d66", fontWeight: "normal" }}>({h.breed})</span>
+                              </span>
+                              <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#c9a227" }}>
+                                {h.totalWins || 0} W
+                              </span>
+                            </div>
+                            <div style={{ height: "0.5rem", background: "rgba(255,255,255,0.03)", borderRadius: "999px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
+                              <div style={{
+                                width: `${pct}%`,
+                                height: "100%",
+                                background: "linear-gradient(90deg, #c9a227 0%, #ffd700 100%)",
+                                borderRadius: "999px",
+                                transition: "width 0.8s ease-out"
+                              }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Rating Leaderboard */}
+                <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
+                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between" }}>
+                    <span>⚡️ {lang === "vi" ? "Chiến Mã Rating Cao Nhất" : "Highest Rated Horses"}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#4a9d6f", fontFamily: "monospace" }}>rating</span>
+                  </h4>
+                  {topRatingHorses.length === 0 ? (
+                    <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>
+                      {lang === "vi" ? "Chưa có dữ liệu chiến mã." : "No horse data available."}
+                    </p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      {topRatingHorses.map((h, index) => {
+                        const pct = ((h.currentRating || 0) / maxRating) * 100;
+                        return (
+                          <div key={h.id} style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+                              <span style={{ fontWeight: 600, color: "#e0dcd3" }}>
+                                {index + 1}. {h.name} <span style={{ fontSize: "0.7rem", color: "#706d66", fontWeight: "normal" }}>({h.breed})</span>
+                              </span>
+                              <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#4a9d6f" }}>
+                                {h.currentRating || 0}
+                              </span>
+                            </div>
+                            <div style={{ height: "0.5rem", background: "rgba(255,255,255,0.03)", borderRadius: "999px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
+                              <div style={{
+                                width: `${pct}%`,
+                                height: "100%",
+                                background: "linear-gradient(90deg, #4a9d6f 0%, #10b981 100%)",
+                                borderRadius: "999px",
+                                transition: "width 0.8s ease-out"
+                              }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.5rem" }}>
+                {/* Race Class Distribution */}
+                <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
+                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between" }}>
+                    <span>🏁 {lang === "vi" ? "Trận Đấu Theo Phân Hạng" : "Races by Class Level"}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#ef4444", fontFamily: "monospace" }}>races</span>
+                  </h4>
+                  {classList.length === 0 ? (
+                    <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>
+                      {lang === "vi" ? "Chưa có trận đấu nào." : "No races available."}
+                    </p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                      {classList.map(([className, count]) => {
+                        const pct = (count / maxClassCount) * 100;
+                        return (
+                          <div key={className} style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
+                              <span style={{ fontWeight: 600, color: "#e0dcd3" }}>{className}</span>
+                              <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#ef4444" }}>
+                                {count} {lang === "vi" ? "trận" : "races"}
+                              </span>
+                            </div>
+                            <div style={{ height: "0.5rem", background: "rgba(255,255,255,0.03)", borderRadius: "999px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
+                              <div style={{
+                                width: `${pct}%`,
+                                height: "100%",
+                                background: "linear-gradient(90deg, #ef4444 0%, #f43f5e 100%)",
+                                borderRadius: "999px",
+                                transition: "width 0.8s ease-out"
+                              }} />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Track Type Breakdown */}
+                <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
+                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem" }}>
+                    🌱 {lang === "vi" ? "Phân Loại Mặt Sân Đua" : "Track Type Distribution"}
+                  </h4>
+                  {Object.keys(trackCounts).length === 0 ? (
+                    <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>
+                      {lang === "vi" ? "Chưa có dữ liệu đường đua." : "No track data available."}
+                    </p>
+                  ) : (
+                    <div>
+                      {/* Stacked bar representing the ratios */}
+                      <div style={{ 
+                        height: "1.5rem", 
+                        width: "100%", 
+                        background: "rgba(255,255,255,0.02)", 
+                        borderRadius: "0.5rem", 
+                        overflow: "hidden", 
+                        display: "flex",
+                        border: "1px solid rgba(255,255,255,0.06)",
+                        marginBottom: "1.5rem"
+                      }}>
+                        {Object.entries(trackCounts).map(([trackType, count], index) => {
+                          const pct = (count / totalRacesWithTrack) * 100;
+                          let color = "#4a9d6f"; // Turf
+                          if (trackType.toUpperCase().includes("DIRT")) color = "#c28c46"; // Dirt
+                          else if (trackType.toUpperCase().includes("POLY")) color = "#06b6d4";
+                          else if (index === 1) color = "#3b82c4";
+                          else if (index === 2) color = "#ec4899";
+
+                          return (
+                            <div 
+                              key={trackType} 
+                              style={{ 
+                                width: `${pct}%`, 
+                                height: "100%", 
+                                background: color,
+                                transition: "width 0.8s ease-out",
+                                position: "relative"
+                              }}
+                              title={`${trackType}: ${count} (${pct.toFixed(0)}%)`}
+                            />
+                          );
+                        })}
+                      </div>
+
+                      {/* Legend with percentages and counts */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                        {Object.entries(trackCounts).map(([trackType, count], index) => {
+                          const pct = (count / totalRacesWithTrack) * 100;
+                          let color = "#4a9d6f"; 
+                          if (trackType.toUpperCase().includes("DIRT")) color = "#c28c46";
+                          else if (trackType.toUpperCase().includes("POLY")) color = "#06b6d4";
+                          else if (index === 1) color = "#3b82c4";
+                          else if (index === 2) color = "#ec4899";
+
+                          return (
+                            <div key={trackType} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.8rem" }}>
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <span style={{ width: "0.75rem", height: "0.75rem", borderRadius: "0.25rem", background: color, display: "inline-block" }} />
+                                <span style={{ fontWeight: 600, color: "#e0dcd3" }}>{trackType}</span>
+                              </div>
+                              <span style={{ fontFamily: "monospace", color: "#a0a0a0" }}>
+                                <strong>{count}</strong> ({pct.toFixed(0)}%)
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         );
 
