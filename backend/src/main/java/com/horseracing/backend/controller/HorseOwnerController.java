@@ -41,4 +41,9 @@ public class HorseOwnerController {
     public ResponseEntity<List<Map<String, Object>>> getOwnerStable(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getOwnerStable(id));
     }
+
+    @GetMapping("/{id}/results")
+    public ResponseEntity<List<Map<String, Object>>> getOwnerResults(@PathVariable Integer id) {
+        return ResponseEntity.ok(dashboardService.getOwnerResults(id));
+    }
 }

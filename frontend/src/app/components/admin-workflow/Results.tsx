@@ -259,21 +259,20 @@ export default function Results() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
-                  {["Meeting Name", "Venue", "Total Budget"].map(h => (
+                  {["Meeting Name", "Venue"].map(h => (
                     <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={3} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                  <tr><td colSpan={2} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
                 ) : meetings.length === 0 ? (
-                  <tr><td colSpan={3} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No Race Meetings Found.</td></tr>
+                  <tr><td colSpan={2} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No Race Meetings Found.</td></tr>
                 ) : meetings.map(meeting => (
                   <tr key={meeting.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <td style={{ padding: "1rem", fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{meeting.name}</td>
                     <td style={{ padding: "1rem", color: "rgba(255,255,255,0.55)", fontSize: "12px" }}>{meeting.venue}</td>
-                    <td style={{ padding: "1rem", fontFamily: "monospace", color: "#4a9d6f", fontSize: "13px" }}>${meeting.totalBudget.toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -288,22 +287,21 @@ export default function Results() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
-                  {["Meeting ID", "Class Level", "Start Time", "Purse", "Status", "Action"].map(h => (
+                  {["Meeting ID", "Class Level", "Start Time", "Status", "Action"].map(h => (
                     <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={6} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                  <tr><td colSpan={5} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
                 ) : races.length === 0 ? (
-                  <tr><td colSpan={6} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No Races Found.</td></tr>
+                  <tr><td colSpan={5} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No Races Found.</td></tr>
                 ) : races.map(race => (
                   <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                     <td style={{ padding: "1rem", fontFamily: "monospace", color: "rgba(255,255,255,0.55)", fontSize: "12px" }}>{race.raceMeetingId}</td>
                     <td style={{ padding: "1rem", fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{race.classLevel}</td>
                     <td style={{ padding: "1rem", color: "rgba(255,255,255,0.55)", fontSize: "12px", fontFamily: "monospace" }}>{race.startTime}</td>
-                    <td style={{ padding: "1rem", fontFamily: "monospace", color: "#4a9d6f", fontSize: "13px" }}>${race.purse.toLocaleString()}</td>
                     <td style={{ padding: "1rem" }}>
                       <span style={{ fontSize: "10px", fontWeight: "bold", color: "#c9a227", background: "rgba(201,162,39,0.15)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem" }}>{race.status}</span>
                     </td>

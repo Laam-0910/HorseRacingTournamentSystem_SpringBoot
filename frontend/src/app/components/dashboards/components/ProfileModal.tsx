@@ -199,13 +199,12 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                         <th className="px-4 py-3">Class</th>
                         <th className="px-4 py-3">Horse</th>
                         <th className="px-4 py-3 text-center">Pos</th>
-                        <th className="px-4 py-3 text-right">Prize</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 text-xs font-mono">
                       {profile.history?.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="px-4 py-8 text-center text-white/40 italic">
+                          <td colSpan={4} className="px-4 py-8 text-center text-white/40 italic">
                             No recent race records found.
                           </td>
                         </tr>
@@ -228,9 +227,6 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                               >
                                 {r.position === "1" ? "1st" : r.position === "2" ? "2nd" : r.position === "3" ? "3rd" : r.position}
                               </span>
-                            </td>
-                            <td className="px-4 py-3 text-right text-emerald-400 font-bold">
-                              {r.prizeMoney > 0 ? `$${r.prizeMoney.toLocaleString()}` : "—"}
                             </td>
                           </tr>
                         ))
