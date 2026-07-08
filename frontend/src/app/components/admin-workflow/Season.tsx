@@ -169,6 +169,7 @@ export default function Season() {
   const [extendStartDateInput, setExtendStartDateInput] = useState("");
   const [extendDateInput, setExtendDateInput] = useState("");
   const [extendError, setExtendError] = useState("");
+  const [isMobile, setIsMobile] = useState(false);
 
   const toDbFormat = (d: string) => d ? `${d} 00:00:00` : "";
 
@@ -201,6 +202,13 @@ export default function Season() {
       console.error("Failed to load rules", err);
     }
   };
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => { fetchSeasons(); }, []);
   useEffect(() => { if (selectedSeasonId !== null) fetchRules(selectedSeasonId); }, [selectedSeasonId]);
@@ -499,12 +507,61 @@ export default function Season() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          {loading ? (
-            <p className="p-8 text-sm text-center font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>Loading seasons...</p>
-          ) : seasons.length === 0 ? (
-            <p className="p-8 text-sm text-center font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>No seasons found.</p>
-          ) : (
+        {isMobile ? (
+          /* Mobile card list */
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+            {loading ? (
+              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>Loading seasons...</p>
+            ) : seasons.length === 0 ? (
+              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>No seasons found.</p>
+            ) : seasons.map(season => (
+              <div
+                key={season.id}
+                onClick={() => setSelectedSeasonId(season.id)}
+                style={{
+                  background: selectedSeasonId === season.id ? 'rgba(201,162,39,0.04)' : 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(201,162,39,0.14)',
+                  borderRadius: '0.75rem',
+                  padding: '1rem',
+                  cursor: 'pointer',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                  <div>
+                    <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#c9a227' }}>S-{season.id}</span>
+                    <p style={{ fontSize: '13px', color: '#f4f2ec', fontWeight: 600, marginTop: '2px' }}>{season.name}</p>
+                    <p style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.45)', marginTop: '4px' }}>
+                      {formatDateTime(season.startDate).split(' ')[0]} – {formatDateTime(season.endDate).split(' ')[0]}
+                    </p>
+                  </div>
+                  {season.status === 'ACTIVE' ? (
+                    <span style={{ fontSize: '9px', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0.25rem 0.625rem', borderRadius: '0.25rem', border: '1px solid #4a9d6f40', background: '#4a9d6f18', color: '#4a9d6f', whiteSpace: 'nowrap' }}>Active</span>
+                  ) : (
+                    <span style={{ fontSize: '9px', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0.25rem 0.625rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' }}>Closed</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={e => { e.stopPropagation(); handleToggle(season.id); }}
+                    style={season.status === 'ACTIVE'
+                      ? { background: 'rgba(239,91,91,0.12)', color: '#ef5b5b', border: '1px solid rgba(239,91,91,0.35)', padding: '0.25rem 0.75rem', borderRadius: '0.375rem', fontSize: '11px', fontFamily: 'monospace', cursor: 'pointer' }
+                      : { background: 'rgba(74,157,111,0.12)', color: '#4a9d6f', border: '1px solid rgba(74,157,111,0.35)', padding: '0.25rem 0.75rem', borderRadius: '0.375rem', fontSize: '11px', fontFamily: 'monospace', cursor: 'pointer' }}
+                  >
+                    {season.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); handleExtend(season); }}
+                    style={{ background: 'rgba(201,162,39,0.10)', color: '#c9a227', border: '1px solid rgba(201,162,39,0.30)', padding: '0.25rem 0.75rem', borderRadius: '0.375rem', fontSize: '11px', fontFamily: 'monospace', cursor: 'pointer' }}
+                  >
+                    Extend
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* ── Desktop: original table ── */
+          <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
@@ -560,8 +617,8 @@ export default function Season() {
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Season Class Rules Footer */}
         {selectedSeasonId !== null && seasonRules.length > 0 && (

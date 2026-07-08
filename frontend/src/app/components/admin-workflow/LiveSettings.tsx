@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 
 export default function LiveSettings() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [meetings, setMeetings] = useState<any[]>([]);
   const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null);
   const [races, setRaces] = useState<any[]>([]);
@@ -127,25 +135,18 @@ export default function LiveSettings() {
         {loading ? (
           <p className="p-6 text-sm text-white/40 text-center">Loading races...</p>
         ) : races.length > 0 ? (
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#151310] text-xs font-semibold text-white/60 uppercase tracking-wider border-b border-white/5">
-                <th className="px-6 py-4">Class Level</th>
-                <th className="px-6 py-4">Race Status</th>
-                <th className="px-6 py-4">YouTube Broadcast URL</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5 text-sm">
+          isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
               {races.map((r) => (
-                <tr key={r.id} className="hover:bg-[#151310]/10 transition">
-                  <td className="px-6 py-4 font-semibold text-white">{r.classLevel}</td>
-                  <td className="px-6 py-4">
+                <div key={r.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontWeight: "bold", color: "#fff", fontSize: "14px" }}>{r.classLevel}</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${r.status === "RUNNING" ? "bg-rose-500/10 text-rose-400" : "bg-white/10 text-white/60"}`}>
                       {r.status}
                     </span>
-                  </td>
-                  <td className="px-6 py-4">
+                  </div>
+                  <div>
+                    <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>YouTube Broadcast URL</label>
                     <input
                       type="text"
                       disabled={r.status !== "RUNNING"}
@@ -154,8 +155,8 @@ export default function LiveSettings() {
                       className={`w-full px-3 py-1.5 bg-black/60 border border-white/5 rounded-lg text-white text-xs ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
                       placeholder={r.status === "RUNNING" ? "Enter YouTube link" : "Only running races can broadcast"}
                     />
-                  </td>
-                  <td className="px-6 py-4 text-right space-x-2">
+                  </div>
+                  <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
                     <button
                       disabled={r.status !== "RUNNING"}
                       onClick={() => handleSave(r.id)}
@@ -172,11 +173,62 @@ export default function LiveSettings() {
                         Remove
                       </button>
                     )}
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
+            </div>
+          ) : (
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#151310] text-xs font-semibold text-white/60 uppercase tracking-wider border-b border-white/5">
+                  <th className="px-6 py-4">Class Level</th>
+                  <th className="px-6 py-4">Race Status</th>
+                  <th className="px-6 py-4">YouTube Broadcast URL</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-sm">
+                {races.map((r) => (
+                  <tr key={r.id} className="hover:bg-[#151310]/10 transition">
+                    <td className="px-6 py-4 font-semibold text-white">{r.classLevel}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${r.status === "RUNNING" ? "bg-rose-500/10 text-rose-400" : "bg-white/10 text-white/60"}`}>
+                        {r.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <input
+                        type="text"
+                        disabled={r.status !== "RUNNING"}
+                        value={youtubeUrls[r.id] || ""}
+                        onChange={(e) => handleUrlChange(r.id, e.target.value)}
+                        className={`w-full px-3 py-1.5 bg-black/60 border border-white/5 rounded-lg text-white text-xs ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
+                        placeholder={r.status === "RUNNING" ? "Enter YouTube link" : "Only running races can broadcast"}
+                      />
+                    </td>
+                    <td className="px-6 py-4 text-right space-x-2">
+                      <button
+                        disabled={r.status !== "RUNNING"}
+                        onClick={() => handleSave(r.id)}
+                        className={`px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        Save
+                      </button>
+                      {r.youtubeLiveUrl && (
+                        <button
+                          disabled={r.status !== "RUNNING"}
+                          onClick={() => handleRemove(r.id)}
+                          className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed" : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20"}`}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
         ) : (
           <p className="p-6 text-sm text-white/40 text-center">No races scheduled for this meeting.</p>
         )}

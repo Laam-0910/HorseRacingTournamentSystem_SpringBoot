@@ -412,6 +412,17 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 
 export default function RefereeHub() {
   const { user } = useAuth();
+  
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
 
@@ -752,8 +763,18 @@ export default function RefereeHub() {
     const tMap: Record<number, string> = {};
     const wMap: Record<number, string> = {};
     const dqMap: Record<number, boolean> = {};
-    raceEntries.forEach((item: any, idx: number) => {
-      const isAlreadyDq = item.entry.status === "DISQUALIFIED";
+
+    // Build set of horseIds that have a DISQUALIFIED violation
+    const dqHorseIds = new Set<number>(
+      violations
+        .filter((v: any) => v.violation?.penalty === "DISQUALIFIED")
+        .map((v: any) => v.horseId)
+    );
+
+    raceEntries.forEach((item: any) => {
+      const isAlreadyDq =
+        item.entry.status === "DISQUALIFIED" ||
+        dqHorseIds.has(item.horse?.id);
       posMap[item.entry.id] = "";
       tMap[item.entry.id] = isAlreadyDq ? "DQ" : "";
       wMap[item.entry.id] = isAlreadyDq ? "" : (item.entry.carriedWeight || 52.0).toString();
@@ -910,78 +931,185 @@ export default function RefereeHub() {
               </select>
             </div>
           </div>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                  {[t.gate, t.horseDetails, t.jockeyDetails, t.jockeyWeight, t.requiredWeight, t.vetCheck, t.status].map(h => (
-                    <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {sortedEntries.map(item => {
-                  const entryId = item.entry.id;
-                  const reqWeight = item.entry.carriedWeight || 52.0;
-                  const weighed = parseFloat(weighedWeights[entryId]);
-                  const diff = weighed - reqWeight;
-                  let badgeText = t.verified;
-                  let badgeStyle = { bg: "rgba(16,185,129,0.1)", color: "#34d399" };
-                  if (vetChecks[entryId] === "SCRATCH") {
-                    badgeText = t.scratched;
-                    badgeStyle = { bg: "rgba(239,68,68,0.1)", color: "#f87171" };
-                  } else if (diff > 1.0) {
-                    badgeText = t.criticalOverweight;
-                    badgeStyle = { bg: "rgba(239,68,68,0.1)", color: "#f87171" };
-                  } else if (diff > 0) {
-                    badgeText = `${t.overweight} +${diff.toFixed(1)}kg (${t.verified})`;
-                    badgeStyle = { bg: "rgba(245,158,11,0.1)", color: "#fbbf24" };
-                  } else if (diff < 0) {
-                    badgeText = `${t.requiresLeadWeight}: +${Math.abs(diff).toFixed(1)}kg`;
-                    badgeStyle = { bg: "rgba(59,130,246,0.1)", color: "#60a5fa" };
-                  } else {
-                    badgeText = t.perfectWeight;
-                    badgeStyle = { bg: "rgba(16,185,129,0.1)", color: "#34d399" };
-                  }
+          {isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+              {sortedEntries.map(item => {
+                const entryId = item.entry.id;
+                const reqWeight = item.entry.carriedWeight || 52.0;
+                const weighed = parseFloat(weighedWeights[entryId]);
+                const diff = weighed - reqWeight;
+                let badgeText = t.verified;
+                let badgeStyle = { bg: "rgba(16,185,129,0.1)", color: "#34d399" };
+                if (vetChecks[entryId] === "SCRATCH") {
+                  badgeText = t.scratched;
+                  badgeStyle = { bg: "rgba(239,68,68,0.1)", color: "#f87171" };
+                } else if (diff > 1.0) {
+                  badgeText = t.criticalOverweight;
+                  badgeStyle = { bg: "rgba(239,68,68,0.1)", color: "#f87171" };
+                } else if (diff > 0) {
+                  badgeText = `${t.overweight} +${diff.toFixed(1)}kg (${t.verified})`;
+                  badgeStyle = { bg: "rgba(245,158,11,0.1)", color: "#fbbf24" };
+                } else if (diff < 0) {
+                  badgeText = `${t.requiresLeadWeight}: +${Math.abs(diff).toFixed(1)}kg`;
+                  badgeStyle = { bg: "rgba(59,130,246,0.1)", color: "#60a5fa" };
+                } else {
+                  badgeText = t.perfectWeight;
+                  badgeStyle = { bg: "rgba(16,185,129,0.1)", color: "#34d399" };
+                }
 
-                  return (
-                    <tr key={entryId} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: vetChecks[entryId] === "SCRATCH" ? 0.4 : 1 }}>
-                      <td style={{ padding: "1rem" }}>
-                        <span style={{ width: 32, height: 32, borderRadius: "50%", background: "#1f1d1a", border: "1px solid #333", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "13px", color: "#c9a227" }}>
-                          {item.entry.gateNumber || "-"}
-                        </span>
-                      </td>
-                      <td style={{ padding: "1rem" }}>
-                        <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{item.horse?.name}</div>
-                        <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · Rating: {item.horse?.currentRating}</div>
-                      </td>
-                      <td style={{ padding: "1rem" }}>
-                        <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "13px" }}>{item.jockey?.username}</div>
-                        <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>Base weight: {item.jockey?.weight || "52.0"} kg</div>
-                      </td>
-                      <td style={{ padding: "1rem" }}>
-                        <input type="number" step="0.1" value={weighedWeights[entryId] || ""} disabled={vetChecks[entryId] === "SCRATCH"} onChange={e => setWeighedWeights(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: 80, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
-                      </td>
-                      <td style={{ padding: "1rem", fontSize: "12px", fontFamily: "monospace", color: "#a855f7", fontWeight: "bold" }}>
-                        {reqWeight} kg
-                      </td>
-                      <td style={{ padding: "1rem" }}>
-                        <select value={vetChecks[entryId]} onChange={e => setVetChecks(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ padding: "0.25rem 0.5rem", fontSize: "11px", width: 140, outline: "none" }}>
+                return (
+                  <div key={entryId} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem", opacity: vetChecks[entryId] === "SCRATCH" ? 0.5 : 1 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ width: 32, height: 32, borderRadius: "50%", background: "#1f1d1a", border: "1px solid #333", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "13px", color: "#c9a227" }}>
+                        {item.entry.gateNumber || "-"}
+                      </span>
+                      <span style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: badgeStyle.bg, color: badgeStyle.color, border: `1px solid ${badgeStyle.color}20`, fontWeight: "bold", textAlign: "right" }}>
+                        {badgeText}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "0.75rem" }}>
+                      <div>
+                        <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Horse Details</label>
+                        <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px", marginTop: "2px" }}>{item.horse?.name}</div>
+                        <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>{item.horse?.breed} · Rating: {item.horse?.currentRating}</div>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Jockey Details</label>
+                        <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "13px", marginTop: "2px" }}>{item.jockey?.username}</div>
+                        <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>Base: {item.jockey?.weight || "52.0"} kg</div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", alignItems: "flex-end" }}>
+                      <div>
+                        <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>
+                          Jockey Weight (kg)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          value={weighedWeights[entryId] || ""}
+                          disabled={vetChecks[entryId] === "SCRATCH"}
+                          onChange={e => setWeighedWeights(prev => ({ ...prev, [entryId]: e.target.value }))}
+                          style={{
+                            width: "100%",
+                            padding: "0.375rem 0.5rem",
+                            fontSize: "12px",
+                            outline: "none",
+                            background: "rgba(0,0,0,0.6)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: "0.375rem",
+                            color: "#fff",
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>
+                          Vet & Safety Check
+                        </label>
+                        <select
+                          value={vetChecks[entryId]}
+                          onChange={e => setVetChecks(prev => ({ ...prev, [entryId]: e.target.value }))}
+                          style={{
+                            width: "100%",
+                            padding: "0.375rem 0.5rem",
+                            fontSize: "11px",
+                            outline: "none",
+                            background: "rgba(0,0,0,0.6)",
+                            border: "1px solid rgba(255,255,255,0.08)",
+                            borderRadius: "0.375rem",
+                            color: "#fff",
+                          }}
+                        >
                           <option value="CLEARED">Cleared ({t.verified})</option>
                           <option value="SCRATCH">{t.scratched}</option>
                         </select>
-                      </td>
-                      <td style={{ padding: "1rem" }}>
-                        <span style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: badgeStyle.bg, color: badgeStyle.color, border: `1px solid ${badgeStyle.color}20`, fontWeight: "bold" }}>
-                          {badgeText}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", fontSize: "11px" }}>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Required Weight:</span>
+                      <span style={{ fontFamily: "monospace", color: "#a855f7", fontWeight: "bold" }}>{reqWeight} kg</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                    {[t.gate, t.horseDetails, t.jockeyDetails, t.jockeyWeight, t.requiredWeight, t.vetCheck, t.status].map(h => (
+                      <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedEntries.map(item => {
+                    const entryId = item.entry.id;
+                    const reqWeight = item.entry.carriedWeight || 52.0;
+                    const weighed = parseFloat(weighedWeights[entryId]);
+                    const diff = weighed - reqWeight;
+                    let badgeText = t.verified;
+                    let badgeStyle = { bg: "rgba(16,185,129,0.1)", color: "#34d399" };
+                    if (vetChecks[entryId] === "SCRATCH") {
+                      badgeText = t.scratched;
+                      badgeStyle = { bg: "rgba(239,68,68,0.1)", color: "#f87171" };
+                    } else if (diff > 1.0) {
+                      badgeText = t.criticalOverweight;
+                      badgeStyle = { bg: "rgba(239,68,68,0.1)", color: "#f87171" };
+                    } else if (diff > 0) {
+                      badgeText = `${t.overweight} +${diff.toFixed(1)}kg (${t.verified})`;
+                      badgeStyle = { bg: "rgba(245,158,11,0.1)", color: "#fbbf24" };
+                    } else if (diff < 0) {
+                      badgeText = `${t.requiresLeadWeight}: +${Math.abs(diff).toFixed(1)}kg`;
+                      badgeStyle = { bg: "rgba(59,130,246,0.1)", color: "#60a5fa" };
+                    } else {
+                      badgeText = t.perfectWeight;
+                      badgeStyle = { bg: "rgba(16,185,129,0.1)", color: "#34d399" };
+                    }
+
+                    return (
+                      <tr key={entryId} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: vetChecks[entryId] === "SCRATCH" ? 0.4 : 1 }}>
+                        <td style={{ padding: "1rem" }}>
+                          <span style={{ width: 32, height: 32, borderRadius: "50%", background: "#1f1d1a", border: "1px solid #333", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "13px", color: "#c9a227" }}>
+                            {item.entry.gateNumber || "-"}
+                          </span>
+                        </td>
+                        <td style={{ padding: "1rem" }}>
+                          <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{item.horse?.name}</div>
+                          <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · Rating: {item.horse?.currentRating}</div>
+                        </td>
+                        <td style={{ padding: "1rem" }}>
+                          <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "13px" }}>{item.jockey?.username}</div>
+                          <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>Base weight: {item.jockey?.weight || "52.0"} kg</div>
+                        </td>
+                        <td style={{ padding: "1rem" }}>
+                          <input type="number" step="0.1" value={weighedWeights[entryId] || ""} disabled={vetChecks[entryId] === "SCRATCH"} onChange={e => setWeighedWeights(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: 80, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                        </td>
+                        <td style={{ padding: "1rem", fontSize: "12px", fontFamily: "monospace", color: "#a855f7", fontWeight: "bold" }}>
+                          {reqWeight} kg
+                        </td>
+                        <td style={{ padding: "1rem" }}>
+                          <select value={vetChecks[entryId]} onChange={e => setVetChecks(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ padding: "0.25rem 0.5rem", fontSize: "11px", width: 140, outline: "none" }}>
+                            <option value="CLEARED">Cleared ({t.verified})</option>
+                            <option value="SCRATCH">{t.scratched}</option>
+                          </select>
+                        </td>
+                        <td style={{ padding: "1rem" }}>
+                          <span style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: badgeStyle.bg, color: badgeStyle.color, border: `1px solid ${badgeStyle.color}20`, fontWeight: "bold" }}>
+                            {badgeText}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem", borderRadius: "0.75rem", flexWrap: "wrap", gap: "1rem" }}>
@@ -1038,7 +1166,7 @@ export default function RefereeHub() {
           </div>
         </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1.5rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr", gap: "1.5rem" }}>
           {/* Active Runners */}
           <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)", padding: "1.25rem 1.5rem", flexWrap: "wrap", gap: "1rem" }}>
@@ -1058,37 +1186,30 @@ export default function RefereeHub() {
                 </select>
               </div>
             </div>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                    {[t.gate, t.horseDetails, t.jockeyDetails, t.jockeyWeight, t.status, "Action"].map(h => (
-                      <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedEntries.map(item => (
-                    <tr key={item.entry.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      <td style={{ padding: "1rem" }}>
-                        <span style={{ width: 32, height: 32, borderRadius: "50%", background: "#1f1d1a", border: "1px solid #333", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "13px", color: "#c9a227" }}>
-                          {item.entry.gateNumber || "-"}
-                        </span>
-                      </td>
-                      <td style={{ padding: "1rem", fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{item.horse?.name}</td>
-                      <td style={{ padding: "1rem", color: "#a0a0a0", fontSize: "12px" }}>{item.jockey?.username}</td>
-                      <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "12px", color: "#f4f2ec" }}>{item.entry.carriedWeight} kg</td>
-                      <td style={{ padding: "1rem" }}>
-                        {statusBadge(item.entry.status)}
-                      </td>
-                      <td style={{ padding: "1rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            {isMobile ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+                {sortedEntries.map(item => (
+                  <div key={item.entry.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ width: 32, height: 32, borderRadius: "50%", background: "#1f1d1a", border: "1px solid #333", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "13px", color: "#c9a227" }}>
+                        {item.entry.gateNumber || "-"}
+                      </span>
+                      {statusBadge(item.entry.status)}
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "14px" }}>{item.horse?.name}</div>
+                      <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>Jockey: <span style={{ color: "#fff" }}>{item.jockey?.username}</span></div>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
+                      <span style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>Weight: {item.entry.carriedWeight} kg</span>
+                      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
                         <button onClick={() => { setViolRunner(`${item.horse.id}-${item.jockey.id}`); setShowViolModal(true); }} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>Report</button>
                         {item.entry.status === "RUNNING" && (
                           <button 
                             onClick={() => handleStopEntry(item.entry.id)} 
                             disabled={actionLoadingId !== null}
                             style={{ 
-                              padding: "0.2rem 0.5rem", 
+                              padding: "0.25rem 0.5rem", 
                               background: "rgba(245,158,11,0.15)", 
                               border: "1px solid rgba(245,158,11,0.3)", 
                               borderRadius: "0.25rem", 
@@ -1108,7 +1229,7 @@ export default function RefereeHub() {
                               onClick={() => handleResumeEntry(item.entry.id)} 
                               disabled={actionLoadingId !== null}
                               style={{ 
-                                padding: "0.2rem 0.5rem", 
+                                padding: "0.25rem 0.5rem", 
                                 background: "rgba(16,185,129,0.15)", 
                                 border: "1px solid rgba(16,185,129,0.3)", 
                                 borderRadius: "0.25rem", 
@@ -1125,7 +1246,7 @@ export default function RefereeHub() {
                               onClick={() => handleDisqualifyEntry(item.entry.id)} 
                               disabled={actionLoadingId !== null}
                               style={{ 
-                                padding: "0.2rem 0.5rem", 
+                                padding: "0.25rem 0.5rem", 
                                 background: "rgba(239,68,68,0.15)", 
                                 border: "1px solid rgba(239,68,68,0.3)", 
                                 borderRadius: "0.25rem", 
@@ -1140,12 +1261,101 @@ export default function RefereeHub() {
                             </button>
                           </>
                         )}
-                      </td>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                      {[t.gate, t.horseDetails, t.jockeyDetails, t.jockeyWeight, t.status, "Action"].map(h => (
+                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {sortedEntries.map(item => (
+                      <tr key={item.entry.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                        <td style={{ padding: "1rem" }}>
+                          <span style={{ width: 32, height: 32, borderRadius: "50%", background: "#1f1d1a", border: "1px solid #333", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "13px", color: "#c9a227" }}>
+                            {item.entry.gateNumber || "-"}
+                          </span>
+                        </td>
+                        <td style={{ padding: "1rem", fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{item.horse?.name}</td>
+                        <td style={{ padding: "1rem", color: "#a0a0a0", fontSize: "12px" }}>{item.jockey?.username}</td>
+                        <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "12px", color: "#f4f2ec" }}>{item.entry.carriedWeight} kg</td>
+                        <td style={{ padding: "1rem" }}>
+                          {statusBadge(item.entry.status)}
+                        </td>
+                        <td style={{ padding: "1rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
+                          <button onClick={() => { setViolRunner(`${item.horse.id}-${item.jockey.id}`); setShowViolModal(true); }} style={{ background: "none", border: "none", color: "#f87171", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>Report</button>
+                          {item.entry.status === "RUNNING" && (
+                            <button 
+                              onClick={() => handleStopEntry(item.entry.id)} 
+                              disabled={actionLoadingId !== null}
+                              style={{ 
+                                padding: "0.2rem 0.5rem", 
+                                background: "rgba(245,158,11,0.15)", 
+                                border: "1px solid rgba(245,158,11,0.3)", 
+                                borderRadius: "0.25rem", 
+                                color: "#f59e0b", 
+                                cursor: actionLoadingId !== null ? "not-allowed" : "pointer", 
+                                opacity: actionLoadingId !== null ? 0.5 : 1,
+                                fontSize: "11px", 
+                                fontWeight: "bold" 
+                              }}
+                            >
+                              Stop
+                            </button>
+                          )}
+                          {item.entry.status === "STOPPED" && (
+                            <>
+                              <button 
+                                onClick={() => handleResumeEntry(item.entry.id)} 
+                                disabled={actionLoadingId !== null}
+                                style={{ 
+                                  padding: "0.2rem 0.5rem", 
+                                  background: "rgba(16,185,129,0.15)", 
+                                  border: "1px solid rgba(16,185,129,0.3)", 
+                                  borderRadius: "0.25rem", 
+                                  color: "#10b981", 
+                                  cursor: actionLoadingId !== null ? "not-allowed" : "pointer", 
+                                  opacity: actionLoadingId !== null ? 0.5 : 1,
+                                  fontSize: "11px", 
+                                  fontWeight: "bold" 
+                                }}
+                              >
+                                Resume
+                              </button>
+                              <button 
+                                onClick={() => handleDisqualifyEntry(item.entry.id)} 
+                                disabled={actionLoadingId !== null}
+                                style={{ 
+                                  padding: "0.2rem 0.5rem", 
+                                  background: "rgba(239,68,68,0.15)", 
+                                  border: "1px solid rgba(239,68,68,0.3)", 
+                                  borderRadius: "0.25rem", 
+                                  color: "#ef4444", 
+                                  cursor: actionLoadingId !== null ? "not-allowed" : "pointer", 
+                                  opacity: actionLoadingId !== null ? 0.5 : 1,
+                                  fontSize: "11px", 
+                                  fontWeight: "bold" 
+                                }}
+                              >
+                                DQ
+                              </button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* Incidents Recorded */}
@@ -1275,96 +1485,200 @@ export default function RefereeHub() {
                 </select>
               </div>
             </div>
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                    {[t.gate, t.horseDetails, t.jockeyDetails, t.finalPosition, t.weighInWeight, t.finishTime, t.dq].map(h => (
-                      <th key={h} style={{ padding: "0.75rem 1rem", textAlign: h === t.dq ? "center" : "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedEntries.map((item, idx) => {
-                    const entryId = item.entry.id;
-                    const isAlreadyDq = item.entry.status === "DISQUALIFIED";
-                    const isDq = disqualifiedList[entryId] || false;
-                    const weighedOut = item.entry.carriedWeight || 52.0;
-                    const weighedIn = parseFloat(weighInWeights[entryId]) || 0;
-                    const diff = weighedIn - weighedOut;
-                    let wiText = t.weighInPassed;
-                    let wiColor = "#34d399";
-                    if (diff < -0.5) {
-                      wiText = `${t.underweightDiscrepancy}: ${diff.toFixed(1)} kg (${t.dq.toLowerCase()})`;
-                      wiColor = "#f87171";
-                    } else {
-                      wiText = `${t.weighInPassed} (${diff >= 0 ? "+" : ""}${diff.toFixed(1)} kg)`;
-                    }
+            {isMobile ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+                {sortedEntries.map((item, idx) => {
+                  const entryId = item.entry.id;
+                  const isAlreadyDq = item.entry.status === "DISQUALIFIED";
+                  const isDq = disqualifiedList[entryId] || false;
+                  const weighedOut = item.entry.carriedWeight || 52.0;
+                  const weighedIn = parseFloat(weighInWeights[entryId]) || 0;
+                  const diff = weighedIn - weighedOut;
+                  let wiText = t.weighInPassed;
+                  let wiColor = "#34d399";
+                  if (diff < -0.5) {
+                    wiText = `${t.underweightDiscrepancy}: ${diff.toFixed(1)} kg (${t.dq.toLowerCase()})`;
+                    wiColor = "#f87171";
+                  } else {
+                    wiText = `${t.weighInPassed} (${diff >= 0 ? "+" : ""}${diff.toFixed(1)} kg)`;
+                  }
 
-                    return (
-                      <tr key={entryId} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: isDq ? 0.4 : 1 }}>
-                        <td style={{ padding: "1rem" }}>
-                          <span style={{ width: 32, height: 32, borderRadius: "50%", background: "#1f1d1a", border: "1px solid #333", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "13px", color: "#c9a227" }}>
-                            {item.entry.gateNumber || "-"}
-                          </span>
-                        </td>
-                        <td style={{ padding: "1rem" }}>
-                          <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{item.horse?.name}</div>
-                          <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · Rating: {item.horse?.currentRating}</div>
-                        </td>
-                        <td style={{ padding: "1rem" }}>
-                          <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "13px" }}>{item.jockey?.username}</div>
-                          <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>Weighed Out: {item.entry.carriedWeight || "52.0"} kg</div>
-                        </td>
-                        <td style={{ padding: "1rem" }}>
+                  return (
+                    <div key={entryId} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem", opacity: isDq ? 0.5 : 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ width: 32, height: 32, borderRadius: "50%", background: "#1f1d1a", border: "1px solid #333", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "13px", color: "#c9a227" }}>
+                          {item.entry.gateNumber || "-"}
+                        </span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <label style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", gap: "0.25rem", cursor: isAlreadyDq ? "not-allowed" : "pointer" }}>
+                            <input type="checkbox" checked={isDq} disabled={isAlreadyDq} onChange={e => setDisqualifiedList(prev => ({ ...prev, [entryId]: e.target.checked }))} style={{ width: 16, height: 16 }} />
+                            {t.dq}
+                          </label>
+                          {isAlreadyDq && (
+                            <span style={{ fontSize: "9px", color: "#f87171", fontWeight: "bold" }}>
+                              ({lang === "vi" ? "Vi phạm" : "Violation"})
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "0.75rem" }}>
+                        <div>
+                          <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Horse Details</label>
+                          <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px", marginTop: "2px" }}>{item.horse?.name}</div>
+                          <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>{item.horse?.breed} · Rating: {item.horse?.currentRating}</div>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Jockey Details</label>
+                          <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "13px", marginTop: "2px" }}>{item.jockey?.username}</div>
+                          <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>Out: {item.entry.carriedWeight || "52.0"} kg</div>
+                        </div>
+                      </div>
+
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", alignItems: "flex-start" }}>
+                        <div>
+                          <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>
+                            {t.finalPosition}
+                          </label>
                           {isAlreadyDq ? (
-                            <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem" }}>
+                            <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", display: "inline-block" }}>
                               {lang === "vi" ? "BỊ LOẠI" : "DISQUALIFIED"}
                             </span>
                           ) : (
-                            <input type="text" readOnly disabled value={isDq ? "DQ" : finalPositions[entryId] ? `${finalPositions[entryId]}` : "—"} style={{ width: 70, padding: "0.25rem 0.5rem", fontSize: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#c9a227", fontWeight: "bold", textAlign: "center", outline: "none", borderRadius: "0.25rem" }} />
+                            <input type="text" readOnly disabled value={isDq ? "DQ" : finalPositions[entryId] ? `${finalPositions[entryId]}` : "—"} style={{ width: "100%", padding: "0.375rem 0.5rem", fontSize: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#c9a227", fontWeight: "bold", textAlign: "center", outline: "none", borderRadius: "0.25rem" }} />
                           )}
-                        </td>
-                        <td style={{ padding: "1rem" }}>
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>
+                            {t.weighInWeight}
+                          </label>
                           {isAlreadyDq ? (
                             <span style={{ fontSize: "11px", color: "#a0a0a0" }}>—</span>
                           ) : (
-                            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                               <input type="number" step="0.1" required={!isDq} value={weighInWeights[entryId] || ""} disabled={isDq} onChange={e => {
                                 const v = parseFloat(e.target.value);
                                 setWeighInWeights(prev => ({ ...prev, [entryId]: e.target.value }));
                                 if (!isNaN(v) && v - weighedOut < -0.5) {
                                   setDisqualifiedList(prev => ({ ...prev, [entryId]: true }));
                                 }
-                              }} style={{ width: 75, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                              }} style={{ width: "100%", padding: "0.375rem 0.5rem", fontSize: "12px", outline: "none", background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.375rem", color: "#fff" }} />
                               <span style={{ fontSize: "11px", color: "#a0a0a0" }}>kg</span>
                             </div>
                           )}
-                          {!isDq && !isAlreadyDq && <div style={{ fontSize: "10px", fontWeight: "bold", color: wiColor, marginTop: "4px" }}>{wiText}</div>}
-                        </td>
-                        <td style={{ padding: "1rem" }}>
+                          {!isDq && !isAlreadyDq && <div style={{ fontSize: "9px", fontWeight: "bold", color: wiColor, marginTop: "4px" }}>{wiText}</div>}
+                        </div>
+
+                        <div style={{ gridColumn: "span 2" }}>
+                          <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>
+                            {t.finishTime}
+                          </label>
                           {isAlreadyDq ? (
                             <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f87171", fontFamily: "monospace" }}>
                               DQ
                             </span>
                           ) : (
-                            <input type="text" required={!isDq} placeholder="e.g. 1:48.35" value={isDq ? "DQ" : finishTimes[entryId] || ""} disabled={isDq} onChange={e => setFinishTimes(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: 120, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                            <input type="text" required={!isDq} placeholder="e.g. 1:48.35" value={isDq ? "DQ" : finishTimes[entryId] || ""} disabled={isDq} onChange={e => setFinishTimes(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: "100%", padding: "0.375rem 0.5rem", fontSize: "12px", outline: "none", background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.375rem", color: "#fff" }} />
                           )}
-                        </td>
-                        <td style={{ padding: "1rem", textAlign: "center" }}>
-                          <input type="checkbox" checked={isDq} disabled={isAlreadyDq} onChange={e => setDisqualifiedList(prev => ({ ...prev, [entryId]: e.target.checked }))} style={{ width: 16, height: 16, cursor: isAlreadyDq ? "not-allowed" : "pointer" }} />
-                          {isAlreadyDq && (
-                            <div style={{ fontSize: "9px", color: "#f87171", marginTop: "4px", fontWeight: "bold" }}>
-                              {lang === "vi" ? "Vi phạm" : "Violation"}
-                            </div>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                      {[t.gate, t.horseDetails, t.jockeyDetails, t.finalPosition, t.weighInWeight, t.finishTime, t.dq].map(h => (
+                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: h === t.dq ? "center" : "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedEntries.map((item, idx) => {
+                      const entryId = item.entry.id;
+                      const isAlreadyDq = item.entry.status === "DISQUALIFIED";
+                      const isDq = disqualifiedList[entryId] || false;
+                      const weighedOut = item.entry.carriedWeight || 52.0;
+                      const weighedIn = parseFloat(weighInWeights[entryId]) || 0;
+                      const diff = weighedIn - weighedOut;
+                      let wiText = t.weighInPassed;
+                      let wiColor = "#34d399";
+                      if (diff < -0.5) {
+                        wiText = `${t.underweightDiscrepancy}: ${diff.toFixed(1)} kg (${t.dq.toLowerCase()})`;
+                        wiColor = "#f87171";
+                      } else {
+                        wiText = `${t.weighInPassed} (${diff >= 0 ? "+" : ""}${diff.toFixed(1)} kg)`;
+                      }
+
+                      return (
+                        <tr key={entryId} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", opacity: isDq ? 0.4 : 1 }}>
+                          <td style={{ padding: "1rem" }}>
+                            <span style={{ width: 32, height: 32, borderRadius: "50%", background: "#1f1d1a", border: "1px solid #333", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold", fontSize: "13px", color: "#c9a227" }}>
+                              {item.entry.gateNumber || "-"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "1rem" }}>
+                            <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{item.horse?.name}</div>
+                            <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · Rating: {item.horse?.currentRating}</div>
+                          </td>
+                          <td style={{ padding: "1rem" }}>
+                            <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "13px" }}>{item.jockey?.username}</div>
+                            <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>Weighed Out: {item.entry.carriedWeight || "52.0"} kg</div>
+                          </td>
+                          <td style={{ padding: "1rem" }}>
+                            {isAlreadyDq ? (
+                              <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem" }}>
+                                {lang === "vi" ? "BỊ LOẠI" : "DISQUALIFIED"}
+                              </span>
+                            ) : (
+                              <input type="text" readOnly disabled value={isDq ? "DQ" : finalPositions[entryId] ? `${finalPositions[entryId]}` : "—"} style={{ width: 70, padding: "0.25rem 0.5rem", fontSize: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#c9a227", fontWeight: "bold", textAlign: "center", outline: "none", borderRadius: "0.25rem" }} />
+                            )}
+                          </td>
+                          <td style={{ padding: "1rem" }}>
+                            {isAlreadyDq ? (
+                              <span style={{ fontSize: "11px", color: "#a0a0a0" }}>—</span>
+                            ) : (
+                              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                <input type="number" step="0.1" required={!isDq} value={weighInWeights[entryId] || ""} disabled={isDq} onChange={e => {
+                                  const v = parseFloat(e.target.value);
+                                  setWeighInWeights(prev => ({ ...prev, [entryId]: e.target.value }));
+                                  if (!isNaN(v) && v - weighedOut < -0.5) {
+                                    setDisqualifiedList(prev => ({ ...prev, [entryId]: true }));
+                                  }
+                                }} style={{ width: 75, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                                <span style={{ fontSize: "11px", color: "#a0a0a0" }}>kg</span>
+                              </div>
+                            )}
+                            {!isDq && !isAlreadyDq && <div style={{ fontSize: "10px", fontWeight: "bold", color: wiColor, marginTop: "4px" }}>{wiText}</div>}
+                          </td>
+                          <td style={{ padding: "1rem" }}>
+                            {isAlreadyDq ? (
+                              <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f87171", fontFamily: "monospace" }}>
+                                DQ
+                              </span>
+                            ) : (
+                              <input type="text" required={!isDq} placeholder="e.g. 1:48.35" value={isDq ? "DQ" : finishTimes[entryId] || ""} disabled={isDq} onChange={e => setFinishTimes(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: 120, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                            )}
+                          </td>
+                          <td style={{ padding: "1rem", textAlign: "center" }}>
+                            <input type="checkbox" checked={isDq} disabled={isAlreadyDq} onChange={e => setDisqualifiedList(prev => ({ ...prev, [entryId]: e.target.checked }))} style={{ width: 16, height: 16, cursor: isAlreadyDq ? "not-allowed" : "pointer" }} />
+                            {isAlreadyDq && (
+                              <div style={{ fontSize: "9px", color: "#f87171", marginTop: "4px", fontWeight: "bold" }}>
+                                {lang === "vi" ? "Vi phạm" : "Violation"}
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem" }}>
@@ -1415,50 +1729,37 @@ export default function RefereeHub() {
             <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{t.inspectMonitor}</p>
           </div>
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                {[t.hId, t.hMeeting, t.hTime, t.hDetails, t.hStatus, t.hActions].map((h, i) => (
-                  <th key={h} style={{ padding: "0.75rem 1rem", textAlign: i === 5 ? "right" : "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loadingRaces}</td></tr>
-              ) : assignedRaces.length === 0 ? (
-                <tr>
-                  <td colSpan={6} style={{ padding: "3rem", textAlign: "center" }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ fontSize: "2rem" }}>📭</span>
-                      <span style={{ color: "#a0a0a0", fontSize: "0.875rem" }}>{t.noRaces}</span>
-                    </div>
-                  </td>
-                </tr>
-              ) : assignedRaces.map((race: any) => {
-                const isPending = !["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status ?? "");
-                const isRunning = race.status === "RUNNING";
-                const isOfficial = race.status === "OFFICIAL";
-                const isStewardsInquiry = race.status === "STEWARDS_INQUIRY";
+        {isMobile ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+            {assignedRaces.map((race: any) => {
+              const isPending = !["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status ?? "");
+              const isRunning = race.status === "RUNNING";
+              const isOfficial = race.status === "OFFICIAL";
+              const isStewardsInquiry = race.status === "STEWARDS_INQUIRY";
 
-                return (
-                  <tr key={race.id} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
-                  >
-                    <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.875rem", color: "#f4f2ec" }}>#{race.id}</td>
-                    <td style={{ padding: "1rem" }}>
-                      <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{race.meetingName}</div>
-                      <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>📍 {race.venue}</div>
-                    </td>
-                    <td style={{ padding: "1rem", fontSize: "0.8rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDateTime(race.startTime)}</td>
-                    <td style={{ padding: "1rem" }}>
-                      <div style={{ fontSize: "0.875rem", color: "#f4f2ec" }}>{formatClassLevel(race.classLevel)}</div>
-                      <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>{race.distanceMeters}m · {race.trackType}</div>
-                    </td>
-                    <td style={{ padding: "1rem" }}>{statusBadge(race.status, race.preCheckCompleted)}</td>
-                    <td style={{ padding: "1rem", textAlign: "right" }}>
+              return (
+                <div key={race.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                    <div>
+                      <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>#{race.id}</span>
+                      <h4 style={{ fontSize: "0.95rem", fontWeight: "bold", color: "#f4f2ec", marginTop: "2px" }}>
+                        {race.meetingName}
+                      </h4>
+                      <span style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", display: "block", marginTop: "2px" }}>📍 {race.venue}</span>
+                    </div>
+                    {statusBadge(race.status, race.preCheckCompleted)}
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                    📅 {formatDateTime(race.startTime)}
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#f4f2ec", display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</div>
+                      <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "2px" }}>
+                        {race.distanceMeters}m · {race.trackType}
+                      </div>
+                    </div>
+                    <div style={{ flexShrink: 0, marginLeft: "0.5rem" }}>
                       {isPending && !isRunning && (
                         race.preCheckCompleted ? (
                           <button onClick={() => handleStartRace(race)} style={{ padding: "0.375rem 0.75rem", background: "#10b981", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
@@ -1506,13 +1807,112 @@ export default function RefereeHub() {
                           {t.stewardReport}
                         </button>
                       )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                  {[t.hId, t.hMeeting, t.hTime, t.hDetails, t.hStatus, t.hActions].map((h, i) => (
+                    <th key={h} style={{ padding: "0.75rem 1rem", textAlign: i === 5 ? "right" : "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loadingRaces}</td></tr>
+                ) : assignedRaces.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ padding: "3rem", textAlign: "center" }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+                        <span style={{ fontSize: "2rem" }}>📭</span>
+                        <span style={{ color: "#a0a0a0", fontSize: "0.875rem" }}>{t.noRaces}</span>
+                      </div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                ) : assignedRaces.map((race: any) => {
+                  const isPending = !["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status ?? "");
+                  const isRunning = race.status === "RUNNING";
+                  const isOfficial = race.status === "OFFICIAL";
+                  const isStewardsInquiry = race.status === "STEWARDS_INQUIRY";
+
+                  return (
+                    <tr key={race.id} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}
+                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
+                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                    >
+                      <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.875rem", color: "#f4f2ec" }}>#{race.id}</td>
+                      <td style={{ padding: "1rem" }}>
+                        <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{race.meetingName}</div>
+                        <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>📍 {race.venue}</div>
+                      </td>
+                      <td style={{ padding: "1rem", fontSize: "0.8rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDateTime(race.startTime)}</td>
+                      <td style={{ padding: "1rem" }}>
+                        <div style={{ fontSize: "0.875rem", color: "#f4f2ec" }}>{formatClassLevel(race.classLevel)}</div>
+                        <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>{race.distanceMeters}m · {race.trackType}</div>
+                      </td>
+                      <td style={{ padding: "1rem" }}>{statusBadge(race.status, race.preCheckCompleted)}</td>
+                      <td style={{ padding: "1rem", textAlign: "right" }}>
+                        {isPending && !isRunning && (
+                          race.preCheckCompleted ? (
+                            <button onClick={() => handleStartRace(race)} style={{ padding: "0.375rem 0.75rem", background: "#10b981", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
+                              {t.startRace}
+                            </button>
+                          ) : race.gatesFullySet ? (
+                            <button onClick={() => handleStartCheck(race)} style={{ padding: "0.375rem 0.75rem", background: PURPLE, color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
+                              {t.startPreCheck}
+                            </button>
+                          ) : (
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
+                              <span style={{ fontSize: "8px", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>{t.gatesNotSet}</span>
+                              <button disabled style={{ padding: "0.375rem 0.75rem", background: "#1f1d1a", color: "#555", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "not-allowed", border: "none" }}>
+                                🔒 {t.startPreCheck}
+                              </button>
+                            </div>
+                          )
+                        )}
+                        {isRunning && (
+                          <button onClick={() => handleStartSupervise(race)} style={{ padding: "0.375rem 0.75rem", background: "#fbbf24", color: "#000", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
+                            {t.monitorRecord}
+                          </button>
+                        )}
+                        {isStewardsInquiry && (
+                          <button
+                            onClick={() => handleStartSupervise(race)}
+                            style={{
+                              padding: "0.375rem 0.75rem",
+                              background: "rgba(239,68,68,0.15)",
+                              color: "#ef4444",
+                              fontSize: "0.7rem",
+                              fontFamily: "monospace",
+                              fontWeight: 700,
+                              borderRadius: "0.5rem",
+                              cursor: "pointer",
+                              border: "1px solid rgba(239,68,68,0.4)",
+                              animation: "pulse 1.5s infinite",
+                            }}
+                          >
+                            {t.confirmResults}
+                          </button>
+                        )}
+                        {isOfficial && (
+                          <button onClick={() => openStewardReportModal(race.id, race.stewardReport)} style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}>
+                            {t.stewardReport}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Steward Report Modal */}

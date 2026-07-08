@@ -368,6 +368,17 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
 // ── StableView ─────────────────────────────────────────────────────────────
 function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => void }) {
   const { user } = useAuth();
+  
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [horseName, setHorseName] = useState("");
   const [breed, setBreed] = useState("");
   const [sex, setSex] = useState("Gelding");
@@ -548,7 +559,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
       {msg && <p style={{ fontSize: "0.8rem", color: msg.startsWith("✅") ? "#4ade80" : "#ef4444", marginBottom: "0.5rem" }}>{msg}</p>}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(260px,320px)", gap: "2rem", alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr minmax(260px,320px)", gap: "2rem", alignItems: "start" }}>
         
         {/* Three Lanes stacked vertically */}
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -601,7 +612,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
         </div>
 
         {/* Declare Horse Form */}
-        <div>
+        <div style={{ order: isMobile ? -1 : undefined }}>
           <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Declare New Horse</h3>
           <form onSubmit={handleRegisterHorse} style={{ background: "rgba(21,19,16,0.6)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
             {[
@@ -975,81 +986,165 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
 
 // ── InvitationsView ────────────────────────────────────────────────────────
 function InvitationsView({ invitations, onViewProfile, onResubmit }: { invitations: any[]; onViewProfile: (id: number) => void; onResubmit: (entryId: number) => void }) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Sent Invitations</h3>
         <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Manage and track invitations sent to jockeys for various races.</p>
       </div>
-      <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", background: "rgba(255,255,255,0.01)" }}>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "700px" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                {["ID", "Meeting", "Race", "Horse", "Jockey", "Status"].map(h => (
-                  <th key={h} style={{ padding: "0.75rem 1.25rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {invitations.length === 0
-                ? <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No invitations have been sent yet.</td></tr>
-                : invitations.map((inv: any) => {
-                  const displayStatus = (inv.status === "ACCEPTED" && inv.entryStatus) ? inv.entryStatus : inv.status;
-                  return (
-                    <tr key={inv.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                      <td style={{ padding: "0.875rem 1.25rem", fontFamily: "monospace", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>#{inv.id}</td>
-                      <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 600, color: "#f4f2ec" }}>{inv.meetingName ?? `Meeting #${inv.raceId}`}</td>
-                      <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
-                        {inv.classLevel ? `${inv.classLevel} · ${formatDate(inv.startTime)}` : `Race #${inv.raceId}`}
-                      </td>
-                      <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{inv.horseName ?? `Horse #${inv.horseId}`}</td>
-                      <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", color: "#f4f2ec" }}>
-                        <button 
-                          type="button" 
-                          onClick={() => onViewProfile(inv.jockeyId)} 
-                          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontSize: "0.8rem", fontFamily: "monospace" }}
+
+      {isMobile ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {invitations.length === 0 ? (
+            <div className="rounded-xl border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.01)", padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>
+              No invitations have been sent yet.
+            </div>
+          ) : (
+            invitations.map((inv: any) => {
+              const displayStatus = (inv.status === "ACCEPTED" && inv.entryStatus) ? inv.entryStatus : inv.status;
+              return (
+                <div key={inv.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                    <div>
+                      <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>#{inv.id}</span>
+                      <h4 style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#f4f2ec", marginTop: "2px" }}>
+                        {inv.meetingName ?? `Meeting #${inv.raceId}`}
+                      </h4>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <StatusBadge status={displayStatus} />
+                      {inv.status === "ACCEPTED" && inv.entryStatus === "REJECTED" && (
+                        <button
+                          type="button"
+                          onClick={() => onResubmit(inv.entryId)}
+                          style={{
+                            padding: "0.2rem 0.5rem",
+                            background: "rgba(201,162,39,0.15)",
+                            border: "1px solid rgba(201,162,39,0.3)",
+                            borderRadius: "0.25rem",
+                            color: "#c9a227",
+                            fontSize: "0.6rem",
+                            fontFamily: "monospace",
+                            fontWeight: 700,
+                            cursor: "pointer"
+                          }}
                         >
-                          {inv.jockeyName ?? `Jockey #${inv.jockeyId}`}
+                          Resubmit
                         </button>
-                      </td>
-                      <td style={{ padding: "0.875rem 1.25rem" }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                          <StatusBadge status={displayStatus} />
-                          {inv.status === "ACCEPTED" && inv.entryStatus === "REJECTED" && (
-                            <button
-                              type="button"
-                              onClick={() => onResubmit(inv.entryId)}
-                              style={{
-                                padding: "0.2rem 0.5rem",
-                                background: "rgba(201,162,39,0.15)",
-                                border: "1px solid rgba(201,162,39,0.3)",
-                                borderRadius: "0.25rem",
-                                color: "#c9a227",
-                                fontSize: "0.6rem",
-                                fontFamily: "monospace",
-                                fontWeight: 700,
-                                cursor: "pointer"
-                              }}
-                            >
-                              Resubmit
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-            </tbody>
-          </table>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                    {inv.classLevel ? `${inv.classLevel} · ${formatDate(inv.startTime)}` : `Race #${inv.raceId}`}
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#f4f2ec", display: "flex", flexWrap: "wrap", gap: "1rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Horse: </span>
+                      <strong>{inv.horseName ?? `Horse #${inv.horseId}`}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Jockey: </span>
+                      <button 
+                        type="button" 
+                        onClick={() => onViewProfile(inv.jockeyId)} 
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontSize: "0.8rem", fontFamily: "monospace" }}
+                      >
+                        {inv.jockeyName ?? `Jockey #${inv.jockeyId}`}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
-      </div>
+      ) : (
+        <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", background: "rgba(255,255,255,0.01)" }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "700px" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                  {["ID", "Meeting", "Race", "Horse", "Jockey", "Status"].map(h => (
+                    <th key={h} style={{ padding: "0.75rem 1.25rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {invitations.length === 0
+                  ? <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No invitations have been sent yet.</td></tr>
+                  : invitations.map((inv: any) => {
+                    const displayStatus = (inv.status === "ACCEPTED" && inv.entryStatus) ? inv.entryStatus : inv.status;
+                    return (
+                      <tr key={inv.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                        <td style={{ padding: "0.875rem 1.25rem", fontFamily: "monospace", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>#{inv.id}</td>
+                        <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 600, color: "#f4f2ec" }}>{inv.meetingName ?? `Meeting #${inv.raceId}`}</td>
+                        <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                          {inv.classLevel ? `${inv.classLevel} · ${formatDate(inv.startTime)}` : `Race #${inv.raceId}`}
+                        </td>
+                        <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{inv.horseName ?? `Horse #${inv.horseId}`}</td>
+                        <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", color: "#f4f2ec" }}>
+                          <button 
+                            type="button" 
+                            onClick={() => onViewProfile(inv.jockeyId)} 
+                            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontSize: "0.8rem", fontFamily: "monospace" }}
+                          >
+                            {inv.jockeyName ?? `Jockey #${inv.jockeyId}`}
+                          </button>
+                        </td>
+                        <td style={{ padding: "0.875rem 1.25rem" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <StatusBadge status={displayStatus} />
+                            {inv.status === "ACCEPTED" && inv.entryStatus === "REJECTED" && (
+                              <button
+                                type="button"
+                                onClick={() => onResubmit(inv.entryId)}
+                                style={{
+                                  padding: "0.2rem 0.5rem",
+                                  background: "rgba(201,162,39,0.15)",
+                                  border: "1px solid rgba(201,162,39,0.3)",
+                                  borderRadius: "0.25rem",
+                                  color: "#c9a227",
+                                  fontSize: "0.6rem",
+                                  fontFamily: "monospace",
+                                  fontWeight: 700,
+                                  cursor: "pointer"
+                                }}
+                              >
+                                Resubmit
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // ── ResultsView ────────────────────────────────────────────────────────────
 function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings: number }) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
@@ -1067,41 +1162,88 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
       </div>
 
       <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", background: "rgba(255,255,255,0.01)" }}>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                {["Date", "Meeting", "Race Class", "Horse", "Pos", "Finish Time", "Rating Adj", "Prize"].map(h => (
-                   <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {results.length === 0
-                ? <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No race results available yet.</td></tr>
-                : results.map((r: any, i: number) => (
-                  <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDate(r.startTime)}</td>
-                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontWeight: 600, color: "#f4f2ec" }}>{r.meetingName ?? "—"}</td>
-                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0" }}>{r.classLevel ?? r.raceName ?? `Race #${r.raceId}`}</td>
-                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{r.horseName ?? `Horse #${r.horseId}`}</td>
-                    <td style={{ padding: "0.875rem 1rem" }}>
-                      <span style={{ fontFamily: "monospace", fontWeight: 700, padding: "0.2rem 0.5rem", borderRadius: "0.25rem", background: r.position === 1 ? "rgba(201,162,39,0.2)" : "rgba(255,255,255,0.05)", color: r.position === 1 ? "#c9a227" : "#f4f2ec" }}>
-                        {r.position ?? r.finalPosition ?? "—"}
+        {isMobile ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+            {results.length === 0 ? (
+              <div style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No race results available yet.</div>
+            ) : (
+              results.map((r: any, i: number) => (
+                <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>
+                      📅 {formatDate(r.startTime)}
+                    </span>
+                    <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "11px", padding: "0.2rem 0.5rem", borderRadius: "0.25rem", background: r.position === 1 ? "rgba(201,162,39,0.2)" : "rgba(255,255,255,0.05)", color: r.position === 1 ? "#c9a227" : "#f4f2ec" }}>
+                      Pos: {r.position ?? r.finalPosition ?? "—"}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "14px" }}>{r.horseName ?? `Horse #${r.horseId}`}</h4>
+                    <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>{r.meetingName ?? "—"}</p>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "11px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)", display: "block" }}>Race Class</span>
+                      <span style={{ color: "#f4f2ec" }}>{r.classLevel ?? r.raceName ?? `Race #${r.raceId}`}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)", display: "block" }}>Finish Time</span>
+                      <span style={{ color: "#f4f2ec", fontFamily: "monospace" }}>{r.finishTime ?? "—"}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)", display: "block" }}>Rating Adj</span>
+                      <span style={{ fontFamily: "monospace", color: r.ratingAdjustment > 0 ? "#4a9d6f" : r.ratingAdjustment < 0 ? "#ef5b5b" : "#a0a0a0" }}>
+                        {r.ratingAdjustment != null ? (r.ratingAdjustment > 0 ? `+${r.ratingAdjustment}` : r.ratingAdjustment) : "—"}
                       </span>
-                    </td>
-                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{r.finishTime ?? "—"}</td>
-                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", fontFamily: "monospace", color: r.ratingAdjustment > 0 ? "#4a9d6f" : r.ratingAdjustment < 0 ? "#ef5b5b" : "#a0a0a0" }}>
-                      {r.ratingAdjustment != null ? (r.ratingAdjustment > 0 ? `+${r.ratingAdjustment}` : r.ratingAdjustment) : "—"}
-                    </td>
-                    <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontFamily: "monospace", fontWeight: 700, color: "#4a9d6f" }}>
-                      ${(r.prizeMoney ?? r.prizeAmount ?? 0).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)", display: "block" }}>Prize Money</span>
+                      <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#4a9d6f" }}>
+                        ${(r.prizeMoney ?? r.prizeAmount ?? 0).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
+                  {["Date", "Meeting", "Race Class", "Horse", "Pos", "Finish Time", "Rating Adj", "Prize"].map(h => (
+                     <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {results.length === 0
+                  ? <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No race results available yet.</td></tr>
+                  : results.map((r: any, i: number) => (
+                    <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                      <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDate(r.startTime)}</td>
+                      <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontWeight: 600, color: "#f4f2ec" }}>{r.meetingName ?? "—"}</td>
+                      <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0" }}>{r.classLevel ?? r.raceName ?? `Race #${r.raceId}`}</td>
+                      <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{r.horseName ?? `Horse #${r.horseId}`}</td>
+                      <td style={{ padding: "0.875rem 1rem" }}>
+                        <span style={{ fontFamily: "monospace", fontWeight: 700, padding: "0.2rem 0.5rem", borderRadius: "0.25rem", background: r.position === 1 ? "rgba(201,162,39,0.2)" : "rgba(255,255,255,0.05)", color: r.position === 1 ? "#c9a227" : "#f4f2ec" }}>
+                          {r.position ?? r.finalPosition ?? "—"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{r.finishTime ?? "—"}</td>
+                      <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", fontFamily: "monospace", color: r.ratingAdjustment > 0 ? "#4a9d6f" : r.ratingAdjustment < 0 ? "#ef5b5b" : "#a0a0a0" }}>
+                        {r.ratingAdjustment != null ? (r.ratingAdjustment > 0 ? `+${r.ratingAdjustment}` : r.ratingAdjustment) : "—"}
+                      </td>
+                      <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontFamily: "monospace", fontWeight: 700, color: "#4a9d6f" }}>
+                        ${(r.prizeMoney ?? r.prizeAmount ?? 0).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

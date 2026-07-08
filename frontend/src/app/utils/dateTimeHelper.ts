@@ -8,14 +8,9 @@
 export const parseSafeDate = (str: string): Date | null => {
   if (!str) return null;
   const cleanStr = str.trim();
-  
-  // Try standard parsing first (handles ISO 8601 like yyyy-MM-ddTHH:mm:ss.sssZ, etc.)
-  const parsed = new Date(cleanStr);
-  if (!isNaN(parsed.getTime())) {
-    return parsed;
-  }
-  
-  // Try matching dd-MM-yyyy HH:mm:ss or dd-MM-yyyy HH:mm
+
+  // Try matching dd-MM-yyyy HH:mm:ss or dd-MM-yyyy HH:mm FIRST
+  // (Must check before native Date() which misreads dd-MM-yyyy as MM-DD-YYYY)
   const dmyMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})[ T](\d{2})[-:](\d{2})(?:[-:](\d{2}))?/);
   if (dmyMatch) {
     const [_, day, month, year, hours, minutes, seconds] = dmyMatch;
@@ -29,14 +24,15 @@ export const parseSafeDate = (str: string): Date | null => {
     return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
   }
 
-  // Fallback for custom yyyy-MM-dd HH:mm:ss if standard parser failed
-  if (cleanStr.includes(" ")) {
-    const spaceD = new Date(cleanStr.replace(" ", "T"));
-    if (!isNaN(spaceD.getTime())) return spaceD;
+  // For ISO 8601 format (yyyy-MM-ddTHH:mm:ss or yyyy-MM-dd HH:mm:ss), use native Date()
+  const parsed = new Date(cleanStr.includes(" ") ? cleanStr.replace(" ", "T") : cleanStr);
+  if (!isNaN(parsed.getTime())) {
+    return parsed;
   }
 
   return null;
 };
+
 
 /**
  * Formats a Date object or string into dd-MM-yyyy

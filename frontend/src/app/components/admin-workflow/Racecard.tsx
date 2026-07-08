@@ -11,6 +11,14 @@ export default function Racecard() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const lang = localStorage.getItem("app-lang") || "vi";
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const fetchMeetings = async () => {
     setLoading(true);
@@ -257,60 +265,92 @@ export default function Racecard() {
               </div>
             )}
 
-            <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-[#151310] text-xs font-semibold text-white/60 uppercase tracking-wider border-b border-white/5">
-                    <th className="px-6 py-4">Horse</th>
-                    <th className="px-6 py-4">Jockey</th>
-                    <th className="px-6 py-4 w-28">Gate</th>
-                    <th className="px-6 py-4 w-28">Carried Weight (kg)</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5 text-sm">
-                  {entries.length > 0 ? (
-                    entries.map((e, idx) => (
-                      <tr key={idx} className="hover:bg-[#151310]/10 transition">
-                        <td className="px-6 py-4">
-                          <h5 className="font-semibold text-white">{e.horse?.name || "Unknown"}</h5>
-                          <p className="text-[10px] text-white/40 mt-0.5">Rating: {e.horse?.currentRating}</p>
-                        </td>
-                        <td className="px-6 py-4 text-white/80">
-                          {e.jockey?.username || "Unknown"}
-                        </td>
-                        <td className="px-6 py-4">
-                          <input
-                            type="number"
-                            min="1"
-                            max="12"
-                            disabled={isCompleted}
-                            value={e.entry.gateNumber || ""}
-                            onChange={(event) => handleGateChange(idx, event.target.value)}
-                            className="w-16 px-2 py-1 bg-black/60 border border-white/5 rounded text-center text-white text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                          />
-                        </td>
-                        <td className="px-6 py-4">
-                          <input
-                            type="number"
-                            step="0.1"
-                            disabled={isCompleted}
-                            value={e.entry.carriedWeight || ""}
-                            onChange={(event) => handleWeightChange(idx, event.target.value)}
-                            className="w-20 px-2 py-1 bg-black/60 border border-white/5 rounded text-center text-white text-xs disabled:opacity-50 disabled:cursor-not-allowed"
-                          />
+            {isMobile ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {entries.length > 0 ? (
+                  entries.map((e, idx) => (
+                    <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <div style={{ fontWeight: 600, color: '#fff', fontSize: '0.9rem' }}>{e.horse?.name || 'Unknown'}</div>
+                          <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Rating: {e.horse?.currentRating}</div>
+                          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginTop: '4px' }}>🏇 {e.jockey?.username || 'Unknown'}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                        <div>
+                          <label style={{ fontSize: '9px', fontFamily: 'monospace', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: '4px' }}>Gate</label>
+                          <input type="number" min="1" max="12" disabled={isCompleted} value={e.entry.gateNumber || ''} onChange={event => handleGateChange(idx, event.target.value)} style={{ width: '100%', padding: '0.375rem', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.375rem', color: '#fff', fontSize: '12px', textAlign: 'center' }} />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '9px', fontFamily: 'monospace', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)', display: 'block', marginBottom: '4px' }}>Weight (kg)</label>
+                          <input type="number" step="0.1" disabled={isCompleted} value={e.entry.carriedWeight || ''} onChange={event => handleWeightChange(idx, event.target.value)} style={{ width: '100%', padding: '0.375rem', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.375rem', color: '#fff', fontSize: '12px', textAlign: 'center' }} />
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '0.875rem' }}>
+                    No approved entries for this race.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-[#151310] text-xs font-semibold text-white/60 uppercase tracking-wider border-b border-white/5">
+                      <th className="px-6 py-4">Horse</th>
+                      <th className="px-6 py-4">Jockey</th>
+                      <th className="px-6 py-4 w-28">Gate</th>
+                      <th className="px-6 py-4 w-28">Carried Weight (kg)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-sm">
+                    {entries.length > 0 ? (
+                      entries.map((e, idx) => (
+                        <tr key={idx} className="hover:bg-[#151310]/10 transition">
+                          <td className="px-6 py-4">
+                            <h5 className="font-semibold text-white">{e.horse?.name || "Unknown"}</h5>
+                            <p className="text-[10px] text-white/40 mt-0.5">Rating: {e.horse?.currentRating}</p>
+                          </td>
+                          <td className="px-6 py-4 text-white/80">
+                            {e.jockey?.username || "Unknown"}
+                          </td>
+                          <td className="px-6 py-4">
+                            <input
+                              type="number"
+                              min="1"
+                              max="12"
+                              disabled={isCompleted}
+                              value={e.entry.gateNumber || ""}
+                              onChange={(event) => handleGateChange(idx, event.target.value)}
+                              className="w-16 px-2 py-1 bg-black/60 border border-white/5 rounded text-center text-white text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </td>
+                          <td className="px-6 py-4">
+                            <input
+                              type="number"
+                              step="0.1"
+                              disabled={isCompleted}
+                              value={e.entry.carriedWeight || ""}
+                              onChange={(event) => handleWeightChange(idx, event.target.value)}
+                              className="w-20 px-2 py-1 bg-black/60 border border-white/5 rounded text-center text-white text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-8 text-center text-white/40">
+                          No approved entries for this race.
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="px-6 py-8 text-center text-white/40">
-                        No approved entries for this race.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
             {entries.length > 0 && !isCompleted && (
               <div className="flex justify-end">

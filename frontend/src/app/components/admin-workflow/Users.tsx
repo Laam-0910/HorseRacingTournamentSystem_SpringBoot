@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 
 export default function Users() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [users, setUsers] = useState<any[]>([]);
   const [horses, setHorses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -299,53 +307,91 @@ export default function Users() {
             </select>
           </div>
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                {["User Details", "Status", "Role", "Role Management"].map((h, idx) => (
-                  <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 3 ? "right" : "left" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {loading ? (
-                <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
-              ) : filteredUsers.length === 0 ? (
-                <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No matching users found.</td></tr>
-              ) : filteredUsers.map((u) => (
-                <tr key={u.id} className="hover:bg-white/[0.015] transition-colors" style={{ opacity: u.status === "INACTIVE" ? 0.6 : 1 }}>
-                  <td style={{ padding: "0.75rem 1.5rem" }}>
-                    <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{u.username}</div>
-                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Email: {u.email} | ID: #{u.id}</div>
-                  </td>
-                  <td style={{ padding: "0.75rem 1.5rem" }}>
+        {isMobile ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+            {loading ? (
+              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</div>
+            ) : filteredUsers.length === 0 ? (
+              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No matching users found.</div>
+            ) : filteredUsers.map((u) => (
+              <div key={u.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", opacity: u.status === "INACTIVE" ? 0.6 : 1 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                  <div>
+                    <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "14px" }}>{u.username}</div>
+                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>Email: {u.email}</div>
+                    <div style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>ID: #{u.id}</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.375rem" }}>
                     <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: u.status === "ACTIVE" ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", color: u.status === "ACTIVE" ? "#34d399" : "#f87171" }}>
                       {u.status}
                     </span>
-                  </td>
-                  <td style={{ padding: "0.75rem 1.5rem" }}>
                     <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: "rgba(201,162,39,0.1)", color: "#c9a227", border: "1px solid rgba(201,162,39,0.2)" }}>
                       {getRoleName(u.roleId)}
                     </span>
-                  </td>
-                  <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
-                    <div style={{ display: "inline-flex", gap: "0.5rem", alignItems: "center" }}>
-                      <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                        Edit
-                      </button>
-                      {u.roleId !== 1 && (
-                        <button onClick={() => handleToggleStatus(u.id)} style={{ padding: "0.375rem 0.75rem", background: u.status === "ACTIVE" ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", border: u.status === "ACTIVE" ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(16,185,129,0.2)", color: u.status === "ACTIVE" ? "#f87171" : "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                          {u.status === "ACTIVE" ? "Deactivate" : "Activate"}
-                        </button>
-                      )}
-                    </div>
-                  </td>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem", justifyContent: "flex-end" }}>
+                  <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
+                    Edit
+                  </button>
+                  {u.roleId !== 1 && (
+                    <button onClick={() => handleToggleStatus(u.id)} style={{ padding: "0.375rem 0.75rem", background: u.status === "ACTIVE" ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", border: u.status === "ACTIVE" ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(16,185,129,0.2)", color: u.status === "ACTIVE" ? "#f87171" : "#34d399", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
+                      {u.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                  {["User Details", "Status", "Role", "Role Management"].map((h, idx) => (
+                    <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 3 ? "right" : "left" }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {loading ? (
+                  <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                ) : filteredUsers.length === 0 ? (
+                  <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No matching users found.</td></tr>
+                ) : filteredUsers.map((u) => (
+                  <tr key={u.id} className="hover:bg-white/[0.015] transition-colors" style={{ opacity: u.status === "INACTIVE" ? 0.6 : 1 }}>
+                    <td style={{ padding: "0.75rem 1.5rem" }}>
+                      <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{u.username}</div>
+                      <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Email: {u.email} | ID: #{u.id}</div>
+                    </td>
+                    <td style={{ padding: "0.75rem 1.5rem" }}>
+                      <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: u.status === "ACTIVE" ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", color: u.status === "ACTIVE" ? "#34d399" : "#f87171" }}>
+                        {u.status}
+                      </span>
+                    </td>
+                    <td style={{ padding: "0.75rem 1.5rem" }}>
+                      <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: "rgba(201,162,39,0.1)", color: "#c9a227", border: "1px solid rgba(201,162,39,0.2)" }}>
+                        {getRoleName(u.roleId)}
+                      </span>
+                    </td>
+                    <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
+                      <div style={{ display: "inline-flex", gap: "0.5rem", alignItems: "center" }}>
+                        <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
+                          Edit
+                        </button>
+                        {u.roleId !== 1 && (
+                          <button onClick={() => handleToggleStatus(u.id)} style={{ padding: "0.375rem 0.75rem", background: u.status === "ACTIVE" ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", border: u.status === "ACTIVE" ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(16,185,129,0.2)", color: u.status === "ACTIVE" ? "#f87171" : "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
+                            {u.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* 4. Registered Horses Directory */}
@@ -354,36 +400,64 @@ export default function Users() {
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Registered Horses Directory</h4>
           <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Stable horse statistics & rating adjustments</p>
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                {["Horse Name", "Breed", "Current Rating", "Races Run", "Actions"].map((h, idx) => (
-                  <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 4 ? "right" : "left" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5 text-sm">
-              {filteredHorses.length > 0 ? (
-                filteredHorses.map((h) => (
-                  <tr key={h.id} className="hover:bg-white/[0.015] transition-colors">
-                    <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#f4f2ec" }}>{h.name}</td>
-                    <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.8)" }}>{h.breed}</td>
-                    <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#fbbf24" }}>{h.currentRating}</td>
-                    <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.5)" }}>{h.totalRaces || 0} races</td>
-                    <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
-                      <button onClick={() => handleEditRating(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                        Edit Rating
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses match the criteria.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {isMobile ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+            {filteredHorses.length > 0 ? (
+              filteredHorses.map((h) => (
+                <div key={h.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                    <div>
+                      <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "14px" }}>{h.name}</div>
+                      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>Breed: {h.breed}</div>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.25rem" }}>
+                      <span style={{ fontWeight: "bold", color: "#fbbf24", fontSize: "13px" }}>⭐ {h.currentRating}</span>
+                      <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)" }}>{h.totalRaces || 0} races</span>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
+                    <button onClick={() => handleEditRating(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
+                      Edit Rating
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses match the criteria.</div>
+            )}
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                  {["Horse Name", "Breed", "Current Rating", "Races Run", "Actions"].map((h, idx) => (
+                    <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 4 ? "right" : "left" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-sm">
+                {filteredHorses.length > 0 ? (
+                  filteredHorses.map((h) => (
+                    <tr key={h.id} className="hover:bg-white/[0.015] transition-colors">
+                      <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#f4f2ec" }}>{h.name}</td>
+                      <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.8)" }}>{h.breed}</td>
+                      <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#fbbf24" }}>{h.currentRating}</td>
+                      <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.5)" }}>{h.totalRaces || 0} races</td>
+                      <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
+                        <button onClick={() => handleEditRating(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
+                          Edit Rating
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses match the criteria.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Edit User Modal */}

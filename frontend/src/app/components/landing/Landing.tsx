@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
-import { parseSafeDate } from "../../utils/dateTimeHelper";
+import { parseSafeDate, formatDate } from "../../utils/dateTimeHelper";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
 
 
@@ -529,7 +529,7 @@ function SearchView({ query, horses, people, meetings, races, t, setView, lang }
                         <div key={m.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem", padding: "1.25rem" }}>
                           <h4 style={{ fontWeight: "bold", fontSize: "0.95rem", color: "#f0f0f0", marginBottom: "0.5rem" }}>🏆 {m.name}</h4>
                           <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>📍 {st.labelVenue}: <span style={{ color: "#fff" }}>{m.venue}</span></p>
-                          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>📅 {st.labelTime}: <span style={{ color: "#fff" }}>{m.startDate || m.date}</span></p>
+                          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>📅 {st.labelTime}: <span style={{ color: "#fff" }}>{formatDate(m.startDate || m.date)}</span></p>
                         </div>
                       ))}
                     </div>
@@ -646,6 +646,65 @@ function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeti
 }
 
 function GenericTableView({ title, data, columns }: { title: string; data: any[]; columns: { key: string; label: string }[] }) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const formatValue = (cKey: string, val: any) => {
+    if (val === null || val === undefined) return "-";
+    if (cKey === "totalBudget" && typeof val === "number") {
+      return `$${val.toLocaleString()}`;
+    }
+    if (cKey === "startDate" || cKey === "date" || cKey.toLowerCase().includes("date")) {
+      return formatDate(val);
+    }
+    return String(val);
+  };
+
+  if (isMobile) {
+    return (
+      <div>
+        <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1.5rem" }}>{title}</h2>
+        {data.length === 0 ? (
+          <div style={{ textAlign: "center", padding: "3rem", background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem" }}>
+            <p style={{ color: "#a0a0a0", fontFamily: "monospace" }}>No data available.</p>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {data.map((row, i) => (
+              <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                {columns.map((c, colIdx) => {
+                  const val = row[c.key];
+                  if (colIdx === 0) {
+                    return (
+                      <div key={c.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
+                        <span style={{ fontSize: "14px", fontWeight: "bold", color: "#c9a227" }}>
+                          {c.label}: {formatValue(c.key, val)}
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={c.key} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#f0f0f0", paddingBottom: "0.25rem", borderBottom: colIdx < columns.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{c.label}</span>
+                      <span style={{ fontWeight: 600 }}>
+                        {formatValue(c.key, val)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
       <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1.5rem" }}>{title}</h2>
@@ -667,7 +726,7 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
               {data.map((row, i) => (
                 <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
                   {columns.map(c => (
-                    <td key={c.key} style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#f0f0f0" }}>{row[c.key] ?? "-"}</td>
+                    <td key={c.key} style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#f0f0f0" }}>{formatValue(c.key, row[c.key])}</td>
                   ))}
                 </tr>
               ))}
@@ -727,6 +786,16 @@ export default function Landing() {
   const setLang = (code: string) => { setLangRaw(code); localStorage.setItem('app-lang', code); };
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
   const langLabel = lang.toUpperCase();
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const [showNoLiveToast, setShowNoLiveToast] = useState(false);
   const [noLiveTimer, setNoLiveTimer] = useState<any>(null);
@@ -877,7 +946,7 @@ export default function Landing() {
                 <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "14px" }}>No live broadcast currently. There are no races running right now.</p>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-3">
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))", gap: "1.5rem" }}>
                 <div className="lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                   {liveRaces.map((r, i) => {
                     const embedUrl = r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "";
@@ -935,15 +1004,44 @@ export default function Landing() {
         return (
           <div>
             <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1rem" }}>{t.racecard}</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-4">
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, minmax(0, 1fr))", gap: "1.5rem" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <h5 style={{ fontFamily: "monospace", fontSize: "11px", color: "#c9a227", textTransform: "uppercase" }}>Select Meeting</h5>
-                {meetings.map(m => (
-                  <button key={m.id} onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} style={{ width: "100%", padding: "0.75rem", background: selectedMeetingId === m.id ? "rgba(201,162,39,0.1)" : "rgba(255,255,255,0.02)", border: selectedMeetingId === m.id ? "1px solid #c9a227" : "1px solid #2a2825", borderRadius: "0.5rem", color: "#f0f0f0", textAlign: "left", cursor: "pointer", transition: "all 0.2s" }}>
-                    <strong>{m.name}</strong>
-                    <p style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "2px" }}>📍 {m.venue}</p>
-                  </button>
-                ))}
+                {isMobile ? (
+                  <select
+                    value={selectedMeetingId || ""}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setSelectedMeetingId(val ? parseInt(val) : null);
+                      setSelectedRaceId(null);
+                      setSelectedRaceEntries([]);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid #2a2825",
+                      borderRadius: "0.5rem",
+                      color: "#f0f0f0",
+                      fontSize: "13px",
+                      outline: "none",
+                    }}
+                  >
+                    <option value="" style={{ background: "#12141a", color: "#fff" }}>-- Choose Meeting --</option>
+                    {meetings.map(m => (
+                      <option key={m.id} value={m.id} style={{ background: "#12141a", color: "#fff" }}>
+                        {m.name} ({m.venue})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  meetings.map(m => (
+                    <button key={m.id} onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} style={{ width: "100%", padding: "0.75rem", background: selectedMeetingId === m.id ? "rgba(201,162,39,0.1)" : "rgba(255,255,255,0.02)", border: selectedMeetingId === m.id ? "1px solid #c9a227" : "1px solid #2a2825", borderRadius: "0.5rem", color: "#f0f0f0", textAlign: "left", cursor: "pointer", transition: "all 0.2s" }}>
+                      <strong>{m.name}</strong>
+                      <p style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "2px" }}>📍 {m.venue}</p>
+                    </button>
+                  ))
+                )}
               </div>
               <div className="lg:col-span-3">
                 {selectedMeetingId ? (
@@ -959,33 +1057,62 @@ export default function Landing() {
                     {selectedRaceId && (
                       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "#2a2825", padding: "1.25rem" }}>
                         <h4 style={{ fontWeight: 700, color: "#f0f0f0", marginBottom: "1rem" }}>Gate Entries</h4>
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                          <thead>
-                            <tr style={{ borderBottom: "1px solid #2a2825", color: "#c9a227", textAlign: "left" }}>
-                              <th style={{ padding: "0.5rem" }}>Gate</th>
-                              <th style={{ padding: "0.5rem" }}>Horse</th>
-                              <th style={{ padding: "0.5rem" }}>Jockey</th>
-                              <th style={{ padding: "0.5rem" }}>Owner</th>
-                              <th style={{ padding: "0.5rem" }}>Rating</th>
-                              <th style={{ padding: "0.5rem" }}>Weight</th>
-                            </tr>
-                          </thead>
-                          <tbody>
+                        {isMobile ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                             {selectedRaceEntries.map((e, idx) => (
-                              <tr key={idx} style={{ borderBottom: "1px solid rgba(42,40,37,0.3)" }}>
-                                <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>#{e.entry?.gateNumber || idx + 1}</td>
-                                <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
-                                <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
-                                <td style={{ padding: "0.5rem" }}>{e.owner?.fullName || e.owner?.username}</td>
-                                <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.horse?.currentRating}</td>
-                                <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.carriedWeight} kg</td>
-                              </tr>
+                              <div key={idx} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem" }}>
+                                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0, flex: 1 }}>
+                                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(201,162,39,0.15)", border: "1px solid #c9a227", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "monospace", fontWeight: "bold", color: "#c9a227", fontSize: "13px", flexShrink: 0 }}>
+                                    {e.entry?.gateNumber || idx + 1}
+                                  </div>
+                                  <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontWeight: "bold", color: "#f0f0f0", fontSize: "14px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{e.horse?.name}</div>
+                                    <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                                      J: {e.jockey?.fullName || e.jockey?.username} | O: {e.owner?.fullName || e.owner?.username}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div style={{ textAlign: "right", flexShrink: 0, fontSize: "12px", fontFamily: "monospace", color: "#f0f0f0" }}>
+                                  <div>Rating: {e.horse?.currentRating}</div>
+                                  <div style={{ color: "#a0a0a0", marginTop: "2px" }}>{e.entry?.carriedWeight} kg</div>
+                                </div>
+                              </div>
                             ))}
                             {selectedRaceEntries.length === 0 && (
-                              <tr><td colSpan={6} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No horses registered for this race card yet.</td></tr>
+                              <p style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem" }}>No horses registered for this race card yet.</p>
                             )}
-                          </tbody>
-                        </table>
+                          </div>
+                        ) : (
+                          <div style={{ overflowX: "auto" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                              <thead>
+                                <tr style={{ borderBottom: "1px solid #2a2825", color: "#c9a227", textAlign: "left" }}>
+                                  <th style={{ padding: "0.5rem" }}>Gate</th>
+                                  <th style={{ padding: "0.5rem" }}>Horse</th>
+                                  <th style={{ padding: "0.5rem" }}>Jockey</th>
+                                  <th style={{ padding: "0.5rem" }}>Owner</th>
+                                  <th style={{ padding: "0.5rem" }}>Rating</th>
+                                  <th style={{ padding: "0.5rem" }}>Weight</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {selectedRaceEntries.map((e, idx) => (
+                                  <tr key={idx} style={{ borderBottom: "1px solid rgba(42,40,37,0.3)" }}>
+                                    <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>#{e.entry?.gateNumber || idx + 1}</td>
+                                    <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
+                                    <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
+                                    <td style={{ padding: "0.5rem" }}>{e.owner?.fullName || e.owner?.username}</td>
+                                    <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.horse?.currentRating}</td>
+                                    <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.carriedWeight} kg</td>
+                                  </tr>
+                                ))}
+                                {selectedRaceEntries.length === 0 && (
+                                  <tr><td colSpan={6} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No horses registered for this race card yet.</td></tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1000,15 +1127,44 @@ export default function Landing() {
         return (
           <div>
             <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1rem" }}>{t.results}</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-4">
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, minmax(0, 1fr))", gap: "1.5rem" }}>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <h5 style={{ fontFamily: "monospace", fontSize: "11px", color: "#c9a227", textTransform: "uppercase" }}>Select Meeting</h5>
-                {meetings.map(m => (
-                  <button key={m.id} onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} style={{ width: "100%", padding: "0.75rem", background: selectedMeetingId === m.id ? "rgba(201,162,39,0.1)" : "rgba(255,255,255,0.02)", border: selectedMeetingId === m.id ? "1px solid #c9a227" : "1px solid #2a2825", borderRadius: "0.5rem", color: "#f0f0f0", textAlign: "left", cursor: "pointer", transition: "all 0.2s" }}>
-                    <strong>{m.name}</strong>
-                    <p style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "2px" }}>📍 {m.venue}</p>
-                  </button>
-                ))}
+                {isMobile ? (
+                  <select
+                    value={selectedMeetingId || ""}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setSelectedMeetingId(val ? parseInt(val) : null);
+                      setSelectedRaceId(null);
+                      setSelectedRaceEntries([]);
+                    }}
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      background: "rgba(255,255,255,0.02)",
+                      border: "1px solid #2a2825",
+                      borderRadius: "0.5rem",
+                      color: "#f0f0f0",
+                      fontSize: "13px",
+                      outline: "none",
+                    }}
+                  >
+                    <option value="" style={{ background: "#12141a", color: "#fff" }}>-- Choose Meeting --</option>
+                    {meetings.map(m => (
+                      <option key={m.id} value={m.id} style={{ background: "#12141a", color: "#fff" }}>
+                        {m.name} ({m.venue})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  meetings.map(m => (
+                    <button key={m.id} onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} style={{ width: "100%", padding: "0.75rem", background: selectedMeetingId === m.id ? "rgba(201,162,39,0.1)" : "rgba(255,255,255,0.02)", border: selectedMeetingId === m.id ? "1px solid #c9a227" : "1px solid #2a2825", borderRadius: "0.5rem", color: "#f0f0f0", textAlign: "left", cursor: "pointer", transition: "all 0.2s" }}>
+                      <strong>{m.name}</strong>
+                      <p style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "2px" }}>📍 {m.venue}</p>
+                    </button>
+                  ))
+                )}
               </div>
               <div className="lg:col-span-3">
                 {selectedMeetingId ? (
@@ -1024,43 +1180,85 @@ export default function Landing() {
                     {selectedRaceId && (
                       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "#2a2825", padding: "1.25rem" }}>
                         <h4 style={{ fontWeight: 700, color: "#f0f0f0", marginBottom: "1rem" }}>Leaderboard / Final Standings</h4>
-                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                          <thead>
-                            <tr style={{ borderBottom: "1px solid #2a2825", color: "#c9a227", textAlign: "left" }}>
-                              <th style={{ padding: "0.5rem" }}>Pos</th>
-                              <th style={{ padding: "0.5rem" }}>Horse</th>
-                              <th style={{ padding: "0.5rem" }}>Jockey</th>
-                              <th style={{ padding: "0.5rem" }}>Owner</th>
-                              <th style={{ padding: "0.5rem" }}>Finish Time</th>
-                              <th style={{ padding: "0.5rem" }}>Prize Money</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {selectedRaceEntries.map((e, idx) => (
-                              <tr key={idx} style={{ borderBottom: "1px solid rgba(42,40,37,0.3)", background: e.entry?.finalPosition === 1 ? "rgba(201,162,39,0.05)" : "transparent" }}>
-                                <td style={{ padding: "0.5rem", fontWeight: "bold" }}>
-                                  {e.entry?.finalPosition === 1
-                                    ? "🥇 1st"
-                                    : e.entry?.finalPosition === 2
-                                      ? "🥈 2nd"
-                                      : e.entry?.finalPosition === 3
-                                        ? "🥉 3rd"
-                                        : (e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ" || !e.entry?.finalPosition)
-                                          ? "DQ"
-                                          : `${e.entry?.finalPosition}th`}
-                                </td>
-                                <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
-                                <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
-                                <td style={{ padding: "0.5rem" }}>{e.owner?.fullName || e.owner?.username}</td>
-                                <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
-                                <td style={{ padding: "0.5rem", fontFamily: "monospace", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</td>
-                              </tr>
-                            ))}
+                        {isMobile ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                            {selectedRaceEntries.map((e, idx) => {
+                              const isWinner = e.entry?.finalPosition === 1;
+                              return (
+                                <div key={idx} style={{ background: isWinner ? "rgba(201,162,39,0.05)" : "rgba(255,255,255,0.02)", border: isWinner ? "1px solid rgba(201,162,39,0.3)" : "1px solid #2a2825", borderRadius: "0.75rem", padding: "0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem" }}>
+                                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0, flex: 1 }}>
+                                    <div style={{ width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>
+                                      {e.entry?.finalPosition === 1
+                                        ? "🥇"
+                                        : e.entry?.finalPosition === 2
+                                          ? "🥈"
+                                          : e.entry?.finalPosition === 3
+                                            ? "🥉"
+                                            : (e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ" || !e.entry?.finalPosition)
+                                              ? "DQ"
+                                              : `${e.entry?.finalPosition}`}
+                                    </div>
+                                    <div style={{ minWidth: 0 }}>
+                                      <div style={{ fontWeight: "bold", color: "#f0f0f0", fontSize: "14px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{e.horse?.name}</div>
+                                      <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                                        J: {e.jockey?.fullName || e.jockey?.username} | O: {e.owner?.fullName || e.owner?.username}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div style={{ textAlign: "right", flexShrink: 0, fontSize: "12px", fontFamily: "monospace" }}>
+                                    <div style={{ color: "#f0f0f0", fontWeight: "bold" }}>{e.entry?.finishTime || "--:--"}</div>
+                                    <div style={{ color: "#4a9d6f", fontWeight: "bold", marginTop: "2px" }}>
+                                      ${e.entry?.prizeMoney?.toLocaleString() || "0"}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
                             {selectedRaceEntries.length === 0 && (
-                              <tr><td colSpan={6} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No entry logs available.</td></tr>
+                              <p style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem" }}>No entry logs available.</p>
                             )}
-                          </tbody>
-                        </table>
+                          </div>
+                        ) : (
+                          <div style={{ overflowX: "auto" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
+                              <thead>
+                                <tr style={{ borderBottom: "1px solid #2a2825", color: "#c9a227", textAlign: "left" }}>
+                                  <th style={{ padding: "0.5rem" }}>Pos</th>
+                                  <th style={{ padding: "0.5rem" }}>Horse</th>
+                                  <th style={{ padding: "0.5rem" }}>Jockey</th>
+                                  <th style={{ padding: "0.5rem" }}>Owner</th>
+                                  <th style={{ padding: "0.5rem" }}>Finish Time</th>
+                                  <th style={{ padding: "0.5rem" }}>Prize Money</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {selectedRaceEntries.map((e, idx) => (
+                                  <tr key={idx} style={{ borderBottom: "1px solid rgba(42,40,37,0.3)", background: e.entry?.finalPosition === 1 ? "rgba(201,162,39,0.05)" : "transparent" }}>
+                                    <td style={{ padding: "0.5rem", fontWeight: "bold" }}>
+                                      {e.entry?.finalPosition === 1
+                                        ? "🥇 1st"
+                                        : e.entry?.finalPosition === 2
+                                          ? "🥈 2nd"
+                                          : e.entry?.finalPosition === 3
+                                            ? "🥉 3rd"
+                                            : (e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ" || !e.entry?.finalPosition)
+                                              ? "DQ"
+                                              : `${e.entry?.finalPosition}th`}
+                                    </td>
+                                    <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
+                                    <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
+                                    <td style={{ padding: "0.5rem" }}>{e.owner?.fullName || e.owner?.username}</td>
+                                    <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
+                                    <td style={{ padding: "0.5rem", fontFamily: "monospace", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</td>
+                                  </tr>
+                                ))}
+                                {selectedRaceEntries.length === 0 && (
+                                  <tr><td colSpan={6} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No entry logs available.</td></tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1075,7 +1273,7 @@ export default function Landing() {
         return <GenericTableView title="Race Fixtures / Meetings" data={meetings} columns={[{ key: "id", label: "ID" }, { key: "name", label: "Meeting" }, { key: "venue", label: "Venue" }, { key: "startDate", label: "Start Date" }, { key: "totalBudget", label: "Budget" }]} />;
       case "statistics":
         return (
-          <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-2">
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "1.5rem" }}>
             <GenericTableView title="Leading Horses (Top Rating)" data={[...horses].sort((a,b) => (b.currentRating - a.currentRating)).slice(0, 10)} columns={[{ key: "name", label: "Horse Name" }, { key: "breed", label: "Breed" }, { key: "currentRating", label: "Rating" }]} />
             <GenericTableView title="Leading Jockeys" data={users.filter(u => u.roleId === 3).slice(0, 10)} columns={[{ key: "fullName", label: "Jockey Name" }, { key: "email", label: "Email" }, { key: "status", label: "Status" }]} />
           </div>
@@ -1088,7 +1286,7 @@ export default function Landing() {
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
               <button onClick={() => setView("jockeys_owners")} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontWeight: "bold" }}>Directories Overview</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: "1.5rem" }} className="lg:grid-cols-2">
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "1.5rem" }}>
               <GenericTableView title="Jockeys" data={users.filter(u => u.roleId === 3)} columns={[{ key: "id", label: "ID" }, { key: "fullName", label: "Jockey" }, { key: "email", label: "Email" }, { key: "weight", label: "Weight" }]} />
               <GenericTableView title="Horse Owners" data={users.filter(u => u.roleId === 2)} columns={[{ key: "id", label: "ID" }, { key: "fullName", label: "Owner" }, { key: "email", label: "Email" }]} />
             </div>
@@ -1149,20 +1347,80 @@ export default function Landing() {
 
       {/* ── HEADER ─────────────────────────────── */}
       <header style={{ background: "#151310", position: "relative", zIndex: 50 }}>
-        <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", height: "4rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1.5rem" }}>
-          {/* Logo */}
-          <a href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem", textDecoration: "none" }}>
-            <div style={{ width: 36, height: 36, borderRadius: "0.25rem", background: "#c9a227", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0e0c09" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
-            </div>
-            <div>
-              <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f0f0f0", lineHeight: 1.2 }}>HorseRace</p>
-              <p style={{ fontSize: "0.6rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.15em" }}>Management System</p>
-            </div>
-          </a>
+        <div style={{ 
+          maxWidth: "80rem", 
+          margin: "0 auto", 
+          padding: "0 1rem", 
+          height: isMobile ? "auto" : "4rem", 
+          paddingTop: isMobile ? "0.75rem" : "0",
+          paddingBottom: isMobile ? "0.75rem" : "0",
+          display: "flex", 
+          flexDirection: isMobile ? "column" : "row",
+          alignItems: isMobile ? "stretch" : "center", 
+          justifyContent: "space-between", 
+          gap: isMobile ? "0.75rem" : "1.5rem" 
+        }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: isMobile ? "100%" : "auto" }}>
+            {/* Logo */}
+            <a href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem", textDecoration: "none" }}>
+              <div style={{ width: 36, height: 36, borderRadius: "0.25rem", background: "#c9a227", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0e0c09" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+              </div>
+              <div>
+                <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f0f0f0", lineHeight: 1.2 }}>HorseRace</p>
+                {!isMobile && <p style={{ fontSize: "0.6rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.15em" }}>Management System</p>}
+              </div>
+            </a>
+
+            {/* If mobile, we put right controls next to logo to save space */}
+            {isMobile && (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                {/* Language Switcher */}
+                <div style={{ position: "relative" }}>
+                  <button onClick={() => setShowLangMenu(v => !v)} style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontFamily: "monospace", fontSize: "0.7rem" }}>
+                    🌐 {langLabel} ▾
+                  </button>
+                  {showLangMenu && (
+                    <div style={{ position: "absolute", right: 0, top: "100%", marginTop: "0.25rem", width: "7rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.375rem", zIndex: 9999 }}>
+                      {[["en","EN","English"],["vi","VI","Tiếng Việt"],["zh","ZH","简体中文"],["ja","JA","日本語"]].map(([code, label, name]) => (
+                        <button key={code} onClick={() => { setLang(code); setShowLangMenu(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "0.375rem 0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", fontFamily: "monospace" }}>{name}</button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {/* Bell */}
+                <div style={{ position: "relative" }}>
+                  <button onClick={() => setShowNotifications(v => !v)} style={{ position: "relative", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", display: "flex", padding: "0.25rem" }}>
+                    🔔
+                    <span style={{ position: "absolute", top: 0, right: 0, width: 8, height: 8, borderRadius: "50%", background: "#c9a227" }} />
+                  </button>
+                  {showNotifications && (
+                    <div style={{ position: "absolute", right: 0, marginTop: "0.75rem", width: "16rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.5rem", zIndex: 9999, overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
+                      <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #2a2825", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#1a1815" }}>
+                        <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#fff", fontFamily: "'Roboto Slab', serif" }}>{t.notifications}</span>
+                        <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", cursor: "pointer" }}>{t.clearAll}</button>
+                      </div>
+                      {[
+                        { icon: "🏆", color: "#c9a227", bg: "rgba(201,162,39,0.1)", title: "Tournament 2026", desc: "Registrations are now open!", time: "10m ago" },
+                        { icon: "📅", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", title: "Race Meeting", desc: "Gold Cup Championship starts Sunday.", time: "2h ago" },
+                      ].map((n, i) => (
+                        <div key={i} style={{ padding: "0.875rem", display: "flex", gap: "0.75rem", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
+                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: n.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.875rem", flexShrink: 0 }}>{n.icon}</div>
+                          <div style={{ overflow: "hidden" }}>
+                            <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.title}</p>
+                            <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.5)", marginTop: "0.25rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* Search Bar */}
-          <div style={{ flex: 1, maxWidth: "28rem", position: "relative" }}>
+          <div style={{ flex: isMobile ? "none" : 1, width: "100%", maxWidth: isMobile ? "100%" : "28rem", position: "relative" }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" strokeWidth="2" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input
               value={searchQuery}
@@ -1193,88 +1451,90 @@ export default function Landing() {
             )}
           </div>
 
-          {/* Right Controls */}
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0" }}>
-            {/* Language */}
-            <div style={{ position: "relative" }}>
-              <button onClick={() => setShowLangMenu(v => !v)} style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontFamily: "monospace", fontSize: "0.7rem" }}>
-                🌐 {langLabel} ▾
-              </button>
-              {showLangMenu && (
-                <div style={{ position: "absolute", right: 0, top: "100%", marginTop: "0.25rem", width: "7rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.375rem", zIndex: 50 }}>
-                  {[["en","EN","English"],["vi","VI","Tiếng Việt"],["zh","ZH","简体中文"],["ja","JA","日本語"]].map(([code, label, name]) => (
-                    <button key={code} onClick={() => { setLang(code); setShowLangMenu(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "0.375rem 0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", fontFamily: "monospace" }}>{name}</button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Bell */}
-            <div style={{ position: "relative" }}>
-              <button onClick={() => setShowNotifications(v => !v)} style={{ position: "relative", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", display: "flex", padding: "0.25rem" }}>
-                🔔
-                <span style={{ position: "absolute", top: 0, right: 0, width: 8, height: 8, borderRadius: "50%", background: "#c9a227" }} />
-              </button>
-              {showNotifications && (
-                <div style={{ position: "absolute", right: 0, marginTop: "0.75rem", width: "20rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.5rem", zIndex: 50, overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
-                  <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #2a2825", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#1a1815" }}>
-                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#fff", fontFamily: "'Roboto Slab', serif" }}>{t.notifications}</span>
-                    <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", cursor: "pointer" }}>{t.clearAll}</button>
+          {/* Right Controls (Desktop Only) */}
+          {!isMobile && (
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0" }}>
+              {/* Language */}
+              <div style={{ position: "relative" }}>
+                <button onClick={() => setShowLangMenu(v => !v)} style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontFamily: "monospace", fontSize: "0.7rem" }}>
+                  🌐 {langLabel} ▾
+                </button>
+                {showLangMenu && (
+                  <div style={{ position: "absolute", right: 0, top: "100%", marginTop: "0.25rem", width: "7rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.375rem", zIndex: 50 }}>
+                    {[["en","EN","English"],["vi","VI","Tiếng Việt"],["zh","ZH","简体中文"],["ja","JA","日本語"]].map(([code, label, name]) => (
+                      <button key={code} onClick={() => { setLang(code); setShowLangMenu(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "0.375rem 0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", fontFamily: "monospace" }}>{name}</button>
+                    ))}
                   </div>
-                  {[
-                    { icon: "🏆", color: "#c9a227", bg: "rgba(201,162,39,0.1)", title: "Tournament Season 2026", desc: "Registrations are now open for Jockeys and Owners!", time: "10 mins ago" },
-                    { icon: "📅", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", title: "Upcoming Race Meeting", desc: "Gold Cup Championship starts Sunday at 3:00 PM.", time: "2 hours ago" },
-                    { icon: "🛡", color: "#4ade80", bg: "rgba(74,222,128,0.1)", title: "System Update", desc: "Database integration verified and performance optimized.", time: "1 day ago" },
-                  ].map((n, i) => (
-                    <div key={i} style={{ padding: "0.875rem", display: "flex", gap: "0.75rem", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
-                      <div style={{ width: 28, height: 28, borderRadius: "50%", background: n.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.875rem", flexShrink: 0 }}>{n.icon}</div>
-                      <div>
-                        <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 500 }}>{n.title}</p>
-                        <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.5)", marginTop: "0.25rem" }}>{n.desc}</p>
-                        <span style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{n.time}</span>
-                      </div>
+                )}
+              </div>
+
+              {/* Bell */}
+              <div style={{ position: "relative" }}>
+                <button onClick={() => setShowNotifications(v => !v)} style={{ position: "relative", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", display: "flex", padding: "0.25rem" }}>
+                  🔔
+                  <span style={{ position: "absolute", top: 0, right: 0, width: 8, height: 8, borderRadius: "50%", background: "#c9a227" }} />
+                </button>
+                {showNotifications && (
+                  <div style={{ position: "absolute", right: 0, marginTop: "0.75rem", width: "20rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.5rem", zIndex: 50, overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
+                    <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #2a2825", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#1a1815" }}>
+                      <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#fff", fontFamily: "'Roboto Slab', serif" }}>{t.notifications}</span>
+                      <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", cursor: "pointer" }}>{t.clearAll}</button>
                     </div>
-                  ))}
-                  <div style={{ padding: "0.5rem 1rem", textAlign: "center", background: "#1a1815", fontSize: "0.6rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{t.noNotifications}</div>
+                    {[
+                      { icon: "🏆", color: "#c9a227", bg: "rgba(201,162,39,0.1)", title: "Tournament Season 2026", desc: "Registrations are now open for Jockeys and Owners!", time: "10 mins ago" },
+                      { icon: "📅", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", title: "Upcoming Race Meeting", desc: "Gold Cup Championship starts Sunday at 3:00 PM.", time: "2 hours ago" },
+                      { icon: "🛡", color: "#4ade80", bg: "rgba(74,222,128,0.1)", title: "System Update", desc: "Database integration verified and performance optimized.", time: "1 day ago" },
+                    ].map((n, i) => (
+                      <div key={i} style={{ padding: "0.875rem", display: "flex", gap: "0.75rem", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
+                        <div style={{ width: 28, height: 28, borderRadius: "50%", background: n.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.875rem", flexShrink: 0 }}>{n.icon}</div>
+                        <div>
+                          <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 500 }}>{n.title}</p>
+                          <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.5)", marginTop: "0.25rem" }}>{n.desc}</p>
+                          <span style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{n.time}</span>
+                        </div>
+                      </div>
+                    ))}
+                    <div style={{ padding: "0.5rem 1rem", textAlign: "center", background: "#1a1815", fontSize: "0.6rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{t.noNotifications}</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Auth Controls */}
+              {user ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
+                  {/* Avatar circle with role-color ring */}
+                  <div style={{
+                    width: 36, height: 36, borderRadius: "50%",
+                    border: `2px solid ${getRoleColor(user.roleId)}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700,
+                    color: user.avatar ? undefined : "#fff",
+                    background: user.avatar ? "transparent" : getRoleColor(user.roleId),
+                    overflow: "hidden", flexShrink: 0
+                  }}>
+                    {user.avatar
+                      ? <img src={user.avatar} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      : (user.fullName || user.username)?.charAt(0).toUpperCase()
+                    }
+                  </div>
+                  <div>
+                    <p style={{ fontSize: "0.75rem", color: "#f0f0f0" }}>{user.fullName || user.username}</p>
+                    <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: getRoleColor(user.roleId) }}>{getRoleLabel(user.roleId)}</p>
+                  </div>
+                  <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>{t.signout}</button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
+                  <Link to="/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.375rem 0.75rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0e0c09", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    👤 {t.signin}
+                  </Link>
+                  <Link to="/register" style={{ padding: "0.375rem 0.75rem", borderRadius: "0.25rem", border: "1px solid rgba(201,162,39,0.5)", color: "#c9a227", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    {t.register}
+                  </Link>
                 </div>
               )}
             </div>
-
-            {/* Auth Controls */}
-            {user ? (
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
-                {/* Avatar circle with role-color ring */}
-                <div style={{
-                  width: 36, height: 36, borderRadius: "50%",
-                  border: `2px solid ${getRoleColor(user.roleId)}`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700,
-                  color: user.avatar ? undefined : "#fff",
-                  background: user.avatar ? "transparent" : getRoleColor(user.roleId),
-                  overflow: "hidden", flexShrink: 0
-                }}>
-                  {user.avatar
-                    ? <img src={user.avatar} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    : (user.fullName || user.username)?.charAt(0).toUpperCase()
-                  }
-                </div>
-                <div>
-                  <p style={{ fontSize: "0.75rem", color: "#f0f0f0" }}>{user.fullName || user.username}</p>
-                  <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: getRoleColor(user.roleId) }}>{getRoleLabel(user.roleId)}</p>
-                </div>
-                <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>{t.signout}</button>
-              </div>
-            ) : (
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
-                <Link to="/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.375rem 0.75rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0e0c09", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  👤 {t.signin}
-                </Link>
-                <Link to="/register" style={{ padding: "0.375rem 0.75rem", borderRadius: "0.25rem", border: "1px solid rgba(201,162,39,0.5)", color: "#c9a227", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                  {t.register}
-                </Link>
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
         {/* ── SUB NAV BAR */}
@@ -1317,7 +1577,7 @@ export default function Landing() {
                     position: "absolute",
                     left: 0,
                     top: "110%",
-                    width: "10rem",
+                    width: isMobile ? "12.5rem" : "10rem",
                     background: "#151310",
                     border: "1px solid #2a2825",
                     borderRadius: "0.5rem",
@@ -1328,7 +1588,44 @@ export default function Landing() {
                     flexDirection: "column",
                     padding: "0.25rem 0"
                   }}>
-                    {user ? (
+                    {isMobile && (
+                      <>
+                        <div style={{ padding: "0.5rem 1rem", fontSize: "0.6rem", fontFamily: "monospace", color: "#c9a227", textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: "1px solid rgba(255,255,255,0.05)", marginBottom: "0.25rem" }}>
+                          Navigation
+                        </div>
+                        {SUB_NAV.map(n => {
+                          const active = view === n.key;
+                          return (
+                            <button
+                              key={n.key}
+                              onClick={() => {
+                                setView(n.key);
+                                setShowDashboardMenu(false);
+                              }}
+                              style={{
+                                background: active ? "rgba(201,162,39,0.08)" : "none",
+                                border: "none",
+                                padding: "0.6rem 1rem",
+                                color: active ? "#c9a227" : "#f0f0f0",
+                                textAlign: "left",
+                                fontSize: "0.75rem",
+                                fontFamily: "monospace",
+                                textTransform: "uppercase",
+                                cursor: "pointer",
+                                transition: "background 0.2s",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5rem"
+                              }}
+                            >
+                              <span>{n.icon}</span> <span>{n.label}</span>
+                            </button>
+                          );
+                        })}
+                        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", margin: "0.25rem 0", height: 1 }} />
+                      </>
+                    )}
+                    {!isMobile && (user ? (
                       <>
                         <button
                           onClick={() => {
@@ -1444,39 +1741,161 @@ export default function Landing() {
                           📝 {t.register}
                         </Link>
                       </>
-                    )}
+                    ))}
                   </div>
                 </>
               )}
             </div>
 
+            {isMobile && (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", flex: 1, justifyContent: "flex-end" }}>
+                {user ? (
+                  <>
+                    <button
+                      onClick={handleDashboard}
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "0.375rem",
+                        padding: "0.35rem 0.5rem",
+                        color: "#f0f0f0",
+                        fontSize: "10px",
+                        fontFamily: "monospace",
+                        textTransform: "uppercase",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.25rem",
+                        flexShrink: 0
+                      }}
+                    >
+                      💼 {t.dashboard}
+                    </button>
+                    <button
+                      onClick={() => {
+                        const roleId = user.roleId;
+                        if (roleId === 1) navigate("/dashboard/admin?tab=profile");
+                        else if (roleId === 2) navigate("/dashboard/owner?tab=profile");
+                        else if (roleId === 3) navigate("/dashboard/jockey?tab=profile");
+                        else if (roleId === 5) navigate("/dashboard/referee?tab=profile");
+                        else navigate("/dashboard/spectator?tab=profile");
+                      }}
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "0.375rem",
+                        padding: "0.35rem 0.5rem",
+                        color: "#f0f0f0",
+                        fontSize: "10px",
+                        fontFamily: "monospace",
+                        textTransform: "uppercase",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.25rem",
+                        flexShrink: 0
+                      }}
+                    >
+                      👤 {lang === "vi" ? "Hồ sơ" : lang === "zh" ? "个人中心" : lang === "ja" ? "プロフィール" : "Profile"}
+                    </button>
+                    <button
+                      onClick={logout}
+                      style={{
+                        background: "rgba(239,68,68,0.1)",
+                        border: "1px solid rgba(239,68,68,0.2)",
+                        borderRadius: "0.375rem",
+                        padding: "0.35rem 0.5rem",
+                        color: "#f87171",
+                        fontSize: "10px",
+                        fontFamily: "monospace",
+                        textTransform: "uppercase",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.25rem",
+                        flexShrink: 0
+                      }}
+                    >
+                      🚪 {t.signout}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      style={{
+                        background: "rgba(201,162,39,0.15)",
+                        border: "1px solid rgba(201,162,39,0.3)",
+                        borderRadius: "0.375rem",
+                        padding: "0.35rem 0.5rem",
+                        color: "#c9a227",
+                        fontSize: "10px",
+                        fontFamily: "monospace",
+                        textTransform: "uppercase",
+                        textDecoration: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.25rem",
+                        flexShrink: 0
+                      }}
+                    >
+                      👤 {t.signin}
+                    </Link>
+                    <Link
+                      to="/register"
+                      style={{
+                        background: "rgba(255,255,255,0.04)",
+                        border: "1px solid rgba(255,255,255,0.08)",
+                        borderRadius: "0.375rem",
+                        padding: "0.35rem 0.5rem",
+                        color: "#a0a0a0",
+                        fontSize: "10px",
+                        fontFamily: "monospace",
+                        textTransform: "uppercase",
+                        textDecoration: "none",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.25rem",
+                        flexShrink: 0
+                      }}
+                    >
+                      📝 {t.register}
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
+
             {/* Scrollable Nav Items */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "0.5rem" }}>
-              {SUB_NAV.map(n => {
-                const active = view === n.key;
-                return (
-                  <button
-                    key={n.key}
-                    onClick={() => {
-                      setView(n.key);
-                    }}
-                    className="hover-lift hover-scale"
-                    style={{
-                      padding: "0.35rem 0.65rem", borderRadius: "0.375rem", fontSize: "0.72rem", fontFamily: "monospace", cursor: "pointer",
-                      border: active ? "1px solid rgba(201,162,39,0.4)" : "1px solid rgba(201,162,39,0.05)",
-                      background: active ? "rgba(201,162,39,0.15)" : "rgba(21,19,16,0.4)",
-                      color: active ? "#c9a227" : "#a0a0a0",
-                      fontWeight: active ? 700 : 400,
-                      transform: active ? "scale(1.02) translateY(-1px)" : "none",
-                      display: "flex", alignItems: "center", gap: "0.375rem",
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    {n.label}
-                  </button>
-                );
-              })}
-            </div>
+            {!isMobile && (
+              <div className="scrollbar-hide" style={{ display: "flex", alignItems: "center", gap: "0.75rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "0.5rem" }}>
+                {SUB_NAV.map(n => {
+                  const active = view === n.key;
+                  return (
+                    <button
+                      key={n.key}
+                      onClick={() => {
+                        setView(n.key);
+                      }}
+                      className="hover-lift hover-scale"
+                      style={{
+                        padding: "0.35rem 0.65rem", borderRadius: "0.375rem", fontSize: "0.72rem", fontFamily: "monospace", cursor: "pointer",
+                        border: active ? "1px solid rgba(201,162,39,0.4)" : "1px solid rgba(201,162,39,0.05)",
+                        background: active ? "rgba(201,162,39,0.15)" : "rgba(21,19,16,0.4)",
+                        color: active ? "#c9a227" : "#a0a0a0",
+                        fontWeight: active ? 700 : 400,
+                        transform: active ? "scale(1.02) translateY(-1px)" : "none",
+                        display: "flex", alignItems: "center", gap: "0.375rem",
+                        transition: "all 0.2s",
+                        flexShrink: 0,
+                      }}
+                    >
+                      {n.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
           </div>
         </div>

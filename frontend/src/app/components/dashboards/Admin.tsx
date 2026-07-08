@@ -57,6 +57,17 @@ const NAV_ITEMS = [
 function AdminWelcome({ onViewChange }: { onViewChange: (view: any) => void }) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [stats, setStats] = useState({ seasons: 0, meetings: 0, races: 0, users: 0, pending: 0, activeSeason: "None" });
 
   useEffect(() => {
@@ -82,7 +93,7 @@ function AdminWelcome({ onViewChange }: { onViewChange: (view: any) => void }) {
         backdropFilter: "blur(16px)",
         boxShadow: "0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)",
         borderRadius: "1rem",
-        padding: "2rem 2.5rem",
+        padding: isMobile ? "1.25rem" : "2rem 2.5rem",
         position: "relative",
         overflow: "hidden",
         display: "flex",

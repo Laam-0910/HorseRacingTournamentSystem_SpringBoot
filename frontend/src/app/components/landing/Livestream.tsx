@@ -135,6 +135,8 @@ export default function Livestream() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+
+
   // Read current language setting
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
@@ -198,6 +200,8 @@ export default function Livestream() {
     const interval = setInterval(fetchLiveRaces, 15000);
     return () => clearInterval(interval);
   }, [raceId]);
+
+
 
   // WebSocket Connection Lifecycle
   useEffect(() => {
@@ -316,7 +320,8 @@ export default function Livestream() {
   };
 
   const embedUrl = selectedRace ? getYouTubeEmbedUrl(selectedRace.youtubeLiveUrl) : null;
-  const iframeSrc = embedUrl ? (embedUrl.includes("youtube.com") ? `${embedUrl}?autoplay=1&mute=0&rel=0&modestbranding=1` : embedUrl) : "";
+  const videoId = embedUrl ? embedUrl.split("/").pop()?.split("?")[0] : "";
+  const iframeSrc = embedUrl ? (embedUrl.includes("youtube.com") ? `${embedUrl}?autoplay=1&mute=0&rel=0&modestbranding=1&playlist=${videoId}&loop=1` : embedUrl) : "";
 
   return (
     <div className="min-h-screen bg-[#0e0c09] text-[#f0f0f0] font-sans">
@@ -396,13 +401,17 @@ export default function Livestream() {
                     autoPlay
                   />
                 ) : (
-                  <iframe
-                    className="absolute top-0 left-0 w-full h-full border-none"
-                    src={iframeSrc}
-                    title={selectedRace.classLevel}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  ></iframe>
+                  <>
+                    <iframe
+                      className="absolute top-0 left-0 w-full h-full border-none"
+                      src={iframeSrc}
+                      title={selectedRace.classLevel}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    ></iframe>
+                    {/* Blocker overlay at the bottom to block related videos (Video khác) and YouTube logo */}
+                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "14%", zIndex: 10, background: "transparent", cursor: "default" }} onClick={e => e.stopPropagation()} />
+                  </>
                 )}
               </div>
 

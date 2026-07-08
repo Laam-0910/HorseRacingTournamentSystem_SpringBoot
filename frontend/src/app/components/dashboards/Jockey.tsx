@@ -126,6 +126,61 @@ function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings
 }
 
 function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: boolean; onViewHorse: (horse: { id: number; name: string }) => void }) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  if (isMobile) {
+    return (
+      <div>
+        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>My Mounts</h3>
+        {loading ? (
+          <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem" }}>Loading...</p>
+        ) : mounts.length === 0 ? (
+          <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem", fontFamily: "monospace" }}>No scheduled mounts at the moment.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            {mounts.map((m, i) => (
+              <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                  <div>
+                    <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>Race #{m.raceId}</span>
+                    <h4 style={{ fontSize: "0.95rem", fontWeight: "bold", color: "#f4f2ec", marginTop: "2px" }}>
+                      <button
+                        type="button"
+                        onClick={() => onViewHorse({ id: m.horseId, name: m.horseName || `Horse #${m.horseId}` })}
+                        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontWeight: "bold", textAlign: "left" }}
+                      >
+                        {m.horseName || `Horse #${m.horseId}`}
+                      </button>
+                    </h4>
+                  </div>
+                  <span style={{ padding: "0.125rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.6rem", fontFamily: "monospace", fontWeight: 700, textTransform: "uppercase", background: m.status === "APPROVED" ? "rgba(74,222,128,0.1)" : "rgba(255,255,255,0.05)", color: m.status === "APPROVED" ? "#4ade80" : "#a0a0a0" }}>
+                    {m.status}
+                  </span>
+                </div>
+                <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.8rem", color: "#f4f2ec", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", fontFamily: "monospace" }}>
+                  <div>
+                    <span style={{ color: "rgba(255,255,255,0.4)" }}>Gate: </span>
+                    <span style={{ color: "#c9a227", fontWeight: "bold" }}>{m.gateNumber ?? "TBD"}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: "rgba(255,255,255,0.4)" }}>Weight: </span>
+                    <span>{m.carriedWeight ?? "TBD"} kg</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>My Mounts</h3>
