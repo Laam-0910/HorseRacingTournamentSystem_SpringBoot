@@ -16,13 +16,12 @@ public class PythonStartupRunner {
 
     @PostConstruct
     public void startPythonServer() {
-        // Tính đường dẫn tuyệt đối tới thư mục python_ai
-        File workDir = Paths.get(System.getProperty("user.dir"), "python_ai").toFile();
+        // Tính đường dẫn tới thư mục ai_service (ở thư mục hiện tại hoặc thư mục cha nếu đang chạy từ backend/)
+        File workDir = Paths.get(System.getProperty("user.dir"), "ai_service").toFile();
         if (!workDir.exists()) {
-            // Thử relative từ backend/
-            workDir = new File("python_ai");
+            workDir = Paths.get(System.getProperty("user.dir"), "..", "ai_service").toFile();
         }
-        File scriptFile = new File(workDir, "app.py");
+        File scriptFile = new File(workDir, "ai_service.py");
 
         if (!scriptFile.exists()) {
             log.warn("[PythonRunner] Không tìm thấy script tại: {}. Bỏ qua khởi động.", scriptFile.getAbsolutePath());
@@ -35,7 +34,7 @@ public class PythonStartupRunner {
         String[] pythonCommands = {"python", "python3", "py"};
         for (String cmd : pythonCommands) {
             try {
-                ProcessBuilder pb = new ProcessBuilder(cmd, "-Xutf8", "app.py");
+                ProcessBuilder pb = new ProcessBuilder(cmd, "-Xutf8", "ai_service.py");
                 pb.directory(workDir);
                 pb.redirectErrorStream(true); // gộp stderr vào stdout
                 pythonProcess = pb.start();
