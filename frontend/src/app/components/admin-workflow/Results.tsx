@@ -41,6 +41,14 @@ interface RaceEntry {
 }
 
 export default function Results() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
   const [classRules, setClassRules] = useState<ClassRule[]>([]);
@@ -193,36 +201,67 @@ export default function Results() {
         <form onSubmit={handleConfirmResults} style={{ padding: "1.5rem" }}>
           {error && <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px", marginBottom: "1rem" }}>{error}</div>}
 
-          <div style={{ overflowX: "auto", marginBottom: "1.5rem" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
-                  {["Gate", "Horse Name", "Jockey Name", "Carried Wt", "Weigh-In Wt (kg)", "Final Position", "Finish Time"].map(h => (
-                    <th key={h} style={{ padding: "0.75rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {entries.map(e => (
-                  <tr key={e.entryId} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                    <td style={{ padding: "0.75rem", fontSize: "12px", fontFamily: "monospace", color: "#c9a227" }}>{e.gateNumber}</td>
-                    <td style={{ padding: "0.75rem", fontSize: "12px", color: "#f4f2ec", fontWeight: "bold" }}>{e.horseName}</td>
-                    <td style={{ padding: "0.75rem", fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>{e.jockeyName}</td>
-                    <td style={{ padding: "0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{e.carriedWeight} kg</td>
-                    <td style={{ padding: "0.5rem 0.75rem" }}>
+          {isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.5rem" }}>
+              {entries.map(e => (
+                <div key={e.entryId} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(201,162,39,0.14)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#c9a227", background: "rgba(201,162,39,0.1)", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold" }}>Gate {e.gateNumber}</span>
+                    <span style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>Carried: {e.carriedWeight} kg</span>
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.horseName}</div>
+                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>Jockey: {e.jockeyName}</div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: "0.5rem" }}>
+                    <div>
+                      <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>Weigh-In (kg)</label>
                       <input type="number" step="0.1" value={weighInWeights[e.entryId] || ""} onChange={val => setWeighInWeights(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
-                    </td>
-                    <td style={{ padding: "0.5rem 0.75rem" }}>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>Pos</label>
                       <input type="number" min="1" value={positions[e.entryId] || ""} onChange={val => setPositions(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
-                    </td>
-                    <td style={{ padding: "0.5rem 0.75rem" }}>
-                      <input type="text" placeholder="e.g. 1:12.45" value={times[e.entryId] || ""} onChange={val => setTimes(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
-                    </td>
+                    </div>
+                    <div>
+                      <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>Finish Time</label>
+                      <input type="text" placeholder="1:12.45" value={times[e.entryId] || ""} onChange={val => setTimes(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto", marginBottom: "1.5rem" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
+                    {["Gate", "Horse Name", "Jockey Name", "Carried Wt", "Weigh-In Wt (kg)", "Final Position", "Finish Time"].map(h => (
+                      <th key={h} style={{ padding: "0.75rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {entries.map(e => (
+                    <tr key={e.entryId} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                      <td style={{ padding: "0.75rem", fontSize: "12px", fontFamily: "monospace", color: "#c9a227" }}>{e.gateNumber}</td>
+                      <td style={{ padding: "0.75rem", fontSize: "12px", color: "#f4f2ec", fontWeight: "bold" }}>{e.horseName}</td>
+                      <td style={{ padding: "0.75rem", fontSize: "12px", color: "rgba(255,255,255,0.6)" }}>{e.jockeyName}</td>
+                      <td style={{ padding: "0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{e.carriedWeight} kg</td>
+                      <td style={{ padding: "0.5rem 0.75rem" }}>
+                        <input type="number" step="0.1" value={weighInWeights[e.entryId] || ""} onChange={val => setWeighInWeights(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
+                      </td>
+                      <td style={{ padding: "0.5rem 0.75rem" }}>
+                        <input type="number" min="1" value={positions[e.entryId] || ""} onChange={val => setPositions(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
+                      </td>
+                      <td style={{ padding: "0.5rem 0.75rem" }}>
+                        <input type="text" placeholder="e.g. 1:12.45" value={times[e.entryId] || ""} onChange={val => setTimes(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           <div style={{ marginBottom: "1.5rem" }}>
             <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Steward Report / Notes</label>
@@ -255,64 +294,107 @@ export default function Results() {
         {/* Meetings */}
         <div style={{ padding: "1.5rem" }}>
           <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>Race Meetings List</h4>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
-                  {["Meeting Name", "Venue"].map(h => (
-                    <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan={2} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
-                ) : meetings.length === 0 ? (
-                  <tr><td colSpan={2} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No Race Meetings Found.</td></tr>
-                ) : meetings.map(meeting => (
-                  <tr key={meeting.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                    <td style={{ padding: "1rem", fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{meeting.name}</td>
-                    <td style={{ padding: "1rem", color: "rgba(255,255,255,0.55)", fontSize: "12px" }}>{meeting.venue}</td>
+          {isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {meetings.length === 0 ? (
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", textAlign: "center", padding: "1.5rem" }}>No Race Meetings Found.</p>
+              ) : meetings.map(meeting => (
+                <div key={meeting.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem" }}>
+                  <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{meeting.name}</div>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>📍 {meeting.venue}</div>
+                  <div style={{ fontSize: "11px", color: "#4a9d6f", fontFamily: "monospace", marginTop: "6px", fontWeight: "bold" }}>
+                    Budget: ${meeting.totalBudget.toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
+                    {["Meeting Name", "Venue", "Total Budget"].map(h => (
+                      <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr><td colSpan={3} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                  ) : meetings.length === 0 ? (
+                    <tr><td colSpan={3} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No Race Meetings Found.</td></tr>
+                  ) : meetings.map(meeting => (
+                    <tr key={meeting.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                      <td style={{ padding: "1rem", fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{meeting.name}</td>
+                      <td style={{ padding: "1rem", color: "rgba(255,255,255,0.55)", fontSize: "12px" }}>{meeting.venue}</td>
+                      <td style={{ padding: "1rem", fontFamily: "monospace", color: "#4a9d6f", fontSize: "13px" }}>${meeting.totalBudget.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Races to Process */}
         <div style={{ padding: "1.5rem", borderTop: "1px solid rgba(201,162,39,0.10)" }}>
           <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>Races To Process</h4>
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
-                  {["Meeting ID", "Class Level", "Start Time", "Status", "Action"].map(h => (
-                    <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan={5} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
-                ) : races.length === 0 ? (
-                  <tr><td colSpan={5} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No Races Found.</td></tr>
-                ) : races.map(race => (
-                  <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                    <td style={{ padding: "1rem", fontFamily: "monospace", color: "rgba(255,255,255,0.55)", fontSize: "12px" }}>{race.raceMeetingId}</td>
-                    <td style={{ padding: "1rem", fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{race.classLevel}</td>
-                    <td style={{ padding: "1rem", color: "rgba(255,255,255,0.55)", fontSize: "12px", fontFamily: "monospace" }}>{race.startTime}</td>
-                    <td style={{ padding: "1rem" }}>
-                      <span style={{ fontSize: "10px", fontWeight: "bold", color: "#c9a227", background: "rgba(201,162,39,0.15)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem" }}>{race.status}</span>
-                    </td>
-                    <td style={{ padding: "1rem" }}>
-                      <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>Process</button>
-                    </td>
+          {isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              {races.length === 0 ? (
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", textAlign: "center", padding: "1.5rem" }}>No Races Found.</p>
+              ) : races.map(race => (
+                <div key={race.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(201,162,39,0.14)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                    <div>
+                      <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{race.classLevel}</div>
+                      <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginTop: "2px" }}>Meeting ID: #{race.raceMeetingId}</div>
+                    </div>
+                    <span style={{ fontSize: "10px", fontWeight: "bold", color: "#c9a227", background: "rgba(201,162,39,0.15)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem" }}>{race.status}</span>
+                  </div>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", fontFamily: "monospace" }}>
+                    📅 {race.startTime}
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
+                    <span style={{ fontFamily: "monospace", color: "#4a9d6f", fontSize: "13px", fontWeight: "bold" }}>${race.purse.toLocaleString()}</span>
+                    <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>Process</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
+                    {["Meeting ID", "Class Level", "Start Time", "Purse", "Status", "Action"].map(h => (
+                      <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr><td colSpan={6} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                  ) : races.length === 0 ? (
+                    <tr><td colSpan={6} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No Races Found.</td></tr>
+                  ) : races.map(race => (
+                    <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+                      <td style={{ padding: "1rem", fontFamily: "monospace", color: "rgba(255,255,255,0.55)", fontSize: "12px" }}>{race.raceMeetingId}</td>
+                      <td style={{ padding: "1rem", fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{race.classLevel}</td>
+                      <td style={{ padding: "1rem", color: "rgba(255,255,255,0.55)", fontSize: "12px", fontFamily: "monospace" }}>{race.startTime}</td>
+                      <td style={{ padding: "1rem", fontFamily: "monospace", color: "#4a9d6f", fontSize: "13px" }}>${race.purse.toLocaleString()}</td>
+                      <td style={{ padding: "1rem" }}>
+                        <span style={{ fontSize: "10px", fontWeight: "bold", color: "#c9a227", background: "rgba(201,162,39,0.15)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem" }}>{race.status}</span>
+                      </td>
+                      <td style={{ padding: "1rem" }}>
+                        <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>Process</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         {/* Class Rules */}

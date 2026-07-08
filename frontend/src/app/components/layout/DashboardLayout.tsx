@@ -128,6 +128,9 @@ export default function DashboardLayout({
   const [lang, setLang] = useState(() => localStorage.getItem('app-lang') || 'vi');
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
+  
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const LANG_OPTIONS: [string, string][] = [['vi', 'Tiếng Việt'], ['en', 'English'], ['zh', '简体中文'], ['ja', '日本語']];
   const langLabel = LANG_OPTIONS.find(([c]) => c === lang)?.[1] || lang.toUpperCase();
@@ -155,10 +158,30 @@ export default function DashboardLayout({
     setToday(d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 1024;
+      setIsMobile(mobile);
+      if (!mobile) {
+        setMobileMenuOpen(false);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const toggleSidebar = () => {
     const next = !collapsed;
     setCollapsed(next);
     localStorage.setItem('sidebar-pinned', next ? 'false' : 'true');
+  };
+
+  const handleNavClick = (view: string) => {
+    onViewChange(view);
+    if (isMobile) {
+      setMobileMenuOpen(false);
+    }
   };
 
   const sidebarExpanded = !collapsed || hovering;
@@ -169,30 +192,55 @@ export default function DashboardLayout({
       className="flex h-screen w-full overflow-hidden"
       style={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden', background: 'var(--background)', color: 'var(--foreground)', '--role-color': roleColor } as React.CSSProperties}
     >
+      {/* Sidebar Overlay backdrop on mobile */}
+      {isMobile && mobileMenuOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 45,
+            transition: 'opacity 0.3s ease',
+          }}
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar Wrapper */}
       <aside
-        style={{
+        style={isMobile ? {
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          width: '16rem',
+          zIndex: 50,
+          transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
+          transition: 'transform 0.3s cubic-bezier(0.4,0,0.2,1)',
+          flexShrink: 0,
+        } : {
           width: sidebarExpanded ? '16rem' : '5rem',
           transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
           flexShrink: 0,
           zIndex: 40,
-          position: collapsed ? 'relative' : 'relative',
+          position: 'relative',
         }}
-        onMouseEnter={() => collapsed && setHovering(true)}
-        onMouseLeave={() => setHovering(false)}
+        onMouseEnter={() => !isMobile && collapsed && setHovering(true)}
+        onMouseLeave={() => !isMobile && setHovering(false)}
       >
         <div
           id="sidebar"
           style={{
-            width: sidebarExpanded ? '16rem' : '5rem',
+            width: isMobile ? '100%' : (sidebarExpanded ? '16rem' : '5rem'),
             transition: 'width 0.3s cubic-bezier(0.4,0,0.2,1)',
             background: 'var(--sidebar)',
             borderRight: '1px solid var(--sidebar-border)',
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            position: collapsed && hovering ? 'absolute' : 'relative',
-            boxShadow: collapsed && hovering ? '10px 0 30px rgba(0,0,0,0.65)' : 'none',
+            position: !isMobile && collapsed && hovering ? 'absolute' : 'relative',
+            boxShadow: (!isMobile && collapsed && hovering) ? '10px 0 30px rgba(0,0,0,0.65)' : 'none',
           }}
         >
           {/* Logo */}
@@ -202,28 +250,37 @@ export default function DashboardLayout({
                 <div style={{ width: 40, height: 40, borderRadius: '0.375rem', background: '#c9a227', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#0e0c09' }}>
                   <Icon name="trophy" size={20} />
                 </div>
-                {sidebarExpanded && (
+                {(isMobile || sidebarExpanded) && (
                   <div className="sidebar-text">
                     <h1 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: '0.9rem', color: 'var(--foreground)', lineHeight: 1.2 }}>HorseRace</h1>
                     <p style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>MS · 2026</p>
                   </div>
                 )}
               </div>
-              {sidebarExpanded && (
+              {isMobile ? (
                 <button
-                  onClick={toggleSidebar}
+                  onClick={() => setMobileMenuOpen(false)}
                   style={{ color: 'var(--muted-foreground)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.375rem', borderRadius: '0.25rem', display: 'flex' }}
                 >
-                  <Icon name="chevron-left" size={16} />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
                 </button>
+              ) : (
+                sidebarExpanded && (
+                  <button
+                    onClick={toggleSidebar}
+                    style={{ color: 'var(--muted-foreground)', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.375rem', borderRadius: '0.25rem', display: 'flex' }}
+                  >
+                    <Icon name="chevron-left" size={16} />
+                  </button>
+                )
               )}
             </div>
           </div>
 
           {/* Profile */}
           <div 
-            onClick={() => onViewChange('profile')}
-            title={lang === "vi" ? "Đến Trang cá nhân & 2FA" : lang === "zh" ? "前往个人中心与双重认证" : lang === "ja" ? "プロフィールと2FAへ" : "Go to Profile & 2FA"}
+            onClick={() => handleNavClick('profile')}
+            title={lang === "vi" ? "Đến Trang cá nhân & 2FA" : lang === "zh" ? "前往个人中心 với 双重认证" : lang === "ja" ? "プロフィールと2FAへ" : "Go to Profile & 2FA"}
             style={{ 
               padding: '1rem 1.25rem', 
               borderBottom: '1px solid var(--sidebar-border)', 
@@ -250,7 +307,7 @@ export default function DashboardLayout({
                 initials
               )}
             </div>
-            {sidebarExpanded && (
+            {(isMobile || sidebarExpanded) && (
               <div style={{ overflow: 'hidden', flex: 1 }} className="sidebar-text">
                 <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.fullName || user?.username}</p>
                 <p style={{ fontSize: '0.6rem', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', color: roleColor }}>{translateLabel(roleLabel, lang)}</p>
@@ -260,7 +317,7 @@ export default function DashboardLayout({
 
           {/* Nav */}
           <nav style={{ flex: 1, padding: '0.75rem', overflowY: 'auto' }} className="scrollbar-hide">
-            {sidebarExpanded && (
+            {(isMobile || sidebarExpanded) && (
               <p style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0 0.75rem', marginBottom: '0.5rem' }}>
                 {lang === "vi" ? "Tiến trình" : lang === "zh" ? "工作流" : lang === "ja" ? "ワークフロー" : "Workflow"}
               </p>
@@ -270,14 +327,14 @@ export default function DashboardLayout({
               return (
                 <button
                   key={item.view}
-                  onClick={() => onViewChange(item.view)}
+                  onClick={() => handleNavClick(item.view)}
                   style={{
                     width: '100%',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: sidebarExpanded ? '0.625rem' : 0,
-                    justifyContent: sidebarExpanded ? 'flex-start' : 'center',
-                    padding: sidebarExpanded ? '0.5rem 0.75rem' : '0.5rem 0',
+                    gap: (isMobile || sidebarExpanded) ? '0.625rem' : 0,
+                    justifyContent: (isMobile || sidebarExpanded) ? 'flex-start' : 'center',
+                    padding: (isMobile || sidebarExpanded) ? '0.5rem 0.75rem' : '0.5rem 0',
                     borderRadius: '0.5rem',
                     marginBottom: '0.125rem',
                     background: isActive ? `${roleColor}18` : 'transparent',
@@ -291,7 +348,7 @@ export default function DashboardLayout({
                     transition: 'all 0.25s',
                   }}
                 >
-                  {!sidebarExpanded ? (
+                  {!(isMobile || sidebarExpanded) ? (
                     <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', fontWeight: 700, color: isActive ? roleColor : 'rgba(255,255,255,0.4)', width: '100%', textAlign: 'center' }}>
                       {item.index}
                     </span>
@@ -305,7 +362,7 @@ export default function DashboardLayout({
                       </span>
                     </>
                   )}
-                  {sidebarExpanded && item.badge !== undefined && item.badge !== null && item.badge > 0 && (
+                  {(isMobile || sidebarExpanded) && item.badge !== undefined && item.badge !== null && item.badge > 0 && (
                     <span style={{ background: roleColor, color: '#0b0d11', fontSize: '0.5rem', fontFamily: 'monospace', fontWeight: 700, padding: '0.125rem 0.375rem', borderRadius: '9999px' }}>
                       {item.badge}
                     </span>
@@ -319,17 +376,17 @@ export default function DashboardLayout({
           <div style={{ borderTop: '1px solid var(--sidebar-border)', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
             <button
               onClick={() => navigate('/')}
-              style={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '0.75rem' : 0, justifyContent: sidebarExpanded ? 'flex-start' : 'center', width: 'calc(100% - 1.5rem)', margin: '0 0.75rem', padding: '0.625rem 0.75rem', borderRadius: '0.25rem', background: 'transparent', border: 'none', color: 'var(--muted-foreground)', fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: (isMobile || sidebarExpanded) ? '0.75rem' : 0, justifyContent: (isMobile || sidebarExpanded) ? 'flex-start' : 'center', width: 'calc(100% - 1.5rem)', margin: '0 0.75rem', padding: '0.625rem 0.75rem', borderRadius: '0.25rem', background: 'transparent', border: 'none', color: 'var(--muted-foreground)', fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
             >
               <Icon name="home" size={16} />
-              {sidebarExpanded && <span className="sidebar-text">{lang === "vi" ? "Về trang chủ" : lang === "zh" ? "返回首页" : lang === "ja" ? "ホームに戻る" : "Back to Home"}</span>}
+              {(isMobile || sidebarExpanded) && <span className="sidebar-text">{lang === "vi" ? "Về trang chủ" : lang === "zh" ? "返回首页" : lang === "ja" ? "ホームに戻る" : "Back to Home"}</span>}
             </button>
             <button
               onClick={() => { logout(); navigate('/login'); }}
-              style={{ display: 'flex', alignItems: 'center', gap: sidebarExpanded ? '0.75rem' : 0, justifyContent: sidebarExpanded ? 'flex-start' : 'center', width: 'calc(100% - 1.5rem)', margin: '0 0.75rem 0.5rem', padding: '0.625rem 0.75rem', borderRadius: '0.25rem', background: 'transparent', border: 'none', color: 'var(--muted-foreground)', fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
+              style={{ display: 'flex', alignItems: 'center', gap: (isMobile || sidebarExpanded) ? '0.75rem' : 0, justifyContent: (isMobile || sidebarExpanded) ? 'flex-start' : 'center', width: 'calc(100% - 1.5rem)', margin: '0 0.75rem 0.5rem', padding: '0.625rem 0.75rem', borderRadius: '0.25rem', background: 'transparent', border: 'none', color: 'var(--muted-foreground)', fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
             >
               <Icon name="log-out" size={16} />
-              {sidebarExpanded && <span className="sidebar-text">{lang === "vi" ? "Đăng xuất" : lang === "zh" ? "退出登录" : lang === "ja" ? "ログアウト" : "Sign out"}</span>}
+              {(isMobile || sidebarExpanded) && <span className="sidebar-text">{lang === "vi" ? "Đăng xuất" : lang === "zh" ? "退出登录" : lang === "ja" ? "ログアウト" : "Sign out"}</span>}
             </button>
           </div>
         </div>
@@ -340,13 +397,31 @@ export default function DashboardLayout({
         {/* Topbar */}
         <header style={{ height: '3.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem', background: 'rgba(21,19,16,0.4)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {isMobile && (
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--muted-foreground)',
+                  cursor: 'pointer',
+                  padding: '0.375rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: '0.25rem',
+                }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+              </button>
+            )}
             <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: '0.9rem', color: 'var(--foreground)' }}>{translateLabel(activeLabel, lang)}</h2>
             <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0.125rem 0.5rem', borderRadius: '0.25rem', background: `${roleColor}22`, color: roleColor }}>
               {translateLabel(roleLabel, lang)}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>{today}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {!isMobile && <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>{today}</span>}
             {/* Language Switcher */}
             <div ref={langRef} style={{ position: 'relative' }}>
               <button
@@ -390,7 +465,7 @@ export default function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem' }} className="scrollbar-hide">
+        <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '1rem' : '1.5rem' }} className="scrollbar-hide">
           {/* Success / Error banners */}
           {successMsg && (
             <div style={{ marginBottom: '1rem', padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(74,157,111,0.1)', border: '1px solid rgba(74,157,111,0.2)', color: '#4a9d6f', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>

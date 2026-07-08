@@ -142,6 +142,14 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
 }
 
 export default function Horses() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [horses, setHorses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -346,62 +354,118 @@ export default function Horses() {
 
       {/* Horses Table */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                {["Horse", "Breed", "Sex", "Current Rating", "Owner ID", "Status", "Races Run", "Actions"].map((h, idx) => (
-                  <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 7 ? "right" : "left" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5 text-sm">
-              {loading ? (
-                <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading horses data...</td></tr>
-              ) : filteredHorses.length > 0 ? (
-                filteredHorses.map((h) => {
-                  let statusColor = "#a0a0a0";
-                  if (h.status === "ACTIVE") statusColor = "#4ade80";
-                  else if (h.status === "PENDING") statusColor = "#fbbf24";
-                  else if (h.status === "REJECTED" || h.status === "SUSPENDED") statusColor = "#f87171";
+        {isMobile ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+            {loading ? (
+              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading horses data...</div>
+            ) : filteredHorses.length > 0 ? (
+              filteredHorses.map((h) => {
+                let statusColor = "#a0a0a0";
+                if (h.status === "ACTIVE") statusColor = "#4ade80";
+                else if (h.status === "PENDING") statusColor = "#fbbf24";
+                else if (h.status === "REJECTED" || h.status === "SUSPENDED") statusColor = "#f87171";
 
-                  return (
-                    <tr key={h.id} className="hover:bg-white/[0.015] transition-colors">
-                      <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                return (
+                  <div key={h.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                         {h.avatar ? (
                           <img src={h.avatar} alt={h.name} style={{ width: "2.25rem", height: "2.25rem", objectFit: "cover", borderRadius: "0.375rem", border: "1px solid rgba(255,255,255,0.1)" }} />
                         ) : (
                           <div style={{ width: "2.25rem", height: "2.25rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.375rem", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "rgba(255,255,255,0.25)" }}>🐴</div>
                         )}
                         <div>
-                          <div>{h.name}</div>
+                          <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "14px" }}>{h.name}</div>
                           <span style={{ fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)" }}>ID: #{h.id}</span>
                         </div>
-                      </td>
-                      <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.8)" }}>{h.breed}</td>
-                      <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.8)" }}>{h.sex || "Gelding"}</td>
-                      <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#fbbf24" }}>{h.currentRating}</td>
-                      <td style={{ padding: "0.75rem 1.5rem", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>Owner #{h.ownerId}</td>
-                      <td style={{ padding: "0.75rem 1.5rem" }}>
+                      </div>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.25rem" }}>
                         <span style={{ fontSize: "9px", fontFamily: "monospace", fontWeight: "bold", color: statusColor, background: `${statusColor}15`, padding: "0.15rem 0.45rem", borderRadius: "0.25rem", border: `1px solid ${statusColor}25` }}>
                           {h.status}
                         </span>
-                      </td>
-                      <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.5)" }}>{h.totalRaces || 0} races</td>
-                      <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
-                        <button onClick={() => handleOpenEdit(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                          Edit Details
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses found.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                        <span style={{ fontWeight: "bold", color: "#fbbf24", fontSize: "13px" }}>⭐ {h.currentRating}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
+                      <span>Breed: <span style={{ color: "rgba(255,255,255,0.8)" }}>{h.breed}</span></span>
+                      <span>|</span>
+                      <span>Sex: <span style={{ color: "rgba(255,255,255,0.8)" }}>{h.sex || "Gelding"}</span></span>
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>
+                      <span>Owner #{h.ownerId}</span>
+                      <span>•</span>
+                      <span>{h.totalRaces || 0} races run</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
+                      <button onClick={() => handleOpenEdit(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
+                        Edit Details
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses found.</div>
+            )}
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                  {["Horse", "Breed", "Sex", "Current Rating", "Owner ID", "Status", "Races Run", "Actions"].map((h, idx) => (
+                    <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 7 ? "right" : "left" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5 text-sm">
+                {loading ? (
+                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading horses data...</td></tr>
+                ) : filteredHorses.length > 0 ? (
+                  filteredHorses.map((h) => {
+                    let statusColor = "#a0a0a0";
+                    if (h.status === "ACTIVE") statusColor = "#4ade80";
+                    else if (h.status === "PENDING") statusColor = "#fbbf24";
+                    else if (h.status === "REJECTED" || h.status === "SUSPENDED") statusColor = "#f87171";
+
+                    return (
+                      <tr key={h.id} className="hover:bg-white/[0.015] transition-colors">
+                        <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                          {h.avatar ? (
+                            <img src={h.avatar} alt={h.name} style={{ width: "2.25rem", height: "2.25rem", objectFit: "cover", borderRadius: "0.375rem", border: "1px solid rgba(255,255,255,0.1)" }} />
+                          ) : (
+                            <div style={{ width: "2.25rem", height: "2.25rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.375rem", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "rgba(255,255,255,0.25)" }}>🐴</div>
+                          )}
+                          <div>
+                            <div>{h.name}</div>
+                            <span style={{ fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)" }}>ID: #{h.id}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.8)" }}>{h.breed}</td>
+                        <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.8)" }}>{h.sex || "Gelding"}</td>
+                        <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#fbbf24" }}>{h.currentRating}</td>
+                        <td style={{ padding: "0.75rem 1.5rem", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>Owner #{h.ownerId}</td>
+                        <td style={{ padding: "0.75rem 1.5rem" }}>
+                          <span style={{ fontSize: "9px", fontFamily: "monospace", fontWeight: "bold", color: statusColor, background: `${statusColor}15`, padding: "0.15rem 0.45rem", borderRadius: "0.25rem", border: `1px solid ${statusColor}25` }}>
+                            {h.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.5)" }}>{h.totalRaces || 0} races</td>
+                        <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
+                          <button onClick={() => handleOpenEdit(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
+                            Edit Details
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                ) : (
+                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses found.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Edit Horse Modal */}

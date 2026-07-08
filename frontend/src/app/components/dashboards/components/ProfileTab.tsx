@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../../context/AuthContext";
 import { api } from "../../../../lib/api";
 
@@ -129,6 +129,16 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
 export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const { user, setUser } = useAuth();
   
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const lang = localStorage.getItem("app-lang") || "vi";
   const st = PROFILE_TRANSLATIONS[lang] || PROFILE_TRANSLATIONS.vi;
   
@@ -327,7 +337,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "2rem", alignItems: "start", maxWidth: "60rem" }}>
+    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? "1.5rem" : "2rem", alignItems: "start", maxWidth: "60rem" }}>
       
       {/* Left side: Profile Info & Avatar */}
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>

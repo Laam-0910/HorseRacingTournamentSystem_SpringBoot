@@ -84,9 +84,17 @@ export default function RefereeDuties() {
   const { user } = useAuth();
   const [schedule, setSchedule] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -106,56 +114,94 @@ export default function RefereeDuties() {
         </p>
       </div>
 
-      {/* Table */}
-      <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-              {[t.scheduleHeader, t.meetingVenue, t.raceDetails, t.status].map(h => (
-                <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loadingSchedule}</td></tr>
-            ) : schedule.length === 0 ? (
-              <tr>
-                <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>
-                  {t.noDuties}
-                </td>
-              </tr>
-            ) : schedule.map((item: any, i: number) => {
-              const race    = item.race    ?? item;
-              const meeting = item.meeting ?? {};
-              return (
-                <tr key={i}
-                  style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
-                >
-                  <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.8rem", color: "#f4f2ec" }}>
-                    {formatDateTime(race.startTime ?? item.startTime) || "—"}
-                  </td>
-                  <td style={{ padding: "1rem" }}>
-                    <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{meeting.name ?? item.meetingName ?? "—"}</div>
-                    <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
+      {/* Mobile Cards */}
+      {isMobile ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+          {loading ? (
+            <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>{t.loadingSchedule}</p>
+          ) : schedule.length === 0 ? (
+            <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem", textAlign: "center", padding: "1rem" }}>{t.noDuties}</p>
+          ) : schedule.map((item: any, i: number) => {
+            const race    = item.race    ?? item;
+            const meeting = item.meeting ?? {};
+            return (
+              <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                  <div>
+                    <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.9rem" }}>
+                      {meeting.name ?? item.meetingName ?? "—"}
+                    </div>
+                    <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "2px" }}>
                       📍 {meeting.venue ?? item.venue ?? "—"}
                     </div>
+                  </div>
+                  {statusBadge(race.status ?? item.status)}
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                  📅 {formatDateTime(race.startTime ?? item.startTime) || "—"}
+                </div>
+                <div style={{ paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", fontSize: "0.8rem", color: "#f4f2ec" }}>
+                  <span style={{ fontWeight: 600 }}>Race #{race.id ?? item.raceId}</span>
+                  <span style={{ color: "#a0a0a0", fontFamily: "monospace", marginLeft: "0.5rem" }}>
+                    {formatClassLevel(race.classLevel)} · {race.distanceMeters}m · {race.trackType}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Desktop Table */
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                {[t.scheduleHeader, t.meetingVenue, t.raceDetails, t.status].map(h => (
+                  <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loadingSchedule}</td></tr>
+              ) : schedule.length === 0 ? (
+                <tr>
+                  <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>
+                    {t.noDuties}
                   </td>
-                  <td style={{ padding: "1rem" }}>
-                    <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>Race #{race.id ?? item.raceId}</div>
-                    <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
-                      {formatClassLevel(race.classLevel)} · {race.distanceMeters}m · {race.trackType}
-                    </div>
-                  </td>
-                  <td style={{ padding: "1rem" }}>{statusBadge(race.status ?? item.status)}</td>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+              ) : schedule.map((item: any, i: number) => {
+                const race    = item.race    ?? item;
+                const meeting = item.meeting ?? {};
+                return (
+                  <tr key={i}
+                    style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                  >
+                    <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.8rem", color: "#f4f2ec" }}>
+                      {formatDateTime(race.startTime ?? item.startTime) || "—"}
+                    </td>
+                    <td style={{ padding: "1rem" }}>
+                      <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{meeting.name ?? item.meetingName ?? "—"}</div>
+                      <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
+                        📍 {meeting.venue ?? item.venue ?? "—"}
+                      </div>
+                    </td>
+                    <td style={{ padding: "1rem" }}>
+                      <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>Race #{race.id ?? item.raceId}</div>
+                      <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
+                        {formatClassLevel(race.classLevel)} · {race.distanceMeters}m · {race.trackType}
+                      </div>
+                    </td>
+                    <td style={{ padding: "1rem" }}>{statusBadge(race.status ?? item.status)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

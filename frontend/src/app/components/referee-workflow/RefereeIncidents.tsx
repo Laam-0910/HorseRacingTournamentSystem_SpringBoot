@@ -73,6 +73,7 @@ export default function RefereeIncidents() {
   const { user } = useAuth();
   const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Steward report modal state
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
@@ -80,6 +81,13 @@ export default function RefereeIncidents() {
 
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -114,67 +122,123 @@ export default function RefereeIncidents() {
           <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{t.incidentSub}</p>
         </div>
 
-        {/* Table */}
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                {[t.id, t.raceMeeting, t.horse, t.jockey, t.violationDetails, t.assessedPenalty, t.hReport].map(h => (
-                  <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loadingIncidents}</td></tr>
-              ) : incidents.length === 0 ? (
-                <tr>
-                  <td colSpan={7} style={{ padding: "3rem", textAlign: "center" }}>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ fontSize: "2rem" }}>🛡️</span>
-                      <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>{t.noViolations}</span>
+        {/* Table / Cards content */}
+        {isMobile ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+            {loading ? (
+              <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>{t.loadingIncidents}</p>
+            ) : incidents.length === 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", padding: "2rem" }}>
+                <span style={{ fontSize: "2rem" }}>🛡️</span>
+                <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>{t.noViolations}</span>
+              </div>
+            ) : (
+              incidents.map((item: any) => (
+                <div key={item.violation?.id ?? item.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                    <div>
+                      <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>#{item.violation?.id ?? item.id}</span>
+                      <h4 style={{ fontSize: "0.95rem", fontWeight: "bold", color: "#f4f2ec", marginTop: "2px" }}>
+                        {item.meetingName}
+                      </h4>
+                      <span style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", display: "block", marginTop: "2px" }}>
+                        Race #{item.raceId} · {item.classLevel}
+                      </span>
                     </div>
-                  </td>
-                </tr>
-              ) : incidents.map((item: any) => (
-                <tr key={item.violation?.id ?? item.id}
-                  style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
-                >
-                  <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.875rem", color: "#f4f2ec" }}>#{item.violation?.id ?? item.id}</td>
-                  <td style={{ padding: "1rem" }}>
-                    <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{item.meetingName}</div>
-                    <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
-                      Race #{item.raceId} · {item.classLevel}
+                    <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.7rem", fontWeight: 700, color: "#ef4444", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", fontFamily: "monospace" }}>
+                      {item.violation?.penalty ?? item.penalty}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#f4f2ec", display: "flex", flexWrap: "wrap", gap: "1rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{t.horse}: </span>
+                      <strong>{item.horseName}</strong>
                     </div>
-                  </td>
-                  <td style={{ padding: "1rem", fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{item.horseName}</td>
-                  <td style={{ padding: "1rem", fontSize: "0.875rem", color: "#a0a0a0" }}>{item.jockeyName}</td>
-                  <td style={{ padding: "1rem", fontSize: "0.875rem", color: "#f4f2ec", maxWidth: "16rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
-                    title={item.violation?.description}>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{t.jockey}: </span>
+                      <span style={{ color: "#fbbf24" }}>{item.jockeyName}</span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "#a0a0a0", background: "rgba(255,255,255,0.01)", padding: "0.625rem", borderRadius: "0.375rem", border: "1px solid rgba(255,255,255,0.03)" }}>
+                    <strong>{t.violationDetails}: </strong>
                     {item.violation?.description ?? item.description}
-                  </td>
-                  <td style={{ padding: "1rem", fontSize: "0.875rem", fontWeight: 700, color: "#ef4444", fontFamily: "monospace" }}>
-                    {item.violation?.penalty ?? item.penalty}
-                  </td>
-                  <td style={{ padding: "1rem" }}>
-                    {item.stewardReport ? (
+                  </div>
+                  {item.stewardReport && (
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.25rem" }}>
                       <button
                         onClick={() => { setSelectedReport(item.stewardReport); setSelectedRaceId(item.raceId); }}
                         style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}
                       >
                         📄 {t.viewReport}
                       </button>
-                    ) : (
-                      <span style={{ fontSize: "0.7rem", color: "#666", fontFamily: "monospace" }}>N/A</span>
-                    )}
-                  </td>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                  {[t.id, t.raceMeeting, t.horse, t.jockey, t.violationDetails, t.assessedPenalty, t.hReport].map(h => (
+                    <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loadingIncidents}</td></tr>
+                ) : incidents.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} style={{ padding: "3rem", textAlign: "center" }}>
+                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+                        <span style={{ fontSize: "2rem" }}>🛡️</span>
+                        <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>{t.noViolations}</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : incidents.map((item: any) => (
+                  <tr key={item.violation?.id ?? item.id}
+                    style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}
+                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
+                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                  >
+                    <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.875rem", color: "#f4f2ec" }}>#{item.violation?.id ?? item.id}</td>
+                    <td style={{ padding: "1rem" }}>
+                      <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{item.meetingName}</div>
+                      <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
+                        Race #{item.raceId} · {item.classLevel}
+                      </div>
+                    </td>
+                    <td style={{ padding: "1rem", fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{item.horseName}</td>
+                    <td style={{ padding: "1rem", fontSize: "0.875rem", color: "#a0a0a0" }}>{item.jockeyName}</td>
+                    <td style={{ padding: "1rem", fontSize: "0.875rem", color: "#f4f2ec", maxWidth: "16rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                      title={item.violation?.description}>
+                      {item.violation?.description ?? item.description}
+                    </td>
+                    <td style={{ padding: "1rem", fontSize: "0.875rem", fontWeight: 700, color: "#ef4444", fontFamily: "monospace" }}>
+                      {item.violation?.penalty ?? item.penalty}
+                    </td>
+                    <td style={{ padding: "1rem" }}>
+                      {item.stewardReport ? (
+                        <button
+                          onClick={() => { setSelectedReport(item.stewardReport); setSelectedRaceId(item.raceId); }}
+                          style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}
+                        >
+                          📄 {t.viewReport}
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: "0.7rem", color: "#666", fontFamily: "monospace" }}>N/A</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Steward Report Modal */}

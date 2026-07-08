@@ -38,6 +38,16 @@ interface Race {
 }
 
 export default function Race() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
   const [referees, setReferees] = useState<User[]>([]);
@@ -369,8 +379,8 @@ export default function Race() {
           {success && <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px", marginBottom: "1rem" }}>{success}</div>}
 
           <form onSubmit={handleCreateRace}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem", marginBottom: "1.5rem" }}>
-              <div style={{ gridColumn: "span 2" }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "1.25rem", marginBottom: "1.5rem" }}>
+              <div style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Select Race Meeting</label>
                 <select value={meetingId} onChange={e => handleSelectMeeting(e.target.value)} required style={{ width: "100%", padding: "0.75rem", background: "#c9a22712", border: "1px solid #c9a22740", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.875rem", outline: "none" }}>
                   <option value="" style={{ background: "#12141a", color: "#fff" }}>-- Choose Meeting --</option>
@@ -443,108 +453,227 @@ export default function Race() {
           <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Races Database</p>
           <p style={{ fontSize: "10px", fontFamily: "monospace", marginTop: "2px", color: "rgba(255,255,255,0.4)" }}>List of all scheduled races across active meetings</p>
         </div>
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
-            <thead>
-              <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
-                {["Race ID", "Actions", "Race Meeting", "Class", "Track", "Distance", "Start Time", "Min-Max Rating", "Status", "Livestream", "Assigned Referee"].map(h => (
-                  <th key={h} style={{ padding: "0.75rem 1.5rem", textAlign: h === "Status" ? "right" : h === "Livestream" || h === "Assigned Referee" || h === "Actions" ? "center" : "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={11} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>Loading races database...</td></tr>
-              ) : races.length === 0 ? (
-                <tr><td colSpan={11} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>No races found.</td></tr>
-              ) : races.map(race => {
-                const assigned = refereesMap[race.id] || [];
-                const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+        {isMobile ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "1rem" }}>
+            {loading ? (
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace", textAlign: "center", padding: "2rem" }}>Loading races database...</p>
+            ) : races.length === 0 ? (
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace", textAlign: "center", padding: "2rem" }}>No races found.</p>
+            ) : races.map(race => {
+              const assigned = refereesMap[race.id] || [];
+              const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+              const meetingName = meetingMap.get(race.raceMeetingId) || race.raceMeetingName;
 
-                return (
-                  <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                    <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
-                      <button
-                        disabled={isCompleted}
-                        onClick={() => handleOpenEdit(race)}
-                        style={{
-                          padding: "0.375rem 0.75rem",
-                          borderRadius: "0.25rem",
-                          background: isCompleted ? "rgba(255,255,255,0.05)" : "#c9a227",
-                          color: isCompleted ? "rgba(255,255,255,0.2)" : "#0c0a09",
-                          border: "none",
-                          fontFamily: "monospace",
-                          fontSize: "10px",
-                          fontWeight: "bold",
-                          cursor: isCompleted ? "not-allowed" : "pointer"
-                        }}
-                      >
-                        Edit
-                      </button>
-                    </td>
-                    <td style={{ padding: "1rem 1.5rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>
-                    <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
-                    <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>
-                    <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.distanceMeters}m</td>
-                    <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{formatDateTime(race.startTime)}</td>
-                    <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{race.minRating} – {race.maxRating}</td>
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>{statusBadge(race.status)}</td>
+              return (
+                <div key={race.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(201,162,39,0.14)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  {/* Top header row: ID, Class and Status badge */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227", fontWeight: "bold" }}>R-{race.id}</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#c9a227", background: "rgba(201,162,39,0.15)", padding: "2px 6px", borderRadius: "4px", fontWeight: "bold" }}>{formatClassLevel(race.classLevel)}</span>
+                      {statusBadge(race.status)}
+                    </div>
+                  </div>
 
-                    {/* Livestream */}
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
-                      {isCompleted ? (
-                        <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
-                      ) : race.youtubeLiveUrl ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
+                  {/* Mid details */}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "12px" }}>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Race Meeting</span>
+                      <span style={{ color: "#f4f2ec", fontWeight: 500 }}>{meetingName}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Track Type</span>
+                      <span style={{ color: "#f4f2ec", fontFamily: "monospace" }}>{race.trackType}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Purse & Rating</span>
+                      <span style={{ color: "#4a9d6f", fontWeight: "bold" }}>${race.purse.toLocaleString()}</span>
+                      <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "10px", display: "block" }}>({race.minRating}-{race.maxRating})</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Start Time</span>
+                      <span style={{ color: "rgba(255,255,255,0.6)", fontFamily: "monospace" }}>{formatDateTime(race.startTime)}</span>
+                    </div>
+                  </div>
+
+                  {/* Assigned Referee Mobile List */}
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "10px", display: "block" }}>Referees Assigned ({assigned.length})</span>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+                      {assigned.map(ref => (
+                        <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.125rem 0.5rem", borderRadius: "0.25rem", border: "1px solid #2e2e33" }}>
+                          <span>{ref.username}</span>
+                          {!isCompleted && (
+                            <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }}>×</button>
+                          )}
+                        </div>
+                      ))}
+                      {assigned.length === 0 && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px", fontStyle: "italic" }}>No referee assigned yet</span>}
+                    </div>
+                    {!isCompleted && (
+                      <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                        <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none", flex: 1 }}>
+                          <option value="">-- Assign Referee --</option>
+                          {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
+                            <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
+                          ))}
+                        </select>
+                        <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Livestream Controls Mobile */}
+                  {!isCompleted && (
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", flexDirection: "column", gap: "4px" }}>
+                      {race.youtubeLiveUrl ? (
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
                           </span>
-                          <button onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>End Live</button>
+                          <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>End Live</button>
                         </div>
                       ) : (
-                        race.status === "RUNNING" ? (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
-                            <input type="text" placeholder="YouTube URL" value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", width: 110 }} />
-                            <button onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>Go Live</button>
+                        race.status === "RUNNING" && (
+                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                            <input type="text" placeholder="YouTube URL" value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", flex: 1 }} />
+                            <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>Go Live</button>
                           </div>
-                        ) : (
-                          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
                         )
                       )}
-                    </td>
+                    </div>
+                  )}
 
-                    {/* Referee */}
-                    <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
-                        {assigned.map(ref => (
-                          <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.125rem 0.5rem", borderRadius: "0.25rem", border: "1px solid #2e2e33" }}>
-                            <span>{ref.username}</span>
-                            {!isCompleted && (
-                              <button onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }} title="Remove referee">×</button>
-                            )}
+                  {/* Action Row */}
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.75rem", display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      disabled={isCompleted}
+                      onClick={() => handleOpenEdit(race)}
+                      style={{
+                        padding: "0.5rem 1rem",
+                        borderRadius: "0.375rem",
+                        background: isCompleted ? "rgba(255,255,255,0.05)" : "#c9a227",
+                        color: isCompleted ? "rgba(255,255,255,0.2)" : "#0c0a09",
+                        border: "none",
+                        fontFamily: "monospace",
+                        fontSize: "11px",
+                        fontWeight: "bold",
+                        cursor: isCompleted ? "not-allowed" : "pointer"
+                      }}
+                    >
+                      Edit Schedule
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
+              <thead>
+                <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
+                  {["Race ID", "Race Meeting", "Class", "Track", "Distance", "Start Time", "Min-Max Rating", "Purse", "Status", "Livestream", "Assigned Referee", "Actions"].map(h => (
+                    <th key={h} style={{ padding: "0.75rem 1.5rem", textAlign: h === "Purse" || h === "Status" ? "right" : h === "Livestream" || h === "Assigned Referee" || h === "Actions" ? "center" : "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={12} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>Loading races database...</td></tr>
+                ) : races.length === 0 ? (
+                  <tr><td colSpan={12} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>No races found.</td></tr>
+                ) : races.map(race => {
+                  const assigned = refereesMap[race.id] || [];
+                  const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+
+                  return (
+                    <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
+                      <td style={{ padding: "1rem 1.5rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>
+                      <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
+                      <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>
+                      <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.distanceMeters}m</td>
+                      <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{formatDateTime(race.startTime)}</td>
+                      <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{race.minRating} – {race.maxRating}</td>
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}><span style={{ fontFamily: "monospace", fontSize: "14px", fontWeight: "bold", color: "#4a9d6f" }}>${race.purse.toLocaleString()}</span></td>
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>{statusBadge(race.status)}</td>
+
+                      {/* Livestream */}
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
+                        {isCompleted ? (
+                          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
+                        ) : race.youtubeLiveUrl ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
+                            <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
+                            </span>
+                            <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>End Live</button>
                           </div>
-                        ))}
-                        {!isCompleted && (
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
-                            <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none" }}>
-                              <option value="">-- Assign Referee --</option>
-                              {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
-                                <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
-                              ))}
-                            </select>
-                            <button onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
-                          </div>
+                        ) : (
+                          race.status === "RUNNING" ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
+                              <input type="text" placeholder="YouTube URL" value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", width: 110 }} />
+                              <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>Go Live</button>
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
+                          )
                         )}
-                      </div>
-                    </td>
+                      </td>
 
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                      {/* Referee */}
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
+                          {assigned.map(ref => (
+                            <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.125rem 0.5rem", borderRadius: "0.25rem", border: "1px solid #2e2e33" }}>
+                              <span>{ref.username}</span>
+                              {!isCompleted && (
+                                <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }} title="Remove referee">×</button>
+                              )}
+                            </div>
+                          ))}
+                          {!isCompleted && (
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                              <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none" }}>
+                                <option value="">-- Assign Referee --</option>
+                                {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
+                                  <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
+                                ))}
+                              </select>
+                              <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Edit button */}
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
+                        <button
+                          disabled={isCompleted}
+                          onClick={() => handleOpenEdit(race)}
+                          style={{
+                            padding: "0.375rem 0.75rem",
+                            borderRadius: "0.25rem",
+                            background: isCompleted ? "rgba(255,255,255,0.05)" : "#c9a227",
+                            color: isCompleted ? "rgba(255,255,255,0.2)" : "#0c0a09",
+                            border: "none",
+                            fontFamily: "monospace",
+                            fontSize: "10px",
+                            fontWeight: "bold",
+                            cursor: isCompleted ? "not-allowed" : "pointer"
+                          }}
+                        >
+                          Edit
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
         <div style={{ padding: "0.75rem 1.5rem", borderTop: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.012)" }}>
           <p style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)" }}>{races.length} races total inside current active season meetings.</p>
         </div>
@@ -564,8 +693,8 @@ export default function Race() {
                   {editError}
                 </div>
               )}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
-                <div style={{ gridColumn: "span 2" }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
+                <div style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
                   <label style={labelStyle}>Start Time</label>
                   <InlineDateTimePicker value={editStartTime} onChange={setEditStartTime} />
                 </div>

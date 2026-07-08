@@ -23,6 +23,16 @@ interface Horse {
 }
 
 export default function AdminHorseRetirement() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const [requests, setRequests] = useState<Request[]>([]);
   const [activeHorses, setActiveHorses] = useState<Horse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,9 +142,9 @@ export default function AdminHorseRetirement() {
       {error && <p style={{ color: "#ef4444", fontSize: "0.8rem", fontFamily: "monospace" }}>❌ {error}</p>}
       {success && <p style={{ color: "#4ade80", fontSize: "0.8rem", fontFamily: "monospace" }}>✅ {success}</p>}
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr minmax(260px,360px)", gap: "2rem", alignItems: "start" }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr minmax(260px,360px)", gap: "2rem", alignItems: "start" }}>
         {/* Left Column: Retirement Requests */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "2rem", order: isMobile ? 2 : undefined }}>
           {/* Pending Requests */}
           <div className="rounded-xl border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem" }}>
             <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.2rem", color: "#f4f2ec", marginBottom: "1rem" }}>Pending Retirement Requests</h3>
@@ -207,7 +217,7 @@ export default function AdminHorseRetirement() {
         </div>
 
         {/* Right Column: Compulsory Retirement */}
-        <div className="rounded-xl border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem" }}>
+        <div className="rounded-xl border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem", order: isMobile ? 1 : undefined }}>
           <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.2rem", color: "#f4f2ec", marginBottom: "1rem" }}>Compulsory Retirement</h3>
           <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1.25rem" }}>
             Forcibly retire any active horse from the HKJC circuit due to age (11+), rating limit (&le;25), injury, or behavioral safety issues.
