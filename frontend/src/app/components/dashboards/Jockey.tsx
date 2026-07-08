@@ -438,12 +438,57 @@ function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[]
 }
 
 function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAcknowledge: (id: number) => void }) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Rule Violations</h3>
       {violations.length === 0 ? (
         <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "3rem", textAlign: "center" }}>
           <p style={{ color: "#4ade80", fontFamily: "monospace", fontSize: "0.875rem" }}>✅ No rule violations recorded.</p>
+        </div>
+      ) : isMobile ? (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          {violations.map((v: any, i: number) => (
+            <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                <div>
+                  <h4 style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#f4f2ec" }}>{v.raceName}</h4>
+                  <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.45)", fontFamily: "monospace", display: "block", marginTop: "2px" }}>📅 {v.date}</span>
+                </div>
+                <span style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", fontWeight: "bold", fontFamily: "monospace" }}>
+                  {v.type}
+                </span>
+              </div>
+              <div style={{ fontSize: "0.8rem", color: "#f4f2ec", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem" }}>
+                <span style={{ color: "rgba(255,255,255,0.4)", display: "block", fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase" }}>Description:</span>
+                {v.description}
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "11px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem" }}>
+                <div>
+                  <span style={{ color: "rgba(255,255,255,0.4)" }}>Penalty:</span>
+                  <div style={{ color: "#c9a227", fontWeight: "bold", marginTop: "2px" }}>{v.penalty}</div>
+                </div>
+                <div>
+                  <span style={{ color: "rgba(255,255,255,0.4)" }}>Status:</span>
+                  <div style={{ color: v.status === "CONFIRMED" ? "#4ade80" : "#f87171", fontWeight: "bold", marginTop: "2px" }}>
+                    {v.status === "CONFIRMED" ? "Acknowledged" : "Pending Acknowledgment"}
+                  </div>
+                </div>
+              </div>
+              {v.status !== "CONFIRMED" && (
+                <button onClick={() => onAcknowledge(v.id)} style={{ width: "100%", marginTop: "0.5rem", padding: "0.5rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontWeight: "bold", cursor: "pointer" }}>
+                  Acknowledge
+                </button>
+              )}
+            </div>
+          ))}
         </div>
       ) : (
         <div className="rounded-xl overflow-x-auto" style={{ border: "1px solid #2a2825" }}>
