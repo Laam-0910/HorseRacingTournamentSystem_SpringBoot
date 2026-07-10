@@ -241,6 +241,21 @@ public class InvitationService {
             throw new IllegalStateException("REGISTRATION_CLOSED");
         }
 
+        // Kiểm tra xem nài ngựa đã bận lượt đăng ký nào khác hoạt động trong trận đấu này chưa
+        List<RaceEntry> activeEntries = raceEntryRepository.findByRaceId(entry.getRaceId());
+        boolean isJockeyBooked = activeEntries.stream()
+                .anyMatch(e -> !e.getId().equals(entryId) && e.getJockeyId().equals(entry.getJockeyId()) && !"REJECTED".equalsIgnoreCase(e.getStatus()));
+        if (isJockeyBooked) {
+            throw new IllegalStateException("JOCKEY_ALREADY_BOOKED");
+        }
+
+        // Kiểm tra xem chiến mã đã bận lượt đăng ký nào khác hoạt động trong trận đấu này chưa
+        boolean isHorseBooked = activeEntries.stream()
+                .anyMatch(e -> !e.getId().equals(entryId) && e.getHorseId().equals(entry.getHorseId()) && !"REJECTED".equalsIgnoreCase(e.getStatus()));
+        if (isHorseBooked) {
+            throw new IllegalStateException("HORSE_ALREADY_BOOKED");
+        }
+
         entry.setStatus("PENDING_ADMIN");
         raceEntryRepository.save(entry);
     }
