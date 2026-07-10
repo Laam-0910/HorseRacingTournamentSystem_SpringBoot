@@ -14,6 +14,17 @@ public class PythonStartupRunner {
 
     private Process pythonProcess;
 
+    // ── CHÚ THÍCH PHÂN TÍCH: ───────────────────────────────────────
+    // 1. @PostConstruct LÀ GÌ? Đây là một annotation của Spring. Khác với Hàm khởi tạo (Constructor),
+    //    nó chỉ chạy sau khi Spring Bean này đã được tạo xong và tất cả các Dependency (như logger, config, các Bean khác)
+    //    đã được tiêm (inject) đầy đủ. Sử dụng Constructor ở đây sẽ dễ bị lỗi NullPointerException do thiếu dependency.
+    // 2. ProcessBuilder LÀ GÌ? Đây là lớp của Java dùng để khởi tạo một Tiến trình Hệ điều hành thực tế (Native OS Process).
+    //    Ở đây ta gọi trình biên dịch "python" (hoặc "python3", "py") để thực thi tệp "ai_service.py" độc lập hoàn toàn với JVM.
+    // 3. TẠI SAO PHẢI CÓ LUỒNG RIÊNG (Thread / Multithreading)? Hàm readLine() để đọc log từ tiến trình con là một hàm
+    //    "gọi chặn" (blocking call). Nếu chạy vòng lặp while (readLine()) này trực tiếp trên luồng chính (Main Thread)
+    //    của Spring Boot, Main Thread sẽ bị treo vĩnh viễn (đóng băng) và Spring Boot sẽ không thể khởi động thành công.
+    //    Sử dụng luồng phụ "python-ai-log-reader" chạy song song (background thread) giúp ứng dụng chính khởi động bình thường
+    //    trong khi vẫn in log từ con AI ra màn hình.
     @PostConstruct
     public void startPythonServer() {
         // Tính đường dẫn tới thư mục ai_service (ở thư mục hiện tại hoặc thư mục cha nếu đang chạy từ backend/)
