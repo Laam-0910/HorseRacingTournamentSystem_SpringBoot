@@ -258,6 +258,28 @@ public class InvitationService {
 
         entry.setStatus("PENDING_ADMIN");
         raceEntryRepository.save(entry);
+
+        // Đặt trạng thái lời mời tương ứng trở lại thành ACCEPTED để đồng bộ dữ liệu
+        invitationRepository.findByJockeyIdAndRaceIdAndHorseId(entry.getJockeyId(), entry.getRaceId(), entry.getHorseId())
+                .stream()
+                .filter(i -> "REJECTED".equalsIgnoreCase(i.getStatus()))
+                .forEach(i -> {
+                    i.setStatus("ACCEPTED");
+                    invitationRepository.save(i);
+
+                    // Từ chối tất cả các lời mời đang chờ/đã chấp nhận khác cho ngựa hoặc nài ngựa này trong trận đua này
+                    List<RaceInvitation> allInvites = invitationRepository.findByRaceId(i.getRaceId());
+                    for (RaceInvitation other : allInvites) {
+                        if (!other.getId().equals(i.getId())) {
+                            if ("PENDING".equals(other.getStatus()) || "ACCEPTED".equals(other.getStatus())) {
+                                if (other.getHorseId().equals(i.getHorseId()) || other.getJockeyId().equals(i.getJockeyId())) {
+                                    other.setStatus("REJECTED");
+                                    invitationRepository.save(other);
+                                }
+                            }
+                        }
+                    }
+                });
     }
 
     @Transactional

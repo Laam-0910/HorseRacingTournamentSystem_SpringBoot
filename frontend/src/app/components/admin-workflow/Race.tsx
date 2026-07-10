@@ -367,7 +367,7 @@ export default function Race() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Create New Race */}
-      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
+      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)", position: "relative", zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)" }}>
           <div>
             <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Create New Race</p>
@@ -448,7 +448,7 @@ export default function Race() {
       </div>
 
       {/* Races Database */}
-      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
+      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)", position: "relative", zIndex: 1 }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)" }}>
           <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Races Database</p>
           <p style={{ fontSize: "10px", fontFamily: "monospace", marginTop: "2px", color: "rgba(255,255,255,0.4)" }}>List of all scheduled races across active meetings</p>
@@ -573,7 +573,7 @@ export default function Race() {
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
-                  {["Race ID", "Race Meeting", "Class", "Track", "Distance", "Start Time", "Min-Max Rating", "Purse", "Status", "Livestream", "Assigned Referee", "Actions"].map(h => (
+                  {["Race ID", "Actions", "Race Meeting", "Class", "Track", "Distance", "Start Time", "Min-Max Rating", "Purse", "Status", "Livestream", "Assigned Referee"].map(h => (
                     <th key={h} style={{ padding: "0.75rem 1.5rem", textAlign: h === "Purse" || h === "Status" ? "right" : h === "Livestream" || h === "Assigned Referee" || h === "Actions" ? "center" : "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
@@ -590,6 +590,28 @@ export default function Race() {
                   return (
                     <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                       <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
+                      
+                      {/* Edit button (Moved to 2nd column for horizontal scroll visibility) */}
+                      <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
+                        <button
+                          disabled={isCompleted}
+                          onClick={() => handleOpenEdit(race)}
+                          style={{
+                            padding: "0.375rem 0.75rem",
+                            borderRadius: "0.25rem",
+                            background: isCompleted ? "rgba(255,255,255,0.05)" : "#c9a227",
+                            color: isCompleted ? "rgba(255,255,255,0.2)" : "#0c0a09",
+                            border: "none",
+                            fontFamily: "monospace",
+                            fontSize: "10px",
+                            fontWeight: "bold",
+                            cursor: isCompleted ? "not-allowed" : "pointer"
+                          }}
+                        >
+                          Edit
+                        </button>
+                      </td>
+
                       <td style={{ padding: "1rem 1.5rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>
                       <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
                       <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>
@@ -645,27 +667,6 @@ export default function Race() {
                             </div>
                           )}
                         </div>
-                      </td>
-
-                      {/* Edit button */}
-                      <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
-                        <button
-                          disabled={isCompleted}
-                          onClick={() => handleOpenEdit(race)}
-                          style={{
-                            padding: "0.375rem 0.75rem",
-                            borderRadius: "0.25rem",
-                            background: isCompleted ? "rgba(255,255,255,0.05)" : "#c9a227",
-                            color: isCompleted ? "rgba(255,255,255,0.2)" : "#0c0a09",
-                            border: "none",
-                            fontFamily: "monospace",
-                            fontSize: "10px",
-                            fontWeight: "bold",
-                            cursor: isCompleted ? "not-allowed" : "pointer"
-                          }}
-                        >
-                          Edit
-                        </button>
                       </td>
                     </tr>
                   );
