@@ -1018,7 +1018,7 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }:
                     </div>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                       <StatusBadge status={displayStatus} />
-                      {inv.status === "ACCEPTED" && inv.entryStatus === "REJECTED" && (
+                      {inv.entryStatus === "REJECTED" && (
                         <button
                           type="button"
                           onClick={() => onResubmit(inv.entryId)}
@@ -1118,7 +1118,7 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }:
                         <td style={{ padding: "0.875rem 1.25rem" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                             <StatusBadge status={displayStatus} />
-                            {inv.status === "ACCEPTED" && inv.entryStatus === "REJECTED" && (
+                            {inv.entryStatus === "REJECTED" && (
                               <button
                                 type="button"
                                 onClick={() => onResubmit(inv.entryId)}
@@ -1223,12 +1223,6 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
                         {r.ratingAdjustment != null ? (r.ratingAdjustment > 0 ? `+${r.ratingAdjustment}` : r.ratingAdjustment) : "—"}
                       </span>
                     </div>
-                    <div>
-                      <span style={{ color: "rgba(255,255,255,0.4)", display: "block" }}>Prize Money</span>
-                      <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#4a9d6f" }}>
-                        ${(r.prizeMoney ?? r.prizeAmount ?? 0).toLocaleString()}
-                      </span>
-                    </div>
                   </div>
                 </div>
               ))
@@ -1239,14 +1233,14 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "800px" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                  {["Date", "Meeting", "Race Class", "Horse", "Pos", "Finish Time", "Rating Adj", "Prize"].map(h => (
+                  {["Date", "Meeting", "Race Class", "Horse", "Pos", "Finish Time", "Rating Adj"].map(h => (
                      <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {results.length === 0
-                  ? <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No race results available yet.</td></tr>
+                  ? <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>No race results available yet.</td></tr>
                   : results.map((r: any, i: number) => (
                     <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                       <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDate(r.startTime)}</td>
@@ -1261,9 +1255,6 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
                       <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{r.finishTime ?? "—"}</td>
                       <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", fontFamily: "monospace", color: r.ratingAdjustment > 0 ? "#4a9d6f" : r.ratingAdjustment < 0 ? "#ef5b5b" : "#a0a0a0" }}>
                         {r.ratingAdjustment != null ? (r.ratingAdjustment > 0 ? `+${r.ratingAdjustment}` : r.ratingAdjustment) : "—"}
-                      </td>
-                      <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontFamily: "monospace", fontWeight: 700, color: "#4a9d6f" }}>
-                        ${(r.prizeMoney ?? r.prizeAmount ?? 0).toLocaleString()}
                       </td>
                     </tr>
                   ))}
@@ -1386,6 +1377,14 @@ export default function HorseOwner() {
         setErrorMsg(lang === "vi" 
           ? "Thời gian đăng ký cho trận đấu này chưa bắt đầu." 
           : "Registration period for this race has not started yet.");
+      } else if (errMsg.includes("JOCKEY_ALREADY_BOOKED")) {
+        setErrorMsg(lang === "vi" 
+          ? "Nài ngựa này đã bận lịch thi đấu hoặc có lượt đăng ký hoạt động khác trong trận đấu này." 
+          : "This jockey is already booked or has another active entry in this race.");
+      } else if (errMsg.includes("HORSE_ALREADY_BOOKED")) {
+        setErrorMsg(lang === "vi" 
+          ? "Chiến mã này đã bận lịch thi đấu hoặc có lượt đăng ký hoạt động khác trong trận đấu này." 
+          : "This horse is already booked or has another active entry in this race.");
       } else {
         setErrorMsg(err.message || (lang === "vi" ? "Không thể gửi lại đăng ký chạy." : "Failed to resubmit race entry."));
       }

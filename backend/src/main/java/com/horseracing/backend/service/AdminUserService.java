@@ -28,6 +28,7 @@ public class AdminUserService {
     private final RaceMeetingRepository raceMeetingRepository;
     private final RaceRefereeRepository raceRefereeRepository;
     private final SeasonClassRuleRepository seasonClassRuleRepository;
+    private final RaceInvitationRepository invitationRepository;
 
     private final RaceEntryMapper raceEntryMapper;
     private final HorseMapper horseMapper;
@@ -295,6 +296,15 @@ public class AdminUserService {
                 .orElseThrow(() -> new IllegalArgumentException("Race entry not found"));
         entry.setStatus("REJECTED");
         raceEntryRepository.save(entry);
+
+        // Reject the corresponding invitation so the jockey is freed up
+        invitationRepository.findByJockeyIdAndRaceIdAndHorseId(entry.getJockeyId(), entry.getRaceId(), entry.getHorseId())
+                .stream()
+                .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()))
+                .forEach(i -> {
+                    i.setStatus("REJECTED");
+                    invitationRepository.save(i);
+                });
 
         autoCalculateWeights(entry.getRaceId());
     }
