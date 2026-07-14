@@ -25,6 +25,22 @@ function Icon({ name, color }: { name: string; color?: string }) {
   return <span style={{ display: "inline-flex", color: color || "currentColor" }}>{icon}</span>;
 }
 
+const translateSex = (sex: string, lang: string) => {
+  if (!sex) return "N/A";
+  if (lang === "vi") {
+    const map: Record<string, string> = {
+      Gelding: "Ngựa thiến",
+      Colt: "Ngựa đực con",
+      Filly: "Ngựa cái con",
+      Horse: "Ngựa đực",
+      Mare: "Ngựa cái"
+    };
+    return map[sex] || sex;
+  }
+  return sex;
+};
+
+
 const statusLabels: Record<string, Record<string, string>> = {
   SCHEDULED:          { vi: "Lịch trình", en: "Scheduled", zh: "已排程", ja: "予定" },
   DECLARATION_OPEN:   { vi: "Mở đăng ký", en: "Declaration Open", zh: "开启报名", ja: "登録受付中" },
@@ -1051,7 +1067,7 @@ export default function RefereeHub() {
                       <div>
                         <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Horse Details</label>
                         <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px", marginTop: "2px" }}>{item.horse?.name}</div>
-                        <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>{item.horse?.breed} · Rating: {item.horse?.currentRating}</div>
+                        <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex, lang)} · Rating: {item.horse?.currentRating}</div>
                       </div>
                       <div>
                         <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Jockey Details</label>
@@ -1159,7 +1175,7 @@ export default function RefereeHub() {
                         </td>
                         <td style={{ padding: "1rem" }}>
                           <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{item.horse?.name}</div>
-                          <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · Rating: {item.horse?.currentRating}</div>
+                          <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex, lang)} · Rating: {item.horse?.currentRating}</div>
                         </td>
                         <td style={{ padding: "1rem" }}>
                           <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "13px" }}>{item.jockey?.username}</div>
@@ -1638,7 +1654,7 @@ export default function RefereeHub() {
                         <div>
                           <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Horse Details</label>
                           <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px", marginTop: "2px" }}>{item.horse?.name}</div>
-                          <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>{item.horse?.breed} · Rating: {item.horse?.currentRating}</div>
+                          <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex, lang)} · Rating: {item.horse?.currentRating}</div>
                         </div>
                         <div>
                           <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Jockey Details</label>
@@ -1735,7 +1751,7 @@ export default function RefereeHub() {
                           </td>
                           <td style={{ padding: "1rem" }}>
                             <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{item.horse?.name}</div>
-                            <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · Rating: {item.horse?.currentRating}</div>
+                            <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex, lang)} · Rating: {item.horse?.currentRating}</div>
                           </td>
                           <td style={{ padding: "1rem" }}>
                             <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "13px" }}>{item.jockey?.username}</div>
