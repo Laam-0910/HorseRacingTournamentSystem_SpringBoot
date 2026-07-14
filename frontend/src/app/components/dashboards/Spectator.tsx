@@ -493,7 +493,6 @@ export default function Spectator() {
                                     </div>
                                     <div style={{ textAlign: "right", flexShrink: 0 }}>
                                       <div style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#f4f2ec" }}>{e.entry?.finishTime || "--:--"}</div>
-                                      <div style={{ fontSize: "0.7rem", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</div>
                                     </div>
                                   </div>
                                 );
@@ -771,25 +770,7 @@ export default function Spectator() {
                 </div>
               </div>
 
-              {/* Total Prize Money */}
-              <div className="rounded-xl" style={{ 
-                background: "linear-gradient(135deg, rgba(10,185,129,0.1) 0%, rgba(21,19,16,0.6) 100%)", 
-                border: "1px solid rgba(16,185,129,0.25)", 
-                padding: "1.25rem", 
-                display: "flex", 
-                alignItems: "center",
-                gap: "1rem"
-              }}>
-                <div style={{ fontSize: "2rem" }}>💰</div>
-                <div>
-                  <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", display: "block" }}>
-                    {lang === "vi" ? "Tổng tiền thưởng đã phát" : "Total Prize Distributed"}
-                  </span>
-                  <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "#10b981", fontFamily: "monospace" }}>
-                    ${(statsData.totalPrizeDistributed || 0).toLocaleString()}
-                  </span>
-                </div>
-              </div>
+
 
               {/* Active Jockeys */}
               <div className="rounded-xl" style={{ 

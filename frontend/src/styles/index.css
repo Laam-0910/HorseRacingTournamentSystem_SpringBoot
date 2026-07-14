@@ -402,3 +402,32 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 }
 
+/* =============================================
+   CUSTOM DARK SCROLLBARS
+   ============================================= */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #110f0e !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 162, 39, 0.25) !important;
+  border-radius: 4px !important;
+  border: 1px solid #110f0e !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 162, 39, 0.5) !important;
+}
+
+/* For Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(201, 162, 39, 0.25) #110f0e;
+}
+
+

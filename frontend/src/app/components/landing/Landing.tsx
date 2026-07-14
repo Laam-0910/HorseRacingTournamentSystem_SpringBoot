@@ -1395,9 +1395,6 @@ export default function Landing() {
                                   </div>
                                   <div style={{ textAlign: "right", flexShrink: 0, fontSize: "12px", fontFamily: "monospace" }}>
                                     <div style={{ color: "#f0f0f0", fontWeight: "bold" }}>{e.entry?.finishTime || "--:--"}</div>
-                                    <div style={{ color: "#4a9d6f", fontWeight: "bold", marginTop: "2px" }}>
-                                      ${e.entry?.prizeMoney?.toLocaleString() || "0"}
-                                    </div>
                                   </div>
                                 </div>
                               );
@@ -1416,7 +1413,6 @@ export default function Landing() {
                                   <th style={{ padding: "0.5rem" }}>Jockey</th>
                                   <th style={{ padding: "0.5rem" }}>Owner</th>
                                   <th style={{ padding: "0.5rem" }}>Finish Time</th>
-                                  <th style={{ padding: "0.5rem" }}>Prize Money</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -1437,11 +1433,10 @@ export default function Landing() {
                                     <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
                                     <td style={{ padding: "0.5rem" }}>{e.owner?.fullName || e.owner?.username}</td>
                                     <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
-                                    <td style={{ padding: "0.5rem", fontFamily: "monospace", color: "#4a9d6f", fontWeight: "bold" }}>${e.entry?.prizeMoney?.toLocaleString() || "0"}</td>
                                   </tr>
                                 ))}
                                 {selectedRaceEntries.length === 0 && (
-                                  <tr><td colSpan={6} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No entry logs available.</td></tr>
+                                  <tr><td colSpan={5} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No entry logs available.</td></tr>
                                 )}
                               </tbody>
                             </table>

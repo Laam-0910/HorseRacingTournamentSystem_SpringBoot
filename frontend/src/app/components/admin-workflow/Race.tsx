@@ -486,9 +486,8 @@ export default function Race() {
                       <span style={{ color: "#f4f2ec", fontFamily: "monospace" }}>{race.trackType}</span>
                     </div>
                     <div>
-                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Purse & Rating</span>
-                      <span style={{ color: "#4a9d6f", fontWeight: "bold" }}>${race.purse.toLocaleString()}</span>
-                      <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "10px", display: "block" }}>({race.minRating}-{race.maxRating})</span>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Rating Limits</span>
+                      <span style={{ color: "#fbbf24", fontWeight: "bold" }}>{race.minRating} – {race.maxRating}</span>
                     </div>
                     <div>
                       <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Start Time</span>
@@ -573,8 +572,8 @@ export default function Race() {
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
-                  {["Race ID", "Actions", "Race Meeting", "Class", "Track", "Distance", "Start Time", "Min-Max Rating", "Purse", "Status", "Livestream", "Assigned Referee"].map(h => (
-                    <th key={h} style={{ padding: "0.75rem 1.5rem", textAlign: h === "Purse" || h === "Status" ? "right" : h === "Livestream" || h === "Assigned Referee" || h === "Actions" ? "center" : "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{h}</th>
+                  {["Race ID", "Actions", "Race Meeting", "Class", "Track", "Distance", "Start Time", "Min-Max Rating", "Status", "Livestream", "Assigned Referee"].map(h => (
+                    <th key={h} style={{ padding: "0.75rem 0.75rem", textAlign: h === "Status" ? "right" : h === "Livestream" || h === "Assigned Referee" || h === "Actions" ? "center" : "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -589,10 +588,10 @@ export default function Race() {
 
                   return (
                     <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
+                      <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
                       
                       {/* Edit button (Moved to 2nd column for horizontal scroll visibility) */}
-                      <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
+                      <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
                         <button
                           disabled={isCompleted}
                           onClick={() => handleOpenEdit(race)}
@@ -612,17 +611,17 @@ export default function Race() {
                         </button>
                       </td>
 
-                      <td style={{ padding: "1rem 1.5rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>
-                      <td style={{ padding: "1rem 1.5rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
-                      <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>
-                      <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.distanceMeters}m</td>
-                      <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{formatDateTime(race.startTime)}</td>
-                      <td style={{ padding: "1rem 1.5rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{race.minRating} – {race.maxRating}</td>
-                      <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}><span style={{ fontFamily: "monospace", fontSize: "14px", fontWeight: "bold", color: "#4a9d6f" }}>${race.purse.toLocaleString()}</span></td>
-                      <td style={{ padding: "1rem 1.5rem", textAlign: "right" }}>{statusBadge(race.status)}</td>
+                      <td style={{ padding: "0.75rem 0.75rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>
+                      <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
+                      <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>
+                      <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.distanceMeters}m</td>
+                      <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{formatDateTime(race.startTime)}</td>
+                      <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{race.minRating} – {race.maxRating}</td>
+
+                      <td style={{ padding: "0.75rem 0.75rem", textAlign: "right" }}>{statusBadge(race.status)}</td>
 
                       {/* Livestream */}
-                      <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
+                      <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
                         {isCompleted ? (
                           <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
                         ) : race.youtubeLiveUrl ? (
@@ -645,7 +644,7 @@ export default function Race() {
                       </td>
 
                       {/* Referee */}
-                      <td style={{ padding: "1rem 1.5rem", textAlign: "center" }}>
+                      <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
                           {assigned.map(ref => (
                             <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.125rem 0.5rem", borderRadius: "0.25rem", border: "1px solid #2e2e33" }}>
