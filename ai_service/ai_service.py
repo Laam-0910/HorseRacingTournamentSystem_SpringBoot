@@ -81,6 +81,16 @@ def top_horses():
     )
 
 def top_jockeys():
+    # ── HÀM LẤY DANH SÁCH 5 NÀI NGỰA XUẤT SẮC NHẤT ─────────────────────────────────────
+    # [GIẢI THÍCH]:
+    # 1. BẢNG [RaceEntry] LÀ GÌ? Đây là bảng trung gian lưu lịch sử thi đấu của từng cặp nài ngựa + ngựa.
+    #    Chúng ta đếm số lần nài ngựa về NHẤT (final_position = 1) để biết số trận thắng (wins).
+    # 2. TẠI SAO DÙNG LEFT JOIN? Để đảm bảo những nài ngựa mới đăng ký (chưa thắng trận nào, wins = NULL)
+    #    vẫn được liệt kê đầy đủ trong danh sách hoạt động, thay vì bị loại bỏ khỏi bảng kết quả.
+    # 3. HÀM COALESCE(w.wins, 0) LÀM GÌ? Nó kiểm tra nếu cột wins bị NULL (do chưa thắng trận nào), 
+    #    thì tự động thay thế bằng số 0 để hiển thị trên giao diện đẹp mắt và tránh lỗi tính toán.
+    # 4. BÍ DANH (AS totalWins, totalRacesParticipated...) ĐỂ LÀM GÌ? Các bí danh này được đặt theo dạng camelCase
+    #    để tương thích khớp 100% với các key của Object mà Frontend/Backend Java đang sử dụng.
     return query(
         "SELECT TOP 5 u.username, u.total_races_participated AS totalRacesParticipated, "
         "COALESCE(w.wins, 0) AS totalWins, u.total_top3_finishes AS totalTop3Finishes, u.weight "

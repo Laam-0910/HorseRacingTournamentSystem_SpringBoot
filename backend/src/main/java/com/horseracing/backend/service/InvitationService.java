@@ -241,8 +241,45 @@ public class InvitationService {
             throw new IllegalStateException("REGISTRATION_CLOSED");
         }
 
+        // Kiểm tra xem nài ngựa đã bận lượt đăng ký nào khác hoạt động trong trận đấu này chưa
+        List<RaceEntry> activeEntries = raceEntryRepository.findByRaceId(entry.getRaceId());
+        boolean isJockeyBooked = activeEntries.stream()
+                .anyMatch(e -> !e.getId().equals(entryId) && e.getJockeyId().equals(entry.getJockeyId()) && !"REJECTED".equalsIgnoreCase(e.getStatus()));
+        if (isJockeyBooked) {
+            throw new IllegalStateException("JOCKEY_ALREADY_BOOKED");
+        }
+
+        // Kiểm tra xem chiến mã đã bận lượt đăng ký nào khác hoạt động trong trận đấu này chưa
+        boolean isHorseBooked = activeEntries.stream()
+                .anyMatch(e -> !e.getId().equals(entryId) && e.getHorseId().equals(entry.getHorseId()) && !"REJECTED".equalsIgnoreCase(e.getStatus()));
+        if (isHorseBooked) {
+            throw new IllegalStateException("HORSE_ALREADY_BOOKED");
+        }
+
         entry.setStatus("PENDING_ADMIN");
         raceEntryRepository.save(entry);
+
+        // Đặt trạng thái lời mời tương ứng trở lại thành ACCEPTED để đồng bộ dữ liệu
+        invitationRepository.findByJockeyIdAndRaceIdAndHorseId(entry.getJockeyId(), entry.getRaceId(), entry.getHorseId())
+                .stream()
+                .filter(i -> "REJECTED".equalsIgnoreCase(i.getStatus()))
+                .forEach(i -> {
+                    i.setStatus("ACCEPTED");
+                    invitationRepository.save(i);
+
+                    // Từ chối tất cả các lời mời đang chờ/đã chấp nhận khác cho ngựa hoặc nài ngựa này trong trận đua này
+                    List<RaceInvitation> allInvites = invitationRepository.findByRaceId(i.getRaceId());
+                    for (RaceInvitation other : allInvites) {
+                        if (!other.getId().equals(i.getId())) {
+                            if ("PENDING".equals(other.getStatus()) || "ACCEPTED".equals(other.getStatus())) {
+                                if (other.getHorseId().equals(i.getHorseId()) || other.getJockeyId().equals(i.getJockeyId())) {
+                                    other.setStatus("REJECTED");
+                                    invitationRepository.save(other);
+                                }
+                            }
+                        }
+                    }
+                });
     }
 
     @Transactional
