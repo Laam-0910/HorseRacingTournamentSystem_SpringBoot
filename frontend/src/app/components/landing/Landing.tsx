@@ -1144,56 +1144,46 @@ export default function Landing() {
                 <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "14px" }}>No live broadcast currently. There are no races running right now.</p>
               </div>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, minmax(0, 1fr))", gap: "1.5rem" }}>
-                <div className="lg:col-span-2" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-                  {liveRaces.map((r, i) => {
-                    const embedUrl = r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "";
-                    return (
-                      <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "rgba(201,162,39,0.2)", padding: "1.25rem" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-                          <h4 style={{ fontWeight: 700, color: "#f0f0f0" }}>{r.classLevel} - Race #{r.id}</h4>
-                          <span style={{ color: "#ef4444", fontWeight: "bold", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
-                          </span>
-                        </div>
-                        {embedUrl ? (
-                          <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "0.5rem", border: "1px solid #2a2825" }}>
-                            {r.youtubeLiveUrl && (
-                              r.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
-                              r.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
-                              r.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
-                              r.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
-                              r.youtubeLiveUrl.toLowerCase().includes("/stream") ||
-                              r.youtubeLiveUrl.toLowerCase().includes(".mp4?")
-                            ) ? (
-                              <video
-                                src={r.youtubeLiveUrl}
-                                controls
-                                autoPlay
-                                muted
-                                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
-                              />
-                            ) : (
-                              <iframe src={embedUrl} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }} allowFullScreen></iframe>
-                            )}
-                          </div>
-                        ) : (
-                          <div style={{ height: 260, background: "#111", borderRadius: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #2a2825" }}>
-                            <p style={{ color: "#a0a0a0", fontSize: "12px", fontFamily: "monospace" }}>Video broadcast stream not linked yet.</p>
-                          </div>
-                        )}
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+                {liveRaces.map((r, i) => {
+                  const embedUrl = r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "";
+                  return (
+                    <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "rgba(201,162,39,0.2)", padding: "1.25rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
+                        <h4 style={{ fontWeight: 700, color: "#f0f0f0" }}>{r.classLevel} - Race #{r.id}</h4>
+                        <span style={{ color: "#ef4444", fontWeight: "bold", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-                <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.01)", borderColor: "#2a2825", padding: "1.25rem", display: "flex", flexDirection: "column", height: 400 }}>
-                  <h5 style={{ fontFamily: "monospace", fontSize: "11px", color: "#c9a227", textTransform: "uppercase", marginBottom: "0.5rem" }}>Live Spectator Chat</h5>
-                  <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: "0.5rem", fontSize: "12px" }}>
-                    <p><strong style={{ color: "#c9a227" }}>spectator_99:</strong> Horse #3 looks very fast today!</p>
-                    <p><strong style={{ color: "#c9a227" }}>john_doe:</strong> Great turf condition.</p>
-                    <p><strong style={{ color: "#c9a227" }}>jockey_fan:</strong> Jockey weight is perfectly adjusted.</p>
-                  </div>
-                </div>
+                      {embedUrl ? (
+                        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "0.5rem", border: "1px solid #2a2825" }}>
+                          {r.youtubeLiveUrl && (
+                            r.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
+                            r.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
+                            r.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
+                            r.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
+                            r.youtubeLiveUrl.toLowerCase().includes("/stream") ||
+                            r.youtubeLiveUrl.toLowerCase().includes(".mp4?")
+                          ) ? (
+                            <video
+                              src={r.youtubeLiveUrl}
+                              controls
+                              autoPlay
+                              muted
+                              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                            />
+                          ) : (
+                            <iframe src={embedUrl} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }} allowFullScreen></iframe>
+                          )}
+                        </div>
+                      ) : (
+                        <div style={{ height: 260, background: "#111", borderRadius: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #2a2825" }}>
+                          <p style={{ color: "#a0a0a0", fontSize: "12px", fontFamily: "monospace" }}>Video broadcast stream not linked yet.</p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -1666,33 +1656,7 @@ export default function Landing() {
                     </div>
                   )}
                 </div>
-                {/* Bell */}
-                <div style={{ position: "relative" }}>
-                  <button onClick={() => setShowNotifications(v => !v)} style={{ position: "relative", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", display: "flex", padding: "0.25rem" }}>
-                    🔔
-                    <span style={{ position: "absolute", top: 0, right: 0, width: 8, height: 8, borderRadius: "50%", background: "#c9a227" }} />
-                  </button>
-                  {showNotifications && (
-                    <div style={{ position: "absolute", right: 0, marginTop: "0.75rem", width: "16rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.5rem", zIndex: 9999, overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
-                      <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #2a2825", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#1a1815" }}>
-                        <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#fff", fontFamily: "'Roboto Slab', serif" }}>{t.notifications}</span>
-                        <button onClick={() => setShowNotifications(false)} style={{ background: "none", border: "none", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", cursor: "pointer" }}>{t.clearAll}</button>
-                      </div>
-                      {[
-                        { icon: "🏆", color: "#c9a227", bg: "rgba(201,162,39,0.1)", title: "Tournament 2026", desc: "Registrations are now open!", time: "10m ago" },
-                        { icon: "📅", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", title: "Race Meeting", desc: "Gold Cup Championship starts Sunday.", time: "2h ago" },
-                      ].map((n, i) => (
-                        <div key={i} style={{ padding: "0.875rem", display: "flex", gap: "0.75rem", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
-                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: n.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.875rem", flexShrink: 0 }}>{n.icon}</div>
-                          <div style={{ overflow: "hidden" }}>
-                            <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.title}</p>
-                            <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.5)", marginTop: "0.25rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.desc}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+
               </div>
             )}
           </div>
@@ -1746,54 +1710,7 @@ export default function Landing() {
                 )}
               </div>
 
-              {/* Bell */}
-              <div style={{ position: "relative" }}>
-                {(() => {
-                  const dynamicNotifications = getDynamicNotifications();
-                  const handleClearAll = () => {
-                    const allIds = dynamicNotifications.map(n => n.id);
-                    setClearedNotifications(prev => {
-                      const next = [...prev, ...allIds];
-                      localStorage.setItem("cleared-notifications", JSON.stringify(next));
-                      return next;
-                    });
-                  };
 
-                  return (
-                    <>
-                      <button onClick={() => setShowNotifications(v => !v)} style={{ position: "relative", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", display: "flex", padding: "0.25rem" }}>
-                        🔔
-                        {dynamicNotifications.length > 0 && (
-                          <span style={{ position: "absolute", top: 0, right: 0, width: 8, height: 8, borderRadius: "50%", background: "#c9a227" }} />
-                        )}
-                      </button>
-                      {showNotifications && (
-                        <div style={{ position: "absolute", right: 0, marginTop: "0.75rem", width: "20rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.5rem", zIndex: 50, overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
-                          <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid #2a2825", display: "flex", justifyContent: "space-between", alignItems: "center", background: "#1a1815" }}>
-                            <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#fff", fontFamily: "'Roboto Slab', serif" }}>{t.notifications}</span>
-                            {dynamicNotifications.length > 0 && (
-                              <button onClick={handleClearAll} style={{ background: "none", border: "none", color: "#c9a227", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", cursor: "pointer" }}>{t.clearAll}</button>
-                            )}
-                          </div>
-                          {dynamicNotifications.map((n, i) => (
-                            <div key={i} style={{ padding: "0.875rem", display: "flex", gap: "0.75rem", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
-                              <div style={{ width: 28, height: 28, borderRadius: "50%", background: n.bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.875rem", flexShrink: 0 }}>{n.icon}</div>
-                              <div>
-                                <p style={{ fontSize: "0.75rem", color: "#fff", fontWeight: 500 }}>{n.title}</p>
-                                <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.5)", marginTop: "0.25rem" }}>{n.desc}</p>
-                                <span style={{ fontSize: "0.55rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{n.time}</span>
-                              </div>
-                            </div>
-                          ))}
-                          {dynamicNotifications.length === 0 && (
-                            <div style={{ padding: "1.5rem 1rem", textAlign: "center", background: "#1a1815", fontSize: "0.65rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>{t.noNotifications}</div>
-                          )}
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
-              </div>
 
               {/* Auth Controls */}
               {user ? (
