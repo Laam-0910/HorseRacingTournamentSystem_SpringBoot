@@ -2,6 +2,7 @@
 -- HORSE RACING DATABASE - Microsoft SQL Server
 -- Updated: Thêm cột full_name (NVARCHAR(100)) và avatar (VARCHAR(MAX)) vào bảng [User]
 --          Đăng nhập bằng username (hoặc email), full_name là tên hiển thị có thể thay đổi
+--          Cập nhật: Thêm trạng thái 'FINISHED' vào CK_Race_Status của bảng Race
 -- ==========================================
 
 USE master;
@@ -129,7 +130,7 @@ CREATE TABLE Race (
     start_time              DATETIME NOT NULL,
     registration_start_time DATETIME NOT NULL,         -- Mốc mở cổng đăng ký
     registration_end_time   DATETIME NOT NULL,         -- Hạn chốt đăng ký (Deadline)
-    status                  VARCHAR(50) NOT NULL DEFAULT 'SCHEDULED', -- SCHEDULED, DECLARATION_OPEN, DECLARATION_CLOSED, RACE_ASSIGNED, RUNNING, STEWARDS_INQUIRY, OFFICIAL, CANCELLED, RACE_EVENT_ENDED
+    status                  VARCHAR(50) NOT NULL DEFAULT 'SCHEDULED', 
     class_level             VARCHAR(50) NULL,               
     min_rating              INT NULL,
     max_rating              INT NULL,
@@ -140,7 +141,8 @@ CREATE TABLE Race (
     max_entries             INT NOT NULL DEFAULT 14,
     steward_report          NVARCHAR(MAX) NULL,        -- Báo cáo/biên bản giám sát của Trọng tài sau trận
     youtube_live_url        VARCHAR(500) NULL,          -- Đường dẫn YouTube Livestream
-    CONSTRAINT CK_Race_Status CHECK (status IN ('SCHEDULED', 'DECLARATION_OPEN', 'DECLARATION_CLOSED', 'RACE_ASSIGNED', 'RUNNING', 'STEWARDS_INQUIRY', 'OFFICIAL', 'CANCELLED', 'RACE_EVENT_ENDED', 'STOPPED'))
+    -- Đã bổ sung trạng thái 'FINISHED' vào danh sách check dưới đây
+    CONSTRAINT CK_Race_Status CHECK (status IN ('SCHEDULED', 'DECLARATION_OPEN', 'DECLARATION_CLOSED', 'RACE_ASSIGNED', 'RUNNING', 'STEWARDS_INQUIRY', 'FINISHED', 'OFFICIAL', 'CANCELLED', 'RACE_EVENT_ENDED', 'STOPPED'))
 );
 GO
 
