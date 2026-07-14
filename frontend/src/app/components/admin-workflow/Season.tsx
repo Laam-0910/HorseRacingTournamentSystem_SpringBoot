@@ -424,7 +424,7 @@ export default function Season() {
               <div className="rounded-xl p-5 border space-y-3" style={{ background: "rgba(255,255,255,0.015)", borderColor: "rgba(201,162,39,0.15)" }}>
                 <div>
                   <p className="text-[9px] font-mono uppercase tracking-widest text-[#c9a227]">Configure Season Classes (Manual Mode)</p>
-                  <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Adjust ratings and prize ranges for the 5 season classes before initialization:</p>
+                  <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Adjust ratings for the 5 season classes before initialization:</p>
                 </div>
                 <div className="overflow-x-auto pt-2">
                   <table className="w-full text-xs font-mono text-left min-w-[600px]">
@@ -433,8 +433,6 @@ export default function Season() {
                         <th className="py-2 pr-4 text-left">Class Level</th>
                         <th className="py-2 px-4 text-left">Min Rating</th>
                         <th className="py-2 px-4 text-left">Max Rating</th>
-                        <th className="py-2 px-4 text-left">Min Prize ($)</th>
-                        <th className="py-2 pl-4 text-left">Max Prize ($)</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
@@ -458,28 +456,6 @@ export default function Season() {
                               onChange={e => updateManualRule(index, "maxRating", e.target.value)}
                               placeholder="No limit"
                               className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-24"
-                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
-                            />
-                          </td>
-                          <td className="py-2 px-4">
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={rule.minPrize ?? ""}
-                              onChange={e => updateManualRule(index, "minPrize", e.target.value)}
-                              required
-                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-32"
-                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
-                            />
-                          </td>
-                          <td className="py-2 pl-4">
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={rule.maxPrize ?? ""}
-                              onChange={e => updateManualRule(index, "maxPrize", e.target.value)}
-                              required
-                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-32"
                               style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
                             />
                           </td>
@@ -637,7 +613,7 @@ export default function Season() {
                 <div key={rule.id} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(201,162,39,0.12)" }}>
                   <p className="text-[10px] font-mono font-bold" style={{ color: "#c9a227" }}>{rule.classLevel}</p>
                   <p className="text-[9px] font-mono mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>Rating: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
-                  <p className="text-[9px] font-mono" style={{ color: "rgba(255,255,255,0.4)" }}>Prize: ${rule.minPrize?.toLocaleString()} – ${rule.maxPrize?.toLocaleString()}</p>
+
                 </div>
               ))}
             </div>
