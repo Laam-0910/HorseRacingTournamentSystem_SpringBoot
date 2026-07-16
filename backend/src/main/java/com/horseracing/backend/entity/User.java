@@ -49,13 +49,14 @@ public class User implements Serializable {
     @Column(name = "require_otp")
     private Boolean requireOtp = false;
 
-    @Column(name = "avatar")
+    @Column(name = "avatar", columnDefinition = "VARCHAR(MAX)")
     private String avatar;
 
     @Column(name = "full_name")
     private String fullName;
 
-
+    @Column(name = "biography", columnDefinition = "NVARCHAR(MAX)")
+    private String biography;
 
 
 

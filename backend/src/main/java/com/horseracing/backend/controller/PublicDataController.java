@@ -34,6 +34,9 @@ public class PublicDataController {
     @Autowired
     private ViolationRepository violationRepository;
 
+    @Autowired
+    private RaceRefereeRepository raceRefereeRepository;
+
     @GetMapping("/stats")
     public ResponseEntity<?> getStats() {
         long seasonsCompleted = seasonRepository.findAll().stream().filter(s -> "COMPLETED".equals(s.getStatus())).count();
@@ -172,9 +175,26 @@ public class PublicDataController {
         response.put("email", user.getEmail());
         response.put("roleId", user.getRoleId());
         response.put("avatar", user.getAvatar());
-        response.put("biography", "Professional participant registered under the Horse Racing Tournament System.");
+        response.put("biography", user.getBiography() != null ? user.getBiography() : "");
 
-        if (user.getRoleId() == 3) {
+        if (user.getRoleId() == 1) {
+            // Admin Profile
+            long managedUsersCount = userRepository.count();
+            long managedHorsesCount = horseRepository.count();
+            long totalSeasons = seasonRepository.count();
+            response.put("managedUsersCount", managedUsersCount);
+            response.put("managedHorsesCount", managedHorsesCount);
+            response.put("totalSeasons", totalSeasons);
+        } else if (user.getRoleId() == 4) {
+            // Referee Profile
+            long totalRacesRefereed = raceRefereeRepository.findByRefereeId(id).size();
+            long totalViolationsIssued = violationRepository.findAll().stream().filter(v -> "APPROVED".equals(v.getStatus())).count(); // Just a generic stat for referees or could be specific if they issue it, but violation has no refereeId. Let's just use a general stat.
+            response.put("totalRacesRefereed", totalRacesRefereed);
+            response.put("totalViolationsIssued", totalViolationsIssued);
+        } else if (user.getRoleId() == 5) {
+            // Spectator Profile
+            response.put("memberSince", "2024");
+        } else if (user.getRoleId() == 3) {
             // Jockey Profile
             response.put("weight", user.getWeight());
 

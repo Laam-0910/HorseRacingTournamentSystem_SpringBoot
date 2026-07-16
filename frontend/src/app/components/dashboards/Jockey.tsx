@@ -134,14 +134,19 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const lang = localStorage.getItem("app-lang") || "vi";
+  const title = lang === "vi" ? "Ngựa của tôi" : "My Mounts";
+  const loadingText = lang === "vi" ? "Đang tải..." : "Loading...";
+  const emptyText = lang === "vi" ? "Hiện tại chưa có cuộc đua nào được xếp lịch." : "No scheduled mounts at the moment.";
+
   if (isMobile) {
     return (
       <div>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>My Mounts</h3>
+        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{title}</h3>
         {loading ? (
-          <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem" }}>Loading...</p>
+          <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem" }}>{loadingText}</p>
         ) : mounts.length === 0 ? (
-          <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem", fontFamily: "monospace" }}>No scheduled mounts at the moment.</p>
+          <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem", fontFamily: "monospace" }}>{emptyText}</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {mounts.map((m, i) => (
@@ -183,21 +188,21 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
 
   return (
     <div>
-      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>My Mounts</h3>
+      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{title}</h3>
       <div className="rounded-xl overflow-x-auto" style={{ border: "1px solid #2a2825" }}>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: `rgba(59,130,196,0.08)`, borderBottom: "1px solid #2a2825" }}>
-              {["Race ID", "Horse", "Gate", "Weight (kg)", "Status"].map(h => (
+              {(lang === "vi" ? ["ID Trận", "Tên ngựa", "Cửa (Gate)", "Cân nặng (kg)", "Trạng thái"] : ["Race ID", "Horse", "Gate", "Weight (kg)", "Status"]).map(h => (
                 <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>Loading...</td></tr>
+              <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{loadingText}</td></tr>
             ) : mounts.length === 0 ? (
-              <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>No scheduled mounts at the moment.</td></tr>
+              <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>{emptyText}</td></tr>
             ) : mounts.map((m, i) => (
               <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
                 <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", color: "#a0a0a0" }}>#{m.raceId}</td>
@@ -446,12 +451,16 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const lang = localStorage.getItem("app-lang") || "vi";
+  const title = lang === "vi" ? "Vi phạm luật" : "Rule Violations";
+  const emptyText = lang === "vi" ? "✅ Không có vi phạm nào được ghi nhận." : "✅ No rule violations recorded.";
+
   return (
     <div>
-      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Rule Violations</h3>
+      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{title}</h3>
       {violations.length === 0 ? (
         <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "3rem", textAlign: "center" }}>
-          <p style={{ color: "#4ade80", fontFamily: "monospace", fontSize: "0.875rem" }}>✅ No rule violations recorded.</p>
+          <p style={{ color: "#4ade80", fontFamily: "monospace", fontSize: "0.875rem" }}>{emptyText}</p>
         </div>
       ) : isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>

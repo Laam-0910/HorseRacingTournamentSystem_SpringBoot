@@ -144,8 +144,8 @@ public class HorseService {
     }
 
     private void validateAvatarSize(String avatar) {
-        if (avatar != null && avatar.length() > 2097152) {
-            throw new IllegalArgumentException("Avatar image size exceeds 1.5MB limit");
+        if (avatar != null && avatar.length() > 7000000) {
+            throw new IllegalArgumentException("Avatar image size exceeds 5MB limit");
         }
     }
 }
