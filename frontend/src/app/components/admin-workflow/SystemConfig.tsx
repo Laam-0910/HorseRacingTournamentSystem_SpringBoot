@@ -1,6 +1,14 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 
+const CONFIG_DESC_MAP: Record<string, string> = {
+  MAX_TOP_WEIGHT: "Maximum top weight (kg)",
+  MIN_BOTTOM_WEIGHT: "Minimum bottom weight (kg)",
+  WEIGHT_PER_POINT: "Weight adjustment (kg) per 1 rating point difference",
+  MAX_OVERWEIGHT_ALLOWED: "Maximum overweight allowed for jockeys (kg)",
+  SEX_ALLOWANCE: "Sex weight allowance for female horses (Fillies/Mares) (kg)",
+};
+
 export default function SystemConfig() {
   const [configs, setConfigs] = useState<any[]>([]);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
@@ -89,7 +97,7 @@ export default function SystemConfig() {
                         {c.configKey}
                       </label>
                       <p style={{ fontSize: "9px", marginTop: "0.125rem", color: "rgba(255,255,255,0.4)" }}>
-                        {c.description || "System parameter"}
+                        {CONFIG_DESC_MAP[c.configKey] || c.description || "System parameter"}
                       </p>
                     </div>
                   </div>
