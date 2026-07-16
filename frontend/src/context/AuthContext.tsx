@@ -10,6 +10,9 @@ export interface AuthUser {
   fullName?: string;
   weight?: number;
   requireOtp?: boolean;
+  totalRacesParticipated?: number;
+  totalTop3Finishes?: number;
+  biography?: string;
 }
 
 interface AuthContextType {

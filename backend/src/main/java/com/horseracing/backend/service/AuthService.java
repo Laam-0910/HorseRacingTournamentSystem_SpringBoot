@@ -325,10 +325,14 @@ public class AuthService {
             user.setFullName(dto.getFullName().trim());
         }
 
+        if (dto.getBiography() != null) {
+            user.setBiography(dto.getBiography().trim());
+        }
+
         if (dto.getAvatar() != null) {
             String avatarStr = dto.getAvatar();
-            if (avatarStr.length() > 2097152) {
-                throw new IllegalArgumentException("Avatar image size exceeds 1.5MB limit");
+            if (avatarStr.length() > 7000000) {
+                throw new IllegalArgumentException("Avatar image size exceeds 5MB limit");
             }
             user.setAvatar(avatarStr);
         }

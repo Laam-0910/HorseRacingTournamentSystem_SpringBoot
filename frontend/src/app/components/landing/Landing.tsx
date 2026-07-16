@@ -52,6 +52,62 @@ const TRANSLATIONS: Record<string, any> = {
     notifications: "Thông báo",
     clearAll: "Xóa tất cả",
     noNotifications: "Không có thông báo mới",
+    startDate: "Ngày bắt đầu",
+    endDate: "Ngày kết thúc",
+    activeStatus: "Đang diễn ra",
+    countdownTo: "Đếm ngược đến: ",
+    days: "Ngày",
+    hours: "Giờ",
+    minutes: "Phút",
+    seconds: "Giây",
+    raceFixtures: "Lịch thi đấu",
+    noFixtures: "Không có lịch thi đấu nào.",
+    statsAndLeaderboards: "Thống kê & Bảng xếp hạng",
+    leadingHorses: "Ngựa dẫn đầu (Top Rating)",
+    leadingJockeys: "Nài ngựa dẫn đầu (Top 3)",
+    ratingTitle: "Đánh giá",
+    racesTitle: "Trận",
+    noHorseData: "Không có dữ liệu ngựa.",
+    noJockeyData: "Không có dữ liệu nài ngựa.",
+    horseRegistry: "Danh sách Đăng ký Ngựa",
+    directoriesOverview: "Tổng quan Danh bạ",
+    jockeysTitle: "Danh sách Nài ngựa",
+    horseOwnersTitle: "Danh sách Chủ ngựa",
+    incidentReports: "Báo cáo Sự cố & Vi phạm",
+    pendingDecision: "Đang chờ xử lý",
+    idTitle: "Mã (ID)",
+    horseNameTitle: "Tên Ngựa",
+    breedTitle: "Giống loài",
+    currentRatingTitle: "Đánh giá",
+    jockeyTitle: "Nài ngựa",
+    emailTitle: "Email",
+    weightTitle: "Cân nặng",
+    racesRunTitle: "Số trận tham gia",
+    top3FinishesTitle: "Số lần Top 3",
+    top3RateTitle: "Tỉ lệ Top 3",
+    ownerTitle: "Chủ ngựa",
+    reportIdTitle: "Mã Báo cáo",
+    raceIdTitle: "Mã Trận đua",
+    horseTitle: "Ngựa",
+    descriptionTitle: "Mô tả sự cố",
+    penaltyTitle: "Hình phạt",
+    statusTitle: "Trạng thái",
+    aboutTitle: "Giới thiệu Hệ thống",
+    aboutSubtitle: "Nền tảng Quản lý Đua ngựa Toàn diện",
+    ourMission: "Sứ mệnh của chúng tôi",
+    missionDesc: "Hệ thống Quản lý Đua ngựa là một nền tảng toàn diện được thiết kế để hợp lý hóa và hiện đại hóa công tác quản lý giải đua ngựa. Từ khâu khởi tạo mùa giải đến khâu vận hành ngày đua, hệ thống của chúng tôi cung cấp cho các quản trị viên, chủ ngựa, nài ngựa và trọng tài những công cụ cần thiết để tổ chức các sự kiện đua ngựa công bằng, hấp dẫn và chuyên nghiệp.",
+    feat1Title: "Quản lý Mùa giải",
+    feat1Desc: "Toàn bộ vòng đời giải đấu từ thiết lập đến kết quả",
+    feat2Title: "Hồ sơ Ngựa",
+    feat2Desc: "Theo dõi ngựa, đánh giá rating và thành tích",
+    feat3Title: "Quản lý Nài ngựa",
+    feat3Desc: "Quản lý hồ sơ nài ngựa và lịch đăng ký",
+    feat4Title: "Vận hành Ngày đua",
+    feat4Desc: "Bảng đua, lịch trình, giám sát trực tiếp",
+    feat5Title: "Thống kê",
+    feat5Desc: "Tỷ lệ thắng, tiền thưởng, phân tích thành tích",
+    feat6Title: "Báo cáo Sự cố",
+    feat6Desc: "Theo dõi vi phạm luật và hình phạt",
   },
   en: {
     home: "Home",
@@ -80,6 +136,14 @@ const TRANSLATIONS: Record<string, any> = {
     notifications: "Notifications",
     clearAll: "Clear All",
     noNotifications: "No more notifications",
+    startDate: "Start Date",
+    endDate: "End Date",
+    activeStatus: "Active",
+    countdownTo: "Countdown to: ",
+    days: "Days",
+    hours: "Hours",
+    minutes: "Minutes",
+    seconds: "Seconds",
   },
   zh: {
     home: "首页",
@@ -108,6 +172,14 @@ const TRANSLATIONS: Record<string, any> = {
     notifications: "通知",
     clearAll: "清除全部",
     noNotifications: "没有更多通知",
+    startDate: "开始日期",
+    endDate: "结束日期",
+    activeStatus: "进行中",
+    countdownTo: "倒计时至：",
+    days: "天",
+    hours: "小时",
+    minutes: "分钟",
+    seconds: "秒",
   },
   ja: {
     home: "ホーム",
@@ -136,6 +208,14 @@ const TRANSLATIONS: Record<string, any> = {
     notifications: "通知",
     clearAll: "すべてクリア",
     noNotifications: "新しい通知はありません",
+    startDate: "開始日",
+    endDate: "終了日",
+    activeStatus: "開催中",
+    countdownTo: "カウントダウン: ",
+    days: "日",
+    hours: "時間",
+    minutes: "分",
+    seconds: "秒",
   }
 };
 
@@ -567,20 +647,117 @@ function SearchView({ query, horses, people, meetings, races, t, setView, lang }
     </div>
   );
 }
+function Countdown({ targetDate, t }: { targetDate: string; t: any }) {
+  const [timeLeft, setTimeLeft] = useState<{ d: number, h: number, m: number, s: number } | null>(null);
 
-function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeting[]; t: any }) {
+  useEffect(() => {
+    if (!targetDate) return;
+    const target = new Date(targetDate.replace(" ", "T")).getTime();
+    
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const diff = target - now;
+      
+      if (diff <= 0) {
+        setTimeLeft({ d: 0, h: 0, m: 0, s: 0 });
+        clearInterval(interval);
+      } else {
+        setTimeLeft({
+          d: Math.floor(diff / (1000 * 60 * 60 * 24)),
+          h: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
+          m: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+          s: Math.floor((diff % (1000 * 60)) / 1000)
+        });
+      }
+    }, 1000);
+    
+    return () => clearInterval(interval);
+  }, [targetDate]);
+
+  if (!timeLeft) return null;
+
   return (
-    <div>
-      <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "0.5rem" }}>{t.welcome}</h2>
-      <p style={{ color: "#a0a0a0", marginBottom: "2rem" }}>{t.welcomeSub}</p>
+    <div className="flex items-center gap-2 md:gap-4 justify-center mt-6 mb-8 animate-fade-in">
+      <div className="flex flex-col items-center">
+        <div className="text-2xl md:text-3xl font-mono font-bold text-white bg-black/60 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227]/40 backdrop-blur-md min-w-[3rem] md:min-w-[4rem]">{String(timeLeft.d).padStart(2, '0')}</div>
+        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{t.days}</div>
+      </div>
+      <div className="text-xl md:text-2xl text-[#c9a227] pb-4 font-bold">:</div>
+      <div className="flex flex-col items-center">
+        <div className="text-2xl md:text-3xl font-mono font-bold text-white bg-black/60 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227]/40 backdrop-blur-md min-w-[3rem] md:min-w-[4rem]">{String(timeLeft.h).padStart(2, '0')}</div>
+        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{t.hours}</div>
+      </div>
+      <div className="text-xl md:text-2xl text-[#c9a227] pb-4 font-bold">:</div>
+      <div className="flex flex-col items-center">
+        <div className="text-2xl md:text-3xl font-mono font-bold text-white bg-black/60 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227]/40 backdrop-blur-md min-w-[3rem] md:min-w-[4rem]">{String(timeLeft.m).padStart(2, '0')}</div>
+        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{t.minutes}</div>
+      </div>
+      <div className="text-xl md:text-2xl text-[#c9a227] pb-4 font-bold">:</div>
+      <div className="flex flex-col items-center">
+        <div className="text-2xl md:text-3xl font-mono font-bold text-[#c9a227] bg-[#c9a227]/10 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227] backdrop-blur-md min-w-[3rem] md:min-w-[4rem] shadow-[0_0_15px_rgba(201,162,39,0.3)]">{String(timeLeft.s).padStart(2, '0')}</div>
+        <div className="text-[10px] md:text-xs text-[#c9a227] mt-2 uppercase tracking-widest font-bold">{t.seconds}</div>
+      </div>
+    </div>
+  );
+}
+
+function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seasons: Season[]; meetings: Meeting[]; t: any; onWatchLive?: () => void; onViewRacecard?: () => void; }) {
+  // Find the closest upcoming meeting
+  const now = new Date().getTime();
+  const upcomingMeetings = meetings
+    .filter(m => new Date(m.startDate.replace(" ", "T")).getTime() > now)
+    .sort((a, b) => new Date(a.startDate.replace(" ", "T")).getTime() - new Date(b.startDate.replace(" ", "T")).getTime());
+  
+  const nextMeeting = upcomingMeetings[0];
+
+  return (
+    <div className="w-full">
+      {/* Spectacular Hero Section matching screenshot with Horse Image */}
+      <div className="relative w-full rounded-[2rem] overflow-hidden mb-12 flex flex-col items-center justify-center text-center px-4 py-20 border border-[#1a1815]">
+        
+        {/* Background Image & Gradient */}
+        <div className="absolute inset-0 bg-[url('/anhngua1-1.jpg')] bg-cover bg-center"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0e0c09] via-[#0e0c09]/90 to-[#0e0c09]/60"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0e0c09]/80 via-transparent to-[#0e0c09]/80"></div>
+
+        <div className="relative z-10 w-full flex flex-col items-center">
+          <div className="inline-block px-6 py-2 mb-6 rounded-full bg-black/40 backdrop-blur-md border border-[#c9a227]/40 text-[#c9a227] text-[0.65rem] font-bold uppercase tracking-widest">
+            Chọn một chức năng bên dưới để bắt đầu.
+          </div>
+          
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 leading-tight text-[#c9a227] max-w-4xl drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)]" style={{ fontFamily: "'Roboto Slab', serif" }}>
+            Chào mừng đến với Hệ thống<br />Quản lý Đua ngựa
+          </h1>
+          
+          {nextMeeting && (
+            <div className="mb-10 flex flex-col items-center">
+              <div className="text-[#c9a227] text-sm font-bold tracking-widest uppercase mb-2">{t.countdownTo}{nextMeeting.name}</div>
+              <Countdown targetDate={nextMeeting.startDate} t={t} />
+            </div>
+          )}
+          
+          <div className="flex flex-wrap justify-center gap-4">
+            <button onClick={onWatchLive} className="px-8 py-3 bg-[#c9a227] text-[#0e0c09] font-bold rounded-lg hover:bg-[#d6af35] transition-all uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(201,162,39,0.3)]">
+              XEM TRỰC TIẾP
+            </button>
+            <button onClick={onViewRacecard} className="px-8 py-3 bg-black/60 backdrop-blur-md border border-[#2a2825] text-white font-medium rounded-lg hover:border-[#c9a227]/50 hover:bg-black/80 transition-all text-sm shadow-lg shadow-black/50">
+              Xem Bảng đua
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Active Seasons */}
-      <div style={{ marginBottom: "2.5rem" }}>
-        <h3 style={{ color: "#c9a227", fontWeight: 700, fontFamily: "monospace", fontSize: "1.25rem", marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.05em", paddingBottom: "0.5rem", borderBottom: "1px solid #2a2825" }}>{t.activeSeasons}</h3>
+      <div className="mb-14 animate-fade-in-up delay-300">
+        <div className="flex items-center gap-4 mb-8">
+          <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.activeSeasons}</h3>
+          <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
+        </div>
+        
         {seasons.length === 0 ? (
-          <p style={{ color: "#a0a0a0", fontSize: "0.875rem", fontFamily: "monospace", fontStyle: "italic" }}>{t.noActiveSeasons}</p>
+          <p className="text-gray-500 text-sm font-mono italic p-8 glass-panel rounded-2xl text-center border-dashed border-[#2a2825]">{t.noActiveSeasons}</p>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {seasons.map(s => {
               const formatSeasonDate = (rawStr: string) => {
                 if (!rawStr) return "";
@@ -591,14 +768,23 @@ function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeti
               };
 
               return (
-                <div key={s.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
-                    <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f0f0f0" }}>{s.name}</h4>
-                    <span style={{ fontSize: "0.55rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,157,111,0.15)", color: "#4a9d6f" }}>Active</span>
+                <div key={s.id} className="bg-[#181613] rounded-2xl p-7 hover:-translate-y-1 transition-transform border border-[#2a2825] hover:border-[#c9a227]/50 shadow-lg relative overflow-hidden group">
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150"></div>
+                  <div className="flex justify-between items-start mb-5 relative z-10">
+                    <h4 className="font-bold text-2xl text-white group-hover:text-[#c9a227] transition-colors drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{s.name}</h4>
+                    <span className="text-[0.65rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">{t.activeStatus}</span>
                   </div>
-                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
-                    📅 {formatSeasonDate(s.startDate)} → {formatSeasonDate(s.endDate)}
-                  </p>
+                  <div className="flex items-center justify-between text-sm text-gray-300 font-mono relative z-10 bg-[#0e0c09]/50 p-3 rounded-xl border border-white/5">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-gray-500 mb-1">{t.startDate}</span>
+                      <span className="opacity-90 font-semibold">{formatSeasonDate(s.startDate)}</span>
+                    </div>
+                    <span className="text-[#c9a227]/50 font-sans px-2 text-xl">→</span>
+                    <div className="flex flex-col text-right">
+                      <span className="text-xs text-gray-500 mb-1">{t.endDate}</span>
+                      <span className="opacity-90 font-semibold">{formatSeasonDate(s.endDate)}</span>
+                    </div>
+                  </div>
                 </div>
               );
             })}
@@ -607,12 +793,16 @@ function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeti
       </div>
 
       {/* Upcoming Meetings */}
-      <div style={{ marginBottom: "2.5rem" }}>
-        <h3 style={{ color: "#c9a227", fontWeight: 700, fontFamily: "monospace", fontSize: "1.25rem", marginBottom: "1rem", textTransform: "uppercase", letterSpacing: "0.05em", paddingBottom: "0.5rem", borderBottom: "1px solid #2a2825" }}>{t.upcomingMeetings}</h3>
+      <div className="mb-14 animate-fade-in-up delay-400">
+        <div className="flex items-center gap-4 mb-8">
+          <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.upcomingMeetings}</h3>
+          <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
+        </div>
+        
         {meetings.length === 0 ? (
-          <p style={{ color: "#a0a0a0", fontSize: "0.875rem", fontFamily: "monospace", fontStyle: "italic" }}>{t.noUpcomingMeetings}</p>
+          <p className="text-gray-500 text-sm font-mono italic p-8 glass-panel rounded-2xl text-center border-dashed border-[#2a2825]">{t.noUpcomingMeetings}</p>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1.5rem" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {meetings.map(m => {
               const formatDateTime = (rawStr: string) => {
                 if (!rawStr) return { date: "", time: "" };
@@ -626,13 +816,25 @@ function HomeView({ seasons, meetings, t }: { seasons: Season[]; meetings: Meeti
               const { date, time } = formatDateTime(m.startDate);
 
               return (
-                <div key={m.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem" }}>
-                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f0f0f0", marginBottom: "0.75rem" }}>{m.name}</h4>
-                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>📍 Venue: {m.venue}</p>
-                  <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>📅 Date: {date}</p>
-                  {time && (
-                    <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginBottom: "0.375rem" }}>🕒 Time: {time}</p>
-                  )}
+                <div key={m.id} className="bg-[#181613] rounded-2xl p-7 hover:-translate-y-1 transition-transform border border-[#2a2825] hover:border-[#c9a227]/50 shadow-lg relative overflow-hidden group">
+                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-gradient-to-tr from-blue-500 to-transparent opacity-10 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150"></div>
+                  <h4 className="font-bold text-2xl text-white mb-6 group-hover:text-blue-400 transition-colors relative z-10 drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
+                  <div className="space-y-3 relative z-10">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#0e0c09]/50 px-4 py-2.5 rounded-xl border border-white/5">
+                      <span className="text-blue-400 text-lg">📍</span> 
+                      <span className="truncate font-medium">{m.venue}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#0e0c09]/50 px-4 py-2.5 rounded-xl border border-white/5">
+                      <span className="text-[#c9a227] text-lg">📅</span> 
+                      <span className="font-medium">{date}</span>
+                    </div>
+                    {time && (
+                      <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#0e0c09]/50 px-4 py-2.5 rounded-xl border border-white/5">
+                        <span className="text-[#c9a227] text-lg">🕒</span> 
+                        <span className="font-medium">{time}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -660,36 +862,44 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
     if (cKey === "startDate" || cKey === "date" || cKey.toLowerCase().includes("date")) {
       return formatDate(val);
     }
+    if (cKey === "status") {
+      const s = String(val).toUpperCase();
+      let colorClass = "text-gray-400";
+      if (s === "ACTIVE" || s === "OFFICIAL") colorClass = "text-green-400";
+      if (s === "PENDING") colorClass = "text-yellow-400";
+      if (s === "REJECTED" || s === "DISQUALIFIED") colorClass = "text-red-400";
+      return <span className={colorClass + " font-bold text-xs tracking-wider"}>{s}</span>;
+    }
     return String(val);
   };
 
   if (isMobile) {
     return (
-      <div>
-        <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1.5rem" }}>{title}</h2>
+      <div className="animate-fade-in-up">
+        <h2 className="text-xl font-bold text-white tracking-wide uppercase drop-shadow-lg mb-6" style={{ fontFamily: "'Roboto Slab', serif" }}>{title}</h2>
         {data.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "3rem", background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem" }}>
-            <p style={{ color: "#a0a0a0", fontFamily: "monospace" }}>No data available.</p>
+          <div className="py-12 text-center glass-panel rounded-2xl border-dashed border-[#2a2825]">
+            <p className="text-gray-500 font-mono text-sm">No data available.</p>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <div className="flex flex-col gap-4">
             {data.map((row, i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <div key={i} className="glass-panel rounded-xl p-4 border border-[#2a2825] hover:border-[#c9a227]/30 transition-colors">
                 {columns.map((c, colIdx) => {
                   const val = row[c.key];
                   if (colIdx === 0) {
                     return (
-                      <div key={c.key} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
-                        <span style={{ fontSize: "14px", fontWeight: "bold", color: "#c9a227" }}>
-                          {c.label}: {formatValue(c.key, val)}
+                      <div key={c.key} className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
+                        <span className="text-sm font-bold text-[#c9a227]">
+                          {c.label}: <span className="text-white">{formatValue(c.key, val)}</span>
                         </span>
                       </div>
                     );
                   }
                   return (
-                    <div key={c.key} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#f0f0f0", paddingBottom: "0.25rem", borderBottom: colIdx < columns.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
-                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{c.label}</span>
-                      <span style={{ fontWeight: 600 }}>
+                    <div key={c.key} className="flex justify-between text-sm py-1.5 border-b border-white/5 last:border-0">
+                      <span className="text-gray-400 font-mono text-xs">{c.label}</span>
+                      <span className="font-semibold text-gray-200 text-right max-w-[60%] truncate">
                         {formatValue(c.key, val)}
                       </span>
                     </div>
@@ -704,64 +914,73 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
   }
 
   return (
-    <div>
-      <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1.5rem" }}>{title}</h2>
+    <div className="animate-fade-in-up">
+      <h2 className="text-xl font-bold text-white tracking-wide uppercase drop-shadow-lg mb-6" style={{ fontFamily: "'Roboto Slab', serif" }}>{title}</h2>
       {data.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "3rem", background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem" }}>
-          <p style={{ color: "#a0a0a0", fontFamily: "monospace" }}>No data available.</p>
+        <div className="py-12 text-center glass-panel rounded-2xl border-dashed border-[#2a2825]">
+          <p className="text-gray-500 font-mono text-sm">No data available.</p>
         </div>
       ) : (
-        <div className="rounded-xl overflow-x-auto" style={{ border: "1px solid #2a2825" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ background: "rgba(201,162,39,0.08)", borderBottom: "1px solid #2a2825" }}>
-                {columns.map(c => (
-                  <th key={c.key} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#c9a227", fontWeight: 600 }}>{c.label}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)", background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)" }}>
+        <div className="glass-panel rounded-2xl overflow-hidden border border-[#2a2825]">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="bg-[#1a1815]/80 border-b border-[#2a2825]">
                   {columns.map(c => (
-                    <td key={c.key} style={{ padding: "0.75rem 1rem", fontSize: "0.8rem", color: "#f0f0f0" }}>{formatValue(c.key, row[c.key])}</td>
+                    <th key={c.key} className="py-4 px-6 text-xs font-mono text-[#c9a227] tracking-widest uppercase font-bold whitespace-nowrap">
+                      {c.label}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-[#2a2825]/50">
+                {data.map((row, i) => (
+                  <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
+                    {columns.map((c, colIdx) => (
+                      <td key={c.key} className={`py-4 px-6 text-sm text-gray-300 ${colIdx === 0 ? 'font-bold text-white' : ''}`}>
+                        {formatValue(c.key, row[c.key])}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function AboutView() {
+function AboutView({ t }: { t: any }) {
   return (
-    <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}>
-      <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.75rem", color: "#f0f0f0", marginBottom: "0.5rem" }}>About Horse Race Management System</h2>
-      <p style={{ color: "#c9a227", fontFamily: "monospace", fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "2rem" }}>The Complete Racing Management Platform</p>
+    <div className="max-w-4xl mx-auto text-center animate-fade-in-up">
+      <h2 className="text-3xl md:text-4xl font-bold text-white tracking-wide uppercase drop-shadow-lg mb-2" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.aboutTitle || "About Horse Race System"}</h2>
+      <p className="text-[#c9a227] font-mono text-xs uppercase tracking-widest mb-12">{t.aboutSubtitle || "The Complete Racing Management Platform"}</p>
       
-      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.5rem", marginBottom: "1.5rem", textAlign: "center" }}>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#c9a227", marginBottom: "0.75rem" }}>Our Mission</h3>
-        <p style={{ color: "#a0a0a0", fontSize: "0.9rem", lineHeight: 1.7 }}>
-          The Horse Race Management System is a comprehensive platform designed to streamline and modernize horse racing tournament management. From season initialization to race-day operations, our system provides administrators, horse owners, jockeys, and referees with the tools they need to conduct fair, exciting, and well-organized race events.
+      <div className="glass-panel rounded-3xl p-8 md:p-12 mb-12 relative overflow-hidden">
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#c9a227]/20 blur-[100px] rounded-full pointer-events-none"></div>
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+        
+        <h3 className="text-2xl font-bold text-gold-gradient mb-6 relative z-10" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.ourMission || "Our Mission"}</h3>
+        <p className="text-gray-300 text-base md:text-lg leading-relaxed relative z-10 font-light max-w-2xl mx-auto">
+          {t.missionDesc || "The Horse Race Management System is a comprehensive platform designed to streamline and modernize horse racing tournament management. From season initialization to race-day operations, our system provides administrators, horse owners, jockeys, and referees with the tools they need to conduct fair, exciting, and well-organized race events."}
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
-          { icon: "🏆", title: "Season Management", desc: "Full tournament lifecycle from setup to results" },
-          { icon: "🐎", title: "Horse Registry", desc: "Track horses, ratings, and performance" },
-          { icon: "🏇", title: "Jockey Management", desc: "Manage jockey profiles and invitations" },
-          { icon: "📋", title: "Race Operations", desc: "Racecard, schedule, live supervision" },
-          { icon: "📊", title: "Statistics", desc: "Win rates, earnings, performance analytics" },
-          { icon: "⚠️", title: "Incident Reports", desc: "Rule violation tracking and penalties" },
+          { icon: "🏆", title: t.feat1Title || "Season Management", desc: t.feat1Desc || "Full tournament lifecycle from setup to results" },
+          { icon: "🐎", title: t.feat2Title || "Horse Registry", desc: t.feat2Desc || "Track horses, ratings, and performance" },
+          { icon: "🏇", title: t.feat3Title || "Jockey Management", desc: t.feat3Desc || "Manage jockey profiles and invitations" },
+          { icon: "📋", title: t.feat4Title || "Race Operations", desc: t.feat4Desc || "Racecard, schedule, live supervision" },
+          { icon: "📊", title: t.feat5Title || "Statistics", desc: t.feat5Desc || "Win rates, earnings, performance analytics" },
+          { icon: "⚠️", title: t.feat6Title || "Incident Reports", desc: t.feat6Desc || "Rule violation tracking and penalties" },
         ].map((item, i) => (
-          <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1rem", textAlign: "center" }}>
-            <div style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>{item.icon}</div>
-            <h4 style={{ fontWeight: 700, color: "#f0f0f0", fontSize: "0.875rem", marginBottom: "0.25rem" }}>{item.title}</h4>
-            <p style={{ color: "#a0a0a0", fontSize: "0.75rem" }}>{item.desc}</p>
+          <div key={i} className="glass-panel rounded-2xl p-6 hover-lift hover-glow transition-all group border border-[#2a2825]" style={{ animationDelay: `${i * 100}ms` }}>
+            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{item.icon}</div>
+            <h4 className="font-bold text-white text-lg mb-2" style={{ fontFamily: "'Roboto Slab', serif" }}>{item.title}</h4>
+            <p className="text-gray-400 text-sm font-light leading-relaxed">{item.desc}</p>
           </div>
         ))}
       </div>
@@ -1134,29 +1353,38 @@ export default function Landing() {
   const renderSubView = () => {
     switch (view) {
       case "home":
-        return <HomeView seasons={seasons.filter(s => s.status === "ACTIVE")} meetings={meetings} t={t} />;
+        return <HomeView seasons={seasons.filter(s => s.status === "ACTIVE")} meetings={meetings} t={t} onWatchLive={handleLiveBtnClick} onViewRacecard={() => setView("racecard")} />;
       case "live":
         return (
-          <div>
-            <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1rem" }}>{t.live}</h2>
+          <div className="animate-fade-in-up">
+            <div className="flex items-center gap-4 mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.live}</h2>
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-red-500/60 to-transparent"></div>
+            </div>
+            
             {liveRaces.length === 0 ? (
-              <div style={{ padding: "4rem 2rem", border: "1px solid #2a2825", borderRadius: "0.75rem", background: "rgba(255,255,255,0.01)", textAlign: "center" }}>
-                <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "14px" }}>No live broadcast currently. There are no races running right now.</p>
+              <div className="glass-panel rounded-2xl flex flex-col items-center justify-center min-h-[40vh] border-dashed border-[#2a2825]">
+                <span className="text-5xl block mb-4 opacity-50 grayscale">📺</span>
+                <p className="text-gray-400 font-mono text-sm max-w-sm text-center">No live broadcast currently. There are no races running right now.</p>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 {liveRaces.map((r, i) => {
                   const embedUrl = r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "";
                   return (
-                    <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "rgba(201,162,39,0.2)", padding: "1.25rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-                        <h4 style={{ fontWeight: 700, color: "#f0f0f0" }}>{r.classLevel} - Race #{r.id}</h4>
-                        <span style={{ color: "#ef4444", fontWeight: "bold", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
+                    <div key={i} className="glass-panel rounded-2xl p-6 relative overflow-hidden group border border-[#2a2825] hover:border-red-500/50 transition-colors">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-5 rounded-bl-full pointer-events-none"></div>
+                      
+                      <div className="flex items-center justify-between mb-6 relative z-10">
+                        <h4 className="font-bold text-xl text-white" style={{ fontFamily: "'Roboto Slab', serif" }}>{r.classLevel} - Race #{r.id}</h4>
+                        <span className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-500 font-bold text-[10px] uppercase tracking-widest rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                          LIVE
                         </span>
                       </div>
+                      
                       {embedUrl ? (
-                        <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, overflow: "hidden", borderRadius: "0.5rem", border: "1px solid #2a2825" }}>
+                        <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
                           {r.youtubeLiveUrl && (
                             r.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
                             r.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
@@ -1170,15 +1398,16 @@ export default function Landing() {
                               controls
                               autoPlay
                               muted
-                              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+                              className="absolute top-0 left-0 w-full h-full border-none"
                             />
                           ) : (
-                            <iframe src={embedUrl} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }} allowFullScreen></iframe>
+                            <iframe src={embedUrl} className="absolute top-0 left-0 w-full h-full border-none" allowFullScreen></iframe>
                           )}
                         </div>
                       ) : (
-                        <div style={{ height: 260, background: "#111", borderRadius: "0.5rem", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #2a2825" }}>
-                          <p style={{ color: "#a0a0a0", fontSize: "12px", fontFamily: "monospace" }}>Video broadcast stream not linked yet.</p>
+                        <div className="h-[300px] bg-[#1a1815]/80 rounded-xl flex flex-col items-center justify-center border border-[#2a2825] relative overflow-hidden">
+                          <span className="text-4xl mb-4 opacity-30 animate-pulse">📡</span>
+                          <p className="text-gray-500 text-xs font-mono uppercase tracking-widest">Video stream not linked</p>
                         </div>
                       )}
                     </div>
@@ -1190,11 +1419,17 @@ export default function Landing() {
         );
       case "racecard":
         return (
-          <div>
-            <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1rem" }}>{t.racecard}</h2>
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, minmax(0, 1fr))", gap: "1.5rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <h5 style={{ fontFamily: "monospace", fontSize: "11px", color: "#c9a227", textTransform: "uppercase" }}>Select Meeting</h5>
+          <div className="animate-fade-in-up">
+            <div className="flex items-center gap-4 mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.racecard}</h2>
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              {/* Sidebar: Meetings Selection */}
+              <div className="flex flex-col gap-4">
+                <h5 className="font-mono text-xs text-[#c9a227] uppercase tracking-widest pl-2 border-l-2 border-[#c9a227]">Select Meeting</h5>
+                
                 {isMobile ? (
                   <select
                     value={selectedMeetingId || ""}
@@ -1204,108 +1439,102 @@ export default function Landing() {
                       setSelectedRaceId(null);
                       setSelectedRaceEntries([]);
                     }}
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid #2a2825",
-                      borderRadius: "0.5rem",
-                      color: "#f0f0f0",
-                      fontSize: "13px",
-                      outline: "none",
-                    }}
+                    className="w-full p-4 bg-[#1a1815]/80 border border-[#2a2825] rounded-xl text-white outline-none focus:border-[#c9a227] transition-colors"
                   >
-                    <option value="" style={{ background: "#12141a", color: "#fff" }}>-- Choose Meeting --</option>
+                    <option value="">-- Choose Meeting --</option>
                     {meetings.map(m => (
-                      <option key={m.id} value={m.id} style={{ background: "#12141a", color: "#fff" }}>
-                        {m.name} ({m.venue})
-                      </option>
+                      <option key={m.id} value={m.id}>{m.name} ({m.venue})</option>
                     ))}
                   </select>
                 ) : (
-                  meetings.map(m => (
-                    <button key={m.id} onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} style={{ width: "100%", padding: "0.75rem", background: selectedMeetingId === m.id ? "rgba(201,162,39,0.1)" : "rgba(255,255,255,0.02)", border: selectedMeetingId === m.id ? "1px solid #c9a227" : "1px solid #2a2825", borderRadius: "0.5rem", color: "#f0f0f0", textAlign: "left", cursor: "pointer", transition: "all 0.2s" }}>
-                      <strong>{m.name}</strong>
-                      <p style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "2px" }}>📍 {m.venue}</p>
-                    </button>
-                  ))
+                  <div className="flex flex-col gap-3">
+                    {meetings.map(m => (
+                      <button 
+                        key={m.id} 
+                        onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} 
+                        className={`w-full text-left p-4 rounded-xl transition-all ${selectedMeetingId === m.id ? 'glass-panel glowing-border !border-[#c9a227]/50 shadow-[0_0_15px_rgba(201,162,39,0.15)]' : 'bg-[#1a1815]/40 border border-[#2a2825] hover:bg-[#1a1815] hover:border-[#c9a227]/30 hover-lift'}`}
+                      >
+                        <strong className={`block text-[15px] ${selectedMeetingId === m.id ? 'text-gold-gradient' : 'text-gray-200'}`} style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</strong>
+                        <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-gray-500">
+                          <span className="text-blue-400">📍</span> {m.venue}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
+              
+              {/* Main Content: Races & Entries */}
               <div className="lg:col-span-3">
                 {selectedMeetingId ? (
-                  <div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                  <div className="animate-fade-in delay-100">
+                    <div className="flex flex-wrap gap-3 mb-8">
                       {meetingRaces.map(r => (
-                        <button key={r.id} onClick={() => setSelectedRaceId(r.id)} style={{ padding: "0.5rem 1rem", background: selectedRaceId === r.id ? "#c9a227" : "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.375rem", color: selectedRaceId === r.id ? "#0e0c09" : "#f0f0f0", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>
-                          R-{r.id} ({r.classLevel})
+                        <button 
+                          key={r.id} 
+                          onClick={() => setSelectedRaceId(r.id)} 
+                          className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all hover-lift ${selectedRaceId === r.id ? 'bg-gradient-to-r from-[#c9a227] to-[#e6c153] text-[#0e0c09] shadow-[0_0_15px_rgba(201,162,39,0.3)]' : 'glass-panel text-gray-300 hover:text-white hover:border-[#c9a227]/50'}`}
+                        >
+                          RACE {r.id} <span className="opacity-70 font-mono text-xs ml-1">({r.classLevel})</span>
                         </button>
                       ))}
-                      {meetingRaces.length === 0 && <p style={{ color: "#a0a0a0", fontSize: "13px" }}>No races scheduled for this meeting.</p>}
+                      {meetingRaces.length === 0 && <p className="text-gray-500 text-sm italic py-2">No races scheduled for this meeting.</p>}
                     </div>
+
                     {selectedRaceId && (
-                      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "#2a2825", padding: "1.25rem" }}>
-                        <h4 style={{ fontWeight: 700, color: "#f0f0f0", marginBottom: "1rem" }}>Gate Entries</h4>
-                        {isMobile ? (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                            {selectedRaceEntries.map((e, idx) => (
-                              <div key={idx} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem" }}>
-                                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0, flex: 1 }}>
-                                  <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "rgba(201,162,39,0.15)", border: "1px solid #c9a227", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "monospace", fontWeight: "bold", color: "#c9a227", fontSize: "13px", flexShrink: 0 }}>
-                                    {e.entry?.gateNumber || idx + 1}
-                                  </div>
-                                  <div style={{ minWidth: 0 }}>
-                                    <div style={{ fontWeight: "bold", color: "#f0f0f0", fontSize: "14px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{e.horse?.name}</div>
-                                    <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                                      J: {e.jockey?.fullName || e.jockey?.username} | O: {e.owner?.fullName || e.owner?.username}
-                                    </div>
-                                  </div>
+                      <div className="glass-panel rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-5 rounded-bl-full pointer-events-none"></div>
+                        
+                        <div className="flex items-center gap-3 mb-6 relative z-10">
+                          <span className="text-2xl">🐎</span>
+                          <h4 className="font-bold text-xl text-white tracking-wide" style={{ fontFamily: "'Roboto Slab', serif" }}>Runners & Riders</h4>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
+                          {selectedRaceEntries.map((e, idx) => (
+                            <div key={idx} className="bg-[#1a1815]/50 border border-white/5 rounded-xl p-4 flex items-center gap-4 hover-lift hover-glow transition-all group">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1a1815] to-[#2a2825] border border-[#c9a227]/30 flex items-center justify-center font-mono font-bold text-[#c9a227] text-lg shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] flex-shrink-0 group-hover:scale-110 transition-transform">
+                                {e.entry?.gateNumber || idx + 1}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-bold text-white text-base truncate group-hover:text-gold-gradient transition-colors" style={{ fontFamily: "'Roboto Slab', serif" }}>
+                                  {e.horse?.name}
                                 </div>
-                                <div style={{ textAlign: "right", flexShrink: 0, fontSize: "12px", fontFamily: "monospace", color: "#f0f0f0" }}>
-                                  <div>Rating: {e.horse?.currentRating}</div>
-                                  <div style={{ color: "#a0a0a0", marginTop: "2px" }}>{e.entry?.carriedWeight} kg</div>
+                                <div className="text-[11px] text-gray-400 mt-1 truncate">
+                                  <span className="text-gray-500">J:</span> <span className="text-gray-300">{e.jockey?.fullName || e.jockey?.username}</span>
+                                  <span className="mx-2 opacity-30">|</span>
+                                  <span className="text-gray-500">O:</span> <span className="text-gray-300">{e.owner?.fullName || e.owner?.username}</span>
                                 </div>
                               </div>
-                            ))}
-                            {selectedRaceEntries.length === 0 && (
-                              <p style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem" }}>No horses registered for this race card yet.</p>
-                            )}
-                          </div>
-                        ) : (
-                          <div style={{ overflowX: "auto" }}>
-                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                              <thead>
-                                <tr style={{ borderBottom: "1px solid #2a2825", color: "#c9a227", textAlign: "left" }}>
-                                  <th style={{ padding: "0.5rem" }}>Gate</th>
-                                  <th style={{ padding: "0.5rem" }}>Horse</th>
-                                  <th style={{ padding: "0.5rem" }}>Jockey</th>
-                                  <th style={{ padding: "0.5rem" }}>Owner</th>
-                                  <th style={{ padding: "0.5rem" }}>Rating</th>
-                                  <th style={{ padding: "0.5rem" }}>Weight</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {selectedRaceEntries.map((e, idx) => (
-                                  <tr key={idx} style={{ borderBottom: "1px solid rgba(42,40,37,0.3)" }}>
-                                    <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>#{e.entry?.gateNumber || idx + 1}</td>
-                                    <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
-                                    <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
-                                    <td style={{ padding: "0.5rem" }}>{e.owner?.fullName || e.owner?.username}</td>
-                                    <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.horse?.currentRating}</td>
-                                    <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.carriedWeight} kg</td>
-                                  </tr>
-                                ))}
-                                {selectedRaceEntries.length === 0 && (
-                                  <tr><td colSpan={6} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No horses registered for this race card yet.</td></tr>
-                                )}
-                              </tbody>
-                            </table>
+                              <div className="text-right flex-shrink-0">
+                                <div className="text-xs font-mono">
+                                  <span className="text-gray-500">RTG </span>
+                                  <span className="text-blue-400 font-bold">{e.horse?.currentRating}</span>
+                                </div>
+                                <div className="text-xs font-mono mt-1 text-[#c9a227]">
+                                  {e.entry?.carriedWeight} kg
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {selectedRaceEntries.length === 0 && (
+                          <div className="py-12 text-center border border-dashed border-[#2a2825] rounded-xl mt-4 bg-[#1a1815]/30">
+                            <span className="text-4xl mb-4 block opacity-50">🏇</span>
+                            <p className="text-gray-500 font-mono text-sm">No horses registered for this race yet.</p>
                           </div>
                         )}
                       </div>
                     )}
                   </div>
                 ) : (
-                  <p style={{ color: "#a0a0a0", fontSize: "14px", fontStyle: "italic" }}>Please select a race meeting from the sidebar.</p>
+                  <div className="glass-panel rounded-2xl flex items-center justify-center min-h-[40vh] border-dashed border-[#2a2825]">
+                    <div className="text-center">
+                      <span className="text-4xl block mb-4 opacity-30 animate-float">👆</span>
+                      <p className="text-gray-500 text-sm font-mono italic">Please select a race meeting from the sidebar.</p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -1313,11 +1542,16 @@ export default function Landing() {
         );
       case "results":
         return (
-          <div>
-            <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", marginBottom: "1rem" }}>{t.results}</h2>
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, minmax(0, 1fr))", gap: "1.5rem" }}>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <h5 style={{ fontFamily: "monospace", fontSize: "11px", color: "#c9a227", textTransform: "uppercase" }}>Select Meeting</h5>
+          <div className="animate-fade-in-up">
+            <div className="flex items-center gap-4 mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.results}</h2>
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              {/* Sidebar: Meetings Selection */}
+              <div className="flex flex-col gap-4">
+                <h5 className="font-mono text-xs text-[#c9a227] uppercase tracking-widest pl-2 border-l-2 border-[#c9a227]">Select Meeting</h5>
                 {isMobile ? (
                   <select
                     value={selectedMeetingId || ""}
@@ -1327,126 +1561,197 @@ export default function Landing() {
                       setSelectedRaceId(null);
                       setSelectedRaceEntries([]);
                     }}
-                    style={{
-                      width: "100%",
-                      padding: "0.75rem",
-                      background: "rgba(255,255,255,0.02)",
-                      border: "1px solid #2a2825",
-                      borderRadius: "0.5rem",
-                      color: "#f0f0f0",
-                      fontSize: "13px",
-                      outline: "none",
-                    }}
+                    className="w-full p-4 bg-[#1a1815]/80 border border-[#2a2825] rounded-xl text-white outline-none focus:border-[#c9a227] transition-colors"
                   >
-                    <option value="" style={{ background: "#12141a", color: "#fff" }}>-- Choose Meeting --</option>
+                    <option value="">-- Choose Meeting --</option>
                     {meetings.map(m => (
-                      <option key={m.id} value={m.id} style={{ background: "#12141a", color: "#fff" }}>
-                        {m.name} ({m.venue})
-                      </option>
+                      <option key={m.id} value={m.id}>{m.name} ({m.venue})</option>
                     ))}
                   </select>
                 ) : (
-                  meetings.map(m => (
-                    <button key={m.id} onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} style={{ width: "100%", padding: "0.75rem", background: selectedMeetingId === m.id ? "rgba(201,162,39,0.1)" : "rgba(255,255,255,0.02)", border: selectedMeetingId === m.id ? "1px solid #c9a227" : "1px solid #2a2825", borderRadius: "0.5rem", color: "#f0f0f0", textAlign: "left", cursor: "pointer", transition: "all 0.2s" }}>
-                      <strong>{m.name}</strong>
-                      <p style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "2px" }}>📍 {m.venue}</p>
-                    </button>
-                  ))
+                  <div className="flex flex-col gap-3">
+                    {meetings.map(m => (
+                      <button 
+                        key={m.id} 
+                        onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} 
+                        className={`w-full text-left p-4 rounded-xl transition-all ${selectedMeetingId === m.id ? 'glass-panel glowing-border !border-[#c9a227]/50 shadow-[0_0_15px_rgba(201,162,39,0.15)]' : 'bg-[#1a1815]/40 border border-[#2a2825] hover:bg-[#1a1815] hover:border-[#c9a227]/30 hover-lift'}`}
+                      >
+                        <strong className={`block text-[15px] ${selectedMeetingId === m.id ? 'text-gold-gradient' : 'text-gray-200'}`} style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</strong>
+                        <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-gray-500">
+                          <span className="text-blue-400">📍</span> {m.venue}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 )}
               </div>
+              
               <div className="lg:col-span-3">
                 {selectedMeetingId ? (
-                  <div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.5rem" }}>
+                  <div className="animate-fade-in delay-100">
+                    <div className="flex flex-wrap gap-3 mb-8">
                       {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").map(r => (
-                        <button key={r.id} onClick={() => setSelectedRaceId(r.id)} style={{ padding: "0.5rem 1rem", background: selectedRaceId === r.id ? "#c9a227" : "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.375rem", color: selectedRaceId === r.id ? "#0e0c09" : "#f0f0f0", cursor: "pointer", fontSize: "12px", fontWeight: "bold" }}>
-                          R-{r.id} ({r.classLevel})
+                        <button 
+                          key={r.id} 
+                          onClick={() => setSelectedRaceId(r.id)} 
+                          className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all hover-lift ${selectedRaceId === r.id ? 'bg-gradient-to-r from-[#c9a227] to-[#e6c153] text-[#0e0c09] shadow-[0_0_15px_rgba(201,162,39,0.3)]' : 'glass-panel text-gray-300 hover:text-white hover:border-[#c9a227]/50'}`}
+                        >
+                          RACE {r.id} <span className="opacity-70 font-mono text-xs ml-1">({r.classLevel})</span>
                         </button>
                       ))}
-                      {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").length === 0 && <p style={{ color: "#a0a0a0", fontSize: "13px" }}>No official finished results for this meeting yet.</p>}
+                      {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").length === 0 && <p className="text-gray-500 text-sm italic py-2">No official finished results for this meeting yet.</p>}
                     </div>
+                    
                     {selectedRaceId && (
-                      <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.015)", borderColor: "#2a2825", padding: "1.25rem" }}>
-                        <h4 style={{ fontWeight: 700, color: "#f0f0f0", marginBottom: "1rem" }}>Leaderboard / Final Standings</h4>
-                        {isMobile ? (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                            {selectedRaceEntries.map((e, idx) => {
-                              const isWinner = e.entry?.finalPosition === 1;
+                      <div className="glass-panel rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
+                        <div className="flex items-center gap-3 mb-8 relative z-10">
+                          <span className="text-3xl drop-shadow-md">🏆</span>
+                          <h4 className="font-bold text-2xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>Final Standings</h4>
+                        </div>
+                        
+                        <div className="flex flex-col gap-4 relative z-10">
+                          {(() => {
+                            const top3 = selectedRaceEntries.filter(e => [1,2,3].includes(e.entry?.finalPosition)).sort((a,b) => (a.entry?.finalPosition || 0) - (b.entry?.finalPosition || 0));
+                            const rest = selectedRaceEntries.filter(e => ![1,2,3].includes(e.entry?.finalPosition)).sort((a,b) => (a.entry?.finalPosition || 999) - (b.entry?.finalPosition || 999));
+                            
+                            const renderPodiumItem = (e: any, place: number) => {
+                              if (!e) return <div className="flex-1"></div>;
+                              
+                              let hClass = "h-40";
+                              let bgClass = "bg-gradient-to-t from-[#c9a227]/30 to-[#1a1815] border-[#c9a227]";
+                              let medal = "🥇";
+                              let rankColor = "text-[#c9a227]";
+                              
+                              if (place === 2) {
+                                hClass = "h-32";
+                                bgClass = "bg-gradient-to-t from-gray-400/30 to-[#1a1815] border-gray-400";
+                                medal = "🥈";
+                                rankColor = "text-gray-300";
+                              } else if (place === 3) {
+                                hClass = "h-24";
+                                bgClass = "bg-gradient-to-t from-[#cd7f32]/30 to-[#1a1815] border-[#cd7f32]";
+                                medal = "🥉";
+                                rankColor = "text-[#cd7f32]";
+                              }
+                              
                               return (
-                                <div key={idx} style={{ background: isWinner ? "rgba(201,162,39,0.05)" : "rgba(255,255,255,0.02)", border: isWinner ? "1px solid rgba(201,162,39,0.3)" : "1px solid #2a2825", borderRadius: "0.75rem", padding: "0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.75rem" }}>
-                                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", minWidth: 0, flex: 1 }}>
-                                    <div style={{ width: "36px", height: "36px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>
-                                      {e.entry?.finalPosition === 1
-                                        ? "🥇"
-                                        : e.entry?.finalPosition === 2
-                                          ? "🥈"
-                                          : e.entry?.finalPosition === 3
-                                            ? "🥉"
-                                            : (e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ" || !e.entry?.finalPosition)
-                                              ? "DQ"
-                                              : `${e.entry?.finalPosition}`}
-                                    </div>
-                                    <div style={{ minWidth: 0 }}>
-                                      <div style={{ fontWeight: "bold", color: "#f0f0f0", fontSize: "14px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>{e.horse?.name}</div>
-                                      <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                                        J: {e.jockey?.fullName || e.jockey?.username} | O: {e.owner?.fullName || e.owner?.username}
-                                      </div>
+                                <div className="flex-1 flex flex-col items-center justify-end">
+                                  {/* Floating Horse Name above Podium */}
+                                  <div className="mb-3 flex flex-col items-center animate-float">
+                                    <div className="text-4xl mb-1 filter drop-shadow-lg">{medal}</div>
+                                    <div className={`font-bold text-sm md:text-lg ${rankColor} truncate max-w-[120px] md:max-w-[160px] text-center`} style={{ fontFamily: "'Roboto Slab', serif" }}>
+                                      {e.horse?.name}
                                     </div>
                                   </div>
-                                  <div style={{ textAlign: "right", flexShrink: 0, fontSize: "12px", fontFamily: "monospace" }}>
-                                    <div style={{ color: "#f0f0f0", fontWeight: "bold" }}>{e.entry?.finishTime || "--:--"}</div>
+                                  {/* The actual physical podium step */}
+                                  <div className={`w-full max-w-[160px] rounded-t-xl border-t-4 border-x border-x-white/10 flex flex-col items-center justify-end p-3 text-center ${bgClass} ${hClass} shadow-[0_-10px_30px_rgba(0,0,0,0.6)]`}>
+                                    <div className="text-3xl font-extrabold text-white/20 mb-2">{place}</div>
                                   </div>
                                 </div>
                               );
-                            })}
-                            {selectedRaceEntries.length === 0 && (
-                              <p style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem" }}>No entry logs available.</p>
-                            )}
-                          </div>
-                        ) : (
-                          <div style={{ overflowX: "auto" }}>
-                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "13px" }}>
-                              <thead>
-                                <tr style={{ borderBottom: "1px solid #2a2825", color: "#c9a227", textAlign: "left" }}>
-                                  <th style={{ padding: "0.5rem" }}>Pos</th>
-                                  <th style={{ padding: "0.5rem" }}>Horse</th>
-                                  <th style={{ padding: "0.5rem" }}>Jockey</th>
-                                  <th style={{ padding: "0.5rem" }}>Owner</th>
-                                  <th style={{ padding: "0.5rem" }}>Finish Time</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {selectedRaceEntries.map((e, idx) => (
-                                  <tr key={idx} style={{ borderBottom: "1px solid rgba(42,40,37,0.3)", background: e.entry?.finalPosition === 1 ? "rgba(201,162,39,0.05)" : "transparent" }}>
-                                    <td style={{ padding: "0.5rem", fontWeight: "bold" }}>
-                                      {e.entry?.finalPosition === 1
-                                        ? "🥇 1st"
-                                        : e.entry?.finalPosition === 2
-                                          ? "🥈 2nd"
-                                          : e.entry?.finalPosition === 3
-                                            ? "🥉 3rd"
-                                            : (e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ" || !e.entry?.finalPosition)
-                                              ? "DQ"
-                                              : `${e.entry?.finalPosition}th`}
-                                    </td>
-                                    <td style={{ padding: "0.5rem", fontWeight: "bold" }}>{e.horse?.name}</td>
-                                    <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
-                                    <td style={{ padding: "0.5rem" }}>{e.owner?.fullName || e.owner?.username}</td>
-                                    <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>{e.entry?.finishTime || "--:--"}</td>
-                                  </tr>
-                                ))}
-                                {selectedRaceEntries.length === 0 && (
-                                  <tr><td colSpan={5} style={{ padding: "1rem", textAlign: "center", color: "#a0a0a0" }}>No entry logs available.</td></tr>
+                            };
+
+                            return (
+                              <>
+                                {/* Podium Ceremony Area */}
+                                {top3.length > 0 && (
+                                  <div className="relative mb-8 pt-8">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#c9a227]/5 blur-2xl pointer-events-none"></div>
+                                    <div className="flex justify-center items-end gap-2 md:gap-4 px-2 border-b-2 border-[#c9a227]/20 pb-0 relative z-10">
+                                      {renderPodiumItem(top3.find(e => e.entry?.finalPosition === 2), 2)}
+                                      {renderPodiumItem(top3.find(e => e.entry?.finalPosition === 1), 1)}
+                                      {renderPodiumItem(top3.find(e => e.entry?.finalPosition === 3), 3)}
+                                    </div>
+                                  </div>
                                 )}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
+                                
+                                {/* Award Recipients List */}
+                                {top3.length > 0 && (
+                                  <div className="mb-6 mt-4">
+                                    <h5 className="text-[#c9a227] font-bold uppercase tracking-widest text-sm mb-4 border-l-4 border-[#c9a227] pl-3">Danh sách nhận giải (Top 3)</h5>
+                                    <div className="flex flex-col gap-3">
+                                      {top3.map((e, idx) => (
+                                        <div key={`top-${idx}`} className="bg-gradient-to-r from-[#c9a227]/10 to-transparent border border-[#c9a227]/30 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-4 hover-lift">
+                                          <div className="flex items-center gap-4 flex-1">
+                                            <div className="text-3xl">{e.entry?.finalPosition === 1 ? "🥇" : e.entry?.finalPosition === 2 ? "🥈" : "🥉"}</div>
+                                            <div>
+                                              <div className="text-lg font-bold text-white" style={{ fontFamily: "'Roboto Slab', serif" }}>{e.horse?.name}</div>
+                                              <div className="text-sm text-gray-400 mt-1 flex flex-wrap gap-4">
+                                                <span><strong className="text-[#c9a227]">Kỵ sĩ:</strong> {e.jockey?.fullName || e.jockey?.username}</span>
+                                                <span><strong className="text-[#c9a227]">Chủ ngựa:</strong> {e.owner?.fullName || e.owner?.username}</span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <div className="text-right">
+                                            <div className="text-xs text-gray-500 uppercase tracking-widest mb-1">Thành tích</div>
+                                            <div className="text-lg font-mono font-bold text-[#c9a227]">{e.entry?.finishTime}</div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Rest of the List */}
+                                {rest.length > 0 && (
+                                  <div className="mt-4">
+                                    <h5 className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-4 border-l-4 border-gray-500 pl-3">Các thứ hạng khác</h5>
+                                    <div className="flex flex-col gap-3">
+                                      {rest.map((e, idx) => {
+                                        const pos = e.entry?.finalPosition;
+                                        let cardStyle = "bg-[#1a1815]/50 border border-white/5 hover:border-gray-500/50";
+                                        let rankStyle = "text-gray-500 bg-[#1a1815]";
+                                        
+                                        if (e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ" || !pos) {
+                                          rankStyle = "text-red-500 bg-red-500/10 border border-red-500/30 text-xs";
+                                        }
+
+                                        return (
+                                          <div key={idx} className={`rounded-xl p-3 md:p-4 flex items-center gap-4 transition-all hover-lift ${cardStyle}`}>
+                                            <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] flex-shrink-0 ${rankStyle}`}>
+                                              {(e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ" || !pos) ? "DQ" : pos}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <div className="truncate text-gray-300 font-bold" style={{ fontFamily: "'Roboto Slab', serif" }}>
+                                                {e.horse?.name}
+                                              </div>
+                                              <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-3">
+                                                <span>J: {e.jockey?.fullName || e.jockey?.username}</span>
+                                                <span>O: {e.owner?.fullName || e.owner?.username}</span>
+                                              </div>
+                                            </div>
+                                            <div className="text-right flex-shrink-0">
+                                              <div className="text-sm font-mono font-bold text-gray-400 bg-black/40 px-2 py-1 md:px-3 md:py-1.5 rounded-lg border border-white/5">
+                                                {e.entry?.finishTime || "--:--"}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {selectedRaceEntries.length === 0 && (
+                                  <div className="py-12 text-center border border-dashed border-[#2a2825] rounded-xl mt-4 bg-[#1a1815]/30">
+                                    <span className="text-4xl mb-4 block opacity-50">🏁</span>
+                                    <p className="text-gray-500 font-mono text-sm">No entry logs available.</p>
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <p style={{ color: "#a0a0a0", fontSize: "14px", fontStyle: "italic" }}>Please select a race meeting from the sidebar.</p>
+                  <div className="glass-panel rounded-2xl flex items-center justify-center min-h-[40vh] border-dashed border-[#2a2825]">
+                    <div className="text-center">
+                      <span className="text-4xl block mb-4 opacity-30 animate-float">👆</span>
+                      <p className="text-gray-500 text-sm font-mono italic">Please select a race meeting from the sidebar.</p>
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
@@ -1454,56 +1759,142 @@ export default function Landing() {
         );
       case "fixtures":
         return (
-          <GenericTableView 
-            title="Race Fixtures / Meetings" 
-            data={meetings.map(m => ({
-              ...m,
-              startDate: formatDate(m.startDate)
-            }))} 
-            columns={[{ key: "id", label: "ID" }, { key: "name", label: "Meeting" }, { key: "venue", label: "Venue" }, { key: "startDate", label: "Start Date" }]} 
-          />
+          <div className="animate-fade-in-up">
+            <div className="flex items-center gap-4 mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.raceFixtures || "Race Fixtures"}</h2>
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {meetings.map((m, idx) => (
+                <div key={m.id} className="glass-panel rounded-2xl p-6 hover-lift glowing-border relative overflow-hidden group border border-[#2a2825]" style={{ animationDelay: `${idx * 100}ms` }}>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 opacity-5 rounded-bl-full pointer-events-none"></div>
+                  <h4 className="font-bold text-xl text-white mb-4 group-hover:text-blue-400 transition-colors" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#1a1815]/50 px-3 py-2 rounded-xl border border-white/5">
+                      <span className="text-[#c9a227]">ID</span>
+                      <span className="font-bold text-white">#{m.id}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#1a1815]/50 px-3 py-2 rounded-xl border border-white/5">
+                      <span className="text-blue-400">📍</span>
+                      <span className="truncate">{m.venue}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#1a1815]/50 px-3 py-2 rounded-xl border border-white/5">
+                      <span className="text-[#c9a227]">📅</span>
+                      <span>{formatDate(m.startDate)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {meetings.length === 0 && (
+                <div className="col-span-full py-12 text-center glass-panel rounded-2xl border-dashed border-[#2a2825]">
+                  <p className="text-gray-500 font-mono text-sm">{t.noFixtures || "No fixtures scheduled."}</p>
+                </div>
+              )}
+            </div>
+          </div>
         );
       case "statistics":
+        const topHorses = [...horses].sort((a,b) => (b.currentRating - a.currentRating)).slice(0, 10);
+        const topJockeys = [...users]
+          .filter(u => u.roleId === 3)
+          .map(u => {
+            const races = u.totalRacesParticipated || 0;
+            const top3 = u.totalTop3Finishes || 0;
+            const rate = races > 0 ? `${Math.round((top3 / races) * 100)}%` : "0%";
+            return {
+              ...u,
+              racesRun: races,
+              top3Finishes: top3,
+              top3Rate: rate
+            };
+          })
+          .sort((a, b) => b.top3Finishes - a.top3Finishes || b.racesRun - a.racesRun)
+          .slice(0, 10);
+
         return (
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "1.5rem" }}>
-            <GenericTableView title="Leading Horses (Top Rating)" data={[...horses].sort((a,b) => (b.currentRating - a.currentRating)).slice(0, 10)} columns={[{ key: "name", label: "Horse Name" }, { key: "breed", label: "Breed" }, { key: "currentRating", label: "Rating" }]} />
-            <GenericTableView 
-              title="Leading Jockeys" 
-              data={[...users]
-                .filter(u => u.roleId === 3)
-                .map(u => {
-                  const races = u.totalRacesParticipated || 0;
-                  const top3 = u.totalTop3Finishes || 0;
-                  const rate = races > 0 ? `${Math.round((top3 / races) * 100)}%` : "0%";
-                  return {
-                    ...u,
-                    racesRun: races,
-                    top3Finishes: top3,
-                    top3Rate: rate
-                  };
-                })
-                .sort((a, b) => b.top3Finishes - a.top3Finishes || b.racesRun - a.racesRun)
-                .slice(0, 10)} 
-              columns={[
-                { key: "fullName", label: "Jockey Name" },
-                { key: "racesRun", label: "Races Run" },
-                { key: "top3Finishes", label: "Top-3 Finishes" },
-                { key: "top3Rate", label: "Top-3 Rate" }
-              ]} 
-            />
+          <div className="animate-fade-in-up">
+            <div className="flex items-center gap-4 mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.statsAndLeaderboards || "Statistics & Leaderboards"}</h2>
+              <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Top Horses */}
+              <div className="glass-panel rounded-2xl p-6 border border-[#2a2825] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
+                <div className="flex items-center gap-3 mb-6 relative z-10">
+                  <span className="text-2xl">🐎</span>
+                  <h4 className="font-bold text-xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.leadingHorses || "Leading Horses (Top Rating)"}</h4>
+                </div>
+                <div className="space-y-3 relative z-10">
+                  {topHorses.map((h, idx) => (
+                    <div key={h.id} className="flex items-center gap-4 p-3 rounded-xl bg-[#1a1815]/50 border border-white/5 hover:border-[#c9a227]/30 transition-colors">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx < 3 ? 'bg-[#c9a227]/20 text-[#c9a227] border border-[#c9a227]/50' : 'bg-[#2a2825] text-gray-400'}`}>
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-gray-200 truncate">{h.name}</div>
+                        <div className="text-[11px] text-gray-500 font-mono truncate">{h.breed}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">{t.ratingTitle || "Rating"}</div>
+                        <div className="font-mono font-bold text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded border border-blue-500/20 inline-block">{h.currentRating}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {topHorses.length === 0 && <p className="text-gray-500 text-sm text-center py-4 italic">{t.noHorseData || "No horse data available."}</p>}
+                </div>
+              </div>
+
+              {/* Top Jockeys */}
+              <div className="glass-panel rounded-2xl p-6 border border-[#2a2825] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-500 to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
+                <div className="flex items-center gap-3 mb-6 relative z-10">
+                  <span className="text-2xl">👤</span>
+                  <h4 className="font-bold text-xl text-white tracking-wide text-blue-400" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.leadingJockeys || "Leading Jockeys (Top-3)"}</h4>
+                </div>
+                <div className="space-y-3 relative z-10">
+                  {topJockeys.map((j, idx) => (
+                    <div key={j.id} className="flex items-center gap-4 p-3 rounded-xl bg-[#1a1815]/50 border border-white/5 hover:border-blue-500/30 transition-colors">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx < 3 ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50' : 'bg-[#2a2825] text-gray-400'}`}>
+                        {idx + 1}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-gray-200 truncate">{j.fullName || j.username}</div>
+                        <div className="text-[11px] text-gray-500 font-mono">
+                          {j.racesRun} {t.racesTitle || "Races"}
+                        </div>
+                      </div>
+                      <div className="text-right flex items-center gap-4">
+                        <div>
+                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Top 3</div>
+                          <div className="font-mono font-bold text-white">{j.top3Finishes}</div>
+                        </div>
+                        <div>
+                          <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-0.5">Rate</div>
+                          <div className="font-mono font-bold text-green-400 bg-green-900/20 px-2 py-0.5 rounded border border-green-500/20">{j.top3Rate}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {topJockeys.length === 0 && <p className="text-gray-500 text-sm text-center py-4 italic">No jockey data available.</p>}
+                </div>
+              </div>
+            </div>
           </div>
         );
       case "horses":
-        return <GenericTableView title="Registered Horse Registry" data={horses} columns={[{ key: "id", label: "ID" }, { key: "name", label: "Horse Name" }, { key: "breed", label: "Breed" }, { key: "currentRating", label: "Current Rating" }]} />;
+        return <GenericTableView title={t.horseRegistry || "Registered Horse Registry"} data={horses} columns={[{ key: "id", label: t.idTitle || "ID" }, { key: "name", label: t.horseNameTitle || "Horse Name" }, { key: "breed", label: t.breedTitle || "Breed" }, { key: "currentRating", label: t.currentRatingTitle || "Current Rating" }]} />;
       case "jockeys_owners":
         return (
           <div>
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
-              <button onClick={() => setView("jockeys_owners")} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontWeight: "bold" }}>Directories Overview</button>
+              <button onClick={() => setView("jockeys_owners")} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontWeight: "bold" }}>{t.directoriesOverview || "Directories Overview"}</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "1.5rem" }}>
               <GenericTableView 
-                title="Jockeys" 
+                title={t.jockeysTitle || "Jockeys"} 
                 data={users
                   .filter(u => u.roleId === 3)
                   .map(u => {
@@ -1520,40 +1911,40 @@ export default function Landing() {
                   })
                   .sort((a, b) => b.top3Finishes - a.top3Finishes || b.racesRun - a.racesRun)} 
                 columns={[
-                  { key: "id", label: "ID" },
-                  { key: "fullName", label: "Jockey" },
-                  { key: "email", label: "Email" },
-                  { key: "jockeyWeight", label: "Weight" },
-                  { key: "racesRun", label: "Races Run" },
-                  { key: "top3Finishes", label: "Top-3 Finishes" },
-                  { key: "top3Rate", label: "Top-3 Rate" }
+                  { key: "id", label: t.idTitle || "ID" },
+                  { key: "fullName", label: t.jockeyTitle || "Jockey" },
+                  { key: "email", label: t.emailTitle || "Email" },
+                  { key: "jockeyWeight", label: t.weightTitle || "Weight" },
+                  { key: "racesRun", label: t.racesRunTitle || "Races Run" },
+                  { key: "top3Finishes", label: t.top3FinishesTitle || "Top-3 Finishes" },
+                  { key: "top3Rate", label: t.top3RateTitle || "Top-3 Rate" }
                 ]} 
               />
-              <GenericTableView title="Horse Owners" data={users.filter(u => u.roleId === 2)} columns={[{ key: "id", label: "ID" }, { key: "fullName", label: "Owner" }, { key: "email", label: "Email" }]} />
+              <GenericTableView title={t.horseOwnersTitle || "Horse Owners"} data={users.filter(u => u.roleId === 2)} columns={[{ key: "id", label: t.idTitle || "ID" }, { key: "fullName", label: t.ownerTitle || "Owner" }, { key: "email", label: t.emailTitle || "Email" }]} />
             </div>
           </div>
         );
       case "incident":
         return (
           <GenericTableView 
-            title="Violation Incident Reports" 
+            title={t.incidentReports || "Violation Incident Reports"} 
             data={violations.map((v: any) => ({
               id: v.violation?.id,
               raceId: v.violation?.raceId,
               horseName: v.horseName || `Horse #${v.violation?.horseId}`,
               jockeyName: v.jockeyName || `Jockey #${v.violation?.jockeyId}`,
               description: v.violation?.description || "—",
-              penalty: v.violation?.penalty || "Pending Decision",
+              penalty: v.violation?.penalty || t.pendingDecision || "Pending Decision",
               status: v.violation?.status || "PENDING"
             }))} 
             columns={[
-              { key: "id", label: "Report ID" },
-              { key: "raceId", label: "Race ID" },
-              { key: "horseName", label: "Horse" },
-              { key: "jockeyName", label: "Jockey" },
-              { key: "description", label: "Description" },
-              { key: "penalty", label: "Penalty" },
-              { key: "status", label: "Status" }
+              { key: "id", label: t.reportIdTitle || "Report ID" },
+              { key: "raceId", label: t.raceIdTitle || "Race ID" },
+              { key: "horseName", label: t.horseTitle || "Horse" },
+              { key: "jockeyName", label: t.jockeyTitle || "Jockey" },
+              { key: "description", label: t.descriptionTitle || "Description" },
+              { key: "penalty", label: t.penaltyTitle || "Penalty" },
+              { key: "status", label: t.statusTitle || "Status" }
             ]} 
           />
         );
@@ -1592,46 +1983,39 @@ export default function Landing() {
         );
       }
       case "about":
-        return <AboutView />;
+        return <AboutView t={t} />;
       default:
         return <HomeView seasons={seasons.filter(s => s.status === "ACTIVE")} meetings={meetings} t={t} />;
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0907", color: "#f0f0f0", fontFamily: "'Outfit', 'Noto Sans SC', sans-serif" }}>
-
-      {/* ── TOP TICKER BAR ─────────────────────── */}
-      <div style={{ background: "#0a0907", borderBottom: "1px solid #2a2825" }}>
-        <div style={{ maxWidth: "80rem", margin: "0 auto", padding: "0 1rem", height: "2rem", display: "flex", alignItems: "center", fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0" }}>
-          <span>Welcome to HorseRace · Royal Ascot meeting in progress</span>
-        </div>
-      </div>
+    <div style={{ minHeight: "100vh", background: "#0e0c09", color: "#f0f0f0", fontFamily: "'Outfit', 'Noto Sans SC', sans-serif" }}>
 
       {/* ── HEADER ─────────────────────────────── */}
-      <header style={{ background: "#151310", position: "relative", zIndex: 50 }}>
+      <header className="sticky top-0" style={{ zIndex: 50, background: "#0e0c09", borderBottom: "1px solid #1a1815" }}>
         <div style={{ 
-          maxWidth: "80rem", 
+          maxWidth: "85rem", 
           margin: "0 auto", 
-          padding: "0 1rem", 
-          height: isMobile ? "auto" : "4rem", 
-          paddingTop: isMobile ? "0.75rem" : "0",
-          paddingBottom: isMobile ? "0.75rem" : "0",
+          padding: "0 1.5rem", 
+          height: isMobile ? "auto" : "5rem", 
+          paddingTop: isMobile ? "1rem" : "0",
+          paddingBottom: isMobile ? "1rem" : "0",
           display: "flex", 
           flexDirection: isMobile ? "column" : "row",
           alignItems: isMobile ? "stretch" : "center", 
           justifyContent: "space-between", 
-          gap: isMobile ? "0.75rem" : "1.5rem" 
+          gap: isMobile ? "1rem" : "2rem" 
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: isMobile ? "100%" : "auto" }}>
             {/* Logo */}
-            <a href="/" style={{ display: "flex", alignItems: "center", gap: "0.75rem", textDecoration: "none" }}>
-              <div style={{ width: 36, height: 36, borderRadius: "0.25rem", background: "#c9a227", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0e0c09" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+            <a href="/" style={{ display: "flex", alignItems: "center", gap: "1rem", textDecoration: "none" }}>
+              <div style={{ width: 40, height: 40, borderRadius: "0.375rem", background: "#c9a227", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0e0c09" strokeWidth="2.5"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
               </div>
               <div>
-                <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f0f0f0", lineHeight: 1.2 }}>HorseRace</p>
-                {!isMobile && <p style={{ fontSize: "0.6rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.15em" }}>Management System</p>}
+                <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f0f0f0", lineHeight: 1.1 }}>HorseRace</p>
+                {!isMobile && <p style={{ fontSize: "0.55rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.2em", marginTop: "2px" }}>Management System</p>}
               </div>
             </a>
 
@@ -1657,7 +2041,7 @@ export default function Landing() {
           </div>
 
           {/* Search Bar */}
-          <div style={{ flex: isMobile ? "none" : 1, width: "100%", maxWidth: isMobile ? "100%" : "28rem", position: "relative" }}>
+          <div style={{ flex: isMobile ? "none" : 1, width: "100%", maxWidth: isMobile ? "100%" : "36rem", position: "relative", marginLeft: isMobile ? "0" : "2rem" }}>
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" strokeWidth="2" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input
               value={searchQuery}
@@ -1675,13 +2059,13 @@ export default function Landing() {
                   setView("search");
                 }
               }}
-              placeholder={t.searchPlaceholder}
-              style={{ width: "100%", paddingLeft: "2.25rem", paddingRight: "1.75rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", fontSize: "0.75rem", background: "rgba(21,19,16,0.8)", borderRadius: "0.375rem", color: "#f0f0f0", border: "1px solid rgba(255,255,255,0.08)", outline: "none" }}
+              placeholder="Tìm kiếm ngựa, nài, chủ ngựa, trận đua..."
+              style={{ width: "100%", paddingLeft: "2.5rem", paddingRight: "1.75rem", paddingTop: "0.5rem", paddingBottom: "0.5rem", fontSize: "0.85rem", background: "#111111", borderRadius: "0.5rem", color: "#f0f0f0", border: "1px solid #1f1f1f", outline: "none" }}
             />
             {searchQuery && (
               <button 
                 onClick={() => { setSearchQuery(""); setView("home"); }}
-                style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "10px" }}
+                style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "12px" }}
               >
                 ✕
               </button>
@@ -1690,16 +2074,16 @@ export default function Landing() {
 
           {/* Right Controls (Desktop Only) */}
           {!isMobile && (
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem", fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0" }}>
               {/* Language */}
               <div style={{ position: "relative" }}>
-                <button onClick={() => setShowLangMenu(v => !v)} style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontFamily: "monospace", fontSize: "0.7rem" }}>
+                <button onClick={() => setShowLangMenu(v => !v)} style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: 700 }}>
                   🌐 {langLabel} ▾
                 </button>
                 {showLangMenu && (
-                  <div style={{ position: "absolute", right: 0, top: "100%", marginTop: "0.25rem", width: "7rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.375rem", zIndex: 50 }}>
+                  <div style={{ position: "absolute", right: 0, top: "100%", marginTop: "0.5rem", width: "8rem", background: "#111111", border: "1px solid #1f1f1f", borderRadius: "0.5rem", zIndex: 50 }}>
                     {[["en","EN","English"],["vi","VI","Tiếng Việt"],["zh","ZH","简体中文"],["ja","JA","日本語"]].map(([code, label, name]) => (
-                      <button key={code} onClick={() => { setLang(code); setShowLangMenu(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "0.375rem 0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", fontFamily: "monospace" }}>{name}</button>
+                      <button key={code} onClick={() => { setLang(code); setShowLangMenu(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "0.5rem 0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem", fontFamily: "monospace" }}>{name}</button>
                     ))}
                   </div>
                 )}
@@ -1709,15 +2093,14 @@ export default function Landing() {
 
               {/* Auth Controls */}
               {user ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
-                  {/* Avatar circle with role-color ring */}
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "1rem" }}>
+                  {/* Avatar circle */}
                   <div style={{
-                    width: 36, height: 36, borderRadius: "50%",
-                    border: `2px solid ${getRoleColor(user.roleId)}`,
+                    width: 38, height: 38, borderRadius: "50%",
                     display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700,
-                    color: user.avatar ? undefined : "#fff",
-                    background: user.avatar ? "transparent" : getRoleColor(user.roleId),
+                    fontSize: "0.9rem", fontFamily: "monospace", fontWeight: 700,
+                    color: "#fff",
+                    background: user.avatar ? "transparent" : "#a855f7",
                     overflow: "hidden", flexShrink: 0
                   }}>
                     {user.avatar
@@ -1726,10 +2109,10 @@ export default function Landing() {
                     }
                   </div>
                   <div>
-                    <p style={{ fontSize: "0.75rem", color: "#f0f0f0" }}>{user.fullName || user.username}</p>
-                    <p style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: getRoleColor(user.roleId) }}>{getRoleLabel(user.roleId)}</p>
+                    <p style={{ fontSize: "0.85rem", color: "#f0f0f0", fontWeight: 600, fontFamily: "sans-serif" }}>{user.fullName || user.username}</p>
+                    <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c9a227", marginTop: "2px" }}>{getRoleLabel(user.roleId)}</p>
                   </div>
-                  <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>{t.signout}</button>
+                  <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem", paddingLeft: "1rem", borderLeft: "1px solid #2a2825", marginLeft: "0.25rem", fontFamily: "sans-serif" }}>Đăng xuất</button>
                 </div>
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
@@ -2076,7 +2459,7 @@ export default function Landing() {
 
             {/* Scrollable Nav Items */}
             {!isMobile && (
-              <div className="scrollbar-hide" style={{ display: "flex", alignItems: "center", gap: "0.75rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "0.5rem" }}>
+              <div className="scrollbar-hide" style={{ display: "flex", alignItems: "center", gap: "1.5rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "0.5rem" }}>
                 {SUB_NAV.map(n => {
                   const active = view === n.key;
                   return (
@@ -2085,15 +2468,19 @@ export default function Landing() {
                       onClick={() => {
                         setView(n.key);
                       }}
-                      className="hover-lift hover-scale"
                       style={{
-                        padding: "0.35rem 0.65rem", borderRadius: "0.375rem", fontSize: "0.72rem", fontFamily: "monospace", cursor: "pointer",
-                        border: active ? "1px solid rgba(201,162,39,0.4)" : "1px solid rgba(201,162,39,0.05)",
-                        background: active ? "rgba(201,162,39,0.15)" : "rgba(21,19,16,0.4)",
+                        padding: active ? "0.4rem 1rem" : "0.4rem 0",
+                        borderRadius: active ? "0.375rem" : "0",
+                        fontSize: "0.85rem",
+                        fontFamily: "sans-serif",
+                        cursor: "pointer",
+                        border: active ? "1px solid rgba(201,162,39,0.5)" : "none",
+                        background: "none",
                         color: active ? "#c9a227" : "#a0a0a0",
-                        fontWeight: active ? 700 : 400,
-                        transform: active ? "scale(1.02) translateY(-1px)" : "none",
-                        display: "flex", alignItems: "center", gap: "0.375rem",
+                        fontWeight: active ? 600 : 500,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.375rem",
                         transition: "all 0.2s",
                         flexShrink: 0,
                       }}
@@ -2108,33 +2495,6 @@ export default function Landing() {
           </div>
         </div>
       </header>
-
-      {/* ── HERO SECTION ────────────────────────── */}
-      <section style={{ position: "relative", overflow: "hidden", borderBottom: "1px solid #2a2825" }}>
-        <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/anhngua1-1.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, #0e0c09, rgba(14,12,9,0.8), transparent)" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, #0e0c09, transparent, transparent)" }} />
-        </div>
-        <div style={{ position: "relative", maxWidth: "80rem", margin: "0 auto", padding: "3.5rem 1rem 5rem" }}>
-          <div style={{ maxWidth: "50rem" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.15em", padding: "0.25rem 0.625rem", borderRadius: "0.25rem", background: "rgba(201,162,39,0.13)", color: "#c9a227" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#c0392b", display: "inline-block" }} />
-              Meeting in progress
-            </span>
-            <h1 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "clamp(1.75rem, 4vw, 3rem)", color: "#f0f0f0", marginTop: "1rem", lineHeight: 1.25 }}>
-              Royal Ascot · Spring Gold Cup Day
-            </h1>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", marginTop: "1.5rem" }}>
-              <button onClick={handleLiveBtnClick} style={{ padding: "0.625rem 1.25rem", fontSize: "0.875rem", fontFamily: "monospace", background: "rgba(21,19,16,0.6)", backdropFilter: "blur(8px)", border: "1px solid rgba(192,57,43,0.3)", color: "#ef4444", borderRadius: "0.375rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                🔴 {t.watchLive}
-              </button>
-              <button onClick={() => setView("racecard")} style={{ padding: "0.625rem 1.25rem", fontSize: "0.875rem", fontFamily: "monospace", background: "rgba(21,19,16,0.6)", backdropFilter: "blur(8px)", border: "1px solid #2a2825", color: "#f0f0f0", borderRadius: "0.375rem", cursor: "pointer" }}>
-                {t.viewRacecard}
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* ── MAIN CONTENT AREA ───────────────────── */}
       <section style={{ maxWidth: "80rem", margin: "0 auto", padding: "2.5rem 1rem 4rem" }}>

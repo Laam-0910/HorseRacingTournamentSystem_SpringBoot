@@ -38,4 +38,5 @@ public class UserDTO {
 
     private String avatar;
     private String fullName;
+    private String biography;
 }

@@ -9,120 +9,128 @@ interface Props {
 
 const PROFILE_TRANSLATIONS: Record<string, any> = {
   vi: {
-    personalProfile: "Thông tin cá nhân",
+    personalProfile: "Cập nhật hồ sơ",
     emailAddress: "Địa chỉ Email",
     saveChanges: "Lưu thay đổi",
-    savingChanges: "Đang lưu thay đổi...",
-    passwordSettings: "🔑 Cài đặt mật khẩu",
-    passwordSettingsDesc: "Để thay đổi mật khẩu, vui lòng yêu cầu một mã xác minh bảo mật được gửi đến địa chỉ Gmail đã đăng ký của bạn.",
-    changePassBtn: "Thay đổi mật khẩu qua xác thực Gmail",
-    sendingCode: "Đang gửi mã xác minh...",
-    twoFactor: "Xác thực 2 yếu tố",
-    twoFactorDesc: "Khi được bật, mã OTP gồm 6 chữ số sẽ được gửi đến email của bạn mỗi khi đăng nhập. Cung cấp một lớp bảo mật bổ sung cho tài khoản của bạn.",
-    noteAdmin: "Lưu ý: Tài khoản Admin và Trọng tài theo mặc định bỏ qua 2FA. Hãy đảm bảo địa chỉ email của bạn chính xác trước khi bật tính năng này.",
-    upload: "Tải ảnh",
+    savingChanges: "Đang lưu...",
+    passwordSettings: "Đổi mật khẩu",
+    passwordSettingsDesc: "Yêu cầu mã xác minh qua Gmail để thiết lập mật khẩu mới.",
+    changePassBtn: "Yêu cầu đổi mật khẩu",
+    sendingCode: "Đang gửi mã...",
+    twoFactor: "Bảo mật 2 Lớp (2FA)",
+    twoFactorDesc: "Bảo vệ tài khoản bằng mã OTP gửi qua email mỗi lần đăng nhập.",
+    noteAdmin: "Lưu ý: Quản trị viên & Trọng tài không bắt buộc dùng 2FA.",
+    upload: "Đổi ảnh",
     fullName: "Họ và tên",
     weight: "Cân nặng (kg)",
-    verCode: "Mã xác minh (từ Email)",
-    enterOtp: "Nhập mã OTP 6 chữ số",
+    verCode: "Mã OTP",
+    enterOtp: "Nhập OTP 6 số",
     newPass: "Mật khẩu mới",
-    confirmPass: "Xác nhận mật khẩu mới",
+    confirmPass: "Xác nhận",
     atLeast4: "Tối thiểu 4 ký tự",
-    reEnter: "Nhập lại mật khẩu mới",
-    updatePass: "Cập nhật mật khẩu",
-    updating: "Đang cập nhật...",
+    reEnter: "Nhập lại mật khẩu",
+    updatePass: "Cập nhật",
+    updating: "Đang xử lý...",
     cancel: "Hủy",
-    avatarSizeErr: "Kích thước ảnh đại diện phải nhỏ hơn 1.5MB",
-    enabled: "Đã bật",
-    disabled: "Đã tắt",
-    successMsg: "✅ Cập nhật thông tin cá nhân thành công!"
+    avatarSizeErr: "Ảnh đại diện phải nhỏ hơn 1.5MB",
+    enabled: "Đang Bật",
+    disabled: "Đã Tắt",
+    successMsg: "✅ Đã lưu thành công!",
+    biography: "Giới thiệu cá nhân",
+    biographyPlace: "Chia sẻ kinh nghiệm làm nài ngựa của bạn..."
   },
   en: {
-    personalProfile: "Personal Profile Details",
+    personalProfile: "Edit Profile",
     emailAddress: "Email Address",
-    saveChanges: "Save Profile Changes",
-    savingChanges: "Saving Changes...",
-    passwordSettings: "🔒 Password Settings",
-    passwordSettingsDesc: "To change your password, request a security verification code sent to your registered Gmail address.",
-    changePassBtn: "Change Password via Gmail Verification",
-    sendingCode: "Sending Verification Code...",
-    twoFactor: "Two-Factor Authentication",
-    twoFactorDesc: "When enabled, a 6-digit OTP code will be sent to your email each time you log in. Provides an extra layer of security for your account.",
-    noteAdmin: "Note: Admin and Referee accounts bypass 2FA by default. Make sure your email address is correct before enabling this feature.",
+    saveChanges: "Save Changes",
+    savingChanges: "Saving...",
+    passwordSettings: "Password",
+    passwordSettingsDesc: "Request a security code via Gmail to change your password.",
+    changePassBtn: "Request Password Change",
+    sendingCode: "Sending...",
+    twoFactor: "2-Factor Auth (2FA)",
+    twoFactorDesc: "Protect your account with email OTP on every login.",
+    noteAdmin: "Note: Admins & Referees bypass 2FA.",
     upload: "Upload",
     fullName: "Full Name",
     weight: "Weight (kg)",
-    verCode: "Verification Code (from Email)",
-    enterOtp: "Enter 6-digit OTP code",
+    verCode: "OTP Code",
+    enterOtp: "6-digit OTP",
     newPass: "New Password",
-    confirmPass: "Confirm New Password",
-    atLeast4: "At least 4 characters",
-    reEnter: "Re-enter new password",
-    updatePass: "Update Password",
-    updating: "Updating...",
+    confirmPass: "Confirm",
+    atLeast4: "Min 4 chars",
+    reEnter: "Re-enter",
+    updatePass: "Update",
+    updating: "Processing...",
     cancel: "Cancel",
-    avatarSizeErr: "Avatar image size must be less than 1.5MB",
+    avatarSizeErr: "Image must be < 1.5MB",
     enabled: "Enabled",
     disabled: "Disabled",
-    successMsg: "✅ Personal information updated successfully!"
+    successMsg: "✅ Saved successfully!",
+    biography: "Biography",
+    biographyPlace: "Share your jockey experience..."
   },
   zh: {
-    personalProfile: "个人资料详情",
-    emailAddress: "电子邮件地址",
-    saveChanges: "保存个人资料更改",
-    savingChanges: "正在保存更改...",
-    passwordSettings: "🔒 密码设置",
-    passwordSettingsDesc: "要更改密码，请请求向您的注册 Gmail 地址发送安全验证码。",
-    changePassBtn: "通过 Gmail 验证更改密码",
-    sendingCode: "正在发送验证码...",
-    twoFactor: "双重身份验证 (2FA)",
-    twoFactorDesc: "启用后，每次登录时都会向您的电子邮箱发送一个6位数的 OTP 验证码。为您的帐户提供额外的安全保障。",
-    noteAdmin: "注意：管理员和裁判帐户默认绕过 2FA。在启用此功能之前，请确保您的电子邮箱地址正确无误。",
-    upload: "上传头像",
+    personalProfile: "编辑资料",
+    emailAddress: "电子邮箱",
+    saveChanges: "保存更改",
+    savingChanges: "保存中...",
+    passwordSettings: "密码",
+    passwordSettingsDesc: "请求安全码以更改密码。",
+    changePassBtn: "更改密码",
+    sendingCode: "发送中...",
+    twoFactor: "双重验证",
+    twoFactorDesc: "使用电子邮件 OTP 保护您的帐户。",
+    noteAdmin: "注意：管理员和裁判无需2FA。",
+    upload: "上传",
     fullName: "姓名",
     weight: "体重 (kg)",
-    verCode: "验证码 (来自邮箱)",
-    enterOtp: "输入6位数OTP验证码",
+    verCode: "OTP 验证码",
+    enterOtp: "6位数OTP",
     newPass: "新密码",
-    confirmPass: "确认新密码",
+    confirmPass: "确认",
     atLeast4: "至少4个字符",
-    reEnter: "重新输入新密码",
-    updatePass: "更新密码",
-    updating: "正在更新...",
+    reEnter: "重新输入",
+    updatePass: "更新",
+    updating: "处理中...",
     cancel: "取消",
-    avatarSizeErr: "头像图片大小必须小于 1.5MB",
+    avatarSizeErr: "图片必须 < 1.5MB",
     enabled: "已启用",
     disabled: "已禁用",
-    successMsg: "✅ 个人信息更新成功！"
+    successMsg: "✅ 已保存！",
+    biography: "个人简介",
+    biographyPlace: "分享您的骑师经验..."
   },
   ja: {
-    personalProfile: "個人プロフィールの詳細",
+    personalProfile: "プロフィールの編集",
     emailAddress: "メールアドレス",
-    saveChanges: "プロフィールの変更を保存",
-    savingChanges: "変更を保存中...",
-    passwordSettings: "🔒 パスワード設定",
-    passwordSettingsDesc: "パスワードを変更するには、登録済みの Gmail アドレスにセキュリティ検証コードを送信するようリクエストしてください。",
-    changePassBtn: "Gmail認証によるパスワード変更",
-    sendingCode: "検証コードを送信中...",
-    twoFactor: "二要素認証 (2FA)",
-    twoFactorDesc: "有効にすると、ログインするたびに6桁 of OTPコードがメールに送信されます。アカウントにセキュリティレイヤーを追加します。",
-    noteAdmin: "注意: 管理者および審判のアカウントはデフォルトで2FAをバイパスします。この機能を有効にする前に、メールアドレスが正しいことを確認してください。",
+    saveChanges: "変更を保存",
+    savingChanges: "保存中...",
+    passwordSettings: "パスワード",
+    passwordSettingsDesc: "パスワードを変更するためのセキュリティコードをリクエストします。",
+    changePassBtn: "パスワードを変更",
+    sendingCode: "送信中...",
+    twoFactor: "2要素認証",
+    twoFactorDesc: "メールOTPでアカウントを保護します。",
+    noteAdmin: "注意：管理者と審判は2FAをバイパスします。",
     upload: "アップロード",
     fullName: "氏名",
     weight: "体重 (kg)",
-    verCode: "認証コード (メールから)",
-    enterOtp: "6桁のOTPコードを入力してください",
+    verCode: "OTPコード",
+    enterOtp: "6桁のOTP",
     newPass: "新しいパスワード",
-    confirmPass: "新しいパスワードの確認",
+    confirmPass: "確認",
     atLeast4: "4文字以上",
-    reEnter: "新しいパスワードを再入力してください",
-    updatePass: "パスワードを更新",
-    updating: "更新中...",
+    reEnter: "再入力",
+    updatePass: "更新",
+    updating: "処理中...",
     cancel: "キャンセル",
-    avatarSizeErr: "アバター画像のサイズは1.5MB未満である必要があります",
+    avatarSizeErr: "画像は1.5MB未満である必要があります",
     enabled: "有効",
     disabled: "無効",
-    successMsg: "✅ 個人情報が正常に更新されました！"
+    successMsg: "✅ 保存しました！",
+    biography: "自己紹介",
+    biographyPlace: "騎手としての経験を共有..."
   }
 };
 
@@ -130,9 +138,11 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const { user, setUser } = useAuth();
   
   const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1024);
     };
     handleResize();
     window.addEventListener("resize", handleResize);
@@ -142,22 +152,19 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const lang = localStorage.getItem("app-lang") || "vi";
   const st = PROFILE_TRANSLATIONS[lang] || PROFILE_TRANSLATIONS.vi;
   
-  // Profile state
   const [fullName, setFullName] = useState(user?.fullName || user?.username || "");
   const [email, setEmail] = useState(user?.email || "");
   const [weight, setWeight] = useState(user?.weight?.toString() || "");
+  const [biography, setBiography] = useState(user?.biography || "");
   const [avatar, setAvatar] = useState(user?.avatar || "");
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileMsg, setProfileMsg] = useState("");
   const [profileErr, setProfileErr] = useState("");
 
-  // OTP Enable/Disable state
   const [otpEnabled, setOtpEnabled] = useState<boolean>(user?.requireOtp ?? false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMsg, setOtpMsg] = useState("");
-  const [otpErr, setOtpErr] = useState("");
 
-  // Password reset state
   const [passMode, setPassMode] = useState(false);
   const [otpTxId, setOtpTxId] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -169,476 +176,425 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle Avatar selection
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProfileMsg("");
-    setProfileErr("");
+    setProfileMsg(""); setProfileErr("");
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1.5 * 1024 * 1024) { // limit to 1.5MB
-        setProfileErr(st.avatarSizeErr);
-        return;
+      if (file.size > 1.5 * 1024 * 1024) { 
+        setProfileErr(st.avatarSizeErr); return;
       }
       const reader = new FileReader();
-      reader.onload = (event) => {
-        if (event.target?.result) {
-          setAvatar(event.target.result as string);
-        }
-      };
+      reader.onload = (event) => { if (event.target?.result) setAvatar(event.target.result as string); };
       reader.readAsDataURL(file);
     }
   };
 
-  // Handle Profile Update
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfileMsg("");
-    setProfileErr("");
-    setProfileLoading(true);
+    setProfileMsg(""); setProfileErr(""); setProfileLoading(true);
     try {
       const parsedWeight = user?.roleId === 3 ? parseFloat(weight) || null : null;
       const res = await api.post<any>("/auth/update-profile", {
-        id: user?.id,
-        fullName: fullName.trim(),
-        email: email.trim(),
-        weight: parsedWeight,
-        avatar: avatar || null
+        id: user?.id, fullName: fullName.trim(), email: email.trim(), weight: parsedWeight, avatar: avatar || null, biography: biography.trim()
       });
-
       if (res.success && res.user) {
-        setUser({
-          ...user,
-          fullName: res.user.fullName,
-          email: res.user.email,
-          weight: res.user.weight,
-          avatar: res.user.avatar
-        } as any);
+        setUser({ ...user, fullName: res.user.fullName, email: res.user.email, weight: res.user.weight, avatar: res.user.avatar, biography: res.user.biography } as any);
         setProfileMsg(st.successMsg);
+        setTimeout(() => setProfileMsg(""), 3000);
       } else {
-        setProfileErr(res.error || (lang === "vi" ? "Lỗi cập nhật thông tin." : lang === "zh" ? "更新个人资料失败。" : lang === "ja" ? "プロフィールの更新に失敗しました。" : "Failed to update profile."));
+        setProfileErr(res.error || "Failed to update profile.");
       }
     } catch (err: any) {
-      setProfileErr(err.message || "Failed to update profile.");
+      setProfileErr(err.message || "Error.");
     } finally {
       setProfileLoading(false);
     }
   };
 
-  // Handle Request Password Change Code
   const handleRequestPassCode = async () => {
-    setPassMsg("");
-    setPassErr("");
-    setPassLoading(true);
+    setPassMsg(""); setPassErr(""); setPassLoading(true);
     try {
       const res = await api.post<any>("/auth/forgot-password", { email: user?.email });
       if (res.success && res.otpTxId) {
-        setOtpTxId(res.otpTxId);
-        setPassMode(true);
-        setPassMsg("🔑 Verification code has been sent to your Gmail.");
+        setOtpTxId(res.otpTxId); setPassMode(true);
+        setPassMsg("🔑 Code sent!");
       } else {
-        setPassErr(res.error || "Failed to request verification code.");
+        setPassErr(res.error || "Error");
       }
     } catch (err: any) {
-      setPassErr(err.message || "Failed to send password reset code. Please check email config.");
+      setPassErr("Failed to send code.");
     } finally {
       setPassLoading(false);
     }
   };
 
-  // Handle Confirm Password Change
   const handleConfirmPassChange = async (e: React.FormEvent) => {
     e.preventDefault();
-    setPassMsg("");
-    setPassErr("");
-    if (newPassword.length < 4) {
-      setPassErr("Password must be at least 4 characters long");
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPassErr("Confirm password does not match");
-      return;
-    }
+    setPassMsg(""); setPassErr("");
+    if (newPassword !== confirmPassword) { setPassErr("Passwords don't match"); return; }
     setPassLoading(true);
     try {
-      const res = await api.post<any>("/auth/verify-forgot-password", {
-        otpTxId,
-        otp: otpCode.trim(),
-        newPassword
-      });
+      const res = await api.post<any>("/auth/verify-forgot-password", { otpTxId, otp: otpCode.trim(), newPassword });
       if (res.success) {
-        setPassMsg("✅ Password updated successfully!");
-        setTimeout(() => {
-          setPassMode(false);
-          setOtpCode("");
-          setNewPassword("");
-          setConfirmPassword("");
-          setPassMsg("");
-        }, 2500);
+        setPassMsg("✅ Updated!");
+        setTimeout(() => { setPassMode(false); setOtpCode(""); setNewPassword(""); setConfirmPassword(""); setPassMsg(""); }, 2000);
       } else {
-        setPassErr(res.error || "Invalid OTP code.");
+        setPassErr(res.error || "Invalid OTP");
       }
     } catch (err: any) {
-      setPassErr(err.message || "Failed to verify code and change password.");
+      setPassErr("Error.");
     } finally {
       setPassLoading(false);
     }
   };
 
-  // Handle OTP Toggle
   const toggleOtp = async () => {
-    setOtpLoading(true);
-    setOtpMsg("");
-    setOtpErr("");
+    setOtpLoading(true); setOtpMsg("");
     try {
       const next = !otpEnabled;
-      await api.post("/auth/toggle-otp", {
-        username: user?.username,
-        requireOtp: next,
-      });
+      await api.post("/auth/toggle-otp", { username: user?.username, requireOtp: next });
       setOtpEnabled(next);
       setUser({ ...user, requireOtp: next } as any);
-      setOtpMsg(
-        next
-          ? "✅ Two-factor authentication has been ENABLED. You will receive an email OTP on next login."
-          : "🔓 Two-factor authentication has been DISABLED."
-      );
     } catch {
-      setOtpErr("Failed to update 2FA setting. Please try again.");
+      setOtpMsg("Error");
     } finally {
       setOtpLoading(false);
     }
   };
 
-  const getInitials = (name?: string) => {
-    if (!name) return "?";
-    return name.substring(0, 2).toUpperCase();
+  const getInitials = (name?: string) => name ? name.substring(0, 2).toUpperCase() : "?";
+
+  // NEW PURE GLASS STYLE
+  const bentoBoxStyle: React.CSSProperties = {
+    background: "rgba(255, 255, 255, 0.03)", // Ultra light glass background
+    backdropFilter: "blur(30px)",
+    WebkitBackdropFilter: "blur(30px)",
+    border: "1px solid rgba(255, 255, 255, 0.08)",
+    borderTop: "1px solid rgba(255, 255, 255, 0.15)", // Brighter top edge for 3D feel
+    borderRadius: "24px",
+    padding: "2rem",
+    boxShadow: "0 10px 40px -10px rgba(0, 0, 0, 0.5)",
+    display: "flex",
+    flexDirection: "column",
+    position: "relative",
+    overflow: "hidden"
   };
 
   const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "0.625rem 0.875rem",
-    background: "#1c1917",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: "0.5rem",
-    color: "#fff",
-    fontSize: "0.8rem",
-    fontFamily: "monospace",
-    outline: "none"
+    width: "100%", padding: "1rem 1.25rem", background: "rgba(255, 255, 255, 0.04)", border: "1px solid rgba(255,255,255,0.08)",
+    borderRadius: "16px", color: "#fff", fontSize: "0.95rem", outline: "none", transition: "all 0.3s ease",
+    fontFamily: "'Outfit', 'Inter', sans-serif"
   };
 
   const labelStyle: React.CSSProperties = {
-    display: "block",
-    fontSize: "0.65rem",
-    fontFamily: "monospace",
-    textTransform: "uppercase",
-    color: "#a0a0a0",
-    marginBottom: "0.375rem",
-    letterSpacing: "0.05em"
+    display: "block", fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.6)",
+    marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "1px", fontFamily: "'Outfit', 'Inter', sans-serif"
   };
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? "1.5rem" : "2rem", alignItems: "start", maxWidth: "60rem" }}>
-      
-      {/* Left side: Profile Info & Avatar */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-        <div style={{
-          background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: "0.75rem", padding: "1.5rem",
-        }}>
-          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.05rem", color: "#f4f2ec", marginBottom: "1.5rem" }}>
-            {st.personalProfile}
-          </h3>
+    <div style={{ position: "relative", minHeight: "85vh", padding: isMobile ? "0.5rem" : "1.5rem", fontFamily: "'Outfit', 'Inter', sans-serif" }}>
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+          
+          @keyframes glowPulse {
+            0% { transform: scale(1) translate(0, 0); opacity: 0.15; }
+            33% { transform: scale(1.1) translate(5%, 5%); opacity: 0.2; }
+            66% { transform: scale(0.9) translate(-5%, -5%); opacity: 0.1; }
+            100% { transform: scale(1) translate(0, 0); opacity: 0.15; }
+          }
+          
+          .bento-input:focus {
+            border-color: ${roleColor}88 !important;
+            box-shadow: 0 0 0 4px ${roleColor}22 !important;
+            background: rgba(255, 255, 255, 0.08) !important;
+          }
+          
+          .bento-btn {
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px -5px ${roleColor}66;
+          }
+          .bento-btn::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.6s ease;
+          }
+          .bento-btn:hover::after { left: 100%; }
+          .bento-btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 12px 30px -5px ${roleColor}88; }
+          .bento-btn:active { transform: translateY(1px); }
+          
+          .glass-badge {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            backdrop-filter: blur(12px);
+          }
+          
+          ::-webkit-scrollbar { width: 0px; background: transparent; }
+        `}
+      </style>
 
-          <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-            
-            {/* Avatar block */}
-            <div style={{ display: "flex", alignItems: "center", gap: "1.25rem", borderBottom: "1px solid rgba(255,255,255,0.04)", paddingBottom: "1.25rem" }}>
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  position: "relative",
-                  width: "4.5rem", height: "4.5rem",
-                  borderRadius: "50%",
-                  border: `2px solid ${roleColor}`,
-                  overflow: "hidden",
-                  cursor: "pointer",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  background: "#1c1917"
-                }}
-              >
-                {avatar ? (
-                  <img src={avatar} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <span style={{ fontSize: "1.25rem", fontWeight: 700, color: roleColor, fontFamily: "monospace" }}>
-                    {getInitials(user?.fullName || user?.username)}
-                  </span>
-                )}
-                <div style={{
-                  position: "absolute", bottom: 0, left: 0, right: 0,
-                  background: "rgba(0,0,0,0.6)", padding: "0.15rem 0",
-                  display: "flex", justifyContent: "center", alignItems: "center"
-                }}>
-                  <span style={{ fontSize: "0.5rem", color: "#fff", fontFamily: "monospace", textTransform: "uppercase" }}>{st.upload}</span>
+      {/* Pure Glow Background - Using ONLY the roleColor and White for a clean, non-muddy aesthetic */}
+      <div style={{ 
+        position: "absolute", top: 0, left: 0, right: 0, bottom: 0, zIndex: 0,
+        pointerEvents: "none", overflow: "hidden"
+      }}>
+         <div style={{ position: "absolute", top: "-20%", left: "-10%", width: "60%", height: "60%", background: roleColor, filter: "blur(140px)", animation: "glowPulse 15s ease infinite" }} />
+         <div style={{ position: "absolute", bottom: "-20%", right: "-10%", width: "50%", height: "50%", background: roleColor, filter: "blur(140px)", animation: "glowPulse 18s ease infinite reverse" }} />
+         <div style={{ position: "absolute", top: "30%", left: "30%", width: "40%", height: "40%", background: "#ffffff", filter: "blur(120px)", opacity: 0.03 }} />
+      </div>
+
+      <div style={{ 
+        position: "relative", zIndex: 1, maxWidth: "1200px", margin: "0 auto",
+        display: "flex", flexDirection: "column", gap: "1.5rem"
+      }}>
+
+        {/* HERO ROW FOR NON-JOCKEYS (Instead of vertical stretch) */}
+        {user?.roleId !== 3 && (
+          <div style={{ ...bentoBoxStyle, flexDirection: isMobile ? "column" : "row", alignItems: "center", justifyContent: "flex-start", gap: "2rem", padding: "2.5rem 3rem" }}>
+             <div style={{ position: "absolute", top: 0, right: 0, width: "40%", height: "100%", background: `linear-gradient(90deg, transparent, ${roleColor}22)`, opacity: 0.5 }} />
+             
+             <div 
+               onClick={() => fileInputRef.current?.click()}
+               style={{ 
+                 width: "120px", height: "120px", borderRadius: "50%", padding: "4px", flexShrink: 0,
+                 background: `linear-gradient(135deg, ${roleColor}, rgba(255,255,255,0.1))`,
+                 cursor: "pointer", boxShadow: `0 10px 30px ${roleColor}44`, position: "relative"
+               }}
+             >
+               <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", background: "#111" }}>
+                  {avatar ? (
+                    <img src={avatar} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} />
+                  ) : (
+                    <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "2.5rem", fontWeight: 800, color: roleColor }}>{getInitials(user?.fullName || user?.username)}</div>
+                  )}
+               </div>
+               <div className="glass-badge" style={{ position: "absolute", bottom: "-5px", left: "50%", transform: "translateX(-50%)", padding: "4px 12px", borderRadius: "100px", fontSize: "0.65rem", fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  {st.upload}
+               </div>
+             </div>
+
+             <div style={{ zIndex: 2, textAlign: isMobile ? "center" : "left" }}>
+               <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#fff", margin: "0 0 0.5rem 0", letterSpacing: "-1px" }}>{user?.fullName || user?.username}</h2>
+               <span style={{ color: roleColor, padding: "0.4rem 1.25rem", borderRadius: "100px", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", background: `${roleColor}15`, border: `1px solid ${roleColor}33` }}>
+                 {lang === "vi" ? (roleLabel === "Admin" ? "Quản trị" : roleLabel === "Horse Owner" ? "Chủ ngựa" : roleLabel === "Jockey" ? "Nài ngựa" : roleLabel === "Referee" ? "Trọng tài" : "Người xem") : roleLabel}
+               </span>
+             </div>
+          </div>
+        )}
+
+        {/* GRID LAYOUT */}
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(12, 1fr)", 
+          gap: "1.5rem"
+        }}>
+
+          {/* FOR JOCKEY ONLY: AVATAR & STATS */}
+          {user?.roleId === 3 && (
+            <>
+              {/* BENTO BOX 1: Avatar (Spans 4 cols) */}
+              <div style={{ ...bentoBoxStyle, gridColumn: isMobile ? "span 1" : isTablet ? "span 2" : "span 4", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", padding: "3rem 2rem" }}>
+                 <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "40%", background: `linear-gradient(to bottom, ${roleColor}22, transparent)`, opacity: 0.5 }} />
+                 
+                 <div 
+                   onClick={() => fileInputRef.current?.click()}
+                   style={{ 
+                     width: "140px", height: "140px", borderRadius: "50%", padding: "4px",
+                     background: `linear-gradient(135deg, ${roleColor}, rgba(255,255,255,0.1))`,
+                     cursor: "pointer", boxShadow: `0 15px 35px -10px ${roleColor}66`,
+                     marginBottom: "1.5rem", position: "relative", zIndex: 2
+                   }}
+                 >
+                   <div style={{ width: "100%", height: "100%", borderRadius: "50%", overflow: "hidden", background: "#111" }}>
+                      {avatar ? (
+                        <img src={avatar} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.5s" }} onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"} onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"} />
+                      ) : (
+                        <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "3rem", fontWeight: 800, color: roleColor }}>{getInitials(user?.fullName || user?.username)}</div>
+                      )}
+                   </div>
+                   <div className="glass-badge" style={{ position: "absolute", bottom: "-10px", left: "50%", transform: "translateX(-50%)", padding: "4px 12px", borderRadius: "100px", fontSize: "0.65rem", fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                      {st.upload}
+                   </div>
+                 </div>
+
+                 <h2 style={{ fontSize: "2rem", fontWeight: 800, color: "#fff", margin: "0 0 0.5rem 0", zIndex: 2 }}>{user?.fullName || user?.username}</h2>
+                 
+                 <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", zIndex: 2, flexWrap: "wrap" }}>
+                   <span className="glass-badge" style={{ color: roleColor, padding: "0.4rem 1rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>
+                     {lang === "vi" ? "Nài ngựa" : "Jockey"}
+                   </span>
+                   {(user.totalTop3Finishes || 0) > 10 && (
+                     <span style={{ background: "rgba(250, 204, 21, 0.15)", color: "#facc15", border: "1px solid rgba(250, 204, 21, 0.3)", padding: "0.4rem 1rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>
+                       Pro
+                     </span>
+                   )}
+                 </div>
+              </div>
+
+              {/* BENTO BOX 2: Stats (Spans 8 cols) */}
+              <div style={{ ...bentoBoxStyle, gridColumn: isMobile ? "span 1" : isTablet ? "span 2" : "span 8", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: "2rem", padding: "2rem" }}>
+                 <div style={{ textAlign: "center" }}>
+                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{lang === "vi" ? "Trận tham gia" : "Races"}</p>
+                   <h1 style={{ fontSize: "4.5rem", fontWeight: 800, margin: 0, background: `linear-gradient(to bottom, #fff, rgba(255,255,255,0.4))`, WebkitBackgroundClip: "text", color: "transparent", lineHeight: 1 }}>{user.totalRacesParticipated || 0}</h1>
+                 </div>
+                 
+                 <div style={{ width: "1px", height: "80px", background: "rgba(255,255,255,0.1)", display: isMobile ? "none" : "block" }} />
+                 
+                 <div style={{ textAlign: "center" }}>
+                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{lang === "vi" ? "Lọt Top 3" : "Top 3"}</p>
+                   <h1 style={{ fontSize: "4.5rem", fontWeight: 800, margin: 0, background: `linear-gradient(to bottom, #10b981, #047857)`, WebkitBackgroundClip: "text", color: "transparent", lineHeight: 1 }}>{user.totalTop3Finishes || 0}</h1>
+                 </div>
+
+                 <div style={{ width: "1px", height: "80px", background: "rgba(255,255,255,0.1)", display: isMobile ? "none" : "block" }} />
+                 <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{lang === "vi" ? "Danh hiệu" : "Title"}</p>
+                   <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.5rem" }}>
+                     <span style={{ fontSize: "3rem", filter: "drop-shadow(0 0 15px rgba(251, 191, 36, 0.4))" }}>{(user.totalTop3Finishes || 0) > 10 ? "🏆" : "🏅"}</span>
+                     <h2 style={{ fontSize: "2rem", fontWeight: 800, margin: 0, color: "#fff" }}>
+                        {(user.totalTop3Finishes || 0) > 10 ? <span style={{ color: "#fbbf24" }}>{lang === "vi" ? "Vô địch" : "Champion"}</span> : <span style={{ color: "#60a5fa" }}>{lang === "vi" ? "Tiềm năng" : "Rookie"}</span>}
+                     </h2>
+                   </div>
+                 </div>
+              </div>
+            </>
+          )}
+
+          {/* BENTO BOX 3: Edit Profile (Spans 5 cols for Jockey, 8 cols for others) */}
+          <div style={{ ...bentoBoxStyle, gridColumn: isMobile ? "span 1" : isTablet ? "span 2" : (user?.roleId === 3 ? "span 5" : "span 7") }}>
+             <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "2rem" }}>
+               <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={roleColor} strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+               </div>
+               <h3 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff", margin: 0 }}>{st.personalProfile}</h3>
+             </div>
+
+             <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "1.25rem", flex: 1 }}>
+                <input type="file" ref={fileInputRef} onChange={handleAvatarChange} accept="image/png, image/jpeg, image/jpg" style={{ display: "none" }} />
+                
+                <div style={{ display: "flex", gap: "1.25rem", flexDirection: isMobile ? "column" : "row" }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={labelStyle}>{st.fullName}</label>
+                    <input type="text" className="bento-input" required value={fullName} onChange={e => setFullName(e.target.value)} style={inputStyle} />
+                  </div>
+                  {user?.roleId === 3 && (
+                    <div style={{ width: isMobile ? "100%" : "120px" }}>
+                      <label style={labelStyle}>{st.weight}</label>
+                      <input type="number" step="0.1" className="bento-input" required value={weight} onChange={e => setWeight(e.target.value)} style={inputStyle} />
+                    </div>
+                  )}
                 </div>
-              </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleAvatarChange} 
-                accept="image/png, image/jpeg, image/jpg" 
-                style={{ display: "none" }} 
-              />
-              <div>
-                <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "#f4f2ec" }}>{user?.fullName || user?.username}</p>
-                <p style={{ fontSize: "0.65rem", fontFamily: "monospace", background: "rgba(255,255,255,0.05)", padding: "0.15rem 0.45rem", borderRadius: "0.25rem", display: "inline-block", marginTop: "0.25rem", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  🏷️ {lang === "vi" ? (roleLabel === "Admin" ? "Quản trị viên" : roleLabel === "Horse Owner" ? "Chủ ngựa" : roleLabel === "Jockey" ? "Nài ngựa" : roleLabel === "Referee" ? "Trọng tài" : "Người xem") : lang === "zh" ? (roleLabel === "Admin" ? "管理员" : roleLabel === "Horse Owner" ? "马主" : roleLabel === "Jockey" ? "骑师" : roleLabel === "Referee" ? "裁判" : "观众") : lang === "ja" ? (roleLabel === "Admin" ? "管理者" : roleLabel === "Horse Owner" ? "馬主" : roleLabel === "Jockey" ? "ジョッキー" : roleLabel === "Referee" ? "審判" : "観客") : roleLabel}
-                </p>
-              </div>
-            </div>
 
-            {/* Full Name field */}
-            <div>
-              <label style={labelStyle}>{st.fullName}</label>
-              <input 
-                type="text" 
-                required 
-                value={fullName} 
-                onChange={e => setFullName(e.target.value)} 
-                style={inputStyle} 
-              />
-            </div>
+                {user?.roleId === 3 && (
+                  <div>
+                    <label style={labelStyle}>{st.biography}</label>
+                    <textarea 
+                      className="bento-input" 
+                      placeholder={st.biographyPlace} 
+                      value={biography} 
+                      onChange={e => setBiography(e.target.value)} 
+                      style={{ ...inputStyle, minHeight: "100px", resize: "vertical" }} 
+                    />
+                  </div>
+                )}
 
-            {/* Email field */}
-            <div>
-              <label style={labelStyle}>{st.emailAddress}</label>
-              <input 
-                type="email" 
-                required 
-                value={email} 
-                onChange={e => setEmail(e.target.value)} 
-                style={inputStyle} 
-              />
-            </div>
+                <div>
+                  <label style={labelStyle}>{st.emailAddress}</label>
+                  <input type="email" className="bento-input" required value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
+                </div>
 
-            {/* Jockey weight field (Only displayed for Jockeys - roleId 3) */}
-            {user?.roleId === 3 && (
-              <div>
-                <label style={labelStyle}>{st.weight}</label>
-                <input 
-                  type="number" 
-                  step="0.1" 
-                  required 
-                  placeholder="E.g. 52.5" 
-                  value={weight} 
-                  onChange={e => setWeight(e.target.value)} 
-                  style={inputStyle} 
-                />
-              </div>
-            )}
-
-            {profileMsg && <p style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#4ade80" }}>{profileMsg}</p>}
-            {profileErr && <p style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#ef4444" }}>{profileErr}</p>}
-
-            <button
-              type="submit"
-              disabled={profileLoading}
-              style={{
-                width: "100%", padding: "0.625rem",
-                background: roleColor, color: "#fff",
-                border: "none", borderRadius: "0.5rem",
-                fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700,
-                cursor: profileLoading ? "not-allowed" : "pointer"
-              }}
-            >
-              {profileLoading ? st.savingChanges : st.saveChanges}
-            </button>
-          </form>
-        </div>
-      </div>
-
-      {/* Right side: Security, Password & 2FA */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-        
-        {/* Password Reset Section */}
-        <div style={{
-          background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: "0.75rem", padding: "1.5rem",
-        }}>
-          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.05rem", color: "#f4f2ec", marginBottom: "1.25rem" }}>
-            {st.passwordSettings}
-          </h3>
-
-          {!passMode ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-              <p style={{ fontSize: "0.75rem", color: "#a0a0a0", lineHeight: 1.5 }}>
-                {st.passwordSettingsDesc}
-              </p>
-              {passErr && <p style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#ef4444" }}>{passErr}</p>}
-              <button
-                onClick={handleRequestPassCode}
-                disabled={passLoading}
-                style={{
-                  width: "100%", padding: "0.625rem",
-                  background: "transparent", border: "1px solid rgba(255,255,255,0.15)",
-                  color: "#f4f2ec", borderRadius: "0.5rem",
-                  fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700,
-                  cursor: passLoading ? "not-allowed" : "pointer"
-                }}
-              >
-                {passLoading ? st.sendingCode : st.changePassBtn}
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleConfirmPassChange} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {passMsg && <p style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#4ade80" }}>{passMsg}</p>}
-              {passErr && <p style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#ef4444" }}>{passErr}</p>}
-              
-              <div>
-                <label style={labelStyle}>{st.verCode}</label>
-                <input 
-                  type="text" 
-                  maxLength={6} 
-                  required 
-                  placeholder={st.enterOtp} 
-                  value={otpCode} 
-                  onChange={e => setOtpCode(e.target.value)} 
-                  style={inputStyle} 
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>{st.newPass}</label>
-                <input 
-                  type="password" 
-                  required 
-                  placeholder={st.atLeast4} 
-                  value={newPassword} 
-                  onChange={e => setNewPassword(e.target.value)} 
-                  style={inputStyle} 
-                />
-              </div>
-
-              <div>
-                <label style={labelStyle}>{st.confirmPass}</label>
-                <input 
-                  type="password" 
-                  required 
-                  placeholder={st.reEnter} 
-                  value={confirmPassword} 
-                  onChange={e => setConfirmPassword(e.target.value)} 
-                  style={inputStyle} 
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
-                <button
-                  type="submit"
-                  disabled={passLoading}
-                  style={{
-                    flex: 1, padding: "0.625rem",
-                    background: roleColor, color: "#fff",
-                    border: "none", borderRadius: "0.5rem",
-                    fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700,
-                    cursor: passLoading ? "not-allowed" : "pointer"
-                  }}
-                >
-                  {passLoading ? st.updating : st.updatePass}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPassMode(false)}
-                  style={{
-                    padding: "0.625rem 1rem",
-                    background: "rgba(255,255,255,0.05)", color: "#fff",
-                    border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.5rem",
-                    fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700,
-                    cursor: "pointer"
-                  }}
-                >
-                  {st.cancel}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-
-        {/* 2FA Toggle Section */}
-        <div style={{
-          background: otpEnabled ? "rgba(74,157,111,0.05)" : "rgba(255,255,255,0.02)",
-          border: `1px solid ${otpEnabled ? "rgba(74,157,111,0.25)" : "rgba(255,255,255,0.08)"}`,
-          borderRadius: "0.75rem", padding: "1.5rem",
-          transition: "all 0.3s",
-        }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "1rem" }}>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-                <span style={{ fontSize: "1.1rem" }}>🔐</span>
-                <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec" }}>
-                  {st.twoFactor}
-                </h3>
-                <span style={{
-                  fontSize: "0.55rem", fontFamily: "monospace", textTransform: "uppercase",
-                  padding: "0.15rem 0.45rem", borderRadius: "0.25rem",
-                  background: otpEnabled ? "rgba(74,157,111,0.2)" : "rgba(192,57,43,0.2)",
-                  color: otpEnabled ? "#4a9d6f" : "#ef4444",
-                }}>
-                  {otpEnabled ? st.enabled : st.disabled}
-                </span>
-              </div>
-              <p style={{ fontSize: "0.78rem", color: "#a0a0a0", lineHeight: 1.6 }}>
-                {st.twoFactorDesc}
-              </p>
-            </div>
-
-            {/* Toggle Switch */}
-            <button
-              onClick={toggleOtp}
-              disabled={otpLoading}
-              style={{
-                flexShrink: 0,
-                width: 52, height: 28,
-                borderRadius: 14,
-                background: otpEnabled ? "#4a9d6f" : "#2a2825",
-                border: `2px solid ${otpEnabled ? "#4a9d6f" : "#3a3835"}`,
-                cursor: otpLoading ? "not-allowed" : "pointer",
-                position: "relative",
-                transition: "all 0.3s",
-                opacity: otpLoading ? 0.6 : 1,
-              }}
-            >
-              <span style={{
-                position: "absolute",
-                top: 2, left: otpEnabled ? 22 : 2,
-                width: 20, height: 20,
-                borderRadius: "50%",
-                background: "#fff",
-                transition: "left 0.3s",
-                boxShadow: "0 1px 3px rgba(0,0,0,0.4)",
-              }} />
-            </button>
+                <div style={{ marginTop: "auto", paddingTop: "1.5rem" }}>
+                  {profileMsg && <div style={{ padding: "0.85rem", borderRadius: "12px", background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16,185,129,0.3)", color: "#10b981", fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem", textAlign: "center" }}>{profileMsg}</div>}
+                  {profileErr && <div style={{ padding: "0.85rem", borderRadius: "12px", background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem", textAlign: "center" }}>{profileErr}</div>}
+                  <button type="submit" disabled={profileLoading} className="bento-btn" style={{ width: "100%", padding: "1.2rem", background: `linear-gradient(135deg, ${roleColor}, ${roleColor}aa)`, color: "#fff", border: "none", borderRadius: "16px", fontSize: "1rem", fontWeight: 700, cursor: profileLoading ? "not-allowed" : "pointer", transition: "all 0.3s" }}>
+                    {profileLoading ? st.savingChanges : st.saveChanges}
+                  </button>
+                </div>
+             </form>
           </div>
 
-          {/* Messages */}
-          {otpMsg && (
-            <div style={{ marginTop: "1rem", padding: "0.625rem 0.875rem", borderRadius: "0.375rem", background: "rgba(74,157,111,0.1)", border: "1px solid rgba(74,157,111,0.2)", color: "#4a9d6f", fontSize: "0.8rem", fontFamily: "monospace" }}>
-              {otpMsg}
-            </div>
-          )}
-          {otpErr && (
-            <div style={{ marginTop: "1rem", padding: "0.625rem 0.875rem", borderRadius: "0.375rem", background: "rgba(192,57,43,0.1)", border: "1px solid rgba(192,57,43,0.2)", color: "#ef4444", fontSize: "0.8rem", fontFamily: "monospace" }}>
-              {otpErr}
-            </div>
-          )}
+          <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", gridColumn: isMobile ? "span 1" : isTablet ? "span 2" : (user?.roleId === 3 ? "span 7" : "span 5") }}>
+            {/* BENTO BOX 4: Password */}
+            <div style={{ ...bentoBoxStyle, flex: 1 }}>
+               <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.5rem" }}>
+                 <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                 </div>
+                 <h3 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff", margin: 0 }}>{st.passwordSettings}</h3>
+               </div>
 
-          <div style={{ marginTop: "1rem", padding: "0.75rem", borderRadius: "0.375rem", background: "rgba(201,162,39,0.05)", border: "1px solid rgba(201,162,39,0.15)" }}>
-            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", lineHeight: 1.6 }}>
-              💡 <strong style={{ color: "#c9a227" }}>{lang === "vi" ? "Lưu ý" : lang === "zh" ? "注意" : lang === "ja" ? "注意" : "Note"}:</strong> {st.noteAdmin}
-            </p>
+               {!passMode ? (
+                 <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+                   <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: "2rem" }}>{st.passwordSettingsDesc}</p>
+                   <div style={{ marginTop: "auto" }}>
+                     <button onClick={handleRequestPassCode} disabled={passLoading} className="bento-btn" style={{ width: "100%", padding: "1.2rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", borderRadius: "16px", fontSize: "0.95rem", fontWeight: 600, cursor: passLoading ? "not-allowed" : "pointer", transition: "all 0.3s" }}>
+                       {passLoading ? st.sendingCode : st.changePassBtn}
+                     </button>
+                   </div>
+                 </div>
+               ) : (
+                 <form onSubmit={handleConfirmPassChange} style={{ display: "flex", flexDirection: "column", gap: "1.25rem", height: "100%" }}>
+                   <div>
+                     <label style={labelStyle}>{st.verCode}</label>
+                     <input type="text" className="bento-input" maxLength={6} required placeholder={st.enterOtp} value={otpCode} onChange={e => setOtpCode(e.target.value)} style={inputStyle} />
+                   </div>
+                   <div style={{ display: "flex", gap: "1.25rem" }}>
+                     <div style={{ flex: 1 }}>
+                       <label style={labelStyle}>{st.newPass}</label>
+                       <input type="password" className="bento-input" required placeholder={st.atLeast4} value={newPassword} onChange={e => setNewPassword(e.target.value)} style={inputStyle} />
+                     </div>
+                     <div style={{ flex: 1 }}>
+                       <label style={labelStyle}>{st.confirmPass}</label>
+                       <input type="password" className="bento-input" required placeholder={st.reEnter} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={inputStyle} />
+                     </div>
+                   </div>
+                   {passMsg && <div style={{ color: "#10b981", fontSize: "0.85rem", fontWeight: 600, textAlign: "center" }}>{passMsg}</div>}
+                   {passErr && <div style={{ color: "#ef4444", fontSize: "0.85rem", fontWeight: 600, textAlign: "center" }}>{passErr}</div>}
+                   <div style={{ display: "flex", gap: "1rem", marginTop: "auto", paddingTop: "0.5rem" }}>
+                     <button type="submit" disabled={passLoading} className="bento-btn" style={{ flex: 2, padding: "1.1rem", background: "#fff", color: "#000", border: "none", borderRadius: "16px", fontSize: "1rem", fontWeight: 700, cursor: passLoading ? "not-allowed" : "pointer" }}>{st.updatePass}</button>
+                     <button type="button" onClick={() => setPassMode(false)} style={{ flex: 1, padding: "1.1rem", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: "16px", fontSize: "1rem", fontWeight: 600, cursor: "pointer" }}>{st.cancel}</button>
+                   </div>
+                 </form>
+               )}
+            </div>
+
+            {/* BENTO BOX 5: Security / 2FA */}
+            <div style={{ ...bentoBoxStyle, background: otpEnabled ? "rgba(16, 185, 129, 0.08)" : "rgba(255, 255, 255, 0.03)", borderColor: otpEnabled ? "rgba(16, 185, 129, 0.4)" : "rgba(255, 255, 255, 0.08)" }}>
+               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+                 <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                   <div style={{ width: 44, height: 44, borderRadius: 14, background: otpEnabled ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.05)", border: `1px solid ${otpEnabled ? "rgba(16,185,129,0.4)" : "transparent"}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={otpEnabled ? "#10b981" : "#fff"} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                   </div>
+                   <div>
+                     <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#fff", margin: "0 0 0.25rem 0" }}>{st.twoFactor}</h3>
+                     <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", padding: "0.2rem 0.6rem", borderRadius: "100px", background: otpEnabled ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.1)", color: otpEnabled ? "#10b981" : "rgba(255,255,255,0.5)", display: "inline-block" }}>
+                       {otpEnabled ? st.enabled : st.disabled}
+                     </span>
+                   </div>
+                 </div>
+                 
+                 {/* Toggle Switch */}
+                 <div onClick={toggleOtp} style={{ width: 60, height: 34, borderRadius: 17, background: otpEnabled ? "#10b981" : "rgba(0,0,0,0.6)", border: `2px solid ${otpEnabled ? "#10b981" : "rgba(255,255,255,0.2)"}`, cursor: "pointer", position: "relative", transition: "all 0.3s" }}>
+                    <div style={{ position: "absolute", top: 2, left: otpEnabled ? 28 : 2, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 0.3s cubic-bezier(0.4, 0, 0.2, 1)", boxShadow: "0 2px 5px rgba(0,0,0,0.3)" }} />
+                 </div>
+               </div>
+               
+               <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: 0 }}>
+                 {st.twoFactorDesc}
+               </p>
+
+               <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+                 <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", lineHeight: 1.5, margin: 0 }}>
+                   {st.noteAdmin}
+                 </p>
+               </div>
+            </div>
           </div>
+
         </div>
-
       </div>
-
     </div>
   );
 }

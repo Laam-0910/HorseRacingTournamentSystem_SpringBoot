@@ -9,6 +9,9 @@ export interface User {
   requireOtp?: boolean;
   totalRacesParticipated?: number;
   totalTop3Finishes?: number;
+  avatar?: string;
+  fullName?: string;
+  biography?: string;
 }
 
 export interface Horse {

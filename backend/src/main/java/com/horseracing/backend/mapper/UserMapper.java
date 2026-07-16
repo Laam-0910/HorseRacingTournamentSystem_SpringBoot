@@ -25,6 +25,7 @@ public class UserMapper {
                 .requireOtp(user.getRequireOtp())
                 .avatar(user.getAvatar() != null ? user.getAvatar().trim() : null)
                 .fullName(user.getFullName() != null ? user.getFullName().trim() : null)
+                .biography(user.getBiography() != null ? user.getBiography().trim() : null)
                 .build();
     }
 
@@ -48,6 +49,7 @@ public class UserMapper {
         user.setRequireOtp(dto.getRequireOtp());
         user.setAvatar(dto.getAvatar() != null ? dto.getAvatar().trim() : null);
         user.setFullName(dto.getFullName() != null ? dto.getFullName().trim() : null);
+        user.setBiography(dto.getBiography() != null ? dto.getBiography().trim() : null);
         return user;
     }
 

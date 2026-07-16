@@ -6,10 +6,77 @@ interface ProfileModalProps {
   onClose: () => void;
 }
 
+const MODAL_TRANSLATIONS: Record<string, any> = {
+  vi: {
+    jockey: "Nài ngựa",
+    owner: "Chủ ngựa",
+    admin: "Quản trị viên",
+    referee: "Trọng tài",
+    spectator: "Khán giả",
+    noBio: "Chưa có tiểu sử.",
+    regStats: "Thống kê hồ sơ",
+    bodyWeight: "Cân nặng",
+    totalRides: "Số trận",
+    wins: "Hạng nhất",
+    top3Finish: "Top 3",
+    winTop3Rates: "Tỉ lệ Nhất / Top 3",
+    activeStable: "Ngựa đang hoạt động",
+    avgFinish: "Hạng trung bình",
+    totalEarnings: "Tổng tiền thưởng",
+    managedUsers: "Số lượng Users",
+    managedHorses: "Số lượng Ngựa",
+    totalSeasons: "Số mùa giải",
+    totalRacesRef: "Số trận đã bắt",
+    totalVio: "Số lỗi đã phạt",
+    memberSince: "Thành viên từ",
+    ownedHorses: "Danh sách ngựa sở hữu",
+    recentPerf: "Thành tích gần đây (10 trận)",
+    meeting: "Giải đấu",
+    class: "Hạng",
+    horse: "Ngựa",
+    pos: "Hạng",
+    noRecords: "Chưa có dữ liệu."
+  },
+  en: {
+    jockey: "Jockey",
+    owner: "Horse Owner",
+    admin: "Admin",
+    referee: "Referee",
+    spectator: "Spectator",
+    noBio: "No professional biography registered.",
+    regStats: "Registry Statistics",
+    bodyWeight: "Body Weight",
+    totalRides: "Total Rides",
+    wins: "Wins",
+    top3Finish: "Top 3 Finish",
+    winTop3Rates: "Win / Top 3 Rates",
+    activeStable: "Active Stable",
+    avgFinish: "Avg Finish Position",
+    totalEarnings: "Total Prize Earnings",
+    managedUsers: "Managed Users",
+    managedHorses: "Managed Horses",
+    totalSeasons: "Total Seasons",
+    totalRacesRef: "Races Refereed",
+    totalVio: "Violations Issued",
+    memberSince: "Member Since",
+    ownedHorses: "Owned Stable Horses",
+    recentPerf: "Recent Performance (Last 10 Races)",
+    meeting: "Meeting",
+    class: "Class",
+    horse: "Horse",
+    pos: "Pos",
+    noRecords: "No recent race records found."
+  }
+};
+
+
 export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const lang = localStorage.getItem("app-lang") || "vi";
+  const st = MODAL_TRANSLATIONS[lang] || MODAL_TRANSLATIONS.en;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -95,17 +162,18 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                   </h2>
                   <span 
                     className="text-[9px] font-mono font-bold uppercase tracking-widest px-2.5 py-1 rounded border inline-block"
-                    style={profile.roleId === 3 
-                      ? { background: "rgba(59,130,246,0.1)", color: "#60a5fa", borderColor: "#60a5fa30" }
-                      : { background: "rgba(74,157,111,0.1)", color: "#4a9d6f", borderColor: "#4a9d6f30" }
-                    }
+                    style={{
+                      background: profile.roleId === 1 ? "rgba(239,68,68,0.1)" : profile.roleId === 2 ? "rgba(74,157,111,0.1)" : profile.roleId === 3 ? "rgba(59,130,246,0.1)" : profile.roleId === 4 ? "rgba(245,158,11,0.1)" : "rgba(107,114,128,0.1)",
+                      color: profile.roleId === 1 ? "#ef4444" : profile.roleId === 2 ? "#4a9d6f" : profile.roleId === 3 ? "#60a5fa" : profile.roleId === 4 ? "#f59e0b" : "#9ca3af",
+                      borderColor: profile.roleId === 1 ? "#ef444430" : profile.roleId === 2 ? "#4a9d6f30" : profile.roleId === 3 ? "#60a5fa30" : profile.roleId === 4 ? "#f59e0b30" : "#9ca3af30"
+                    }}
                   >
-                    {profile.roleId === 3 ? "Jockey" : "Horse Owner"}
+                    {profile.roleId === 1 ? st.admin : profile.roleId === 2 ? st.owner : profile.roleId === 3 ? st.jockey : profile.roleId === 4 ? st.referee : st.spectator}
                   </span>
                 </div>
                 <p className="text-xs text-white/40 font-mono">{profile.email}</p>
                 <p className="text-xs text-white/70 italic max-w-xl leading-relaxed">
-                  {profile.biography || "No professional biography registered in registry profile database."}
+                  {profile.biography || st.noBio}
                 </p>
               </div>
             </div>
@@ -115,52 +183,83 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
               {/* Stats column */}
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">Registry Statistics</h4>
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{st.regStats}</h4>
                   <div className="grid grid-cols-2 gap-3">
                     {profile.roleId === 3 ? (
                       <>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">Body Weight</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.bodyWeight}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">{profile.weight} kg</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">Total Rides</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.totalRides}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">{profile.totalRides}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">Wins</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.wins}</p>
                           <p className="text-lg font-bold font-mono text-emerald-400 mt-1">{profile.wins}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">Top 3 Finish</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.top3Finish}</p>
                           <p className="text-lg font-bold font-mono text-amber-400 mt-1">{profile.top3}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">Win / Top 3 Rates</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.winTop3Rates}</p>
                           <p className="text-sm font-bold font-mono text-white mt-1">
                             {profile.winRate.toFixed(1)}% / {profile.top3Rate.toFixed(1)}%
                           </p>
                         </div>
                       </>
-                    ) : (
+                    ) : profile.roleId === 2 ? (
                       <>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">Active Stable</p>
-                          <p className="text-lg font-bold font-mono text-white mt-1">{profile.stableSize} Horses</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.activeStable}</p>
+                          <p className="text-lg font-bold font-mono text-white mt-1">{profile.stableSize}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">Avg Finish Position</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.avgFinish}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">
                             {profile.avgPosition > 0 ? `#${profile.avgPosition.toFixed(1)}` : "N/A"}
                           </p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">Total Prize Earnings</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.totalEarnings}</p>
                           <p className="text-base font-bold font-mono text-emerald-400 mt-1">
                             ${profile.totalEarnings.toLocaleString()}
                           </p>
                         </div>
                       </>
+                    ) : profile.roleId === 1 ? (
+                      <>
+                        <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.managedUsers}</p>
+                          <p className="text-lg font-bold font-mono text-white mt-1">{profile.managedUsersCount}</p>
+                        </div>
+                        <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.managedHorses}</p>
+                          <p className="text-lg font-bold font-mono text-white mt-1">{profile.managedHorsesCount}</p>
+                        </div>
+                        <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.totalSeasons}</p>
+                          <p className="text-base font-bold font-mono text-emerald-400 mt-1">{profile.totalSeasons}</p>
+                        </div>
+                      </>
+                    ) : profile.roleId === 4 ? (
+                      <>
+                        <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.totalRacesRef}</p>
+                          <p className="text-lg font-bold font-mono text-white mt-1">{profile.totalRacesRefereed}</p>
+                        </div>
+                        <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.totalVio}</p>
+                          <p className="text-lg font-bold font-mono text-white mt-1">{profile.totalViolationsIssued}</p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
+                        <p className="text-[9px] font-mono text-white/40 uppercase">{st.memberSince}</p>
+                        <p className="text-lg font-bold font-mono text-white mt-1">{profile.memberSince || "2024"}</p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -168,7 +267,7 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                 {/* Owner active horses list */}
                 {profile.roleId === 2 && profile.activeHorses && profile.activeHorses.length > 0 && (
                   <div>
-                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">Owned Stable Horses</h4>
+                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{st.ownedHorses}</h4>
                     <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
                       {profile.activeHorses.map((h: any) => (
                         <div 
@@ -189,23 +288,24 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
               </div>
 
               {/* Recent History Table column */}
+              {(profile.roleId === 2 || profile.roleId === 3) && (
               <div className="lg:col-span-2 flex flex-col">
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">Recent Performance (Last 10 Races)</h4>
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{st.recentPerf}</h4>
                 <div className="flex-1 overflow-x-auto rounded-xl border border-white/5">
                   <table className="w-full border-collapse text-left min-w-[500px]">
                     <thead>
                       <tr className="border-b border-white/10 bg-white/[0.01] text-[9px] font-mono uppercase text-white/40">
-                        <th className="px-4 py-3">Meeting</th>
-                        <th className="px-4 py-3">Class</th>
-                        <th className="px-4 py-3">Horse</th>
-                        <th className="px-4 py-3 text-center">Pos</th>
+                        <th className="px-4 py-3">{st.meeting}</th>
+                        <th className="px-4 py-3">{st.class}</th>
+                        <th className="px-4 py-3">{st.horse}</th>
+                        <th className="px-4 py-3 text-center">{st.pos}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 text-xs font-mono">
                       {profile.history?.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="px-4 py-8 text-center text-white/40 italic">
-                            No recent race records found.
+                            {st.noRecords}
                           </td>
                         </tr>
                       ) : (
@@ -235,6 +335,7 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                   </table>
                 </div>
               </div>
+              )}
             </div>
           </>
         )}
