@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
+import { confirm } from "../../../lib/confirm";
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
 import { $t } from '@/lib/i18n';
 
@@ -748,7 +749,7 @@ export default function RefereeHub() {
   };
 
   const handleDisqualifyEntry = async (entryId: number) => {
-    if (!window.confirm("Are you sure you want to disqualify this horse?")) return;
+    if (!await confirm("Are you sure you want to disqualify this horse?")) return;
     setActionLoadingId(entryId);
     try {
       await api.post(`/referee/entry/${entryId}/disqualify`);

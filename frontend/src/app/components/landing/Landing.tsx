@@ -2209,6 +2209,7 @@ export default function Landing() {
                           return (
                             <button
                               key={n.key}
+                              className="landing-nav-btn"
                               onClick={() => {
                                 setView(n.key);
                                 setShowDashboardMenu(false);
@@ -2485,17 +2486,18 @@ export default function Landing() {
                   return (
                     <button
                       key={n.key}
+                      className="landing-nav-btn"
                       onClick={() => {
                         setView(n.key);
                       }}
                       style={{
-                        padding: active ? "0.4rem 1rem" : "0.4rem 0",
-                        borderRadius: active ? "0.375rem" : "0",
+                        padding: "0.4rem 0.8rem",
+                        borderRadius: "0.375rem",
                         fontSize: "0.85rem",
                         fontFamily: "sans-serif",
                         cursor: "pointer",
-                        border: active ? "1px solid rgba(201,162,39,0.5)" : "none",
-                        background: "none",
+                        border: active ? "1px solid rgba(201,162,39,0.5)" : "1px solid transparent",
+                        background: active ? "rgba(201,162,39,0.06)" : "transparent",
                         color: active ? "#c9a227" : "#a0a0a0",
                         fontWeight: active ? 600 : 500,
                         display: "flex",

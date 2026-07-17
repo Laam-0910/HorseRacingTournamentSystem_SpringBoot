@@ -476,45 +476,48 @@ export default function Horses() {
             </div>
             <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               
-              <div>
-                <label style={labelStyle}>{$t("Horse Name", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                <input type="text" required value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} />
-              </div>
-              
-              <div>
-                <label style={labelStyle}>{$t("Breed", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                <input type="text" required value={editBreed} onChange={e => setEditBreed(e.target.value)} style={inputStyle} />
-              </div>
-              
-              <div>
-                <label style={labelStyle}>{$t("Gender / Sex", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                <select value={editSex} onChange={e => setEditSex(e.target.value)} style={selectStyle}>
-                  <option value="Gelding">{$t("Gelding", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  <option value="Colt">{$t("Colt", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  <option value="Horse">{$t("Horse", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  <option value="Filly">{$t("Filly", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  <option value="Mare">{$t("Mare", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                </select>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={labelStyle}>{$t("Horse Name", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                  <input type="text" required value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>{$t("Breed", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                  <input type="text" required value={editBreed} onChange={e => setEditBreed(e.target.value)} style={inputStyle} />
+                </div>
               </div>
 
-              <InlineDatePicker label={$t("Date of Birth", (localStorage.getItem('app-lang') || 'vi'))} value={editDob} onChange={setEditDob} />
-              
-              <div>
-                <label style={labelStyle}>{$t("Current Rating", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                <input type="number" required value={editRating} onChange={e => setEditRating(parseInt(e.target.value))} style={inputStyle} />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={labelStyle}>{$t("Gender / Sex", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                  <select value={editSex} onChange={e => setEditSex(e.target.value)} style={selectStyle}>
+                    <option value="Gelding">{$t("Gelding", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="Colt">{$t("Colt", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="Horse">{$t("Horse", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="Filly">{$t("Filly", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="Mare">{$t("Mare", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  </select>
+                </div>
+                <InlineDatePicker label={$t("Date of Birth", (localStorage.getItem('app-lang') || 'vi'))} value={editDob} onChange={setEditDob} />
               </div>
 
-              <div>
-                <label style={labelStyle}>{$t("Status", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={selectStyle}>
-                  <option value="PENDING">{$t("PENDING", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  <option value="ACTIVE">{$t("ACTIVE", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  <option value="INJURED">{$t("INJURED", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  <option value="INACTIVE">{$t("INACTIVE", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  <option value="REJECTED">{$t("REJECTED", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  <option value="SUSPENDED">{$t("SUSPENDED", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  <option value="RETIRED">{$t("RETIRED", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                </select>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div>
+                  <label style={labelStyle}>{$t("Current Rating", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                  <input type="number" required value={editRating} onChange={e => setEditRating(parseInt(e.target.value))} style={inputStyle} />
+                </div>
+                <div>
+                  <label style={labelStyle}>{$t("Status", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                  <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={selectStyle}>
+                    <option value="PENDING">{$t("PENDING", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="ACTIVE">{$t("ACTIVE", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="INJURED">{$t("INJURED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="INACTIVE">{$t("INACTIVE", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="REJECTED">{$t("REJECTED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="SUSPENDED">{$t("SUSPENDED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="RETIRED">{$t("RETIRED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  </select>
+                </div>
               </div>
               
               <div>

@@ -1,5 +1,6 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { api } from "../../../lib/api";
 
 export default function Users() {
@@ -187,7 +188,7 @@ export default function Users() {
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", padding: "1.5rem" }}>
         <div style={{ marginBottom: "1rem" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Create New Account", (localStorage.getItem('app-lang') || 'vi'))}</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Register an Owner, Jockey or Spectator manually", (localStorage.getItem('app-lang') || 'vi'))}</p>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Register an Owner, Jockey, Referee or Spectator manually", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         <form onSubmit={handleCreateUser} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", alignItems: "end" }}>
           <div>
@@ -208,6 +209,7 @@ export default function Users() {
               <option value="4">{$t("Spectator / Fan", (localStorage.getItem('app-lang') || 'vi'))}</option>
               <option value="2">{$t("Horse Owner", (localStorage.getItem('app-lang') || 'vi'))}</option>
               <option value="3">{$t("Jockey", (localStorage.getItem('app-lang') || 'vi'))}</option>
+              <option value="5">{$t("Referee", (localStorage.getItem('app-lang') || 'vi'))}</option>
             </select>
           </div>
           {createRoleId === "3" && (
@@ -359,8 +361,8 @@ export default function Users() {
 
 
       {/* Edit User Modal */}
-      {editingUser && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 99, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+      {editingUser && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "28rem", position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(201,162,39,0.1)", paddingBottom: "0.75rem", marginBottom: "1.25rem" }}>
               <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>{$t("Edit User Account", (localStorage.getItem('app-lang') || 'vi'))}</h3>
@@ -384,6 +386,7 @@ export default function Users() {
                     <option value="4">{$t("Spectator / Fan", (localStorage.getItem('app-lang') || 'vi'))}</option>
                     <option value="2">{$t("Horse Owner", (localStorage.getItem('app-lang') || 'vi'))}</option>
                     <option value="3">{$t("Jockey", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="5">{$t("Referee", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   </select>
                 )}
               </div>
@@ -404,7 +407,8 @@ export default function Users() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

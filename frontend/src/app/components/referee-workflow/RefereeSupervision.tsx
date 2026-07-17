@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
+import { confirm } from "../../../lib/confirm";
 
 interface RefereeSupervisionProps {
   raceId: number;
@@ -71,7 +72,7 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
       setError("Steward report is required for emergency stop.");
       return;
     }
-    if (!window.confirm("CRITICAL: Are you sure you want to stop this race?")) return;
+    if (!await confirm("CRITICAL: Are you sure you want to stop this race?")) return;
 
     setError("");
     setSuccess("");

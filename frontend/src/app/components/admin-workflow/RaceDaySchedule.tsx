@@ -1,8 +1,10 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { api } from "../../../lib/api";
 import { formatDateTime, formatDate, formatForApi, parseSafeDate } from "../../utils/dateTimeHelper";
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
+import { confirm } from "../../../lib/confirm";
 
 export default function RaceDaySchedule() {
   const [meetings, setMeetings] = useState<any[]>([]);
@@ -167,7 +169,7 @@ export default function RaceDaySchedule() {
   };
 
   const handleCancelRace = async (raceId: number) => {
-    if (!confirm("Are you sure you want to cancel this race?")) return;
+    if (!await confirm("Are you sure you want to cancel this race?")) return;
     try {
       await api.post(`/admin/races/${raceId}/cancel`);
       if (selectedMeetingId) {
@@ -397,10 +399,10 @@ export default function RaceDaySchedule() {
       </div>
 
       {/* Schedule Race Modal */}
-      {showScheduleModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
-          <div style={{ background: "#111217", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "1rem", width: "100%", maxWidth: "500px", overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
-            <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      {showScheduleModal && createPortal(
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999, padding: "1rem" }}>
+          <div style={{ background: "#111217", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "1rem", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto", position: "relative", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
+            <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, background: "#111217", zIndex: 10 }}>
               <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "16px", color: "#f4f2ec" }}>{$t("Schedule New Race", (localStorage.getItem('app-lang') || 'vi'))}</h3>
               <button onClick={() => setShowScheduleModal(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "18px" }}>✕</button>
             </div>
@@ -446,13 +448,14 @@ export default function RaceDaySchedule() {
                 </div>
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "1rem" }}>
                 <button type="button" onClick={() => setShowScheduleModal(false)} style={{ padding: "0.5rem 1rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.375rem", color: "#a0a0a0", cursor: "pointer", fontSize: "11px", fontFamily: "monospace" }}>{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
                 <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0b0d11", border: "none", borderRadius: "0.375rem", cursor: "pointer", fontSize: "11px", fontFamily: "monospace", fontWeight: 700 }}>{$t("Confirm Schedule", (localStorage.getItem('app-lang') || 'vi'))}</button>
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

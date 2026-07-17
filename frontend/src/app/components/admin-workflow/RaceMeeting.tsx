@@ -1,8 +1,9 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
-import { formatDate, formatForDateTimeLocal, formatForApi } from "../../utils/dateTimeHelper";
+import { formatDate, formatDateTime, formatForDateTimeLocal, formatForApi } from "../../utils/dateTimeHelper";
 import InlineDatePicker from "../ui/InlineDatePicker";
+import { confirm } from "../../../lib/confirm";
 
 export default function RaceMeeting() {
   const [meetings, setMeetings] = useState<any[]>([]);
@@ -70,7 +71,7 @@ export default function RaceMeeting() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this race meeting? This action cannot be undone.")) {
+    if (!await confirm("Are you sure you want to delete this race meeting? This action cannot be undone.")) {
       return;
     }
     setError("");
@@ -95,7 +96,7 @@ export default function RaceMeeting() {
     try {
       const payload = {
         name,
-        startDate: date,
+        startDate: formatDateTime(date),
         venue,
         seasonId: parseInt(seasonId),
       };
@@ -208,7 +209,7 @@ export default function RaceMeeting() {
       <div className="space-y-4 order-first lg:order-last">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-          <span>{editingMeeting ? `{$t("Edit Meeting", (localStorage.getItem('app-lang') || 'vi'))} #${editingMeeting.id}` : "Add New Meeting"}</span>
+          <span>{editingMeeting ? `${$t("Edit Meeting", (localStorage.getItem('app-lang') || 'vi'))} #${editingMeeting.id}` : $t("Add New Meeting", (localStorage.getItem('app-lang') || 'vi'))}</span>
         </h3>
 
         {error && (
