@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { formatDate, formatForDateTimeLocal, formatForApi } from "../../utils/dateTimeHelper";
@@ -123,16 +124,16 @@ export default function RaceMeeting() {
       <div className="lg:col-span-2 space-y-4 order-last lg:order-first">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-          <span>Race Meetings Directory</span>
+          <span>{$t("Race Meetings Directory", (localStorage.getItem('app-lang') || 'vi'))}</span>
         </h3>
 
         {loading ? (
-          <p className="text-sm text-white/40">Loading meetings...</p>
+          <p className="text-sm text-white/40">{$t("Loading meetings...", (localStorage.getItem('app-lang') || 'vi'))}</p>
         ) : isMobile ? (
           /* Mobile: stacked cards */
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {meetings.length === 0 ? (
-              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>No meetings found.</p>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>{$t("No meetings found.", (localStorage.getItem('app-lang') || 'vi'))}</p>
             ) : meetings.map((m) => (
               <div key={m.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
@@ -153,15 +154,11 @@ export default function RaceMeeting() {
                     <button
                       onClick={() => handleEdit(m)}
                       className="px-2.5 py-1 text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-md transition"
-                    >
-                      Edit
-                    </button>
+                    >{$t("Edit", (localStorage.getItem('app-lang') || 'vi'))}</button>
                     <button
                       onClick={() => handleDelete(m.id)}
                       className="px-2.5 py-1 text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-md transition"
-                    >
-                      Delete
-                    </button>
+                    >{$t("Delete", (localStorage.getItem('app-lang') || 'vi'))}</button>
                   </div>
                 </div>
               </div>
@@ -173,12 +170,12 @@ export default function RaceMeeting() {
             <table className="w-full text-left border-collapse min-w-[650px]">
               <thead>
                 <tr className="bg-[#151310] text-xs font-semibold text-white/60 uppercase tracking-wider border-b border-white/5">
-                  <th className="px-6 py-4">ID</th>
-                  <th className="px-6 py-4">Meeting Name</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4">Venue</th>
-                  <th className="px-6 py-4">Season ID</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-6 py-4">{$t("ID", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-4">{$t("Meeting Name", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-4">{$t("Date", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-4">{$t("Venue", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-4">{$t("Season ID", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-4 text-right">{$t("Actions", (localStorage.getItem('app-lang') || 'vi'))}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-sm">
@@ -193,15 +190,11 @@ export default function RaceMeeting() {
                       <button
                         onClick={() => handleEdit(m)}
                         className="px-2.5 py-1 text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-md transition"
-                      >
-                        Edit
-                      </button>
+                      >{$t("Edit", (localStorage.getItem('app-lang') || 'vi'))}</button>
                       <button
                         onClick={() => handleDelete(m.id)}
                         className="px-2.5 py-1 text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-md transition"
-                      >
-                        Delete
-                      </button>
+                      >{$t("Delete", (localStorage.getItem('app-lang') || 'vi'))}</button>
                     </td>
                   </tr>
                 ))}
@@ -215,7 +208,7 @@ export default function RaceMeeting() {
       <div className="space-y-4 order-first lg:order-last">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-          <span>{editingMeeting ? `Edit Meeting #${editingMeeting.id}` : "Add New Meeting"}</span>
+          <span>{editingMeeting ? `{$t("Edit Meeting", (localStorage.getItem('app-lang') || 'vi'))} #${editingMeeting.id}` : "Add New Meeting"}</span>
         </h3>
 
         {error && (
@@ -232,19 +225,19 @@ export default function RaceMeeting() {
 
         <form onSubmit={handleSubmit} className="bg-white/[0.015] border border-white/10 rounded-2xl p-5 space-y-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">Meeting Name</label>
+            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Meeting Name", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <input
               type="text"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs"
-              placeholder="E.g., Grand Prix Sunday"
+              placeholder={$t("E.g., Grand Prix Sunday", (localStorage.getItem('app-lang') || 'vi'))}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">Date</label>
+            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Date", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <InlineDatePicker
               value={date ? date.split(" ")[0] : ""}
               onChange={(v) => setDate(v + " 00:00:00")}
@@ -252,19 +245,19 @@ export default function RaceMeeting() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">Venue</label>
+            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Venue", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <input
               type="text"
               required
               value={venue}
               onChange={(e) => setVenue(e.target.value)}
               className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs"
-              placeholder="E.g., Epsom Downs Track"
+              placeholder={$t("E.g., Epsom Downs Track", (localStorage.getItem('app-lang') || 'vi'))}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">Season Association</label>
+            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Season Association", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <select
               value={seasonId}
               onChange={(e) => setSeasonId(e.target.value)}
@@ -282,16 +275,14 @@ export default function RaceMeeting() {
             type="submit"
             className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-xl transition"
           >
-            {editingMeeting ? "Save Changes" : "Create Meeting"}
+            {editingMeeting ? $t("Save Changes", (localStorage.getItem('app-lang') || 'vi')) : $t("Create Meeting", (localStorage.getItem('app-lang') || 'vi'))}
           </button>
           {editingMeeting && (
             <button
               type="button"
               onClick={handleCancelEdit}
               className="w-full py-2.5 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-xl transition mt-2"
-            >
-              Cancel Edit
-            </button>
+            >{$t("Cancel Edit", (localStorage.getItem('app-lang') || 'vi'))}</button>
           )}
         </form>
       </div>

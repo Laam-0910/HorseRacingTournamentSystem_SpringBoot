@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { formatDateTime, formatDate, formatForApi, parseSafeDate } from "../../utils/dateTimeHelper";
@@ -188,36 +189,36 @@ export default function RaceDaySchedule() {
       {/* Stats Cards (JSP Style) */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem" }}>
         <div style={cardStyle}>
-          <p style={cardLabelStyle}>Season</p>
+          <p style={cardLabelStyle}>{$t("Season", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <p style={cardValStyle} title={activeSeason?.name}>
             {activeSeason?.name || "Championship Season"}
           </p>
-          <p style={cardSubStyle}>Active Tournament</p>
+          <p style={cardSubStyle}>{$t("Active Tournament", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
 
         <div style={{ ...cardStyle, borderColor: "rgba(201,162,39,0.22)" }}>
-          <p style={cardLabelStyle}>Race Meeting</p>
+          <p style={cardLabelStyle}>{$t("Race Meeting", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <p style={cardValStyle} title={selectedMeeting?.name}>
             {selectedMeeting?.name || "No Meeting Selected"}
           </p>
-          <p style={{ ...cardSubStyle, color: "#c9a227" }}>● Scheduled Day</p>
+          <p style={{ ...cardSubStyle, color: "#c9a227" }}>● {$t("Scheduled Day", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
 
         <div style={cardStyle}>
-          <p style={cardLabelStyle}>Track Venue</p>
+          <p style={cardLabelStyle}>{$t("Track Venue", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <p style={cardValStyle} title={selectedMeeting?.venue}>
             {selectedMeeting?.venue || "Main Course"}
           </p>
-          <p style={cardSubStyle}>Track Venue type</p>
+          <p style={cardSubStyle}>{$t("Track Venue type", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
 
         <div style={cardStyle}>
-          <p style={cardLabelStyle}>Race Date</p>
+          <p style={cardLabelStyle}>{$t("Race Date", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <p style={{ ...cardValStyle, fontFamily: "monospace" }}>
             {selectedMeeting ? formatDate(selectedMeeting.startDate || selectedMeeting.date) : "N/A"}
           </p>
           <p style={cardSubStyle}>
-            Total Events: {enrichedRaces.length}
+            {$t("Total Events:", (localStorage.getItem('app-lang') || 'vi'))} {enrichedRaces.length}
           </p>
         </div>
       </div>
@@ -228,8 +229,8 @@ export default function RaceDaySchedule() {
         {/* Header with selector */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.05)", flexWrap: "wrap", gap: "0.5rem" }}>
           <div>
-            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Race Day Schedule</h4>
-            <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Official operational timeline for the upcoming race fixture</p>
+            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Race Day Schedule", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+            <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Official operational timeline for the upcoming race fixture", (localStorage.getItem('app-lang') || 'vi'))}</p>
           </div>
           <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
             <button
@@ -256,11 +257,11 @@ export default function RaceDaySchedule() {
             >
               {meetings.map((m) => (
                 <option key={m.id} value={m.id} style={{ background: "#12141a" }}>
-                  {m.name} {m.id === selectedMeetingId ? "(Current)" : ""}
+                  {m.name} {m.id === selectedMeetingId ? $t("(Current)", (localStorage.getItem('app-lang') || 'vi')) : ""}
                 </option>
               ))}
               {meetings.length === 0 && (
-                <option value="">No meetings available</option>
+                <option value="">{$t("No meetings available", (localStorage.getItem('app-lang') || 'vi'))}</option>
               )}
             </select>
           </div>
@@ -269,7 +270,7 @@ export default function RaceDaySchedule() {
         {/* Content list */}
         <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           {loadingRaces ? (
-            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.4)", padding: "2rem" }}>Loading schedule timeline...</p>
+            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.4)", padding: "2rem" }}>{$t("Loading schedule timeline...", (localStorage.getItem('app-lang') || 'vi'))}</p>
           ) : enrichedRaces.length > 0 ? (
             enrichedRaces.map((item) => {
               const r = item.race;
@@ -280,11 +281,11 @@ export default function RaceDaySchedule() {
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.05)", paddingBottom: "0.75rem", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
                     <div>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                        <span style={{ fontSize: "12px", fontFamily: "monospace", fontWeight: "bold", color: "#c9a227" }}>Race #{r.id}</span>
+                        <span style={{ fontSize: "12px", fontFamily: "monospace", fontWeight: "bold", color: "#c9a227" }}>{$t("Race", (localStorage.getItem('app-lang') || 'vi'))} #{r.id}</span>
                         <span style={{ fontSize: "14px", fontWeight: "bold", color: "#f4f2ec" }}>{r.classLevel}</span>
                       </div>
                       <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
-                        Time: {formatDateTime(r.startTime)} | Distance: {r.distanceMeters}m | Track: {r.trackType}
+                        {$t("Time:", (localStorage.getItem('app-lang') || 'vi'))} {formatDateTime(r.startTime)} | {$t("Distance:", (localStorage.getItem('app-lang') || 'vi'))} {r.distanceMeters}m | {$t("Track:", (localStorage.getItem('app-lang') || 'vi'))} {r.trackType}
                       </p>
                     </div>
                     <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -313,9 +314,7 @@ export default function RaceDaySchedule() {
                             fontFamily: "monospace",
                             cursor: "pointer",
                           }}
-                        >
-                          Cancel
-                        </button>
+                        >{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
                       )}
                     </div>
                   </div>
@@ -325,7 +324,7 @@ export default function RaceDaySchedule() {
                     
                     {/* Referees */}
                     <div style={{ borderRight: "1px solid rgba(255,255,255,0.05)", paddingRight: "1rem" }}>
-                      <h5 style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>Assigned Referees</h5>
+                      <h5 style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>{$t("Assigned Referees", (localStorage.getItem('app-lang') || 'vi'))}</h5>
                       {item.referees && item.referees.length > 0 ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
                           {item.referees.map((ref: any) => (
@@ -335,22 +334,22 @@ export default function RaceDaySchedule() {
                           ))}
                         </div>
                       ) : (
-                        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>No referees assigned.</p>
+                        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>{$t("No referees assigned.", (localStorage.getItem('app-lang') || 'vi'))}</p>
                       )}
                     </div>
 
                     {/* Entries */}
                     <div className="lg:col-span-2">
-                      <h5 style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>Racecard Entries</h5>
+                      <h5 style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>{$t("Racecard Entries", (localStorage.getItem('app-lang') || 'vi'))}</h5>
                       {item.entries && item.entries.length > 0 ? (
                         <div style={{ overflowX: "auto" }}>
                           <table style={{ width: "100%", borderCollapse: "collapse" }}>
                             <thead>
                               <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>
-                                <th style={{ padding: "0.5rem 0.25rem", textAlign: "left" }}>Gate</th>
-                                <th style={{ padding: "0.5rem", textAlign: "left" }}>Horse (Rating)</th>
-                                <th style={{ padding: "0.5rem", textAlign: "left" }}>Jockey (Weight)</th>
-                                <th style={{ padding: "0.5rem", textAlign: "right" }}>Carried Wt</th>
+                                <th style={{ padding: "0.5rem 0.25rem", textAlign: "left" }}>{$t("Gate", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                                <th style={{ padding: "0.5rem", textAlign: "left" }}>{$t("Horse (Rating)", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                                <th style={{ padding: "0.5rem", textAlign: "left" }}>{$t("Jockey (Weight)", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                                <th style={{ padding: "0.5rem", textAlign: "right" }}>{$t("Carried Wt", (localStorage.getItem('app-lang') || 'vi'))}</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -372,7 +371,7 @@ export default function RaceDaySchedule() {
                           </table>
                         </div>
                       ) : (
-                        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>No entries declared for this race yet.</p>
+                        <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>{$t("No entries declared for this race yet.", (localStorage.getItem('app-lang') || 'vi'))}</p>
                       )}
                     </div>
 
@@ -382,7 +381,7 @@ export default function RaceDaySchedule() {
               );
             })
           ) : (
-            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.4)", padding: "2rem", fontSize: "12px", fontFamily: "monospace" }}>No scheduled events found for this meeting date.</p>
+            <p style={{ textAlign: "center", color: "rgba(255,255,255,0.4)", padding: "2rem", fontSize: "12px", fontFamily: "monospace" }}>{$t("No scheduled events found for this meeting date.", (localStorage.getItem('app-lang') || 'vi'))}</p>
           )}
         </div>
 
@@ -390,9 +389,9 @@ export default function RaceDaySchedule() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.75rem 1.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.005)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "10px", color: "rgba(255,255,255,0.4)" }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }}></span>
-            <span>Timeline operational and scheduler enabled</span>
+            <span>{$t("Timeline operational and scheduler enabled", (localStorage.getItem('app-lang') || 'vi'))}</span>
           </div>
-          <p style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)" }}>Last updated: Just now</p>
+          <p style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)" }}>{$t("Last updated: Just now", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
 
       </div>
@@ -402,54 +401,54 @@ export default function RaceDaySchedule() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
           <div style={{ background: "#111217", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "1rem", width: "100%", maxWidth: "500px", overflow: "hidden", boxShadow: "0 20px 40px rgba(0,0,0,0.5)" }}>
             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "16px", color: "#f4f2ec" }}>Schedule New Race</h3>
+              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "16px", color: "#f4f2ec" }}>{$t("Schedule New Race", (localStorage.getItem('app-lang') || 'vi'))}</h3>
               <button onClick={() => setShowScheduleModal(false)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "18px" }}>✕</button>
             </div>
             <form onSubmit={handleScheduleRaceSubmit} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Class Level</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>{$t("Class Level", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <select value={classLevel} onChange={e => setClassLevel(e.target.value)} required style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px" }}>
                   <option value="Class 1 (Rating 95+)">Class 1 (Rating 95+)</option>
-                  <option value="Class 2 (Rating 80-94)">Class 2 (Rating 80-94)</option>
-                  <option value="Class 3 (Rating 60-79)">Class 3 (Rating 60-79)</option>
-                  <option value="Class 4 (Rating 40-59)">Class 4 (Rating 40-59)</option>
-                  <option value="Class 5 (Rating 0-39)">Class 5 (Rating 0-39)</option>
+                  <option value="Class 2 (Rating 80-94)">{$t("Class 2 (Rating 80-94)", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Class 3 (Rating 60-79)">{$t("Class 3 (Rating 60-79)", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Class 4 (Rating 40-59)">{$t("Class 4 (Rating 40-59)", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Class 5 (Rating 0-39)">{$t("Class 5 (Rating 0-39)", (localStorage.getItem('app-lang') || 'vi'))}</option>
                 </select>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Track Type</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>{$t("Track Type", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <select value={trackType} onChange={e => setTrackType(e.target.value)} required style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px" }}>
-                  <option value="Turf">Turf</option>
-                  <option value="Dirt">Dirt</option>
-                  <option value="Artificial">Artificial</option>
+                  <option value="Turf">{$t("Turf", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Dirt">{$t("Dirt", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Artificial">{$t("Artificial", (localStorage.getItem('app-lang') || 'vi'))}</option>
                 </select>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Start Time</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>{$t("Start Time", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <InlineDateTimePicker value={startTime} onChange={setStartTime} />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Distance (Meters)</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>{$t("Distance (Meters)", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <input type="number" min="1" value={distance} onChange={e => setDistance(e.target.value)} required style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px" }} />
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Min Entries</label>
+                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>{$t("Min Entries", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="number" min="1" value={minEntries} onChange={e => setMinEntries(e.target.value)} required style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px" }} />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>Max Entries</label>
+                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", color: "rgba(255,255,255,0.4)" }}>{$t("Max Entries", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="number" min="1" value={maxEntries} onChange={e => setMaxEntries(e.target.value)} required style={{ width: "100%", padding: "0.5rem", background: "#151310", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.375rem", fontSize: "12px" }} />
                 </div>
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", marginTop: "0.5rem" }}>
-                <button type="button" onClick={() => setShowScheduleModal(false)} style={{ padding: "0.5rem 1rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.375rem", color: "#a0a0a0", cursor: "pointer", fontSize: "11px", fontFamily: "monospace" }}>Cancel</button>
-                <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0b0d11", border: "none", borderRadius: "0.375rem", cursor: "pointer", fontSize: "11px", fontFamily: "monospace", fontWeight: 700 }}>Confirm Schedule</button>
+                <button type="button" onClick={() => setShowScheduleModal(false)} style={{ padding: "0.5rem 1rem", background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "0.375rem", color: "#a0a0a0", cursor: "pointer", fontSize: "11px", fontFamily: "monospace" }}>{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0b0d11", border: "none", borderRadius: "0.375rem", cursor: "pointer", fontSize: "11px", fontFamily: "monospace", fontWeight: 700 }}>{$t("Confirm Schedule", (localStorage.getItem('app-lang') || 'vi'))}</button>
               </div>
             </form>
           </div>

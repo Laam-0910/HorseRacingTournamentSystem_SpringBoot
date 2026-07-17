@@ -1,3 +1,4 @@
+import { $t } from '@/lib/i18n';
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
@@ -118,19 +119,19 @@ export default function RefereeIncidents() {
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
         {/* Header */}
         <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)" }}>
-          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{t.stewardIncidentLog}</h3>
-          <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{t.incidentSub}</p>
+          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{$t("Nhật ký sự cố cuộc đua", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Danh sách lịch sử các vi phạm quy tắc và hình phạt đã được bạn ghi nhận.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
 
         {/* Table / Cards content */}
         {isMobile ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
-              <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>{t.loadingIncidents}</p>
+              <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>{$t("Đang tải dữ liệu...", (localStorage.getItem('app-lang') || 'vi'))}</p>
             ) : incidents.length === 0 ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", padding: "2rem" }}>
                 <span style={{ fontSize: "2rem" }}>🛡️</span>
-                <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>{t.noViolations}</span>
+                <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>{$t("Bạn chưa ghi nhận vi phạm nào.", (localStorage.getItem('app-lang') || 'vi'))}</span>
               </div>
             ) : (
               incidents.map((item: any) => (
@@ -151,16 +152,16 @@ export default function RefereeIncidents() {
                   </div>
                   <div style={{ fontSize: "0.8rem", color: "#f4f2ec", display: "flex", flexWrap: "wrap", gap: "1rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                     <div>
-                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{t.horse}: </span>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Chiến mã", (localStorage.getItem('app-lang') || 'vi'))}: </span>
                       <strong>{item.horseName}</strong>
                     </div>
                     <div>
-                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{t.jockey}: </span>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Nài ngựa", (localStorage.getItem('app-lang') || 'vi'))}: </span>
                       <span style={{ color: "#fbbf24" }}>{item.jockeyName}</span>
                     </div>
                   </div>
                   <div style={{ fontSize: "0.8rem", color: "#a0a0a0", background: "rgba(255,255,255,0.01)", padding: "0.625rem", borderRadius: "0.375rem", border: "1px solid rgba(255,255,255,0.03)" }}>
-                    <strong>{t.violationDetails}: </strong>
+                    <strong>{$t("Chi tiết vi phạm", (localStorage.getItem('app-lang') || 'vi'))}: </strong>
                     {item.violation?.description ?? item.description}
                   </div>
                   {item.stewardReport && (
@@ -169,7 +170,7 @@ export default function RefereeIncidents() {
                         onClick={() => { setSelectedReport(item.stewardReport); setSelectedRaceId(item.raceId); }}
                         style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}
                       >
-                        📄 {t.viewReport}
+                        📄 {$t("Xem báo cáo", (localStorage.getItem('app-lang') || 'vi'))}
                       </button>
                     </div>
                   )}
@@ -182,20 +183,20 @@ export default function RefereeIncidents() {
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                  {[t.id, t.raceMeeting, t.horse, t.jockey, t.violationDetails, t.assessedPenalty, t.hReport].map(h => (
+                  {[$t("ID", (localStorage.getItem('app-lang') || 'vi')), $t("Trận đấu & Ngày hội đua", (localStorage.getItem('app-lang') || 'vi')), $t("Chiến mã", (localStorage.getItem('app-lang') || 'vi')), $t("Nài ngựa", (localStorage.getItem('app-lang') || 'vi')), $t("Chi tiết vi phạm", (localStorage.getItem('app-lang') || 'vi')), $t("Hình phạt áp dụng", (localStorage.getItem('app-lang') || 'vi')), $t("Báo cáo cuộc đua", (localStorage.getItem('app-lang') || 'vi'))].map(h => (
                     <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loadingIncidents}</td></tr>
+                  <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{$t("Đang tải dữ liệu...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : incidents.length === 0 ? (
                   <tr>
                     <td colSpan={7} style={{ padding: "3rem", textAlign: "center" }}>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
                         <span style={{ fontSize: "2rem" }}>🛡️</span>
-                        <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>{t.noViolations}</span>
+                        <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>{$t("Bạn chưa ghi nhận vi phạm nào.", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       </div>
                     </td>
                   </tr>
@@ -227,7 +228,7 @@ export default function RefereeIncidents() {
                           onClick={() => { setSelectedReport(item.stewardReport); setSelectedRaceId(item.raceId); }}
                           style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}
                         >
-                          📄 {t.viewReport}
+                          📄 {$t("Xem báo cáo", (localStorage.getItem('app-lang') || 'vi'))}
                         </button>
                       ) : (
                         <span style={{ fontSize: "0.7rem", color: "#666", fontFamily: "monospace" }}>N/A</span>
@@ -247,7 +248,7 @@ export default function RefereeIncidents() {
           <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "32rem", overflow: "hidden", margin: "auto" }}>
             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                {t.stewardReportTitle}
+                {$t("📄 Báo cáo giám sát chính thức", (localStorage.getItem('app-lang') || 'vi'))}
               </h3>
               <button onClick={() => setSelectedReport(null)} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "1.25rem" }}>✕</button>
             </div>
@@ -258,7 +259,7 @@ export default function RefereeIncidents() {
               </div>
             </div>
             <div style={{ padding: "1rem 1.5rem", background: "rgba(0,0,0,0.2)", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "flex-end" }}>
-              <button onClick={() => setSelectedReport(null)} style={{ padding: "0.5rem 1rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{t.close}</button>
+              <button onClick={() => setSelectedReport(null)} style={{ padding: "0.5rem 1rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Đóng", (localStorage.getItem('app-lang') || 'vi'))}</button>
             </div>
           </div>
         </div>

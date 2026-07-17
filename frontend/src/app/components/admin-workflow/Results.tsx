@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 
@@ -193,7 +194,7 @@ export default function Results() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.1)" }}>
           <div>
             <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec" }}>Process Results: Race #{processingRace.id} ({processingRace.classLevel})</h3>
-            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>Enter final position, finish times, and weigh-in weights for each horse.</p>
+            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>{$t("Enter final position, finish times, and weigh-in weights for each horse.", (localStorage.getItem('app-lang') || 'vi'))}</p>
           </div>
           <button onClick={() => setProcessingRace(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.25rem" }}>✕</button>
         </div>
@@ -215,16 +216,16 @@ export default function Results() {
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: "0.5rem" }}>
                     <div>
-                      <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>Weigh-In (kg)</label>
+                      <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>{$t("Weigh-In (kg)", (localStorage.getItem('app-lang') || 'vi'))}</label>
                       <input type="number" step="0.1" value={weighInWeights[e.entryId] || ""} onChange={val => setWeighInWeights(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
                     </div>
                     <div>
-                      <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>Pos</label>
+                      <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>{$t("Pos", (localStorage.getItem('app-lang') || 'vi'))}</label>
                       <input type="number" min="1" value={positions[e.entryId] || ""} onChange={val => setPositions(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
                     </div>
                     <div>
-                      <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>Finish Time</label>
-                      <input type="text" placeholder="1:12.45" value={times[e.entryId] || ""} onChange={val => setTimes(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
+                      <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>{$t("Finish Time", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                      <input type="text" placeholder={$t("1:12.45", (localStorage.getItem('app-lang') || 'vi'))} value={times[e.entryId] || ""} onChange={val => setTimes(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
                     </div>
                   </div>
                 </div>
@@ -236,7 +237,7 @@ export default function Results() {
                 <thead>
                   <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
                     {["Gate", "Horse Name", "Jockey Name", "Carried Wt", "Weigh-In Wt (kg)", "Final Position", "Finish Time"].map(h => (
-                      <th key={h} style={{ padding: "0.75rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                      <th key={h} style={{ padding: "0.75rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                     ))}
                   </tr>
                 </thead>
@@ -254,7 +255,7 @@ export default function Results() {
                         <input type="number" min="1" value={positions[e.entryId] || ""} onChange={val => setPositions(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
                       </td>
                       <td style={{ padding: "0.5rem 0.75rem" }}>
-                        <input type="text" placeholder="e.g. 1:12.45" value={times[e.entryId] || ""} onChange={val => setTimes(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
+                        <input type="text" placeholder={$t("e.g. 1:12.45", (localStorage.getItem('app-lang') || 'vi'))} value={times[e.entryId] || ""} onChange={val => setTimes(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
                       </td>
                     </tr>
                   ))}
@@ -264,12 +265,12 @@ export default function Results() {
           )}
 
           <div style={{ marginBottom: "1.5rem" }}>
-            <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Steward Report / Notes</label>
-            <textarea value={stewardReport} onChange={e => setStewardReport(e.target.value)} placeholder="Enter details of any race incidents, track conditions, or steward decisions..." style={{ width: "100%", padding: "0.75rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "12px", height: "5rem", resize: "none", outline: "none" }} />
+            <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Steward Report / Notes", (localStorage.getItem('app-lang') || 'vi'))}</label>
+            <textarea value={stewardReport} onChange={e => setStewardReport(e.target.value)} placeholder={$t("Enter details of any race incidents, track conditions, or steward decisions...", (localStorage.getItem('app-lang') || 'vi'))} style={{ width: "100%", padding: "0.75rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "12px", height: "5rem", resize: "none", outline: "none" }} />
           </div>
 
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={() => setProcessingRace(null)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
+            <button type="button" onClick={() => setProcessingRace(null)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
             <button type="submit" disabled={procLoading} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: procLoading ? "not-allowed" : "pointer" }}>
               {procLoading ? "Processing..." : "Verify & Confirm Results"}
             </button>
@@ -284,8 +285,8 @@ export default function Results() {
       {/* Process Results */}
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)" }}>
-          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec" }}>Process Results & Close Races</h3>
-          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>Select a Race Meeting and process the outcomes of scheduled races.</p>
+          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec" }}>{$t("Process Results & Close Races", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>{$t("Select a Race Meeting and process the outcomes of scheduled races.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
 
         {error && <div style={{ margin: "1rem 1.5rem 0", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px" }}>{error}</div>}
@@ -293,11 +294,11 @@ export default function Results() {
 
         {/* Meetings */}
         <div style={{ padding: "1.5rem" }}>
-          <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>Race Meetings List</h4>
+          <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>{$t("Race Meetings List", (localStorage.getItem('app-lang') || 'vi'))}</h4>
           {isMobile ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {meetings.length === 0 ? (
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", textAlign: "center", padding: "1.5rem" }}>No Race Meetings Found.</p>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", textAlign: "center", padding: "1.5rem" }}>{$t("No Race Meetings Found.", (localStorage.getItem('app-lang') || 'vi'))}</p>
               ) : meetings.map(meeting => (
                 <div key={meeting.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem" }}>
                   <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{meeting.name}</div>
@@ -311,15 +312,15 @@ export default function Results() {
                 <thead>
                   <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
                     {["Meeting Name", "Venue"].map(h => (
-                      <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                      <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={2} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                    <tr><td colSpan={2} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                   ) : meetings.length === 0 ? (
-                    <tr><td colSpan={2} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No Race Meetings Found.</td></tr>
+                    <tr><td colSpan={2} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("No Race Meetings Found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                   ) : meetings.map(meeting => (
                     <tr key={meeting.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                       <td style={{ padding: "1rem", fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{meeting.name}</td>
@@ -334,11 +335,11 @@ export default function Results() {
 
         {/* Races to Process */}
         <div style={{ padding: "1.5rem", borderTop: "1px solid rgba(201,162,39,0.10)" }}>
-          <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>Races To Process</h4>
+          <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>{$t("Races To Process", (localStorage.getItem('app-lang') || 'vi'))}</h4>
           {isMobile ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               {races.length === 0 ? (
-                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", textAlign: "center", padding: "1.5rem" }}>No Races Found.</p>
+                <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", textAlign: "center", padding: "1.5rem" }}>{$t("No Races Found.", (localStorage.getItem('app-lang') || 'vi'))}</p>
               ) : races.map(race => (
                 <div key={race.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(201,162,39,0.14)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
@@ -352,7 +353,7 @@ export default function Results() {
                     📅 {race.startTime}
                   </div>
                   <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
-                    <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>Process</button>
+                    <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>{$t("Process", (localStorage.getItem('app-lang') || 'vi'))}</button>
                   </div>
                 </div>
               ))}
@@ -363,15 +364,15 @@ export default function Results() {
                 <thead>
                   <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
                     {["Meeting ID", "Class Level", "Start Time", "Status", "Action"].map(h => (
-                      <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{h}</th>
+                      <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={5} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                    <tr><td colSpan={5} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                   ) : races.length === 0 ? (
-                    <tr><td colSpan={5} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No Races Found.</td></tr>
+                    <tr><td colSpan={5} style={{ padding: "1.5rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("No Races Found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                   ) : races.map(race => (
                     <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                       <td style={{ padding: "1rem", fontFamily: "monospace", color: "rgba(255,255,255,0.55)", fontSize: "12px" }}>{race.raceMeetingId}</td>
@@ -381,7 +382,7 @@ export default function Results() {
                         <span style={{ fontSize: "10px", fontWeight: "bold", color: "#c9a227", background: "rgba(201,162,39,0.15)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem" }}>{race.status}</span>
                       </td>
                       <td style={{ padding: "1rem" }}>
-                        <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>Process</button>
+                        <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>{$t("Process", (localStorage.getItem('app-lang') || 'vi'))}</button>
                       </td>
                     </tr>
                   ))}
@@ -394,7 +395,7 @@ export default function Results() {
         {/* Class Rules */}
         {classRules.length > 0 && (
           <div style={{ padding: "1.5rem", borderTop: "1px solid rgba(201,162,39,0.10)" }}>
-            <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>Season Class Rules Reference</h4>
+            <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>{$t("Season Class Rules Reference", (localStorage.getItem('app-lang') || 'vi'))}</h4>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem" }}>
               {classRules.map(rule => (
                 <div key={rule.id} style={{ padding: "0.75rem 1rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.1)", background: "rgba(255,255,255,0.02)", width: "230px" }}>

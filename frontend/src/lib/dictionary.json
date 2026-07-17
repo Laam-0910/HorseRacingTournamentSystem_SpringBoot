@@ -1,0 +1,4865 @@
+{
+  "Lưu thông tin Racecard thành công.": {
+    "en": "Racecard saved successfully.",
+    "zh": "赛马排位表保存成功。",
+    "ja": "出馬表が正常に保存されました。"
+  },
+  "Cổng xuất phát không được trùng nhau giữa các ngựa hoạt động trong cùng một trận đấu.": {
+    "en": "Gate numbers must be unique within the same race.",
+    "zh": "同一比赛中参赛马的起跑门号不能重复。",
+    "ja": "同じレース内でゲート番号が重複してはいけません。"
+  },
+  "Không thể lưu thông tin Racecard.": {
+    "en": "Failed to save racecard.",
+    "zh": "保存赛马排位表失败。",
+    "ja": "出馬表の保存に失敗しました。"
+  },
+  "Vui lòng nhập họ và tên đầy đủ": {
+    "en": "Please enter your full name",
+    "zh": "请输入您的全名",
+    "ja": "氏名を入力してください"
+  },
+  "Họ và tên phải có ít nhất 3 ký tự": {
+    "en": "Full name must be at least 3 characters",
+    "zh": "姓名必须至少3个字符",
+    "ja": "氏名は3文字以上でなければなりません"
+  },
+  "Vui lòng nhập username đăng nhập": {
+    "en": "Please enter a username for login",
+    "zh": "请输入登录用户名",
+    "ja": "ログイン用のユーザー名を入力してください"
+  },
+  "Username phải có ít nhất 3 ký tự": {
+    "en": "Username must be at least 3 characters",
+    "zh": "用户名必须至少3个字符",
+    "ja": "ユーザー名は3文字以上でなければなりません"
+  },
+  "Mật khẩu xác nhận không khớp": {
+    "en": "Passwords do not match",
+    "zh": "确认密码不匹配",
+    "ja": "パスワードが一致しません"
+  },
+  "Mật khẩu phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)": {
+    "en": "Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (@$!%*?&)",
+    "zh": "密码长度至少为8个字符，包括至少1个大写字母，1个数字和1个特殊字符（@$!%*?&）",
+    "ja": "パスワードは少なくとも8文字以上で、大文字1つ、数字1つ、特殊文字（@$!%*?&）を1つ含む必要があります"
+  },
+  "Mật khẩu xác nhận không khớp.": {
+    "en": "Passwords do not match.",
+    "zh": "确认密码不匹配。",
+    "ja": "パスワードが一致しません。"
+  },
+  "Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)": {
+    "en": "New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (@$!%*?&)",
+    "zh": "新密码长度至少为8个字符，包括至少1个大写字母，1个数字和1个特殊字符（@$!%*?&）",
+    "ja": "新しいパスワードは少なくとも8文字以上で、大文字1つ、数字1つ、特殊文字（@$!%*?&）を1つ含む必要があります"
+  },
+  "Nài ngựa": {
+    "en": "Jockey",
+    "zh": "骑师",
+    "ja": "騎手"
+  },
+  "Trận tham gia": {
+    "en": "Races",
+    "zh": "参赛次数",
+    "ja": "参加レース"
+  },
+  "Lọt Top 3": {
+    "en": "Top 3",
+    "zh": "进入前三",
+    "ja": "トップ3入り"
+  },
+  "Danh hiệu": {
+    "en": "Title",
+    "zh": "称号",
+    "ja": "称号"
+  },
+  "Vô địch": {
+    "en": "Champion",
+    "zh": "冠军",
+    "ja": "チャンピオン"
+  },
+  "Tiềm năng": {
+    "en": "Rookie",
+    "zh": "潜力新星",
+    "ja": "ルーキー"
+  },
+  "Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)": {
+    "en": "Stewards' Inquiry - Race under investigation by Stewards (Official results pending)",
+    "zh": "赛事研讯 - 裁判正在调查违规行为（非正式结果）",
+    "ja": "審議中 - レースは審判による調査中です（確定結果待ち）"
+  },
+  "Chưa gửi lời mời nào.": {
+    "en": "No invitations have been sent yet.",
+    "zh": "尚未发送任何邀请。",
+    "ja": "まだ招待が送信されていません。"
+  },
+  "Nộp lại": {
+    "en": "Resubmit",
+    "zh": "重新提交",
+    "ja": "再提出"
+  },
+  "Rút đăng ký": {
+    "en": "Withdraw",
+    "zh": "撤回",
+    "ja": "登録取り消し"
+  },
+  "Đã gửi lời mời tới nài ngựa.": {
+    "en": "Invitation sent to jockey.",
+    "zh": "已向骑师发送邀请。",
+    "ja": "騎手へ招待を送信しました。"
+  },
+  "Nài ngựa này chưa được phê duyệt đăng ký tham gia buổi đua này.": {
+    "en": "This jockey has not been approved for this race meeting yet.",
+    "zh": "该骑师尚未获得本次比赛的参赛批准。",
+    "ja": "この騎手はまだこのレースミーティングへの参加が承認されていません。"
+  },
+  "Chiến mã được chọn đang không ở trạng thái hoạt động (ACTIVE).": {
+    "en": "The selected horse is not active.",
+    "zh": "所选马匹当前未处于活跃状态 (ACTIVE)。",
+    "ja": "選択された馬はアクティブな状態ではありません。"
+  },
+  "Chiến mã được chọn chưa được duyệt tham gia buổi đua này.": {
+    "en": "The selected horse has not been approved for this race meeting yet.",
+    "zh": "所选马匹尚未获得本次比赛的参赛批准。",
+    "ja": "選択された馬はまだこのレースミーティングへの参加が承認されていません。"
+  },
+  "Gửi lời mời thất bại.": {
+    "en": "Failed to send invitation.",
+    "zh": "发送邀请失败。",
+    "ja": "招待の送信に失敗しました。"
+  },
+  "Gửi lại đăng ký chạy thành công.": {
+    "en": "Successfully resubmitted race entry.",
+    "zh": "成功重新提交出赛登记。",
+    "ja": "レース登録の再提出に成功しました。"
+  },
+  "Hạn đăng ký cho trận đấu này đã kết thúc, không thể nộp lại đăng ký.": {
+    "en": "Registration period for this race has closed.",
+    "zh": "本场比赛的报名期限已过，无法重新提交。",
+    "ja": "このレースの登録期間は終了したため、再提出できません。"
+  },
+  "Thời gian đăng ký cho trận đấu này chưa bắt đầu.": {
+    "en": "Registration period for this race has not started yet.",
+    "zh": "本场比赛的报名时间尚未开始。",
+    "ja": "このレースの登録期間はまだ始まっていません。"
+  },
+  "Nài ngựa này đã bận lịch thi đấu hoặc có lượt đăng ký hoạt động khác trong trận đấu này.": {
+    "en": "This jockey is already booked or has another active entry in this race.",
+    "zh": "该骑师已有其他比赛安排或在此赛事中已有有效报名。",
+    "ja": "この騎手はすでに予約されているか、このレースに別の有効な登録があります。"
+  },
+  "Chiến mã này đã bận lịch thi đấu hoặc có lượt đăng ký hoạt động khác trong trận đấu này.": {
+    "en": "This horse is already booked or has another active entry in this race.",
+    "zh": "该马匹已有其他比赛安排或在此赛事中已有有效报名。",
+    "ja": "この馬はすでに予約されているか、このレースに別の有効な登録があります。"
+  },
+  "Không thể gửi lại đăng ký chạy.": {
+    "en": "Failed to resubmit race entry.",
+    "zh": "无法重新提交出赛登记。",
+    "ja": "レース登録の再提出に失敗しました。"
+  },
+  "Đã rút lời mời/đăng ký thành công.": {
+    "en": "Successfully withdrew invitation/entry.",
+    "zh": "成功撤回邀请/登记。",
+    "ja": "招待/登録の取り消しに成功しました。"
+  },
+  "Hạn đăng ký cho trận đấu này đã kết thúc, không thể rút đăng ký.": {
+    "en": "Registration period for this race has closed.",
+    "zh": "本场比赛的报名期限已过，无法撤回登记。",
+    "ja": "このレースの登録期間は終了したため、取り消しできません。"
+  },
+  "Không thể rút đăng ký.": {
+    "en": "Failed to withdraw registration.",
+    "zh": "无法撤回登记。",
+    "ja": "登録の取り消しに失敗しました。"
+  },
+  "Ngựa của tôi": {
+    "en": "My Mounts",
+    "zh": "我的赛马",
+    "ja": "私の馬"
+  },
+  "Đang tải...": {
+    "en": "Loading...",
+    "zh": "加载中...",
+    "ja": "読み込み中..."
+  },
+  "Hiện tại chưa có cuộc đua nào được xếp lịch.": {
+    "en": "No scheduled mounts at the moment.",
+    "zh": "目前没有已排期的比赛。",
+    "ja": "現在予定されているレースはありません。"
+  },
+  "Vi phạm luật": {
+    "en": "Rule Violations",
+    "zh": "违规记录",
+    "ja": "ルール違反"
+  },
+  "✅ Không có vi phạm nào được ghi nhận.": {
+    "en": "✅ No rule violations recorded.",
+    "zh": "✅ 没有记录任何违规行为。",
+    "ja": "✅ 記録されたルール違反はありません。"
+  },
+  "ID Trận": {
+    "en": "Race ID",
+    "zh": "比赛 ID",
+    "ja": "レース ID"
+  },
+  "Tên ngựa": {
+    "en": "Horse",
+    "zh": "马匹名称",
+    "ja": "馬名"
+  },
+  "Cửa (Gate)": {
+    "en": "Gate",
+    "zh": "闸位 (Gate)",
+    "ja": "ゲート"
+  },
+  "Cân nặng (kg)": {
+    "en": "Weight (kg)",
+    "zh": "重量 (kg)",
+    "ja": "体重 (kg)"
+  },
+  "Trạng thái": {
+    "en": "Status",
+    "zh": "状态",
+    "ja": "状態"
+  },
+  "Chào bạn! Tôi là trợ lý AI. Hỏi tôi về ngựa, nài, xếp hạng rating hoặc dự đoán trận đấu nhé.": {
+    "en": "Hello! I am your AI Assistant. Ask me about horses, ratings, jockeys, or race predictions!",
+    "zh": "您好！我是您的 AI 助手。您可以向我询问有关马匹、骑师、评分或比赛预测的信息！",
+    "ja": "こんにちは！AIアシスタントです。馬、騎手、レーティング、またはレース予測について聞いてください！"
+  },
+  "Rất tiếc, đã có lỗi kết nối đến máy chủ AI. Xin vui lòng thử lại sau.": {
+    "en": "Sorry, I encountered a connection error. Please try again later.",
+    "zh": "抱歉，连接 AI 服务器时出错。请稍后再试。",
+    "ja": "申し訳ありません、AIサーバーへの接続エラーが発生しました。後でもう一度お試しください。"
+  },
+  "Chào mừng đến với Hệ Thống Quản Lý Đua Ngựa": {
+    "en": "Welcome to Horse Race Management System",
+    "zh": "欢迎来到赛马管理系统",
+    "ja": "競馬管理システムへようこそ"
+  },
+  "Chọn một mục từ menu bên trái để bắt đầu.": {
+    "en": "Select an option from the menu on the left to get started.",
+    "zh": "请从左侧菜单中选择一个选项以开始。",
+    "ja": "開始するには左側のメニューからオプションを選択してください。"
+  },
+  "Buổi đua sắp diễn ra": {
+    "en": "Upcoming Race Meetings",
+    "zh": "即将进行的赛事",
+    "ja": "開催予定のレース"
+  },
+  "Không có buổi đua nào được lên lịch.": {
+    "en": "No upcoming meetings scheduled.",
+    "zh": "没有安排即将进行的赛事。",
+    "ja": "開催予定のレースはありません。"
+  },
+  "Thông tin trận đấu (Racecard)": {
+    "en": "Racecard",
+    "zh": "排位表",
+    "ja": "出馬表"
+  },
+  "Chưa có trận đấu nào được tạo.": {
+    "en": "No races available.",
+    "zh": "尚未创建任何比赛。",
+    "ja": "作成されたレースはありません。"
+  },
+  "Đang tải dữ liệu và phân tích tỷ lệ thắng AI...": {
+    "en": "Loading entries and computing AI Win Probabilities...",
+    "zh": "正在加载数据并分析 AI 胜率...",
+    "ja": "データを読み込み、AIによる勝率を計算しています..."
+  },
+  "Chưa có nài ngựa đăng ký cho trận này.": {
+    "en": "No entries registered for this race yet.",
+    "zh": "尚未有骑师报名参加此场比赛。",
+    "ja": "このレースに登録している騎手はまだいません。"
+  },
+  "Xem Live Ngay": {
+    "en": "Watch Live stream",
+    "zh": "立即观看直播",
+    "ja": "今すぐライブを見る"
+  },
+  "Kết quả chính thức": {
+    "en": "Race Results",
+    "zh": "正式比赛结果",
+    "ja": "公式レース結果"
+  },
+  "Chưa có trận đấu nào hoàn thành.": {
+    "en": "No completed races yet.",
+    "zh": "尚未有完成的比赛。",
+    "ja": "終了したレースはまだありません。"
+  },
+  "Kết quả chưa chính thức (Đang chờ trọng tài xác nhận)": {
+    "en": "Unofficial Results (Awaiting referee official declaration)",
+    "zh": "非正式结果（等待裁判确认）",
+    "ja": "非公式結果（審判の確認待ち）"
+  },
+  "⚠️ Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)": {
+    "en": "⚠️ Stewards' Inquiry - Race under investigation by Stewards (Official results pending)",
+    "zh": "⚠️ 赛事研讯 - 裁判正在调查违规行为（非正式结果）",
+    "ja": "⚠️ 審議中 - レースは審判による調査中です（確定結果待ち）"
+  },
+  "Đang tải bảng kết quả...": {
+    "en": "Loading standings...",
+    "zh": "正在加载结果榜...",
+    "ja": "結果を読み込んでいます..."
+  },
+  "Chưa có kết quả chính thức.": {
+    "en": "No results recorded yet.",
+    "zh": "暂无正式结果。",
+    "ja": "公式結果はまだありません。"
+  },
+  "Đang tải bảng kết quả về đích...": {
+    "en": "Loading finishing standings...",
+    "zh": "正在加载完赛排名榜...",
+    "ja": "ゴール順位表を読み込んでいます..."
+  },
+  "Chưa có kết quả chính thức nào được lưu cho trận này.": {
+    "en": "No finishing results recorded for this race yet.",
+    "zh": "这场比赛尚未保存任何正式结果。",
+    "ja": "このレースにはまだ公式な結果が記録されていません。"
+  },
+  "Danh sách Chiến mã": {
+    "en": "Horses Directory",
+    "zh": "战马名录",
+    "ja": "競走馬名鑑"
+  },
+  "Không tìm thấy ngựa đã đăng ký.": {
+    "en": "No horses registered yet.",
+    "zh": "未找到已注册的马匹。",
+    "ja": "登録された馬が見つかりません。"
+  },
+  "Khác": {
+    "en": "Other",
+    "zh": "其他",
+    "ja": "その他"
+  },
+  "Chưa xác định": {
+    "en": "Unknown",
+    "zh": "未知",
+    "ja": "不明"
+  },
+  "Thống kê tổng quan": {
+    "en": "Statistics",
+    "zh": "概况统计",
+    "ja": "全体統計"
+  },
+  "Số liệu trực quan và kết quả phân tích giải đấu giải đua ngựa": {
+    "en": "Visual insights and tournament metrics for the horse racing series",
+    "zh": "赛马系列赛的可视化数据和分析结果",
+    "ja": "競馬シリーズの視覚的なデータと分析結果"
+  },
+  "Tổng buổi đua": {
+    "en": "Total Meetings",
+    "zh": "比赛日总数",
+    "ja": "開催日合計"
+  },
+  "Tổng trận đấu": {
+    "en": "Total Races",
+    "zh": "比赛总数",
+    "ja": "レース合計"
+  },
+  "Tổng số ngựa": {
+    "en": "Total Horses",
+    "zh": "马匹总数",
+    "ja": "馬の総数"
+  },
+  "Trận hoàn thành": {
+    "en": "Completed Races",
+    "zh": "已完成比赛",
+    "ja": "完了したレース"
+  },
+  "Mùa giải hiện tại": {
+    "en": "Active Season",
+    "zh": "当前赛季",
+    "ja": "現在のシーズン"
+  },
+  "Nài ngựa hoạt động": {
+    "en": "Active Jockeys",
+    "zh": "活跃骑师",
+    "ja": "アクティブな騎手"
+  },
+  "Bảng Xếp Hạng Ngựa": {
+    "en": "Horse Leaderboards",
+    "zh": "马匹排行榜",
+    "ja": "馬のランキング"
+  },
+  "Phân Tích Giải Đấu": {
+    "en": "Tournament Analysis",
+    "zh": "赛事分析",
+    "ja": "トーナメント分析"
+  },
+  "Chiến Mã Thắng Nhiều Nhất": {
+    "en": "Most Winning Horses",
+    "zh": "胜率最高战马",
+    "ja": "最多勝利馬"
+  },
+  "Chưa có dữ liệu chiến mã.": {
+    "en": "No horse data available.",
+    "zh": "暂无战马数据。",
+    "ja": "馬のデータがありません。"
+  },
+  "Chiến Mã Rating Cao Nhất": {
+    "en": "Highest Rated Horses",
+    "zh": "最高评分战马",
+    "ja": "最高評価馬"
+  },
+  "Trận Đấu Theo Phân Hạng": {
+    "en": "Races by Class Level",
+    "zh": "按级别分类的比赛",
+    "ja": "クラス別レース"
+  },
+  "Chưa có trận đấu nào.": {
+    "en": "No races available.",
+    "zh": "暂无比赛。",
+    "ja": "レースがありません。"
+  },
+  "trận": {
+    "en": "races",
+    "zh": "场",
+    "ja": "レース"
+  },
+  "Phân Loại Mặt Sân Đua": {
+    "en": "Track Type Distribution",
+    "zh": "赛道类型分布",
+    "ja": "トラックタイプの分布"
+  },
+  "Chưa có dữ liệu đường đua.": {
+    "en": "No track data available.",
+    "zh": "暂无赛道数据。",
+    "ja": "トラックのデータがありません。"
+  },
+  "✦ Trợ lý ảo AI giải đấu": {
+    "en": "✦ Tournament AI Assistant",
+    "zh": "✦ 赛事 AI 助手",
+    "ja": "✦ トーナメントAIアシスタント"
+  },
+  "Trợ lý AI nội bộ phân tích phong độ và thống kê thời gian thực": {
+    "en": "Internal AI assistant for form analysis and real-time statistics",
+    "zh": "内部分析和实时统计的 AI 助手",
+    "ja": "パフォーマンス分析とリアルタイム統計の内部AIアシスタント"
+  },
+  "✦ TRỢ LÝ AI HỆ THỐNG": {
+    "en": "✦ SYSTEM AI ASSISTANT",
+    "zh": "✦ 系统 AI 助手",
+    "ja": "✦ システムAIアシスタント"
+  },
+  "Trợ lý AI đang trả lời...": {
+    "en": "AI Assistant is thinking...",
+    "zh": "AI 助手正在思考...",
+    "ja": "AIアシスタントが考え中..."
+  },
+  "Hỏi Trợ lý AI về cuộc đua, ngựa, nài...": {
+    "en": "Ask AI Assistant about races, horses, jockeys...",
+    "zh": "向 AI 助手询问比赛、马匹、骑师...",
+    "ja": "レース、馬、騎手についてAIアシスタントに尋ねる..."
+  },
+  "Ngựa nào rating cao nhất?": {
+    "en": "Who has the highest rating?",
+    "zh": "哪匹马的评分最高？",
+    "ja": "最も評価が高い馬はどれですか？"
+  },
+  "Dự đoán trận đấu Class 2": {
+    "en": "Predict the upcoming Class 2 race",
+    "zh": "预测即将到来的二级赛",
+    "ja": "次のクラス2レースを予測する"
+  },
+  "Thống kê nài ngựa xuất sắc nhất": {
+    "en": "Give me top jockey stats",
+    "zh": "给我顶级骑师的统计数据",
+    "ja": "トップジョッキーの統計を教えて"
+  },
+  "Mùa Giải Hoạt Động": {
+    "en": "Active Tournament Season",
+    "zh": "进行中的赛季",
+    "ja": "現在進行中のシーズン"
+  },
+  "Đang diễn ra": {
+    "en": "Ongoing",
+    "zh": "进行中",
+    "ja": "開催中"
+  },
+  "Sự kiện sắp khởi tranh": {
+    "en": "Upcoming Race Meeting",
+    "zh": "即将开始的赛事",
+    "ja": "まもなく始まるレース"
+  },
+  "Sự cố chờ quyết định": {
+    "en": "Pending Violation Decision",
+    "zh": "待定违规处理",
+    "ja": "違反処分待ち"
+  },
+  "Trận đua cần xử lý kết quả": {
+    "en": "Races to Process",
+    "zh": "待处理结果的比赛",
+    "ja": "結果処理待ちのレース"
+  },
+  "Cảnh báo vi phạm của Ngựa": {
+    "en": "Horse Violation Warning",
+    "zh": "马匹违规警告",
+    "ja": "馬の違反警告"
+  },
+  "Bạn có báo cáo vi phạm": {
+    "en": "Violation Warning",
+    "zh": "违规警告",
+    "ja": "違反警告"
+  },
+  "Lượt đua được phân công": {
+    "en": "Assigned Races Today",
+    "zh": "今日分配的比赛",
+    "ja": "本日割り当てられたレース"
+  },
+  "Đua ngựa": {
+    "en": "Racing",
+    "zh": "赛马",
+    "ja": "競馬"
+  },
+  "Trận đấu đang tạm dừng": {
+    "en": "Race is suspended",
+    "zh": "比赛已暂停",
+    "ja": "レースは中断されています"
+  },
+  "Vi phạm": {
+    "en": "Violation",
+    "zh": "违规",
+    "ja": "違反"
+  },
+  "BỊ LOẠI": {
+    "en": "DISQUALIFIED",
+    "zh": "取消资格",
+    "ja": "失格"
+  },
+  "Bảng trọng tài": {
+    "en": "Referee Board",
+    "zh": "裁判面板",
+    "ja": "審判ボード"
+  },
+  "Nhật ký sự cố": {
+    "en": "Incident Log",
+    "zh": "违规记录",
+    "ja": "インシデントログ"
+  },
+  "Lịch phân công": {
+    "en": "Assignment Schedule",
+    "zh": "值勤日程",
+    "ja": "任務スケジュール"
+  },
+  "Chủ ngựa": {
+    "en": "Horse Owner",
+    "zh": "马主",
+    "ja": "馬主"
+  },
+  "Quản trị viên": {
+    "en": "Admin",
+    "zh": "管理员",
+    "ja": "管理者"
+  },
+  "Trọng tài": {
+    "en": "Referee",
+    "zh": "裁判",
+    "ja": "審判"
+  },
+  "Khán giả": {
+    "en": "Spectator",
+    "zh": "观众",
+    "ja": "観客"
+  },
+  "Chưa có tiểu sử.": {
+    "en": "No biography yet.",
+    "zh": "暂无简介。",
+    "ja": "プロフィールはまだありません。"
+  },
+  "Thống kê hồ sơ": {
+    "en": "Profile Statistics",
+    "zh": "资料统计",
+    "ja": "プロフィール統計"
+  },
+  "Cân nặng": {
+    "en": "Weight",
+    "zh": "重量",
+    "ja": "体重"
+  },
+  "Số trận": {
+    "en": "Total Races",
+    "zh": "总比赛数",
+    "ja": "全レース数"
+  },
+  "Hạng nhất": {
+    "en": "Wins",
+    "zh": "冠军",
+    "ja": "優勝"
+  },
+  "Top 3": {
+    "en": "Top 3",
+    "zh": "前三名",
+    "ja": "トップ3"
+  },
+  "Tỉ lệ Nhất / Top 3": {
+    "en": "Win / Top 3 Rate",
+    "zh": "胜率 / 前三率",
+    "ja": "勝率 / トップ3率"
+  },
+  "Ngựa đang hoạt động": {
+    "en": "Active Horses",
+    "zh": "活跃马匹",
+    "ja": "アクティブな馬"
+  },
+  "Hạng trung bình": {
+    "en": "Average Rank",
+    "zh": "平均排名",
+    "ja": "平均順位"
+  },
+  "Tổng tiền thưởng": {
+    "en": "Total Earnings",
+    "zh": "总奖金",
+    "ja": "総収益"
+  },
+  "Số lượng Users": {
+    "en": "Number of Users",
+    "zh": "用户数量",
+    "ja": "ユーザー数"
+  },
+  "Số lượng Ngựa": {
+    "en": "Number of Horses",
+    "zh": "马匹数量",
+    "ja": "馬の数"
+  },
+  "Số mùa giải": {
+    "en": "Number of Seasons",
+    "zh": "赛季数量",
+    "ja": "シーズン数"
+  },
+  "Số trận đã bắt": {
+    "en": "Refereed Races",
+    "zh": "执裁场次",
+    "ja": "審判したレース"
+  },
+  "Số lỗi đã phạt": {
+    "en": "Penalties Given",
+    "zh": "处罚次数",
+    "ja": "与えたペナルティ"
+  },
+  "Thành viên từ": {
+    "en": "Member since",
+    "zh": "加入时间",
+    "ja": "登録日"
+  },
+  "Danh sách ngựa sở hữu": {
+    "en": "Owned Horses",
+    "zh": "拥有的马匹",
+    "ja": "所有馬"
+  },
+  "Thành tích gần đây (10 trận)": {
+    "en": "Recent Performance (10 races)",
+    "zh": "近期表现（10场比赛）",
+    "ja": "最近の成績（10レース）"
+  },
+  "Giải đấu": {
+    "en": "Tournament",
+    "zh": "锦标赛",
+    "ja": "トーナメント"
+  },
+  "Hạng": {
+    "en": "Rank",
+    "zh": "排名",
+    "ja": "順位"
+  },
+  "Ngựa": {
+    "en": "Horse",
+    "zh": "马匹",
+    "ja": "馬"
+  },
+  "Chưa có dữ liệu.": {
+    "en": "No data available.",
+    "zh": "暂无数据。",
+    "ja": "データがありません。"
+  },
+  "Cập nhật hồ sơ": {
+    "en": "Update Profile",
+    "zh": "更新资料",
+    "ja": "プロフィールを更新"
+  },
+  "Địa chỉ Email": {
+    "en": "Email Address",
+    "zh": "电子邮件地址",
+    "ja": "メールアドレス"
+  },
+  "Lưu thay đổi": {
+    "en": "Save Changes",
+    "zh": "保存更改",
+    "ja": "変更を保存"
+  },
+  "Đang lưu...": {
+    "en": "Saving...",
+    "zh": "保存中...",
+    "ja": "保存中..."
+  },
+  "Đổi mật khẩu": {
+    "en": "Change Password",
+    "zh": "修改密码",
+    "ja": "パスワードを変更"
+  },
+  "Yêu cầu mã xác minh qua Gmail để thiết lập mật khẩu mới.": {
+    "en": "Request verification code via Gmail to set a new password.",
+    "zh": "通过 Gmail 请求验证码以设置新密码。",
+    "ja": "新しいパスワードを設定するためにGmailで確認コードをリクエストします。"
+  },
+  "Yêu cầu đổi mật khẩu": {
+    "en": "Request Password Change",
+    "zh": "请求修改密码",
+    "ja": "パスワード変更リクエスト"
+  },
+  "Đang gửi mã...": {
+    "en": "Sending code...",
+    "zh": "正在发送验证码...",
+    "ja": "コードを送信中..."
+  },
+  "Bảo mật 2 Lớp (2FA)": {
+    "en": "Two-Factor Authentication (2FA)",
+    "zh": "双重认证 (2FA)",
+    "ja": "2要素認証 (2FA)"
+  },
+  "Bảo vệ tài khoản bằng mã OTP gửi qua email mỗi lần đăng nhập.": {
+    "en": "Protect your account with an OTP sent via email upon login.",
+    "zh": "每次登录时通过电子邮件发送 OTP 保护您的帐户。",
+    "ja": "ログイン時にメールで送信されるOTPでアカウントを保護します。"
+  },
+  "Lưu ý: Quản trị viên & Trọng tài không bắt buộc dùng 2FA.": {
+    "en": "Note: Admins & Referees are not required to use 2FA.",
+    "zh": "注意：管理员和裁判无需使用双重认证。",
+    "ja": "注：管理者と審判は2FAを使用する必要はありません。"
+  },
+  "Đổi ảnh": {
+    "en": "Change Photo",
+    "zh": "更改照片",
+    "ja": "写真を変更"
+  },
+  "Họ và tên": {
+    "en": "Full Name",
+    "zh": "姓名",
+    "ja": "氏名"
+  },
+  "Mã OTP": {
+    "en": "OTP Code",
+    "zh": "OTP 验证码",
+    "ja": "OTPコード"
+  },
+  "Nhập OTP 6 số": {
+    "en": "Enter 6-digit OTP",
+    "zh": "输入6位验证码",
+    "ja": "6桁のOTPを入力してください"
+  },
+  "Mật khẩu mới": {
+    "en": "New Password",
+    "zh": "新密码",
+    "ja": "新しいパスワード"
+  },
+  "Xác nhận": {
+    "en": "Confirm",
+    "zh": "确认",
+    "ja": "確認"
+  },
+  "Tối thiểu 4 ký tự": {
+    "en": "Minimum 4 characters",
+    "zh": "至少 4 个字符",
+    "ja": "最低4文字"
+  },
+  "Nhập lại mật khẩu": {
+    "en": "Re-enter Password",
+    "zh": "重新输入密码",
+    "ja": "パスワードを再入力"
+  },
+  "Cập nhật": {
+    "en": "Update",
+    "zh": "更新",
+    "ja": "更新"
+  },
+  "Đang xử lý...": {
+    "en": "Processing...",
+    "zh": "处理中...",
+    "ja": "処理中..."
+  },
+  "Hủy": {
+    "en": "Cancel",
+    "zh": "取消",
+    "ja": "キャンセル"
+  },
+  "Ảnh đại diện phải nhỏ hơn 1.5MB": {
+    "en": "Avatar image must be less than 1.5MB",
+    "zh": "头像图片必须小于 1.5MB",
+    "ja": "アバター画像は1.5MB未満である必要があります"
+  },
+  "Đang Bật": {
+    "en": "Enabled",
+    "zh": "已启用",
+    "ja": "有効"
+  },
+  "Đã Tắt": {
+    "en": "Disabled",
+    "zh": "已禁用",
+    "ja": "無効"
+  },
+  "✅ Đã lưu thành công!": {
+    "en": "✅ Saved successfully!",
+    "zh": "✅ 保存成功！",
+    "ja": "✅ 保存に成功しました！"
+  },
+  "Giới thiệu cá nhân": {
+    "en": "Personal Introduction",
+    "zh": "个人介绍",
+    "ja": "自己紹介"
+  },
+  "Chia sẻ kinh nghiệm làm nài ngựa của bạn...": {
+    "en": "Share your experience as a jockey...",
+    "zh": "分享您作为骑师的经验...",
+    "ja": "騎手としての経験を共有してください..."
+  },
+  "Phòng xem trực tiếp": {
+    "en": "Live Viewing Room",
+    "zh": "直播间",
+    "ja": "ライブルーム"
+  },
+  "Chọn trận đấu:": {
+    "en": "Select Race:",
+    "zh": "选择比赛：",
+    "ja": "レースを選択："
+  },
+  "Đang tải dữ liệu...": {
+    "en": "Loading data...",
+    "zh": "正在加载数据...",
+    "ja": "データを読み込み中..."
+  },
+  "Hiện tại không có trận đấu nào livestream": {
+    "en": "No live streams currently available",
+    "zh": "目前没有可用直播",
+    "ja": "現在利用可能なライブ配信はありません"
+  },
+  "Admin chưa khởi chạy livestream hoặc không có trận đấu nào đang diễn ra. Vui lòng quay lại sau!": {
+    "en": "Admin has not started the live stream or there are no ongoing races. Please check back later!",
+    "zh": "管理员尚未开启直播或没有正在进行的比赛。请稍后再回来！",
+    "ja": "管理者がライブ配信を開始していないか、現在進行中のレースはありません。後でまた確認してください！"
+  },
+  "Cự ly": {
+    "en": "Distance",
+    "zh": "距离",
+    "ja": "距離"
+  },
+  "Đường đua": {
+    "en": "Track",
+    "zh": "赛道",
+    "ja": "トラック"
+  },
+  "Khởi tranh": {
+    "en": "Start",
+    "zh": "开始",
+    "ja": "開始"
+  },
+  "Luồng Phát Trực Tiếp": {
+    "en": "Live Stream",
+    "zh": "实况直播",
+    "ja": "ライブストリーム"
+  },
+  "ĐANG XEM": {
+    "en": "WATCHING",
+    "zh": "观看中",
+    "ja": "視聴中"
+  },
+  "XEM": {
+    "en": "WATCH",
+    "zh": "观看",
+    "ja": "視聴する"
+  },
+  "Trò chuyện": {
+    "en": "Chat",
+    "zh": "聊天",
+    "ja": "チャット"
+  },
+  "Chat ở đây...": {
+    "en": "Chat here...",
+    "zh": "在这里聊天...",
+    "ja": "ここでチャット..."
+  },
+  "Gửi": {
+    "en": "Send",
+    "zh": "发送",
+    "ja": "送信"
+  },
+  "Online": {
+    "en": "Online",
+    "zh": "在线",
+    "ja": "オンライン"
+  },
+  "Trang chủ": {
+    "en": "Home",
+    "zh": "首页",
+    "ja": "ホーム"
+  },
+  "Trực tiếp": {
+    "en": "Live",
+    "zh": "直播",
+    "ja": "ライブ"
+  },
+  "Bảng đua": {
+    "en": "Racecard",
+    "zh": "排位表",
+    "ja": "出馬表"
+  },
+  "Kết quả": {
+    "en": "Results",
+    "zh": "赛果",
+    "ja": "結果"
+  },
+  "Lịch thi đấu": {
+    "en": "Fixtures",
+    "zh": "赛事安排",
+    "ja": "開催日程"
+  },
+  "Thống kê": {
+    "en": "Statistics",
+    "zh": "统计数据",
+    "ja": "統計"
+  },
+  "Danh sách Ngựa": {
+    "en": "Horses Directory",
+    "zh": "战马名录",
+    "ja": "競走馬名鑑"
+  },
+  "Nài & Chủ ngựa": {
+    "en": "Jockeys & Owners",
+    "zh": "骑师与马主",
+    "ja": "騎手と馬主"
+  },
+  "Báo cáo sự cố": {
+    "en": "Incident Reports",
+    "zh": "违规报告",
+    "ja": "インシデント報告"
+  },
+  "Chào mừng đến với Hệ thống Quản lý Đua ngựa": {
+    "en": "Welcome to Horse Race Management System",
+    "zh": "欢迎使用赛马管理系统",
+    "ja": "競馬管理システムへようこそ"
+  },
+  "Chọn một chức năng bên dưới để bắt đầu.": {
+    "en": "Select a feature below to get started.",
+    "zh": "选择以下功能以开始使用。",
+    "ja": "開始するには、以下の機能を選択してください。"
+  },
+  "Mùa giải đang hoạt động": {
+    "en": "Active Seasons",
+    "zh": "当前赛季",
+    "ja": "現在のシーズン"
+  },
+  "Hiện chưa có mùa giải nào hoạt động.": {
+    "en": "There are currently no active seasons.",
+    "zh": "目前没有活跃的赛季。",
+    "ja": "現在アクティブなシーズンはありません。"
+  },
+  "Các Ngày hội đua sắp tới": {
+    "en": "Upcoming Race Meetings",
+    "zh": "即将举行的比赛日",
+    "ja": "今後のレースミーティング"
+  },
+  "Chưa lên lịch ngày hội đua nào.": {
+    "en": "No race meetings scheduled.",
+    "zh": "尚未安排任何比赛日。",
+    "ja": "レースミーティングの予定はありません。"
+  },
+  "XEM TRỰC TIẾP": {
+    "en": "WATCH LIVE",
+    "zh": "观看直播",
+    "ja": "ライブ視聴"
+  },
+  "Xem Bảng đua": {
+    "en": "View Racecard",
+    "zh": "查看排位表",
+    "ja": "出馬表を見る"
+  },
+  "Giới thiệu": {
+    "en": "About",
+    "zh": "关于",
+    "ja": "概要"
+  },
+  "Đăng nhập": {
+    "en": "Sign In",
+    "zh": "登录",
+    "ja": "サインイン"
+  },
+  "Đăng ký": {
+    "en": "Register",
+    "zh": "注册",
+    "ja": "登録"
+  },
+  "Đăng xuất": {
+    "en": "Sign Out",
+    "zh": "注销",
+    "ja": "サインアウト"
+  },
+  "Trang quản trị": {
+    "en": "Dashboard",
+    "zh": "控制台",
+    "ja": "ダッシュボード"
+  },
+  "Tìm kiếm ngựa, nài, chủ ngựa, trận đua...": {
+    "en": "Search horses, jockeys, owners, races...",
+    "zh": "搜索马匹、骑师、马主、比赛...",
+    "ja": "馬、騎手、馬主、レースを検索..."
+  },
+  "Thông báo": {
+    "en": "Notifications",
+    "zh": "通知",
+    "ja": "通知"
+  },
+  "Xóa tất cả": {
+    "en": "Clear all",
+    "zh": "清除全部",
+    "ja": "すべてクリア"
+  },
+  "Không có thông báo mới": {
+    "en": "No new notifications",
+    "zh": "没有新通知",
+    "ja": "新しい通知はありません"
+  },
+  "Ngày bắt đầu": {
+    "en": "Start Date",
+    "zh": "开始日期",
+    "ja": "開始日"
+  },
+  "Ngày kết thúc": {
+    "en": "End Date",
+    "zh": "结束日期",
+    "ja": "終了日"
+  },
+  "Đếm ngược đến: ": {
+    "en": "Countdown to: ",
+    "zh": "倒计时至：",
+    "ja": "カウントダウン："
+  },
+  "Ngày": {
+    "en": "Days",
+    "zh": "天",
+    "ja": "日"
+  },
+  "Giờ": {
+    "en": "Hours",
+    "zh": "小时",
+    "ja": "時間"
+  },
+  "Phút": {
+    "en": "Minutes",
+    "zh": "分钟",
+    "ja": "分"
+  },
+  "Giây": {
+    "en": "Seconds",
+    "zh": "秒",
+    "ja": "秒"
+  },
+  "Không có lịch thi đấu nào.": {
+    "en": "No fixtures available.",
+    "zh": "暂无赛事安排。",
+    "ja": "開催予定はありません。"
+  },
+  "Thống kê & Bảng xếp hạng": {
+    "en": "Statistics & Leaderboards",
+    "zh": "统计数据与排行榜",
+    "ja": "統計とリーダーボード"
+  },
+  "Ngựa dẫn đầu (Top Rating)": {
+    "en": "Leading Horses (Top Rating)",
+    "zh": "领先马匹（最高评分）",
+    "ja": "トップホース（最高評価）"
+  },
+  "Nài ngựa dẫn đầu (Top 3)": {
+    "en": "Leading Jockeys (Top 3)",
+    "zh": "领先骑师（前三名）",
+    "ja": "トップジョッキー（トップ3）"
+  },
+  "Đánh giá": {
+    "en": "Rating",
+    "zh": "评分",
+    "ja": "評価"
+  },
+  "Trận": {
+    "en": "Races",
+    "zh": "场次",
+    "ja": "レース"
+  },
+  "Không có dữ liệu ngựa.": {
+    "en": "No horse data.",
+    "zh": "暂无马匹数据。",
+    "ja": "馬のデータはありません。"
+  },
+  "Không có dữ liệu nài ngựa.": {
+    "en": "No jockey data.",
+    "zh": "暂无骑师数据。",
+    "ja": "騎手のデータはありません。"
+  },
+  "Danh sách Đăng ký Ngựa": {
+    "en": "Horse Registration Directory",
+    "zh": "马匹注册名录",
+    "ja": "馬登録名鑑"
+  },
+  "Tổng quan Danh bạ": {
+    "en": "Directory Overview",
+    "zh": "名录总览",
+    "ja": "ディレクトリの概要"
+  },
+  "Danh sách Nài ngựa": {
+    "en": "Jockey Directory",
+    "zh": "骑师名录",
+    "ja": "騎手名鑑"
+  },
+  "Danh sách Chủ ngựa": {
+    "en": "Owner Directory",
+    "zh": "马主名录",
+    "ja": "馬主名鑑"
+  },
+  "Báo cáo Sự cố & Vi phạm": {
+    "en": "Incident & Violation Reports",
+    "zh": "违规与事故报告",
+    "ja": "インシデントと違反の報告"
+  },
+  "Đang chờ xử lý": {
+    "en": "Pending",
+    "zh": "待处理",
+    "ja": "保留中"
+  },
+  "Mã (ID)": {
+    "en": "ID",
+    "zh": "ID",
+    "ja": "ID"
+  },
+  "Tên Ngựa": {
+    "en": "Horse Name",
+    "zh": "马匹名称",
+    "ja": "馬名"
+  },
+  "Giống loài": {
+    "en": "Breed",
+    "zh": "品种",
+    "ja": "品種"
+  },
+  "Email": {
+    "en": "Email",
+    "zh": "电子邮件",
+    "ja": "Eメール",
+    "vi": "E-mail"
+  },
+  "Số trận tham gia": {
+    "en": "Races Run",
+    "zh": "参赛次数",
+    "ja": "出走回数"
+  },
+  "Số lần Top 3": {
+    "en": "Top 3 Finishes",
+    "zh": "前三名次数",
+    "ja": "トップ3回数"
+  },
+  "Tỉ lệ Top 3": {
+    "en": "Top 3 Rate",
+    "zh": "前三率",
+    "ja": "トップ3率"
+  },
+  "Mã Báo cáo": {
+    "en": "Report ID",
+    "zh": "报告编号",
+    "ja": "レポートID"
+  },
+  "Mã Trận đua": {
+    "en": "Race ID",
+    "zh": "赛事编号",
+    "ja": "レースID"
+  },
+  "Mô tả sự cố": {
+    "en": "Incident Description",
+    "zh": "事件描述",
+    "ja": "インシデントの説明"
+  },
+  "Hình phạt": {
+    "en": "Penalty",
+    "zh": "处罚",
+    "ja": "ペナルティ"
+  },
+  "Giới thiệu Hệ thống": {
+    "en": "About the System",
+    "zh": "关于系统",
+    "ja": "システムについて"
+  },
+  "Nền tảng Quản lý Đua ngựa Toàn diện": {
+    "en": "Comprehensive Horse Racing Management Platform",
+    "zh": "综合赛马管理平台",
+    "ja": "総合競馬管理プラットフォーム"
+  },
+  "Sứ mệnh của chúng tôi": {
+    "en": "Our Mission",
+    "zh": "我们的使命",
+    "ja": "私たちのミッション"
+  },
+  "Quản lý Mùa giải": {
+    "en": "Season Management",
+    "zh": "赛季管理",
+    "ja": "シーズン管理"
+  },
+  "Quản lý Nài ngựa": {
+    "en": "Jockey Management",
+    "zh": "骑师管理",
+    "ja": "騎手管理"
+  },
+  "Kết quả tìm kiếm": {
+    "en": "Search Results",
+    "zh": "搜索结果",
+    "ja": "検索結果"
+  },
+  "Đấu Trường Livestream": {
+    "en": "Livestream Arena",
+    "zh": "直播竞技场",
+    "ja": "ライブ配信アリーナ"
+  },
+  "ĐANG PHÁT": {
+    "en": "LIVE NOW",
+    "zh": "正在直播",
+    "ja": "ライブ中"
+  },
+  "Không có livestream trực tiếp nào": {
+    "en": "No active livestreams",
+    "zh": "没有活跃的直播",
+    "ja": "アクティブなライブ配信はありません"
+  },
+  "Cự ly đua": {
+    "en": "Race Distance",
+    "zh": "比赛距离",
+    "ja": "レース距離"
+  },
+  "Loại đường đua": {
+    "en": "Track Type",
+    "zh": "赛道类型",
+    "ja": "トラックタイプ"
+  },
+  "Thời gian bắt đầu": {
+    "en": "Start Time",
+    "zh": "开始时间",
+    "ja": "開始時間"
+  },
+  "Về Trang chủ": {
+    "en": "Back to Home",
+    "zh": "返回首页",
+    "ja": "ホームに戻る"
+  },
+  "Các luồng trực tiếp khác": {
+    "en": "Other Live Streams",
+    "zh": "其他直播",
+    "ja": "その他のライブ配信"
+  },
+  "XEM NGAY": {
+    "en": "WATCH NOW",
+    "zh": "立即观看",
+    "ja": "今すぐ見る"
+  },
+  "Trò chuyện trực tiếp": {
+    "en": "Live Chat",
+    "zh": "实时聊天",
+    "ja": "ライブチャット"
+  },
+  "Nhập tin nhắn...": {
+    "en": "Type a message...",
+    "zh": "输入消息...",
+    "ja": "メッセージを入力..."
+  },
+  "GỬI": {
+    "en": "SEND",
+    "zh": "发送",
+    "ja": "送信"
+  },
+  "Trực tuyến": {
+    "en": "Online",
+    "zh": "在线",
+    "ja": "オンライン"
+  },
+  "Danh Sách Livestream": {
+    "en": "Livestream List",
+    "zh": "直播列表",
+    "ja": "ライブ配信リスト"
+  },
+  "Chọn trận đấu để chuyển đổi luồng phát": {
+    "en": "Select a race to switch streams",
+    "zh": "选择比赛以切换直播流",
+    "ja": "レースを選択して配信を切り替える"
+  },
+  "Đang tải dữ liệu livestream...": {
+    "en": "Loading livestream data...",
+    "zh": "正在加载直播数据...",
+    "ja": "ライブデータを読み込み中..."
+  },
+  "Lịch trình trọng tài": {
+    "en": "Referee Schedule",
+    "zh": "裁判日程",
+    "ja": "審判スケジュール"
+  },
+  "Danh sách các cuộc đua sắp diễn ra và đã diễn ra mà bạn được phân công làm trọng tài.": {
+    "en": "List of upcoming and past races where you are assigned as a referee.",
+    "zh": "您被指派为裁判的即将举行和已结束的比赛列表。",
+    "ja": "あなたが審判として割り当てられた今後のレースおよび過去のレースのリスト。"
+  },
+  "Lịch trình": {
+    "en": "Schedule",
+    "zh": "日程",
+    "ja": "スケジュール"
+  },
+  "Giải đua & Địa điểm": {
+    "en": "Meeting & Venue",
+    "zh": "比赛日与地点",
+    "ja": "ミーティングと会場"
+  },
+  "Trận đấu & Chi tiết": {
+    "en": "Race & Details",
+    "zh": "比赛与详情",
+    "ja": "レースと詳細"
+  },
+  "Đang tải lịch trình...": {
+    "en": "Loading schedule...",
+    "zh": "正在加载日程...",
+    "ja": "スケジュールを読み込み中..."
+  },
+  "Không có nhiệm vụ nào được phân công cho lịch trình của bạn.": {
+    "en": "No tasks assigned for your schedule.",
+    "zh": "您的日程没有分配任何任务。",
+    "ja": "あなたのスケジュールに割り当てられたタスクはありません。"
+  },
+  "Tổng số phân công": {
+    "en": "Total Assignments",
+    "zh": "总任务数",
+    "ja": "総割り当て数"
+  },
+  "Chờ kiểm duyệt/Giám sát": {
+    "en": "Pending Inspection/Monitoring",
+    "zh": "待检查/监控",
+    "ja": "検査/監視待ち"
+  },
+  "Trận đấu đã hoàn thành": {
+    "en": "Completed Races",
+    "zh": "已完成的比赛",
+    "ja": "終了したレース"
+  },
+  "Nhiệm vụ & Trận đấu phân công": {
+    "en": "Assignments & Assigned Races",
+    "zh": "任务与分配的比赛",
+    "ja": "任務と割り当てられたレース"
+  },
+  "Kiểm tra, giám sát và chốt kết quả cho các trận đấu được giao.": {
+    "en": "Inspect, monitor, and finalize results for assigned races.",
+    "zh": "检查、监控并确定所分配比赛的结果。",
+    "ja": "割り当てられたレースの検査、監視、および結果の確定。"
+  },
+  "Đang tải các trận đấu được giao...": {
+    "en": "Loading assigned races...",
+    "zh": "正在加载分配的比赛...",
+    "ja": "割り当てられたレースを読み込み中..."
+  },
+  "Hiện tại không có trận đấu nào được giao cho bạn.": {
+    "en": "There are currently no races assigned to you.",
+    "zh": "当前没有分配给您的比赛。",
+    "ja": "現在、あなたに割り当てられたレースはありません。"
+  },
+  "🟢 Bắt đầu trận": {
+    "en": "🟢 Start Race",
+    "zh": "🟢 开始比赛",
+    "ja": "🟢 レース開始"
+  },
+  "☑ Bắt đầu kiểm tra": {
+    "en": "☑ Start Inspection",
+    "zh": "☑ 开始检查",
+    "ja": "☑ 検査開始"
+  },
+  "Chưa thiết lập Cổng (Gate)": {
+    "en": "Gate Not Set",
+    "zh": "未设置闸位",
+    "ja": "ゲート未設定"
+  },
+  "👁 Giám sát & Ghi nhận": {
+    "en": "👁 Monitor & Record",
+    "zh": "👁 监控与记录",
+    "ja": "👁 監視と記録"
+  },
+  "🔴 Xác nhận kết quả": {
+    "en": "🔴 Confirm Results",
+    "zh": "🔴 确认结果",
+    "ja": "🔴 結果確認"
+  },
+  "📄 Báo cáo Trọng tài": {
+    "en": "📄 Referee Report",
+    "zh": "📄 裁判报告",
+    "ja": "📄 審判レポート"
+  },
+  "Quay lại Bảng trọng tài": {
+    "en": "Back to Referee Board",
+    "zh": "返回裁判面板",
+    "ja": "審判ボードに戻る"
+  },
+  "Kiểm tra tiền trận đấu cho": {
+    "en": "Pre-race Inspection for",
+    "zh": "赛前检查：",
+    "ja": "レース前検査："
+  },
+  "Hạng đấu": {
+    "en": "Class",
+    "zh": "级别",
+    "ja": "クラス"
+  },
+  "Loại đường chạy": {
+    "en": "Track Surface",
+    "zh": "赛道表面",
+    "ja": "トラック表面"
+  },
+  "Kiểm tra cân nặng Ngựa & Nài": {
+    "en": "Weight Check for Horse & Jockey",
+    "zh": "马匹与骑师重量检查",
+    "ja": "馬と騎手の体重チェック"
+  },
+  "Hoàn thành danh sách kiểm tra an toàn?": {
+    "en": "Completed safety checklist?",
+    "zh": "是否完成安全检查清单？",
+    "ja": "安全チェックリストを完了しましたか？"
+  },
+  "Xác nhận kiểm tra & Mở cổng xuất phát": {
+    "en": "Confirm Inspection & Open Starting Gates",
+    "zh": "确认检查并开启起跑闸门",
+    "ja": "検査を確認してスターティングゲートを開く"
+  },
+  "Giám sát trực tiếp cho": {
+    "en": "Live Monitoring for",
+    "zh": "现场监控：",
+    "ja": "ライブ監視："
+  },
+  "Trận đấu đang diễn ra": {
+    "en": "Race is Ongoing",
+    "zh": "比赛进行中",
+    "ja": "レース進行中"
+  },
+  "🛑 Dừng trận đấu khẩn cấp": {
+    "en": "🛑 Emergency Race Stop",
+    "zh": "🛑 紧急停止比赛",
+    "ja": "🛑 緊急レース停止"
+  },
+  "⚠️ Ghi nhận vi phạm": {
+    "en": "⚠️ Record Violation",
+    "zh": "⚠️ 记录违规",
+    "ja": "⚠️ 違反を記録"
+  },
+  "Thí sinh đang chạy": {
+    "en": "Running Participants",
+    "zh": "正在比赛的参赛者",
+    "ja": "走行中の参加者"
+  },
+  "Các đối thủ đang chạy trên đường đua.": {
+    "en": "Competitors are running on the track.",
+    "zh": "竞争对手正在赛道上比赛。",
+    "ja": "競技者がトラックを走っています。"
+  },
+  "Sự cố / Vi phạm đã ghi nhận": {
+    "en": "Recorded Incidents / Violations",
+    "zh": "已记录的事故/违规",
+    "ja": "記録されたインシデント/違反"
+  },
+  "Các vi phạm đã được trọng tài ghi nhận cho trận đấu này.": {
+    "en": "Violations recorded by the referee for this race.",
+    "zh": "裁判为本场比赛记录的违规行为。",
+    "ja": "このレースで審判によって記録された違反。"
+  },
+  "Không có sự cố nào được ghi nhận. Trận đấu sạch cho đến nay.": {
+    "en": "No incidents recorded. Clean race so far.",
+    "zh": "未记录任何事故。比赛目前很干净。",
+    "ja": "インシデントは記録されていません。今のところクリーンなレースです。"
+  },
+  "Trận đấu đã kết thúc?": {
+    "en": "Has the race ended?",
+    "zh": "比赛结束了吗？",
+    "ja": "レースは終了しましたか？"
+  },
+  "Kết thúc trận & Nhập kết quả": {
+    "en": "End Race & Enter Results",
+    "zh": "结束比赛并输入结果",
+    "ja": "レースを終了して結果を入力"
+  },
+  "Ghi nhận vi phạm luật đua": {
+    "en": "Record Race Rule Violation",
+    "zh": "记录比赛违规行为",
+    "ja": "レースルール違反を記録"
+  },
+  "Thí sinh (Ngựa / Nài)": {
+    "en": "Participant (Horse / Jockey)",
+    "zh": "参赛者 (马匹/骑师)",
+    "ja": "参加者 (馬/騎手)"
+  },
+  "Vi phạm cực kỳ nghiêm trọng (Loại trực tiếp khỏi trận đấu ngay lập tức)": {
+    "en": "Extremely serious violation (Immediate Disqualification)",
+    "zh": "极其严重的违规行为（立即取消比赛资格）",
+    "ja": "極めて深刻な違反（即時失格）"
+  },
+  "Lưu vi phạm": {
+    "en": "Save Violation",
+    "zh": "保存违规",
+    "ja": "違反を保存"
+  },
+  "Nhập kết quả chung cuộc cho": {
+    "en": "Enter final results for",
+    "zh": "输入最终结果：",
+    "ja": "最終結果を入力："
+  },
+  "Bảng thứ hạng chính thức": {
+    "en": "Official Standings Board",
+    "zh": "正式排名榜",
+    "ja": "公式順位表"
+  },
+  "Báo cáo chính thức của Trọng tài": {
+    "en": "Official Referee Report",
+    "zh": "官方裁判报告",
+    "ja": "公式審判レポート"
+  },
+  "Phê duyệt & Công bố chính thức": {
+    "en": "Approve & Officially Publish",
+    "zh": "批准并正式发布",
+    "ja": "承認と公式発表"
+  },
+  "Cân nặng chuẩn": {
+    "en": "Standard Weight",
+    "zh": "标准重量",
+    "ja": "基準重量"
+  },
+  "Đã xác nhận": {
+    "en": "Confirmed",
+    "zh": "已确认",
+    "ja": "確認済み"
+  },
+  "BỊ LOẠI (Y TẾ)": {
+    "en": "DISQUALIFIED (MEDICAL)",
+    "zh": "取消资格 (医疗)",
+    "ja": "失格 (医療)"
+  },
+  "Quá cân nghiêm trọng (Tối đa +1.0kg)": {
+    "en": "Severe Overweight (Max +1.0kg)",
+    "zh": "严重超重 (最大+1.0kg)",
+    "ja": "重度の重量オーバー (最大+1.0kg)"
+  },
+  "Quá cân": {
+    "en": "Overweight",
+    "zh": "超重",
+    "ja": "重量オーバー"
+  },
+  "Cần mang thêm chì": {
+    "en": "Needs extra lead",
+    "zh": "需要增加配重铅",
+    "ja": "追加の鉛が必要"
+  },
+  "Cổng": {
+    "en": "Gate",
+    "zh": "闸位",
+    "ja": "ゲート"
+  },
+  "Thông tin Nài": {
+    "en": "Jockey Info",
+    "zh": "骑师信息",
+    "ja": "騎手情報"
+  },
+  "Thông tin Ngựa": {
+    "en": "Horse Info",
+    "zh": "马匹信息",
+    "ja": "馬情報"
+  },
+  "Cân nặng trước đua (Weigh-Out) (kg)": {
+    "en": "Weigh-Out (kg)",
+    "zh": "赛前过磅 (Weigh-Out) (kg)",
+    "ja": "前検量 (Weigh-Out) (kg)"
+  },
+  "Cân nặng yêu cầu": {
+    "en": "Required Weight",
+    "zh": "要求重量",
+    "ja": "要求重量"
+  },
+  "Khám y tế & An toàn": {
+    "en": "Medical & Safety Check",
+    "zh": "医疗与安全检查",
+    "ja": "医療・安全チェック"
+  },
+  "Đóng": {
+    "en": "Close",
+    "zh": "关闭",
+    "ja": "閉じる"
+  },
+  "Cân sau đua đạt": {
+    "en": "Weigh-In Passed",
+    "zh": "赛后过磅合格",
+    "ja": "後検量合格"
+  },
+  "SAI LỆCH THIẾU CÂN": {
+    "en": "UNDERWEIGHT DISCREPANCY",
+    "zh": "体重不足差异",
+    "ja": "重量不足による不一致"
+  },
+  "Thứ hạng chung cuộc": {
+    "en": "Final Rank",
+    "zh": "最终排名",
+    "ja": "最終順位"
+  },
+  "Cân nặng sau đua (Weigh-In) (kg)": {
+    "en": "Weigh-In (kg)",
+    "zh": "赛后过磅 (Weigh-In) (kg)",
+    "ja": "後検量 (Weigh-In) (kg)"
+  },
+  "Thời gian chạy": {
+    "en": "Running Time",
+    "zh": "比赛时间",
+    "ja": "走行時間"
+  },
+  "Loại (DQ)": {
+    "en": "Disqualify (DQ)",
+    "zh": "取消资格 (DQ)",
+    "ja": "失格 (DQ)"
+  },
+  "Tạm hoãn cuộc đua": {
+    "en": "Suspend Race",
+    "zh": "暂停比赛",
+    "ja": "レース中断"
+  },
+  "Khôi phục cuộc đua": {
+    "en": "Resume Race",
+    "zh": "恢复比赛",
+    "ja": "レース再開"
+  },
+  "Nhật ký sự cố cuộc đua": {
+    "en": "Race Incident Log",
+    "zh": "比赛事故记录",
+    "ja": "レースインシデントログ"
+  },
+  "Danh sách lịch sử các vi phạm quy tắc và hình phạt đã được bạn ghi nhận.": {
+    "en": "History of rule violations and penalties recorded by you.",
+    "zh": "您记录的违规和处罚的历史列表。",
+    "ja": "あなたが記録したルール違反とペナルティの履歴。"
+  },
+  "ID": {
+    "en": "ID",
+    "zh": "ID",
+    "ja": "ID",
+    "vi": "NHẬN DẠNG"
+  },
+  "Trận đấu & Ngày hội đua": {
+    "en": "Race & Meeting",
+    "zh": "比赛与比赛日",
+    "ja": "レースとミーティング"
+  },
+  "Chiến mã": {
+    "en": "Horse",
+    "zh": "战马",
+    "ja": "競走馬"
+  },
+  "Chi tiết vi phạm": {
+    "en": "Violation Details",
+    "zh": "违规详情",
+    "ja": "違反の詳細"
+  },
+  "Bạn chưa ghi nhận vi phạm nào.": {
+    "en": "You have not recorded any violations.",
+    "zh": "您尚未记录任何违规行为。",
+    "ja": "違反は記録されていません。"
+  },
+  "Báo cáo cuộc đua": {
+    "en": "Race Report",
+    "zh": "比赛报告",
+    "ja": "レースレポート"
+  },
+  "Xem báo cáo": {
+    "en": "View Report",
+    "zh": "查看报告",
+    "ja": "レポートを見る"
+  },
+  "📄 Báo cáo giám sát chính thức": {
+    "en": "📄 Official Monitoring Report",
+    "zh": "📄 官方监控报告",
+    "ja": "📄 公式監視レポート"
+  },
+  "Ngựa số 3 tăng tốc kinh quá!": {
+    "vi": "Ngựa số 3 tăng tốc kinh quá!",
+    "en": "Horse number 3 accelerates so much!",
+    "zh": "三号马加速得这么快！",
+    "ja": "3番馬がすごい加速！"
+  },
+  "Jockey nài ngựa Ryan chạy rất thông minh.": {
+    "vi": "Jockey nài ngựa Ryan chạy rất thông minh.",
+    "en": "Jockey jockey Ryan runs very smart.",
+    "zh": "骑师瑞安跑得非常聪明。",
+    "ja": "騎手のライアンはとてもスマートに走ります。"
+  },
+  "Quá hay! Vòng cuối rồi anh em ơi!": {
+    "vi": "Quá hay! Vòng cuối rồi anh em ơi!",
+    "en": "So cool! It's the last round, guys!",
+    "zh": "太酷了！这是最后一轮了，伙计们！",
+    "ja": "とてもクールです！最終ラウンドですよ、皆さん！"
+  },
+  "Mặc định": {
+    "vi": "Mặc định",
+    "en": "Default",
+    "zh": "默认",
+    "ja": "デフォルト"
+  },
+  "Rạp phim": {
+    "vi": "Rạp phim",
+    "en": "Movie theater",
+    "zh": "电影院",
+    "ja": "映画館"
+  },
+  "Xin chào! Hỏi tôi về ngựa, nài, race, dự đoán kết quả nhé.": {
+    "vi": "Xin chào! Hỏi tôi về ngựa, nài, race, dự đoán kết quả nhé.",
+    "en": "Hello! Ask me about horses, jockeys, races, and predict the results.",
+    "zh": "你好！向我询问有关马匹、骑师、比赛的信息，并预测结果。",
+    "ja": "こんにちは！馬、騎手、レースについて質問したり、結果を予想したりしてください。"
+  },
+  "Hệ thống Quản lý Đua ngựa là một nền tảng toàn diện được thiết kế để hợp lý hóa và hiện đại hóa công tác quản lý giải đua ngựa. Từ khâu khởi tạo mùa giải đến khâu vận hành ngày đua, hệ thống của chúng tôi cung cấp cho các quản trị viên, chủ ngựa, nài ngựa và trọng tài những công cụ cần thiết để tổ chức các sự kiện đua ngựa công bằng, hấp dẫn và chuyên nghiệp.": {
+    "vi": "Hệ thống Quản lý Đua ngựa là một nền tảng toàn diện được thiết kế để hợp lý hóa và hiện đại hóa công tác quản lý giải đua ngựa. Từ khâu khởi tạo mùa giải đến khâu vận hành ngày đua, hệ thống của chúng tôi cung cấp cho các quản trị viên, chủ ngựa, nài ngựa và trọng tài những công cụ cần thiết để tổ chức các sự kiện đua ngựa công bằng, hấp dẫn và chuyên nghiệp.",
+    "en": "The Horse Racing Management System is a comprehensive platform designed to streamline and modernize horse racing management. From season initiation to race day operations, our system provides administrators, horse owners, jockeys and judges with the tools needed to organize fair, attractive and professional horse racing events.",
+    "zh": "赛马管理系统是一个旨在简化和现代化赛马管理的综合平台。从赛季开始到比赛日运营，我们的系统为管理员、马主、骑师和裁判提供组织公平、有吸引力和专业赛马活动所需的工具。",
+    "ja": "競馬管理システムは、競馬管理を合理化し、最新化するために設計された包括的なプラットフォームです。シーズン開始からレース当日の運営に至るまで、当社のシステムは管理者、馬主、騎手、審判に公正で魅力的でプロフェッショナルな競馬イベントを開催するために必要なツールを提供します。"
+  },
+  "Toàn bộ vòng đời giải đấu từ thiết lập đến kết quả": {
+    "vi": "Toàn bộ vòng đời giải đấu từ thiết lập đến kết quả",
+    "en": "Complete tournament lifecycle from setup to results",
+    "zh": "从设置到结果的完整锦标赛生命周期",
+    "ja": "セットアップから結果までトーナメントのライフサイクルを完了する"
+  },
+  "Hồ sơ Ngựa": {
+    "vi": "Hồ sơ Ngựa",
+    "en": "Horse Profile",
+    "zh": "马匹简介",
+    "ja": "馬のプロフィール"
+  },
+  "Theo dõi ngựa, đánh giá rating và thành tích": {
+    "vi": "Theo dõi ngựa, đánh giá rating và thành tích",
+    "en": "Track horses, evaluate ratings and achievements",
+    "zh": "追踪马匹，评估评级和成就",
+    "ja": "馬を追跡し、評価と成績を評価する"
+  },
+  "Quản lý hồ sơ nài ngựa và lịch đăng ký": {
+    "vi": "Quản lý hồ sơ nài ngựa và lịch đăng ký",
+    "en": "Manage jockey profiles and registration schedules",
+    "zh": "管理骑师资料和注册时间表",
+    "ja": "騎手のプロフィールと登録スケジュールを管理"
+  },
+  "Vận hành Ngày đua": {
+    "vi": "Vận hành Ngày đua",
+    "en": "Race Day Operations",
+    "zh": "比赛日运营",
+    "ja": "レース当日の運営"
+  },
+  "Bảng đua, lịch trình, giám sát trực tiếp": {
+    "vi": "Bảng đua, lịch trình, giám sát trực tiếp",
+    "en": "Race table, schedule, live supervision",
+    "zh": "赛表、赛程表、现场监督",
+    "ja": "出馬表、スケジュール、ライブ監修"
+  },
+  "Tỷ lệ thắng, tiền thưởng, phân tích thành tích": {
+    "vi": "Tỷ lệ thắng, tiền thưởng, phân tích thành tích",
+    "en": "Win rate, bonuses, performance analysis",
+    "zh": "胜率、奖金、表现分析",
+    "ja": "勝率、ボーナス、パフォーマンス分析"
+  },
+  "Báo cáo Sự cố": {
+    "vi": "Báo cáo Sự cố",
+    "en": "Report a Problem",
+    "zh": "报告问题",
+    "ja": "問題を報告する"
+  },
+  "Theo dõi vi phạm luật và hình phạt": {
+    "vi": "Theo dõi vi phạm luật và hình phạt",
+    "en": "Monitor law violations and penalties",
+    "zh": "监控违法行为和处罚",
+    "ja": "法律違反と罰則を監視する"
+  },
+  "Hồ sơ": {
+    "vi": "Hồ sơ",
+    "en": "File",
+    "zh": "文件",
+    "ja": "ファイル"
+  },
+  "Khởi đầu ấn tượng quá! Ngựa số 3 đang bứt tốc!": {
+    "vi": "Khởi đầu ấn tượng quá! Ngựa số 3 đang bứt tốc!",
+    "en": "What an impressive start! Horse number 3 is accelerating!",
+    "zh": "多么令人印象深刻的开始！三号马正在加速！",
+    "ja": "なんて印象的なスタートでしょう！ ３番馬が加速！"
+  },
+  "giây trước": {
+    "vi": "giây trước",
+    "en": "seconds ago",
+    "zh": "几秒钟前",
+    "ja": "数秒前"
+  },
+  "Đường đua Turf hôm nay rất đẹp, chim ưng quá.": {
+    "vi": "Đường đua Turf hôm nay rất đẹp, chim ưng quá.",
+    "en": "The Turf track today is very beautiful, the birds are so beautiful.",
+    "zh": "今天的草坪赛道很漂亮，鸟儿也很漂亮。",
+    "ja": "今日のターフトラックはとても美しく、鳥もとても美しいです。"
+  },
+  "Theo các bác ai sẽ về nhất vòng này?": {
+    "vi": "Theo các bác ai sẽ về nhất vòng này?",
+    "en": "Who do you think will come first this round?",
+    "zh": "您认为本轮谁会获得第一名？",
+    "ja": "このラウンドで誰が1位になると思いますか?"
+  },
+  "Thunder King chạy khỏe quá, tạ gánh vừa khít.": {
+    "vi": "Thunder King chạy khỏe quá, tạ gánh vừa khít.",
+    "en": "Thunder King runs so well, the weights fit perfectly.",
+    "zh": "雷霆之王跑得很好，重量也非常合适。",
+    "ja": "サンダーキングはとても良く走ります、ウェイトは完璧にフィットします。"
+  },
+  "Hiện tại không có trận đấu nào đang chạy hoặc Admin chưa thiết lập đường link phát trực tiếp. Vui lòng quay lại sau!": {
+    "vi": "Hiện tại không có trận đấu nào đang chạy hoặc Admin chưa thiết lập đường link phát trực tiếp. Vui lòng quay lại sau!",
+    "en": "There are currently no matches running or the Admin has not set up a live streaming link. Please come back later!",
+    "zh": "目前没有正在进行的比赛或管理员尚未设置直播链接。请稍后再回来！",
+    "ja": "現在、実行中の試合がないか、管理者がライブ ストリーミング リンクを設定していません。後でまた来てください！"
+  },
+  "Đến Trang cá nhân & 2FA": {
+    "vi": "Đến Trang cá nhân & 2FA",
+    "en": "Go to Personal Page & 2FA",
+    "zh": "转到个人页面和 2FA",
+    "ja": "個人ページと 2FA に移動"
+  },
+  "Tiến trình": {
+    "vi": "Tiến trình",
+    "en": "Progress",
+    "zh": "进步",
+    "ja": "進捗"
+  },
+  "Về trang chủ": {
+    "vi": "Về trang chủ",
+    "en": "Back to home page",
+    "zh": "返回首页",
+    "ja": "ホームページに戻る"
+  },
+  "Đã ghi nhận vi phạm và LOẠI TRỰC TIẾP thí sinh ngay lập tức!": {
+    "vi": "Đã ghi nhận vi phạm và LOẠI TRỰC TIẾP thí sinh ngay lập tức!",
+    "en": "Violations have been recorded and contestants are immediately DISQUALIFIED!",
+    "zh": "违规行为已被记录，参赛者将立即被取消资格！",
+    "ja": "違反は記録され、出場者は直ちに失格となります。"
+  },
+  "Đã ghi nhận vi phạm thành công.": {
+    "vi": "Đã ghi nhận vi phạm thành công.",
+    "en": "Violation successfully recorded.",
+    "zh": "违规行为已成功记录。",
+    "ja": "違反は正常に記録されました。"
+  },
+  "Ghi nhận vi phạm thất bại: ": {
+    "vi": "Ghi nhận vi phạm thất bại: ",
+    "en": "Recording failed violations:",
+    "zh": "记录失败的违规行为：",
+    "ja": "失敗した違反の記録:"
+  },
+  "Đã thực hiện dừng khẩn cấp. Trạng thái cuộc đua chuyển thành CANCELLED.": {
+    "vi": "Đã thực hiện dừng khẩn cấp. Trạng thái cuộc đua chuyển thành CANCELLED.",
+    "en": "An emergency stop has been performed. Race status changes to CANCELLED.",
+    "zh": "已执行紧急停止。比赛状态更改为“已取消”。",
+    "ja": "緊急停止が行われました。レースステータスが「CANCELLED」に変わります。"
+  },
+  "Không thể dừng cuộc đua: ": {
+    "vi": "Không thể dừng cuộc đua: ",
+    "en": "Cannot stop the race:",
+    "zh": "无法停止比赛：",
+    "ja": "レースを停止できません:"
+  },
+  "Đã tạm hoãn cuộc đua. Trạng thái chuyển thành STOPPED.": {
+    "vi": "Đã tạm hoãn cuộc đua. Trạng thái chuyển thành STOPPED.",
+    "en": "The race has been postponed. Status changes to STOPPED.",
+    "zh": "比赛已被推迟。状态更改为“已停止”。",
+    "ja": "レースは延期になりました。ステータスが「STOPPED」に変わります。"
+  },
+  "Không thể tạm hoãn cuộc đua: ": {
+    "vi": "Không thể tạm hoãn cuộc đua: ",
+    "en": "The race cannot be postponed:",
+    "zh": "比赛不能推迟：",
+    "ja": "レースを延期することはできません。"
+  },
+  "Đã khôi phục cuộc đua. Trạng thái chuyển thành RUNNING.": {
+    "vi": "Đã khôi phục cuộc đua. Trạng thái chuyển thành RUNNING.",
+    "en": "Race restored. Status changes to RUNNING.",
+    "zh": "比赛恢复。状态更改为“正在运行”。",
+    "ja": "レースが復活しました。ステータスが「実行中」に変わります。"
+  },
+  "Không thể khôi phục cuộc đua: ": {
+    "vi": "Không thể khôi phục cuộc đua: ",
+    "en": "Unable to restore race:",
+    "zh": "无法恢复比赛：",
+    "ja": "種族を復元できません:"
+  },
+  "Kết quả đã được xác minh và công bố chính thức. Đóng trận đấu.": {
+    "vi": "Kết quả đã được xác minh và công bố chính thức. Đóng trận đấu.",
+    "en": "The results have been verified and officially announced. Close the match.",
+    "zh": "结果已经核实并正式公布。结束比赛。",
+    "ja": "その結果が検証され、正式に発表されました。試合を終了します。"
+  },
+  "Gửi kết quả thất bại: ": {
+    "vi": "Gửi kết quả thất bại: ",
+    "en": "Sending failed results:",
+    "zh": "发送失败结果：",
+    "ja": "失敗した結果の送信:"
+  },
+  "Không có báo cáo nào được ghi nhận cho trận đấu này.": {
+    "vi": "Không có báo cáo nào được ghi nhận cho trận đấu này.",
+    "en": "There are no reports recorded for this match.",
+    "zh": "本场比赛没有任何报道记录。",
+    "ja": "この試合に関するレポートは記録されていません。"
+  },
+  "Cảnh báo: Cổng xuất phát chưa được thiết lập đầy đủ cho tất cả nài/ngựa. Hãy yêu cầu Admin cấu hình cổng trước khi bắt đầu cuộc đua.": {
+    "vi": "Cảnh báo: Cổng xuất phát chưa được thiết lập đầy đủ cho tất cả nài/ngựa. Hãy yêu cầu Admin cấu hình cổng trước khi bắt đầu cuộc đua.",
+    "en": "Warning: The starting gate has not been fully set up for all jockeys/horses. Please ask the Admin to configure the port before starting the race.",
+    "zh": "警告：尚未为所有骑师/马匹完全设置起跑门。请在比赛开始前要求管理员配置端口。",
+    "ja": "警告: スタートゲートはすべての騎手/馬に対して完全に設定されていません。レースを開始する前に、管理者にポートの設定を依頼してください。"
+  },
+  "Thông tin: Trận đấu đã đầy đủ cổng xuất phát. Bạn có thể cho phép bắt đầu cuộc đua trước giờ bằng cách bấm Xác nhận kiểm tra phía dưới để đưa trạng thái trận đấu sang RUNNING ngay lập tức.": {
+    "vi": "Thông tin: Trận đấu đã đầy đủ cổng xuất phát. Bạn có thể cho phép bắt đầu cuộc đua trước giờ bằng cách bấm Xác nhận kiểm tra phía dưới để đưa trạng thái trận đấu sang RUNNING ngay lập tức.",
+    "en": "Information: The starting gate is full for the match. You can allow the race to start ahead of time by clicking Confirm check below to bring the match status to RUNNING immediately.",
+    "zh": "信息：比赛起跑门已满。您可以通过单击下面的“确认”检查来允许比赛提前开始，以使比赛状态立即变为“正在运行”。",
+    "ja": "お知らせ: 試合開始ゲートは満席です。下の [確認チェック] をクリックすると、レースを事前に開始できるようになり、試合のステータスがただちに「実行中」になります。"
+  },
+  "Xác minh trọng lượng tạ mang theo, giống ngựa và kiểm tra an toàn trang bị trước khi mở cổng.": {
+    "vi": "Xác minh trọng lượng tạ mang theo, giống ngựa và kiểm tra an toàn trang bị trước khi mở cổng.",
+    "en": "Verify weight of weights carried, breed of horse and check equipment safety before opening gate.",
+    "zh": "开门前核实所携带物品的重量、马匹品种并检查设备安全。",
+    "ja": "ゲートを開ける前に、運ぶウェイトの重量、馬の品種、設備の安全性を確認してください。"
+  },
+  "Đảm bảo bác sĩ thú y đã kiểm duyệt tất cả ngựa, nài ngựa đã được cân và hộp xuất phát an toàn.": {
+    "vi": "Đảm bảo bác sĩ thú y đã kiểm duyệt tất cả ngựa, nài ngựa đã được cân và hộp xuất phát an toàn.",
+    "en": "Ensure all horses have been vetted by a veterinarian, jockeys have been weighed and the starting box is secure.",
+    "zh": "确保所有马匹都经过兽医检查，骑师都经过称重，起跑箱也已安全。",
+    "ja": "すべての馬が獣医師による検査を受け、騎手の体重が測定され、スタートボックスが安全であることを確認してください。"
+  },
+  "Nhập lý do tạm hoãn cuộc đua (Steward's Report):": {
+    "vi": "Nhập lý do tạm hoãn cuộc đua (Steward's Report):",
+    "en": "Enter the reason for postponing the race (Steward's Report):",
+    "zh": "输入推迟比赛的原因（赛会报告）：",
+    "ja": "レースを延期する理由を入力してください (スチュワードレポート):"
+  },
+  "Nhập lý do tạm dừng/hoãn cuộc đua khẩn cấp (Steward's Report):": {
+    "vi": "Nhập lý do tạm dừng/hoãn cuộc đua khẩn cấp (Steward's Report):",
+    "en": "Enter reason for emergency race suspension/postponement (Steward's Report):",
+    "zh": "输入紧急比赛暂停/推迟的原因（管理员报告）：",
+    "ja": "レースの緊急中断/延期の理由を入力してください (審査員報告書):"
+  },
+  "Chuyển sang bảng nhập kết quả chung cuộc để điền thứ hạng, thời gian chạy và gửi báo cáo chính thức.": {
+    "vi": "Chuyển sang bảng nhập kết quả chung cuộc để điền thứ hạng, thời gian chạy và gửi báo cáo chính thức.",
+    "en": "Switch to the final results entry table to fill in rankings, running time and send the official report.",
+    "zh": "切换至最终成绩录入表，填写排名、运行时间并发送正式报告。",
+    "ja": "最終結果入力表に切り替えて、順位や走行時間を記入し、公式レポートを送信します。"
+  },
+  "-- Chọn Thí sinh --": {
+    "vi": "-- Chọn Thí sinh --",
+    "en": "-- Select Candidate --",
+    "zh": "-- 选择候选人 --",
+    "ja": "-- 候補を選択 --"
+  },
+  "Mô tả vi phạm": {
+    "vi": "Mô tả vi phạm",
+    "en": "Description of violation",
+    "zh": "违规情况描述",
+    "ja": "違反内容の説明"
+  },
+  "Hình phạt áp dụng": {
+    "vi": "Hình phạt áp dụng",
+    "en": "Penalties apply",
+    "zh": "适用处罚",
+    "ja": "罰則が適用される"
+  },
+  "Gửi thứ hạng, thời gian chạy chính thức, các trường hợp loại trực tiếp và lập Báo cáo của Trọng tài để chia giải thưởng và cập nhật điểm rating.": {
+    "vi": "Gửi thứ hạng, thời gian chạy chính thức, các trường hợp loại trực tiếp và lập Báo cáo của Trọng tài để chia giải thưởng và cập nhật điểm rating.",
+    "en": "Submit standings, official running times, knockouts and prepare a Referee's Report to divide prizes and update rating scores.",
+    "zh": "提交排名、官方运行时间、淘汰赛并准备裁判报告来分配奖金和更新评分。",
+    "ja": "順位表、公式ランタイム、ノックアウトを提出し、賞品を分配してレーティングスコアを更新するための審判レポートを作成します。"
+  },
+  "Xác minh thứ hạng và thời gian của từng con ngựa. Chọn cột DQ để loại thí sinh khỏi trận đấu.": {
+    "vi": "Xác minh thứ hạng và thời gian của từng con ngựa. Chọn cột DQ để loại thí sinh khỏi trận đấu.",
+    "en": "Verify each horse's rank and time. Select the DQ column to eliminate the contestant from the match.",
+    "zh": "验证每匹马的排名和时间。选择 DQ 列将参赛者从比赛中淘汰。",
+    "ja": "各馬の順位とタイムを確認します。 DQ 列を選択して、出場者を試合から除外します。"
+  },
+  "Cung cấp bản tóm tắt bằng văn bản về cuộc đua, mô tả chi tiết bất kỳ cuộc điều tra sự cố, cảnh cáo hoặc ghi chú y tế.": {
+    "vi": "Cung cấp bản tóm tắt bằng văn bản về cuộc đua, mô tả chi tiết bất kỳ cuộc điều tra sự cố, cảnh cáo hoặc ghi chú y tế.",
+    "en": "Provide a written summary of the race, detailing any incident investigations, cautions or medical notes.",
+    "zh": "提供比赛的书面摘要，详细说明任何事件调查、警告或医疗记录。",
+    "ja": "レースの概要を書面で提出し、インシデントの調査、注意事項、医療記録などを詳しく説明します。"
+  },
+  "No live broadcast currently. There are no races running right now.": {
+    "vi": "Hiện tại không có phát sóng trực tiếp. Hiện tại không có cuộc đua nào đang diễn ra.",
+    "en": "No live broadcast currently. There are no races running right now.",
+    "zh": "目前没有直播。目前没有比赛。",
+    "ja": "現在生放送は行っておりません。現在開催中のレースはありません。"
+  },
+  "Video stream not linked": {
+    "vi": "Video stream not linked",
+    "en": "Video streams not linked",
+    "zh": "视频流未链接",
+    "ja": "ビデオストリームがリンクされていません"
+  },
+  "Select Meeting": {
+    "vi": "Chọn cuộc họp",
+    "en": "Select Meeting",
+    "zh": "选择会议",
+    "ja": "会議の選択"
+  },
+  "Runners & Riders": {
+    "vi": "Người chạy và tay đua",
+    "en": "Runners & Riders",
+    "zh": "跑步者和骑手",
+    "ja": "ランナーとライダー"
+  },
+  "J:": {
+    "vi": "J:",
+    "en": "J:",
+    "zh": "杰：",
+    "ja": "J:"
+  },
+  "O:": {
+    "vi": "O:",
+    "en": "O:",
+    "zh": "哦：",
+    "ja": "お:"
+  },
+  "RTG": {
+    "vi": "RTG",
+    "en": "RTG",
+    "zh": "RTG",
+    "ja": "RTG"
+  },
+  "Final Standings": {
+    "vi": "Bảng xếp hạng cuối cùng",
+    "en": "Final Standings",
+    "zh": "最终排名",
+    "ja": "最終順位"
+  },
+  "Danh sách nhận giải (Top 3)": {
+    "vi": "Danh sách nhận giải (Top 3)",
+    "en": "List of award recipients (Top 3)",
+    "zh": "获奖名单（前3名）",
+    "ja": "受賞者一覧（上位3位）"
+  },
+  "Kỵ sĩ:": {
+    "vi": "Kỵ sĩ:",
+    "en": "Horseman:",
+    "zh": "骑手：",
+    "ja": "騎手："
+  },
+  "Chủ ngựa:": {
+    "vi": "Chủ ngựa:",
+    "en": "Horse owner:",
+    "zh": "马主：",
+    "ja": "馬主："
+  },
+  "Thành tích": {
+    "vi": "Thành tích",
+    "en": "Achievements",
+    "zh": "成就",
+    "ja": "業績"
+  },
+  "ADMIN": {
+    "vi": "Quản trị viên",
+    "en": "ADMIN",
+    "zh": "管理员",
+    "ja": "管理者"
+  },
+  "OWNER": {
+    "vi": "Chủ ngựa",
+    "en": "OWNER",
+    "zh": "马主",
+    "ja": "馬主"
+  },
+  "JOCKEY": {
+    "vi": "Nài ngựa",
+    "en": "JOCKEY",
+    "zh": "骑师",
+    "ja": "騎手"
+  },
+  "SPECTATOR": {
+    "vi": "Khán giả",
+    "en": "SPECTATOR",
+    "zh": "观众",
+    "ja": "観客"
+  },
+  "REFEREE": {
+    "vi": "Trọng tài",
+    "en": "REFEREE",
+    "zh": "裁判",
+    "ja": "審判"
+  },
+  "MEMBER": {
+    "vi": "Thành viên",
+    "en": "MEMBER",
+    "zh": "会员",
+    "ja": "会員"
+  },
+  "Available Race Meetings": {
+    "en": "Available Race Meetings",
+    "vi": "Cuộc họp cuộc đua có sẵn",
+    "zh": "可用的比赛会议",
+    "ja": "利用可能なレースミーティング"
+  },
+  "Register for race meetings to make yourself available for stable hire invitations.": {
+    "en": "Register for race meetings to make yourself available for stable hire invitations.",
+    "vi": "Đăng ký các cuộc họp cuộc đua để sẵn sàng nhận được những lời mời tuyển dụng ổn định.",
+    "zh": "注册参加比赛会议，以便获得稳定的聘用邀请。",
+    "ja": "レースミーティングに登録して、安定した雇用の招待を受けられるようにしてください。"
+  },
+  "No upcoming meetings available.": {
+    "en": "No upcoming meetings available.",
+    "vi": "Không có cuộc họp sắp tới nào.",
+    "zh": "没有即将举行的会议。",
+    "ja": "今後の会議はありません。"
+  },
+  "Approved Race Entries": {
+    "en": "Approved Race Entries",
+    "vi": "Bài dự thi đã được phê duyệt",
+    "zh": "批准的参赛项目",
+    "ja": "承認されたレースエントリー"
+  },
+  "Loading entries...": {
+    "en": "Loading entries...",
+    "vi": "Đang tải các mục...",
+    "zh": "正在加载条目...",
+    "ja": "エントリを読み込んでいます..."
+  },
+  "No approved entries for this race yet.": {
+    "en": "No approved entries for this race yet.",
+    "vi": "Chưa có mục nào được phê duyệt cho cuộc đua này.",
+    "zh": "本次比赛尚未批准参赛作品。",
+    "ja": "このレースにはまだ承認されたエントリーがありません。"
+  },
+  "Race Calendar": {
+    "en": "Race Calendar",
+    "vi": "Lịch đua",
+    "zh": "比赛日历",
+    "ja": "レースカレンダー"
+  },
+  "No upcoming race meetings scheduled.": {
+    "en": "No upcoming race meetings scheduled.",
+    "vi": "Không có cuộc họp cuộc đua sắp tới nào được lên lịch.",
+    "zh": "没有安排即将举行的比赛。",
+    "ja": "今後のレースミーティングは予定されていません。"
+  },
+  "No races scheduled for this meeting.": {
+    "en": "No races scheduled for this meeting.",
+    "vi": "Không có cuộc đua nào được lên lịch cho cuộc họp này.",
+    "zh": "本次会议没有安排任何比赛。",
+    "ja": "このミーティングには予定されているレースはありません。"
+  },
+  "Gate": {
+    "en": "Gate",
+    "vi": "Cổng",
+    "zh": "门",
+    "ja": "ゲート"
+  },
+  "Horse": {
+    "en": "Horse",
+    "vi": "Ngựa",
+    "zh": "马",
+    "ja": "馬"
+  },
+  "Jockey": {
+    "en": "Jockey",
+    "vi": "Đua ngựa",
+    "zh": "骑师",
+    "ja": "騎手"
+  },
+  "Owner": {
+    "en": "Owner",
+    "vi": "Người sở hữu",
+    "zh": "所有者",
+    "ja": "所有者"
+  },
+  "Weight": {
+    "en": "Weight",
+    "vi": "Cân nặng",
+    "zh": "重量",
+    "ja": "重さ"
+  },
+  "Description:": {
+    "en": "Description:",
+    "vi": "Sự miêu tả:",
+    "zh": "描述：",
+    "ja": "説明："
+  },
+  "Penalty:": {
+    "en": "Penalty:",
+    "vi": "Hình phạt:",
+    "zh": "惩罚：",
+    "ja": "ペナルティ:"
+  },
+  "Status:": {
+    "en": "Status:",
+    "vi": "Trạng thái:",
+    "zh": "地位：",
+    "ja": "状態："
+  },
+  "Total Rides": {
+    "en": "Total Rides",
+    "vi": "Tổng số chuyến đi",
+    "zh": "总骑行次数",
+    "ja": "総乗車数"
+  },
+  "Wins (1st)": {
+    "en": "Wins (1st)",
+    "vi": "Thắng (lần 1)",
+    "zh": "获胜（第一）",
+    "ja": "勝利（1位）"
+  },
+  "Top 3 Finishes": {
+    "en": "Top 3 Finishes",
+    "vi": "Top 3 kết thúc",
+    "zh": "前 3 名成绩",
+    "ja": "トップ3フィニッシュ"
+  },
+  "Win Rate": {
+    "en": "Win Rate",
+    "vi": "Tỷ lệ thắng",
+    "zh": "胜率",
+    "ja": "勝率"
+  },
+  "Total Earnings (10%)": {
+    "en": "Total Earnings (10%)",
+    "vi": "Tổng thu nhập (10%)",
+    "zh": "总收益（10%）",
+    "ja": "総収益 (10%)"
+  },
+  "Race #": {
+    "en": "Race #",
+    "vi": "Loài #",
+    "zh": "种族 ＃",
+    "ja": "人種 ＃"
+  },
+  "Class ": {
+    "en": "Class ",
+    "vi": "Lớp học",
+    "zh": "班级",
+    "ja": "クラス"
+  },
+  "Pending Ride Offers": {
+    "en": "Pending Ride Offers",
+    "vi": "Ưu đãi chuyến đi đang chờ xử lý",
+    "zh": "待定乘车优惠",
+    "ja": "保留中の乗車オファー"
+  },
+  "No pending ride offers currently.": {
+    "en": "No pending ride offers currently.",
+    "vi": "Hiện tại không có ưu đãi chuyến đi nào đang chờ xử lý.",
+    "zh": "目前没有待处理的乘车优惠。",
+    "ja": "現在保留中の乗車オファーはありません。"
+  },
+  "Offer from Stable Owner": {
+    "en": "Offer from Stable Owner",
+    "vi": "Ưu đãi từ chủ sở hữu ổn định",
+    "zh": "马厩主人的报价",
+    "ja": "厩舎オーナーからのオファー"
+  },
+  "Status": {
+    "en": "Status",
+    "vi": "Trạng thái",
+    "zh": "地位",
+    "ja": "状態"
+  },
+  "Accept Offer": {
+    "en": "Accept Offer",
+    "vi": "Chấp nhận ưu đãi",
+    "zh": "接受报价",
+    "ja": "オファーを受け入れる"
+  },
+  "Reject": {
+    "en": "Reject",
+    "vi": "Từ chối",
+    "zh": "拒绝",
+    "ja": "拒否する"
+  },
+  "Time:": {
+    "en": "Time:",
+    "vi": "Thời gian:",
+    "zh": "时间：",
+    "ja": "時間："
+  },
+  "Distance:": {
+    "en": "Distance:",
+    "vi": "Khoảng cách:",
+    "zh": "距离：",
+    "ja": "距離："
+  },
+  "Track:": {
+    "en": "Track:",
+    "vi": "Theo dõi:",
+    "zh": "追踪：",
+    "ja": "追跡："
+  },
+  "Already Registered": {
+    "en": "Already Registered",
+    "vi": "Đã đăng ký",
+    "zh": "已注册",
+    "ja": "すでに登録されています"
+  },
+  "Register as Jockey": {
+    "en": "Register as Jockey",
+    "vi": "Đăng ký làm tay đua",
+    "zh": "注册成为骑师",
+    "ja": "騎手として登録する"
+  },
+  "Register as Owner": {
+    "en": "Register as Owner",
+    "vi": "Đăng ký làm chủ sở hữu",
+    "zh": "注册为所有者",
+    "ja": "所有者として登録する"
+  },
+  "APPROVED": {
+    "en": "APPROVED",
+    "vi": "TÁN THÀNH",
+    "zh": "得到正式认可的",
+    "ja": "承認された"
+  },
+  "UNREGISTERED": {
+    "en": "UNREGISTERED",
+    "vi": "KHÔNG ĐĂNG KÝ",
+    "zh": "未注册",
+    "ja": "未登録"
+  },
+  "UPCOMING": {
+    "en": "UPCOMING",
+    "vi": "SẮP TỚI",
+    "zh": "即将推出",
+    "ja": "今後の予定"
+  },
+  "PENDING": {
+    "en": "PENDING",
+    "vi": "CHƯA GIẢI QUYẾT",
+    "zh": "待办的",
+    "ja": "保留中"
+  },
+  "dd-mm-yyyy": {
+    "en": "dd-mm-yyyy",
+    "vi": "dd-mm-yyyy",
+    "zh": "年-月-日",
+    "ja": "dd-mm-yyyy"
+  },
+  "Owner Hub": {
+    "en": "Owner Hub",
+    "vi": "Trung tâm chủ sở hữu",
+    "zh": "业主中心",
+    "ja": "オーナーハブ"
+  },
+  "My Stable": {
+    "en": "My Stable",
+    "vi": "Chuồng ngựa của tôi",
+    "zh": "我的马厩",
+    "ja": "私の厩舎"
+  },
+  "Invitations": {
+    "en": "Invitations",
+    "vi": "Lời mời",
+    "zh": "邀请函",
+    "ja": "招待状"
+  },
+  "Stable Race History": {
+    "en": "Stable Race History",
+    "vi": "Lịch sử cuộc đua ổn định",
+    "zh": "稳定的比赛历史",
+    "ja": "安定したレース履歴"
+  },
+  "Total Horses": {
+    "en": "Total Horses",
+    "vi": "Tổng số ngựa",
+    "zh": "马匹总数",
+    "ja": "総馬数"
+  },
+  "Stable Avg Rank": {
+    "en": "Stable Avg Rank",
+    "vi": "Xếp hạng trung bình ổn định",
+    "zh": "平均排名稳定",
+    "ja": "安定した平均ランク"
+  },
+  "Races Completed": {
+    "en": "Races Completed",
+    "vi": "Cuộc đua đã hoàn thành",
+    "zh": "比赛已完成",
+    "ja": "完了したレース"
+  },
+  "Pending Registrations": {
+    "en": "Pending Registrations",
+    "vi": "Đăng ký đang chờ xử lý",
+    "zh": "待注册",
+    "ja": "保留中の登録"
+  },
+  "Register your stable for upcoming race day events.": {
+    "en": "Register your stable for upcoming race day events.",
+    "vi": "Đăng ký chuồng ngựa của bạn cho các sự kiện trong ngày đua sắp tới.",
+    "zh": "为即将到来的比赛日活动注册您的马厩。",
+    "ja": "今後のレース当日のイベントに備えて厩舎を登録してください。"
+  },
+  "No unregistered horses available.": {
+    "en": "No unregistered horses available.",
+    "vi": "Không có ngựa chưa đăng ký có sẵn.",
+    "zh": "没有未注册的马匹。",
+    "ja": "未登録馬はいません。"
+  },
+  "Register for Event": {
+    "en": "Register for Event",
+    "vi": "Đăng ký sự kiện",
+    "zh": "注册参加活动",
+    "ja": "イベントに登録する"
+  },
+  "Select Horses to Register:": {
+    "en": "Select Horses to Register:",
+    "vi": "Chọn ngựa để đăng ký:",
+    "zh": "选择要注册的马匹：",
+    "ja": "登録する馬を選択してください:"
+  },
+  "Registered Horses:": {
+    "en": "Registered Horses:",
+    "vi": "Ngựa đã đăng ký:",
+    "zh": "登记马匹：",
+    "ja": "登録馬："
+  },
+  "Register Additional Horses:": {
+    "en": "Register Additional Horses:",
+    "vi": "Đăng ký bổ sung ngựa:",
+    "zh": "注册额外的马匹：",
+    "ja": "追加の馬を登録する:"
+  },
+  "NO IMAGE": {
+    "en": "NO IMAGE",
+    "vi": "KHÔNG CÓ HÌNH ẢNH",
+    "zh": "无图像",
+    "ja": "画像がありません"
+  },
+  "Rating:": {
+    "en": "Rating:",
+    "vi": "Đánh giá:",
+    "zh": "等级：",
+    "ja": "評価:"
+  },
+  "Wins / Races:": {
+    "en": "Wins / Races:",
+    "vi": "Thắng/Cuộc đua:",
+    "zh": "胜利/比赛：",
+    "ja": "勝利/レース:"
+  },
+  "Edit Details": {
+    "en": "Edit Details",
+    "vi": "Chỉnh sửa chi tiết",
+    "zh": "编辑详细信息",
+    "ja": "詳細の編集"
+  },
+  "Request Retirement": {
+    "en": "Request Retirement",
+    "vi": "Yêu cầu nghỉ hưu",
+    "zh": "请求退休",
+    "ja": "退職の申請"
+  },
+  "No active or pending horses.": {
+    "en": "No active or pending horses.",
+    "vi": "Không có ngựa đang hoạt động hoặc đang chờ xử lý.",
+    "zh": "没有活跃或待处理的马匹。",
+    "ja": "活躍馬も保留馬もいない。"
+  },
+  "No rejected declarations.": {
+    "en": "No rejected declarations.",
+    "vi": "Không có tuyên bố bị từ chối.",
+    "zh": "没有被拒绝的声明。",
+    "ja": "拒否された宣言はありません。"
+  },
+  "No retired horses.": {
+    "en": "No retired horses.",
+    "vi": "Không có ngựa đã nghỉ hưu.",
+    "zh": "没有退役的马匹。",
+    "ja": "引退馬はいない。"
+  },
+  "Declare New Horse": {
+    "en": "Declare New Horse",
+    "vi": "Khai báo ngựa mới",
+    "zh": "宣告新马",
+    "ja": "新馬宣言"
+  },
+  "Gender / Sex": {
+    "en": "Gender / Sex",
+    "vi": "Giới tính / Giới tính",
+    "zh": "性别/性别",
+    "ja": "性別/性別"
+  },
+  "Horse Photo / Avatar": {
+    "en": "Horse Photo / Avatar",
+    "vi": "Hình ảnh con ngựa / Avatar",
+    "zh": "马照片/头像",
+    "ja": "馬の写真 / アバター"
+  },
+  "Biography / Description": {
+    "en": "Biography / Description",
+    "vi": "Tiểu sử / Mô tả",
+    "zh": "传记/描述",
+    "ja": "略歴 / 説明"
+  },
+  "Enter horse details...": {
+    "en": "Enter horse details...",
+    "vi": "Nhập thông tin ngựa...",
+    "zh": "输入马匹详细信息...",
+    "ja": "馬の詳細を入力してください..."
+  },
+  "Declare Horse": {
+    "en": "Declare Horse",
+    "vi": "Khai báo ngựa",
+    "zh": "宣布马",
+    "ja": "馬を宣言する"
+  },
+  "Retirement Request History": {
+    "en": "Retirement Request History",
+    "vi": "Lịch sử yêu cầu nghỉ hưu",
+    "zh": "退休请求历史记录",
+    "ja": "退職申請履歴"
+  },
+  "No retirement requests submitted yet.": {
+    "en": "No retirement requests submitted yet.",
+    "vi": "Chưa có yêu cầu nghỉ hưu nào được gửi.",
+    "zh": "尚未提交退休申请。",
+    "ja": "まだ退職願は提出されていません。"
+  },
+  "Horse Name": {
+    "en": "Horse Name",
+    "vi": "Tên ngựa",
+    "zh": "马名",
+    "ja": "馬名"
+  },
+  "Reason": {
+    "en": "Reason",
+    "vi": "Lý do",
+    "zh": "原因",
+    "ja": "理由"
+  },
+  "Admin Remarks": {
+    "en": "Admin Remarks",
+    "vi": "Nhận xét của quản trị viên",
+    "zh": "管理员备注",
+    "ja": "管理者のコメント"
+  },
+  "Submitted At": {
+    "en": "Submitted At",
+    "vi": "Đã gửi tại",
+    "zh": "提交于",
+    "ja": "提出先"
+  },
+  "Edit Horse Details": {
+    "en": "Edit Horse Details",
+    "vi": "Chỉnh sửa chi tiết ngựa",
+    "zh": "编辑马匹详细信息",
+    "ja": "馬の詳細を編集する"
+  },
+  "Rating": {
+    "en": "Rating",
+    "vi": "Đánh giá",
+    "zh": "等级",
+    "ja": "評価"
+  },
+  "Biography": {
+    "en": "Biography",
+    "vi": "Tiểu sử",
+    "zh": "传",
+    "ja": "バイオグラフィー"
+  },
+  "Cancel": {
+    "en": "Cancel",
+    "vi": "Hủy bỏ",
+    "zh": "取消",
+    "ja": "キャンセル"
+  },
+  "Save Changes": {
+    "en": "Save Changes",
+    "vi": "Lưu thay đổi",
+    "zh": "保存更改",
+    "ja": "変更を保存"
+  },
+  "Are you sure you want to request retirement for": {
+    "en": "Are you sure you want to request retirement for",
+    "vi": "Bạn có chắc chắn muốn yêu cầu nghỉ hưu cho",
+    "zh": "您确定要申请退休吗",
+    "ja": "本当に退職を申請してもよろしいですか"
+  },
+  "RETIRED": {
+    "en": "RETIRED",
+    "vi": "đã nghỉ hưu",
+    "zh": "退休",
+    "ja": "退職しました"
+  },
+  "and cannot be registered for any future races.": {
+    "en": "and cannot be registered for any future races.",
+    "vi": "và không thể đăng ký cho bất kỳ cuộc đua nào trong tương lai.",
+    "zh": "并且不能注册参加任何未来的比赛。",
+    "ja": "今後のレースに登録することはできません。"
+  },
+  "Reason for Retirement": {
+    "en": "Reason for Retirement",
+    "vi": "Lý do nghỉ hưu",
+    "zh": "退休原因",
+    "ja": "退職理由"
+  },
+  "Please explain why this horse is retiring (e.g. voluntary retirement, age, health)...": {
+    "en": "Please explain why this horse is retiring (e.g. voluntary retirement, age, health)...",
+    "vi": "Vui lòng giải thích lý do tại sao con ngựa này nghỉ hưu (ví dụ: nghỉ hưu tự nguyện, tuổi tác, sức khỏe)...",
+    "zh": "请解释这匹马退役的原因（例如自愿退役、年龄、健康状况）...",
+    "ja": "この馬が引退する理由を説明してください (例: 自主引退、年齢、健康状態)..."
+  },
+  "Submit Request": {
+    "en": "Submit Request",
+    "vi": "Gửi yêu cầu",
+    "zh": "提交请求",
+    "ja": "リクエストの送信"
+  },
+  "Select a race to invite an approved jockey. You must be registered for the meeting.": {
+    "en": "Select a race to invite an approved jockey. You must be registered for the meeting.",
+    "vi": "Chọn một cuộc đua để mời một tay đua được phê duyệt. Bạn phải đăng ký tham dự cuộc họp.",
+    "zh": "选择一场比赛来邀请经过批准的骑师。您必须注册参加会议。",
+    "ja": "承認された騎手を招待するレースを選択します。ミーティングに登録する必要があります。"
+  },
+  "Filter by Season": {
+    "en": "Filter by Season",
+    "vi": "Lọc theo mùa",
+    "zh": "按季节过滤",
+    "ja": "季節で絞り込む"
+  },
+  "No meetings found.": {
+    "en": "No meetings found.",
+    "vi": "Không tìm thấy cuộc họp nào.",
+    "zh": "没有找到会议。",
+    "ja": "会議が見つかりませんでした。"
+  },
+  "Event Registration Approved": {
+    "en": "Event Registration Approved",
+    "vi": "Đăng ký sự kiện đã được phê duyệt",
+    "zh": "活动注册已获批准",
+    "ja": "イベント登録が承認されました"
+  },
+  "Event Registration Required": {
+    "en": "Event Registration Required",
+    "vi": "Yêu cầu đăng ký sự kiện",
+    "zh": "需要活动注册",
+    "ja": "イベント登録が必要です"
+  },
+  "Start Time": {
+    "en": "Start Time",
+    "vi": "Thời gian bắt đầu",
+    "zh": "开始时间",
+    "ja": "開始時間"
+  },
+  "Distance & Track": {
+    "en": "Distance & Track",
+    "vi": "Khoảng cách & Đường đua",
+    "zh": "距离与轨迹",
+    "ja": "距離と軌跡"
+  },
+  "Rating Limits": {
+    "en": "Rating Limits",
+    "vi": "Giới hạn xếp hạng",
+    "zh": "评级限制",
+    "ja": "評価制限"
+  },
+  "Entries Open:": {
+    "en": "Entries Open:",
+    "vi": "Bài viết đang mở:",
+    "zh": "参赛作品开放：",
+    "ja": "エントリー受付中:"
+  },
+  "Close:": {
+    "en": "Close:",
+    "vi": "Đóng:",
+    "zh": "关闭：",
+    "ja": "近い："
+  },
+  "Select Horse": {
+    "en": "Select Horse",
+    "vi": "Chọn ngựa",
+    "zh": "选择马匹",
+    "ja": "馬を選択してください"
+  },
+  "Select Jockey": {
+    "en": "Select Jockey",
+    "vi": "Chọn nài ngựa",
+    "zh": "选择骑师",
+    "ja": "騎手を選択する"
+  },
+  "Registration opens at:": {
+    "en": "Registration opens at:",
+    "vi": "Đăng ký mở tại:",
+    "zh": "注册开放时间为：",
+    "ja": "登録は次の場所で開始されます。"
+  },
+  "Declarations closed for this race.": {
+    "en": "Declarations closed for this race.",
+    "vi": "Tuyên bố đã đóng cửa cho cuộc đua này.",
+    "zh": "本次比赛的申报已结束。",
+    "ja": "このレースの申告は終了しました。"
+  },
+  "Sent Invitations": {
+    "en": "Sent Invitations",
+    "vi": "Đã gửi lời mời",
+    "zh": "已发送邀请",
+    "ja": "送信された招待状"
+  },
+  "Manage and track invitations sent to jockeys for various races.": {
+    "en": "Manage and track invitations sent to jockeys for various races.",
+    "vi": "Quản lý và theo dõi các lời mời được gửi tới các tay đua cho các cuộc đua khác nhau.",
+    "zh": "管理和跟踪发送给骑师参加各种比赛的邀请。",
+    "ja": "さまざまなレースの騎手に送信された招待状を管理および追跡します。"
+  },
+  "Horse:": {
+    "en": "Horse:",
+    "vi": "Ngựa:",
+    "zh": "马：",
+    "ja": "馬："
+  },
+  "Jockey:": {
+    "en": "Jockey:",
+    "vi": "Đua ngựa:",
+    "zh": "骑师：",
+    "ja": "騎手："
+  },
+  "Comprehensive record of all finished races and performance metrics of your stable.": {
+    "en": "Comprehensive record of all finished races and performance metrics of your stable.",
+    "vi": "Hồ sơ toàn diện về tất cả các cuộc đua đã hoàn thành và số liệu hiệu suất của chuồng ngựa của bạn.",
+    "zh": "所有已完成比赛和马厩表现指标的综合记录。",
+    "ja": "終了したすべてのレースと厩舎のパフォーマンス指標の包括的な記録。"
+  },
+  "No race results available yet.": {
+    "en": "No race results available yet.",
+    "vi": "Chưa có kết quả cuộc đua.",
+    "zh": "尚未公布比赛结果。",
+    "ja": "レース結果はまだありません。"
+  },
+  "Race Class": {
+    "en": "Race Class",
+    "vi": "Hạng đua",
+    "zh": "比赛级别",
+    "ja": "レースクラス"
+  },
+  "Finish Time": {
+    "en": "Finish Time",
+    "vi": "Thời gian kết thúc",
+    "zh": "完成时间",
+    "ja": "終了時間"
+  },
+  "Rating Adj": {
+    "en": "Rating Adj",
+    "vi": "Đánh giá điều chỉnh",
+    "zh": "评级调整",
+    "ja": "評価調整"
+  },
+  "Dashboard Overview": {
+    "en": "Dashboard Overview",
+    "vi": "Tổng quan về trang tổng quan",
+    "zh": "仪表板概述",
+    "ja": "ダッシュボードの概要"
+  },
+  "Season Initialization": {
+    "en": "Season Initialization",
+    "vi": "Khởi tạo phần",
+    "zh": "赛季初始化",
+    "ja": "シーズンの初期化"
+  },
+  "Race Meeting Management": {
+    "en": "Race Meeting Management",
+    "vi": "Quản lý cuộc họp cuộc đua",
+    "zh": "赛事管理",
+    "ja": "レース大会運営"
+  },
+  "Race Configuration": {
+    "en": "Race Configuration",
+    "vi": "Cấu hình cuộc đua",
+    "zh": "赛事配置",
+    "ja": "レース構成"
+  },
+  "Registration Processing": {
+    "en": "Registration Processing",
+    "vi": "Xử lý đăng ký",
+    "zh": "注册处理",
+    "ja": "登録処理"
+  },
+  "Racecard Management": {
+    "en": "Racecard Management",
+    "vi": "Quản lý thẻ đua",
+    "zh": "赛卡管理",
+    "ja": "出馬表管理"
+  },
+  "Race Day Schedule": {
+    "en": "Race Day Schedule",
+    "vi": "Lịch trình ngày đua",
+    "zh": "比赛日日程",
+    "ja": "レース当日スケジュール"
+  },
+  "Process Results & Close": {
+    "en": "Process Results & Close",
+    "vi": "Xử lý kết quả & Đóng",
+    "zh": "处理结果并结束",
+    "ja": "結果を処理して終了"
+  },
+  "User & Role Management": {
+    "en": "User & Role Management",
+    "vi": "Quản lý người dùng và vai trò",
+    "zh": "用户和角色管理",
+    "ja": "ユーザーと役割の管理"
+  },
+  "Horse Registry Directory": {
+    "en": "Horse Registry Directory",
+    "vi": "Thư mục đăng ký ngựa",
+    "zh": "马匹登记目录",
+    "ja": "馬登録簿"
+  },
+  "System Configuration": {
+    "en": "System Configuration",
+    "vi": "Cấu hình hệ thống",
+    "zh": "系统配置",
+    "ja": "システム構成"
+  },
+  "Live Setting": {
+    "en": "Live Setting",
+    "vi": "Cài đặt trực tiếp",
+    "zh": "现场设置",
+    "ja": "ライブ設定"
+  },
+  "Horse Retirement": {
+    "en": "Horse Retirement",
+    "vi": "Nghỉ hưu ngựa",
+    "zh": "马匹退休",
+    "ja": "馬の引退"
+  },
+  "Welcome to the Admin Dashboard": {
+    "en": "Welcome to the Admin Dashboard",
+    "vi": "Chào mừng bạn đến với Bảng điều khiển dành cho quản trị viên",
+    "zh": "欢迎来到管理仪表板",
+    "ja": "管理者ダッシュボードへようこそ"
+  },
+  "System Status": {
+    "en": "System Status",
+    "vi": "Trạng thái hệ thống",
+    "zh": "系统状态",
+    "ja": "システムステータス"
+  },
+  "ONLINE": {
+    "en": "ONLINE",
+    "vi": "TRỰC TUYẾN",
+    "zh": "在线的",
+    "ja": "オンライン"
+  },
+  "Active Season:": {
+    "en": "Active Season:",
+    "vi": "Mùa hoạt động:",
+    "zh": "活跃季节：",
+    "ja": "アクティブな季節:"
+  },
+  "Pending Approvals:": {
+    "en": "Pending Approvals:",
+    "vi": "Đang chờ phê duyệt:",
+    "zh": "待批准：",
+    "ja": "保留中の承認:"
+  },
+  "Seasons": {
+    "en": "Seasons",
+    "vi": "Mùa",
+    "zh": "季节",
+    "ja": "季節"
+  },
+  "Meetings": {
+    "en": "Meetings",
+    "vi": "Cuộc họp",
+    "zh": "会议",
+    "ja": "会議"
+  },
+  "Total Races": {
+    "en": "Total Races",
+    "vi": "Tổng số cuộc đua",
+    "zh": "总比赛数",
+    "ja": "総レース数"
+  },
+  "Total Users": {
+    "en": "Total Users",
+    "vi": "Tổng số người dùng",
+    "zh": "用户总数",
+    "ja": "総ユーザー数"
+  },
+  "System Operations Quick Navigation": {
+    "en": "System Operations Quick Navigation",
+    "vi": "Hoạt động hệ thống Điều hướng nhanh",
+    "zh": "系统操作快速导航",
+    "ja": "システム操作のクイックナビゲーション"
+  },
+  "Overview": {
+    "en": "Overview",
+    "vi": "Tổng quan",
+    "zh": "概述",
+    "ja": "概要"
+  },
+  "Live Watch": {
+    "en": "Live Watch",
+    "vi": "Xem trực tiếp",
+    "zh": "现场观看",
+    "ja": "ライブウォッチ"
+  },
+  "Racecard": {
+    "en": "Racecard",
+    "vi": "Thẻ đua",
+    "zh": "赛车卡",
+    "ja": "出馬表"
+  },
+  "Results": {
+    "en": "Results",
+    "vi": "Kết quả",
+    "zh": "结果",
+    "ja": "結果"
+  },
+  "Horses": {
+    "en": "Horses",
+    "vi": "Ngựa",
+    "zh": "马匹",
+    "ja": "馬"
+  },
+  "Statistics": {
+    "en": "Statistics",
+    "vi": "Thống kê",
+    "zh": "统计数据",
+    "ja": "統計"
+  },
+  "AI Assistant": {
+    "en": "AI Assistant",
+    "vi": "Trợ lý AI",
+    "zh": "人工智能助手",
+    "ja": "AIアシスタント"
+  },
+  "Active": {
+    "en": "Active",
+    "vi": "Tích cực",
+    "zh": "积极的",
+    "ja": "アクティブ"
+  },
+  "Pos": {
+    "en": "Pos",
+    "vi": "vị trí",
+    "zh": "位置",
+    "ja": "位置"
+  },
+  "Weight (Out/In)": {
+    "en": "Weight (Out/In)",
+    "vi": "Trọng lượng (Ra/Vào)",
+    "zh": "重量（外/内）",
+    "ja": "重量 (アウト/イン)"
+  },
+  "wins": {
+    "en": "wins",
+    "vi": "thắng",
+    "zh": "获胜",
+    "ja": "勝ちます"
+  },
+  "rating": {
+    "en": "rating",
+    "vi": "đánh giá",
+    "zh": "等级",
+    "ja": "評価"
+  },
+  "races": {
+    "en": "races",
+    "vi": "chủng tộc",
+    "zh": "比赛",
+    "ja": "人種"
+  },
+  "Register {n} Horse(s)": {
+    "en": "Register {n} Horse(s)",
+    "vi": "Đăng ký {n} ngựa",
+    "zh": "注册 {n} 匹马",
+    "ja": "{n} 頭の馬を登録する"
+  },
+  "All stable horses registered": {
+    "en": "All stable horses registered",
+    "vi": "Tất cả ngựa trong chuồng đã được đăng ký",
+    "zh": "所有马房马匹均已注册",
+    "ja": "厩舎の全馬が登録されました"
+  },
+  "E.g., Shadow Fax": {
+    "en": "E.g., Shadow Fax",
+    "vi": "Ví dụ: Shadow Fax",
+    "zh": "例如，影子传真",
+    "ja": "例：シャドウファクス"
+  },
+  "E.g., Arabian Thoroughbred": {
+    "en": "E.g., Arabian Thoroughbred",
+    "vi": "Ví dụ: thuần chủng Ả Rập",
+    "zh": "例如，阿拉伯纯种马",
+    "ja": "例：アラビアンサラブレッド"
+  },
+  "Active & Pending": {
+    "en": "Active & Pending",
+    "vi": "Đang hoạt động & Đang chờ xử lý",
+    "zh": "有效和待处理",
+    "ja": "アクティブおよび保留中"
+  },
+  "Rejected Declarations": {
+    "en": "Rejected Declarations",
+    "vi": "Tuyên bố bị từ chối",
+    "zh": "拒绝声明",
+    "ja": "拒否された宣言"
+  },
+  "Retired": {
+    "en": "Retired",
+    "vi": "Đã nghỉ hưu",
+    "zh": "退休",
+    "ja": "退職"
+  },
+  "History": {
+    "en": "History",
+    "vi": "Lịch sử",
+    "zh": "历史",
+    "ja": "歴史"
+  },
+  "Breed:": {
+    "en": "Breed:",
+    "vi": "Giống:",
+    "zh": "品种：",
+    "ja": "繁殖："
+  },
+  "Sex:": {
+    "en": "Sex:",
+    "vi": "Giới tính:",
+    "zh": "性别：",
+    "ja": "性別:"
+  },
+  "Gelding": {
+    "en": "Gelding",
+    "vi": "Sơn gel",
+    "zh": "骟马",
+    "ja": "去勢馬"
+  },
+  "Breed": {
+    "en": "Breed",
+    "vi": "giống",
+    "zh": "品种",
+    "ja": "繁殖"
+  },
+  "Date of Birth": {
+    "en": "Date of Birth",
+    "vi": "Ngày sinh",
+    "zh": "出生日期",
+    "ja": "生年月日"
+  },
+  "Race Meetings": {
+    "en": "Race Meetings",
+    "vi": "Cuộc họp cuộc đua",
+    "zh": "赛马会",
+    "ja": "レースミーティング"
+  },
+  "Race Day Scheduling": {
+    "en": "Race Day Scheduling",
+    "vi": "Lên lịch ngày đua",
+    "zh": "比赛日安排",
+    "ja": "レース当日のスケジュール設定"
+  },
+  "Racecard & Gate Setup": {
+    "en": "Racecard & Gate Setup",
+    "vi": "Thiết lập thẻ đua & cổng",
+    "zh": "赛车卡和登机门设置",
+    "ja": "レースカードとゲートのセットアップ"
+  },
+  "Livestream Settings": {
+    "en": "Livestream Settings",
+    "vi": "Cài đặt phát trực tiếp",
+    "zh": "直播设置",
+    "ja": "ライブストリーム設定"
+  },
+  "User Management": {
+    "en": "User Management",
+    "vi": "Quản lý người dùng",
+    "zh": "用户管理",
+    "ja": "ユーザー管理"
+  },
+  "Initialize tournament seasons, specify date ranges, and configure rating class rules.": {
+    "en": "Initialize tournament seasons, specify date ranges, and configure rating class rules.",
+    "vi": "Khởi tạo các mùa giải đấu, chỉ định phạm vi ngày và định cấu hình quy tắc xếp hạng.",
+    "zh": "初始化锦标赛赛季、指定日期范围并配置评级类别规则。",
+    "ja": "トーナメント シーズンを初期化し、日付範囲を指定し、レーティング クラス ルールを構成します。"
+  },
+  "Schedule new race meetings, set track venues, and allocate prize money budgets.": {
+    "en": "Schedule new race meetings, set track venues, and allocate prize money budgets.",
+    "vi": "Lên lịch các cuộc họp cuộc đua mới, đặt địa điểm theo dõi và phân bổ ngân sách tiền thưởng.",
+    "zh": "安排新的比赛会议、设置赛道场地并分配奖金预算。",
+    "ja": "新しいレース会議をスケジュールし、トラック会場を設定し、賞金の予算を割り当てます。"
+  },
+  "Review, approve, or reject horse registrations, jockey licenses, and race entries.": {
+    "en": "Review, approve, or reject horse registrations, jockey licenses, and race entries.",
+    "vi": "Xem xét, phê duyệt hoặc từ chối đăng ký ngựa, giấy phép đua ngựa và các mục nhập cuộc đua.",
+    "zh": "审查、批准或拒绝马匹注册、骑师执照和比赛参赛。",
+    "ja": "馬の登録、騎手免許、レースエントリーを確認、承認、または拒否します。"
+  },
+  "Configure global system variables, settings, and other operational limits.": {
+    "en": "Configure global system variables, settings, and other operational limits.",
+    "vi": "Định cấu hình các biến, cài đặt hệ thống toàn cầu và các giới hạn hoạt động khác.",
+    "zh": "配置全局系统变量、设置和其他操作限制。",
+    "ja": "グローバル システム変数、設定、その他の操作制限を構成します。"
+  },
+  "Assign starting gates and jockey-horse weights. Finalize race start times.": {
+    "en": "Assign starting gates and jockey-horse weights. Finalize race start times.",
+    "vi": "Chỉ định cổng xuất phát và trọng lượng của ngựa đua. Hoàn thiện thời gian bắt đầu cuộc đua.",
+    "zh": "指定起始门和赛马重量。确定比赛开始时间。",
+    "ja": "スタートゲートと騎手と馬の体重を割り当てます。レースのスタート時間を最終決定します。"
+  },
+  "Publish racecards with stall draws, jockey weights, and race specifications.": {
+    "en": "Publish racecards with stall draws, jockey weights, and race specifications.",
+    "vi": "Xuất bản các thẻ đua có kết quả rút thăm gian hàng, trọng lượng của người đua ngựa và thông số kỹ thuật của cuộc đua.",
+    "zh": "发布包含摊位抽签、骑师体重和比赛规格的比赛卡。",
+    "ja": "馬房抽選、騎手の体重、レース仕様を記載した出馬表を発行します。"
+  },
+  "Configure YouTube live links for race broadcasts and manage live race status.": {
+    "en": "Configure YouTube live links for race broadcasts and manage live race status.",
+    "vi": "Định cấu hình liên kết trực tiếp trên YouTube để phát sóng cuộc đua và quản lý trạng thái cuộc đua trực tiếp.",
+    "zh": "配置比赛直播的 YouTube 直播链接并管理现场比赛状态。",
+    "ja": "レースブロードキャスト用の YouTube ライブリンクを設定し、ライブレースステータスを管理します。"
+  },
+  "View and manage user accounts, roles, and approval status across all roles.": {
+    "en": "View and manage user accounts, roles, and approval status across all roles.",
+    "vi": "Xem và quản lý tài khoản người dùng, vai trò và trạng thái phê duyệt trên tất cả các vai trò.",
+    "zh": "查看和管理所有角色的用户帐户、角色和审批状态。",
+    "ja": "ユーザー アカウント、ロール、すべてのロールにわたる承認ステータスを表示および管理します。"
+  },
+  "Promise": {
+    "en": "Promise",
+    "vi": "Hứa",
+    "zh": "承诺",
+    "ja": "約束"
+  },
+  "-- All Seasons --": {
+    "en": "-- All Seasons --",
+    "vi": "-- Tất cả các mùa --",
+    "zh": "-- 四季皆宜 --",
+    "ja": "-- オールシーズン --"
+  },
+  "-- Select Horse --": {
+    "en": "-- Select Horse --",
+    "vi": "-- Chọn Ngựa --",
+    "zh": "-- 选择马匹 --",
+    "ja": "-- 馬を選択 --"
+  },
+  "-- Select Jockey --": {
+    "en": "-- Select Jockey --",
+    "vi": "-- Chọn Đua ngựa --",
+    "zh": "-- 选择骑师 --",
+    "ja": "-- 騎手の選択 --"
+  },
+  "Gate:": {
+    "en": "Gate:",
+    "vi": "Cổng:",
+    "zh": "门：",
+    "ja": "ゲート："
+  },
+  "Weight:": {
+    "en": "Weight:",
+    "vi": "Cân nặng:",
+    "zh": "重量：",
+    "ja": "重さ："
+  },
+  "Acknowledge": {
+    "en": "Acknowledge",
+    "vi": "Thừa nhận",
+    "zh": "承认",
+    "ja": "認める"
+  },
+  "Pending Retirement Requests": {
+    "en": "Pending Retirement Requests",
+    "vi": "Yêu cầu nghỉ hưu đang chờ xử lý",
+    "zh": "待处理的退休请求",
+    "ja": "保留中の退職リクエスト"
+  },
+  "Loading requests...": {
+    "en": "Loading requests...",
+    "vi": "Đang tải yêu cầu...",
+    "zh": "正在加载请求...",
+    "ja": "リクエストを読み込んでいます..."
+  },
+  "No pending retirement requests.": {
+    "en": "No pending retirement requests.",
+    "vi": "Không có yêu cầu nghỉ hưu đang chờ xử lý.",
+    "zh": "没有待处理的退休请求。",
+    "ja": "保留中の退職リクエストはありません。"
+  },
+  "Owner:": {
+    "en": "Owner:",
+    "vi": "Người sở hữu:",
+    "zh": "所有者：",
+    "ja": "所有者："
+  },
+  "Approve": {
+    "en": "Approve",
+    "vi": "Chấp thuận",
+    "zh": "批准",
+    "ja": "承認する"
+  },
+  "Retirement History": {
+    "en": "Retirement History",
+    "vi": "Lịch sử nghỉ hưu",
+    "zh": "退休史",
+    "ja": "退職履歴"
+  },
+  "No processed requests found.": {
+    "en": "No processed requests found.",
+    "vi": "Không tìm thấy yêu cầu được xử lý nào.",
+    "zh": "未找到已处理的请求。",
+    "ja": "処理されたリクエストが見つかりませんでした。"
+  },
+  "Remarks": {
+    "en": "Remarks",
+    "vi": "Bình luận",
+    "zh": "评论",
+    "ja": "備考"
+  },
+  "Compulsory Retirement": {
+    "en": "Compulsory Retirement",
+    "vi": "Nghỉ hưu bắt buộc",
+    "zh": "强制退休",
+    "ja": "強制退職"
+  },
+  "Select Active Horse": {
+    "en": "Select Active Horse",
+    "vi": "Chọn ngựa hoạt động",
+    "zh": "选择活跃马匹",
+    "ja": "活躍馬を選択"
+  },
+  "Retirement Reason / Report": {
+    "en": "Retirement Reason / Report",
+    "vi": "Lý do nghỉ hưu / Báo cáo",
+    "zh": "退休原因/报告",
+    "ja": "退職理由・届出"
+  },
+  "Enforce Retirement": {
+    "en": "Enforce Retirement",
+    "vi": "Buộc nghỉ hưu",
+    "zh": "强制退休",
+    "ja": "強制退職"
+  },
+  "E.g., Enforced retirement: Horse reached 11 years of age, or Rating dropped below 25 at end of season.": {
+    "en": "E.g., Enforced retirement: Horse reached 11 years of age, or Rating dropped below 25 at end of season.",
+    "vi": "Ví dụ: Buộc nghỉ hưu: Ngựa đạt 11 tuổi hoặc Xếp hạng giảm xuống dưới 25 vào cuối mùa giải.",
+    "zh": "例如，强制退役：马匹年满 11 岁，或赛季结束时评级降至 25 以下。",
+    "ja": "例: 強制引退: 馬が 11 歳に達したか、シーズン終了時にレーティングが 25 を下回りました。"
+  },
+  "Provide any comments or instructions...": {
+    "en": "Provide any comments or instructions...",
+    "vi": "Đưa ra bất kỳ ý kiến ​​hoặc hướng dẫn nào...",
+    "zh": "提供任何意见或指示...",
+    "ja": "コメントや指示があれば入力してください..."
+  },
+  "View, edit ratings, status, and information of all stable horses": {
+    "en": "View, edit ratings, status, and information of all stable horses",
+    "vi": "Xem, chỉnh sửa xếp hạng, trạng thái và thông tin của tất cả các con ngựa ổn định",
+    "zh": "查看、编辑所有马匹的评级、状态和信息",
+    "ja": "すべての厩舎馬の評価、ステータス、情報を表示、編集します。"
+  },
+  "All Status": {
+    "en": "All Status",
+    "vi": "Tất cả trạng thái",
+    "zh": "所有状态",
+    "ja": "すべてのステータス"
+  },
+  "Pending": {
+    "en": "Pending",
+    "vi": "Chưa giải quyết",
+    "zh": "待办的",
+    "ja": "保留中"
+  },
+  "Injured": {
+    "en": "Injured",
+    "vi": "Bị thương",
+    "zh": "受伤",
+    "ja": "怪我した"
+  },
+  "Inactive": {
+    "en": "Inactive",
+    "vi": "Không hoạt động",
+    "zh": "不活跃",
+    "ja": "非アクティブ"
+  },
+  "Rejected": {
+    "en": "Rejected",
+    "vi": "Vật bị loại bỏ",
+    "zh": "被拒绝",
+    "ja": "拒否されました"
+  },
+  "Suspended": {
+    "en": "Suspended",
+    "vi": "Cấm",
+    "zh": "暂停",
+    "ja": "一時停止中"
+  },
+  "Loading horses data...": {
+    "en": "Loading horses data...",
+    "vi": "Đang tải dữ liệu về ngựa...",
+    "zh": "正在加载马匹数据...",
+    "ja": "馬のデータを読み込み中..."
+  },
+  "No registered horses found.": {
+    "en": "No registered horses found.",
+    "vi": "Không tìm thấy ngựa đã đăng ký.",
+    "zh": "未找到已登记的马匹。",
+    "ja": "登録馬は見つかりませんでした。"
+  },
+  "Edit Horse Registry Details": {
+    "en": "Edit Horse Registry Details",
+    "vi": "Chỉnh sửa chi tiết đăng ký ngựa",
+    "zh": "编辑马匹登记详细信息",
+    "ja": "馬登録情報の編集"
+  },
+  "Colt": {
+    "en": "Colt",
+    "vi": "Colt",
+    "zh": "小马",
+    "ja": "コルト"
+  },
+  "Filly": {
+    "en": "Filly",
+    "vi": "con gái",
+    "zh": "母马",
+    "ja": "牝馬"
+  },
+  "Mare": {
+    "en": "Mare",
+    "vi": "ngựa cái",
+    "zh": "马雷",
+    "ja": "マーレ"
+  },
+  "Current Rating": {
+    "en": "Current Rating",
+    "vi": "Đánh giá hiện tại",
+    "zh": "电流额定值",
+    "ja": "電流定格"
+  },
+  "ACTIVE": {
+    "en": "ACTIVE",
+    "vi": "TÍCH CỰC",
+    "zh": "积极的",
+    "ja": "アクティブ"
+  },
+  "INJURED": {
+    "en": "INJURED",
+    "vi": "BỊ THƯƠNG",
+    "zh": "受伤",
+    "ja": "怪我した"
+  },
+  "INACTIVE": {
+    "en": "INACTIVE",
+    "vi": "KHÔNG HOẠT ĐỘNG",
+    "zh": "不活跃",
+    "ja": "非アクティブ"
+  },
+  "REJECTED": {
+    "en": "REJECTED",
+    "vi": "VẬT BỊ LOẠI BỎ",
+    "zh": "被拒绝",
+    "ja": "拒否されました"
+  },
+  "SUSPENDED": {
+    "en": "SUSPENDED",
+    "vi": "CẤM",
+    "zh": "暂停",
+    "ja": "一時停止中"
+  },
+  "Photo Preview": {
+    "en": "Photo Preview",
+    "vi": "Xem trước ảnh",
+    "zh": "照片预览",
+    "ja": "写真のプレビュー"
+  },
+  "Search horse name or breed...": {
+    "en": "Search horse name or breed...",
+    "vi": "Tìm kiếm tên ngựa hoặc giống...",
+    "zh": "搜索马的名称或品种...",
+    "ja": "馬名や品種を検索..."
+  },
+  "Race Livestream Broadcasting": {
+    "en": "Race Livestream Broadcasting",
+    "vi": "Phát sóng trực tiếp cuộc đua",
+    "zh": "赛事直播",
+    "ja": "レースのライブストリーム放送"
+  },
+  "Select Meeting:": {
+    "en": "Select Meeting:",
+    "vi": "Chọn cuộc họp:",
+    "zh": "选择会议：",
+    "ja": "会議を選択します:"
+  },
+  "Loading races...": {
+    "en": "Loading races...",
+    "vi": "Đang tải cuộc đua...",
+    "zh": "正在加载比赛...",
+    "ja": "レースを読み込み中..."
+  },
+  "YouTube Broadcast URL": {
+    "en": "YouTube Broadcast URL",
+    "vi": "URL phát sóng trên YouTube",
+    "zh": "YouTube 广播网址",
+    "ja": "YouTube ブロードキャスト URL"
+  },
+  "Save": {
+    "en": "Save",
+    "vi": "Cứu",
+    "zh": "节省",
+    "ja": "保存"
+  },
+  "Remove": {
+    "en": "Remove",
+    "vi": "Di dời",
+    "zh": "消除",
+    "ja": "取り除く"
+  },
+  "Class Level": {
+    "en": "Class Level",
+    "vi": "Cấp lớp",
+    "zh": "班级级别",
+    "ja": "クラスレベル"
+  },
+  "Race Status": {
+    "en": "Race Status",
+    "vi": "Tình trạng cuộc đua",
+    "zh": "比赛状态",
+    "ja": "レース状況"
+  },
+  "Actions": {
+    "en": "Actions",
+    "vi": "hành động",
+    "zh": "行动",
+    "ja": "アクション"
+  },
+  "Create New Race": {
+    "en": "Create New Race",
+    "vi": "Tạo cuộc đua mới",
+    "zh": "创建新种族",
+    "ja": "新しい種族を作成する"
+  },
+  "Add a race to a scheduled race meeting": {
+    "en": "Add a race to a scheduled race meeting",
+    "vi": "Thêm cuộc đua vào cuộc họp cuộc đua đã lên lịch",
+    "zh": "将比赛添加到预定的比赛中",
+    "ja": "スケジュールされたレースミーティングにレースを追加する"
+  },
+  "Select Race Meeting": {
+    "en": "Select Race Meeting",
+    "vi": "Chọn cuộc họp cuộc đua",
+    "zh": "选择赛马会",
+    "ja": "レースミーティングを選択してください"
+  },
+  "Class 2 (Rating 80-94)": {
+    "en": "Class 2 (Rating 80-94)",
+    "vi": "Loại 2 (Xếp hạng 80-94)",
+    "zh": "2 级（评级 80-94）",
+    "ja": "クラス 2 (レーティング 80 ～ 94)"
+  },
+  "Class 3 (Rating 60-79)": {
+    "en": "Class 3 (Rating 60-79)",
+    "vi": "Loại 3 (Xếp hạng 60-79)",
+    "zh": "3 级（评级 60-79）",
+    "ja": "クラス 3 (レーティング 60 ～ 79)"
+  },
+  "Class 4 (Rating 40-59)": {
+    "en": "Class 4 (Rating 40-59)",
+    "vi": "Lớp 4 (Xếp hạng 40-59)",
+    "zh": "4 级（评级 40-59）",
+    "ja": "クラス 4 (評価 40 ～ 59)"
+  },
+  "Class 5 (Rating 0-39)": {
+    "en": "Class 5 (Rating 0-39)",
+    "vi": "Lớp 5 (Xếp hạng 0-39)",
+    "zh": "5 级（等级 0-39）",
+    "ja": "クラス 5 (評価 0 ～ 39)"
+  },
+  "Track Type": {
+    "en": "Track Type",
+    "vi": "Loại bản nhạc",
+    "zh": "轨道类型",
+    "ja": "トラックの種類"
+  },
+  "Turf": {
+    "en": "Turf",
+    "vi": "Sân cỏ",
+    "zh": "草皮",
+    "ja": "芝"
+  },
+  "Dirt": {
+    "en": "Dirt",
+    "vi": "Bụi bẩn",
+    "zh": "污垢",
+    "ja": "ダート"
+  },
+  "Synthetic": {
+    "en": "Synthetic",
+    "vi": "Tổng hợp",
+    "zh": "合成的",
+    "ja": "合成"
+  },
+  "Registration Start": {
+    "en": "Registration Start",
+    "vi": "Bắt đầu đăng ký",
+    "zh": "注册开始",
+    "ja": "登録開始"
+  },
+  "Registration End": {
+    "en": "Registration End",
+    "vi": "Kết thúc đăng ký",
+    "zh": "报名结束",
+    "ja": "登録終了"
+  },
+  "Distance (Meters)": {
+    "en": "Distance (Meters)",
+    "vi": "Khoảng cách (Mét)",
+    "zh": "距离（米）",
+    "ja": "距離 (メートル)"
+  },
+  "Min Entries": {
+    "en": "Min Entries",
+    "vi": "Mục nhập tối thiểu",
+    "zh": "最少条目数",
+    "ja": "最小エントリ数"
+  },
+  "Max Entries": {
+    "en": "Max Entries",
+    "vi": "Mục nhập tối đa",
+    "zh": "最大条目数",
+    "ja": "最大エントリ数"
+  },
+  "Create Race": {
+    "en": "Create Race",
+    "vi": "Tạo cuộc đua",
+    "zh": "创建比赛",
+    "ja": "レースの作成"
+  },
+  "Races Database": {
+    "en": "Races Database",
+    "vi": "Cơ sở dữ liệu cuộc đua",
+    "zh": "赛事数据库",
+    "ja": "種族データベース"
+  },
+  "List of all scheduled races across active meetings": {
+    "en": "List of all scheduled races across active meetings",
+    "vi": "Danh sách tất cả các cuộc đua đã lên lịch trong các cuộc họp đang diễn ra",
+    "zh": "活跃会议中所有已安排比赛的列表",
+    "ja": "アクティブなミーティング全体でスケジュールされたすべてのレースのリスト"
+  },
+  "Loading races database...": {
+    "en": "Loading races database...",
+    "vi": "Đang tải cơ sở dữ liệu cuộc đua...",
+    "zh": "正在加载比赛数据库...",
+    "ja": "レースデータベースをロード中..."
+  },
+  "No races found.": {
+    "en": "No races found.",
+    "vi": "Không tìm thấy cuộc đua nào.",
+    "zh": "没有找到种族。",
+    "ja": "種族が見つかりませんでした。"
+  },
+  "Race Meeting": {
+    "en": "Race Meeting",
+    "vi": "Cuộc họp cuộc đua",
+    "zh": "赛马会",
+    "ja": "レースミーティング"
+  },
+  "No referee assigned yet": {
+    "en": "No referee assigned yet",
+    "vi": "Chưa có trọng tài nào được chỉ định",
+    "zh": "尚未指定裁判",
+    "ja": "まだ審判員が割り当てられていない"
+  },
+  "Assign": {
+    "en": "Assign",
+    "vi": "Giao phó",
+    "zh": "分配",
+    "ja": "割り当てる"
+  },
+  "LIVE": {
+    "en": "LIVE",
+    "vi": "SỐNG",
+    "zh": "居住",
+    "ja": "ライブ"
+  },
+  "End Live": {
+    "en": "End Live",
+    "vi": "Kết thúc trực tiếp",
+    "zh": "结束直播",
+    "ja": "エンドライブ"
+  },
+  "Go Live": {
+    "en": "Go Live",
+    "vi": "Phát trực tiếp",
+    "zh": "上线",
+    "ja": "ライブに移行"
+  },
+  "Edit Schedule": {
+    "en": "Edit Schedule",
+    "vi": "Chỉnh sửa lịch trình",
+    "zh": "编辑日程",
+    "ja": "スケジュールの編集"
+  },
+  "Edit": {
+    "en": "Edit",
+    "vi": "Biên tập",
+    "zh": "编辑",
+    "ja": "編集"
+  },
+  "Edit Race Schedule": {
+    "en": "Edit Race Schedule",
+    "vi": "Chỉnh sửa lịch đua",
+    "zh": "编辑比赛日程",
+    "ja": "レーススケジュールを編集する"
+  },
+  "Distance (m)": {
+    "en": "Distance (m)",
+    "vi": "Khoảng cách (m)",
+    "zh": "距离（米）",
+    "ja": "距離(m)"
+  },
+  "YouTube URL": {
+    "en": "YouTube URL",
+    "vi": "URL YouTube",
+    "zh": "YouTube 网址",
+    "ja": "YouTubeのURL"
+  },
+  "-- Choose Meeting --": {
+    "en": "-- Choose Meeting --",
+    "vi": "-- Chọn cuộc họp --",
+    "zh": "-- 选择会议 --",
+    "ja": "-- 会議を選択 --"
+  },
+  "-- Assign Referee --": {
+    "en": "-- Assign Referee --",
+    "vi": "-- Chỉ định trọng tài --",
+    "zh": "-- 指定裁判 --",
+    "ja": "-- 審判員の割り当て --"
+  },
+  "Select Race": {
+    "en": "Select Race",
+    "vi": "Chọn cuộc đua",
+    "zh": "选择种族",
+    "ja": "種族を選択"
+  },
+  "No scheduled races for this meeting.": {
+    "en": "No scheduled races for this meeting.",
+    "vi": "Không có cuộc đua theo lịch trình cho cuộc họp này.",
+    "zh": "本次会议没有安排比赛。",
+    "ja": "このミーティングには予定されているレースはありません。"
+  },
+  "Racecard Customization": {
+    "en": "Racecard Customization",
+    "vi": "Tùy chỉnh thẻ đua",
+    "zh": "赛车卡定制",
+    "ja": "レースカードのカスタマイズ"
+  },
+  "Auto Gates": {
+    "en": "Auto Gates",
+    "vi": "Cổng tự động",
+    "zh": "自动门",
+    "ja": "オートゲート"
+  },
+  "Auto Weights": {
+    "en": "Auto Weights",
+    "vi": "Trọng lượng tự động",
+    "zh": "自动配重",
+    "ja": "オートウェイト"
+  },
+  "Cancel Race": {
+    "en": "Cancel Race",
+    "vi": "Hủy bỏ cuộc đua",
+    "zh": "取消比赛",
+    "ja": "レースをキャンセルする"
+  },
+  "Weight (kg)": {
+    "en": "Weight (kg)",
+    "vi": "Trọng lượng (kg)",
+    "zh": "重量（公斤）",
+    "ja": "重量(kg)"
+  },
+  "No approved entries for this race.": {
+    "en": "No approved entries for this race.",
+    "vi": "Không có mục nào được phê duyệt cho cuộc đua này.",
+    "zh": "本次比赛没有批准的参赛作品。",
+    "ja": "このレースには承認されたエントリーはありません。"
+  },
+  "Carried Weight (kg)": {
+    "en": "Carried Weight (kg)",
+    "vi": "Trọng lượng mang theo (kg)",
+    "zh": "承载重量（公斤）",
+    "ja": "積載重量(kg)"
+  },
+  "Save Custom Changes": {
+    "en": "Save Custom Changes",
+    "vi": "Lưu thay đổi tùy chỉnh",
+    "zh": "保存自定义更改",
+    "ja": "カスタム変更の保存"
+  },
+  "Please select a race to configure the racecard.": {
+    "en": "Please select a race to configure the racecard.",
+    "vi": "Vui lòng chọn một cuộc đua để cấu hình thẻ đua.",
+    "zh": "请选择一场比赛来配置比赛卡。",
+    "ja": "レースカードを設定するにはレースを選択してください。"
+  },
+  "Season": {
+    "en": "Season",
+    "vi": "Mùa",
+    "zh": "季节",
+    "ja": "季節"
+  },
+  "Active Tournament": {
+    "en": "Active Tournament",
+    "vi": "Giải đấu đang hoạt động",
+    "zh": "活跃锦标赛",
+    "ja": "アクティブなトーナメント"
+  },
+  "Track Venue": {
+    "en": "Track Venue",
+    "vi": "Theo dõi địa điểm",
+    "zh": "赛道场地",
+    "ja": "トラック会場"
+  },
+  "Track Venue type": {
+    "en": "Track Venue type",
+    "vi": "Theo dõi loại địa điểm",
+    "zh": "赛道 场地类型",
+    "ja": "トラック会場タイプ"
+  },
+  "Race Date": {
+    "en": "Race Date",
+    "vi": "Ngày đua",
+    "zh": "比赛日期",
+    "ja": "レース日"
+  },
+  "Official operational timeline for the upcoming race fixture": {
+    "en": "Official operational timeline for the upcoming race fixture",
+    "vi": "Dòng thời gian hoạt động chính thức cho lịch thi đấu cuộc đua sắp tới",
+    "zh": "即将举行的比赛的官方运营时间表",
+    "ja": "今後のレースの公式運営スケジュール"
+  },
+  "No meetings available": {
+    "en": "No meetings available",
+    "vi": "Không có cuộc họp nào",
+    "zh": "没有可用的会议",
+    "ja": "利用可能な会議はありません"
+  },
+  "Loading schedule timeline...": {
+    "en": "Loading schedule timeline...",
+    "vi": "Đang tải dòng thời gian của lịch trình...",
+    "zh": "正在加载时间表...",
+    "ja": "スケジュールのタイムラインを読み込んでいます..."
+  },
+  "Assigned Referees": {
+    "en": "Assigned Referees",
+    "vi": "Trọng tài được chỉ định",
+    "zh": "指定裁判员",
+    "ja": "担当審判員"
+  },
+  "No referees assigned.": {
+    "en": "No referees assigned.",
+    "vi": "Không có trọng tài được chỉ định.",
+    "zh": "没有指定裁判。",
+    "ja": "審判員は割り当てられていない。"
+  },
+  "Racecard Entries": {
+    "en": "Racecard Entries",
+    "vi": "Bài dự thi thẻ đua",
+    "zh": "赛车卡参赛作品",
+    "ja": "レースカードエントリー"
+  },
+  "Horse (Rating)": {
+    "en": "Horse (Rating)",
+    "vi": "Ngựa (Xếp hạng)",
+    "zh": "马（评级）",
+    "ja": "馬（評価）"
+  },
+  "Jockey (Weight)": {
+    "en": "Jockey (Weight)",
+    "vi": "Đua ngựa (cân nặng)",
+    "zh": "骑师（体重）",
+    "ja": "騎手(体重)"
+  },
+  "Carried Wt": {
+    "en": "Carried Wt",
+    "vi": "Khối lượng thực hiện",
+    "zh": "携带重量",
+    "ja": "運搬重量"
+  },
+  "No entries declared for this race yet.": {
+    "en": "No entries declared for this race yet.",
+    "vi": "Chưa có mục nào được công bố cho cuộc đua này.",
+    "zh": "目前还没有宣布参加本次比赛的参赛作品。",
+    "ja": "このレースへのエントリーはまだ発表されていません。"
+  },
+  "No scheduled events found for this meeting date.": {
+    "en": "No scheduled events found for this meeting date.",
+    "vi": "Không tìm thấy sự kiện đã lên lịch nào cho ngày họp này.",
+    "zh": "找不到此会议日期的预定活动。",
+    "ja": "この会議日に予定されているイベントは見つかりませんでした。"
+  },
+  "Timeline operational and scheduler enabled": {
+    "en": "Timeline operational and scheduler enabled",
+    "vi": "Đã bật lịch trình và vận hành dòng thời gian",
+    "zh": "时间轴运行并启用调度程序",
+    "ja": "タイムラインが動作し、スケジューラが有効になっている"
+  },
+  "Last updated: Just now": {
+    "en": "Last updated: Just now",
+    "vi": "Cập nhật lần cuối: Vừa rồi",
+    "zh": "最后更新时间：刚刚",
+    "ja": "最終更新日: たった今"
+  },
+  "Schedule New Race": {
+    "en": "Schedule New Race",
+    "vi": "Lên lịch cuộc đua mới",
+    "zh": "安排新比赛",
+    "ja": "新しいレースをスケジュールする"
+  },
+  "Artificial": {
+    "en": "Artificial",
+    "vi": "Nhân tạo",
+    "zh": "人造的",
+    "ja": "人工的な"
+  },
+  "Confirm Schedule": {
+    "en": "Confirm Schedule",
+    "vi": "Xác nhận lịch trình",
+    "zh": "确认日程",
+    "ja": "スケジュールを確認する"
+  },
+  "Race Meetings Directory": {
+    "en": "Race Meetings Directory",
+    "vi": "Danh mục cuộc họp cuộc đua",
+    "zh": "赛马会议目录",
+    "ja": "レースミーティングディレクトリ"
+  },
+  "Loading meetings...": {
+    "en": "Loading meetings...",
+    "vi": "Đang tải cuộc họp...",
+    "zh": "正在加载会议...",
+    "ja": "会議を読み込んでいます..."
+  },
+  "Delete": {
+    "en": "Delete",
+    "vi": "Xóa bỏ",
+    "zh": "删除",
+    "ja": "消去"
+  },
+  "Meeting Name": {
+    "en": "Meeting Name",
+    "vi": "Tên cuộc họp",
+    "zh": "会议名称",
+    "ja": "会議名"
+  },
+  "Date": {
+    "en": "Date",
+    "vi": "Ngày",
+    "zh": "日期",
+    "ja": "日付"
+  },
+  "Venue": {
+    "en": "Venue",
+    "vi": "Địa điểm",
+    "zh": "场地",
+    "ja": "会場"
+  },
+  "Season ID": {
+    "en": "Season ID",
+    "vi": "ID phần",
+    "zh": "季节ID",
+    "ja": "シーズンID"
+  },
+  "Season Association": {
+    "en": "Season Association",
+    "vi": "Hiệp hội mùa",
+    "zh": "季节协会",
+    "ja": "シーズンアソシエーション"
+  },
+  "Cancel Edit": {
+    "en": "Cancel Edit",
+    "vi": "Hủy Chỉnh sửa",
+    "zh": "取消编辑",
+    "ja": "編集をキャンセル"
+  },
+  "E.g., Grand Prix Sunday": {
+    "en": "E.g., Grand Prix Sunday",
+    "vi": "Ví dụ: Chủ nhật Grand Prix",
+    "zh": "例如，大奖赛周日",
+    "ja": "例：グランプリサンデー"
+  },
+  "E.g., Epsom Downs Track": {
+    "en": "E.g., Epsom Downs Track",
+    "vi": "Ví dụ: Đường đi xuống của Epsom",
+    "zh": "例如，Epsom Downs Track",
+    "ja": "例: エプソム ダウンズ トラック"
+  },
+  "Awaiting Decision": {
+    "en": "Awaiting Decision",
+    "vi": "Đang chờ quyết định",
+    "zh": "等待决定",
+    "ja": "決定待ち"
+  },
+  "Approved": {
+    "en": "Approved",
+    "vi": "Tán thành",
+    "zh": "得到正式认可的",
+    "ja": "承認された"
+  },
+  "Pending Race Entries & Predictions": {
+    "en": "Pending Race Entries & Predictions",
+    "vi": "Đang chờ đăng ký và dự đoán cuộc đua",
+    "zh": "待定的比赛报名和预测",
+    "ja": "保留中のレースエントリーと予想"
+  },
+  "Race meeting entry submissions awaiting steward approval": {
+    "en": "Race meeting entry submissions awaiting steward approval",
+    "vi": "Nội dung gửi cuộc họp cuộc đua đang chờ người quản lý phê duyệt",
+    "zh": "比赛报名提交等待管理员批准",
+    "ja": "レースミーティングのエントリー提出物はスチュワードの承認を待っています"
+  },
+  "Loading...": {
+    "en": "Loading...",
+    "vi": "Đang tải...",
+    "zh": "加载中...",
+    "ja": "読み込み中..."
+  },
+  "No pending race entries found.": {
+    "en": "No pending race entries found.",
+    "vi": "Không tìm thấy mục cuộc đua đang chờ xử lý.",
+    "zh": "未找到待处理的比赛条目。",
+    "ja": "保留中のレースエントリーは見つかりませんでした。"
+  },
+  "Pending Horse Meeting Registrations": {
+    "en": "Pending Horse Meeting Registrations",
+    "vi": "Đang chờ đăng ký cuộc họp ngựa",
+    "zh": "待定的马匹会议注册",
+    "ja": "保留中のホースミーティング登録"
+  },
+  "Horse event entry submissions awaiting steward approval": {
+    "en": "Horse event entry submissions awaiting steward approval",
+    "vi": "Việc gửi mục nhập sự kiện ngựa đang chờ người quản lý phê duyệt",
+    "zh": "马匹赛事报名提交等待管理员批准",
+    "ja": "スチュワードの承認を待っている馬イベントエントリーの提出"
+  },
+  "No pending horse meeting registrations found.": {
+    "en": "No pending horse meeting registrations found.",
+    "vi": "Không tìm thấy đăng ký cuộc họp ngựa đang chờ xử lý.",
+    "zh": "未找到待处理的马匹会议注册。",
+    "ja": "保留中の競馬登録は見つかりませんでした。"
+  },
+  "Pending Owner Meeting Registrations": {
+    "en": "Pending Owner Meeting Registrations",
+    "vi": "Đang chờ đăng ký cuộc họp chủ sở hữu",
+    "zh": "待定的业主会议注册",
+    "ja": "保留中のオーナーミーティングの登録"
+  },
+  "Horse Owner event registration requests awaiting steward approval": {
+    "en": "Horse Owner event registration requests awaiting steward approval",
+    "vi": "Yêu cầu đăng ký sự kiện của Chủ ngựa đang chờ người quản lý phê duyệt",
+    "zh": "马主活动注册请求等待管理员批准",
+    "ja": "馬主イベント登録リクエストはスチュワードの承認を待っています"
+  },
+  "No pending owner meeting registrations found.": {
+    "en": "No pending owner meeting registrations found.",
+    "vi": "Không tìm thấy đăng ký cuộc họp chủ sở hữu đang chờ xử lý.",
+    "zh": "未找到待处理的业主会议注册。",
+    "ja": "保留中のオーナー会議の登録が見つかりません。"
+  },
+  "Pending Jockey Meeting Registrations": {
+    "en": "Pending Jockey Meeting Registrations",
+    "vi": "Đang chờ đăng ký cuộc họp Jockey",
+    "zh": "待定的赛马会注册",
+    "ja": "ジョッキーミーティングの登録保留中"
+  },
+  "Jockey availability sign-up submissions awaiting steward approval": {
+    "en": "Jockey availability sign-up submissions awaiting steward approval",
+    "vi": "Việc gửi đăng ký tính khả dụng của nài ngựa đang chờ người quản lý phê duyệt",
+    "zh": "骑师可用性报名提交等待赛会干事批准",
+    "ja": "騎手利用可能サインアップの提出はスチュワードの承認を待っています"
+  },
+  "No pending jockey meeting registrations found.": {
+    "en": "No pending jockey meeting registrations found.",
+    "vi": "Không tìm thấy đăng ký cuộc họp đua ngựa đang chờ xử lý.",
+    "zh": "未找到待处理的赛马会注册。",
+    "ja": "保留中の騎手ミーティング登録は見つかりませんでした。"
+  },
+  "Pending System Horse Approvals": {
+    "en": "Pending System Horse Approvals",
+    "vi": "Hệ thống ngựa đang chờ phê duyệt",
+    "zh": "等待系统马匹批准",
+    "ja": "保留中のシステム馬の承認"
+  },
+  "New stable horses registered by Owners awaiting system activation": {
+    "en": "New stable horses registered by Owners awaiting system activation",
+    "vi": "Ngựa ổn định mới được Chủ sở hữu đăng ký đang chờ kích hoạt hệ thống",
+    "zh": "业主登记的新马匹等待系统激活",
+    "ja": "馬主によって登録された新しい厩舎の馬はシステムのアクティブ化を待っています"
+  },
+  "No pending system horses found.": {
+    "en": "No pending system horses found.",
+    "vi": "Không tìm thấy ngựa hệ thống đang chờ xử lý.",
+    "zh": "未找到待处理的系统马。",
+    "ja": "保留中のシステム馬は見つかりませんでした。"
+  },
+  "Enter final position, finish times, and weigh-in weights for each horse.": {
+    "en": "Enter final position, finish times, and weigh-in weights for each horse.",
+    "vi": "Nhập vị trí cuối cùng, thời gian về đích và cân nặng cho mỗi con ngựa.",
+    "zh": "输入每匹马的最终排名、完成时间和称重体重。",
+    "ja": "各馬の最終順位、ゴールタイム、体重を計量します。"
+  },
+  "Weigh-In (kg)": {
+    "en": "Weigh-In (kg)",
+    "vi": "Cân nặng (kg)",
+    "zh": "称重（公斤）",
+    "ja": "計量(kg)"
+  },
+  "Steward Report / Notes": {
+    "en": "Steward Report / Notes",
+    "vi": "Báo cáo của người quản lý / Ghi chú",
+    "zh": "管家报告/注释",
+    "ja": "スチュワードレポート/メモ"
+  },
+  "Process Results & Close Races": {
+    "en": "Process Results & Close Races",
+    "vi": "Xử lý kết quả & Kết thúc cuộc đua",
+    "zh": "处理结果和近距离比赛",
+    "ja": "プロセス結果と接戦"
+  },
+  "Select a Race Meeting and process the outcomes of scheduled races.": {
+    "en": "Select a Race Meeting and process the outcomes of scheduled races.",
+    "vi": "Chọn Cuộc họp cuộc đua và xử lý kết quả của các cuộc đua đã lên lịch.",
+    "zh": "选择一场比赛并处理预定比赛的结果。",
+    "ja": "レース会議を選択し、スケジュールされたレースの結果を処理します。"
+  },
+  "Race Meetings List": {
+    "en": "Race Meetings List",
+    "vi": "Danh sách các cuộc họp cuộc đua",
+    "zh": "赛事列表",
+    "ja": "レースミーティング一覧"
+  },
+  "No Race Meetings Found.": {
+    "en": "No Race Meetings Found.",
+    "vi": "Không tìm thấy cuộc họp cuộc đua nào.",
+    "zh": "未找到赛马会。",
+    "ja": "レースミーティングが見つかりませんでした。"
+  },
+  "Races To Process": {
+    "en": "Races To Process",
+    "vi": "Cuộc đua để xử lý",
+    "zh": "进程竞赛",
+    "ja": "処理すべきレース"
+  },
+  "No Races Found.": {
+    "en": "No Races Found.",
+    "vi": "Không tìm thấy cuộc đua nào.",
+    "zh": "未找到比赛。",
+    "ja": "レースが見つかりません。"
+  },
+  "Process": {
+    "en": "Process",
+    "vi": "Quá trình",
+    "zh": "过程",
+    "ja": "プロセス"
+  },
+  "Season Class Rules Reference": {
+    "en": "Season Class Rules Reference",
+    "vi": "Tham khảo quy tắc lớp mùa",
+    "zh": "赛季等级规则参考",
+    "ja": "シーズンクラスルールリファレンス"
+  },
+  "1:12.45": {
+    "en": "1:12.45",
+    "vi": "1:12.45",
+    "zh": "1:12.45",
+    "ja": "1:12.45"
+  },
+  "e.g. 1:12.45": {
+    "en": "e.g. 1:12.45",
+    "vi": "ví dụ. 1:12.45",
+    "zh": "例如1:12.45",
+    "ja": "例えば1:12.45"
+  },
+  "Enter details of any race incidents, track conditions, or steward decisions...": {
+    "en": "Enter details of any race incidents, track conditions, or steward decisions...",
+    "vi": "Nhập thông tin chi tiết về mọi sự cố trong cuộc đua, điều kiện đường đua hoặc quyết định của người quản lý...",
+    "zh": "输入任何比赛事件、赛道条件或管理员决定的详细信息...",
+    "ja": "レースインシデント、トラック状況、スチュワードの決定などの詳細を入力します..."
+  },
+  "Initialize New Racing Season": {
+    "en": "Initialize New Racing Season",
+    "vi": "Khởi tạo mùa đua mới",
+    "zh": "初始化新赛季",
+    "ja": "新しいレーシングシーズンを初期化する"
+  },
+  "Configure the season framework and choose rule initialization method.": {
+    "en": "Configure the season framework and choose rule initialization method.",
+    "vi": "Định cấu hình khung phần và chọn phương thức khởi tạo quy tắc.",
+    "zh": "配置季节框架并选择规则初始化方法。",
+    "ja": "シーズンフレームワークを設定し、ルールの初期化方法を選択します。"
+  },
+  "Season Name": {
+    "en": "Season Name",
+    "vi": "Tên mùa",
+    "zh": "季节名称",
+    "ja": "季節名"
+  },
+  "Class Rule Setup Method": {
+    "en": "Class Rule Setup Method",
+    "vi": "Phương pháp thiết lập quy tắc lớp",
+    "zh": "类规则设置方法",
+    "ja": "クラスルールの設定方法"
+  },
+  "Automatic Class Rules": {
+    "en": "Automatic Class Rules",
+    "vi": "Nội quy lớp học tự động",
+    "zh": "自动班级规则",
+    "ja": "自動クラスルール"
+  },
+  "Manual Setup": {
+    "en": "Manual Setup",
+    "vi": "Cài đặt thủ công",
+    "zh": "手动设置",
+    "ja": "手動セットアップ"
+  },
+  "Configure Season Classes (Manual Mode)": {
+    "en": "Configure Season Classes (Manual Mode)",
+    "vi": "Định cấu hình các lớp theo mùa (Chế độ thủ công)",
+    "zh": "配置季节类别（手动模式）",
+    "ja": "シーズンクラスの構成 (手動モード)"
+  },
+  "Adjust ratings for the 5 season classes before initialization:": {
+    "en": "Adjust ratings for the 5 season classes before initialization:",
+    "vi": "Điều chỉnh xếp hạng cho các lớp 5 mùa trước khi khởi tạo:",
+    "zh": "初始化前调整 5 个赛季班级的评分：",
+    "ja": "初期化前に 5 シーズン クラスの評価を調整します。"
+  },
+  "Min Rating": {
+    "en": "Min Rating",
+    "vi": "Xếp hạng tối thiểu",
+    "zh": "最低评级",
+    "ja": "最小評価"
+  },
+  "Max Rating": {
+    "en": "Max Rating",
+    "vi": "Xếp hạng tối đa",
+    "zh": "最高评级",
+    "ja": "最大定格"
+  },
+  "Historical Seasons": {
+    "en": "Historical Seasons",
+    "vi": "Các mùa lịch sử",
+    "zh": "历史季节",
+    "ja": "歴史的な季節"
+  },
+  "Previously completed and active racing seasons": {
+    "en": "Previously completed and active racing seasons",
+    "vi": "Các mùa đua đã hoàn thành và đang diễn ra trước đó",
+    "zh": "之前已完成且活跃的赛季",
+    "ja": "以前に完了し、アクティブなレース シーズン"
+  },
+  "Loading seasons...": {
+    "en": "Loading seasons...",
+    "vi": "Đang tải các phần...",
+    "zh": "加载季节...",
+    "ja": "季節を読み込んでいます..."
+  },
+  "No seasons found.": {
+    "en": "No seasons found.",
+    "vi": "Không tìm thấy mùa nào.",
+    "zh": "没有找到季节。",
+    "ja": "季節が見つかりません。"
+  },
+  "Closed": {
+    "en": "Closed",
+    "vi": "Đã đóng",
+    "zh": "关闭",
+    "ja": "閉店"
+  },
+  "Extend": {
+    "en": "Extend",
+    "vi": "Mở rộng",
+    "zh": "延长",
+    "ja": "伸ばす"
+  },
+  "Date Range": {
+    "en": "Date Range",
+    "vi": "Phạm vi ngày",
+    "zh": "日期范围",
+    "ja": "日付範囲"
+  },
+  "Status / Actions": {
+    "en": "Status / Actions",
+    "vi": "Trạng thái / Hành động",
+    "zh": "状态/行动",
+    "ja": "ステータス/アクション"
+  },
+  "Extend Season": {
+    "en": "Extend Season",
+    "vi": "Kéo dài mùa giải",
+    "zh": "延长赛季",
+    "ja": "シーズンを延長する"
+  },
+  "Season Start Date": {
+    "en": "Season Start Date",
+    "vi": "Ngày bắt đầu mùa giải",
+    "zh": "赛季开始日期",
+    "ja": "シーズン開始日"
+  },
+  "Season End Date": {
+    "en": "Season End Date",
+    "vi": "Ngày kết thúc mùa giải",
+    "zh": "赛季结束日期",
+    "ja": "シーズン終了日"
+  },
+  "New Start Date": {
+    "en": "New Start Date",
+    "vi": "Ngày bắt đầu mới",
+    "zh": "新的开始日期",
+    "ja": "新しい開始日"
+  },
+  "New End Date": {
+    "en": "New End Date",
+    "vi": "Ngày kết thúc mới",
+    "zh": "新的结束日期",
+    "ja": "新しい終了日"
+  },
+  "e.g. 2026–2027 Grand Prix Season": {
+    "en": "e.g. 2026–2027 Grand Prix Season",
+    "vi": "ví dụ. Mùa giải Grand Prix 2026–2027",
+    "zh": "例如2026–2027 大奖赛赛季",
+    "ja": "例えば2026–2027 グランプリシーズン"
+  },
+  "No limit": {
+    "en": "No limit",
+    "vi": "Không giới hạn",
+    "zh": "无限制",
+    "ja": "制限なし"
+  },
+  "SeasonRulesEdit": {
+    "en": "SeasonRulesEdit",
+    "vi": "Quy tắc mùaSửa đổi",
+    "zh": "赛季规则编辑",
+    "ja": "シーズンルール編集"
+  },
+  "System Configurations": {
+    "en": "System Configurations",
+    "vi": "Cấu hình hệ thống",
+    "zh": "系统配置",
+    "ja": "システム構成"
+  },
+  "Update weights and thresholds for ranking and prediction formulas.": {
+    "en": "Update weights and thresholds for ranking and prediction formulas.",
+    "vi": "Cập nhật trọng số và ngưỡng cho các công thức xếp hạng và dự đoán.",
+    "zh": "更新排名和预测公式的权重和阈值。",
+    "ja": "ランキングおよび予測式の重みとしきい値を更新します。"
+  },
+  "UserEdit": {
+    "en": "UserEdit",
+    "vi": "Người dùngSửa đổi",
+    "zh": "用户编辑",
+    "ja": "ユーザー編集"
+  },
+  "Create New Account": {
+    "en": "Create New Account",
+    "vi": "Tạo tài khoản mới",
+    "zh": "创建新帐户",
+    "ja": "新しいアカウントを作成する"
+  },
+  "Register an Owner, Jockey or Spectator manually": {
+    "en": "Register an Owner, Jockey or Spectator manually",
+    "vi": "Đăng ký Chủ sở hữu, Người đua ngựa hoặc Người xem theo cách thủ công",
+    "zh": "手动注册马主、骑师或观众",
+    "ja": "馬主、騎手、観客を手動で登録する"
+  },
+  "Username": {
+    "en": "Username",
+    "vi": "Tên người dùng",
+    "zh": "用户名",
+    "ja": "ユーザー名"
+  },
+  "Password": {
+    "en": "Password",
+    "vi": "Mật khẩu",
+    "zh": "密码",
+    "ja": "パスワード"
+  },
+  "Role": {
+    "en": "Role",
+    "vi": "Vai trò",
+    "zh": "角色",
+    "ja": "役割"
+  },
+  "Spectator / Fan": {
+    "en": "Spectator / Fan",
+    "vi": "Khán giả / Người hâm mộ",
+    "zh": "观众/粉丝",
+    "ja": "観客・ファン"
+  },
+  "Horse Owner": {
+    "en": "Horse Owner",
+    "vi": "Chủ ngựa",
+    "zh": "马主",
+    "ja": "馬主"
+  },
+  "Clear": {
+    "en": "Clear",
+    "vi": "Thông thoáng",
+    "zh": "清除",
+    "ja": "クリア"
+  },
+  "Registered Users Directory": {
+    "en": "Registered Users Directory",
+    "vi": "Danh mục người dùng đã đăng ký",
+    "zh": "注册用户目录",
+    "ja": "登録ユーザーディレクトリ"
+  },
+  "System user catalog & role assignment options": {
+    "en": "System user catalog & role assignment options",
+    "vi": "Tùy chọn phân công vai trò và danh mục người dùng hệ thống",
+    "zh": "系统用户目录和角色分配选项",
+    "ja": "システムユーザーカタログと役割割り当てオプション"
+  },
+  "Filter:": {
+    "en": "Filter:",
+    "vi": "Lọc:",
+    "zh": "筛选：",
+    "ja": "フィルター："
+  },
+  "All Roles": {
+    "en": "All Roles",
+    "vi": "Tất cả vai trò",
+    "zh": "所有角色",
+    "ja": "すべての役割"
+  },
+  "Administrators": {
+    "en": "Administrators",
+    "vi": "Quản trị viên",
+    "zh": "管理员",
+    "ja": "管理者"
+  },
+  "Horse Owners": {
+    "en": "Horse Owners",
+    "vi": "Chủ ngựa",
+    "zh": "马主",
+    "ja": "馬主"
+  },
+  "Jockeys": {
+    "en": "Jockeys",
+    "vi": "Đua ngựa",
+    "zh": "骑师",
+    "ja": "騎手"
+  },
+  "Referees": {
+    "en": "Referees",
+    "vi": "trọng tài",
+    "zh": "裁判员",
+    "ja": "審判員"
+  },
+  "Spectators": {
+    "en": "Spectators",
+    "vi": "Khán giả",
+    "zh": "观众",
+    "ja": "観客"
+  },
+  "No matching users found.": {
+    "en": "No matching users found.",
+    "vi": "Không tìm thấy người dùng phù hợp.",
+    "zh": "未找到匹配的用户。",
+    "ja": "一致するユーザーが見つかりませんでした。"
+  },
+  "Registered Horses Directory": {
+    "en": "Registered Horses Directory",
+    "vi": "Thư mục ngựa đã đăng ký",
+    "zh": "注册马匹目录",
+    "ja": "登録馬名鑑"
+  },
+  "Stable horse statistics & rating adjustments": {
+    "en": "Stable horse statistics & rating adjustments",
+    "vi": "Thống kê ngựa ổn định và điều chỉnh xếp hạng",
+    "zh": "马匹统计和评级调整",
+    "ja": "安定した馬の統計と評価の調整"
+  },
+  "Edit Rating": {
+    "en": "Edit Rating",
+    "vi": "Chỉnh sửa xếp hạng",
+    "zh": "编辑评级",
+    "ja": "評価の編集"
+  },
+  "No registered horses match the criteria.": {
+    "en": "No registered horses match the criteria.",
+    "vi": "Không có con ngựa đã đăng ký nào phù hợp với tiêu chí.",
+    "zh": "没有注册的马匹符合标准。",
+    "ja": "条件に一致する登録馬はいません。"
+  },
+  "Edit User Account": {
+    "en": "Edit User Account",
+    "vi": "Chỉnh sửa tài khoản người dùng",
+    "zh": "编辑用户帐户",
+    "ja": "ユーザーアカウントの編集"
+  },
+  "Enable Login OTP Verification": {
+    "en": "Enable Login OTP Verification",
+    "vi": "Kích hoạt xác minh OTP đăng nhập",
+    "zh": "启用登录 OTP 验证",
+    "ja": "ログイン OTP 検証を有効にする"
+  },
+  "Nguyen Van A": {
+    "en": "Nguyen Van A",
+    "vi": "Nguyễn Văn A",
+    "zh": "阮文爱",
+    "ja": "グエン・ヴァン・A"
+  },
+  "van.a@example.com": {
+    "en": "van.a@example.com",
+    "vi": "van.a@example.com",
+    "zh": "van.a@example.com",
+    "ja": "van.a@example.com"
+  },
+  "••••••••": {
+    "en": "••••••••",
+    "vi": "•···········",
+    "zh": "••••••••",
+    "ja": "••••••••"
+  },
+  "E.g., 55.5": {
+    "en": "E.g., 55.5",
+    "vi": "Ví dụ: 55,5",
+    "zh": "例如，55.5",
+    "ja": "例：55.5"
+  },
+  "Saving Parameters...": {
+    "en": "Saving Parameters...",
+    "vi": "Đang lưu tham số...",
+    "zh": "保存参数中...",
+    "ja": "パラメータを保存中..."
+  },
+  "Save System Configs": {
+    "en": "Save System Configs",
+    "vi": "Lưu cấu hình hệ thống",
+    "zh": "保存系统配置",
+    "ja": "システム設定を保存"
+  },
+  "User Details": {
+    "en": "User Details",
+    "vi": "Chi tiết người dùng",
+    "zh": "用户详细信息",
+    "ja": "ユーザーの詳細"
+  },
+  "Role Management": {
+    "en": "Role Management",
+    "vi": "Quản lý vai trò",
+    "zh": "角色管理",
+    "ja": "役割管理"
+  },
+  "Sex": {
+    "en": "Sex",
+    "vi": "Tình dục",
+    "zh": "性别",
+    "ja": "セックス"
+  },
+  "Owner ID": {
+    "en": "Owner ID",
+    "vi": "ID chủ sở hữu",
+    "zh": "所有者 ID",
+    "ja": "オーナーID"
+  },
+  "Races Run": {
+    "en": "Races Run",
+    "vi": "Cuộc đua chạy",
+    "zh": "比赛运行",
+    "ja": "レースラン"
+  },
+  "Ref": {
+    "en": "Ref",
+    "vi": "Tham chiếu",
+    "zh": "参考号",
+    "ja": "参照"
+  },
+  "Horse & Rating": {
+    "en": "Horse & Rating",
+    "vi": "Ngựa & Xếp hạng",
+    "zh": "马匹及评级",
+    "ja": "馬と評価"
+  },
+  "Assigned Jockey": {
+    "en": "Assigned Jockey",
+    "vi": "Đua ngựa được chỉ định",
+    "zh": "指定骑师",
+    "ja": "担当騎手"
+  },
+  "Target Race": {
+    "en": "Target Race",
+    "vi": "Cuộc đua mục tiêu",
+    "zh": "目标竞赛",
+    "ja": "対象種族"
+  },
+  "Carried Weight": {
+    "en": "Carried Weight",
+    "vi": "Trọng lượng mang theo",
+    "zh": "承载重量",
+    "ja": "積載重量"
+  },
+  "AI Win Chance": {
+    "en": "AI Win Chance",
+    "vi": "Cơ hội giành chiến thắng AI",
+    "zh": "人工智能获胜机会",
+    "ja": "AI の勝利のチャンス"
+  },
+  "Target Meeting": {
+    "en": "Target Meeting",
+    "vi": "Cuộc họp mục tiêu",
+    "zh": "目标会议",
+    "ja": "目標会議"
+  },
+  "Submitted": {
+    "en": "Submitted",
+    "vi": "Đã gửi",
+    "zh": "已提交",
+    "ja": "提出済み"
+  },
+  "Horse ID": {
+    "en": "Horse ID",
+    "vi": "Mã ngựa",
+    "zh": "马匹 ID",
+    "ja": "馬ID"
+  },
+  "Meeting ID": {
+    "en": "Meeting ID",
+    "vi": "ID cuộc họp",
+    "zh": "会议ID",
+    "ja": "ミーティングID"
+  },
+  "Action": {
+    "en": "Action",
+    "vi": "Hoạt động",
+    "zh": "行动",
+    "ja": "アクション"
+  },
+  "Jockey Name": {
+    "en": "Jockey Name",
+    "vi": "Tên đua ngựa",
+    "zh": "骑师姓名",
+    "ja": "騎手名"
+  },
+  "Weigh-In Wt (kg)": {
+    "en": "Weigh-In Wt (kg)",
+    "vi": "Cân nặng (kg)",
+    "zh": "称重重量（公斤）",
+    "ja": "計量重量(kg)"
+  },
+  "Final Position": {
+    "en": "Final Position",
+    "vi": "Vị trí cuối cùng",
+    "zh": "最终位置",
+    "ja": "最終順位"
+  },
+  "Race ID": {
+    "en": "Race ID",
+    "vi": "ID cuộc đua",
+    "zh": "比赛编号",
+    "ja": "レースID"
+  },
+  "Class": {
+    "en": "Class",
+    "vi": "Lớp học",
+    "zh": "班级",
+    "ja": "クラス"
+  },
+  "Track": {
+    "en": "Track",
+    "vi": "Theo dõi",
+    "zh": "追踪",
+    "ja": "追跡"
+  },
+  "Distance": {
+    "en": "Distance",
+    "vi": "Khoảng cách",
+    "zh": "距离",
+    "ja": "距離"
+  },
+  "Min-Max Rating": {
+    "en": "Min-Max Rating",
+    "vi": "Xếp hạng tối thiểu-tối đa",
+    "zh": "最小-最大评级",
+    "ja": "最小-最大評価"
+  },
+  "Livestream": {
+    "en": "Livestream",
+    "vi": "Phát trực tiếp",
+    "zh": "直播",
+    "ja": "ライブストリーム"
+  },
+  "Assigned Referee": {
+    "en": "Assigned Referee",
+    "vi": "Trọng tài được chỉ định",
+    "zh": "指定裁判员",
+    "ja": "担当審判員"
+  },
+  "pending review": {
+    "en": "pending review",
+    "vi": "đang chờ xem xét",
+    "zh": "待审查",
+    "ja": "審査待ち"
+  },
+  "cleared to race": {
+    "en": "cleared to race",
+    "vi": "được phép tham gia cuộc đua",
+    "zh": "获准参加比赛",
+    "ja": "レースへの参加を許可された"
+  },
+  "entry denied": {
+    "en": "entry denied",
+    "vi": "mục nhập bị từ chối",
+    "zh": "入境被拒绝",
+    "ja": "入国拒否"
+  },
+  "Deactivate": {
+    "en": "Deactivate",
+    "vi": "Vô hiệu hóa",
+    "zh": "停用",
+    "ja": "非アクティブ化"
+  },
+  "Activate": {
+    "en": "Activate",
+    "vi": "Kích hoạt",
+    "zh": "激活",
+    "ja": "活性化"
+  },
+  "Admin": {
+    "en": "Admin",
+    "vi": "Quản trị viên",
+    "zh": "行政",
+    "ja": "管理者"
+  },
+  "Referee": {
+    "en": "Referee",
+    "vi": "Trọng tài",
+    "zh": "裁判",
+    "ja": "審判"
+  },
+  "Spectator": {
+    "en": "Spectator",
+    "vi": "khán giả",
+    "zh": "旁观者",
+    "ja": "観客"
+  },
+  "OFFICIAL": {
+    "en": "OFFICIAL",
+    "vi": "CHÍNH THỨC",
+    "zh": "官方的",
+    "ja": "正式"
+  },
+  "FINISHED": {
+    "en": "FINISHED",
+    "vi": "HOÀN THÀNH",
+    "zh": "完成的",
+    "ja": "終了した"
+  },
+  "CANCELLED": {
+    "en": "CANCELLED",
+    "vi": "ĐÃ HỦY",
+    "zh": "取消",
+    "ja": "キャンセル"
+  },
+  "+ Create": {
+    "en": "+ Create",
+    "vi": "+ Tạo",
+    "zh": "+ 创建",
+    "ja": "+ 作成"
+  },
+  "Add New Meeting": {
+    "en": "Add New Meeting",
+    "vi": "Thêm cuộc họp mới",
+    "zh": "添加新会议",
+    "ja": "新しい会議を追加"
+  },
+  "Create Meeting": {
+    "en": "Create Meeting",
+    "vi": "Tạo cuộc họp",
+    "zh": "创建会议",
+    "ja": "会議の作成"
+  },
+  "Edit Meeting": {
+    "en": "Edit Meeting",
+    "vi": "Chỉnh sửa cuộc họp",
+    "zh": "编辑会议",
+    "ja": "会議の編集"
+  },
+  "Current": {
+    "en": "Current",
+    "vi": "Hiện hành",
+    "zh": "当前的",
+    "ja": "現在"
+  },
+  "+ Schedule a Race": {
+    "en": "+ Schedule a Race",
+    "vi": "+ Lên lịch đua",
+    "zh": "+ 安排比赛",
+    "ja": "+ レースをスケジュールする"
+  },
+  "Time": {
+    "en": "Time",
+    "vi": "Thời gian",
+    "zh": "时间",
+    "ja": "時間"
+  },
+  "races total inside current active season meetings.": {
+    "en": "races total inside current active season meetings.",
+    "vi": "tổng số cuộc đua trong các cuộc họp mùa giải đang hoạt động hiện tại.",
+    "zh": "当前活跃赛季会议中的比赛总数。",
+    "ja": "現在アクティブなシーズンミーティング内のレースの合計。"
+  },
+  "Race": {
+    "en": "Race",
+    "vi": "Loài",
+    "zh": "种族",
+    "ja": "人種"
+  },
+  "Initialize Season": {
+    "en": "Initialize Season",
+    "vi": "Khởi tạo phần",
+    "ja": "シーズンの初期化",
+    "zh": "初始化季节"
+  },
+  "Scheduled Day": {
+    "en": "Scheduled Day",
+    "vi": "Ngày dự kiến",
+    "ja": "予定日",
+    "zh": "预定日期"
+  },
+  "Total Events:": {
+    "en": "Total Events:",
+    "vi": "Tổng số sự kiện:",
+    "ja": "イベント総数:",
+    "zh": "活动总数："
+  },
+  "Meeting": {
+    "en": "Meeting",
+    "vi": "Cuộc họp",
+    "zh": "会议",
+    "ja": "ミーティング"
+  },
+  "Withdraw": {
+    "en": "Withdraw",
+    "vi": "Rút",
+    "zh": "提取",
+    "ja": "撤回する"
+  },
+  "My Mounts": {
+    "en": "My Mounts",
+    "vi": "Thú cưỡi của tôi",
+    "ja": "私の乗り物",
+    "zh": "我的坐骑"
+  },
+  "No scheduled mounts at the moment.": {
+    "en": "No scheduled mounts at the moment.",
+    "vi": "Không có lịch trình gắn kết vào lúc này.",
+    "ja": "現時点ではスケジュールされたマウントはありません。",
+    "zh": "目前没有预定的安装。"
+  },
+  "Offer from Stable Owner ": {
+    "en": "Offer from Stable Owner ",
+    "vi": "Ưu đãi từ chủ sở hữu ổn định",
+    "ja": "厩舎オーナーからのオファー",
+    "zh": "马厩主人的报价"
+  },
+  "Collapse": {
+    "en": "Collapse",
+    "vi": "Sụp đổ",
+    "ja": "崩壊",
+    "zh": "坍塌"
+  },
+  "View Entries": {
+    "en": "View Entries",
+    "vi": "Xem bài viết",
+    "ja": "エントリの表示",
+    "zh": "查看条目"
+  },
+  "Rule Violations": {
+    "en": "Rule Violations",
+    "vi": "Vi phạm quy tắc",
+    "ja": "ルール違反",
+    "zh": "违反规则"
+  },
+  "No rule violations recorded.": {
+    "en": "No rule violations recorded.",
+    "vi": "Không có vi phạm quy tắc được ghi lại.",
+    "ja": "ルール違反は記録されていません。",
+    "zh": "没有违规记录。"
+  },
+  "Acknowledged": {
+    "en": "Acknowledged",
+    "vi": "Được công nhận",
+    "ja": "了承しました",
+    "zh": "已确认"
+  },
+  "Pending Acknowledgment": {
+    "en": "Pending Acknowledgment",
+    "vi": "Đang chờ xác nhận",
+    "ja": "承認待ち",
+    "zh": "待确认"
+  },
+  "Type": {
+    "en": "Type",
+    "vi": "Kiểu",
+    "ja": "タイプ",
+    "zh": "类型"
+  },
+  "Penalty": {
+    "en": "Penalty",
+    "vi": "Hình phạt",
+    "ja": "ペナルティ",
+    "zh": "惩罚"
+  },
+  "Class 1": {
+    "en": "Class 1",
+    "vi": "Lớp 1",
+    "ja": "クラス1",
+    "zh": "1级"
+  },
+  "Class 2": {
+    "en": "Class 2",
+    "vi": "Lớp 2",
+    "ja": "クラス2",
+    "zh": "2级"
+  },
+  "Class 3": {
+    "en": "Class 3",
+    "vi": "Lớp 3",
+    "ja": "クラス3",
+    "zh": "3级"
+  },
+  "Class 4": {
+    "en": "Class 4",
+    "vi": "Lớp 4",
+    "ja": "クラス4",
+    "zh": "4级"
+  },
+  "Class 5": {
+    "en": "Class 5",
+    "vi": "Lớp 5",
+    "ja": "クラス5",
+    "zh": "5级"
+  },
+  "Class 6": {
+    "en": "Class 6",
+    "vi": "lớp 6",
+    "ja": "クラス6",
+    "zh": "6级"
+  },
+  "Class 7": {
+    "en": "Class 7",
+    "vi": "Lớp 7",
+    "ja": "クラス7",
+    "zh": "7级"
+  },
+  "Class 8": {
+    "en": "Class 8",
+    "vi": "Lớp 8",
+    "ja": "クラス8",
+    "zh": "8级"
+  },
+  "Class 9": {
+    "en": "Class 9",
+    "vi": "lớp 9",
+    "ja": "クラス9",
+    "zh": "9级"
+  },
+  "Class 10": {
+    "en": "Class 10",
+    "vi": "lớp 10",
+    "ja": "クラス10",
+    "zh": "10级"
+  }
+}

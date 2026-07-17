@@ -1,3 +1,4 @@
+import { $t } from '@/lib/i18n';
 import { useState, useEffect } from "react";
 import { api } from "../../../../lib/api";
 
@@ -168,12 +169,12 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                       borderColor: profile.roleId === 1 ? "#ef444430" : profile.roleId === 2 ? "#4a9d6f30" : profile.roleId === 3 ? "#60a5fa30" : profile.roleId === 4 ? "#f59e0b30" : "#9ca3af30"
                     }}
                   >
-                    {profile.roleId === 1 ? st.admin : profile.roleId === 2 ? st.owner : profile.roleId === 3 ? st.jockey : profile.roleId === 4 ? st.referee : st.spectator}
+                    {profile.roleId === 1 ? $t("Quản trị viên", (localStorage.getItem('app-lang') || 'vi')) : profile.roleId === 2 ? $t("Chủ ngựa", (localStorage.getItem('app-lang') || 'vi')) : profile.roleId === 3 ? $t("Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) : profile.roleId === 4 ? $t("Trọng tài", (localStorage.getItem('app-lang') || 'vi')) : $t("Khán giả", (localStorage.getItem('app-lang') || 'vi'))}
                   </span>
                 </div>
                 <p className="text-xs text-white/40 font-mono">{profile.email}</p>
                 <p className="text-xs text-white/70 italic max-w-xl leading-relaxed">
-                  {profile.biography || st.noBio}
+                  {profile.biography || $t("Chưa có tiểu sử.", (localStorage.getItem('app-lang') || 'vi'))}
                 </p>
               </div>
             </div>
@@ -183,28 +184,28 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
               {/* Stats column */}
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{st.regStats}</h4>
+                  <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{$t("Thống kê hồ sơ", (localStorage.getItem('app-lang') || 'vi'))}</h4>
                   <div className="grid grid-cols-2 gap-3">
                     {profile.roleId === 3 ? (
                       <>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.bodyWeight}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Cân nặng", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">{profile.weight} kg</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.totalRides}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Số trận", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">{profile.totalRides}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.wins}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Hạng nhất", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-lg font-bold font-mono text-emerald-400 mt-1">{profile.wins}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.top3Finish}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Top 3", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-lg font-bold font-mono text-amber-400 mt-1">{profile.top3}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.winTop3Rates}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Tỉ lệ Nhất / Top 3", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-sm font-bold font-mono text-white mt-1">
                             {profile.winRate.toFixed(1)}% / {profile.top3Rate.toFixed(1)}%
                           </p>
@@ -213,17 +214,17 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                     ) : profile.roleId === 2 ? (
                       <>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.activeStable}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Ngựa đang hoạt động", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">{profile.stableSize}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.avgFinish}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Hạng trung bình", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">
                             {profile.avgPosition > 0 ? `#${profile.avgPosition.toFixed(1)}` : "N/A"}
                           </p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.totalEarnings}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Tổng tiền thưởng", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-base font-bold font-mono text-emerald-400 mt-1">
                             ${profile.totalEarnings.toLocaleString()}
                           </p>
@@ -232,32 +233,32 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                     ) : profile.roleId === 1 ? (
                       <>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.managedUsers}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Số lượng Users", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">{profile.managedUsersCount}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.managedHorses}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Số lượng Ngựa", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">{profile.managedHorsesCount}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.totalSeasons}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Số mùa giải", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-base font-bold font-mono text-emerald-400 mt-1">{profile.totalSeasons}</p>
                         </div>
                       </>
                     ) : profile.roleId === 4 ? (
                       <>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.totalRacesRef}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Số trận đã bắt", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">{profile.totalRacesRefereed}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{st.totalVio}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Số lỗi đã phạt", (localStorage.getItem('app-lang') || 'vi'))}</p>
                           <p className="text-lg font-bold font-mono text-white mt-1">{profile.totalViolationsIssued}</p>
                         </div>
                       </>
                     ) : (
                       <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
-                        <p className="text-[9px] font-mono text-white/40 uppercase">{st.memberSince}</p>
+                        <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Thành viên từ", (localStorage.getItem('app-lang') || 'vi'))}</p>
                         <p className="text-lg font-bold font-mono text-white mt-1">{profile.memberSince || "2024"}</p>
                       </div>
                     )}
@@ -267,7 +268,7 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                 {/* Owner active horses list */}
                 {profile.roleId === 2 && profile.activeHorses && profile.activeHorses.length > 0 && (
                   <div>
-                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{st.ownedHorses}</h4>
+                    <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{$t("Danh sách ngựa sở hữu", (localStorage.getItem('app-lang') || 'vi'))}</h4>
                     <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-1">
                       {profile.activeHorses.map((h: any) => (
                         <div 
@@ -290,22 +291,22 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
               {/* Recent History Table column */}
               {(profile.roleId === 2 || profile.roleId === 3) && (
               <div className="lg:col-span-2 flex flex-col">
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{st.recentPerf}</h4>
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{$t("Thành tích gần đây (10 trận)", (localStorage.getItem('app-lang') || 'vi'))}</h4>
                 <div className="flex-1 overflow-x-auto rounded-xl border border-white/5">
                   <table className="w-full border-collapse text-left min-w-[500px]">
                     <thead>
                       <tr className="border-b border-white/10 bg-white/[0.01] text-[9px] font-mono uppercase text-white/40">
-                        <th className="px-4 py-3">{st.meeting}</th>
-                        <th className="px-4 py-3">{st.class}</th>
-                        <th className="px-4 py-3">{st.horse}</th>
-                        <th className="px-4 py-3 text-center">{st.pos}</th>
+                        <th className="px-4 py-3">{$t("Giải đấu", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                        <th className="px-4 py-3">{$t("Hạng", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                        <th className="px-4 py-3">{$t("Ngựa", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                        <th className="px-4 py-3 text-center">{$t("Hạng", (localStorage.getItem('app-lang') || 'vi'))}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 text-xs font-mono">
                       {profile.history?.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="px-4 py-8 text-center text-white/40 italic">
-                            {st.noRecords}
+                            {$t("Chưa có dữ liệu.", (localStorage.getItem('app-lang') || 'vi'))}
                           </td>
                         </tr>
                       ) : (

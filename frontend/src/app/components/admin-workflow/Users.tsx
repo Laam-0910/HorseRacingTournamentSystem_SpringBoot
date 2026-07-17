@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 
@@ -190,11 +191,11 @@ export default function Users() {
   });
 
   const getRoleName = (roleId: number) => {
-    if (roleId === 1) return "Admin";
-    if (roleId === 2) return "Horse Owner";
+    if (roleId === 1) return $t("Admin", (localStorage.getItem('app-lang') || 'vi'));
+    if (roleId === 2) return $t("Horse Owner", (localStorage.getItem('app-lang') || 'vi'));
     if (roleId === 3) return "Jockey";
-    if (roleId === 5) return "Referee";
-    return "Spectator";
+    if (roleId === 5) return $t("Referee", (localStorage.getItem('app-lang') || 'vi'));
+    return $t("Spectator", (localStorage.getItem('app-lang') || 'vi'));
   };
 
   return (
@@ -215,40 +216,38 @@ export default function Users() {
       {/* 1. Create New Account (JSP Style) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", padding: "1.5rem" }}>
         <div style={{ marginBottom: "1rem" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Create New Account</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Register an Owner, Jockey or Spectator manually</p>
+          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Create New Account", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Register an Owner, Jockey or Spectator manually", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         <form onSubmit={handleCreateUser} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", alignItems: "end" }}>
           <div>
-            <label style={labelStyle}>Username</label>
-            <input type="text" required value={createUsername} onChange={e => setCreateUsername(e.target.value)} style={inputStyle} placeholder="Nguyen Van A" />
+            <label style={labelStyle}>{$t("Username", (localStorage.getItem('app-lang') || 'vi'))}</label>
+            <input type="text" required value={createUsername} onChange={e => setCreateUsername(e.target.value)} style={inputStyle} placeholder={$t("Nguyen Van A", (localStorage.getItem('app-lang') || 'vi'))} />
           </div>
           <div>
-            <label style={labelStyle}>Email</label>
-            <input type="email" required value={createEmail} onChange={e => setCreateEmail(e.target.value)} style={inputStyle} placeholder="van.a@example.com" />
+            <label style={labelStyle}>{$t("Email", (localStorage.getItem('app-lang') || 'vi'))}</label>
+            <input type="email" required value={createEmail} onChange={e => setCreateEmail(e.target.value)} style={inputStyle} placeholder={$t("van.a@example.com", (localStorage.getItem('app-lang') || 'vi'))} />
           </div>
           <div>
-            <label style={labelStyle}>Password</label>
-            <input type="password" required value={createPassword} onChange={e => setCreatePassword(e.target.value)} style={inputStyle} placeholder="••••••••" />
+            <label style={labelStyle}>{$t("Password", (localStorage.getItem('app-lang') || 'vi'))}</label>
+            <input type="password" required value={createPassword} onChange={e => setCreatePassword(e.target.value)} style={inputStyle} placeholder={$t("••••••••", (localStorage.getItem('app-lang') || 'vi'))} />
           </div>
           <div>
-            <label style={labelStyle}>Role</label>
+            <label style={labelStyle}>{$t("Role", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <select value={createRoleId} onChange={e => setCreateRoleId(e.target.value)} style={selectStyle}>
-              <option value="4">Spectator / Fan</option>
-              <option value="2">Horse Owner</option>
-              <option value="3">Jockey</option>
+              <option value="4">{$t("Spectator / Fan", (localStorage.getItem('app-lang') || 'vi'))}</option>
+              <option value="2">{$t("Horse Owner", (localStorage.getItem('app-lang') || 'vi'))}</option>
+              <option value="3">{$t("Jockey", (localStorage.getItem('app-lang') || 'vi'))}</option>
             </select>
           </div>
           {createRoleId === "3" && (
             <div>
-              <label style={labelStyle}>Weight (kg)</label>
-              <input type="number" step="0.1" required value={createWeight} onChange={e => setCreateWeight(e.target.value)} style={inputStyle} placeholder="E.g., 55.5" />
+              <label style={labelStyle}>{$t("Weight (kg)", (localStorage.getItem('app-lang') || 'vi'))}</label>
+              <input type="number" step="0.1" required value={createWeight} onChange={e => setCreateWeight(e.target.value)} style={inputStyle} placeholder={$t("E.g., 55.5", (localStorage.getItem('app-lang') || 'vi'))} />
             </div>
           )}
           <div>
-            <button type="submit" style={{ width: "100%", padding: "0.625rem", border: "none", borderRadius: "0.5rem", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>
-              + Create
-            </button>
+            <button type="submit" style={{ width: "100%", padding: "0.625rem", border: "none", borderRadius: "0.5rem", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>{$t("+ Create", (localStorage.getItem('app-lang') || 'vi'))}</button>
           </div>
         </form>
       </div>
@@ -282,9 +281,7 @@ export default function Users() {
               fontSize: "11px",
               fontFamily: "monospace" 
             }}
-          >
-            Clear
-          </button>
+          >{$t("Clear", (localStorage.getItem('app-lang') || 'vi'))}</button>
         )}
       </div>
 
@@ -292,27 +289,27 @@ export default function Users() {
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
           <div>
-            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Registered Users Directory</h4>
-            <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>System user catalog & role assignment options</p>
+            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Registered Users Directory", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+            <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("System user catalog & role assignment options", (localStorage.getItem('app-lang') || 'vi'))}</p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>Filter:</span>
+            <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>{$t("Filter:", (localStorage.getItem('app-lang') || 'vi'))}</span>
             <select value={filterRole} onChange={(e) => setFilterRole(e.target.value)} style={{ padding: "0.25rem 0.5rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", fontSize: "11px" }}>
-              <option value="ALL">All Roles</option>
-              <option value="ADMIN">Administrators</option>
-              <option value="OWNER">Horse Owners</option>
-              <option value="JOCKEY">Jockeys</option>
-              <option value="REFEREE">Referees</option>
-              <option value="SPECTATOR">Spectators</option>
+              <option value="ALL">{$t("All Roles", (localStorage.getItem('app-lang') || 'vi'))}</option>
+              <option value="ADMIN">{$t("Administrators", (localStorage.getItem('app-lang') || 'vi'))}</option>
+              <option value="OWNER">{$t("Horse Owners", (localStorage.getItem('app-lang') || 'vi'))}</option>
+              <option value="JOCKEY">{$t("Jockeys", (localStorage.getItem('app-lang') || 'vi'))}</option>
+              <option value="REFEREE">{$t("Referees", (localStorage.getItem('app-lang') || 'vi'))}</option>
+              <option value="SPECTATOR">{$t("Spectators", (localStorage.getItem('app-lang') || 'vi'))}</option>
             </select>
           </div>
         </div>
         {isMobile ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
-              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</div>
+              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : filteredUsers.length === 0 ? (
-              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No matching users found.</div>
+              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No matching users found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : filteredUsers.map((u) => (
               <div key={u.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", opacity: u.status === "INACTIVE" ? 0.6 : 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
@@ -331,12 +328,10 @@ export default function Users() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem", justifyContent: "flex-end" }}>
-                  <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                    Edit
-                  </button>
+                  <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>{$t("Edit", (localStorage.getItem('app-lang') || 'vi'))}</button>
                   {u.roleId !== 1 && (
                     <button onClick={() => handleToggleStatus(u.id)} style={{ padding: "0.375rem 0.75rem", background: u.status === "ACTIVE" ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", border: u.status === "ACTIVE" ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(16,185,129,0.2)", color: u.status === "ACTIVE" ? "#f87171" : "#34d399", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                      {u.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                      {u.status === "ACTIVE" ? $t("Deactivate", (localStorage.getItem('app-lang') || 'vi')) : $t("Activate", (localStorage.getItem('app-lang') || 'vi'))}
                     </button>
                   )}
                 </div>
@@ -349,15 +344,15 @@ export default function Users() {
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
                   {["User Details", "Status", "Role", "Role Management"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 3 ? "right" : "left" }}>{h}</th>
+                    <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 3 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {loading ? (
-                  <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                  <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : filteredUsers.length === 0 ? (
-                  <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No matching users found.</td></tr>
+                  <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No matching users found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : filteredUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-white/[0.015] transition-colors" style={{ opacity: u.status === "INACTIVE" ? 0.6 : 1 }}>
                     <td style={{ padding: "0.75rem 1.5rem" }}>
@@ -376,12 +371,10 @@ export default function Users() {
                     </td>
                     <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
                       <div style={{ display: "inline-flex", gap: "0.5rem", alignItems: "center" }}>
-                        <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                          Edit
-                        </button>
+                        <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>{$t("Edit", (localStorage.getItem('app-lang') || 'vi'))}</button>
                         {u.roleId !== 1 && (
                           <button onClick={() => handleToggleStatus(u.id)} style={{ padding: "0.375rem 0.75rem", background: u.status === "ACTIVE" ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", border: u.status === "ACTIVE" ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(16,185,129,0.2)", color: u.status === "ACTIVE" ? "#f87171" : "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                            {u.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                            {u.status === "ACTIVE" ? $t("Deactivate", (localStorage.getItem('app-lang') || 'vi')) : $t("Activate", (localStorage.getItem('app-lang') || 'vi'))}
                           </button>
                         )}
                       </div>
@@ -397,8 +390,8 @@ export default function Users() {
       {/* 4. Registered Horses Directory */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Registered Horses Directory</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Stable horse statistics & rating adjustments</p>
+          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Registered Horses Directory", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Stable horse statistics & rating adjustments", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         {isMobile ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
@@ -416,14 +409,12 @@ export default function Users() {
                     </div>
                   </div>
                   <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
-                    <button onClick={() => handleEditRating(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                      Edit Rating
-                    </button>
+                    <button onClick={() => handleEditRating(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>{$t("Edit Rating", (localStorage.getItem('app-lang') || 'vi'))}</button>
                   </div>
                 </div>
               ))
             ) : (
-              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses match the criteria.</div>
+              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("No registered horses match the criteria.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             )}
           </div>
         ) : (
@@ -432,7 +423,7 @@ export default function Users() {
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
                   {["Horse Name", "Breed", "Current Rating", "Races Run", "Actions"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 4 ? "right" : "left" }}>{h}</th>
+                    <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 4 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
@@ -445,14 +436,12 @@ export default function Users() {
                       <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#fbbf24" }}>{h.currentRating}</td>
                       <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.5)" }}>{h.totalRaces || 0} races</td>
                       <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
-                        <button onClick={() => handleEditRating(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                          Edit Rating
-                        </button>
+                        <button onClick={() => handleEditRating(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>{$t("Edit Rating", (localStorage.getItem('app-lang') || 'vi'))}</button>
                       </td>
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses match the criteria.</td></tr>
+                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("No registered horses match the criteria.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 )}
               </tbody>
             </table>
@@ -465,44 +454,44 @@ export default function Users() {
         <div style={{ position: "fixed", inset: 0, zIndex: 99, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "28rem", position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(201,162,39,0.1)", paddingBottom: "0.75rem", marginBottom: "1.25rem" }}>
-              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Edit User Account</h3>
+              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>{$t("Edit User Account", (localStorage.getItem('app-lang') || 'vi'))}</h3>
               <button onClick={() => setEditingUser(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.5rem", fontWeight: "bold" }}>&times;</button>
             </div>
             <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
-                <label style={labelStyle}>Username</label>
+                <label style={labelStyle}>{$t("Username", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <input type="text" required value={editUsername} onChange={e => setEditUsername(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Email</label>
+                <label style={labelStyle}>{$t("Email", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <input type="email" required value={editEmail} onChange={e => setEditEmail(e.target.value)} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Role</label>
+                <label style={labelStyle}>{$t("Role", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 {editingUser.roleId === 1 ? (
                   <input type="text" disabled value="Administrator" style={{ ...inputStyle, opacity: 0.6 }} />
                 ) : (
                   <select value={editRoleId} onChange={e => setEditRoleId(e.target.value)} style={selectStyle}>
-                    <option value="4">Spectator / Fan</option>
-                    <option value="2">Horse Owner</option>
-                    <option value="3">Jockey</option>
+                    <option value="4">{$t("Spectator / Fan", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="2">{$t("Horse Owner", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="3">{$t("Jockey", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   </select>
                 )}
               </div>
               {editRoleId === "3" && (
                 <div>
-                  <label style={labelStyle}>Weight (kg)</label>
+                  <label style={labelStyle}>{$t("Weight (kg)", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="number" step="0.1" required value={editWeight} onChange={e => setEditWeight(e.target.value)} style={inputStyle} />
                 </div>
               )}
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.5rem 0" }}>
                 <input type="checkbox" id="requireOtp" checked={editRequireOtp} onChange={e => setEditRequireOtp(e.target.checked)} style={{ cursor: "pointer", width: "16px", height: "16px", accentColor: "#c9a227" }} />
-                <label htmlFor="requireOtp" style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.7)", cursor: "pointer" }}>Enable Login OTP Verification</label>
+                <label htmlFor="requireOtp" style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.7)", cursor: "pointer" }}>{$t("Enable Login OTP Verification", (localStorage.getItem('app-lang') || 'vi'))}</label>
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", borderTop: "1px solid rgba(201,162,39,0.1)", paddingTop: "1rem", marginTop: "0.5rem" }}>
-                <button type="button" onClick={() => setEditingUser(null)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>Save Changes</button>
+                <button type="button" onClick={() => setEditingUser(null)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>{$t("Save Changes", (localStorage.getItem('app-lang') || 'vi'))}</button>
               </div>
             </form>
           </div>
