@@ -1,5 +1,6 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { api } from "../../../lib/api";
 import { parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
 
@@ -466,75 +467,72 @@ export default function Horses() {
       </div>
 
       {/* Edit Horse Modal */}
-      {editingHorse && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 99, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "36rem", position: "relative", maxHeight: "90vh", overflowY: "auto" }}>
+      {editingHorse && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "28rem", position: "relative", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(201,162,39,0.1)", paddingBottom: "0.75rem", marginBottom: "1.25rem" }}>
               <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>{$t("Edit Horse Registry Details", (localStorage.getItem('app-lang') || 'vi'))}</h3>
               <button onClick={() => setEditingHorse(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.5rem", fontWeight: "bold" }}>&times;</button>
             </div>
             <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
-                <div>
-                  <label style={labelStyle}>{$t("Horse Name", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                  <input type="text" required value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>{$t("Breed", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                  <input type="text" required value={editBreed} onChange={e => setEditBreed(e.target.value)} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>{$t("Gender / Sex", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                  <select value={editSex} onChange={e => setEditSex(e.target.value)} style={selectStyle}>
-                    <option value="Gelding">{$t("Gelding", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                    <option value="Colt">{$t("Colt", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                    <option value="Horse">{$t("Horse", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                    <option value="Filly">{$t("Filly", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                    <option value="Mare">{$t("Mare", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  </select>
-                </div>
+              <div>
+                <label style={labelStyle}>{$t("Horse Name", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                <input type="text" required value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} />
+              </div>
+              
+              <div>
+                <label style={labelStyle}>{$t("Breed", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                <input type="text" required value={editBreed} onChange={e => setEditBreed(e.target.value)} style={inputStyle} />
+              </div>
+              
+              <div>
+                <label style={labelStyle}>{$t("Gender / Sex", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                <select value={editSex} onChange={e => setEditSex(e.target.value)} style={selectStyle}>
+                  <option value="Gelding">{$t("Gelding", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Colt">{$t("Colt", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Horse">{$t("Horse", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Filly">{$t("Filly", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Mare">{$t("Mare", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                </select>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <InlineDatePicker label={$t("Date of Birth", (localStorage.getItem('app-lang') || 'vi'))} value={editDob} onChange={setEditDob} />
-                <div>
-                  <label style={labelStyle}>{$t("Current Rating", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                  <input type="number" required value={editRating} onChange={e => setEditRating(parseInt(e.target.value))} style={inputStyle} />
-                </div>
+              <InlineDatePicker label={$t("Date of Birth", (localStorage.getItem('app-lang') || 'vi'))} value={editDob} onChange={setEditDob} />
+              
+              <div>
+                <label style={labelStyle}>{$t("Current Rating", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                <input type="number" required value={editRating} onChange={e => setEditRating(parseInt(e.target.value))} style={inputStyle} />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <div>
-                  <label style={labelStyle}>{$t("Status", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                  <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={selectStyle}>
-                    <option value="PENDING">{$t("PENDING", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                    <option value="ACTIVE">{$t("ACTIVE", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                    <option value="INJURED">{$t("INJURED", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                    <option value="INACTIVE">{$t("INACTIVE", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                    <option value="REJECTED">{$t("REJECTED", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                    <option value="SUSPENDED">{$t("SUSPENDED", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                    <option value="RETIRED">{$t("RETIRED", (localStorage.getItem('app-lang') || 'vi'))}</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={labelStyle}>{$t("Horse Photo / Avatar", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                  <input type="file" accept="image/*" onChange={handleAvatarChange} style={inputStyle} />
-                </div>
+              <div>
+                <label style={labelStyle}>{$t("Status", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={selectStyle}>
+                  <option value="PENDING">{$t("PENDING", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="ACTIVE">{$t("ACTIVE", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="INJURED">{$t("INJURED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="INACTIVE">{$t("INACTIVE", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="REJECTED">{$t("REJECTED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="SUSPENDED">{$t("SUSPENDED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="RETIRED">{$t("RETIRED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                </select>
+              </div>
+              
+              <div>
+                <label style={labelStyle}>{$t("Horse Photo / Avatar", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                <input type="file" accept="image/*" onChange={handleAvatarChange} style={inputStyle} />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: editAvatar ? "1fr 1fr" : "1fr", gap: "1rem" }}>
-                <div>
-                  <label style={labelStyle}>{$t("Biography / Description", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                  <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} style={{ ...inputStyle, height: "6.5rem", resize: "none" }} />
-                </div>
-                {editAvatar && (
-                  <div>
-                    <label style={labelStyle}>{$t("Photo Preview", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                    <img src={editAvatar} alt="Preview" style={{ width: "100%", height: "6.5rem", objectFit: "cover", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.08)" }} />
-                  </div>
-                )}
+              <div>
+                <label style={labelStyle}>{$t("Biography / Description", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} style={{ ...inputStyle, height: "4.5rem", resize: "none" }} />
               </div>
+              
+              {editAvatar && (
+                <div>
+                  <label style={labelStyle}>{$t("Photo Preview", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                  <img src={editAvatar} alt="Preview" style={{ width: "100%", height: "8rem", objectFit: "cover", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.08)" }} />
+                </div>
+              )}
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", borderTop: "1px solid rgba(201,162,39,0.1)", paddingTop: "1rem", marginTop: "0.5rem" }}>
                 <button type="button" onClick={() => setEditingHorse(null)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
@@ -542,7 +540,8 @@ export default function Horses() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
