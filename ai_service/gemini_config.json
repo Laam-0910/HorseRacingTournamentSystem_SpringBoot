@@ -1,11 +1,8 @@
 {
   "model_name": "gemini-3.5-flash",
-  "gemini_api_key": "AQ.Ab8RN6IZfv4v5ic1ylYRrCy9Hl36wbt0g66fvdcBmuEMp8A0UQ",
+  "gemini_api_key": "YOUR_GEMINI_API_KEY",
   "gemini_api_keys": [
-    "AQ.Ab8RN6IZfv4v5ic1ylYRrCy9Hl36wbt0g66fvdcBmuEMp8A0UQ",
-    "AQ.Ab8RN6INlUW8E9aSPS_wYd3tjo0Ks6LLpntksVOeI-D42cdBnQ",
-    "AQ.Ab8RN6KCZn-XdE-1OQhjW7_IwBGimQTyX-FBaUKTlFRYKsBeeQ",
-    "AQ.Ab8RN6KUWmYDDtTeMQiicbICCIA1Tm9StrFIElBoZbVBptMUVg"
+    "YOUR_GEMINI_API_KEY"
   ],
   "temperature": 0.3,
   "top_p": 0.95,

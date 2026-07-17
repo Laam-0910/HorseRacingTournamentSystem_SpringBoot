@@ -12,7 +12,26 @@ CORS(app)
 # ── CONFIG CHATBOT RAG / LLM ─────────────────────────────────────────────────
 import os, json
 USE_GEMINI = True
-GEMINI_API_KEY = "AQ.Ab8RN6IZfv4v5ic1ylYRrCy9Hl36wbt0g66fvdcBmuEMp8A0UQ"
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
+
+# Thử load từ tệp .env cục bộ nếu chưa có trong biến môi trường
+if not GEMINI_API_KEY:
+    env_path = os.path.join(os.path.dirname(__file__), ".env")
+    if os.path.exists(env_path):
+        try:
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        k, v = line.split("=", 1)
+                        if k.strip() == "GEMINI_API_KEY":
+                            val = v.strip()
+                            if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                                val = val[1:-1]
+                            if val and not val.startswith("YOUR_"):
+                                GEMINI_API_KEY = val
+        except Exception as e:
+            print(f"[Env Loader Error] {e}")
 
 # Thử load động từ file cấu hình
 config_path = os.path.join(os.path.dirname(__file__), "gemini_config.json")
@@ -24,7 +43,9 @@ if os.path.exists(config_path):
             api_key = config.get("gemini_api_key", "").strip()
             if api_key and not api_key.startswith("YOUR_") and not api_key.startswith("Điền_"):
                 GEMINI_API_KEY = api_key
-            gemini_api_keys = config.get("gemini_api_keys", [])
+            keys = config.get("gemini_api_keys", [])
+            if keys:
+                gemini_api_keys = [k for k in keys if k and not k.startswith("YOUR_")]
     except Exception as e:
         print(f"[Config Loader Error] {e}")
 
