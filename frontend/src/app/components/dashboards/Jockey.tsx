@@ -72,13 +72,11 @@ function StatusBadge({ status }: { status: string }) {
 function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Stats row — giống JSP: grid-cols-2 md:grid-cols-5 */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "1rem" }}>
-        <StatsCard label={$t("Total Rides", (localStorage.getItem('app-lang') || 'vi'))}     value={dashboard?.totalRaces} />
-        <StatsCard label={$t("Wins (1st)", (localStorage.getItem('app-lang') || 'vi'))}      value={dashboard?.totalWins}   color="#4ade80" />
-        <StatsCard label={$t("Top 3 Finishes", (localStorage.getItem('app-lang') || 'vi'))}  value={dashboard?.top3Count}   color={ROLE_COLOR} />
-        <StatsCard label={$t("Win Rate", (localStorage.getItem('app-lang') || 'vi'))}        value={dashboard?.winRate ? `${Number(dashboard.winRate).toFixed(1)}%` : "0.0%"} color="#c9a227" />
-        <StatsCard label={$t("Total Earnings (10%)", (localStorage.getItem('app-lang') || 'vi'))} value={dashboard?.totalEarnings ? `$${Number(dashboard.totalEarnings).toLocaleString()}` : "$0"} color="#4ade80" />
+        <StatsCard label={$t("Total Rides", (localStorage.getItem('app-lang') || 'vi'))}     value={dashboard?.jockeyStats?.totalRaces} />
+        <StatsCard label={$t("Wins (1st)", (localStorage.getItem('app-lang') || 'vi'))}      value={dashboard?.jockeyStats?.totalWins}   color="#4ade80" />
+        <StatsCard label={$t("Top 3 Finishes", (localStorage.getItem('app-lang') || 'vi'))}  value={dashboard?.jockeyStats?.top3}   color={ROLE_COLOR} />
+        <StatsCard label={$t("Win Rate", (localStorage.getItem('app-lang') || 'vi'))}        value={dashboard?.jockeyStats?.winRate ? `${Number(dashboard.jockeyStats.winRate).toFixed(1)}%` : "0.0%"} color="#c9a227" />
       </div>
 
       {/* Available Race Meetings */}

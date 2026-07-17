@@ -743,26 +743,26 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
 
         <div className="relative z-10 w-full flex flex-col items-center">
           <div className="inline-block px-6 py-2 mb-6 rounded-full bg-black/40 backdrop-blur-md border border-[#c9a227]/40 text-[#c9a227] text-[0.65rem] font-bold uppercase tracking-widest">
-            {$t("Nền tảng Quản lý Đua ngựa Toàn diện", (localStorage.getItem('app-lang') || 'vi'))}
+            {t.welcomeSub}
           </div>
           
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 leading-tight text-[#c9a227] max-w-4xl drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)]" style={{ fontFamily: "'Roboto Slab', serif" }}>
-            {$t("Hệ thống giải đua ngựa vô địch", (localStorage.getItem('app-lang') || 'vi'))}
+            {t.welcome}
           </h1>
           
           {nextMeeting && (
             <div className="mb-10 flex flex-col items-center">
-              <div className="text-[#c9a227] text-sm font-bold tracking-widest uppercase mb-2">{$t("Đếm ngược đến: ", (localStorage.getItem('app-lang') || 'vi'))}{nextMeeting.name}</div>
+              <div className="text-[#c9a227] text-sm font-bold tracking-widest uppercase mb-2">{t.countdownTo}{nextMeeting.name}</div>
               <Countdown targetDate={nextMeeting.startDate} t={t} />
             </div>
           )}
           
           <div className="flex flex-wrap justify-center gap-4">
             <button onClick={onWatchLive} className="px-8 py-3 bg-[#c9a227] text-[#0e0c09] font-bold rounded-lg hover:bg-[#d6af35] transition-all uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(201,162,39,0.3)]">
-              {$t("Xem trực tiếp", (localStorage.getItem('app-lang') || 'vi'))}
+              {t.watchLive}
             </button>
             <button onClick={onViewRacecard} className="px-8 py-3 bg-black/60 backdrop-blur-md border border-[#2a2825] text-white font-medium rounded-lg hover:border-[#c9a227]/50 hover:bg-black/80 transition-all text-sm shadow-lg shadow-black/50">
-              {$t("Bảng đua", (localStorage.getItem('app-lang') || 'vi'))}
+              {t.viewRacecard}
             </button>
           </div>
         </div>
