@@ -52,6 +52,7 @@ CREATE TABLE [User] (
     require_otp                 BIT NOT NULL DEFAULT 0,
     avatar                      VARCHAR(MAX) NULL,              -- Lưu ảnh đại diện dạng Base64
     full_name                   NVARCHAR(100) NULL,             -- Tên hiển thị người dùng (CÓ THỂ thay đổi)
+    biography                   NVARCHAR(MAX) NULL,             -- Tiểu sử giới thiệu cá nhân
     CONSTRAINT CK_User_Status CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 GO
