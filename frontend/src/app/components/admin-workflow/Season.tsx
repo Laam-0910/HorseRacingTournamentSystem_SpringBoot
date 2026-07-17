@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
@@ -66,7 +67,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
           readOnly
           onClick={() => setIsOpen(!isOpen)}
           value={value}
-          placeholder="dd-mm-yyyy"
+          placeholder={$t("dd-mm-yyyy", (localStorage.getItem('app-lang') || 'vi'))}
           className="w-full rounded-lg px-3 py-2.5 text-xs text-[#f4f2ec] outline-none cursor-pointer font-mono"
           style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)" }}
         />
@@ -332,8 +333,8 @@ export default function Season() {
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "rgba(201,162,39,0.10)" }}>
           <div>
-            <p className="font-bold text-sm text-[#f4f2ec]" style={{ fontFamily: "'Roboto Slab', serif" }}>Initialize New Racing Season</p>
-            <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Configure the season framework and choose rule initialization method.</p>
+            <p className="font-bold text-sm text-[#f4f2ec]" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Initialize New Racing Season", (localStorage.getItem('app-lang') || 'vi'))}</p>
+            <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Configure the season framework and choose rule initialization method.", (localStorage.getItem('app-lang') || 'vi'))}</p>
           </div>
         </div>
 
@@ -342,7 +343,7 @@ export default function Season() {
             {/* Season basic info */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               <div className="md:col-span-2">
-                <label className="block text-[9px] font-mono uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>Season Name</label>
+                <label className="block text-[9px] font-mono uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Season Name", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <input
                   type="text"
                   required
@@ -350,16 +351,16 @@ export default function Season() {
                   onChange={e => setNewSeasonName(e.target.value)}
                   className="w-full rounded-lg px-3 py-2.5 text-xs text-[#f4f2ec] outline-none"
                   style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)" }}
-                  placeholder="e.g. 2026–2027 Grand Prix Season"
+                  placeholder={$t("e.g. 2026–2027 Grand Prix Season", (localStorage.getItem('app-lang') || 'vi'))}
                 />
               </div>
-              <InlineDatePicker label="Season Start Date" value={newSeasonStartDate} onChange={setNewSeasonStartDate} />
-              <InlineDatePicker label="Season End Date" value={newSeasonEndDate} onChange={setNewSeasonEndDate} />
+              <InlineDatePicker label={$t("Season Start Date", (localStorage.getItem('app-lang') || 'vi'))} value={newSeasonStartDate} onChange={setNewSeasonStartDate} />
+              <InlineDatePicker label={$t("Season End Date", (localStorage.getItem('app-lang') || 'vi'))} value={newSeasonEndDate} onChange={setNewSeasonEndDate} />
             </div>
 
             {/* Class Rule Method */}
             <div className="space-y-3">
-              <label className="block text-[9px] font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>Class Rule Setup Method</label>
+              <label className="block text-[9px] font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Class Rule Setup Method", (localStorage.getItem('app-lang') || 'vi'))}</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Automatic */}
                 <div
@@ -381,7 +382,7 @@ export default function Season() {
                       onClick={e => e.stopPropagation()}
                     />
                     <div>
-                      <span className="block text-xs font-mono font-bold text-[#f4f2ec]">Automatic Class Rules</span>
+                      <span className="block text-xs font-mono font-bold text-[#f4f2ec]">{$t("Automatic Class Rules", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       <span className="block text-[10px] font-mono mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
                         TỰ ĐỘNG: Máy tự động thiết lập và áp dụng toàn bộ các Class mặc định (Class 1 - Class 5) vào Season này.
                       </span>
@@ -409,7 +410,7 @@ export default function Season() {
                       onClick={e => e.stopPropagation()}
                     />
                     <div>
-                      <span className="block text-xs font-mono font-bold text-[#f4f2ec]">Manual Setup</span>
+                      <span className="block text-xs font-mono font-bold text-[#f4f2ec]">{$t("Manual Setup", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       <span className="block text-[10px] font-mono mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
                         THỦ CÔNG: Tự tay điều chỉnh trực tiếp điểm số và tiền thưởng cho cả 5 Class (Class 1 - Class 5) cho Season này.
                       </span>
@@ -423,16 +424,16 @@ export default function Season() {
             {classRuleMethod === "MANUAL" && (
               <div className="rounded-xl p-5 border space-y-3" style={{ background: "rgba(255,255,255,0.015)", borderColor: "rgba(201,162,39,0.15)" }}>
                 <div>
-                  <p className="text-[9px] font-mono uppercase tracking-widest text-[#c9a227]">Configure Season Classes (Manual Mode)</p>
-                  <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Adjust ratings for the 5 season classes before initialization:</p>
+                  <p className="text-[9px] font-mono uppercase tracking-widest text-[#c9a227]">{$t("Configure Season Classes (Manual Mode)", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                  <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Adjust ratings for the 5 season classes before initialization:", (localStorage.getItem('app-lang') || 'vi'))}</p>
                 </div>
                 <div className="overflow-x-auto pt-2">
                   <table className="w-full text-xs font-mono text-left min-w-[600px]">
                     <thead>
                       <tr className="border-b pb-2" style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>
-                        <th className="py-2 pr-4 text-left">Class Level</th>
-                        <th className="py-2 px-4 text-left">Min Rating</th>
-                        <th className="py-2 px-4 text-left">Max Rating</th>
+                        <th className="py-2 pr-4 text-left">{$t("Class Level", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                        <th className="py-2 px-4 text-left">{$t("Min Rating", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                        <th className="py-2 px-4 text-left">{$t("Max Rating", (localStorage.getItem('app-lang') || 'vi'))}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
@@ -454,7 +455,7 @@ export default function Season() {
                               type="number"
                               value={rule.maxRating ?? ""}
                               onChange={e => updateManualRule(index, "maxRating", e.target.value)}
-                              placeholder="No limit"
+                              placeholder={$t("No limit", (localStorage.getItem('app-lang') || 'vi'))}
                               className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-24"
                               style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
                             />
@@ -472,9 +473,7 @@ export default function Season() {
                 type="submit"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-xs font-mono font-semibold transition-all hover:opacity-90 active:scale-95 cursor-pointer"
                 style={{ background: "#c9a227", color: "#0b0d11" }}
-              >
-                ✓ Initialize Season
-              </button>
+              >{$t("Initialize Season", (localStorage.getItem('app-lang') || 'vi'))}</button>
             </div>
           </form>
         </div>
@@ -484,8 +483,8 @@ export default function Season() {
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "rgba(201,162,39,0.10)" }}>
           <div>
-            <p className="font-bold text-sm text-[#f4f2ec]" style={{ fontFamily: "'Roboto Slab', serif" }}>Historical Seasons</p>
-            <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Previously completed and active racing seasons</p>
+            <p className="font-bold text-sm text-[#f4f2ec]" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Historical Seasons", (localStorage.getItem('app-lang') || 'vi'))}</p>
+            <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Previously completed and active racing seasons", (localStorage.getItem('app-lang') || 'vi'))}</p>
           </div>
         </div>
 
@@ -493,9 +492,9 @@ export default function Season() {
           /* Mobile card list */
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
-              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>Loading seasons...</p>
+              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>{$t("Loading seasons...", (localStorage.getItem('app-lang') || 'vi'))}</p>
             ) : seasons.length === 0 ? (
-              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>No seasons found.</p>
+              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>{$t("No seasons found.", (localStorage.getItem('app-lang') || 'vi'))}</p>
             ) : seasons.map(season => (
               <div
                 key={season.id}
@@ -517,9 +516,9 @@ export default function Season() {
                     </p>
                   </div>
                   {season.status === 'ACTIVE' ? (
-                    <span style={{ fontSize: '9px', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0.25rem 0.625rem', borderRadius: '0.25rem', border: '1px solid #4a9d6f40', background: '#4a9d6f18', color: '#4a9d6f', whiteSpace: 'nowrap' }}>Active</span>
+                    <span style={{ fontSize: '9px', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0.25rem 0.625rem', borderRadius: '0.25rem', border: '1px solid #4a9d6f40', background: '#4a9d6f18', color: '#4a9d6f', whiteSpace: 'nowrap' }}>{$t("Active", (localStorage.getItem('app-lang') || 'vi'))}</span>
                   ) : (
-                    <span style={{ fontSize: '9px', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0.25rem 0.625rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' }}>Closed</span>
+                    <span style={{ fontSize: '9px', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0.25rem 0.625rem', borderRadius: '0.25rem', border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', whiteSpace: 'nowrap' }}>{$t("Closed", (localStorage.getItem('app-lang') || 'vi'))}</span>
                   )}
                 </div>
                 <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
@@ -534,9 +533,7 @@ export default function Season() {
                   <button
                     onClick={e => { e.stopPropagation(); handleExtend(season); }}
                     style={{ background: 'rgba(201,162,39,0.10)', color: '#c9a227', border: '1px solid rgba(201,162,39,0.30)', padding: '0.25rem 0.75rem', borderRadius: '0.375rem', fontSize: '11px', fontFamily: 'monospace', cursor: 'pointer' }}
-                  >
-                    Extend
-                  </button>
+                  >{$t("Extend", (localStorage.getItem('app-lang') || 'vi'))}</button>
                 </div>
               </div>
             ))}
@@ -547,10 +544,10 @@ export default function Season() {
             <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
-                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-left" style={{ color: "rgba(255,255,255,0.35)" }}>Season ID</th>
-                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-left" style={{ color: "rgba(255,255,255,0.35)" }}>Season Name</th>
-                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-left" style={{ color: "rgba(255,255,255,0.35)" }}>Date Range</th>
-                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-right" style={{ color: "rgba(255,255,255,0.35)" }}>Status / Actions</th>
+                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-left" style={{ color: "rgba(255,255,255,0.35)" }}>{$t("Season ID", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-left" style={{ color: "rgba(255,255,255,0.35)" }}>{$t("Season Name", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-left" style={{ color: "rgba(255,255,255,0.35)" }}>{$t("Date Range", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-3 text-[9px] font-mono uppercase tracking-widest text-right" style={{ color: "rgba(255,255,255,0.35)" }}>{$t("Status / Actions", (localStorage.getItem('app-lang') || 'vi'))}</th>
                 </tr>
               </thead>
               <tbody>
@@ -573,9 +570,9 @@ export default function Season() {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-3">
                         {season.status === "ACTIVE" ? (
-                          <span className="text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded border inline-block" style={{ background: "#4a9d6f18", color: "#4a9d6f", borderColor: "#4a9d6f40" }}>Active</span>
+                          <span className="text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded border inline-block" style={{ background: "#4a9d6f18", color: "#4a9d6f", borderColor: "#4a9d6f40" }}>{$t("Active", (localStorage.getItem('app-lang') || 'vi'))}</span>
                         ) : (
-                          <span className="text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded border inline-block" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.12)" }}>Closed</span>
+                          <span className="text-[9px] font-mono uppercase tracking-widest px-2.5 py-1 rounded border inline-block" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", borderColor: "rgba(255,255,255,0.12)" }}>{$t("Closed", (localStorage.getItem('app-lang') || 'vi'))}</span>
                         )}
                         <button
                           onClick={e => { e.stopPropagation(); handleToggle(season.id); }}
@@ -590,9 +587,7 @@ export default function Season() {
                           onClick={e => { e.stopPropagation(); handleExtend(season); }}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition hover:brightness-90"
                           style={{ background: "rgba(201,162,39,0.10)", color: "#c9a227", border: "1px solid rgba(201,162,39,0.30)" }}
-                        >
-                          Extend
-                        </button>
+                        >{$t("Extend", (localStorage.getItem('app-lang') || 'vi'))}</button>
                       </div>
                     </td>
                   </tr>
@@ -612,7 +607,7 @@ export default function Season() {
               {seasonRules.map(rule => (
                 <div key={rule.id} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(201,162,39,0.12)" }}>
                   <p className="text-[10px] font-mono font-bold" style={{ color: "#c9a227" }}>{rule.classLevel}</p>
-                  <p className="text-[9px] font-mono mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>Rating: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
+                  <p className="text-[9px] font-mono mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Rating", (localStorage.getItem('app-lang') || 'vi'))}: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
 
                 </div>
               ))}
@@ -627,26 +622,24 @@ export default function Season() {
           <div className="border rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4" style={{ background: "#151310", borderColor: "#2a2825" }}>
             <div className="flex items-center justify-between">
               <h4 className="text-base font-bold text-white flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-amber-500 inline-block"></span>
-                Extend Season
-              </h4>
+                <span className="h-2 w-2 rounded-full bg-amber-500 inline-block"></span>{$t("Extend Season", (localStorage.getItem('app-lang') || 'vi'))}</h4>
               <button type="button" onClick={() => setExtendingSeason(null)} className="text-white/40 hover:text-white/80 text-lg transition">✕</button>
             </div>
             <div className="space-y-1">
-              <span className="text-[10px] text-white/40 uppercase tracking-wider font-mono">Season Name</span>
+              <span className="text-[10px] text-white/40 uppercase tracking-wider font-mono">{$t("Season Name", (localStorage.getItem('app-lang') || 'vi'))}</span>
               <p className="text-white text-sm font-semibold">{extendingSeason.name}</p>
             </div>
             <form onSubmit={handleExtendSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <InlineDatePicker label="New Start Date" value={extendStartDateInput} onChange={setExtendStartDateInput} />
-                <InlineDatePicker label="New End Date" value={extendDateInput} onChange={setExtendDateInput} />
+                <InlineDatePicker label={$t("New Start Date", (localStorage.getItem('app-lang') || 'vi'))} value={extendStartDateInput} onChange={setExtendStartDateInput} />
+                <InlineDatePicker label={$t("New End Date", (localStorage.getItem('app-lang') || 'vi'))} value={extendDateInput} onChange={setExtendDateInput} />
               </div>
               {extendError && (
                 <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">⚠️ {extendError}</p>
               )}
               <div className="flex justify-end gap-3 pt-2">
-                <button type="button" onClick={() => setExtendingSeason(null)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs font-semibold rounded-lg transition">Cancel</button>
-                <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition">Extend Season</button>
+                <button type="button" onClick={() => setExtendingSeason(null)} className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs font-semibold rounded-lg transition">{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                <button type="submit" className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition">{$t("Extend Season", (localStorage.getItem('app-lang') || 'vi'))}</button>
               </div>
             </form>
           </div>

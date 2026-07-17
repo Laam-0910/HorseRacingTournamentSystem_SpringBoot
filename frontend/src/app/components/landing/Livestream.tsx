@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { api } from "../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
 import { useAuth } from "../../../context/AuthContext";
+import { $t } from '@/lib/i18n';
 
 interface Race {
   id: number;
@@ -164,10 +165,10 @@ export default function Livestream() {
   // Set initial localized mock chat messages
   useEffect(() => {
     setChatMessages([
-      { user: "RaceFan_99", text: t.chatMock1, time: `1 ${t.secondsAgo}` },
-      { user: "GoldenJockey", text: t.chatMock2, time: `45 ${t.secondsAgo}` },
-      { user: "TurfKing", text: t.chatMock3, time: `2 ${t.secondsAgo}` },
-      { user: "BetMaster", text: t.chatMock4, time: `10 ${t.secondsAgo}` },
+      { user: "RaceFan_99", text: $t("Khởi đầu ấn tượng quá! Ngựa số 3 đang bứt tốc!", (localStorage.getItem('app-lang') || 'vi')), time: `1 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
+      { user: "GoldenJockey", text: $t("Đường đua Turf hôm nay rất đẹp, chim ưng quá.", lang), time: `45 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
+      { user: "TurfKing", text: $t("Theo các bác ai sẽ về nhất vòng này?", (localStorage.getItem('app-lang') || 'vi')), time: `2 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
+      { user: "BetMaster", text: $t("Thunder King chạy khỏe quá, tạ gánh vừa khít.", lang), time: `10 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
     ]);
   }, [lang]);
 
@@ -332,11 +333,11 @@ export default function Livestream() {
             onClick={() => navigate("/")} 
             className="text-amber-500 hover:text-amber-400 font-mono text-sm flex items-center space-x-1 transition"
           >
-            <span>←</span> <span>{t.home}</span>
+            <span>←</span> <span>{$t("Trang chủ", (localStorage.getItem('app-lang') || 'vi'))}</span>
           </button>
           <div className="h-4 w-[1px] bg-[#2a2825]"></div>
           <h1 className="text-lg font-bold text-white tracking-wide font-serif">
-            🔴 {t.title}
+            🔴 {$t("Đấu Trường Livestream", (localStorage.getItem('app-lang') || 'vi'))}
           </h1>
         </div>
         
@@ -347,11 +348,11 @@ export default function Livestream() {
               className="bg-[#151310] hover:bg-[#1a1815] border border-[#2a2825] hover:border-amber-500/30 text-white text-xs font-mono px-3.5 py-1.5 rounded-xl transition flex items-center space-x-1.5"
             >
               <span>🎭</span>
-              <span>{isTheaterMode ? t.defaultMode : t.theaterMode}</span>
+              <span>{isTheaterMode ? $t("Mặc định", (localStorage.getItem('app-lang') || 'vi')) : $t("Rạp phim", (localStorage.getItem('app-lang') || 'vi'))}</span>
             </button>
             <div className="flex items-center space-x-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 px-3 py-1 rounded-full text-xs font-semibold uppercase animate-pulse">
               <span className="h-2 w-2 rounded-full bg-rose-500"></span>
-              <span>{t.liveNow}</span>
+              <span>{$t("ĐANG PHÁT", (localStorage.getItem('app-lang') || 'vi'))}</span>
             </div>
           </div>
         )}
@@ -365,9 +366,7 @@ export default function Livestream() {
         >
           <span className="text-xl">⚠️</span>
           <span>
-            {lang === "vi" 
-              ? "Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)"
-              : "Stewards' Inquiry - Race under investigation by Stewards (Official results pending)"}
+            {$t("Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)", (localStorage.getItem('app-lang') || 'vi'))}
           </span>
         </div>
       )}
@@ -380,7 +379,7 @@ export default function Livestream() {
           {loading ? (
             <div className="flex flex-col items-center justify-center h-[450px] bg-[#151310] border border-[#2a2825] rounded-2xl">
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500 mb-4"></div>
-              <p className="text-white/60 font-mono text-sm">{t.loadingStream}</p>
+              <p className="text-white/60 font-mono text-sm">{$t("Đang tải dữ liệu livestream...", (localStorage.getItem('app-lang') || 'vi'))}</p>
             </div>
           ) : selectedRace && embedUrl ? (
             <div className="space-y-4">
@@ -428,15 +427,15 @@ export default function Livestream() {
                 
                 <div className="grid grid-cols-3 gap-4 pt-3 border-t border-[#2a2825] text-xs md:text-sm font-mono text-white/60">
                   <div>
-                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{t.trackDistance}</span>
+                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{$t("Cự ly đua", (localStorage.getItem('app-lang') || 'vi'))}</span>
                     <span className="text-white font-semibold">{selectedRace.distanceMeters} Meters</span>
                   </div>
                   <div>
-                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{t.trackType}</span>
+                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{$t("Loại đường đua", (localStorage.getItem('app-lang') || 'vi'))}</span>
                     <span className="text-white font-semibold">{selectedRace.trackType}</span>
                   </div>
                   <div>
-                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{t.startTime}</span>
+                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{$t("Thời gian bắt đầu", (localStorage.getItem('app-lang') || 'vi'))}</span>
                     <span className="text-white font-semibold">{selectedRace.startTime}</span>
                   </div>
                 </div>
@@ -445,15 +444,15 @@ export default function Livestream() {
           ) : (
             <div className="flex flex-col items-center justify-center h-[450px] bg-[#151310] border border-[#2a2825] rounded-2xl p-6 text-center space-y-4">
               <div className="text-4xl">📺</div>
-              <h3 className="text-lg font-bold text-white font-serif">{t.noLive}</h3>
+              <h3 className="text-lg font-bold text-white font-serif">{$t("Không có livestream trực tiếp nào", (localStorage.getItem('app-lang') || 'vi'))}</h3>
               <p className="text-white/60 text-sm max-w-md font-sans leading-relaxed">
-                {t.noLiveSub}
+                {$t("Hiện tại không có trận đấu nào đang chạy hoặc Admin chưa thiết lập đường link phát trực tiếp. Vui lòng quay lại sau!", (localStorage.getItem('app-lang') || 'vi'))}
               </p>
               <button 
                 onClick={() => navigate("/")}
                 className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-[#0e0c09] font-bold text-xs rounded-xl transition font-mono uppercase tracking-wider"
               >
-                {t.backToHome}
+                {$t("Về Trang chủ", (localStorage.getItem('app-lang') || 'vi'))}
               </button>
             </div>
           )}
@@ -467,9 +466,9 @@ export default function Livestream() {
             <div className="bg-[#151310] border border-[#2a2825] rounded-2xl p-4 flex flex-col space-y-3">
               <div>
                 <h3 className="text-xs font-mono font-bold text-amber-500 uppercase tracking-wider">
-                  {t.activeStreams}
+                  {$t("Danh Sách Livestream", (localStorage.getItem('app-lang') || 'vi'))}
                 </h3>
-                <p className="text-[10px] text-white/40 font-mono mt-0.5">{t.activeStreamsDesc}</p>
+                <p className="text-[10px] text-white/40 font-mono mt-0.5">{$t("Chọn trận đấu để chuyển đổi luồng phát", (localStorage.getItem('app-lang') || 'vi'))}</p>
               </div>
               
               <div className="space-y-2 max-h-[180px] overflow-y-auto scrollbar-hide">
@@ -498,7 +497,7 @@ export default function Livestream() {
                           ? "bg-amber-500/20 text-amber-400" 
                           : "bg-rose-500/15 text-rose-400 animate-pulse"
                       }`}>
-                        {isCurrent ? t.watching : t.watch}
+                        {isCurrent ? $t("ĐANG XEM", (localStorage.getItem('app-lang') || 'vi')) : $t("XEM NGAY", (localStorage.getItem('app-lang') || 'vi'))}
                       </span>
                     </button>
                   );
@@ -511,12 +510,12 @@ export default function Livestream() {
           <div className="flex flex-col h-[350px] lg:h-[350px] bg-[#151310] border border-[#2a2825] rounded-2xl overflow-hidden flex-1">
             <div className="px-4 py-3 border-b border-[#2a2825] bg-[#1a1815] flex items-center justify-between">
               <h3 className="text-xs font-mono font-bold text-amber-500 uppercase tracking-wider">
-                {t.chatHeader}
+                {$t("Trò chuyện trực tiếp", (localStorage.getItem('app-lang') || 'vi'))}
               </h3>
               {connectionState === "connected" ? (
                 <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-mono uppercase flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  {t.online}
+                  {$t("Trực tuyến", (localStorage.getItem('app-lang') || 'vi'))}
                 </span>
               ) : connectionState === "connecting" ? (
                 <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px] font-mono uppercase flex items-center gap-1.5">
@@ -554,14 +553,14 @@ export default function Livestream() {
                 type="text"
                 value={newMsg}
                 onChange={e => setNewMsg(e.target.value)}
-                placeholder={t.chatInputPlaceholder}
+                placeholder={$t("Nhập tin nhắn...", (localStorage.getItem('app-lang') || 'vi'))}
                 className="flex-1 bg-[#0e0c09] border border-[#2a2825] focus:border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none placeholder-white/30"
               />
               <button
                 type="submit"
                 className="bg-amber-500 hover:bg-amber-400 text-[#0e0c09] font-bold text-xs px-3 rounded-lg transition font-mono"
               >
-                {t.chatSend}
+                {$t("GỬI", (localStorage.getItem('app-lang') || 'vi'))}
               </button>
             </form>
           </div>

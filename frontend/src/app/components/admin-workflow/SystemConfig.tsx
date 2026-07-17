@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 
@@ -71,8 +72,8 @@ export default function SystemConfig() {
 
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(21,19,16,0.6)" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>System Configurations</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Update weights and thresholds for ranking and prediction formulas.</p>
+          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("System Configurations", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Update weights and thresholds for ranking and prediction formulas.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
 
         <div style={{ padding: "1.5rem" }}>
@@ -112,7 +113,7 @@ export default function SystemConfig() {
                 disabled={loading}
                 style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.625rem 1.25rem", borderRadius: "0.5rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, border: "none", background: "#c9a227", color: "#0b0d11", cursor: "pointer", opacity: loading ? 0.7 : 1 }}
               >
-                {loading ? "Saving Parameters..." : "Save System Configs"}
+                {loading ? $t("Saving Parameters...", (localStorage.getItem('app-lang') || 'vi')) : $t("Save System Configs", (localStorage.getItem('app-lang') || 'vi'))}
               </button>
             </div>
           </form>

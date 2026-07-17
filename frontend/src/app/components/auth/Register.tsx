@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { api } from "../../../lib/api";
+import { $t } from '@/lib/i18n';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -15,32 +16,30 @@ export default function Register() {
     e.preventDefault();
     // Validate fullName
     if (!form.fullName.trim()) {
-      setError(lang === "vi" ? "Vui lòng nhập họ và tên đầy đủ" : "Please enter your full name");
+      setError($t("Vui lòng nhập họ và tên đầy đủ", lang));
       return;
     }
     if (form.fullName.trim().length < 3) {
-      setError(lang === "vi" ? "Họ và tên phải có ít nhất 3 ký tự" : "Full name must be at least 3 characters");
+      setError($t("Họ và tên phải có ít nhất 3 ký tự", lang));
       return;
     }
     if (!form.username.trim()) {
-      setError(lang === "vi" ? "Vui lòng nhập username đăng nhập" : "Please enter a username for login");
+      setError($t("Vui lòng nhập username đăng nhập", lang));
       return;
     }
     if (form.username.trim().length < 3) {
-      setError(lang === "vi" ? "Username phải có ít nhất 3 ký tự" : "Username must be at least 3 characters");
+      setError($t("Username phải có ít nhất 3 ký tự", lang));
       return;
     }
     if (form.password !== form.confirmPassword) {
-      setError(lang === "vi" ? "Mật khẩu xác nhận không khớp" : "Passwords do not match");
+      setError($t("Mật khẩu xác nhận không khớp", lang));
       return;
     }
     // Kiểm tra độ phức tạp của mật khẩu (Chữ hoa, số, ký tự đặc biệt)
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!pwdRegex.test(form.password)) {
       setError(
-        lang === "vi"
-          ? "Mật khẩu phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)"
-          : "Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (@$!%*?&)"
+        $t("Mật khẩu phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)", lang)
       );
       return;
     }

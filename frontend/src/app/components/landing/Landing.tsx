@@ -5,6 +5,7 @@ import { api } from "../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
 import { parseSafeDate, formatDate } from "../../utils/dateTimeHelper";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
+import { $t } from '@/lib/i18n';
 
 
 // ─────────────────────────────────────────────
@@ -490,7 +491,7 @@ function SearchView({ query, horses, people, meetings, races, t, setView, lang }
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
           <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0" }}>
-            {st.title}
+            {$t("Kết quả tìm kiếm", (localStorage.getItem('app-lang') || 'vi'))}
           </h2>
           <p style={{ color: "#a0a0a0", fontSize: "0.875rem", fontFamily: "monospace", marginTop: "0.25rem" }}>
             {st.foundResults(totalMatches, query)}
@@ -680,22 +681,22 @@ function Countdown({ targetDate, t }: { targetDate: string; t: any }) {
     <div className="flex items-center gap-2 md:gap-4 justify-center mt-6 mb-8 animate-fade-in">
       <div className="flex flex-col items-center">
         <div className="text-2xl md:text-3xl font-mono font-bold text-white bg-black/60 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227]/40 backdrop-blur-md min-w-[3rem] md:min-w-[4rem]">{String(timeLeft.d).padStart(2, '0')}</div>
-        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{t.days}</div>
+        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{$t("Ngày", (localStorage.getItem('app-lang') || 'vi'))}</div>
       </div>
       <div className="text-xl md:text-2xl text-[#c9a227] pb-4 font-bold">:</div>
       <div className="flex flex-col items-center">
         <div className="text-2xl md:text-3xl font-mono font-bold text-white bg-black/60 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227]/40 backdrop-blur-md min-w-[3rem] md:min-w-[4rem]">{String(timeLeft.h).padStart(2, '0')}</div>
-        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{t.hours}</div>
+        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{$t("Giờ", (localStorage.getItem('app-lang') || 'vi'))}</div>
       </div>
       <div className="text-xl md:text-2xl text-[#c9a227] pb-4 font-bold">:</div>
       <div className="flex flex-col items-center">
         <div className="text-2xl md:text-3xl font-mono font-bold text-white bg-black/60 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227]/40 backdrop-blur-md min-w-[3rem] md:min-w-[4rem]">{String(timeLeft.m).padStart(2, '0')}</div>
-        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{t.minutes}</div>
+        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{$t("Phút", (localStorage.getItem('app-lang') || 'vi'))}</div>
       </div>
       <div className="text-xl md:text-2xl text-[#c9a227] pb-4 font-bold">:</div>
       <div className="flex flex-col items-center">
         <div className="text-2xl md:text-3xl font-mono font-bold text-[#c9a227] bg-[#c9a227]/10 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227] backdrop-blur-md min-w-[3rem] md:min-w-[4rem] shadow-[0_0_15px_rgba(201,162,39,0.3)]">{String(timeLeft.s).padStart(2, '0')}</div>
-        <div className="text-[10px] md:text-xs text-[#c9a227] mt-2 uppercase tracking-widest font-bold">{t.seconds}</div>
+        <div className="text-[10px] md:text-xs text-[#c9a227] mt-2 uppercase tracking-widest font-bold">{$t("Giây", (localStorage.getItem('app-lang') || 'vi'))}</div>
       </div>
     </div>
   );
@@ -722,26 +723,26 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
 
         <div className="relative z-10 w-full flex flex-col items-center">
           <div className="inline-block px-6 py-2 mb-6 rounded-full bg-black/40 backdrop-blur-md border border-[#c9a227]/40 text-[#c9a227] text-[0.65rem] font-bold uppercase tracking-widest">
-            Chọn một chức năng bên dưới để bắt đầu.
+            {$t("Chọn một chức năng bên dưới để bắt đầu.", (localStorage.getItem('app-lang') || 'vi'))}
           </div>
           
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 leading-tight text-[#c9a227] max-w-4xl drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)]" style={{ fontFamily: "'Roboto Slab', serif" }}>
-            Chào mừng đến với Hệ thống<br />Quản lý Đua ngựa
+            {$t("Xin chào! Hỏi tôi về ngựa, nài, race, dự đoán kết quả nhé.", (localStorage.getItem('app-lang') || 'vi'))}
           </h1>
           
           {nextMeeting && (
             <div className="mb-10 flex flex-col items-center">
-              <div className="text-[#c9a227] text-sm font-bold tracking-widest uppercase mb-2">{t.countdownTo}{nextMeeting.name}</div>
+              <div className="text-[#c9a227] text-sm font-bold tracking-widest uppercase mb-2">{$t("Đếm ngược đến: ", (localStorage.getItem('app-lang') || 'vi'))}{nextMeeting.name}</div>
               <Countdown targetDate={nextMeeting.startDate} t={t} />
             </div>
           )}
           
           <div className="flex flex-wrap justify-center gap-4">
             <button onClick={onWatchLive} className="px-8 py-3 bg-[#c9a227] text-[#0e0c09] font-bold rounded-lg hover:bg-[#d6af35] transition-all uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(201,162,39,0.3)]">
-              XEM TRỰC TIẾP
+              {$t("XEM TRỰC TIẾP", (localStorage.getItem('app-lang') || 'vi'))}
             </button>
             <button onClick={onViewRacecard} className="px-8 py-3 bg-black/60 backdrop-blur-md border border-[#2a2825] text-white font-medium rounded-lg hover:border-[#c9a227]/50 hover:bg-black/80 transition-all text-sm shadow-lg shadow-black/50">
-              Xem Bảng đua
+              {$t("Xem Bảng đua", (localStorage.getItem('app-lang') || 'vi'))}
             </button>
           </div>
         </div>
@@ -750,12 +751,12 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
       {/* Active Seasons */}
       <div className="mb-14 animate-fade-in-up delay-300">
         <div className="flex items-center gap-4 mb-8">
-          <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.activeSeasons}</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Mùa giải đang hoạt động", (localStorage.getItem('app-lang') || 'vi'))}</h3>
           <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
         </div>
         
         {seasons.length === 0 ? (
-          <p className="text-gray-500 text-sm font-mono italic p-8 glass-panel rounded-2xl text-center border-dashed border-[#2a2825]">{t.noActiveSeasons}</p>
+          <p className="text-gray-500 text-sm font-mono italic p-8 glass-panel rounded-2xl text-center border-dashed border-[#2a2825]">{$t("Hiện chưa có mùa giải nào hoạt động.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {seasons.map(s => {
@@ -772,16 +773,16 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
                   <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150"></div>
                   <div className="flex justify-between items-start mb-5 relative z-10">
                     <h4 className="font-bold text-2xl text-white group-hover:text-[#c9a227] transition-colors drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{s.name}</h4>
-                    <span className="text-[0.65rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">{t.activeStatus}</span>
+                    <span className="text-[0.65rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">{$t("Đang diễn ra", (localStorage.getItem('app-lang') || 'vi'))}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm text-gray-300 font-mono relative z-10 bg-[#0e0c09]/50 p-3 rounded-xl border border-white/5">
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 mb-1">{t.startDate}</span>
+                      <span className="text-xs text-gray-500 mb-1">{$t("Ngày bắt đầu", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       <span className="opacity-90 font-semibold">{formatSeasonDate(s.startDate)}</span>
                     </div>
                     <span className="text-[#c9a227]/50 font-sans px-2 text-xl">→</span>
                     <div className="flex flex-col text-right">
-                      <span className="text-xs text-gray-500 mb-1">{t.endDate}</span>
+                      <span className="text-xs text-gray-500 mb-1">{$t("Ngày kết thúc", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       <span className="opacity-90 font-semibold">{formatSeasonDate(s.endDate)}</span>
                     </div>
                   </div>
@@ -795,12 +796,12 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
       {/* Upcoming Meetings */}
       <div className="mb-14 animate-fade-in-up delay-400">
         <div className="flex items-center gap-4 mb-8">
-          <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.upcomingMeetings}</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Các Ngày hội đua sắp tới", (localStorage.getItem('app-lang') || 'vi'))}</h3>
           <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
         </div>
         
         {meetings.length === 0 ? (
-          <p className="text-gray-500 text-sm font-mono italic p-8 glass-panel rounded-2xl text-center border-dashed border-[#2a2825]">{t.noUpcomingMeetings}</p>
+          <p className="text-gray-500 text-sm font-mono italic p-8 glass-panel rounded-2xl text-center border-dashed border-[#2a2825]">{$t("Chưa lên lịch ngày hội đua nào.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {meetings.map(m => {
@@ -955,27 +956,27 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
 function AboutView({ t }: { t: any }) {
   return (
     <div className="max-w-4xl mx-auto text-center animate-fade-in-up">
-      <h2 className="text-3xl md:text-4xl font-bold text-white tracking-wide uppercase drop-shadow-lg mb-2" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.aboutTitle || "About Horse Race System"}</h2>
-      <p className="text-[#c9a227] font-mono text-xs uppercase tracking-widest mb-12">{t.aboutSubtitle || "The Complete Racing Management Platform"}</p>
+      <h2 className="text-3xl md:text-4xl font-bold text-white tracking-wide uppercase drop-shadow-lg mb-2" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Giới thiệu Hệ thống", (localStorage.getItem('app-lang') || 'vi')) || "About Horse Race System"}</h2>
+      <p className="text-[#c9a227] font-mono text-xs uppercase tracking-widest mb-12">{$t("Nền tảng Quản lý Đua ngựa Toàn diện", (localStorage.getItem('app-lang') || 'vi')) || "The Complete Racing Management Platform"}</p>
       
       <div className="glass-panel rounded-3xl p-8 md:p-12 mb-12 relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#c9a227]/20 blur-[100px] rounded-full pointer-events-none"></div>
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500/20 blur-[100px] rounded-full pointer-events-none"></div>
         
-        <h3 className="text-2xl font-bold text-gold-gradient mb-6 relative z-10" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.ourMission || "Our Mission"}</h3>
+        <h3 className="text-2xl font-bold text-gold-gradient mb-6 relative z-10" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Sứ mệnh của chúng tôi", (localStorage.getItem('app-lang') || 'vi')) || "Our Mission"}</h3>
         <p className="text-gray-300 text-base md:text-lg leading-relaxed relative z-10 font-light max-w-2xl mx-auto">
-          {t.missionDesc || "The Horse Race Management System is a comprehensive platform designed to streamline and modernize horse racing tournament management. From season initialization to race-day operations, our system provides administrators, horse owners, jockeys, and referees with the tools they need to conduct fair, exciting, and well-organized race events."}
+          {$t("Hệ thống Quản lý Đua ngựa là một nền tảng toàn diện được thiết kế để hợp lý hóa và hiện đại hóa công tác quản lý giải đua ngựa. Từ khâu khởi tạo mùa giải đến khâu vận hành ngày đua, hệ thống của chúng tôi cung cấp cho các quản trị viên, chủ ngựa, nài ngựa và trọng tài những công cụ cần thiết để tổ chức các sự kiện đua ngựa công bằng, hấp dẫn và chuyên nghiệp.", (localStorage.getItem('app-lang') || 'vi')) || "The Horse Race Management System is a comprehensive platform designed to streamline and modernize horse racing tournament management. From season initialization to race-day operations, our system provides administrators, horse owners, jockeys, and referees with the tools they need to conduct fair, exciting, and well-organized race events."}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
-          { icon: "🏆", title: t.feat1Title || "Season Management", desc: t.feat1Desc || "Full tournament lifecycle from setup to results" },
-          { icon: "🐎", title: t.feat2Title || "Horse Registry", desc: t.feat2Desc || "Track horses, ratings, and performance" },
-          { icon: "🏇", title: t.feat3Title || "Jockey Management", desc: t.feat3Desc || "Manage jockey profiles and invitations" },
-          { icon: "📋", title: t.feat4Title || "Race Operations", desc: t.feat4Desc || "Racecard, schedule, live supervision" },
-          { icon: "📊", title: t.feat5Title || "Statistics", desc: t.feat5Desc || "Win rates, earnings, performance analytics" },
-          { icon: "⚠️", title: t.feat6Title || "Incident Reports", desc: t.feat6Desc || "Rule violation tracking and penalties" },
+          { icon: "🏆", title: $t("Quản lý Mùa giải", (localStorage.getItem('app-lang') || 'vi')) || "Season Management", desc: $t("Toàn bộ vòng đời giải đấu từ thiết lập đến kết quả", (localStorage.getItem('app-lang') || 'vi')) || "Full tournament lifecycle from setup to results" },
+          { icon: "🐎", title: $t("Hồ sơ Ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Horse Registry", desc: $t("Theo dõi ngựa, đánh giá rating và thành tích", (localStorage.getItem('app-lang') || 'vi')) || "Track horses, ratings, and performance" },
+          { icon: "🏇", title: $t("Quản lý Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Jockey Management", desc: $t("Quản lý hồ sơ nài ngựa và lịch đăng ký", (localStorage.getItem('app-lang') || 'vi')) || "Manage jockey profiles and invitations" },
+          { icon: "📋", title: $t("Vận hành Ngày đua", (localStorage.getItem('app-lang') || 'vi')) || "Race Operations", desc: $t("Bảng đua, lịch trình, giám sát trực tiếp", (localStorage.getItem('app-lang') || 'vi')) || "Racecard, schedule, live supervision" },
+          { icon: "📊", title: $t("Thống kê", (localStorage.getItem('app-lang') || 'vi')) || "Statistics", desc: $t("Tỷ lệ thắng, tiền thưởng, phân tích thành tích", (localStorage.getItem('app-lang') || 'vi')) || "Win rates, earnings, performance analytics" },
+          { icon: "⚠️", title: $t("Báo cáo Sự cố", (localStorage.getItem('app-lang') || 'vi')) || "Incident Reports", desc: $t("Theo dõi vi phạm luật và hình phạt", (localStorage.getItem('app-lang') || 'vi')) || "Rule violation tracking and penalties" },
         ].map((item, i) => (
           <div key={i} className="glass-panel rounded-2xl p-6 hover-lift hover-glow transition-all group border border-[#2a2825]" style={{ animationDelay: `${i * 100}ms` }}>
             <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{item.icon}</div>
@@ -1000,7 +1001,7 @@ export default function Landing() {
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showDashboardMenu, setShowDashboardMenu] = useState(false);
   const [lang, setLangRaw] = useState(() => localStorage.getItem('app-lang') || 'vi');
-  const setLang = (code: string) => { setLangRaw(code); localStorage.setItem('app-lang', code); };
+  const setLang = (code: string) => { setLangRaw(code); localStorage.setItem('app-lang', code); window.location.reload(); };
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
   const langLabel = lang.toUpperCase();
 
@@ -1052,11 +1053,11 @@ export default function Landing() {
         icon: "🏆",
         color: "#c9a227",
         bg: "rgba(201,162,39,0.1)",
-        title: lang === "vi" ? "Mùa Giải Hoạt Động" : "Active Tournament Season",
+        title: $t("Mùa Giải Hoạt Động", (localStorage.getItem('app-lang') || 'vi')),
         desc: lang === "vi" 
           ? `Mùa giải ${activeSeason.name} đang diễn ra! Đăng ký tham gia ngay.`
           : `Season ${activeSeason.name} is currently active! Register now.`,
-        time: lang === "vi" ? "Đang diễn ra" : "Ongoing"
+        time: $t("Đang diễn ra", (localStorage.getItem('app-lang') || 'vi'))
       });
     }
 
@@ -1080,7 +1081,7 @@ export default function Landing() {
           icon: "📅",
           color: "#60a5fa",
           bg: "rgba(96,165,250,0.1)",
-          title: lang === "vi" ? "Sự kiện sắp khởi tranh" : "Upcoming Race Meeting",
+          title: $t("Sự kiện sắp khởi tranh", (localStorage.getItem('app-lang') || 'vi')),
           desc: lang === "vi"
             ? `${upcomingMeeting.name} sẽ bắt đầu tại ${upcomingMeeting.venue}.`
             : `${upcomingMeeting.name} starts soon at ${upcomingMeeting.venue}.`,
@@ -1096,7 +1097,7 @@ export default function Landing() {
           icon: "🛡",
           color: "#ef4444",
           bg: "rgba(239,68,68,0.1)",
-          title: lang === "vi" ? "Sự cố chờ quyết định" : "Pending Violation Decision",
+          title: $t("Sự cố chờ quyết định", (localStorage.getItem('app-lang') || 'vi')),
           desc: lang === "vi"
             ? `Có ${pendingViolations.length} sự cố vi phạm đang chờ xử lý quyết định phạt.`
             : `There are ${pendingViolations.length} violation reports awaiting penalty decision.`,
@@ -1111,7 +1112,7 @@ export default function Landing() {
           icon: "⚙️",
           color: "#fbbf24",
           bg: "rgba(251,191,36,0.1)",
-          title: lang === "vi" ? "Trận đua cần xử lý kết quả" : "Races to Process",
+          title: $t("Trận đua cần xử lý kết quả", (localStorage.getItem('app-lang') || 'vi')),
           desc: lang === "vi"
             ? `Có ${unprocessRaces.length} trận đua đã kết thúc cần được duyệt kết quả chính thức.`
             : `There are ${unprocessRaces.length} finished races awaiting official results processing.`,
@@ -1130,7 +1131,7 @@ export default function Landing() {
           icon: "⚠️",
           color: "#ef4444",
           bg: "rgba(239,68,68,0.1)",
-          title: lang === "vi" ? "Cảnh báo vi phạm của Ngựa" : "Horse Violation Warning",
+          title: $t("Cảnh báo vi phạm của Ngựa", (localStorage.getItem('app-lang') || 'vi')),
           desc: lang === "vi"
             ? `Ngựa ${latestOwnerViol.horseName || "của bạn"} bị báo cáo lỗi: ${latestOwnerViol.violation?.description || "Vi phạm luật chạy"}`
             : `Your horse ${latestOwnerViol.horseName || ""} was reported for: ${latestOwnerViol.violation?.description || "Rule violation"}`,
@@ -1156,7 +1157,7 @@ export default function Landing() {
           icon: "📅",
           color: "#60a5fa",
           bg: "rgba(96,165,250,0.1)",
-          title: lang === "vi" ? "Sự kiện sắp khởi tranh" : "Upcoming Race Meeting",
+          title: $t("Sự kiện sắp khởi tranh", (localStorage.getItem('app-lang') || 'vi')),
           desc: lang === "vi"
             ? `Đăng ký ngựa của bạn cho sự kiện ${upcomingMeeting.name} tại ${upcomingMeeting.venue}.`
             : `Register your horses for ${upcomingMeeting.name} at ${upcomingMeeting.venue}.`,
@@ -1175,7 +1176,7 @@ export default function Landing() {
           icon: "⚠️",
           color: "#ef4444",
           bg: "rgba(239,68,68,0.1)",
-          title: lang === "vi" ? "Bạn có báo cáo vi phạm" : "Violation Warning",
+          title: $t("Bạn có báo cáo vi phạm", (localStorage.getItem('app-lang') || 'vi')),
           desc: lang === "vi"
             ? `Bạn bị báo cáo vi phạm: ${latestJockeyViol.violation?.description || "Vi phạm luật thi đấu"}`
             : `You have been reported for: ${latestJockeyViol.violation?.description || "Rule violation"}`,
@@ -1201,7 +1202,7 @@ export default function Landing() {
           icon: "🏃‍♂️",
           color: "#60a5fa",
           bg: "rgba(96,165,250,0.1)",
-          title: lang === "vi" ? "Sự kiện sắp khởi tranh" : "Upcoming Race Meeting",
+          title: $t("Sự kiện sắp khởi tranh", (localStorage.getItem('app-lang') || 'vi')),
           desc: lang === "vi"
             ? `Buổi đua ${upcomingMeeting.name} sắp diễn ra. Hãy kiểm tra các lượt đăng ký cưỡi ngựa.`
             : `Meeting ${upcomingMeeting.name} starts soon. Check available rides.`,
@@ -1220,7 +1221,7 @@ export default function Landing() {
           icon: "🏁",
           color: "#38bdf8",
           bg: "rgba(56,189,248,0.1)",
-          title: lang === "vi" ? "Lượt đua được phân công" : "Assigned Races Today",
+          title: $t("Lượt đua được phân công", (localStorage.getItem('app-lang') || 'vi')),
           desc: lang === "vi"
             ? `Bạn được phân công làm trọng tài cho ${assignedRaces.length} lượt đua sắp tới.`
             : `You are assigned as referee for ${assignedRaces.length} upcoming races.`,
@@ -1298,7 +1299,7 @@ export default function Landing() {
 
   const getRoleLabel = (roleId: number) => {
     const map: Record<number, string> = { 1: "ADMIN", 2: "OWNER", 3: "JOCKEY", 4: "SPECTATOR", 5: "REFEREE" };
-    return map[roleId] || "MEMBER";
+    return $t(map[roleId] || "MEMBER", (localStorage.getItem('app-lang') || 'vi'));
   };
 
   const getRoleColor = (roleId?: number) => {
@@ -1320,16 +1321,16 @@ export default function Landing() {
   };
 
   const SUB_NAV: { key: SubView; label: string; icon: string }[] = [
-    { key: "live", label: t.live, icon: "📺" },
-    { key: "home", label: lang === "vi" ? "Đua ngựa" : "Racing", icon: "🏇" },
-    { key: "racecard", label: t.racecard, icon: "ℹ️" },
-    { key: "results", label: t.results, icon: "🏆" },
-    { key: "fixtures", label: t.fixtures, icon: "📅" },
-    { key: "statistics", label: t.statistics, icon: "📊" },
-    { key: "horses", label: t.horses, icon: "🐎" },
-    { key: "jockeys_owners", label: t.jockeys_owners, icon: "👤" },
-    { key: "incident", label: t.incident, icon: "⚠️" },
-    { key: "about", label: t.about, icon: "ℹ️" },
+    { key: "live", label: $t("Trực tiếp", (localStorage.getItem('app-lang') || 'vi')), icon: "📺" },
+    { key: "home", label: $t("Đua ngựa", (localStorage.getItem('app-lang') || 'vi')), icon: "🏇" },
+    { key: "racecard", label: $t("Bảng đua", (localStorage.getItem('app-lang') || 'vi')), icon: "ℹ️" },
+    { key: "results", label: $t("Kết quả", (localStorage.getItem('app-lang') || 'vi')), icon: "🏆" },
+    { key: "fixtures", label: $t("Lịch thi đấu", (localStorage.getItem('app-lang') || 'vi')), icon: "📅" },
+    { key: "statistics", label: $t("Thống kê", (localStorage.getItem('app-lang') || 'vi')), icon: "📊" },
+    { key: "horses", label: $t("Danh sách Ngựa", (localStorage.getItem('app-lang') || 'vi')), icon: "🐎" },
+    { key: "jockeys_owners", label: $t("Nài & Chủ ngựa", (localStorage.getItem('app-lang') || 'vi')), icon: "👤" },
+    { key: "incident", label: $t("Báo cáo sự cố", (localStorage.getItem('app-lang') || 'vi')), icon: "⚠️" },
+    { key: "about", label: $t("Giới thiệu", (localStorage.getItem('app-lang') || 'vi')), icon: "ℹ️" },
   ];
 
   // Helper date formatter for Landing views
@@ -1358,14 +1359,14 @@ export default function Landing() {
         return (
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.live}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Trực tiếp", (localStorage.getItem('app-lang') || 'vi'))}</h2>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-red-500/60 to-transparent"></div>
             </div>
             
             {liveRaces.length === 0 ? (
               <div className="glass-panel rounded-2xl flex flex-col items-center justify-center min-h-[40vh] border-dashed border-[#2a2825]">
                 <span className="text-5xl block mb-4 opacity-50 grayscale">📺</span>
-                <p className="text-gray-400 font-mono text-sm max-w-sm text-center">No live broadcast currently. There are no races running right now.</p>
+                <p className="text-gray-400 font-mono text-sm max-w-sm text-center">{$t("No live broadcast currently. There are no races running right now.", (localStorage.getItem('app-lang') || 'vi'))}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
@@ -1407,7 +1408,7 @@ export default function Landing() {
                       ) : (
                         <div className="h-[300px] bg-[#1a1815]/80 rounded-xl flex flex-col items-center justify-center border border-[#2a2825] relative overflow-hidden">
                           <span className="text-4xl mb-4 opacity-30 animate-pulse">📡</span>
-                          <p className="text-gray-500 text-xs font-mono uppercase tracking-widest">Video stream not linked</p>
+                          <p className="text-gray-500 text-xs font-mono uppercase tracking-widest">{$t("Video stream not linked", (localStorage.getItem('app-lang') || 'vi'))}</p>
                         </div>
                       )}
                     </div>
@@ -1421,14 +1422,14 @@ export default function Landing() {
         return (
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.racecard}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Bảng đua", (localStorage.getItem('app-lang') || 'vi'))}</h2>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Sidebar: Meetings Selection */}
               <div className="flex flex-col gap-4">
-                <h5 className="font-mono text-xs text-[#c9a227] uppercase tracking-widest pl-2 border-l-2 border-[#c9a227]">Select Meeting</h5>
+                <h5 className="font-mono text-xs text-[#c9a227] uppercase tracking-widest pl-2 border-l-2 border-[#c9a227]">{$t("Select Meeting", (localStorage.getItem('app-lang') || 'vi'))}</h5>
                 
                 {isMobile ? (
                   <select
@@ -1487,7 +1488,7 @@ export default function Landing() {
                         
                         <div className="flex items-center gap-3 mb-6 relative z-10">
                           <span className="text-2xl">🐎</span>
-                          <h4 className="font-bold text-xl text-white tracking-wide" style={{ fontFamily: "'Roboto Slab', serif" }}>Runners & Riders</h4>
+                          <h4 className="font-bold text-xl text-white tracking-wide" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Runners & Riders", (localStorage.getItem('app-lang') || 'vi'))}</h4>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
@@ -1501,14 +1502,14 @@ export default function Landing() {
                                   {e.horse?.name}
                                 </div>
                                 <div className="text-[11px] text-gray-400 mt-1 truncate">
-                                  <span className="text-gray-500">J:</span> <span className="text-gray-300">{e.jockey?.fullName || e.jockey?.username}</span>
+                                  <span className="text-gray-500">{$t("J:", (localStorage.getItem('app-lang') || 'vi'))}</span> <span className="text-gray-300">{e.jockey?.fullName || e.jockey?.username}</span>
                                   <span className="mx-2 opacity-30">|</span>
-                                  <span className="text-gray-500">O:</span> <span className="text-gray-300">{e.owner?.fullName || e.owner?.username}</span>
+                                  <span className="text-gray-500">{$t("O:", (localStorage.getItem('app-lang') || 'vi'))}</span> <span className="text-gray-300">{e.owner?.fullName || e.owner?.username}</span>
                                 </div>
                               </div>
                               <div className="text-right flex-shrink-0">
                                 <div className="text-xs font-mono">
-                                  <span className="text-gray-500">RTG </span>
+                                  <span className="text-gray-500">{$t("RTG", (localStorage.getItem('app-lang') || 'vi'))} </span>
                                   <span className="text-blue-400 font-bold">{e.horse?.currentRating}</span>
                                 </div>
                                 <div className="text-xs font-mono mt-1 text-[#c9a227]">
@@ -1544,14 +1545,14 @@ export default function Landing() {
         return (
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.results}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Kết quả", (localStorage.getItem('app-lang') || 'vi'))}</h2>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Sidebar: Meetings Selection */}
               <div className="flex flex-col gap-4">
-                <h5 className="font-mono text-xs text-[#c9a227] uppercase tracking-widest pl-2 border-l-2 border-[#c9a227]">Select Meeting</h5>
+                <h5 className="font-mono text-xs text-[#c9a227] uppercase tracking-widest pl-2 border-l-2 border-[#c9a227]">{$t("Select Meeting", (localStorage.getItem('app-lang') || 'vi'))}</h5>
                 {isMobile ? (
                   <select
                     value={selectedMeetingId || ""}
@@ -1606,7 +1607,7 @@ export default function Landing() {
                       <div className="glass-panel rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
                         <div className="flex items-center gap-3 mb-8 relative z-10">
                           <span className="text-3xl drop-shadow-md">🏆</span>
-                          <h4 className="font-bold text-2xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>Final Standings</h4>
+                          <h4 className="font-bold text-2xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Final Standings", (localStorage.getItem('app-lang') || 'vi'))}</h4>
                         </div>
                         
                         <div className="flex flex-col gap-4 relative z-10">
@@ -1668,7 +1669,7 @@ export default function Landing() {
                                 {/* Award Recipients List */}
                                 {top3.length > 0 && (
                                   <div className="mb-6 mt-4">
-                                    <h5 className="text-[#c9a227] font-bold uppercase tracking-widest text-sm mb-4 border-l-4 border-[#c9a227] pl-3">Danh sách nhận giải (Top 3)</h5>
+                                    <h5 className="text-[#c9a227] font-bold uppercase tracking-widest text-sm mb-4 border-l-4 border-[#c9a227] pl-3">{$t("Danh sách nhận giải (Top 3)", (localStorage.getItem('app-lang') || 'vi'))}</h5>
                                     <div className="flex flex-col gap-3">
                                       {top3.map((e, idx) => (
                                         <div key={`top-${idx}`} className="bg-gradient-to-r from-[#c9a227]/10 to-transparent border border-[#c9a227]/30 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-4 hover-lift">
@@ -1677,13 +1678,13 @@ export default function Landing() {
                                             <div>
                                               <div className="text-lg font-bold text-white" style={{ fontFamily: "'Roboto Slab', serif" }}>{e.horse?.name}</div>
                                               <div className="text-sm text-gray-400 mt-1 flex flex-wrap gap-4">
-                                                <span><strong className="text-[#c9a227]">Kỵ sĩ:</strong> {e.jockey?.fullName || e.jockey?.username}</span>
-                                                <span><strong className="text-[#c9a227]">Chủ ngựa:</strong> {e.owner?.fullName || e.owner?.username}</span>
+                                                <span><strong className="text-[#c9a227]">{$t("Kỵ sĩ:", (localStorage.getItem('app-lang') || 'vi'))}</strong> {e.jockey?.fullName || e.jockey?.username}</span>
+                                                <span><strong className="text-[#c9a227]">{$t("Chủ ngựa:", (localStorage.getItem('app-lang') || 'vi'))}</strong> {e.owner?.fullName || e.owner?.username}</span>
                                               </div>
                                             </div>
                                           </div>
                                           <div className="text-right">
-                                            <div className="text-xs text-gray-500 uppercase tracking-widest mb-1">Thành tích</div>
+                                            <div className="text-xs text-gray-500 uppercase tracking-widest mb-1">{$t("Thành tích", (localStorage.getItem('app-lang') || 'vi'))}</div>
                                             <div className="text-lg font-mono font-bold text-[#c9a227]">{e.entry?.finishTime}</div>
                                           </div>
                                         </div>
@@ -1761,7 +1762,7 @@ export default function Landing() {
         return (
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.raceFixtures || "Race Fixtures"}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Lịch thi đấu", (localStorage.getItem('app-lang') || 'vi')) || "Race Fixtures"}</h2>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
             </div>
             
@@ -1788,7 +1789,7 @@ export default function Landing() {
               ))}
               {meetings.length === 0 && (
                 <div className="col-span-full py-12 text-center glass-panel rounded-2xl border-dashed border-[#2a2825]">
-                  <p className="text-gray-500 font-mono text-sm">{t.noFixtures || "No fixtures scheduled."}</p>
+                  <p className="text-gray-500 font-mono text-sm">{$t("Không có lịch thi đấu nào.", (localStorage.getItem('app-lang') || 'vi')) || "No fixtures scheduled."}</p>
                 </div>
               )}
             </div>
@@ -1815,7 +1816,7 @@ export default function Landing() {
         return (
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.statsAndLeaderboards || "Statistics & Leaderboards"}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Thống kê & Bảng xếp hạng", (localStorage.getItem('app-lang') || 'vi')) || "Statistics & Leaderboards"}</h2>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
             </div>
 
@@ -1825,7 +1826,7 @@ export default function Landing() {
                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <span className="text-2xl">🐎</span>
-                  <h4 className="font-bold text-xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.leadingHorses || "Leading Horses (Top Rating)"}</h4>
+                  <h4 className="font-bold text-xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Ngựa dẫn đầu (Top Rating)", (localStorage.getItem('app-lang') || 'vi')) || "Leading Horses (Top Rating)"}</h4>
                 </div>
                 <div className="space-y-3 relative z-10">
                   {topHorses.map((h, idx) => (
@@ -1838,12 +1839,12 @@ export default function Landing() {
                         <div className="text-[11px] text-gray-500 font-mono truncate">{h.breed}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">{t.ratingTitle || "Rating"}</div>
+                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">{$t("Đánh giá", (localStorage.getItem('app-lang') || 'vi')) || "Rating"}</div>
                         <div className="font-mono font-bold text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded border border-blue-500/20 inline-block">{h.currentRating}</div>
                       </div>
                     </div>
                   ))}
-                  {topHorses.length === 0 && <p className="text-gray-500 text-sm text-center py-4 italic">{t.noHorseData || "No horse data available."}</p>}
+                  {topHorses.length === 0 && <p className="text-gray-500 text-sm text-center py-4 italic">{$t("Không có dữ liệu ngựa.", (localStorage.getItem('app-lang') || 'vi')) || "No horse data available."}</p>}
                 </div>
               </div>
 
@@ -1852,7 +1853,7 @@ export default function Landing() {
                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-500 to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <span className="text-2xl">👤</span>
-                  <h4 className="font-bold text-xl text-white tracking-wide text-blue-400" style={{ fontFamily: "'Roboto Slab', serif" }}>{t.leadingJockeys || "Leading Jockeys (Top-3)"}</h4>
+                  <h4 className="font-bold text-xl text-white tracking-wide text-blue-400" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Nài ngựa dẫn đầu (Top 3)", (localStorage.getItem('app-lang') || 'vi')) || "Leading Jockeys (Top-3)"}</h4>
                 </div>
                 <div className="space-y-3 relative z-10">
                   {topJockeys.map((j, idx) => (
@@ -1863,7 +1864,7 @@ export default function Landing() {
                       <div className="flex-1 min-w-0">
                         <div className="font-bold text-gray-200 truncate">{j.fullName || j.username}</div>
                         <div className="text-[11px] text-gray-500 font-mono">
-                          {j.racesRun} {t.racesTitle || "Races"}
+                          {j.racesRun} {$t("Trận", (localStorage.getItem('app-lang') || 'vi')) || "Races"}
                         </div>
                       </div>
                       <div className="text-right flex items-center gap-4">
@@ -1885,16 +1886,16 @@ export default function Landing() {
           </div>
         );
       case "horses":
-        return <GenericTableView title={t.horseRegistry || "Registered Horse Registry"} data={horses} columns={[{ key: "id", label: t.idTitle || "ID" }, { key: "name", label: t.horseNameTitle || "Horse Name" }, { key: "breed", label: t.breedTitle || "Breed" }, { key: "currentRating", label: t.currentRatingTitle || "Current Rating" }]} />;
+        return <GenericTableView title={$t("Danh sách Đăng ký Ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Registered Horse Registry"} data={horses} columns={[{ key: "id", label: $t("Mã (ID)", (localStorage.getItem('app-lang') || 'vi')) || "ID" }, { key: "name", label: $t("Tên Ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Horse Name" }, { key: "breed", label: $t("Giống loài", (localStorage.getItem('app-lang') || 'vi')) || "Breed" }, { key: "currentRating", label: $t("Đánh giá", (localStorage.getItem('app-lang') || 'vi')) || "Current Rating" }]} />;
       case "jockeys_owners":
         return (
           <div>
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
-              <button onClick={() => setView("jockeys_owners")} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontWeight: "bold" }}>{t.directoriesOverview || "Directories Overview"}</button>
+              <button onClick={() => setView("jockeys_owners")} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontWeight: "bold" }}>{$t("Tổng quan Danh bạ", (localStorage.getItem('app-lang') || 'vi')) || "Directories Overview"}</button>
             </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "1.5rem" }}>
               <GenericTableView 
-                title={t.jockeysTitle || "Jockeys"} 
+                title={$t("Danh sách Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Jockeys"} 
                 data={users
                   .filter(u => u.roleId === 3)
                   .map(u => {
@@ -1911,40 +1912,40 @@ export default function Landing() {
                   })
                   .sort((a, b) => b.top3Finishes - a.top3Finishes || b.racesRun - a.racesRun)} 
                 columns={[
-                  { key: "id", label: t.idTitle || "ID" },
-                  { key: "fullName", label: t.jockeyTitle || "Jockey" },
-                  { key: "email", label: t.emailTitle || "Email" },
-                  { key: "jockeyWeight", label: t.weightTitle || "Weight" },
-                  { key: "racesRun", label: t.racesRunTitle || "Races Run" },
-                  { key: "top3Finishes", label: t.top3FinishesTitle || "Top-3 Finishes" },
-                  { key: "top3Rate", label: t.top3RateTitle || "Top-3 Rate" }
+                  { key: "id", label: $t("Mã (ID)", (localStorage.getItem('app-lang') || 'vi')) || "ID" },
+                  { key: "fullName", label: $t("Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Jockey" },
+                  { key: "email", label: $t("Email", (localStorage.getItem('app-lang') || 'vi')) || "Email" },
+                  { key: "jockeyWeight", label: $t("Cân nặng", (localStorage.getItem('app-lang') || 'vi')) || "Weight" },
+                  { key: "racesRun", label: $t("Số trận tham gia", (localStorage.getItem('app-lang') || 'vi')) || "Races Run" },
+                  { key: "top3Finishes", label: $t("Số lần Top 3", (localStorage.getItem('app-lang') || 'vi')) || "Top-3 Finishes" },
+                  { key: "top3Rate", label: $t("Tỉ lệ Top 3", (localStorage.getItem('app-lang') || 'vi')) || "Top-3 Rate" }
                 ]} 
               />
-              <GenericTableView title={t.horseOwnersTitle || "Horse Owners"} data={users.filter(u => u.roleId === 2)} columns={[{ key: "id", label: t.idTitle || "ID" }, { key: "fullName", label: t.ownerTitle || "Owner" }, { key: "email", label: t.emailTitle || "Email" }]} />
+              <GenericTableView title={$t("Danh sách Chủ ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Horse Owners"} data={users.filter(u => u.roleId === 2)} columns={[{ key: "id", label: $t("Mã (ID)", (localStorage.getItem('app-lang') || 'vi')) || "ID" }, { key: "fullName", label: $t("Chủ ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Owner" }, { key: "email", label: $t("Email", (localStorage.getItem('app-lang') || 'vi')) || "Email" }]} />
             </div>
           </div>
         );
       case "incident":
         return (
           <GenericTableView 
-            title={t.incidentReports || "Violation Incident Reports"} 
+            title={$t("Báo cáo Sự cố & Vi phạm", (localStorage.getItem('app-lang') || 'vi')) || "Violation Incident Reports"} 
             data={violations.map((v: any) => ({
               id: v.violation?.id,
               raceId: v.violation?.raceId,
               horseName: v.horseName || `Horse #${v.violation?.horseId}`,
               jockeyName: v.jockeyName || `Jockey #${v.violation?.jockeyId}`,
               description: v.violation?.description || "—",
-              penalty: v.violation?.penalty || t.pendingDecision || "Pending Decision",
+              penalty: v.violation?.penalty || $t("Đang chờ xử lý", (localStorage.getItem('app-lang') || 'vi')) || "Pending Decision",
               status: v.violation?.status || "PENDING"
             }))} 
             columns={[
-              { key: "id", label: t.reportIdTitle || "Report ID" },
-              { key: "raceId", label: t.raceIdTitle || "Race ID" },
-              { key: "horseName", label: t.horseTitle || "Horse" },
-              { key: "jockeyName", label: t.jockeyTitle || "Jockey" },
-              { key: "description", label: t.descriptionTitle || "Description" },
-              { key: "penalty", label: t.penaltyTitle || "Penalty" },
-              { key: "status", label: t.statusTitle || "Status" }
+              { key: "id", label: $t("Mã Báo cáo", (localStorage.getItem('app-lang') || 'vi')) || "Report ID" },
+              { key: "raceId", label: $t("Mã Trận đua", (localStorage.getItem('app-lang') || 'vi')) || "Race ID" },
+              { key: "horseName", label: $t("Ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Horse" },
+              { key: "jockeyName", label: $t("Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Jockey" },
+              { key: "description", label: $t("Mô tả sự cố", (localStorage.getItem('app-lang') || 'vi')) || "Description" },
+              { key: "penalty", label: $t("Hình phạt", (localStorage.getItem('app-lang') || 'vi')) || "Penalty" },
+              { key: "status", label: $t("Trạng thái", (localStorage.getItem('app-lang') || 'vi')) || "Status" }
             ]} 
           />
         );
@@ -2059,7 +2060,7 @@ export default function Landing() {
                   setView("search");
                 }
               }}
-              placeholder="Tìm kiếm ngựa, nài, chủ ngựa, trận đua..."
+              placeholder={$t("Tìm kiếm ngựa, nài, chủ ngựa, trận đua...", (localStorage.getItem('app-lang') || 'vi'))}
               style={{ width: "100%", paddingLeft: "2.5rem", paddingRight: "1.75rem", paddingTop: "0.5rem", paddingBottom: "0.5rem", fontSize: "0.85rem", background: "#111111", borderRadius: "0.5rem", color: "#f0f0f0", border: "1px solid #1f1f1f", outline: "none" }}
             />
             {searchQuery && (
@@ -2112,15 +2113,15 @@ export default function Landing() {
                     <p style={{ fontSize: "0.85rem", color: "#f0f0f0", fontWeight: 600, fontFamily: "sans-serif" }}>{user.fullName || user.username}</p>
                     <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c9a227", marginTop: "2px" }}>{getRoleLabel(user.roleId)}</p>
                   </div>
-                  <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem", paddingLeft: "1rem", borderLeft: "1px solid #2a2825", marginLeft: "0.25rem", fontFamily: "sans-serif" }}>Đăng xuất</button>
+                  <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem", paddingLeft: "1rem", borderLeft: "1px solid #2a2825", marginLeft: "0.25rem", fontFamily: "sans-serif" }}>{$t("Đăng xuất", (localStorage.getItem('app-lang') || 'vi'))}</button>
                 </div>
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
                   <Link to="/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.375rem 0.75rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0e0c09", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    👤 {t.signin}
+                    👤 {$t("Đăng nhập", (localStorage.getItem('app-lang') || 'vi'))}
                   </Link>
                   <Link to="/register" style={{ padding: "0.375rem 0.75rem", borderRadius: "0.25rem", border: "1px solid rgba(201,162,39,0.5)", color: "#c9a227", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    {t.register}
+                    {$t("Đăng ký", (localStorage.getItem('app-lang') || 'vi'))}
                   </Link>
                 </div>
               )}
@@ -2238,7 +2239,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(201,162,39,0.1)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          💼 {t.dashboard}
+                          💼 {$t("Trang quản trị", (localStorage.getItem('app-lang') || 'vi'))}
                         </button>
                         <button
                           onClick={() => {
@@ -2265,7 +2266,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(201,162,39,0.1)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          👤 {lang === "vi" ? "Hồ sơ" : lang === "zh" ? "个人中心" : lang === "ja" ? "プロフィール" : "Profile"}
+                          👤 {$t("Hồ sơ", (localStorage.getItem('app-lang') || 'vi'))}
                         </button>
                         <button
                           onClick={() => {
@@ -2288,7 +2289,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(239,68,68,0.1)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          🚪 {t.signout}
+                          🚪 {$t("Đăng xuất", (localStorage.getItem('app-lang') || 'vi'))}
                         </button>
                       </>
                     ) : (
@@ -2310,7 +2311,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(201,162,39,0.1)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          👤 {t.signin}
+                          👤 {$t("Đăng nhập", (localStorage.getItem('app-lang') || 'vi'))}
                         </Link>
                         <Link
                           to="/register"
@@ -2329,7 +2330,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          📝 {t.register}
+                          📝 {$t("Đăng ký", (localStorage.getItem('app-lang') || 'vi'))}
                         </Link>
                       </>
                     ))}
@@ -2360,7 +2361,7 @@ export default function Landing() {
                         flexShrink: 0
                       }}
                     >
-                      💼 {t.dashboard}
+                      💼 {$t("Trang quản trị", (localStorage.getItem('app-lang') || 'vi'))}
                     </button>
                     <button
                       onClick={() => {
@@ -2387,7 +2388,7 @@ export default function Landing() {
                         flexShrink: 0
                       }}
                     >
-                      👤 {lang === "vi" ? "Hồ sơ" : lang === "zh" ? "个人中心" : lang === "ja" ? "プロフィール" : "Profile"}
+                      👤 {$t("Hồ sơ", (localStorage.getItem('app-lang') || 'vi'))}
                     </button>
                     <button
                       onClick={logout}
@@ -2407,7 +2408,7 @@ export default function Landing() {
                         flexShrink: 0
                       }}
                     >
-                      🚪 {t.signout}
+                      🚪 {$t("Đăng xuất", (localStorage.getItem('app-lang') || 'vi'))}
                     </button>
                   </>
                 ) : (
@@ -2430,7 +2431,7 @@ export default function Landing() {
                         flexShrink: 0
                       }}
                     >
-                      👤 {t.signin}
+                      👤 {$t("Đăng nhập", (localStorage.getItem('app-lang') || 'vi'))}
                     </Link>
                     <Link
                       to="/register"
@@ -2450,7 +2451,7 @@ export default function Landing() {
                         flexShrink: 0
                       }}
                     >
-                      📝 {t.register}
+                      📝 {$t("Đăng ký", (localStorage.getItem('app-lang') || 'vi'))}
                     </Link>
                   </>
                 )}

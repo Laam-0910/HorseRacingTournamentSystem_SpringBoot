@@ -1,3 +1,4 @@
+import { $t } from '@/lib/i18n';
 import { useState } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import DashboardLayout from "../layout/DashboardLayout";
@@ -46,12 +47,12 @@ export default function Referee() {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
 
   const navItems = [
-    { index: "01", icon: "layout-dashboard", label: t.refereeHub,   view: "hub"       },
-    { index: "02", icon: "alert-triangle",   label: t.incidents,     view: "incidents" },
-    { index: "03", icon: "clipboard-check",  label: t.duties,        view: "duties"    },
+    { index: "01", icon: "layout-dashboard", label: $t("Bảng trọng tài", (localStorage.getItem('app-lang') || 'vi')),   view: "hub"       },
+    { index: "02", icon: "alert-triangle",   label: $t("Nhật ký sự cố", (localStorage.getItem('app-lang') || 'vi')),     view: "incidents" },
+    { index: "03", icon: "clipboard-check",  label: $t("Lịch phân công", (localStorage.getItem('app-lang') || 'vi')),        view: "duties"    },
   ];
 
-  const activeLabel = navItems.find(n => n.view === activeTab)?.label ?? t.refereeHub;
+  const activeLabel = navItems.find(n => n.view === activeTab)?.label ?? $t("Bảng trọng tài", (localStorage.getItem('app-lang') || 'vi'));
 
   const handleViewChange = (view: string) => {
     setActiveTab(view as RefereeTab);

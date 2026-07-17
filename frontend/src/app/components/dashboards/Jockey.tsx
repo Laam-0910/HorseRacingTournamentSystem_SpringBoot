@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { parseSafeDate, formatDateTime, formatDate } from "../../utils/dateTimeHelper";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
+import { $t } from "../../../lib/i18n";
 import DashboardLayout from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
 import ProfileModal from "./components/ProfileModal";
@@ -63,7 +64,7 @@ function StatusBadge({ status }: { status: string }) {
       color: fg,
       border: `1px solid ${bc}`
     }}>
-      {s}
+      {$t(s, (localStorage.getItem('app-lang') || 'vi'))}
     </span>
   );
 }
@@ -73,20 +74,20 @@ function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Stats row — giống JSP: grid-cols-2 md:grid-cols-5 */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "1rem" }}>
-        <StatsCard label="Total Rides"     value={dashboard?.totalRaces} />
-        <StatsCard label="Wins (1st)"      value={dashboard?.totalWins}   color="#4ade80" />
-        <StatsCard label="Top 3 Finishes"  value={dashboard?.top3Count}   color={ROLE_COLOR} />
-        <StatsCard label="Win Rate"        value={dashboard?.winRate ? `${Number(dashboard.winRate).toFixed(1)}%` : "0.0%"} color="#c9a227" />
-        <StatsCard label="Total Earnings (10%)" value={dashboard?.totalEarnings ? `$${Number(dashboard.totalEarnings).toLocaleString()}` : "$0"} color="#4ade80" />
+        <StatsCard label={$t("Total Rides", (localStorage.getItem('app-lang') || 'vi'))}     value={dashboard?.totalRaces} />
+        <StatsCard label={$t("Wins (1st)", (localStorage.getItem('app-lang') || 'vi'))}      value={dashboard?.totalWins}   color="#4ade80" />
+        <StatsCard label={$t("Top 3 Finishes", (localStorage.getItem('app-lang') || 'vi'))}  value={dashboard?.top3Count}   color={ROLE_COLOR} />
+        <StatsCard label={$t("Win Rate", (localStorage.getItem('app-lang') || 'vi'))}        value={dashboard?.winRate ? `${Number(dashboard.winRate).toFixed(1)}%` : "0.0%"} color="#c9a227" />
+        <StatsCard label={$t("Total Earnings (10%)", (localStorage.getItem('app-lang') || 'vi'))} value={dashboard?.totalEarnings ? `$${Number(dashboard.totalEarnings).toLocaleString()}` : "$0"} color="#4ade80" />
       </div>
 
       {/* Available Race Meetings */}
       <div>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Available Race Meetings</h3>
-        <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>Register for race meetings to make yourself available for stable hire invitations.</p>
+        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Available Race Meetings", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+        <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>{$t("Register for race meetings to make yourself available for stable hire invitations.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
           {meetings.length === 0 ? (
-            <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>No upcoming meetings available.</p>
+            <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>{$t("No upcoming meetings available.", (localStorage.getItem('app-lang') || 'vi'))}</p>
           ) : meetings.map((m: any) => {
             const isReg = dashboard?.registeredMeetingIds?.includes(m.id);
             const regStatus = dashboard?.regStatuses?.[m.id];
@@ -106,15 +107,13 @@ function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings
                     disabled
                     style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "not-allowed" }}
                   >
-                    Already Registered
+                    {$t("Already Registered", (localStorage.getItem('app-lang') || 'vi'))}
                   </button>
                 ) : (
                   <button
                     onClick={() => onRegister(m.id)}
                     style={{ width: "100%", padding: "0.625rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
-                  >
-                    Register as Jockey
-                  </button>
+                  >{$t("Register as Jockey", (localStorage.getItem('app-lang') || 'vi'))}</button>
                 )}
               </div>
             );
@@ -135,9 +134,9 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
   }, []);
 
   const lang = localStorage.getItem("app-lang") || "vi";
-  const title = lang === "vi" ? "Ngựa của tôi" : "My Mounts";
-  const loadingText = lang === "vi" ? "Đang tải..." : "Loading...";
-  const emptyText = lang === "vi" ? "Hiện tại chưa có cuộc đua nào được xếp lịch." : "No scheduled mounts at the moment.";
+  const title = $t("My Mounts", (localStorage.getItem('app-lang') || 'vi'));
+  const loadingText = $t("Loading...", (localStorage.getItem('app-lang') || 'vi'));
+  const emptyText = $t("No scheduled mounts at the moment.", (localStorage.getItem('app-lang') || 'vi'));
 
   if (isMobile) {
     return (
@@ -153,7 +152,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
               <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                   <div>
-                    <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>Race #{m.raceId}</span>
+                    <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>{$t("Race #", (localStorage.getItem('app-lang') || 'vi'))}{m.raceId}</span>
                     <h4 style={{ fontSize: "0.95rem", fontWeight: "bold", color: "#f4f2ec", marginTop: "2px" }}>
                       <button
                         type="button"
@@ -193,8 +192,8 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: `rgba(59,130,196,0.08)`, borderBottom: "1px solid #2a2825" }}>
-              {(lang === "vi" ? ["ID Trận", "Tên ngựa", "Cửa (Gate)", "Cân nặng (kg)", "Trạng thái"] : ["Race ID", "Horse", "Gate", "Weight (kg)", "Status"]).map(h => (
-                <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{h}</th>
+              {["Race ID", "Horse", "Gate", "Weight (kg)", "Status"].map(h => (
+                <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
               ))}
             </tr>
           </thead>
@@ -218,7 +217,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
                 <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", color: "#c9a227", fontWeight: 700 }}>{m.gateNumber ?? "TBD"}</td>
                 <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec" }}>{m.carriedWeight ?? "TBD"} kg</td>
                 <td style={{ padding: "0.75rem 1rem" }}>
-                  <span style={{ padding: "0.125rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.6rem", fontFamily: "monospace", fontWeight: 700, textTransform: "uppercase", background: m.status === "APPROVED" ? "rgba(74,222,128,0.1)" : "rgba(42,40,37,0.5)", color: m.status === "APPROVED" ? "#4ade80" : "#a0a0a0" }}>{m.status}</span>
+                  <span style={{ padding: "0.125rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.6rem", fontFamily: "monospace", fontWeight: 700, textTransform: "uppercase", background: m.status === "APPROVED" ? "rgba(74,222,128,0.1)" : "rgba(42,40,37,0.5)", color: m.status === "APPROVED" ? "#4ade80" : "#a0a0a0" }}>{$t(m.status || '', (localStorage.getItem('app-lang') || 'vi'))}</span>
                 </td>
               </tr>
             ))}
@@ -232,44 +231,17 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
 function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onViewHorse }: { invitations: any[]; onAccept: (id: number) => void; onReject: (id: number) => void; onViewProfile: (id: number) => void; onViewHorse: (horse: { id: number; name: string }) => void }) {
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = {
-    vi: {
-      offersTitle: "Lời mời nài ngựa",
-      noOffers: "Hiện tại không có lời mời nào dành cho bạn.",
-      offerFrom: "Lời mời từ chủ Stable ",
-      horse: "Chiến mã",
-      race: "Trận đấu",
-      meeting: "Ngày đua",
-      venue: "Địa điểm",
-      startTime: "Khởi tranh",
-      status: "Trạng thái",
-      accept: "Chấp nhận",
-      reject: "Từ chối",
-    },
-    en: {
-      offersTitle: "Pending Ride Offers",
-      noOffers: "No pending ride offers currently.",
-      offerFrom: "Offer from Stable Owner ",
-      horse: "Horse",
-      race: "Race ID",
-      meeting: "Meeting",
-      venue: "Venue",
-      startTime: "Start Time",
-      status: "Status",
-      accept: "Accept Offer",
-      reject: "Reject",
-    }
-  }[lang] || {
-    offersTitle: "Pending Ride Offers",
-    noOffers: "No pending ride offers currently.",
-    offerFrom: "Offer from Stable Owner ",
-    horse: "Horse",
-    race: "Race ID",
-    meeting: "Meeting",
-    venue: "Venue",
-    startTime: "Start Time",
-    status: "Status",
-    accept: "Accept Offer",
-    reject: "Reject",
+    offersTitle: $t("Pending Ride Offers", (localStorage.getItem('app-lang') || 'vi')),
+    noOffers: $t("No pending ride offers currently.", (localStorage.getItem('app-lang') || 'vi')),
+    offerFrom: $t("Offer from Stable Owner ", (localStorage.getItem('app-lang') || 'vi')),
+    horse: $t("Horse", (localStorage.getItem('app-lang') || 'vi')),
+    race: $t("Race ID", (localStorage.getItem('app-lang') || 'vi')),
+    meeting: $t("Meeting", (localStorage.getItem('app-lang') || 'vi')),
+    venue: $t("Venue", (localStorage.getItem('app-lang') || 'vi')),
+    startTime: $t("Start Time", (localStorage.getItem('app-lang') || 'vi')),
+    status: $t("Status", (localStorage.getItem('app-lang') || 'vi')),
+    accept: $t("Accept Offer", (localStorage.getItem('app-lang') || 'vi')),
+    reject: $t("Reject", (localStorage.getItem('app-lang') || 'vi')),
   };
 
   return (
@@ -352,34 +324,34 @@ function RaceRow({ race }: { race: any }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => setExpanded(!expanded)}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", color: "#3b82c4" }}>Race #{race.id}</span>
-            <span style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{race.classLevel}</span>
+            <span style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", color: "#3b82c4" }}>{$t("Race #", (localStorage.getItem('app-lang') || 'vi'))}{race.id}</span>
+            <span style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{$t(race.classLevel || "", (localStorage.getItem('app-lang') || 'vi'))}</span>
           </div>
           <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
-            Time: {formatDateTime(race.startTime)} | Distance: {race.distanceMeters}m | Track: {race.trackType}
+            {$t("Time:", (localStorage.getItem('app-lang') || 'vi'))} {formatDateTime(race.startTime)} | {$t("Distance:", (localStorage.getItem('app-lang') || 'vi'))} {race.distanceMeters}m | {$t("Track:", (localStorage.getItem('app-lang') || 'vi'))} {race.trackType}
           </p>
         </div>
         <button style={{ background: "none", border: "none", color: "#3b82c4", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
-          {expanded ? "▲ Collapse" : "▼ View Entries"}
+          {expanded ? "▲ " + $t("Collapse", (localStorage.getItem('app-lang') || 'vi')) : "▼ " + $t("View Entries", (localStorage.getItem('app-lang') || 'vi'))}
         </button>
       </div>
 
       {expanded && (
         <div style={{ marginTop: "0.75rem", background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "0.5rem", padding: "0.75rem" }}>
-          <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>Approved Race Entries</p>
+          <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>{$t("Approved Race Entries", (localStorage.getItem('app-lang') || 'vi'))}</p>
           {loading ? (
-            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>Loading entries...</p>
+            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("Loading entries...", (localStorage.getItem('app-lang') || 'vi'))}</p>
           ) : entries.length === 0 ? (
-            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No approved entries for this race yet.</p>
+            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No approved entries for this race yet.", (localStorage.getItem('app-lang') || 'vi'))}</p>
           ) : (
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#a0a0a0", textAlign: "left" }}>
-                  <th style={{ padding: "0.25rem" }}>Gate</th>
-                  <th style={{ padding: "0.25rem" }}>Horse</th>
-                  <th style={{ padding: "0.25rem" }}>Jockey</th>
-                  <th style={{ padding: "0.25rem" }}>Owner</th>
-                  <th style={{ padding: "0.25rem" }}>Weight</th>
+                  <th style={{ padding: "0.25rem" }}>{$t("Gate", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th style={{ padding: "0.25rem" }}>{$t("Horse", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th style={{ padding: "0.25rem" }}>{$t("Jockey", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th style={{ padding: "0.25rem" }}>{$t("Owner", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th style={{ padding: "0.25rem" }}>{$t("Weight", (localStorage.getItem('app-lang') || 'vi'))}</th>
                 </tr>
               </thead>
               <tbody>
@@ -404,9 +376,9 @@ function RaceRow({ race }: { race: any }) {
 function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[] }) {
   return (
     <div>
-      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>Race Calendar</h3>
+      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Race Calendar", (localStorage.getItem('app-lang') || 'vi'))}</h3>
       {meetings.length === 0 ? (
-        <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No upcoming race meetings scheduled.</p>
+        <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No upcoming race meetings scheduled.", (localStorage.getItem('app-lang') || 'vi'))}</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           {meetings.map((m: any, i: number) => {
@@ -420,13 +392,13 @@ function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[]
                     <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
                     <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue} · 📅 {formatDate(m.startDate || m.date)}</p>
                   </div>
-                  <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: `rgba(59,130,196,0.1)`, color: ROLE_COLOR }}>{m.status ?? "UPCOMING"}</span>
+                  <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: `rgba(59,130,196,0.1)`, color: ROLE_COLOR }}>{ $t(m.status ?? "UPCOMING", (localStorage.getItem('app-lang') || 'vi')) }</span>
                 </div>
 
                 {/* Races List */}
                 <div style={{ padding: "0.75rem 1.25rem" }}>
                   {meetingRaces.length === 0 ? (
-                    <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", padding: "0.5rem 0" }}>No races scheduled for this meeting.</p>
+                    <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", padding: "0.5rem 0" }}>{$t("No races scheduled for this meeting.", (localStorage.getItem('app-lang') || 'vi'))}</p>
                   ) : (
                     meetingRaces.map((race: any) => (
                       <RaceRow key={race.id} race={race} />
@@ -452,8 +424,8 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
   }, []);
 
   const lang = localStorage.getItem("app-lang") || "vi";
-  const title = lang === "vi" ? "Vi phạm luật" : "Rule Violations";
-  const emptyText = lang === "vi" ? "✅ Không có vi phạm nào được ghi nhận." : "✅ No rule violations recorded.";
+  const title = $t("Rule Violations", (localStorage.getItem('app-lang') || 'vi'));
+  const emptyText = "✅ " + $t("No rule violations recorded.", (localStorage.getItem('app-lang') || 'vi'));
 
   return (
     <div>
@@ -481,13 +453,13 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "11px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem" }}>
                 <div>
-                  <span style={{ color: "rgba(255,255,255,0.4)" }}>Penalty:</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Penalty:", (localStorage.getItem('app-lang') || 'vi'))}</span>
                   <div style={{ color: "#c9a227", fontWeight: "bold", marginTop: "2px" }}>{v.penalty}</div>
                 </div>
                 <div>
-                  <span style={{ color: "rgba(255,255,255,0.4)" }}>Status:</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Status:", (localStorage.getItem('app-lang') || 'vi'))}</span>
                   <div style={{ color: v.status === "CONFIRMED" ? "#4ade80" : "#f87171", fontWeight: "bold", marginTop: "2px" }}>
-                    {v.status === "CONFIRMED" ? "Acknowledged" : "Pending Acknowledgment"}
+                    {v.status === "CONFIRMED" ? $t("Acknowledged", (localStorage.getItem('app-lang') || 'vi')) : $t("Pending Acknowledgment", (localStorage.getItem('app-lang') || 'vi'))}
                   </div>
                 </div>
               </div>
@@ -518,7 +490,7 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
                   <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem" }}>{v.description}</td>
                   <td style={{ padding: "0.75rem 1rem", color: "#c9a227", fontSize: "0.8rem" }}>{v.penalty}</td>
                   <td style={{ padding: "0.75rem 1rem", color: v.status === "CONFIRMED" ? "#4ade80" : "#f87171", fontFamily: "monospace", fontSize: "0.75rem" }}>
-                    {v.status === "CONFIRMED" ? "Acknowledged" : "Pending Acknowledgment"}
+                    {v.status === "CONFIRMED" ? $t("Acknowledged", (localStorage.getItem('app-lang') || 'vi')) : $t("Pending Acknowledgment", (localStorage.getItem('app-lang') || 'vi'))}
                   </td>
                   <td style={{ padding: "0.75rem 1rem" }}>
                     {v.status !== "CONFIRMED" && (

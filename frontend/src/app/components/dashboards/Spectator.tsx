@@ -8,19 +8,20 @@ import ProfileModal from "./components/ProfileModal";
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
 import { formatDate, parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
+import { $t } from '@/lib/i18n';
 
 type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "profile";
 
 const ROLE_COLOR = "#ef4444";
 
 const NAV_ITEMS = [
-  { index: "01", icon: "layout-dashboard", label: "Overview",   view: "home"         },
-  { index: "02", icon: "tv",               label: "Live Watch", view: "live"         },
-  { index: "03", icon: "info",             label: "Racecard",   view: "racecard"     },
-  { index: "04", icon: "award",            label: "Results",    view: "results"      },
-  { index: "05", icon: "activity",         label: "Horses",     view: "horses"       },
-  { index: "06", icon: "bar-chart-3",      label: "Statistics", view: "stats"        },
-  { index: "07", icon: "mail",             label: "AI Assistant", view: "ai-assistant" },
+  { index: "01", icon: "layout-dashboard", label: $t("Overview", (localStorage.getItem('app-lang') || 'vi')),   view: "home"         },
+  { index: "02", icon: "tv",               label: $t("Live Watch", (localStorage.getItem('app-lang') || 'vi')), view: "live"         },
+  { index: "03", icon: "info",             label: $t("Racecard", (localStorage.getItem('app-lang') || 'vi')),   view: "racecard"     },
+  { index: "04", icon: "award",            label: $t("Results", (localStorage.getItem('app-lang') || 'vi')),    view: "results"      },
+  { index: "05", icon: "activity",         label: $t("Horses", (localStorage.getItem('app-lang') || 'vi')),     view: "horses"       },
+  { index: "06", icon: "bar-chart-3",      label: $t("Statistics", (localStorage.getItem('app-lang') || 'vi')), view: "stats"        },
+  { index: "07", icon: "mail",             label: $t("AI Assistant", (localStorage.getItem('app-lang') || 'vi')), view: "ai-assistant" },
 ];
 
 interface ChatMessage {
@@ -67,9 +68,7 @@ export default function Spectator() {
 
   // AI Assistant Chat State
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
-    const welcome = lang === "vi" 
-      ? "Chào bạn! Tôi là trợ lý AI. Hỏi tôi về ngựa, nài, xếp hạng rating hoặc dự đoán trận đấu nhé."
-      : "Hello! I am your AI Assistant. Ask me about horses, ratings, jockeys, or race predictions!";
+    const welcome = $t("Chào bạn! Tôi là trợ lý AI. Hỏi tôi về ngựa, nài, xếp hạng rating hoặc dự đoán trận đấu nhé.", lang);
     return [{
       sender: "ai",
       text: welcome,
@@ -173,9 +172,7 @@ export default function Spectator() {
     } catch (err: any) {
       const errorReply: ChatMessage = {
         sender: "ai",
-        text: lang === "vi" 
-          ? "Rất tiếc, đã có lỗi kết nối đến máy chủ AI. Xin vui lòng thử lại sau."
-          : "Sorry, I encountered a connection error. Please try again later.",
+        text: $t("Rất tiếc, đã có lỗi kết nối đến máy chủ AI. Xin vui lòng thử lại sau.", lang),
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       };
       setChatMessages(prev => [...prev, errorReply]);
@@ -222,20 +219,20 @@ export default function Spectator() {
           <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
             <div>
               <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>
-                {lang === "vi" ? "Chào mừng đến với Hệ Thống Quản Lý Đua Ngựa" : "Welcome to Horse Race Management System"}
+                {$t("Chào mừng đến với Hệ Thống Quản Lý Đua Ngựa", lang)}
               </h2>
               <p style={{ color: "#a0a0a0", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
-                {lang === "vi" ? "Chọn một mục từ menu bên trái để bắt đầu." : "Select an option from the menu on the left to get started."}
+                {$t("Chọn một mục từ menu bên trái để bắt đầu.", lang)}
               </p>
             </div>
 
             {/* Upcoming Meetings */}
             <div>
               <h3 style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "1.1rem", color: "#c9a227", textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: "1px solid #2a2825", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
-                {lang === "vi" ? "Buổi đua sắp diễn ra" : "Upcoming Race Meetings"}
+                {$t("Buổi đua sắp diễn ra", lang)}
               </h3>
               {meetings.length === 0
-                ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>{lang === "vi" ? "Không có buổi đua nào được lên lịch." : "No upcoming meetings scheduled."}</p>
+                ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>{$t("Không có buổi đua nào được lên lịch.", lang)}</p>
                 : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "1rem" }}>
                   {meetings.slice(0, 6).map((m: any) => (
                     <div key={m.id} className="rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.25rem", transition: "border-color 0.2s" }}
@@ -244,7 +241,7 @@ export default function Spectator() {
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
                         <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "0.95rem" }}>{m.name}</h4>
-                        <span style={{ fontSize: "0.55rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.2rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,157,111,0.15)", color: "#4a9d6f", whiteSpace: "nowrap" }}>Active</span>
+                        <span style={{ fontSize: "0.55rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.2rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,157,111,0.15)", color: "#4a9d6f", whiteSpace: "nowrap" }}>{$t("Active", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       </div>
                       <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue}</p>
                       <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>📅 {formatDate(m.startDate || m.date)}</p>
@@ -261,9 +258,9 @@ export default function Spectator() {
       case "racecard":
         return (
           <div>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{lang === "vi" ? "Thông tin trận đấu (Racecard)" : "Racecard"}</h3>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Thông tin trận đấu (Racecard)", lang)}</h3>
             {races.length === 0
-              ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{lang === "vi" ? "Chưa có trận đấu nào được tạo." : "No races available."}</p>
+              ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("Chưa có trận đấu nào được tạo.", lang)}</p>
               : <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 {races.map((r: any) => {
                   const isExpanded = expandedRaceId === r.id;
@@ -302,11 +299,11 @@ export default function Spectator() {
                         <div style={{ padding: "1.25rem", background: "rgba(0,0,0,0.15)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                           {loading ? (
                             <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontFamily: "monospace" }}>
-                              {lang === "vi" ? "Đang tải dữ liệu và phân tích tỷ lệ thắng AI..." : "Loading entries and computing AI Win Probabilities..."}
+                              {$t("Đang tải dữ liệu và phân tích tỷ lệ thắng AI...", lang)}
                             </div>
                           ) : sortedEntries.length === 0 ? (
                             <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontStyle: "italic" }}>
-                              {lang === "vi" ? "Chưa có nài ngựa đăng ký cho trận này." : "No entries registered for this race yet."}
+                              {$t("Chưa có nài ngựa đăng ký cho trận này.", lang)}
                             </div>
                           ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -333,7 +330,7 @@ export default function Spectator() {
                                       fontFamily: "monospace"
                                     }}
                                   >
-                                    📺 {lang === "vi" ? "Xem Live Ngay" : "Watch Live stream"}
+                                    📺 {$t("Xem Live Ngay", lang)}
                                   </button>
                                 </div>
                               )}
@@ -392,13 +389,13 @@ export default function Spectator() {
         const finishedRaces = races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL");
         return (
           <div>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{lang === "vi" ? "Kết quả chính thức" : "Race Results"}</h3>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Kết quả chính thức", lang)}</h3>
 
             {isMobile ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 {finishedRaces.length === 0 ? (
                   <p style={{ color: "#a0a0a0", fontStyle: "italic", textAlign: "center", padding: "2rem" }}>
-                    {lang === "vi" ? "Chưa có trận đấu nào hoàn thành." : "No completed races yet."}
+                    {$t("Chưa có trận đấu nào hoàn thành.", lang)}
                   </p>
                 ) : finishedRaces.map((r: any) => {
                   const isExpanded = expandedRaceId === r.id;
@@ -444,9 +441,7 @@ export default function Spectator() {
                               className="bg-amber-950/20 border border-amber-500/20 text-amber-500 font-bold uppercase tracking-wider text-center py-2 rounded-lg mb-3 animate-pulse"
                               style={{ animationDuration: "1.5s", fontSize: "10px" }}
                             >
-                              {lang === "vi" 
-                                ? "Kết quả chưa chính thức (Đang chờ trọng tài xác nhận)"
-                                : "Unofficial Results (Awaiting referee official declaration)"}
+                              {$t("Kết quả chưa chính thức (Đang chờ trọng tài xác nhận)", lang)}
                             </div>
                           )}
                           {r.status === "STEWARDS_INQUIRY" && (
@@ -454,19 +449,17 @@ export default function Spectator() {
                               className="bg-rose-950/40 border border-rose-500/30 text-rose-500 font-bold uppercase tracking-wider text-center py-2 rounded-lg mb-3 animate-pulse"
                               style={{ animationDuration: "1.5s", fontSize: "10px" }}
                             >
-                              {lang === "vi" 
-                                ? "⚠️ Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)"
-                                : "⚠️ Stewards' Inquiry - Race under investigation by Stewards (Official results pending)"}
+                              {$t("⚠️ Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)", lang)}
                             </div>
                           )}
 
                           {loading ? (
                             <p style={{ textAlign: "center", color: "#a0a0a0", fontSize: "12px", fontFamily: "monospace" }}>
-                              {lang === "vi" ? "Đang tải bảng kết quả..." : "Loading standings..."}
+                              {$t("Đang tải bảng kết quả...", lang)}
                             </p>
                           ) : sortedStandings.length === 0 ? (
                             <p style={{ textAlign: "center", color: "#a0a0a0", fontSize: "12px", fontStyle: "italic" }}>
-                              {lang === "vi" ? "Chưa có kết quả chính thức." : "No results recorded yet."}
+                              {$t("Chưa có kết quả chính thức.", lang)}
                             </p>
                           ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -512,7 +505,7 @@ export default function Spectator() {
                   <thead>
                     <tr style={{ background: "rgba(239,68,68,0.06)", borderBottom: "1px solid #2a2825" }}>
                       {["Race", "Distance", "Track", "Status", "Start Time"].map(h => (
-                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{h}</th>
+                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                       ))}
                     </tr>
                   </thead>
@@ -520,7 +513,7 @@ export default function Spectator() {
                     {finishedRaces.length === 0 ? (
                       <tr>
                         <td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>
-                          {lang === "vi" ? "Chưa có trận đấu nào hoàn thành." : "No completed races yet."}
+                          {$t("Chưa có trận đấu nào hoàn thành.", lang)}
                         </td>
                       </tr>
                     ) : finishedRaces.map((r: any) => {
@@ -567,11 +560,11 @@ export default function Spectator() {
                               <td colSpan={5} style={{ padding: "1.25rem", background: "rgba(0,0,0,0.2)", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
                                 {loading ? (
                                   <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontFamily: "monospace" }}>
-                                    {lang === "vi" ? "Đang tải bảng kết quả về đích..." : "Loading finishing standings..."}
+                                    {$t("Đang tải bảng kết quả về đích...", lang)}
                                   </div>
                                 ) : sortedStandings.length === 0 ? (
                                   <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontStyle: "italic" }}>
-                                    {lang === "vi" ? "Chưa có kết quả chính thức nào được lưu cho trận này." : "No finishing results recorded for this race yet."}
+                                    {$t("Chưa có kết quả chính thức nào được lưu cho trận này.", lang)}
                                   </div>
                                 ) : (
                                   <div style={{ overflowX: "auto" }}>
@@ -580,9 +573,7 @@ export default function Spectator() {
                                         className="bg-amber-950/20 border border-amber-500/20 text-amber-500 font-bold uppercase tracking-wider text-center py-2 rounded-lg mb-3 animate-pulse"
                                         style={{ animationDuration: "1.5s", fontSize: "11px" }}
                                       >
-                                        {lang === "vi" 
-                                          ? "Kết quả chưa chính thức (Đang chờ trọng tài xác nhận)"
-                                          : "Unofficial Results (Awaiting referee official declaration)"}
+                                        {$t("Kết quả chưa chính thức (Đang chờ trọng tài xác nhận)", lang)}
                                       </div>
                                     )}
                                     {r.status === "STEWARDS_INQUIRY" && (
@@ -590,21 +581,19 @@ export default function Spectator() {
                                         className="bg-rose-950/40 border border-rose-500/30 text-rose-500 font-bold uppercase tracking-wider text-center py-2 rounded-lg mb-3 animate-pulse"
                                         style={{ animationDuration: "1.5s", fontSize: "11px" }}
                                       >
-                                        {lang === "vi" 
-                                          ? "⚠️ Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)"
-                                          : "⚠️ Stewards' Inquiry - Race under investigation by Stewards (Official results pending)"}
+                                        {$t("⚠️ Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)", lang)}
                                       </div>
                                     )}
                                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                                       <thead>
                                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", color: "#c9a227", textAlign: "left" }}>
-                                          <th style={{ padding: "0.5rem" }}>Pos</th>
-                                          <th style={{ padding: "0.5rem" }}>Gate</th>
-                                          <th style={{ padding: "0.5rem" }}>Horse</th>
-                                          <th style={{ padding: "0.5rem" }}>Jockey</th>
-                                          <th style={{ padding: "0.5rem" }}>Owner</th>
-                                          <th style={{ padding: "0.5rem" }}>Weight (Out/In)</th>
-                                          <th style={{ padding: "0.5rem" }}>Finish Time</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Pos", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Gate", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Horse", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Jockey", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Owner", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Weight (Out/In)", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Finish Time", (localStorage.getItem('app-lang') || 'vi'))}</th>
                                         </tr>
                                       </thead>
                                       <tbody>
@@ -653,10 +642,10 @@ export default function Spectator() {
       case "horses":
         return (
           <div>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{lang === "vi" ? "Danh sách Chiến mã" : "Horses Directory"}</h3>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Danh sách Chiến mã", lang)}</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
               {horses.length === 0
-                ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{lang === "vi" ? "Không tìm thấy ngựa đã đăng ký." : "No horses registered yet."}</p>
+                ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("Không tìm thấy ngựa đã đăng ký.", lang)}</p>
                 : horses.map((h: any) => (
                   <div
                     key={h.id}
@@ -668,12 +657,12 @@ export default function Spectator() {
                   >
                     {h.avatar
                       ? <img src={h.avatar} alt={h.name} style={{ width: "100%", height: "9rem", objectFit: "cover" }} />
-                      : <div style={{ width: "100%", height: "9rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontFamily: "monospace", fontSize: "0.7rem" }}>NO IMAGE</div>}
+                      : <div style={{ width: "100%", height: "9rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontFamily: "monospace", fontSize: "0.7rem" }}>{$t("NO IMAGE", (localStorage.getItem('app-lang') || 'vi'))}</div>}
                     <div style={{ padding: "0.875rem" }}>
                       <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "0.95rem" }}>{h.name}</h4>
                       <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{h.breed}</p>
                       <div style={{ marginTop: "0.5rem", display: "flex", justifyContent: "space-between", fontSize: "0.7rem" }}>
-                        <span style={{ color: "#a0a0a0", fontFamily: "monospace" }}>Rating: <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
+                        <span style={{ color: "#a0a0a0", fontFamily: "monospace" }}>{$t("Rating:", (localStorage.getItem('app-lang') || 'vi'))} <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
                         <span style={{ color: "#a0a0a0", fontFamily: "monospace" }}>W: {h.totalWins ?? 0}</span>
                       </div>
                       <p style={{ fontSize: "0.6rem", color: "#c9a227", fontFamily: "monospace", marginTop: "0.4rem", textAlign: "center" }}>Click to view performance →</p>
@@ -708,7 +697,7 @@ export default function Spectator() {
         // Analysis calculations
         const classCounts: Record<string, number> = {};
         races.forEach(r => {
-          const cls = r.classLevel || (lang === "vi" ? "Khác" : "Other");
+          const cls = r.classLevel || ($t("Khác", lang));
           classCounts[cls] = (classCounts[cls] || 0) + 1;
         });
         const classList = Object.entries(classCounts).sort((a, b) => b[1] - a[1]);
@@ -716,7 +705,7 @@ export default function Spectator() {
 
         const trackCounts: Record<string, number> = {};
         races.forEach(r => {
-          const trk = r.trackType || (lang === "vi" ? "Chưa xác định" : "Unknown");
+          const trk = r.trackType || ($t("Chưa xác định", lang));
           trackCounts[trk] = (trackCounts[trk] || 0) + 1;
         });
         const totalRacesWithTrack = Object.values(trackCounts).reduce((a, b) => a + b, 0) || 1;
@@ -726,20 +715,20 @@ export default function Spectator() {
             {/* Page Header */}
             <div>
               <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>
-                {lang === "vi" ? "Thống kê tổng quan" : "Statistics"}
+                {$t("Thống kê tổng quan", lang)}
               </h3>
               <p style={{ color: "#a0a0a0", fontSize: "0.75rem", fontFamily: "monospace" }}>
-                {lang === "vi" ? "Số liệu trực quan và kết quả phân tích giải đấu giải đua ngựa" : "Visual insights and tournament metrics for the horse racing series"}
+                {$t("Số liệu trực quan và kết quả phân tích giải đấu giải đua ngựa", lang)}
               </p>
             </div>
 
             {/* Core KPI Grid */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "1rem" }}>
               {[
-                { label: lang === "vi" ? "Tổng buổi đua" : "Total Meetings", value: meetings.length, color: "#c9a227" },
-                { label: lang === "vi" ? "Tổng trận đấu" : "Total Races",    value: races.length,    color: "#ef4444" },
-                { label: lang === "vi" ? "Tổng số ngựa" : "Total Horses",   value: horses.length,   color: "#4a9d6f" },
-                { label: lang === "vi" ? "Trận hoàn thành" : "Completed Races", value: races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL").length, color: "#3b82c4" },
+                { label: $t("Tổng buổi đua", lang), value: meetings.length, color: "#c9a227" },
+                { label: $t("Tổng trận đấu", lang),    value: races.length,    color: "#ef4444" },
+                { label: $t("Tổng số ngựa", lang),   value: horses.length,   color: "#4a9d6f" },
+                { label: $t("Trận hoàn thành", lang), value: races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL").length, color: "#3b82c4" },
               ].map(s => (
                 <div key={s.label} className="rounded-xl" style={{ background: "rgba(21,19,16,0.6)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.25rem", textAlign: "center" }}>
                   <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", display: "block", marginBottom: "0.25rem" }}>{s.label}</span>
@@ -762,7 +751,7 @@ export default function Spectator() {
                 <div style={{ fontSize: "2rem" }}>🏆</div>
                 <div style={{ minWidth: 0 }}>
                   <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", display: "block" }}>
-                    {lang === "vi" ? "Mùa giải hiện tại" : "Active Season"}
+                    {$t("Mùa giải hiện tại", lang)}
                   </span>
                   <span style={{ fontSize: "1rem", fontWeight: 800, color: "#fff", fontFamily: "'Roboto Slab', serif", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
                     {statsData.activeSeason || "N/A"}
@@ -784,7 +773,7 @@ export default function Spectator() {
                 <div style={{ fontSize: "2rem" }}>🏇</div>
                 <div>
                   <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", color: "#a0a0a0", display: "block" }}>
-                    {lang === "vi" ? "Nài ngựa hoạt động" : "Active Jockeys"}
+                    {$t("Nài ngựa hoạt động", lang)}
                   </span>
                   <span style={{ fontSize: "1.25rem", fontWeight: 800, color: "#f59e0b", fontFamily: "monospace" }}>
                     {statsData.totalActiveJockeys || 0}
@@ -816,7 +805,7 @@ export default function Spectator() {
                   transition: "all 0.2s"
                 }}
               >
-                🏆 {lang === "vi" ? "Bảng Xếp Hạng Ngựa" : "Horse Leaderboards"}
+                🏆 {$t("Bảng Xếp Hạng Ngựa", lang)}
               </button>
               <button 
                 onClick={() => setStatsSubTab("analysis")}
@@ -833,7 +822,7 @@ export default function Spectator() {
                   transition: "all 0.2s"
                 }}
               >
-                📊 {lang === "vi" ? "Phân Tích Giải Đấu" : "Tournament Analysis"}
+                📊 {$t("Phân Tích Giải Đấu", lang)}
               </button>
             </div>
 
@@ -843,12 +832,12 @@ export default function Spectator() {
                 {/* Wins Leaderboard */}
                 <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
                   <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between" }}>
-                    <span>🥇 {lang === "vi" ? "Chiến Mã Thắng Nhiều Nhất" : "Most Winning Horses"}</span>
-                    <span style={{ fontSize: "0.75rem", color: "#c9a227", fontFamily: "monospace" }}>wins</span>
+                    <span>🥇 {$t("Chiến Mã Thắng Nhiều Nhất", lang)}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#c9a227", fontFamily: "monospace" }}>{$t("wins", (localStorage.getItem('app-lang') || 'vi'))}</span>
                   </h4>
                   {topWinsHorses.length === 0 ? (
                     <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>
-                      {lang === "vi" ? "Chưa có dữ liệu chiến mã." : "No horse data available."}
+                      {$t("Chưa có dữ liệu chiến mã.", lang)}
                     </p>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -883,12 +872,12 @@ export default function Spectator() {
                 {/* Rating Leaderboard */}
                 <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
                   <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between" }}>
-                    <span>⚡️ {lang === "vi" ? "Chiến Mã Rating Cao Nhất" : "Highest Rated Horses"}</span>
-                    <span style={{ fontSize: "0.75rem", color: "#4a9d6f", fontFamily: "monospace" }}>rating</span>
+                    <span>⚡️ {$t("Chiến Mã Rating Cao Nhất", lang)}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#4a9d6f", fontFamily: "monospace" }}>{$t("rating", (localStorage.getItem('app-lang') || 'vi'))}</span>
                   </h4>
                   {topRatingHorses.length === 0 ? (
                     <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>
-                      {lang === "vi" ? "Chưa có dữ liệu chiến mã." : "No horse data available."}
+                      {$t("Chưa có dữ liệu chiến mã.", lang)}
                     </p>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -925,12 +914,12 @@ export default function Spectator() {
                 {/* Race Class Distribution */}
                 <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
                   <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between" }}>
-                    <span>🏁 {lang === "vi" ? "Trận Đấu Theo Phân Hạng" : "Races by Class Level"}</span>
-                    <span style={{ fontSize: "0.75rem", color: "#ef4444", fontFamily: "monospace" }}>races</span>
+                    <span>🏁 {$t("Trận Đấu Theo Phân Hạng", lang)}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#ef4444", fontFamily: "monospace" }}>{$t("races", (localStorage.getItem('app-lang') || 'vi'))}</span>
                   </h4>
                   {classList.length === 0 ? (
                     <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>
-                      {lang === "vi" ? "Chưa có trận đấu nào." : "No races available."}
+                      {$t("Chưa có trận đấu nào.", lang)}
                     </p>
                   ) : (
                     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -941,7 +930,7 @@ export default function Spectator() {
                             <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
                               <span style={{ fontWeight: 600, color: "#e0dcd3" }}>{className}</span>
                               <span style={{ fontFamily: "monospace", fontWeight: 700, color: "#ef4444" }}>
-                                {count} {lang === "vi" ? "trận" : "races"}
+                                {count} {$t("trận", lang)}
                               </span>
                             </div>
                             <div style={{ height: "0.5rem", background: "rgba(255,255,255,0.03)", borderRadius: "999px", overflow: "hidden", border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -963,11 +952,11 @@ export default function Spectator() {
                 {/* Track Type Breakdown */}
                 <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
                   <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem" }}>
-                    🌱 {lang === "vi" ? "Phân Loại Mặt Sân Đua" : "Track Type Distribution"}
+                    🌱 {$t("Phân Loại Mặt Sân Đua", lang)}
                   </h4>
                   {Object.keys(trackCounts).length === 0 ? (
                     <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>
-                      {lang === "vi" ? "Chưa có dữ liệu đường đua." : "No track data available."}
+                      {$t("Chưa có dữ liệu đường đua.", lang)}
                     </p>
                   ) : (
                     <div>
@@ -1038,9 +1027,7 @@ export default function Spectator() {
         );
 
       case "ai-assistant":
-        const SUGGESTIONS = lang === "vi" 
-          ? ["Ngựa nào rating cao nhất?", "Dự đoán trận đấu Class 2", "Thống kê nài ngựa xuất sắc nhất"]
-          : ["Who has the highest rating?", "Predict the upcoming Class 2 race", "Give me top jockey stats"];
+        const SUGGESTIONS = ["Ngựa nào rating cao nhất?", "Dự đoán trận đấu Class 2", "Thống kê nài ngựa xuất sắc nhất"].map(v => $t(v, lang));
 
         return (
           <div style={{ 
@@ -1077,10 +1064,10 @@ export default function Spectator() {
                     background: "linear-gradient(45deg, #c9a227, #f3d06c)",
                     WebkitBackgroundClip: "text",
                     WebkitTextFillColor: "transparent"
-                  }}>{lang === "vi" ? "✦ Trợ lý ảo AI giải đấu" : "✦ Tournament AI Assistant"}</span>
+                  }}>{$t("✦ Trợ lý ảo AI giải đấu", lang)}</span>
                 </h4>
                 <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>
-                  {lang === "vi" ? "Trợ lý AI nội bộ phân tích phong độ và thống kê thời gian thực" : "Internal AI assistant for form analysis and real-time statistics"}
+                  {$t("Trợ lý AI nội bộ phân tích phong độ và thống kê thời gian thực", lang)}
                 </p>
               </div>
             </div>
@@ -1116,7 +1103,7 @@ export default function Spectator() {
                         fontWeight: "bold",
                         letterSpacing: "0.5px"
                       }}>
-                        {isAI ? (lang === "vi" ? "✦ TRỢ LÝ AI HỆ THỐNG" : "✦ SYSTEM AI ASSISTANT") : "YOU"} · {msg.time}
+                        {isAI ? ($t("✦ TRỢ LÝ AI HỆ THỐNG", lang)) : "YOU"} · {msg.time}
                       </div>
                        <div style={{
                         padding: "1rem 1.25rem",
@@ -1143,7 +1130,7 @@ export default function Spectator() {
                 <div style={{ display: "flex", justifyContent: "flex-start" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "1rem 1.25rem", borderRadius: "0 1.25rem 1.25rem 1.25rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
                     <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#c9a227", animation: "pulse 1.2s infinite alternate" }} />
-                    <span style={{ fontSize: "11px", color: "#888", fontFamily: "monospace" }}>{lang === "vi" ? "Trợ lý AI đang trả lời..." : "AI Assistant is thinking..."}</span>
+                    <span style={{ fontSize: "11px", color: "#888", fontFamily: "monospace" }}>{$t("Trợ lý AI đang trả lời...", lang)}</span>
                   </div>
                 </div>
               )}
@@ -1209,7 +1196,7 @@ export default function Spectator() {
                 value={chatInput}
                 onChange={e => setChatInput(e.target.value)}
                 disabled={chatLoading}
-                placeholder={lang === "vi" ? "Hỏi Trợ lý AI về cuộc đua, ngựa, nài..." : "Ask AI Assistant about races, horses, jockeys..."}
+                placeholder={$t("Hỏi Trợ lý AI về cuộc đua, ngựa, nài...", lang)}
                 style={{
                   flex: 1,
                   background: "rgba(255,255,255,0.03)",
