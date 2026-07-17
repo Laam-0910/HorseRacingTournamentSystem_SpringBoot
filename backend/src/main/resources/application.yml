@@ -19,3 +19,8 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.SQLServerDialect
+
+ai:
+  service:
+    url: ${AI_SERVICE_URL:http://localhost:5000}
+    start-local: ${AI_SERVICE_START_LOCAL:true}

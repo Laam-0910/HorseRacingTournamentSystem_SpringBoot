@@ -3,6 +3,7 @@ package com.horseracing.backend.runner;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
@@ -13,6 +14,9 @@ import java.nio.file.Paths;
 public class PythonStartupRunner {
 
     private Process pythonProcess;
+
+    @Value("${ai.service.start-local:true}")
+    private boolean startLocal;
 
     // ── CHÚ THÍCH PHÂN TÍCH: ───────────────────────────────────────
     // 1. @PostConstruct LÀ GÌ? Đây là một annotation của Spring. Khác với Hàm khởi tạo (Constructor),
@@ -27,6 +31,10 @@ public class PythonStartupRunner {
     //    trong khi vẫn in log từ con AI ra màn hình.
     @PostConstruct
     public void startPythonServer() {
+        if (!startLocal) {
+            log.info("[PythonRunner] Khởi động Python AI Server ở chế độ local đã bị TẮT (start-local=false).");
+            return;
+        }
         // Tính đường dẫn tới thư mục ai_service (ở thư mục hiện tại hoặc thư mục cha nếu đang chạy từ backend/)
         File workDir = Paths.get(System.getProperty("user.dir"), "ai_service").toFile();
         if (!workDir.exists()) {
