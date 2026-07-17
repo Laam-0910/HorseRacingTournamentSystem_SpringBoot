@@ -413,8 +413,17 @@ class RAGEngine:
                                 if key_name == "GEMINI_API_KEY" and (not self.gemini_api_key or self.gemini_api_key.startswith("YOUR_")):
                                     self.gemini_api_key = val
                                     self.use_gemini = True
+                                elif key_name == "GEMINI_API_KEYS":
+                                    env_gemini_keys = [x.strip() for x in val.split(",") if x.strip() and not x.strip().startswith("YOUR_")]
+                                    if env_gemini_keys and not self.gemini_api_keys:
+                                        self.gemini_api_keys = env_gemini_keys
+                                        self.use_gemini = True
                                 elif key_name == "GROQ_API_KEY" and (not self.groq_api_key or self.groq_api_key.startswith("YOUR_")):
                                     self.groq_api_key = val
+                                elif key_name == "GROQ_API_KEYS":
+                                    env_groq_keys = [x.strip() for x in val.split(",") if x.strip() and not x.strip().startswith("YOUR_")]
+                                    if env_groq_keys and not self.groq_api_keys:
+                                        self.groq_api_keys = env_groq_keys
             except Exception as e:
                 print(f"[Env Loader Error] Failed to read .env: {e}")
 
