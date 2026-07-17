@@ -384,7 +384,7 @@ export default function Season() {
                     <div>
                       <span className="block text-xs font-mono font-bold text-[#f4f2ec]">{$t("Automatic Class Rules", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       <span className="block text-[10px] font-mono mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
-                        TỰ ĐỘNG: Máy tự động thiết lập và áp dụng toàn bộ các Class mặc định (Class 1 - Class 5) vào Season này.
+                        AUTOMATIC: System automatically configures and applies all default rating classes (Class 1 - Class 5) to this season.
                       </span>
                     </div>
                   </div>
@@ -412,7 +412,7 @@ export default function Season() {
                     <div>
                       <span className="block text-xs font-mono font-bold text-[#f4f2ec]">{$t("Manual Setup", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       <span className="block text-[10px] font-mono mt-1 leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
-                        THỦ CÔNG: Tự tay điều chỉnh trực tiếp điểm số và tiền thưởng cho cả 5 Class (Class 1 - Class 5) cho Season này.
+                        MANUAL: Manually configure and adjust rating boundaries for all 5 classes (Class 1 - Class 5) for this season.
                       </span>
                     </div>
                   </div>

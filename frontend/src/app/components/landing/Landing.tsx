@@ -109,6 +109,11 @@ const TRANSLATIONS: Record<string, any> = {
     feat5Desc: "Tỷ lệ thắng, tiền thưởng, phân tích thành tích",
     feat6Title: "Báo cáo Sự cố",
     feat6Desc: "Theo dõi vi phạm luật và hình phạt",
+    awardRecipients: "Danh sách nhận giải (Top 3)",
+    jockeyLabel: "Kỵ sĩ",
+    ownerLabel: "Chủ ngựa",
+    achievement: "Thành tích",
+    otherPositions: "Các thứ hạng khác",
   },
   en: {
     home: "Home",
@@ -145,6 +150,11 @@ const TRANSLATIONS: Record<string, any> = {
     hours: "Hours",
     minutes: "Minutes",
     seconds: "Seconds",
+    awardRecipients: "Award Recipients (Top 3)",
+    jockeyLabel: "Jockey",
+    ownerLabel: "Owner",
+    achievement: "Result",
+    otherPositions: "Other Positions",
   },
   zh: {
     home: "首页",
@@ -181,6 +191,11 @@ const TRANSLATIONS: Record<string, any> = {
     hours: "小时",
     minutes: "分钟",
     seconds: "秒",
+    awardRecipients: "领奖名单 (前 3 名)",
+    jockeyLabel: "骑师",
+    ownerLabel: "马主",
+    achievement: "成绩",
+    otherPositions: "其他排名",
   },
   ja: {
     home: "ホーム",
@@ -217,6 +232,11 @@ const TRANSLATIONS: Record<string, any> = {
     hours: "時間",
     minutes: "分",
     seconds: "秒",
+    awardRecipients: "受賞者リスト (トップ 3)",
+    jockeyLabel: "騎手",
+    ownerLabel: "馬主",
+    achievement: "成績",
+    otherPositions: "その他の順位",
   }
 };
 
@@ -723,11 +743,7 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
 
         <div className="relative z-10 w-full flex flex-col items-center">
           <div className="inline-block px-6 py-2 mb-6 rounded-full bg-black/40 backdrop-blur-md border border-[#c9a227]/40 text-[#c9a227] text-[0.65rem] font-bold uppercase tracking-widest">
-            {$t("Chọn một chức năng bên dưới để bắt đầu.", (localStorage.getItem('app-lang') || 'vi'))}
-          </div>
-          
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-8 leading-tight text-[#c9a227] max-w-4xl drop-shadow-[0_5px_15px_rgba(0,0,0,0.8)]" style={{ fontFamily: "'Roboto Slab', serif" }}>
-            {$t("Xin chào! Hỏi tôi về ngựa, nài, race, dự đoán kết quả nhé.", (localStorage.getItem('app-lang') || 'vi'))}
+
           </h1>
           
           {nextMeeting && (
@@ -739,10 +755,7 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
           
           <div className="flex flex-wrap justify-center gap-4">
             <button onClick={onWatchLive} className="px-8 py-3 bg-[#c9a227] text-[#0e0c09] font-bold rounded-lg hover:bg-[#d6af35] transition-all uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(201,162,39,0.3)]">
-              {$t("XEM TRỰC TIẾP", (localStorage.getItem('app-lang') || 'vi'))}
-            </button>
-            <button onClick={onViewRacecard} className="px-8 py-3 bg-black/60 backdrop-blur-md border border-[#2a2825] text-white font-medium rounded-lg hover:border-[#c9a227]/50 hover:bg-black/80 transition-all text-sm shadow-lg shadow-black/50">
-              {$t("Xem Bảng đua", (localStorage.getItem('app-lang') || 'vi'))}
+
             </button>
           </div>
         </div>
@@ -1669,7 +1682,7 @@ export default function Landing() {
                                 {/* Award Recipients List */}
                                 {top3.length > 0 && (
                                   <div className="mb-6 mt-4">
-                                    <h5 className="text-[#c9a227] font-bold uppercase tracking-widest text-sm mb-4 border-l-4 border-[#c9a227] pl-3">{$t("Danh sách nhận giải (Top 3)", (localStorage.getItem('app-lang') || 'vi'))}</h5>
+
                                     <div className="flex flex-col gap-3">
                                       {top3.map((e, idx) => (
                                         <div key={`top-${idx}`} className="bg-gradient-to-r from-[#c9a227]/10 to-transparent border border-[#c9a227]/30 rounded-xl p-4 flex flex-col md:flex-row md:items-center gap-4 hover-lift">
@@ -1678,13 +1691,12 @@ export default function Landing() {
                                             <div>
                                               <div className="text-lg font-bold text-white" style={{ fontFamily: "'Roboto Slab', serif" }}>{e.horse?.name}</div>
                                               <div className="text-sm text-gray-400 mt-1 flex flex-wrap gap-4">
-                                                <span><strong className="text-[#c9a227]">{$t("Kỵ sĩ:", (localStorage.getItem('app-lang') || 'vi'))}</strong> {e.jockey?.fullName || e.jockey?.username}</span>
-                                                <span><strong className="text-[#c9a227]">{$t("Chủ ngựa:", (localStorage.getItem('app-lang') || 'vi'))}</strong> {e.owner?.fullName || e.owner?.username}</span>
+
                                               </div>
                                             </div>
                                           </div>
                                           <div className="text-right">
-                                            <div className="text-xs text-gray-500 uppercase tracking-widest mb-1">{$t("Thành tích", (localStorage.getItem('app-lang') || 'vi'))}</div>
+
                                             <div className="text-lg font-mono font-bold text-[#c9a227]">{e.entry?.finishTime}</div>
                                           </div>
                                         </div>
@@ -1696,7 +1708,7 @@ export default function Landing() {
                                 {/* Rest of the List */}
                                 {rest.length > 0 && (
                                   <div className="mt-4">
-                                    <h5 className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-4 border-l-4 border-gray-500 pl-3">Các thứ hạng khác</h5>
+                                    <h5 className="text-gray-400 font-bold uppercase tracking-widest text-sm mb-4 border-l-4 border-gray-500 pl-3">{t.otherPositions}</h5>
                                     <div className="flex flex-col gap-3">
                                       {rest.map((e, idx) => {
                                         const pos = e.entry?.finalPosition;
@@ -2060,7 +2072,7 @@ export default function Landing() {
                   setView("search");
                 }
               }}
-              placeholder={$t("Tìm kiếm ngựa, nài, chủ ngựa, trận đua...", (localStorage.getItem('app-lang') || 'vi'))}
+
               style={{ width: "100%", paddingLeft: "2.5rem", paddingRight: "1.75rem", paddingTop: "0.5rem", paddingBottom: "0.5rem", fontSize: "0.85rem", background: "#111111", borderRadius: "0.5rem", color: "#f0f0f0", border: "1px solid #1f1f1f", outline: "none" }}
             />
             {searchQuery && (
