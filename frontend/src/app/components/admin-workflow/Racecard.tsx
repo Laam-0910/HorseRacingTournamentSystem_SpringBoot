@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { $t } from '@/lib/i18n';
+import { confirm } from "../../../lib/confirm";
 
 export default function Racecard() {
   const [meetings, setMeetings] = useState<any[]>([]);
@@ -109,7 +110,7 @@ export default function Racecard() {
 
   const handleCancelRace = async () => {
     if (selectedRaceId === null) return;
-    if (!window.confirm("Are you sure you want to cancel this race? This will reset all entries.")) return;
+    if (!await confirm("Are you sure you want to cancel this race? This will reset all entries.")) return;
     setError("");
     setSuccess("");
     try {
