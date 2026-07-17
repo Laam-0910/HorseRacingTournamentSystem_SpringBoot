@@ -1,26 +1,79 @@
 package com.horseracing.backend.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import java.util.Map;
 
 @RestController
 @RequestMapping({"/api/ai", "/ai"})
 @CrossOrigin(origins = "*")
 public class AIProxyController {
 
-    private static final String AI_BASE_URL = "http://localhost:5000";
+    @Value("${ai.service.url:http://localhost:5000}")
+    private String aiBaseUrl;
+
     private final RestTemplate restTemplate = new RestTemplate();
 
     private String buildUrl(HttpServletRequest request) {
         String path = request.getRequestURI().replaceFirst("^/api/ai", "").replaceFirst("^/ai", "");
-        String url = AI_BASE_URL + (path.startsWith("/") ? path : "/" + path);
+        String url = aiBaseUrl + (path.startsWith("/") ? path : "/" + path);
         if (request.getQueryString() != null) {
             url += "?" + request.getQueryString();
         }
         return url;
+    }
+
+    @PostMapping("/chat")
+    public ResponseEntity<String> chat(@RequestBody Map<String, Object> body) {
+        String url = aiBaseUrl + "/chat";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+
+        try {
+            return restTemplate.postForEntity(url, entity, String.class);
+        } catch (HttpStatusCodeException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(e.getResponseHeaders())
+                    .body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
+    }
+
+    @GetMapping("/predict/{raceId}")
+    public ResponseEntity<String> predict(@PathVariable("raceId") Integer raceId) {
+        String url = aiBaseUrl + "/predict/" + raceId;
+        try {
+            return restTemplate.getForEntity(url, String.class);
+        } catch (HttpStatusCodeException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(e.getResponseHeaders())
+                    .body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<String> health() {
+        String url = aiBaseUrl + "/health";
+        try {
+            return restTemplate.getForEntity(url, String.class);
+        } catch (HttpStatusCodeException e) {
+            return ResponseEntity.status(e.getStatusCode())
+                    .headers(e.getResponseHeaders())
+                    .body(e.getResponseBodyAsString());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"" + e.getMessage() + "\"}");
+        }
     }
 
     @GetMapping("/**")
