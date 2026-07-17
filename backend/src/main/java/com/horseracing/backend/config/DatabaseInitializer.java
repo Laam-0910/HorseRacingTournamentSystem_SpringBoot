@@ -38,6 +38,14 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
+            // Check and add biography to User table
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'biography') " +
+                "BEGIN " +
+                "    ALTER TABLE [User] ADD biography NVARCHAR(MAX) NULL; " +
+                "END"
+            );
+
             // Check and add min_entries to Race table
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'min_entries') " +

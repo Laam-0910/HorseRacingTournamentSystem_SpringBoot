@@ -12,7 +12,6 @@ export default function Users() {
   }, []);
 
   const [users, setUsers] = useState<any[]>([]);
-  const [horses, setHorses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -47,11 +46,8 @@ export default function Users() {
     try {
       const allUsers = await api.get<any[]>("/admin/users");
       setUsers(allUsers);
-
-      const allHorses = await api.get<any[]>("/public/horses");
-      setHorses(allHorses);
     } catch (err: any) {
-      setError(err.message || "Failed to load users and horses data.");
+      setError(err.message || "Failed to load users data.");
     } finally {
       setLoading(false);
     }
@@ -141,26 +137,7 @@ export default function Users() {
     }
   };
 
-  const handleEditRating = async (h: any) => {
-    const val = prompt(`Enter new rating for horse "${h.name}":`, h.currentRating);
-    if (val === null) return;
-    const newRating = parseInt(val);
-    if (isNaN(newRating)) {
-      alert("Invalid rating number.");
-      return;
-    }
 
-    try {
-      await api.put(`/horses/${h.id}`, {
-        ...h,
-        currentRating: newRating,
-      });
-      showSuccess("Rating updated successfully.");
-      fetchData();
-    } catch (err: any) {
-      alert("Failed to update rating: " + err.message);
-    }
-  };
 
   const filteredUsers = users.filter((u) => {
     let matchesRole = true;
@@ -181,14 +158,7 @@ export default function Users() {
     return matchesRole && matchesSearch;
   });
 
-  const filteredHorses = horses.filter((h) => {
-    if (!searchQuery.trim()) return true;
-    const q = searchQuery.toLowerCase().trim();
-    const nameMatch = (h.name || "").toLowerCase().includes(q);
-    const breedMatch = (h.breed || "").toLowerCase().includes(q);
-    const ownerMatch = (h.ownerName || "").toLowerCase().includes(q);
-    return nameMatch || breedMatch || ownerMatch;
-  });
+
 
   const getRoleName = (roleId: number) => {
     if (roleId === 1) return $t("Admin", (localStorage.getItem('app-lang') || 'vi'));
@@ -387,67 +357,6 @@ export default function Users() {
         )}
       </div>
 
-      {/* 4. Registered Horses Directory */}
-      <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-        <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Registered Horses Directory", (localStorage.getItem('app-lang') || 'vi'))}</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Stable horse statistics & rating adjustments", (localStorage.getItem('app-lang') || 'vi'))}</p>
-        </div>
-        {isMobile ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
-            {filteredHorses.length > 0 ? (
-              filteredHorses.map((h) => (
-                <div key={h.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                    <div>
-                      <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "14px" }}>{h.name}</div>
-                      <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>Breed: {h.breed}</div>
-                    </div>
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.25rem" }}>
-                      <span style={{ fontWeight: "bold", color: "#fbbf24", fontSize: "13px" }}>⭐ {h.currentRating}</span>
-                      <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)" }}>{h.totalRaces || 0} races</span>
-                    </div>
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
-                    <button onClick={() => handleEditRating(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>{$t("Edit Rating", (localStorage.getItem('app-lang') || 'vi'))}</button>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("No registered horses match the criteria.", (localStorage.getItem('app-lang') || 'vi'))}</div>
-            )}
-          </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                  {["Horse Name", "Breed", "Current Rating", "Races Run", "Actions"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 4 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5 text-sm">
-                {filteredHorses.length > 0 ? (
-                  filteredHorses.map((h) => (
-                    <tr key={h.id} className="hover:bg-white/[0.015] transition-colors">
-                      <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#f4f2ec" }}>{h.name}</td>
-                      <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.8)" }}>{h.breed}</td>
-                      <td style={{ padding: "0.75rem 1.5rem", fontWeight: "bold", color: "#fbbf24" }}>{h.currentRating}</td>
-                      <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.5)" }}>{h.totalRaces || 0} races</td>
-                      <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
-                        <button onClick={() => handleEditRating(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>{$t("Edit Rating", (localStorage.getItem('app-lang') || 'vi'))}</button>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("No registered horses match the criteria.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
 
       {/* Edit User Modal */}
       {editingUser && (
