@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 
@@ -113,10 +114,10 @@ export default function LiveSettings() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-          <span>Race Livestream Broadcasting</span>
+          <span>{$t("Race Livestream Broadcasting", (localStorage.getItem('app-lang') || 'vi'))}</span>
         </h3>
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-white/60 font-semibold uppercase tracking-wider">Select Meeting:</span>
+          <span className="text-xs text-white/60 font-semibold uppercase tracking-wider">{$t("Select Meeting:", (localStorage.getItem('app-lang') || 'vi'))}</span>
           <select
             value={selectedMeetingId || ""}
             onChange={(e) => setSelectedMeetingId(parseInt(e.target.value))}
@@ -133,7 +134,7 @@ export default function LiveSettings() {
 
       <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
         {loading ? (
-          <p className="p-6 text-sm text-white/40 text-center">Loading races...</p>
+          <p className="p-6 text-sm text-white/40 text-center">{$t("Loading races...", (localStorage.getItem('app-lang') || 'vi'))}</p>
         ) : races.length > 0 ? (
           isMobile ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
@@ -146,7 +147,7 @@ export default function LiveSettings() {
                     </span>
                   </div>
                   <div>
-                    <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>YouTube Broadcast URL</label>
+                    <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>{$t("YouTube Broadcast URL", (localStorage.getItem('app-lang') || 'vi'))}</label>
                     <input
                       type="text"
                       disabled={r.status !== "RUNNING"}
@@ -161,17 +162,13 @@ export default function LiveSettings() {
                       disabled={r.status !== "RUNNING"}
                       onClick={() => handleSave(r.id)}
                       className={`px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
-                    >
-                      Save
-                    </button>
+                    >{$t("Save", (localStorage.getItem('app-lang') || 'vi'))}</button>
                     {r.youtubeLiveUrl && (
                       <button
                         disabled={r.status !== "RUNNING"}
                         onClick={() => handleRemove(r.id)}
                         className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed" : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20"}`}
-                      >
-                        Remove
-                      </button>
+                      >{$t("Remove", (localStorage.getItem('app-lang') || 'vi'))}</button>
                     )}
                   </div>
                 </div>
@@ -181,10 +178,10 @@ export default function LiveSettings() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#151310] text-xs font-semibold text-white/60 uppercase tracking-wider border-b border-white/5">
-                  <th className="px-6 py-4">Class Level</th>
-                  <th className="px-6 py-4">Race Status</th>
-                  <th className="px-6 py-4">YouTube Broadcast URL</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-6 py-4">{$t("Class Level", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-4">{$t("Race Status", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-4">{$t("YouTube Broadcast URL", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-4 text-right">{$t("Actions", (localStorage.getItem('app-lang') || 'vi'))}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-sm">
@@ -211,17 +208,13 @@ export default function LiveSettings() {
                         disabled={r.status !== "RUNNING"}
                         onClick={() => handleSave(r.id)}
                         className={`px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
-                      >
-                        Save
-                      </button>
+                      >{$t("Save", (localStorage.getItem('app-lang') || 'vi'))}</button>
                       {r.youtubeLiveUrl && (
                         <button
                           disabled={r.status !== "RUNNING"}
                           onClick={() => handleRemove(r.id)}
                           className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed" : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20"}`}
-                        >
-                          Remove
-                        </button>
+                        >{$t("Remove", (localStorage.getItem('app-lang') || 'vi'))}</button>
                       )}
                     </td>
                   </tr>
@@ -230,7 +223,7 @@ export default function LiveSettings() {
             </table>
           )
         ) : (
-          <p className="p-6 text-sm text-white/40 text-center">No races scheduled for this meeting.</p>
+          <p className="p-6 text-sm text-white/40 text-center">{$t("No races scheduled for this meeting.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         )}
       </div>
     </div>

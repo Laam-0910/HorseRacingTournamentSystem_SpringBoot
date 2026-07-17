@@ -1,3 +1,4 @@
+import { $t } from '@/lib/i18n';
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
@@ -108,9 +109,9 @@ export default function RefereeDuties() {
     <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
       {/* Header */}
       <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)" }}>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{t.refereeSchedule}</h3>
+        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{$t("Lịch trình trọng tài", (localStorage.getItem('app-lang') || 'vi'))}</h3>
         <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>
-          {t.scheduleSub}
+          {$t("Danh sách các cuộc đua sắp diễn ra và đã diễn ra mà bạn được phân công làm trọng tài.", (localStorage.getItem('app-lang') || 'vi'))}
         </p>
       </div>
 
@@ -118,9 +119,9 @@ export default function RefereeDuties() {
       {isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
           {loading ? (
-            <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>{t.loadingSchedule}</p>
+            <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>{$t("Đang tải lịch trình...", (localStorage.getItem('app-lang') || 'vi'))}</p>
           ) : schedule.length === 0 ? (
-            <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem", textAlign: "center", padding: "1rem" }}>{t.noDuties}</p>
+            <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem", textAlign: "center", padding: "1rem" }}>{$t("Không có nhiệm vụ nào được phân công cho lịch trình của bạn.", (localStorage.getItem('app-lang') || 'vi'))}</p>
           ) : schedule.map((item: any, i: number) => {
             const race    = item.race    ?? item;
             const meeting = item.meeting ?? {};
@@ -156,18 +157,18 @@ export default function RefereeDuties() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                {[t.scheduleHeader, t.meetingVenue, t.raceDetails, t.status].map(h => (
+                {[$t("Lịch trình", (localStorage.getItem('app-lang') || 'vi')), $t("Giải đua & Địa điểm", (localStorage.getItem('app-lang') || 'vi')), $t("Trận đấu & Chi tiết", (localStorage.getItem('app-lang') || 'vi')), $t("Trạng thái", (localStorage.getItem('app-lang') || 'vi'))].map(h => (
                   <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{t.loadingSchedule}</td></tr>
+                <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{$t("Đang tải lịch trình...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
               ) : schedule.length === 0 ? (
                 <tr>
                   <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>
-                    {t.noDuties}
+                    {$t("Không có nhiệm vụ nào được phân công cho lịch trình của bạn.", (localStorage.getItem('app-lang') || 'vi'))}
                   </td>
                 </tr>
               ) : schedule.map((item: any, i: number) => {

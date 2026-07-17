@@ -157,8 +157,8 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const d = new Date();
-    setToday(d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
-  }, []);
+    const loc = lang === 'vi' ? 'vi-VN' : lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja-JP' : 'en-GB'; setToday(d.toLocaleDateString(loc, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
+  }, [lang]);
 
   useEffect(() => {
     const handleResize = () => {

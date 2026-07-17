@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 
@@ -147,25 +148,25 @@ export default function AdminHorseRetirement() {
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem", order: isMobile ? 2 : undefined }}>
           {/* Pending Requests */}
           <div className="rounded-xl border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem" }}>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.2rem", color: "#f4f2ec", marginBottom: "1rem" }}>Pending Retirement Requests</h3>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.2rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Pending Retirement Requests", (localStorage.getItem('app-lang') || 'vi'))}</h3>
             {loading ? (
-              <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem" }}>Loading requests...</p>
+              <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem" }}>{$t("Loading requests...", (localStorage.getItem('app-lang') || 'vi'))}</p>
             ) : pendingRequests.length === 0 ? (
-              <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem", fontFamily: "monospace" }}>No pending retirement requests.</p>
+              <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem", fontFamily: "monospace" }}>{$t("No pending retirement requests.", (localStorage.getItem('app-lang') || 'vi'))}</p>
             ) : (
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
                 {pendingRequests.map(req => (
                   <div key={req.id} className="rounded-lg border" style={{ borderColor: "rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.02)", padding: "1rem", display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
                     <div>
                       <h4 style={{ color: "#f4f2ec", fontWeight: "bold", fontSize: "0.9rem" }}>{req.horseName}</h4>
-                      <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.15rem" }}>Owner: <strong>{req.ownerName}</strong></p>
+                      <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.15rem" }}>{$t("Owner:", (localStorage.getItem('app-lang') || 'vi'))}<strong>{req.ownerName}</strong></p>
                       <p style={{ fontSize: "0.75rem", color: "#f4f2ec", marginTop: "0.5rem", background: "rgba(255,255,255,0.03)", padding: "0.5rem", borderRadius: "0.375rem" }}>
                         Reason: {req.reason}
                       </p>
                     </div>
                     <div style={{ display: "flex", gap: "0.5rem" }}>
-                      <button onClick={() => { setProcessingRequest(req); setActionType("APPROVE"); }} style={{ padding: "0.4rem 0.8rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "0.7rem", fontWeight: "bold", cursor: "pointer" }}>Approve</button>
-                      <button onClick={() => { setProcessingRequest(req); setActionType("REJECT"); }} style={{ padding: "0.4rem 0.8rem", background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "0.375rem", fontSize: "0.7rem", fontWeight: "bold", cursor: "pointer" }}>Reject</button>
+                      <button onClick={() => { setProcessingRequest(req); setActionType("APPROVE"); }} style={{ padding: "0.4rem 0.8rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "0.7rem", fontWeight: "bold", cursor: "pointer" }}>{$t("Approve", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                      <button onClick={() => { setProcessingRequest(req); setActionType("REJECT"); }} style={{ padding: "0.4rem 0.8rem", background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", borderRadius: "0.375rem", fontSize: "0.7rem", fontWeight: "bold", cursor: "pointer" }}>{$t("Reject", (localStorage.getItem('app-lang') || 'vi'))}</button>
                     </div>
                   </div>
                 ))}
@@ -175,19 +176,19 @@ export default function AdminHorseRetirement() {
 
           {/* Processed Requests History */}
           <div className="rounded-xl border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem" }}>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec", marginBottom: "1rem" }}>Retirement History</h3>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Retirement History", (localStorage.getItem('app-lang') || 'vi'))}</h3>
             {processedRequests.length === 0 ? (
-              <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem", fontFamily: "monospace" }}>No processed requests found.</p>
+              <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem", fontFamily: "monospace" }}>{$t("No processed requests found.", (localStorage.getItem('app-lang') || 'vi'))}</p>
             ) : (
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem", textAlign: "left", fontFamily: "monospace" }}>
                   <thead>
                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#a0a0a0" }}>
-                      <th style={{ padding: "0.5rem" }}>Horse Name</th>
-                      <th style={{ padding: "0.5rem" }}>Owner</th>
-                      <th style={{ padding: "0.5rem" }}>Reason</th>
-                      <th style={{ padding: "0.5rem" }}>Status</th>
-                      <th style={{ padding: "0.5rem" }}>Remarks</th>
+                      <th style={{ padding: "0.5rem" }}>{$t("Horse Name", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                      <th style={{ padding: "0.5rem" }}>{$t("Owner", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                      <th style={{ padding: "0.5rem" }}>{$t("Reason", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                      <th style={{ padding: "0.5rem" }}>{$t("Status", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                      <th style={{ padding: "0.5rem" }}>{$t("Remarks", (localStorage.getItem('app-lang') || 'vi'))}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -218,25 +219,25 @@ export default function AdminHorseRetirement() {
 
         {/* Right Column: Compulsory Retirement */}
         <div className="rounded-xl border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem", order: isMobile ? 1 : undefined }}>
-          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.2rem", color: "#f4f2ec", marginBottom: "1rem" }}>Compulsory Retirement</h3>
+          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.2rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Compulsory Retirement", (localStorage.getItem('app-lang') || 'vi'))}</h3>
           <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1.25rem" }}>
             Forcibly retire any active horse from the HKJC circuit due to age (11+), rating limit (&le;25), injury, or behavioral safety issues.
           </p>
           <form onSubmit={handleCompulsoryRetire} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div>
-              <label style={labelStyle}>Select Active Horse</label>
+              <label style={labelStyle}>{$t("Select Active Horse", (localStorage.getItem('app-lang') || 'vi'))}</label>
               <select required value={selectedHorseId} onChange={e => setSelectedHorseId(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
-                <option value="">-- Select Horse --</option>
+                <option value="">{$t("-- Select Horse --", (localStorage.getItem('app-lang') || 'vi'))}</option>
                 {activeHorses.map(h => (
                   <option key={h.id} value={String(h.id)}>{h.name} ({h.breed}) - Owner: {h.ownerName}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Retirement Reason / Report</label>
-              <textarea required value={compulsoryReason} onChange={e => setCompulsoryReason(e.target.value)} placeholder="E.g., Enforced retirement: Horse reached 11 years of age, or Rating dropped below 25 at end of season." style={{ ...inputStyle, height: "6rem", resize: "none" }} />
+              <label style={labelStyle}>{$t("Retirement Reason / Report", (localStorage.getItem('app-lang') || 'vi'))}</label>
+              <textarea required value={compulsoryReason} onChange={e => setCompulsoryReason(e.target.value)} placeholder={$t("E.g., Enforced retirement: Horse reached 11 years of age, or Rating dropped below 25 at end of season.", (localStorage.getItem('app-lang') || 'vi'))} style={{ ...inputStyle, height: "6rem", resize: "none" }} />
             </div>
-            <button type="submit" disabled={!selectedHorseId || !compulsoryReason.trim()} style={{ width: "100%", padding: "0.75rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontWeight: "bold", fontSize: "0.75rem", cursor: "pointer" }}>Enforce Retirement</button>
+            <button type="submit" disabled={!selectedHorseId || !compulsoryReason.trim()} style={{ width: "100%", padding: "0.75rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontWeight: "bold", fontSize: "0.75rem", cursor: "pointer" }}>{$t("Enforce Retirement", (localStorage.getItem('app-lang') || 'vi'))}</button>
           </form>
         </div>
       </div>
@@ -256,11 +257,11 @@ export default function AdminHorseRetirement() {
             </p>
             <form onSubmit={handleProcessRequest} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div>
-                <label style={labelStyle}>Admin Remarks</label>
-                <textarea required value={adminRemarks} onChange={e => setAdminRemarks(e.target.value)} placeholder="Provide any comments or instructions..." style={{ ...inputStyle, height: "5rem", resize: "none" }} />
+                <label style={labelStyle}>{$t("Admin Remarks", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                <textarea required value={adminRemarks} onChange={e => setAdminRemarks(e.target.value)} placeholder={$t("Provide any comments or instructions...", (localStorage.getItem('app-lang') || 'vi'))} style={{ ...inputStyle, height: "5rem", resize: "none" }} />
               </div>
               <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-                <button type="button" onClick={() => { setProcessingRequest(null); setActionType(null); setAdminRemarks(""); }} style={{ padding: "0.5rem 1rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.5rem", color: "#f4f2ec", fontFamily: "monospace", fontSize: "0.75rem", cursor: "pointer" }}>Cancel</button>
+                <button type="button" onClick={() => { setProcessingRequest(null); setActionType(null); setAdminRemarks(""); }} style={{ padding: "0.5rem 1rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.5rem", color: "#f4f2ec", fontFamily: "monospace", fontSize: "0.75rem", cursor: "pointer" }}>{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
                 <button type="submit" style={{ padding: "0.5rem 1rem", background: actionType === "APPROVE" ? "#4ade80" : "#ef4444", color: actionType === "APPROVE" ? "#0e0c09" : "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>
                   Confirm {actionType === "APPROVE" ? "Approval" : "Rejection"}
                 </button>

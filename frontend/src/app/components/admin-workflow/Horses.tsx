@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
@@ -66,7 +67,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
           readOnly
           onClick={() => setIsOpen(!isOpen)}
           value={value}
-          placeholder="dd-mm-yyyy"
+          placeholder={$t("dd-mm-yyyy", (localStorage.getItem('app-lang') || 'vi'))}
           style={inputStyle}
           className="cursor-pointer"
         />
@@ -322,14 +323,14 @@ export default function Horses() {
       {/* Header and filters */}
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
         <div>
-          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec" }}>Horse Registry Directory</h3>
-          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>View, edit ratings, status, and information of all stable horses</p>
+          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec" }}>{$t("Horse Registry Directory", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+          <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>{$t("View, edit ratings, status, and information of all stable horses", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
 
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
           <input
             type="text"
-            placeholder="Search horse name or breed..."
+            placeholder={$t("Search horse name or breed...", (localStorage.getItem('app-lang') || 'vi'))}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             style={{ ...inputStyle, width: "14rem" }}
@@ -340,14 +341,14 @@ export default function Horses() {
             onChange={e => setFilterStatus(e.target.value)}
             style={{ ...selectStyle, width: "8rem" }}
           >
-            <option value="ALL">All Status</option>
-            <option value="ACTIVE">Active</option>
-            <option value="PENDING">Pending</option>
-            <option value="INJURED">Injured</option>
-            <option value="INACTIVE">Inactive</option>
-            <option value="REJECTED">Rejected</option>
-            <option value="SUSPENDED">Suspended</option>
-            <option value="RETIRED">Retired</option>
+            <option value="ALL">{$t("All Status", (localStorage.getItem('app-lang') || 'vi'))}</option>
+            <option value="ACTIVE">{$t("Active", (localStorage.getItem('app-lang') || 'vi'))}</option>
+            <option value="PENDING">{$t("Pending", (localStorage.getItem('app-lang') || 'vi'))}</option>
+            <option value="INJURED">{$t("Injured", (localStorage.getItem('app-lang') || 'vi'))}</option>
+            <option value="INACTIVE">{$t("Inactive", (localStorage.getItem('app-lang') || 'vi'))}</option>
+            <option value="REJECTED">{$t("Rejected", (localStorage.getItem('app-lang') || 'vi'))}</option>
+            <option value="SUSPENDED">{$t("Suspended", (localStorage.getItem('app-lang') || 'vi'))}</option>
+            <option value="RETIRED">{$t("Retired", (localStorage.getItem('app-lang') || 'vi'))}</option>
           </select>
         </div>
       </div>
@@ -357,7 +358,7 @@ export default function Horses() {
         {isMobile ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
-              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading horses data...</div>
+              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading horses data...", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : filteredHorses.length > 0 ? (
               filteredHorses.map((h) => {
                 let statusColor = "#a0a0a0";
@@ -387,9 +388,9 @@ export default function Horses() {
                       </div>
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", fontSize: "12px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
-                      <span>Breed: <span style={{ color: "rgba(255,255,255,0.8)" }}>{h.breed}</span></span>
+                      <span>{$t("Breed:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: "rgba(255,255,255,0.8)" }}>{h.breed}</span></span>
                       <span>|</span>
-                      <span>Sex: <span style={{ color: "rgba(255,255,255,0.8)" }}>{h.sex || "Gelding"}</span></span>
+                      <span>{$t("Sex:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: "rgba(255,255,255,0.8)" }}>{h.sex || "Gelding"}</span></span>
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>
                       <span>Owner #{h.ownerId}</span>
@@ -397,15 +398,13 @@ export default function Horses() {
                       <span>{h.totalRaces || 0} races run</span>
                     </div>
                     <div style={{ display: "flex", justifyContent: "flex-end", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
-                      <button onClick={() => handleOpenEdit(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                        Edit Details
-                      </button>
+                      <button onClick={() => handleOpenEdit(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>{$t("Edit Details", (localStorage.getItem('app-lang') || 'vi'))}</button>
                     </div>
                   </div>
                 );
               })
             ) : (
-              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses found.</div>
+              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("No registered horses found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             )}
           </div>
         ) : (
@@ -414,13 +413,13 @@ export default function Horses() {
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
                   {["Horse", "Breed", "Sex", "Current Rating", "Owner ID", "Status", "Races Run", "Actions"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 7 ? "right" : "left" }}>{h}</th>
+                    <th key={idx} style={{ padding: "0.75rem 1.5rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 7 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-sm">
                 {loading ? (
-                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading horses data...</td></tr>
+                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading horses data...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : filteredHorses.length > 0 ? (
                   filteredHorses.map((h) => {
                     let statusColor = "#a0a0a0";
@@ -452,15 +451,13 @@ export default function Horses() {
                         </td>
                         <td style={{ padding: "0.75rem 1.5rem", color: "rgba(255,255,255,0.5)" }}>{h.totalRaces || 0} races</td>
                         <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
-                          <button onClick={() => handleOpenEdit(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                            Edit Details
-                          </button>
+                          <button onClick={() => handleOpenEdit(h)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>{$t("Edit Details", (localStorage.getItem('app-lang') || 'vi'))}</button>
                         </td>
                       </tr>
                     );
                   })
                 ) : (
-                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>No registered horses found.</td></tr>
+                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("No registered horses found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 )}
               </tbody>
             </table>
@@ -473,75 +470,75 @@ export default function Horses() {
         <div style={{ position: "fixed", inset: 0, zIndex: 99, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "36rem", position: "relative", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(201,162,39,0.1)", paddingBottom: "0.75rem", marginBottom: "1.25rem" }}>
-              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Edit Horse Registry Details</h3>
+              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>{$t("Edit Horse Registry Details", (localStorage.getItem('app-lang') || 'vi'))}</h3>
               <button onClick={() => setEditingHorse(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.5rem", fontWeight: "bold" }}>&times;</button>
             </div>
             <form onSubmit={handleSaveEdit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "1rem" }}>
                 <div>
-                  <label style={labelStyle}>Horse Name</label>
+                  <label style={labelStyle}>{$t("Horse Name", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="text" required value={editName} onChange={e => setEditName(e.target.value)} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Breed</label>
+                  <label style={labelStyle}>{$t("Breed", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="text" required value={editBreed} onChange={e => setEditBreed(e.target.value)} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Gender / Sex</label>
+                  <label style={labelStyle}>{$t("Gender / Sex", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <select value={editSex} onChange={e => setEditSex(e.target.value)} style={selectStyle}>
-                    <option value="Gelding">Gelding</option>
-                    <option value="Colt">Colt</option>
-                    <option value="Horse">Horse</option>
-                    <option value="Filly">Filly</option>
-                    <option value="Mare">Mare</option>
+                    <option value="Gelding">{$t("Gelding", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="Colt">{$t("Colt", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="Horse">{$t("Horse", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="Filly">{$t("Filly", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="Mare">{$t("Mare", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   </select>
                 </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
-                <InlineDatePicker label="Date of Birth" value={editDob} onChange={setEditDob} />
+                <InlineDatePicker label={$t("Date of Birth", (localStorage.getItem('app-lang') || 'vi'))} value={editDob} onChange={setEditDob} />
                 <div>
-                  <label style={labelStyle}>Current Rating</label>
+                  <label style={labelStyle}>{$t("Current Rating", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="number" required value={editRating} onChange={e => setEditRating(parseInt(e.target.value))} style={inputStyle} />
                 </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
                 <div>
-                  <label style={labelStyle}>Status</label>
+                  <label style={labelStyle}>{$t("Status", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <select value={editStatus} onChange={e => setEditStatus(e.target.value)} style={selectStyle}>
-                    <option value="PENDING">PENDING</option>
-                    <option value="ACTIVE">ACTIVE</option>
-                    <option value="INJURED">INJURED</option>
-                    <option value="INACTIVE">INACTIVE</option>
-                    <option value="REJECTED">REJECTED</option>
-                    <option value="SUSPENDED">SUSPENDED</option>
-                    <option value="RETIRED">RETIRED</option>
+                    <option value="PENDING">{$t("PENDING", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="ACTIVE">{$t("ACTIVE", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="INJURED">{$t("INJURED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="INACTIVE">{$t("INACTIVE", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="REJECTED">{$t("REJECTED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="SUSPENDED">{$t("SUSPENDED", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="RETIRED">{$t("RETIRED", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Horse Photo / Avatar</label>
+                  <label style={labelStyle}>{$t("Horse Photo / Avatar", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="file" accept="image/*" onChange={handleAvatarChange} style={inputStyle} />
                 </div>
               </div>
 
               <div style={{ display: "grid", gridTemplateColumns: editAvatar ? "1fr 1fr" : "1fr", gap: "1rem" }}>
                 <div>
-                  <label style={labelStyle}>Biography / Description</label>
+                  <label style={labelStyle}>{$t("Biography / Description", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} style={{ ...inputStyle, height: "6.5rem", resize: "none" }} />
                 </div>
                 {editAvatar && (
                   <div>
-                    <label style={labelStyle}>Photo Preview</label>
+                    <label style={labelStyle}>{$t("Photo Preview", (localStorage.getItem('app-lang') || 'vi'))}</label>
                     <img src={editAvatar} alt="Preview" style={{ width: "100%", height: "6.5rem", objectFit: "cover", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.08)" }} />
                   </div>
                 )}
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", borderTop: "1px solid rgba(201,162,39,0.1)", paddingTop: "1rem", marginTop: "0.5rem" }}>
-                <button type="button" onClick={() => setEditingHorse(null)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>Save Changes</button>
+                <button type="button" onClick={() => setEditingHorse(null)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>{$t("Save Changes", (localStorage.getItem('app-lang') || 'vi'))}</button>
               </div>
             </form>
           </div>

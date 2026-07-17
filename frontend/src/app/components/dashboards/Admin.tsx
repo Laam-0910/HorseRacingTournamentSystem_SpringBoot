@@ -1,3 +1,4 @@
+import { $t } from "@/lib/i18n";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
@@ -38,19 +39,19 @@ type AdminTab =
 const ROLE_COLOR = "#c9a227";
 
 const NAV_ITEMS = [
-  { index: "01", icon: "layout-dashboard", label: "Dashboard Overview",        view: "welcome"       },
-  { index: "02", icon: "layers",           label: "Season Initialization",     view: "season"        },
-  { index: "03", icon: "calendar",         label: "Race Meeting Management",   view: "race-meeting"  },
-  { index: "04", icon: "flag",             label: "Race Configuration",        view: "race"          },
-  { index: "05", icon: "file-check",       label: "Registration Processing",   view: "processing"    },
-  { index: "06", icon: "layout",           label: "Racecard Management",       view: "racecard"      },
-  { index: "07", icon: "clipboard-list",   label: "Race Day Schedule",         view: "schedule"      },
-  { index: "08", icon: "award",            label: "Process Results & Close",   view: "results"       },
-  { index: "09", icon: "user-cog",         label: "User & Role Management",    view: "users"         },
-  { index: "10", icon: "flag",             label: "Horse Registry Directory",  view: "horses"        },
-  { index: "11", icon: "settings",         label: "System Configuration",      view: "config"        },
-  { index: "12", icon: "tv",               label: "Live Setting",              view: "live-settings" },
-  { index: "13", icon: "heart-off",        label: "Horse Retirement",          view: "retirement"    },
+  { index: "01", icon: "layout-dashboard", label: $t("Dashboard Overview", (localStorage.getItem('app-lang') || 'vi')),        view: "welcome"       },
+  { index: "02", icon: "layers",           label: $t("Season Initialization", (localStorage.getItem('app-lang') || 'vi')),     view: "season"        },
+  { index: "03", icon: "calendar",         label: $t("Race Meeting Management", (localStorage.getItem('app-lang') || 'vi')),   view: "race-meeting"  },
+  { index: "04", icon: "flag",             label: $t("Race Configuration", (localStorage.getItem('app-lang') || 'vi')),        view: "race"          },
+  { index: "05", icon: "file-check",       label: $t("Registration Processing", (localStorage.getItem('app-lang') || 'vi')),   view: "processing"    },
+  { index: "06", icon: "layout",           label: $t("Racecard Management", (localStorage.getItem('app-lang') || 'vi')),       view: "racecard"      },
+  { index: "07", icon: "clipboard-list",   label: $t("Race Day Schedule", (localStorage.getItem('app-lang') || 'vi')),         view: "schedule"      },
+  { index: "08", icon: "award",            label: $t("Process Results & Close", (localStorage.getItem('app-lang') || 'vi')),   view: "results"       },
+  { index: "09", icon: "user-cog",         label: $t("User & Role Management", (localStorage.getItem('app-lang') || 'vi')),    view: "users"         },
+  { index: "10", icon: "flag",             label: $t("Horse Registry Directory", (localStorage.getItem('app-lang') || 'vi')),  view: "horses"        },
+  { index: "11", icon: "settings",         label: $t("System Configuration", (localStorage.getItem('app-lang') || 'vi')),      view: "config"        },
+  { index: "12", icon: "tv",               label: $t("Live Setting", (localStorage.getItem('app-lang') || 'vi')),              view: "live-settings" },
+  { index: "13", icon: "heart-off",        label: $t("Horse Retirement", (localStorage.getItem('app-lang') || 'vi')),          view: "retirement"    },
 ];
 
 // ─── AdminWelcome Component (matches AdminWelcome.jsp exactly) ────────────────
@@ -112,7 +113,7 @@ function AdminWelcome({ onViewChange }: { onViewChange: (view: any) => void }) {
             👑 ADMINISTRATIVE OVERVIEW
           </span>
           <h1 style={{ fontFamily: "'Roboto Slab', serif", fontSize: "clamp(1.5rem, 3vw, 2.25rem)", fontWeight: 700, letterSpacing: "0.02em", color: "#f4f2ec", marginTop: "0.75rem" }}>
-            Welcome to the Admin Dashboard
+            {$t("Welcome to the Admin Dashboard", (localStorage.getItem('app-lang') || 'vi'))}
           </h1>
           <p style={{ fontSize: "0.8rem", color: "rgba(161,161,170,0.85)", maxWidth: "32rem", lineHeight: 1.7, marginTop: "0.5rem" }}>
             Welcome back, {user?.username ?? "Administrator"}. Use this central management panel to coordinate and run the tournament cycles, configure class rules, manage entries, and publish results.
@@ -122,17 +123,17 @@ function AdminWelcome({ onViewChange }: { onViewChange: (view: any) => void }) {
         {/* Right: Live System Info */}
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem", padding: "1rem", minWidth: "13rem", fontFamily: "monospace", fontSize: "0.7rem", color: "rgba(161,161,170,0.8)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-            <span>System Status</span>
+            <span>{$t("System Status", (localStorage.getItem('app-lang') || 'vi'))}</span>
             <span style={{ color: "#4ade80", fontWeight: 700, display: "flex", alignItems: "center", gap: "0.375rem" }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block", animation: "pulse 2s infinite" }} /> ONLINE
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block", animation: "pulse 2s infinite" }} /> {$t("ONLINE", (localStorage.getItem('app-lang') || 'vi'))}
             </span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>Active Season:</span>
+            <span>{$t("Active Season:", (localStorage.getItem('app-lang') || 'vi'))}</span>
             <span style={{ color: "#c9a227", fontWeight: 700 }}>{stats.activeSeason}</span>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <span>Pending Approvals:</span>
+            <span>{$t("Pending Approvals:", (localStorage.getItem('app-lang') || 'vi'))}</span>
             <span style={{ fontWeight: 700, color: stats.pending > 0 ? "#c9a227" : "rgba(113,113,122,0.8)" }}>{stats.pending}</span>
           </div>
         </div>
@@ -141,10 +142,10 @@ function AdminWelcome({ onViewChange }: { onViewChange: (view: any) => void }) {
       {/* ── Stats Grid (2×2 mobile, 4 desktop) ─────────────── */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "1rem" }}>
         {[
-          { label: "Seasons",     value: stats.seasons,  gold: true  },
-          { label: "Meetings",    value: stats.meetings, gold: false },
-          { label: "Total Races", value: stats.races,    gold: false },
-          { label: "Total Users", value: stats.users,    gold: false },
+          { label: $t("Seasons", (localStorage.getItem('app-lang') || 'vi')),     value: stats.seasons,  gold: true  },
+          { label: $t("Meetings", (localStorage.getItem('app-lang') || 'vi')),    value: stats.meetings, gold: false },
+          { label: $t("Total Races", (localStorage.getItem('app-lang') || 'vi')), value: stats.races,    gold: false },
+          { label: $t("Total Users", (localStorage.getItem('app-lang') || 'vi')), value: stats.users,    gold: false },
         ].map(s => (
           <div key={s.label} style={{
             background: "rgba(255,255,255,0.02)",
@@ -175,18 +176,18 @@ function AdminWelcome({ onViewChange }: { onViewChange: (view: any) => void }) {
       {/* ── Quick Navigation ─────────────────────────────── */}
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "#c9a227", paddingLeft: "0.25rem", marginBottom: "1rem" }}>
-          System Operations Quick Navigation
+          {$t("System Operations Quick Navigation", (localStorage.getItem('app-lang') || 'vi'))}
         </h3>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
           {[
-            { icon: "🗂", title: "Season Initialization",     desc: "Initialize tournament seasons, specify date ranges, and configure rating class rules.",               view: "season",        pending: false },
-            { icon: "📅", title: "Race Meetings",             desc: "Schedule new race meetings, set track venues, and allocate prize money budgets.",                    view: "race-meeting",  pending: false },
-            { icon: "📋", title: "Registration Processing",   desc: "Review, approve, or reject horse registrations, jockey licenses, and race entries.",                view: "processing",    pending: stats.pending > 0 },
-            { icon: "⚙️", title: "System Configuration",     desc: "Configure global system variables, settings, and other operational limits.",                        view: "config",        pending: false },
-            { icon: "📊", title: "Race Day Scheduling",      desc: "Assign starting gates and jockey-horse weights. Finalize race start times.",                        view: "schedule",      pending: false },
-            { icon: "🏁", title: "Racecard & Gate Setup",    desc: "Publish racecards with stall draws, jockey weights, and race specifications.",                      view: "racecard",      pending: false },
-            { icon: "🎥", title: "Livestream Settings",      desc: "Configure YouTube live links for race broadcasts and manage live race status.",                       view: "live-settings", pending: false },
-            { icon: "👥", title: "User Management",          desc: "View and manage user accounts, roles, and approval status across all roles.",                       view: "users",         pending: false },
+            { icon: "🗂", title: $t("Season Initialization", (localStorage.getItem('app-lang') || 'vi')),     desc: $t("Initialize tournament seasons, specify date ranges, and configure rating class rules.", (localStorage.getItem('app-lang') || 'vi')),               view: "season",        pending: false },
+            { icon: "📅", title: $t("Race Meetings", (localStorage.getItem('app-lang') || 'vi')),             desc: $t("Schedule new race meetings, set track venues, and allocate prize money budgets.", (localStorage.getItem('app-lang') || 'vi')),                    view: "race-meeting",  pending: false },
+            { icon: "📋", title: $t("Registration Processing", (localStorage.getItem('app-lang') || 'vi')),   desc: $t("Review, approve, or reject horse registrations, jockey licenses, and race entries.", (localStorage.getItem('app-lang') || 'vi')),                view: "processing",    pending: stats.pending > 0 },
+            { icon: "⚙️", title: $t("System Configuration", (localStorage.getItem('app-lang') || 'vi')),     desc: $t("Configure global system variables, settings, and other operational limits.", (localStorage.getItem('app-lang') || 'vi')),                        view: "config",        pending: false },
+            { icon: "📊", title: $t("Race Day Scheduling", (localStorage.getItem('app-lang') || 'vi')),      desc: $t("Assign starting gates and jockey-horse weights. Finalize race start times.", (localStorage.getItem('app-lang') || 'vi')),                        view: "schedule",      pending: false },
+            { icon: "🏁", title: $t("Racecard & Gate Setup", (localStorage.getItem('app-lang') || 'vi')),    desc: $t("Publish racecards with stall draws, jockey weights, and race specifications.", (localStorage.getItem('app-lang') || 'vi')),                      view: "racecard",      pending: false },
+            { icon: "🎥", title: $t("Livestream Settings", (localStorage.getItem('app-lang') || 'vi')),      desc: $t("Configure YouTube live links for race broadcasts and manage live race status.", (localStorage.getItem('app-lang') || 'vi')),                       view: "live-settings", pending: false },
+            { icon: "👥", title: $t("User Management", (localStorage.getItem('app-lang') || 'vi')),          desc: $t("View and manage user accounts, roles, and approval status across all roles.", (localStorage.getItem('app-lang') || 'vi')),                       view: "users",         pending: false },
           ].map(item => (
             <button
               key={item.view}

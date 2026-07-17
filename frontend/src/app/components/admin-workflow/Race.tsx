@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { formatDateTime, formatForDateTimeLocal, formatForApi, formatClassLevel, parseSafeDate } from "../../utils/dateTimeHelper";
@@ -370,8 +371,8 @@ export default function Race() {
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)", position: "relative", zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)" }}>
           <div>
-            <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Create New Race</p>
-            <p style={{ fontSize: "10px", fontFamily: "monospace", marginTop: "2px", color: "rgba(255,255,255,0.4)" }}>Add a race to a scheduled race meeting</p>
+            <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>{$t("Create New Race", (localStorage.getItem('app-lang') || 'vi'))}</p>
+            <p style={{ fontSize: "10px", fontFamily: "monospace", marginTop: "2px", color: "rgba(255,255,255,0.4)" }}>{$t("Add a race to a scheduled race meeting", (localStorage.getItem('app-lang') || 'vi'))}</p>
           </div>
         </div>
         <div style={{ padding: "1.5rem" }}>
@@ -381,9 +382,9 @@ export default function Race() {
           <form onSubmit={handleCreateRace}>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "1.25rem", marginBottom: "1.5rem" }}>
               <div style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Select Race Meeting</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Select Race Meeting", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <select value={meetingId} onChange={e => handleSelectMeeting(e.target.value)} required style={{ width: "100%", padding: "0.75rem", background: "#c9a22712", border: "1px solid #c9a22740", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.875rem", outline: "none" }}>
-                  <option value="" style={{ background: "#12141a", color: "#fff" }}>-- Choose Meeting --</option>
+                  <option value="" style={{ background: "#12141a", color: "#fff" }}>{$t("-- Choose Meeting --", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   {meetings.map(m => (
                     <option key={m.id} value={m.id} style={{ background: "#12141a", color: "#fff" }}>{m.name}</option>
                   ))}
@@ -391,58 +392,56 @@ export default function Race() {
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Class Level</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Class Level", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <select value={classLevel} onChange={e => setClassLevel(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }}>
                   <option value="Class 1" style={{ background: "#12141a", color: "#fff" }}>Class 1 (Rating 95+)</option>
-                  <option value="Class 2" style={{ background: "#12141a", color: "#fff" }}>Class 2 (Rating 80-94)</option>
-                  <option value="Class 3" style={{ background: "#12141a", color: "#fff" }}>Class 3 (Rating 60-79)</option>
-                  <option value="Class 4" style={{ background: "#12141a", color: "#fff" }}>Class 4 (Rating 40-59)</option>
-                  <option value="Class 5" style={{ background: "#12141a", color: "#fff" }}>Class 5 (Rating 0-39)</option>
+                  <option value="Class 2" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 2 (Rating 80-94)", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Class 3" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 3 (Rating 60-79)", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Class 4" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 4 (Rating 40-59)", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Class 5" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 5 (Rating 0-39)", (localStorage.getItem('app-lang') || 'vi'))}</option>
                 </select>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Track Type</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Track Type", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <select value={trackType} onChange={e => setTrackType(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }}>
-                  <option value="Turf" style={{ background: "#12141a", color: "#fff" }}>Turf</option>
-                  <option value="Dirt" style={{ background: "#12141a", color: "#fff" }}>Dirt</option>
-                  <option value="Synthetic" style={{ background: "#12141a", color: "#fff" }}>Synthetic</option>
+                  <option value="Turf" style={{ background: "#12141a", color: "#fff" }}>{$t("Turf", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Dirt" style={{ background: "#12141a", color: "#fff" }}>{$t("Dirt", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                  <option value="Synthetic" style={{ background: "#12141a", color: "#fff" }}>{$t("Synthetic", (localStorage.getItem('app-lang') || 'vi'))}</option>
                 </select>
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Start Time</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Start Time", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <InlineDateTimePicker value={startTime} onChange={setStartTime} />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#c9a227" }}>Registration Start</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#c9a227" }}>{$t("Registration Start", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <InlineDateTimePicker value={regStartTime} onChange={setRegStartTime} />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#c9a227" }}>Registration End</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#c9a227" }}>{$t("Registration End", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <InlineDateTimePicker value={regEndTime} onChange={setRegEndTime} />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Distance (Meters)</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Distance (Meters)", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <input type="number" value={distance} onChange={e => setDistance(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }} />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Min Entries</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Min Entries", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <input type="number" min="1" value={minEntries} onChange={e => setMinEntries(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }} />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Max Entries</label>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Max Entries", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <input type="number" min="1" value={maxEntries} onChange={e => setMaxEntries(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }} />
               </div>
             </div>
-            <button type="submit" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.625rem 1.25rem", borderRadius: "0.5rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, border: "none", background: "#c9a227", color: "#0b0d11", cursor: "pointer", transition: "transform 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.95)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}>
-              Create Race
-            </button>
+            <button type="submit" style={{ display: "inline-flex", alignItems: "center", gap: "0.5rem", padding: "0.625rem 1.25rem", borderRadius: "0.5rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, border: "none", background: "#c9a227", color: "#0b0d11", cursor: "pointer", transition: "transform 0.1s" }} onMouseDown={e => e.currentTarget.style.transform = "scale(0.95)"} onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}>{$t("Create Race", (localStorage.getItem('app-lang') || 'vi'))}</button>
           </form>
         </div>
       </div>
@@ -450,15 +449,15 @@ export default function Race() {
       {/* Races Database */}
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)", position: "relative", zIndex: 1 }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)" }}>
-          <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Races Database</p>
-          <p style={{ fontSize: "10px", fontFamily: "monospace", marginTop: "2px", color: "rgba(255,255,255,0.4)" }}>List of all scheduled races across active meetings</p>
+          <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>{$t("Races Database", (localStorage.getItem('app-lang') || 'vi'))}</p>
+          <p style={{ fontSize: "10px", fontFamily: "monospace", marginTop: "2px", color: "rgba(255,255,255,0.4)" }}>{$t("List of all scheduled races across active meetings", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         {isMobile ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "1rem" }}>
             {loading ? (
-              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace", textAlign: "center", padding: "2rem" }}>Loading races database...</p>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace", textAlign: "center", padding: "2rem" }}>{$t("Loading races database...", (localStorage.getItem('app-lang') || 'vi'))}</p>
             ) : races.length === 0 ? (
-              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace", textAlign: "center", padding: "2rem" }}>No races found.</p>
+              <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace", textAlign: "center", padding: "2rem" }}>{$t("No races found.", (localStorage.getItem('app-lang') || 'vi'))}</p>
             ) : races.map(race => {
               const assigned = refereesMap[race.id] || [];
               const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
@@ -478,19 +477,19 @@ export default function Race() {
                   {/* Mid details */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "12px" }}>
                     <div>
-                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Race Meeting</span>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>{$t("Race Meeting", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       <span style={{ color: "#f4f2ec", fontWeight: 500 }}>{meetingName}</span>
                     </div>
                     <div>
-                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Track Type</span>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>{$t("Track Type", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       <span style={{ color: "#f4f2ec", fontFamily: "monospace" }}>{race.trackType}</span>
                     </div>
                     <div>
-                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Rating Limits</span>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>{$t("Rating Limits", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       <span style={{ color: "#fbbf24", fontWeight: "bold" }}>{race.minRating} – {race.maxRating}</span>
                     </div>
                     <div>
-                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>Start Time</span>
+                      <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>{$t("Start Time", (localStorage.getItem('app-lang') || 'vi'))}</span>
                       <span style={{ color: "rgba(255,255,255,0.6)", fontFamily: "monospace" }}>{formatDateTime(race.startTime)}</span>
                     </div>
                   </div>
@@ -507,17 +506,17 @@ export default function Race() {
                           )}
                         </div>
                       ))}
-                      {assigned.length === 0 && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px", fontStyle: "italic" }}>No referee assigned yet</span>}
+                      {assigned.length === 0 && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px", fontStyle: "italic" }}>{$t("No referee assigned yet", (localStorage.getItem('app-lang') || 'vi'))}</span>}
                     </div>
                     {!isCompleted && (
                       <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
                         <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none", flex: 1 }}>
-                          <option value="">-- Assign Referee --</option>
+                          <option value="">{$t("-- Assign Referee --", (localStorage.getItem('app-lang') || 'vi'))}</option>
                           {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
                             <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
                           ))}
                         </select>
-                        <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
+                        <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Assign", (localStorage.getItem('app-lang') || 'vi'))}</button>
                       </div>
                     )}
                   </div>
@@ -528,15 +527,14 @@ export default function Race() {
                       {race.youtubeLiveUrl ? (
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
-                          </span>
-                          <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>End Live</button>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>{$t("LIVE", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                          <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>{$t("End Live", (localStorage.getItem('app-lang') || 'vi'))}</button>
                         </div>
                       ) : (
                         race.status === "RUNNING" && (
                           <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            <input type="text" placeholder="YouTube URL" value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", flex: 1 }} />
-                            <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>Go Live</button>
+                            <input type="text" placeholder={$t("YouTube URL", (localStorage.getItem('app-lang') || 'vi'))} value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", flex: 1 }} />
+                            <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Go Live", (localStorage.getItem('app-lang') || 'vi'))}</button>
                           </div>
                         )
                       )}
@@ -559,9 +557,7 @@ export default function Race() {
                         fontWeight: "bold",
                         cursor: isCompleted ? "not-allowed" : "pointer"
                       }}
-                    >
-                      Edit Schedule
-                    </button>
+                    >{$t("Edit Schedule", (localStorage.getItem('app-lang') || 'vi'))}</button>
                   </div>
                 </div>
               );
@@ -573,15 +569,15 @@ export default function Race() {
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
                   {["Race ID", "Actions", "Race Meeting", "Class", "Track", "Distance", "Start Time", "Min-Max Rating", "Status", "Livestream", "Assigned Referee"].map(h => (
-                    <th key={h} style={{ padding: "0.75rem 0.75rem", textAlign: h === "Status" ? "right" : h === "Livestream" || h === "Assigned Referee" || h === "Actions" ? "center" : "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{h}</th>
+                    <th key={h} style={{ padding: "0.75rem 0.75rem", textAlign: h === "Status" ? "right" : h === "Livestream" || h === "Assigned Referee" || h === "Actions" ? "center" : "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={12} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>Loading races database...</td></tr>
+                  <tr><td colSpan={12} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>{$t("Loading races database...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : races.length === 0 ? (
-                  <tr><td colSpan={12} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>No races found.</td></tr>
+                  <tr><td colSpan={12} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>{$t("No races found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : races.map(race => {
                   const assigned = refereesMap[race.id] || [];
                   const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
@@ -606,9 +602,7 @@ export default function Race() {
                             fontWeight: "bold",
                             cursor: isCompleted ? "not-allowed" : "pointer"
                           }}
-                        >
-                          Edit
-                        </button>
+                        >{$t("Edit", (localStorage.getItem('app-lang') || 'vi'))}</button>
                       </td>
 
                       <td style={{ padding: "0.75rem 0.75rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>
@@ -627,15 +621,14 @@ export default function Race() {
                         ) : race.youtubeLiveUrl ? (
                           <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
                             <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>LIVE
-                            </span>
-                            <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>End Live</button>
+                              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>{$t("LIVE", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                            <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>{$t("End Live", (localStorage.getItem('app-lang') || 'vi'))}</button>
                           </div>
                         ) : (
                           race.status === "RUNNING" ? (
                             <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
-                              <input type="text" placeholder="YouTube URL" value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", width: 110 }} />
-                              <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>Go Live</button>
+                              <input type="text" placeholder={$t("YouTube URL", (localStorage.getItem('app-lang') || 'vi'))} value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", width: 110 }} />
+                              <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Go Live", (localStorage.getItem('app-lang') || 'vi'))}</button>
                             </div>
                           ) : (
                             <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
@@ -657,12 +650,12 @@ export default function Race() {
                           {!isCompleted && (
                             <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
                               <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none" }}>
-                                <option value="">-- Assign Referee --</option>
+                                <option value="">{$t("-- Assign Referee --", (localStorage.getItem('app-lang') || 'vi'))}</option>
                                 {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
                                   <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
                                 ))}
                               </select>
-                              <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>Assign</button>
+                              <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Assign", (localStorage.getItem('app-lang') || 'vi'))}</button>
                             </div>
                           )}
                         </div>
@@ -675,7 +668,7 @@ export default function Race() {
           </div>
         )}
         <div style={{ padding: "0.75rem 1.5rem", borderTop: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.012)" }}>
-          <p style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)" }}>{races.length} races total inside current active season meetings.</p>
+          <p style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)" }}>{races.length} {$t("races total inside current active season meetings.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
       </div>
 
@@ -684,7 +677,7 @@ export default function Race() {
         <div style={{ position: "fixed", inset: 0, zIndex: 99, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "32rem", position: "relative" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(201,162,39,0.1)", paddingBottom: "0.75rem", marginBottom: "1.25rem" }}>
-              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Edit Race Schedule</h3>
+              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>{$t("Edit Race Schedule", (localStorage.getItem('app-lang') || 'vi'))}</h3>
               <button onClick={() => { setEditingRace(null); setEditError(""); }} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.5rem", fontWeight: "bold" }}>&times;</button>
             </div>
             <form onSubmit={handleSaveEdit}>
@@ -695,41 +688,41 @@ export default function Race() {
               )}
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
                 <div style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
-                  <label style={labelStyle}>Start Time</label>
+                  <label style={labelStyle}>{$t("Start Time", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <InlineDateTimePicker value={editStartTime} onChange={setEditStartTime} />
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, color: "#c9a227" }}>Registration Start</label>
+                  <label style={{ ...labelStyle, color: "#c9a227" }}>{$t("Registration Start", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <InlineDateTimePicker value={editRegStartTime} onChange={setEditRegStartTime} />
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, color: "#c9a227" }}>Registration End</label>
+                  <label style={{ ...labelStyle, color: "#c9a227" }}>{$t("Registration End", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <InlineDateTimePicker value={editRegEndTime} onChange={setEditRegEndTime} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Distance (m)</label>
+                  <label style={labelStyle}>{$t("Distance (m)", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="number" value={editDistance} onChange={e => setEditDistance(e.target.value)} required style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Track Type</label>
+                  <label style={labelStyle}>{$t("Track Type", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <select value={editTrackType} onChange={e => setEditTrackType(e.target.value)} required style={inputStyle}>
-                    <option value="Turf">Turf</option>
-                    <option value="Dirt">Dirt</option>
-                    <option value="Synthetic">Synthetic</option>
+                    <option value="Turf">{$t("Turf", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="Dirt">{$t("Dirt", (localStorage.getItem('app-lang') || 'vi'))}</option>
+                    <option value="Synthetic">{$t("Synthetic", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   </select>
                 </div>
                  <div>
-                  <label style={labelStyle}>Min Entries</label>
+                  <label style={labelStyle}>{$t("Min Entries", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="number" min="1" value={editMinEntries} onChange={e => setEditMinEntries(e.target.value)} required style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Max Entries</label>
+                  <label style={labelStyle}>{$t("Max Entries", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="number" min="1" value={editMaxEntries} onChange={e => setEditMaxEntries(e.target.value)} required style={inputStyle} />
                 </div>
               </div>
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", borderTop: "1px solid rgba(201,162,39,0.1)", paddingTop: "1rem" }}>
-                <button type="button" onClick={() => { setEditingRace(null); setEditError(""); }} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
-                <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>Save Changes</button>
+                <button type="button" onClick={() => { setEditingRace(null); setEditError(""); }} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>{$t("Save Changes", (localStorage.getItem('app-lang') || 'vi'))}</button>
               </div>
             </form>
           </div>

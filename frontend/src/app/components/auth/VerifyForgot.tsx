@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../../../services/authService";
+import { $t } from '@/lib/i18n';
 
 export default function VerifyForgot() {
   const [otp, setOtp] = useState("");
@@ -27,7 +28,7 @@ export default function VerifyForgot() {
     const lang = localStorage.getItem("app-lang") || "vi";
 
     if (newPassword !== confirmPassword) {
-      setError(lang === "vi" ? "Mật khẩu xác nhận không khớp." : "Passwords do not match.");
+      setError($t("Mật khẩu xác nhận không khớp.", lang));
       return;
     }
 
@@ -35,9 +36,7 @@ export default function VerifyForgot() {
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
     if (!pwdRegex.test(newPassword)) {
       setError(
-        lang === "vi"
-          ? "Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)"
-          : "New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (@$!%*?&)"
+        $t("Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)", lang)
       );
       return;
     }

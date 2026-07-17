@@ -1,3 +1,4 @@
+import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { parseSafeDate } from "../../utils/dateTimeHelper";
@@ -173,19 +174,19 @@ export default function RegistrationProcessing() {
       {/* Overview Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(201,162,39,0.14)", padding: "1.25rem" }}>
-          <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>Awaiting Decision</p>
+          <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>{$t("Awaiting Decision", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#c9a227" }}>{awaitingDecisionCount}</h3>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>pending review</p>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>{$t("pending review", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(74,157,111,0.14)", padding: "1.25rem" }}>
-          <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>Approved</p>
+          <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>{$t("Approved", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#4ade80" }}>{approvedCount}</h3>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>cleared to race</p>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>{$t("cleared to race", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(239,68,68,0.14)", padding: "1.25rem" }}>
-          <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>Rejected</p>
+          <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>{$t("Rejected", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#f87171" }}>{rejectedCount}</h3>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>entry denied</p>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>{$t("entry denied", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
       </div>
 
@@ -204,15 +205,15 @@ export default function RegistrationProcessing() {
       {/* 1. Pending Race Entries */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Pending Race Entries & Predictions</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Race meeting entry submissions awaiting steward approval</p>
+          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Race Entries & Predictions", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Race meeting entry submissions awaiting steward approval", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         {isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
             {loading ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Loading...</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingEntries.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>No pending race entries found.</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending race entries found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingEntries.map((e) => (
               <div key={e.entry?.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
                 {/* top row: ref + actions */}
@@ -230,9 +231,9 @@ export default function RegistrationProcessing() {
                 </div>
                 {/* owner + jockey */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '12px' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Owner: <span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username || `Owner #${e.horse?.ownerId}`}</span></span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{$t("Owner:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username || `Owner #${e.horse?.ownerId}`}</span></span>
                   <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Jockey: <span style={{ color: '#3b82c4' }}>{e.jockey?.username}</span> <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>({e.jockey?.weight} kg)</span></span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{$t("Jockey:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: '#3b82c4' }}>{e.jockey?.username}</span> <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>({e.jockey?.weight} kg)</span></span>
                 </div>
                 {/* race info */}
                 <div style={{ marginBottom: '0.5rem' }}>
@@ -258,15 +259,15 @@ export default function RegistrationProcessing() {
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
                   {["Ref", "Horse & Rating", "Owner", "Assigned Jockey", "Target Race", "Carried Weight", "AI Win Chance", "Actions"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 7 ? "right" : "left" }}>{h}</th>
+                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 7 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {loading ? (
-                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : pendingEntries.length === 0 ? (
-                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No pending race entries found.</td></tr>
+                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No pending race entries found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : pendingEntries.map((e) => (
                   <tr key={e.entry?.id} className="hover:bg-white/[0.015] transition-colors">
                     <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>REG-{e.entry?.id}</td>
@@ -315,15 +316,15 @@ export default function RegistrationProcessing() {
       {/* 2. Pending Horse Meeting Registrations */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Pending Horse Meeting Registrations</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Horse event entry submissions awaiting steward approval</p>
+          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Horse Meeting Registrations", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Horse event entry submissions awaiting steward approval", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         {isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
             {loading ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Loading...</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingHorseRegs.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>No pending horse meeting registrations found.</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending horse meeting registrations found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingHorseRegs.map((e) => (
               <div key={e.registration.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
                 {/* top row: ref + actions */}
@@ -340,7 +341,7 @@ export default function RegistrationProcessing() {
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Rating: {e.horse?.currentRating} | Breed: {e.horse?.breed}</div>
                 </div>
                 {/* owner */}
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginBottom: '0.4rem' }}>Owner: <span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username}</span></div>
+                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginBottom: '0.4rem' }}>{$t("Owner:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username}</span></div>
                 {/* meeting */}
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#f4f2ec', marginBottom: '0.25rem' }}>{e.meeting?.name}</div>
                 {/* submitted */}
@@ -354,15 +355,15 @@ export default function RegistrationProcessing() {
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
                   {["Ref", "Horse", "Owner", "Target Meeting", "Submitted", "Actions"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 5 ? "right" : "left" }}>{h}</th>
+                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 5 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {loading ? (
-                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : pendingHorseRegs.length === 0 ? (
-                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No pending horse meeting registrations found.</td></tr>
+                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No pending horse meeting registrations found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : pendingHorseRegs.map((e) => (
                   <tr key={e.registration.id} className="hover:bg-white/[0.015] transition-colors">
                     <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>REG-H-{e.registration.id}</td>
@@ -390,15 +391,15 @@ export default function RegistrationProcessing() {
       {/* 2.5. Pending Owner Meeting Registrations */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Pending Owner Meeting Registrations</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Horse Owner event registration requests awaiting steward approval</p>
+          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Owner Meeting Registrations", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Horse Owner event registration requests awaiting steward approval", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         {isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
             {loading ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Loading...</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingOwnerRegs.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>No pending owner meeting registrations found.</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending owner meeting registrations found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingOwnerRegs.map((e) => (
               <div key={e.registration.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
                 {/* top row: ref + actions */}
@@ -427,15 +428,15 @@ export default function RegistrationProcessing() {
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
                   {["Ref", "Owner", "Target Meeting", "Submitted", "Actions"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 4 ? "right" : "left" }}>{h}</th>
+                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 4 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {loading ? (
-                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : pendingOwnerRegs.length === 0 ? (
-                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No pending owner meeting registrations found.</td></tr>
+                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No pending owner meeting registrations found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : pendingOwnerRegs.map((e) => (
                   <tr key={e.registration.id} className="hover:bg-white/[0.015] transition-colors">
                     <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>REG-O-{e.registration.id}</td>
@@ -462,15 +463,15 @@ export default function RegistrationProcessing() {
       {/* 3. Pending Jockey Meeting Registrations */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Pending Jockey Meeting Registrations</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>Jockey availability sign-up submissions awaiting steward approval</p>
+          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Jockey Meeting Registrations", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Jockey availability sign-up submissions awaiting steward approval", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         {isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
             {loading ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Loading...</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingJockeyRegs.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>No pending jockey meeting registrations found.</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending jockey meeting registrations found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingJockeyRegs.map((e) => (
               <div key={e.registration.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
                 {/* top row: ref + actions */}
@@ -499,15 +500,15 @@ export default function RegistrationProcessing() {
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
                   {["Ref", "Jockey", "Target Meeting", "Submitted", "Actions"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 4 ? "right" : "left" }}>{h}</th>
+                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 4 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {loading ? (
-                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : pendingJockeyRegs.length === 0 ? (
-                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No pending jockey meeting registrations found.</td></tr>
+                  <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No pending jockey meeting registrations found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : pendingJockeyRegs.map((e) => (
                   <tr key={e.registration.id} className="hover:bg-white/[0.015] transition-colors">
                     <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>REG-J-{e.registration.id}</td>
@@ -534,15 +535,15 @@ export default function RegistrationProcessing() {
       {/* 4. Pending System Horse Approvals (New Horses) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>Pending System Horse Approvals</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>New stable horses registered by Owners awaiting system activation</p>
+          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending System Horse Approvals", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("New stable horses registered by Owners awaiting system activation", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         {isMobile ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
             {loading ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>Loading...</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingSystemHorses.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>No pending system horses found.</div>
+              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending system horses found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingSystemHorses.map((e) => (
               <div key={e.horse.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
                 {/* top row: ref + actions */}
@@ -557,9 +558,9 @@ export default function RegistrationProcessing() {
                 <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px', marginBottom: '0.5rem' }}>{e.horse.name}</div>
                 {/* breed + owner */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.4rem', fontSize: '12px' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Breed: <span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.horse.breed}</span></span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{$t("Breed:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.horse.breed}</span></span>
                   <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Owner: <span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username}</span></span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{$t("Owner:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username}</span></span>
                 </div>
                 {/* DOB */}
                 <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>DOB: {formatSimpleDate(e.horse.dateOfBirth)}</div>
@@ -572,15 +573,15 @@ export default function RegistrationProcessing() {
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
                   {["Horse ID", "Horse Name", "Breed", "Owner", "Date of Birth", "Actions"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 5 ? "right" : "left" }}>{h}</th>
+                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 5 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5">
                 {loading ? (
-                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>Loading...</td></tr>
+                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : pendingSystemHorses.length === 0 ? (
-                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>No pending system horses found.</td></tr>
+                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No pending system horses found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : pendingSystemHorses.map((e) => (
                   <tr key={e.horse.id} className="hover:bg-white/[0.015] transition-colors">
                     <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>HORSE-{e.horse.id}</td>
