@@ -12,7 +12,7 @@ CORS(app)
 # ── CONFIG CHATBOT RAG / LLM ─────────────────────────────────────────────────
 import os, json
 USE_GEMINI = True
-GEMINI_API_KEY = "AQ.Ab8RN6IZfv4v5ic1ylYRrCy9Hl36wbt0g66fvdcBmuEMp8A0UQ"
+GEMINI_API_KEY = "AQ.Ab8RN6Lh317vCMamG6XmD1BtHy3pTlSz19IzN0fc0RHUksIPuA"
 
 # Thử load động từ file cấu hình
 config_path = os.path.join(os.path.dirname(__file__), "gemini_config.json")
