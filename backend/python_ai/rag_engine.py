@@ -387,25 +387,45 @@ class RAGEngine:
             except Exception as e:
                 print(f"[Config Loader Error] Failed to read dynamic config: {e}")
 
-        # Bảo mật: Nếu chưa có key trong gemini_config.json, thử đọc từ file .env riêng tư (không chia sẻ)
-        if not self.gemini_api_key or self.gemini_api_key.startswith("YOUR_"):
-            env_path = os.path.join(os.path.dirname(__file__), ".env")
-            if os.path.exists(env_path):
-                try:
-                    with open(env_path, "r", encoding="utf-8") as f:
-                        for line in f:
-                            line = line.strip()
-                            if line and not line.startswith("#") and "=" in line:
-                                k, v = line.split("=", 1)
-                                if k.strip() == "GEMINI_API_KEY":
-                                    val = v.strip()
-                                    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
-                                        val = val[1:-1]
-                                    if val and not val.startswith("YOUR_"):
-                                        self.gemini_api_key = val
+        # Bảo mật: Thử đọc từ biến môi trường hệ thống trước
+        sys_gemini = os.getenv("GEMINI_API_KEY", "").strip()
+        if sys_gemini and not sys_gemini.startswith("YOUR_"):
+            self.gemini_api_key = sys_gemini
+            self.use_gemini = True
+        sys_groq = os.getenv("GROQ_API_KEY", "").strip()
+        if sys_groq and not sys_groq.startswith("YOUR_"):
+            self.groq_api_key = sys_groq
+
+        # Thử đọc từ file .env riêng tư (không chia sẻ)
+        env_path = os.path.join(os.path.dirname(__file__), ".env")
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            key_name = k.strip()
+                            val = v.strip()
+                            if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                                val = val[1:-1]
+                            if val and not val.startswith("YOUR_"):
+                                if key_name == "GEMINI_API_KEY" and (not self.gemini_api_key or self.gemini_api_key.startswith("YOUR_")):
+                                    self.gemini_api_key = val
+                                    self.use_gemini = True
+                                elif key_name == "GEMINI_API_KEYS":
+                                    env_gemini_keys = [x.strip() for x in val.split(",") if x.strip() and not x.strip().startswith("YOUR_")]
+                                    if env_gemini_keys and not self.gemini_api_keys:
+                                        self.gemini_api_keys = env_gemini_keys
                                         self.use_gemini = True
-                except Exception as e:
-                    print(f"[Env Loader Error] Failed to read .env: {e}")
+                                elif key_name == "GROQ_API_KEY" and (not self.groq_api_key or self.groq_api_key.startswith("YOUR_")):
+                                    self.groq_api_key = val
+                                elif key_name == "GROQ_API_KEYS":
+                                    env_groq_keys = [x.strip() for x in val.split(",") if x.strip() and not x.strip().startswith("YOUR_")]
+                                    if env_groq_keys and not self.groq_api_keys:
+                                        self.groq_api_keys = env_groq_keys
+            except Exception as e:
+                print(f"[Env Loader Error] Failed to read .env: {e}")
 
         prompt = (
             f"=== THÔNG TIN GIẢI ĐẤU THỰC TẾ TỪ DATABASE ===\n"
