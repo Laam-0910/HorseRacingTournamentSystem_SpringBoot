@@ -352,6 +352,19 @@ public class AdminUserService {
             Horse horse = horseOpt.get();
             horse.setStatus("ACTIVE");
             horseRepository.save(horse);
+
+            // Auto-approve owner's registration for this race meeting if exists
+            if (horse.getOwnerId() != null && reg.getRaceMeetingId() != null) {
+                Optional<OwnerRaceMeetingRegistration> ownerRegOpt =
+                        ownerRegRepository.findByRaceMeetingIdAndOwnerId(reg.getRaceMeetingId(), horse.getOwnerId());
+                if (ownerRegOpt.isPresent()) {
+                    OwnerRaceMeetingRegistration ownerReg = ownerRegOpt.get();
+                    if (!"APPROVED".equalsIgnoreCase(ownerReg.getStatus())) {
+                        ownerReg.setStatus("APPROVED");
+                        ownerRegRepository.save(ownerReg);
+                    }
+                }
+            }
         }
         horseRegRepository.save(reg);
     }
