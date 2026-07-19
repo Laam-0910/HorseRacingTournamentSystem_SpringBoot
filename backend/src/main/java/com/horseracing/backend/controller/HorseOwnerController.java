@@ -37,31 +37,83 @@ public class HorseOwnerController {
     private final JockeyOwnerDashboardService dashboardService;
 
     @GetMapping("/{id}/horses")
-    @Operation(summary = "GET: Lấy danh sách ngựa của Chủ sở hữu", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n📌 **Code Architecture**: `HorseOwnerController.getOwnerHorses()` -> `HorseService.getAllHorses()`")
+    @Operation(
+        summary = "GET: Lấy danh sách ngựa của Chủ sở hữu",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `HorseOwnerController.getOwnerHorses()`\n" +
+                      "* **Service**: `HorseService.getAllHorses()` (`HorseServiceImpl.java`)\n" +
+                      "* **Repository**: `HorseRepository.findByOwnerId()`\n" +
+                      "* **Entity**: `Horse.java`\n" +
+                      "* **DTO Response**: `List<HorseDTO>`\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Tiếp nhận ID Chủ sở hữu từ PathVariable.\n" +
+                      "2. Lấy danh sách toàn bộ chiến mã thuộc quyền sở hữu của Chủ ngựa."
+    )
     public ResponseEntity<List<HorseDTO>> getOwnerHorses(@PathVariable Integer id) {
         return ResponseEntity.ok(horseService.getAllHorses(null, id));
     }
 
     @GetMapping("/{id}/invitations")
-    @Operation(summary = "GET: Lấy danh sách lời mời thi đấu của Chủ ngựa", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n📌 **Code Architecture**: `HorseOwnerController.getOwnerInvitations()` -> `InvitationService.getInvitations()`")
+    @Operation(
+        summary = "GET: Lấy danh sách lời mời thi đấu của Chủ ngựa",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `HorseOwnerController.getOwnerInvitations()`\n" +
+                      "* **Service**: `InvitationService.getInvitations()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Repository**: `RaceInvitationRepository.findByOwnerId()`\n" +
+                      "* **DTO Response**: `List<RaceInvitationDTO>`\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Lấy danh sách toàn bộ lời mời thi đấu do Chủ ngựa này khởi tạo cho các Nài ngựa."
+    )
     public ResponseEntity<List<RaceInvitationDTO>> getOwnerInvitations(@PathVariable Integer id) {
         return ResponseEntity.ok(invitationService.getInvitations(null, id));
     }
 
     @GetMapping("/{id}/dashboard")
-    @Operation(summary = "GET: Lấy dữ liệu Dashboard tổng quan của Chủ ngựa", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n📌 **Code Architecture**: `HorseOwnerController.getOwnerDashboard()` -> `JockeyOwnerDashboardService.getOwnerDashboard()`")
+    @Operation(
+        summary = "GET: Lấy dữ liệu Dashboard tổng quan của Chủ ngựa",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `HorseOwnerController.getOwnerDashboard()`\n" +
+                      "* **Service**: `JockeyOwnerDashboardService.getOwnerDashboard()` (`JockeyOwnerDashboardServiceImpl.java`)\n" +
+                      "* **Repositories**: `HorseRepository.findByOwnerId()`, `RaceEntryRepository.findByHorseId()`\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`stableSize`, `totalEarnings`, `avgPosition`, `activeHorses`, `history`)\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Tổng hợp quy mô chuồng ngựa (`stableSize`).\n" +
+                      "2. Tính toán tổng tiền thưởng lũy kế thu được từ các giải đua (`totalEarnings`).\n" +
+                      "3. Tính thứ hạng cán đích trung bình của chuồng ngựa (`avgPosition`)."
+    )
     public ResponseEntity<Map<String, Object>> getOwnerDashboard(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getOwnerDashboard(id));
     }
 
     @GetMapping("/{id}/stable")
-    @Operation(summary = "GET: Lấy danh sách chuồng ngựa của Chủ sở hữu", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n📌 **Code Architecture**: `HorseOwnerController.getOwnerStable()` -> `JockeyOwnerDashboardService.getOwnerStable()`")
+    @Operation(
+        summary = "GET: Lấy danh sách chuồng ngựa của Chủ sở hữu",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `HorseOwnerController.getOwnerStable()`\n" +
+                      "* **Service**: `JockeyOwnerDashboardService.getOwnerStable()` (`JockeyOwnerDashboardServiceImpl.java`)\n" +
+                      "* **Repository**: `HorseRepository.findByOwnerId()`\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Tra cứu danh sách chiến mã đang ở trạng thái `ACTIVE` trong chuồng ngựa."
+    )
     public ResponseEntity<List<Map<String, Object>>> getOwnerStable(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getOwnerStable(id));
     }
 
     @GetMapping("/{id}/results")
-    @Operation(summary = "GET: Lấy lịch sử kết quả thi đấu của các con ngựa thuộc Chủ sở hữu", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n📌 **Code Architecture**: `HorseOwnerController.getOwnerResults()` -> `JockeyOwnerDashboardService.getOwnerResults()`")
+    @Operation(
+        summary = "GET: Lấy lịch sử kết quả thi đấu của các con ngựa thuộc Chủ sở hữu",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `HorseOwnerController.getOwnerResults()`\n" +
+                      "* **Service**: `JockeyOwnerDashboardService.getOwnerResults()` (`JockeyOwnerDashboardServiceImpl.java`)\n" +
+                      "* **Repository**: `RaceEntryRepository.findByHorseId()`\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Tổng hợp lịch sử kết quả tất cả các trận đua mà các con ngựa của Chủ này từng tham gia."
+    )
     public ResponseEntity<List<Map<String, Object>>> getOwnerResults(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getOwnerResults(id));
     }
