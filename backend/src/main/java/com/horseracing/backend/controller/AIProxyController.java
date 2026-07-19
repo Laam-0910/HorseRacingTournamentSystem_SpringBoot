@@ -1,5 +1,7 @@
 package com.horseracing.backend.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -11,6 +13,7 @@ import java.util.Map;
 @RestController
 @RequestMapping({"/api/ai", "/ai"})
 @CrossOrigin(origins = "*")
+@Tag(name = "AI Service (Python)", description = "APIs tích hợp AI Gemini Chatbot & Dự đoán kết quả đua ngựa")
 public class AIProxyController {
 
     @Value("${ai.service.url:http://localhost:5000}")

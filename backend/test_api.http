@@ -1,0 +1,35 @@
+### 1. Đăng nhập hệ thống (Lấy Token)
+# @name login
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "password123"
+}
+
+### Lưu token từ response vào biến
+@authToken = {{login.response.body.token}}
+
+---
+
+### 2. Lấy danh sách giải đua (Races)
+GET http://localhost:8080/api/races
+Authorization: Bearer {{authToken}}
+
+---
+
+### 3. Lấy thông tin user hiện tại (Profile)
+GET http://localhost:8080/api/users/me
+Authorization: Bearer {{authToken}}
+
+---
+
+### 4. Kiểm tra AI Chat / Prediction
+POST http://localhost:8080/api/ai/predict
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+  "raceId": 1
+}
