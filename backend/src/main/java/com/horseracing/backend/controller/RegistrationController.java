@@ -35,7 +35,22 @@ public class RegistrationController {
     private final RegistrationService registrationService;
 
     @PostMapping("/jockey")
-    @Operation(summary = "POST: Nài ngựa đăng ký tham gia Ngày đua", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RegistrationController.registerJockey()` -> `RegistrationService.registerJockey()`")
+    @Operation(
+        summary = "POST: Nài ngựa đăng ký tham gia Ngày đua",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `RegistrationController.registerJockey()`\n" +
+                      "* **Service**: `RegistrationService.registerJockey()` (`RegistrationServiceImpl.java`)\n" +
+                      "* **Repository**: `JockeyRaceMeetingRegistrationRepository.save()`\n" +
+                      "* **Entity**: `JockeyRaceMeetingRegistration.java`\n" +
+                      "* **DTO Request**: `RegistrationMeetingRequestDTO` (`meetingId`, `jockeyId`)\n" +
+                      "* **DTO Response**: `JockeyRaceMeetingRegistrationDTO`\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Tiếp nhận `meetingId` và `jockeyId` từ request body.\n" +
+                      "2. Kiểm tra Nài ngựa và Ngày đua có hợp lệ không.\n" +
+                      "3. Tạo bản ghi `JockeyRaceMeetingRegistration` với trạng thái `PENDING`.\n" +
+                      "4. Trả về thông tin đơn đăng ký vừa tạo."
+    )
     public ResponseEntity<?> registerJockey(@RequestBody RegistrationMeetingRequestDTO body) {
         try {
             JockeyRaceMeetingRegistrationDTO reg = registrationService.registerJockey(body.getMeetingId(), body.getJockeyId());
@@ -46,7 +61,22 @@ public class RegistrationController {
     }
 
     @PostMapping("/owner")
-    @Operation(summary = "POST: Chủ ngựa đăng ký tham gia Ngày đua", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RegistrationController.registerOwner()` -> `RegistrationService.registerOwner()`")
+    @Operation(
+        summary = "POST: Chủ ngựa đăng ký tham gia Ngày đua",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `RegistrationController.registerOwner()`\n" +
+                      "* **Service**: `RegistrationService.registerOwner()` (`RegistrationServiceImpl.java`)\n" +
+                      "* **Repository**: `OwnerRaceMeetingRegistrationRepository.save()`\n" +
+                      "* **Entity**: `OwnerRaceMeetingRegistration.java`\n" +
+                      "* **DTO Request**: `RegistrationMeetingRequestDTO` (`meetingId`, `ownerId`)\n" +
+                      "* **DTO Response**: `OwnerRaceMeetingRegistrationDTO`\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Tiếp nhận `meetingId` và `ownerId` từ request body.\n" +
+                      "2. Kiểm tra Chủ ngựa và Ngày đua có hợp lệ không.\n" +
+                      "3. Tạo bản ghi `OwnerRaceMeetingRegistration` với trạng thái `PENDING`.\n" +
+                      "4. Trả về thông tin đơn đăng ký vừa tạo."
+    )
     public ResponseEntity<?> registerOwner(@RequestBody RegistrationMeetingRequestDTO body) {
         try {
             OwnerRaceMeetingRegistrationDTO reg = registrationService.registerOwner(body.getMeetingId(), body.getOwnerId());
@@ -57,7 +87,22 @@ public class RegistrationController {
     }
 
     @PostMapping("/horse")
-    @Operation(summary = "POST: Ngựa đăng ký tham gia Ngày đua", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RegistrationController.registerHorse()` -> `RegistrationService.registerHorse()`")
+    @Operation(
+        summary = "POST: Ngựa đăng ký tham gia Ngày đua",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `RegistrationController.registerHorse()`\n" +
+                      "* **Service**: `RegistrationService.registerHorse()` (`RegistrationServiceImpl.java`)\n" +
+                      "* **Repository**: `HorseRaceMeetingRegistrationRepository.save()`\n" +
+                      "* **Entity**: `HorseRaceMeetingRegistration.java`\n" +
+                      "* **DTO Request**: `RegistrationMeetingRequestDTO` (`meetingId`, `horseId`)\n" +
+                      "* **DTO Response**: `HorseRaceMeetingRegistrationDTO`\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Tiếp nhận `meetingId` và `horseId` từ request body.\n" +
+                      "2. Kiểm tra Ngựa có trạng thái `ACTIVE` và Ngày đua có hợp lệ không.\n" +
+                      "3. Tạo bản ghi `HorseRaceMeetingRegistration` với trạng thái `PENDING`.\n" +
+                      "4. Trả về thông tin đơn đăng ký vừa tạo."
+    )
     public ResponseEntity<?> registerHorse(@RequestBody RegistrationMeetingRequestDTO body) {
         try {
             HorseRaceMeetingRegistrationDTO reg = registrationService.registerHorse(body.getMeetingId(), body.getHorseId());

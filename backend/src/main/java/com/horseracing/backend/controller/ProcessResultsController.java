@@ -42,7 +42,7 @@ public class ProcessResultsController {
                       "* **Service**: `ProcessResultsService.confirmResults()` (`ProcessResultsServiceImpl.java`)\n" +
                       "* **Repositories**: `RaceEntryRepository.save()`, `HorseRepository.save()`, `RaceRepository.save()`\n" +
                       "* **Entities**: `RaceEntry.java`, `Horse.java`, `Race.java`\n" +
-                      "* **DTO Request**: `ConfirmResultsRequestDTO` (`raceId`, `stewardReport`, `results`)\n" +
+                      "* **DTO Request**: `ConfirmResultsRequestDTO` (`raceId`, `stewardReport`, `results: [{entryId, finalPosition, finishTime}]`)\n" +
                       "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"Results processed successfully\"}`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Tiếp nhận payload `ConfirmResultsRequestDTO` gồm danh sách vị trí về đích của các chiến mã.\n" +
