@@ -206,11 +206,14 @@ select option {
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
-input:-webkit-autofill:active {
+input:-webkit-autofill:active,
+input:-internal-autofill-selected,
+input:autofill {
   -webkit-box-shadow: 0 0 0 1000px #1a1815 inset !important;
   -webkit-text-fill-color: #f4f2ec !important;
+  caret-color: #f4f2ec !important;
   border: 1.5px solid rgba(201, 162, 39, 0.35) !important;
-  transition: background-color 5000s ease-in-out 0s !important;
+  transition: background-color 99999s ease-in-out 0s !important;
 }
 
 /* Invalid field highlight */

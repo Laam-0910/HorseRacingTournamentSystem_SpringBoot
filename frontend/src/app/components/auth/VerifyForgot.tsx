@@ -101,9 +101,10 @@ export default function VerifyForgot() {
                 type="text"
                 required
                 maxLength={6}
+                autoComplete="off"
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                className="appearance-none block w-full px-4 py-3 bg-black/40 border border-white/5 rounded-xl placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition duration-150 ease-in-out text-center text-2xl font-mono tracking-widest"
+                className="appearance-none block w-full px-4 py-3 bg-[#1a1815] border border-white/10 rounded-xl placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition duration-150 ease-in-out text-center text-2xl font-mono tracking-widest"
                 placeholder="000000"
               />
             </div>
@@ -115,9 +116,10 @@ export default function VerifyForgot() {
               <input
                 type="password"
                 required
+                autoComplete="new-password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="appearance-none block w-full px-4 py-3 bg-black/40 border border-white/5 rounded-xl placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition duration-150 ease-in-out sm:text-sm"
+                className="appearance-none block w-full px-4 py-3 bg-[#1a1815] border border-white/10 rounded-xl placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition duration-150 ease-in-out sm:text-sm"
                 placeholder="Enter new password"
               />
             </div>
@@ -129,9 +131,10 @@ export default function VerifyForgot() {
               <input
                 type="password"
                 required
+                autoComplete="new-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="appearance-none block w-full px-4 py-3 bg-black/40 border border-white/5 rounded-xl placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition duration-150 ease-in-out sm:text-sm"
+                className="appearance-none block w-full px-4 py-3 bg-[#1a1815] border border-white/10 rounded-xl placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition duration-150 ease-in-out sm:text-sm"
                 placeholder="Confirm new password"
               />
             </div>
