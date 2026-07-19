@@ -28,18 +28,18 @@ export default function Register() {
       return;
     }
     if (form.username.trim().length < 3) {
-      setError($t("Username phải có ít nhất 3 ký tự", lang));
+      setError($t("Username must be at least 3 characters long", lang));
       return;
     }
     if (form.password !== form.confirmPassword) {
-      setError($t("Mật khẩu xác nhận không khớp", lang));
+      setError($t("Passwords do not match.", lang));
       return;
     }
     // Kiểm tra độ phức tạp của mật khẩu (Chữ hoa, số, ký tự đặc biệt)
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(form.password)) {
       setError(
-        $t("Mật khẩu phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (ví dụ: @$!%*?&^./,#-_+)", lang)
+        $t("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)", lang)
       );
       return;
     }

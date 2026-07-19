@@ -241,14 +241,14 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     const lang = localStorage.getItem('app-lang') || 'vi';
 
     if (newPassword !== confirmPassword) { 
-      setPassErr($t("Mật khẩu xác nhận không khớp.", lang)); 
+      setPassErr($t("Passwords do not match.", lang)); 
       return; 
     }
 
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(newPassword)) {
       setPassErr(
-        $t("Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (ví dụ: @$!%*?&^./,#-_+)", lang)
+        $t("New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)", lang)
       );
       return;
     }
@@ -257,10 +257,10 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     try {
       const res = await api.post<any>("/auth/verify-forgot-password", { otpTxId, otp: otpCode.trim(), newPassword });
       if (res.success) {
-        setPassMsg("✅ " + $t("Đã lưu thành công!", lang));
+        setPassMsg("✅ " + $t("Saved successfully!", lang));
         setTimeout(() => { setPassMode(false); setOtpCode(""); setNewPassword(""); setConfirmPassword(""); setPassMsg(""); }, 2000);
       } else {
-        setPassErr(res.error || $t("Xác minh thất bại", lang));
+        setPassErr(res.error || $t("Verification failed", lang));
       }
     } catch (err: any) {
       setPassErr(err.message || "Error.");
