@@ -14,13 +14,44 @@ import java.util.Map;
 @RequestMapping("/api/results")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@Tag(name = "Process Results Service", description = "Xác nhận và nhập kết quả trận đua")
+@Tag(
+    name = "Process Results Service",
+    description = "🏁 **Cấu trúc Mô-đun Nhập Kết Quả & Tính Tiền Thưởng (Results Architecture)**\n\n" +
+                  "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
+                  "* **Controllers**: `ProcessResultsController.java`, `RefereeController.java`\n" +
+                  "* **Services**: `ProcessResultsService.java` (`ProcessResultsServiceImpl.java`)\n" +
+                  "* **Repositories**: `RaceEntryRepository.java`, `RaceRepository.java`, `HorseRepository.java`\n" +
+                  "* **Entities**: `RaceEntry.java`, `Race.java`, `Horse.java`\n" +
+                  "* **DTOs**: `ConfirmResultsRequestDTO.java`\n\n" +
+                  "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
+                  "1. Trọng tài nhập thứ hạng về đích 1-2-3..., thời gian chạy (`Finish Time`) và Báo cáo giám sát (`Steward Report`).\n" +
+                  "2. Kiểm tra tính hợp lệ về cân nặng (Weights) và các lỗi vi phạm trong trận.\n" +
+                  "3. Cập nhật trạng thái trận đua sang `OFFICIAL`.\n" +
+                  "4. Tự động tính toán chia **Tiền thưởng (`Prize Money`)** cho Chủ ngựa & Nài ngựa.\n" +
+                  "5. Tự động tính toán cộng/trừ **Điểm phong độ Elo Rating (`Current Rating`)** cho các con ngựa theo thứ hạng."
+)
 public class ProcessResultsController {
 
     private final ProcessResultsService processResultsService;
 
     @PostMapping("/confirm")
-    @Operation(summary = "Trọng tài nhập kết quả trận đua và báo cáo giám sát", description = "📌 **Code Handler**: `ProcessResultsController.confirmResults()` -> `ProcessResultsService.confirmResults()` | **DTO Request**: `ConfirmResultsRequestDTO`")
+    @Operation(
+        summary = "Trọng tài nhập kết quả trận đua và báo cáo giám sát",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `ProcessResultsController.confirmResults()`\n" +
+                      "* **Service**: `ProcessResultsService.confirmResults()` (`ProcessResultsServiceImpl.java`)\n" +
+                      "* **Repositories**: `RaceEntryRepository.save()`, `HorseRepository.save()`, `RaceRepository.save()`\n" +
+                      "* **Entities**: `RaceEntry.java`, `Horse.java`, `Race.java`\n" +
+                      "* **DTO Request**: `ConfirmResultsRequestDTO` (`raceId`, `stewardReport`, `results`)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"Results processed successfully\"}`)\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Tiếp nhận payload `ConfirmResultsRequestDTO` gồm danh sách vị trí về đích của các chiến mã.\n" +
+                      "2. Lưu thông tin Báo cáo giám sát (`Steward Report`) vào bản ghi `Race`.\n" +
+                      "3. Đổi trạng thái `Race` sang `OFFICIAL`.\n" +
+                      "4. Duyệt qua từng `RaceEntry`: Cập nhật `finalPosition`, `finishTime`, tính toán `prizeMoney` theo quỹ thưởng.\n" +
+                      "5. Cập nhật chỉ số `totalWins`, `totalRaces` và tính toán lại `currentRating` cho từng chiến mã trong `HorseRepository`."
+    )
     public ResponseEntity<?> confirmResults(@RequestBody ConfirmResultsRequestDTO request) {
         try {
             processResultsService.confirmResults(request.getRaceId(), request.getStewardReport(), request.getResults());
