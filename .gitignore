@@ -29,3 +29,9 @@ application-local.properties
 application-local.yml
 application-private.properties
 application-private.yml
+
+# Temporary Office files
+~$*.xlsx
+~$*.docx
+~$*.pptx
+
