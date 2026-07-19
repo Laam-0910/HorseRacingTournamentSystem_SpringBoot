@@ -156,6 +156,12 @@ def stats():
 # ── Phân tích ý định ──────────────────────────────────────────────────────────
 def intent(msg):
     m = msg.lower()
+    if any(w in m for w in ["ngựa tham gia cuộc đua hiện tại", "ngựa đang đua", "ngựa tham gia trận hiện tại", "horse in current race", "current race horse", "ngựa tham gia hiện tại"]):
+        return "current_horses"
+    if any(w in m for w in ["cuộc đua đã hoàn thành", "trận đấu đã xong", "races completed", "completed race", "đã hoàn thành", "trận đã xong"]):
+        return "completed_races"
+    if any(w in m for w in ["mùa nào đang diễn ra", "mùa giải hiện tại", "current season", "season running", "mùa đang diễn ra"]):
+        return "current_season"
     if any(w in m for w in ["top ngựa","ngựa nào","rating cao","horse rating","ranking"]):
         return "top_horses"
     if any(w in m for w in ["nài","jockey","nai ngua"]):
@@ -180,6 +186,59 @@ def fmt(v):
 
 def respond(it, lang):
     vi = lang != "en"
+
+    if it == "current_horses":
+        rows = currently_running_participants()
+        if not rows: return "Hiện tại không có cuộc đua nào đang diễn ra." if vi else "There are no races currently running."
+        grouped = {}
+        for r in rows:
+            rid = r['raceId']
+            if rid not in grouped:
+                grouped[rid] = {
+                    "meeting": r.get('meetingName', '—'),
+                    "class": r.get('classLevel', '—'),
+                    "status": r.get('raceStatus', 'RUNNING'),
+                    "horses": []
+                }
+            grouped[rid]["horses"].append(f"{r.get('horseName', '—')} (Nài: {r.get('jockeyName', '—')}, Cổng {r.get('gateNumber', '—')})")
+        h = "🏇 Ngựa tham gia các cuộc đua hiện tại:\n\n" if vi else "🏇 Horses in current races:\n\n"
+        for rid, info in grouped.items():
+            h += f"• **Race #{rid}** ({info['meeting']} | {info['class']} | Trạng thái: {info['status']}):\n" if vi else f"• **Race #{rid}** ({info['meeting']} | {info['class']} | Status: {info['status']}):\n"
+            for horse in info["horses"]:
+                h += f"  - {horse}\n"
+        return h
+
+    if it == "completed_races":
+        rows = query(
+            "SELECT r.id, rm.name AS meetingName, r.class_level AS classLevel, r.distance_meters AS distanceMeters, "
+            "CONVERT(VARCHAR(19), r.start_time, 105) + ' ' + CONVERT(VARCHAR(8), r.start_time, 108) AS startTime "
+            "FROM [Race] r LEFT JOIN [RaceMeeting] rm ON r.race_meeting_id=rm.id "
+            "WHERE r.status='OFFICIAL' ORDER BY r.start_time DESC"
+        )
+        if not rows: return "Chưa có cuộc đua nào hoàn thành." if vi else "No completed races yet."
+        h = "🏆 Các cuộc đua đã hoàn thành:\n\n" if vi else "🏆 Completed races:\n\n"
+        for r in rows:
+            h += f"• **Race #{r['id']}** | {r.get('meetingName','—')} | {r.get('classLevel','—')} | {r.get('distanceMeters','—')}m | Hoàn thành vào: {r.get('startTime','—')}\n" if vi else f"• **Race #{r['id']}** | {r.get('meetingName','—')} | {r.get('classLevel','—')} | {r.get('distanceMeters','—')}m | Date: {r.get('startTime','—')}\n"
+        return h
+
+    if it == "current_season":
+        rows = query(
+            "SELECT name, CONVERT(VARCHAR(10), start_date, 105) AS startDate, "
+            "CONVERT(VARCHAR(10), end_date, 105) AS endDate, status "
+            "FROM [Season] WHERE status='ACTIVE'"
+        )
+        if not rows:
+            rows = query(
+                "SELECT TOP 1 name, CONVERT(VARCHAR(10), start_date, 105) AS startDate, "
+                "CONVERT(VARCHAR(10), end_date, 105) AS endDate, status "
+                "FROM [Season] ORDER BY start_date DESC"
+            )
+        if not rows: return "Không tìm thấy thông tin mùa giải." if vi else "No season information found."
+        r = rows[0]
+        status_str = "Đang diễn ra" if r['status'] == 'ACTIVE' else "Đã kết thúc"
+        if vi:
+            return f"📅 Mùa giải hiện tại:\n• **{r['name']}**\n• Thời gian: {r['startDate']} đến {r['endDate']}\n• Trạng thái: {status_str}"
+        return f"📅 Current Season:\n• **{r['name']}**\n• Duration: {r['startDate']} to {r['endDate']}\n• Status: {r['status']}"
 
     if it == "top_horses":
         rows = top_horses()
@@ -240,6 +299,9 @@ def respond(it, lang):
 
     if vi:
         return ("💡 Tôi có thể giúp:\n"
+                "• 🏇 Ngựa tham gia cuộc đua hiện tại\n"
+                "• 🏆 Cuộc đua đã hoàn thành\n"
+                "• 📅 Mùa giải hiện tại đang diễn ra\n"
                 "• 🏇 Top ngựa rating cao nhất\n"
                 "• 🥇 Top nài ngựa xuất sắc\n"
                 "• 📅 Lịch trận sắp tới\n"
@@ -248,6 +310,9 @@ def respond(it, lang):
                 "• 📊 Thống kê\n"
                 "• 🐴 Thông tin ngựa (VD: 'ngựa Thunder King')")
     return ("💡 I can help with:\n"
+            "• 🏇 Horses in the current race\n"
+            "• 🏆 Completed races\n"
+            "• 📅 Current active season\n"
             "• 🏇 Top rated horses\n• 🥇 Top jockeys\n"
             "• 📅 Upcoming races\n• 🔴 Live races\n"
             "• 🏆 Recent results\n• 📊 Statistics\n"
@@ -278,8 +343,15 @@ def all_race_meetings():
     return query(
         "SELECT rm.id, rm.name, rm.venue, rm.status, CONVERT(VARCHAR(10), rm.start_date, 105) AS startDate, "
         "rs.name AS seasonName "
-        "FROM [RaceMeeting] rm LEFT JOIN [RaceSeason] rs ON rm.season_id=rs.id "
+        "FROM [RaceMeeting] rm LEFT JOIN [Season] rs ON rm.season_id=rs.id "
         "ORDER BY rm.start_date DESC"
+    )
+
+def all_seasons():
+    return query(
+        "SELECT id, name, CONVERT(VARCHAR(10), start_date, 105) AS startDate, "
+        "CONVERT(VARCHAR(10), end_date, 105) AS endDate, status "
+        "FROM [Season] ORDER BY start_date DESC"
     )
 
 def all_races():
@@ -358,6 +430,7 @@ def get_db_grounding_context(user_msg):
     live_participants = currently_running_participants()
     entries = all_race_entries()
     violations = all_violations()
+    seasons = all_seasons()
     st = stats()
 
     context = f"""[FULL SYSTEM DATABASE REAL-TIME CONTEXT]
@@ -368,28 +441,31 @@ System Current Date & Time: {current_time_str}
    - Total Active Horses: {st.get('horses', 0)}
    - Total Active Jockeys: {st.get('jockeys', 0)}
 
-2. All Registered Horses (Ratings, Wins, Breed, Owner):
+2. All Registered Seasons (Active & Completed):
+{json.dumps(seasons, default=str, ensure_ascii=False, indent=2)}
+
+3. All Registered Horses (Ratings, Wins, Breed, Owner):
 {json.dumps(horses, default=str, ensure_ascii=False, indent=2)}
 
-3. All Registered Jockeys (Races, Top 3, Wins, Weight):
+4. All Registered Jockeys (Races, Top 3, Wins, Weight):
 {json.dumps(jockeys, default=str, ensure_ascii=False, indent=2)}
 
-4. All Race Meetings:
+5. All Race Meetings:
 {json.dumps(meetings, default=str, ensure_ascii=False, indent=2)}
 
-5. All Tournament Races (Today, Scheduled, Running, Finished, Official):
+6. All Tournament Races (Today, Scheduled, Running, Finished, Official):
 {json.dumps(all_r, default=str, ensure_ascii=False, indent=2)}
 
-6. Currently Live / Running Races:
+7. Currently Live / Running Races:
 {json.dumps(running, default=str, ensure_ascii=False, indent=2)}
 
-7. Active Participants in Currently Live/Running Races (Horse Name & Jockey Name):
+8. Active Participants in Currently Live/Running Races (Horse Name & Jockey Name):
 {json.dumps(live_participants, default=str, ensure_ascii=False, indent=2)}
 
-8. All Race Participants & Official Entry Results:
+9. All Race Participants & Official Entry Results:
 {json.dumps(entries, default=str, ensure_ascii=False, indent=2)}
 
-9. Steward Recorded Violations:
+10. Steward Recorded Violations:
 {json.dumps(violations, default=str, ensure_ascii=False, indent=2)}
 [END OF DATABASE CONTEXT]"""
     return context
@@ -455,7 +531,7 @@ def chat():
             print(f"[AI] Thử key #{idx+1}/{len(all_keys)}: ...{api_key[-8:]}")
             client = genai.Client(api_key=api_key)
             response = client.models.generate_content(
-                model=config.get("model_name", "gemini-2.0-flash"),
+                model=config.get("model_name", "gemini-2.5-flash"),
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     system_instruction=config.get("system_instruction"),

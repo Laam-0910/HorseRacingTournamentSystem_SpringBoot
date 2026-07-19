@@ -1116,6 +1116,14 @@ export default function RefereeHub() {
             setLoading(false);
             return;
           }
+          const weight = parseFloat(weighInWeights[entryId]);
+          if (isNaN(weight) || weight <= 0) {
+            alert(isVi
+              ? `Vui lòng nhập cân nặng sau đua hợp lệ cho ngựa "${item.horse?.name}".`
+              : `Please enter a valid weigh-in weight for horse "${item.horse?.name}".`);
+            setLoading(false);
+            return;
+          }
         }
       }
 
