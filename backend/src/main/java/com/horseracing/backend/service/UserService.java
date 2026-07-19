@@ -54,14 +54,24 @@ public class UserService {
 
     @Transactional
     public UserDTO createUserManual(String username, String email, String password, Integer roleId, java.math.BigDecimal weight) {
-        if (userRepository.findByUsername(username).isPresent()) {
-            throw new IllegalArgumentException("Username already exists");
+        if (username == null || username.trim().length() < 3) {
+            throw new IllegalArgumentException("Username must be at least 3 characters long");
         }
+        if (userRepository.findByUsername(username.trim()).isPresent()) {
+            throw new IllegalArgumentException("Username is already taken");
+        }
+        if (email != null && !email.trim().isEmpty() && userRepository.findByEmail(email.trim()).isPresent()) {
+            throw new IllegalArgumentException("Email is already registered");
+        }
+        if (password == null || !password.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")) {
+            throw new IllegalArgumentException("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)");
+        }
+
         User user = new User();
-        user.setUsername(username);
-        user.setEmail(email);
+        user.setUsername(username.trim());
+        user.setEmail(email != null ? email.trim() : null);
         user.setPasswordHash(passwordEncoder.encode(password));
-        user.setRoleId(roleId);
+        user.setRoleId(roleId != null ? roleId : 4);
         user.setStatus("ACTIVE");
         user.setRequireOtp(false);
         user.setWeight(weight);

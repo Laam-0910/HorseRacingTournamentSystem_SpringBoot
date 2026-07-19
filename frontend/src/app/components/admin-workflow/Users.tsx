@@ -67,10 +67,25 @@ export default function Users() {
     e.preventDefault();
     setError("");
     setSuccess("");
+    const lang = localStorage.getItem("app-lang") || "vi";
+
+    if (createUsername.trim().length < 3) {
+      setError($t("Username must be at least 3 characters long", lang));
+      return;
+    }
+
+    const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!pwdRegex.test(createPassword)) {
+      setError(
+        $t("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)", lang)
+      );
+      return;
+    }
+
     try {
       const body: any = {
-        username: createUsername,
-        email: createEmail,
+        username: createUsername.trim(),
+        email: createEmail.trim(),
         password: createPassword,
         roleId: parseInt(createRoleId, 10),
       };
@@ -201,7 +216,7 @@ export default function Users() {
           </div>
           <div>
             <label style={labelStyle}>{$t("Password", (localStorage.getItem('app-lang') || 'vi'))}</label>
-            <input type="password" required value={createPassword} onChange={e => setCreatePassword(e.target.value)} style={inputStyle} placeholder={$t("••••••••", (localStorage.getItem('app-lang') || 'vi'))} />
+            <input type="password" required value={createPassword} onChange={e => setCreatePassword(e.target.value)} style={inputStyle} placeholder={$t("Min 8 chars (uppercase, digit, special)", (localStorage.getItem('app-lang') || 'vi'))} />
           </div>
           <div>
             <label style={labelStyle}>{$t("Role", (localStorage.getItem('app-lang') || 'vi'))}</label>
