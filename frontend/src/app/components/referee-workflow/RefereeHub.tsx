@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import { confirm } from "../../../lib/confirm";
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
+import { getYouTubeEmbedUrl } from "../../../lib/utils";
 import { $t } from '@/lib/i18n';
 
 const PURPLE = "#8b5cf6";
@@ -494,6 +495,206 @@ export default function RefereeHub() {
   const [disqualifiedList, setDisqualifiedList] = useState<Record<number, boolean>>({});
   const [stewardReport, setStewardReport] = useState("");
   const [sortBy, setSortBy] = useState<"gate" | "rating">("gate");
+
+  // Live Race Monitor State for Referee Supervision
+  const [liveMonitorMode, setLiveMonitorMode] = useState<"floating" | "embedded" | "hidden">("floating");
+  const [liveMonitorSize, setLiveMonitorSize] = useState<"small" | "medium" | "large">("small");
+  const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number }>({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("button, input, select, iframe, video, a")) return;
+    setIsDragging(true);
+    const defaultX = typeof window !== "undefined" ? window.innerWidth - (liveMonitorSize === "small" ? 380 : liveMonitorSize === "medium" ? 500 : 660) : 100;
+    const defaultY = typeof window !== "undefined" ? window.innerHeight - (liveMonitorSize === "small" ? 250 : liveMonitorSize === "medium" ? 320 : 420) : 100;
+    const currentX = dragPos ? dragPos.x : defaultX;
+    const currentY = dragPos ? dragPos.y : defaultY;
+    dragStartRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: currentX,
+      initialY: currentY,
+    };
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartRef.current.startX;
+      const dy = e.clientY - dragStartRef.current.startY;
+      const newX = Math.max(10, Math.min(window.innerWidth - 300, dragStartRef.current.initialX + dx));
+      const newY = Math.max(10, Math.min(window.innerHeight - 180, dragStartRef.current.initialY + dy));
+      setDragPos({ x: newX, y: newY });
+    };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+    if (isDragging) {
+      window.addEventListener("mousemove", handleMouseMove);
+      window.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  const renderLiveMonitorCard = (isEmbeddedMode: boolean) => {
+    if (!selectedRace || liveMonitorMode === "hidden") return null;
+    if (isEmbeddedMode && liveMonitorMode !== "embedded") return null;
+    if (!isEmbeddedMode && liveMonitorMode !== "floating") return null;
+
+    const embedUrl = selectedRace.youtubeLiveUrl ? getYouTubeEmbedUrl(selectedRace.youtubeLiveUrl) : null;
+
+    const sizeWidth = isEmbeddedMode ? "100%" : (liveMonitorSize === "small" ? "360px" : liveMonitorSize === "medium" ? "480px" : "640px");
+    const sizeHeight = isEmbeddedMode ? "360px" : (liveMonitorSize === "small" ? "210px" : liveMonitorSize === "medium" ? "280px" : "370px");
+
+    return (
+      <div
+        onMouseDown={!isEmbeddedMode ? handleMouseDown : undefined}
+        style={{
+          width: sizeWidth,
+          maxWidth: "100%",
+          background: "#14151c",
+          border: "1px solid rgba(201,162,39,0.3)",
+          borderRadius: "0.875rem",
+          boxShadow: isEmbeddedMode ? "0 8px 25px rgba(0,0,0,0.4)" : "0 15px 40px rgba(0,0,0,0.75)",
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          position: !isEmbeddedMode ? "fixed" : "relative",
+          top: !isEmbeddedMode && dragPos ? `${dragPos.y}px` : !isEmbeddedMode ? "auto" : undefined,
+          bottom: !isEmbeddedMode && !dragPos ? "20px" : undefined,
+          right: !isEmbeddedMode && !dragPos ? "20px" : undefined,
+          left: !isEmbeddedMode && dragPos ? `${dragPos.x}px` : undefined,
+          zIndex: !isEmbeddedMode ? 9999 : 1,
+          cursor: !isEmbeddedMode ? (isDragging ? "grabbing" : "grab") : "default",
+          transition: isDragging ? "none" : "all 0.2s ease",
+          marginBottom: isEmbeddedMode ? "1.5rem" : undefined,
+        }}
+      >
+        {/* Header Bar */}
+        <div style={{
+          padding: "0.5rem 0.875rem",
+          background: "rgba(255,255,255,0.04)",
+          borderBottom: "1px solid rgba(255,255,255,0.08)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "0.5rem",
+          userSelect: "none"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block" }} className="animate-pulse"></span>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "#f4f2ec", fontFamily: "monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              📺 LIVE MONITOR · Race #{selectedRace.id}
+            </span>
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+            {/* Size selector for floating window */}
+            {!isEmbeddedMode && (
+              <div style={{ display: "flex", background: "rgba(0,0,0,0.4)", borderRadius: "0.25rem", padding: "2px", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <button type="button" onClick={() => setLiveMonitorSize("small")} style={{ padding: "1px 5px", fontSize: "9px", background: liveMonitorSize === "small" ? "#c9a227" : "transparent", color: liveMonitorSize === "small" ? "#000" : "#a0a0a0", border: "none", borderRadius: "2px", cursor: "pointer", fontWeight: "bold" }}>S</button>
+                <button type="button" onClick={() => setLiveMonitorSize("medium")} style={{ padding: "1px 5px", fontSize: "9px", background: liveMonitorSize === "medium" ? "#c9a227" : "transparent", color: liveMonitorSize === "medium" ? "#000" : "#a0a0a0", border: "none", borderRadius: "2px", cursor: "pointer", fontWeight: "bold" }}>M</button>
+                <button type="button" onClick={() => setLiveMonitorSize("large")} style={{ padding: "1px 5px", fontSize: "9px", background: liveMonitorSize === "large" ? "#c9a227" : "transparent", color: liveMonitorSize === "large" ? "#000" : "#a0a0a0", border: "none", borderRadius: "2px", cursor: "pointer", fontWeight: "bold" }}>L</button>
+              </div>
+            )}
+
+            {/* Toggle Mode Button (Floating ↔ Embedded) */}
+            <button
+              type="button"
+              onClick={() => setLiveMonitorMode(isEmbeddedMode ? "floating" : "embedded")}
+              style={{ padding: "2px 6px", fontSize: "10px", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", color: "#c9a227", borderRadius: "0.25rem", cursor: "pointer", fontWeight: "bold", fontFamily: "monospace" }}
+              title={isEmbeddedMode ? "Switch to Floating Movable Window" : "Switch to Embedded Mode Below Table"}
+            >
+              {isEmbeddedMode ? "📌 Floating (Góc)" : "📌 Below Table (Dưới bảng)"}
+            </button>
+
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setLiveMonitorMode("hidden")}
+              style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "14px", padding: "0 4px", lineHeight: 1 }}
+              title="Close Monitor"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* Video / Simulation Screen Body */}
+        <div style={{ height: sizeHeight, background: "#000", position: "relative", overflow: "hidden" }}>
+          {embedUrl ? (
+            embedUrl.endsWith(".mp4") || embedUrl.endsWith(".webm") || embedUrl.includes(".mp4?") ? (
+              <video src={selectedRace.youtubeLiveUrl} controls autoPlay muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <iframe
+                src={embedUrl.includes("?") ? `${embedUrl}&autoplay=1&mute=1` : `${embedUrl}?autoplay=1&mute=1&rel=0`}
+                title={`Live Monitor Race #${selectedRace.id}`}
+                style={{ width: "100%", height: "100%", border: "none" }}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )
+          ) : (
+            /* Animated 2D Live Track Simulation */
+            <div style={{ width: "100%", height: "100%", background: "radial-gradient(circle at center, #1a2318 0%, #0d120c 100%)", padding: "0.875rem", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: "10px", color: "#34d399", fontFamily: "monospace", fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} className="animate-ping"></span>
+                  LIVE TRACK SIMULATION ({selectedRace.distanceMeters || 1200}m · {selectedRace.trackType || "Turf"})
+                </span>
+                <span style={{ fontSize: "10px", color: "#fbbf24", fontFamily: "monospace", fontWeight: "bold" }}>
+                  {selectedRace.status}
+                </span>
+              </div>
+
+              {/* Track Lanes */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "6px", margin: "auto 0", width: "100%" }}>
+                {raceEntries.slice(0, 6).map((item: any, idx: number) => {
+                  const isDq = item.entry.status === "DISQUALIFIED";
+                  const isStopped = item.entry.status === "STOPPED";
+                  const progressPct = isDq ? 0 : Math.min(95, Math.max(10, ((idx * 17 + 45) % 90) + 5));
+                  return (
+                    <div key={item.entry.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#fbbf24", width: "16px", textAlign: "right", fontWeight: "bold" }}>
+                        G{item.entry.gateNumber || idx + 1}
+                      </span>
+                      <div style={{ flex: 1, height: "18px", background: "rgba(255,255,255,0.05)", borderRadius: "9px", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
+                        <div style={{
+                          height: "100%",
+                          width: `${progressPct}%`,
+                          background: isDq ? "#ef4444" : isStopped ? "#f59e0b" : "linear-gradient(90deg, #c9a227 0%, #10b981 100%)",
+                          borderRadius: "9px",
+                          transition: "width 0.5s ease"
+                        }} />
+                        <span style={{ position: "absolute", left: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "9px", color: "#fff", fontWeight: 700, textShadow: "0 1px 2px #000", whiteSpace: "nowrap" }}>
+                          🐴 {item.horse?.name || "Horse"} ({item.jockey?.username || "Jockey"})
+                        </span>
+                        {isDq && (
+                          <span style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "8px", color: "#f87171", fontWeight: "bold", fontFamily: "monospace" }}>
+                            DISQUALIFIED
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Bottom Status bar */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "9px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "4px" }}>
+                <span>FINISH LINE 🚩</span>
+                <span>Ref: {user?.username || "Official Referee"}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   // Auto-calculate final positions whenever finishTimes or disqualifiedList changes
   useEffect(() => {
@@ -1290,6 +1491,24 @@ export default function RefereeHub() {
             >
               {$t("🛑 Dừng trận đấu khẩn cấp", (localStorage.getItem('app-lang') || 'vi'))}
             </button>
+            <button 
+              onClick={() => setLiveMonitorMode(prev => prev === "hidden" ? "floating" : prev === "floating" ? "embedded" : "floating")} 
+              style={{ 
+                padding: "0.5rem 1.25rem", 
+                background: liveMonitorMode !== "hidden" ? "rgba(16,185,129,0.15)" : "rgba(255,255,255,0.05)", 
+                color: liveMonitorMode !== "hidden" ? "#34d399" : "#fff", 
+                border: liveMonitorMode !== "hidden" ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(255,255,255,0.15)", 
+                borderRadius: "0.5rem", 
+                fontSize: "12px", 
+                fontWeight: "bold", 
+                cursor: "pointer", 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "0.375rem" 
+              }}
+            >
+              📺 {liveMonitorMode === "floating" ? $t("Màn hình nổi (Floating)", lang) : liveMonitorMode === "embedded" ? $t("Màn hình dưới bảng (Embedded)", lang) : $t("Bật Live Monitor", lang)}
+            </button>
             <button onClick={() => setShowViolModal(true)} style={{ padding: "0.5rem 1.25rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}>
               {$t("⚠️ Ghi nhận vi phạm", (localStorage.getItem('app-lang') || 'vi'))}
             </button>
@@ -1521,6 +1740,9 @@ export default function RefereeHub() {
           </div>
         </div>
 
+        {/* Embedded Live Race Monitor (Option 2: Below Table) */}
+        {renderLiveMonitorCard(true)}
+
         {/* Finalization Bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem", borderRadius: "0.75rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
@@ -1531,6 +1753,9 @@ export default function RefereeHub() {
             <Icon name="check-square" /> {$t("Kết thúc trận & Nhập kết quả", (localStorage.getItem('app-lang') || 'vi'))}
           </button>
         </div>
+
+        {/* Floating Movable Live Race Monitor (Option 1: Corner Draggable) */}
+        {renderLiveMonitorCard(false)}
 
         {/* Log Violation Modal */}
         {showViolModal && (
