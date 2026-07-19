@@ -14,10 +14,13 @@ public class RaceInvitationDTO {
     private Integer raceId;
     private Integer horseId;
     private String horseName;       // Tên chiến mã bổ trợ
+    private String horseAvatar;     // Ảnh/Avatar chiến mã bổ trợ
     private Integer ownerId;
     private String ownerName;       // Tên chủ ngựa bổ trợ
+    private String ownerAvatar;     // Avatar chủ ngựa bổ trợ
     private Integer jockeyId;
     private String jockeyName;      // Tên nài ngựa bổ trợ
+    private String jockeyAvatar;    // Avatar nài ngựa bổ trợ
     private String status;          // PENDING, ACCEPTED, REJECTED, EXPIRED
     private String meetingName;     // Tên ngày hội đua bổ trợ
     private String startTime;       // Thời gian bắt đầu trận đấu bổ trợ

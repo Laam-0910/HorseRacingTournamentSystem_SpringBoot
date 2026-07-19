@@ -48,10 +48,10 @@ public class InvitationService {
             invitations = invitationRepository.findAll();
         }
 
-        Map<Integer, String> userMap = userRepository.findAll().stream()
-                .collect(Collectors.toMap(User::getId, u -> u.getFullName() != null && !u.getFullName().isBlank() ? u.getFullName() : u.getUsername()));
-        Map<Integer, String> horseMap = horseRepository.findAll().stream()
-                .collect(Collectors.toMap(Horse::getId, Horse::getName));
+        Map<Integer, User> userEntityMap = userRepository.findAll().stream()
+                .collect(Collectors.toMap(User::getId, u -> u, (u1, u2) -> u1));
+        Map<Integer, Horse> horseEntityMap = horseRepository.findAll().stream()
+                .collect(Collectors.toMap(Horse::getId, h -> h, (h1, h2) -> h1));
 
         java.util.Map<Integer, com.horseracing.backend.entity.Race> raceMap = raceRepository.findAll().stream()
                 .collect(Collectors.toMap(com.horseracing.backend.entity.Race::getId, r -> r));
@@ -62,10 +62,21 @@ public class InvitationService {
 
         return invitations.stream()
                 .map(i -> {
+                    Horse horse = horseEntityMap.get(i.getHorseId());
+                    User owner = userEntityMap.get(i.getOwnerId());
+                    User jockey = userEntityMap.get(i.getJockeyId());
+
+                    String horseName = horse != null ? horse.getName() : null;
+                    String horseAvatar = horse != null ? horse.getAvatar() : null;
+                    String ownerName = owner != null ? (owner.getFullName() != null && !owner.getFullName().isBlank() ? owner.getFullName() : owner.getUsername()) : null;
+                    String ownerAvatar = owner != null ? owner.getAvatar() : null;
+                    String jockeyName = jockey != null ? (jockey.getFullName() != null && !jockey.getFullName().isBlank() ? jockey.getFullName() : jockey.getUsername()) : null;
+                    String jockeyAvatar = jockey != null ? jockey.getAvatar() : null;
+
                     RaceInvitationDTO dto = invitationMapper.toDTO(i, 
-                            horseMap.get(i.getHorseId()), 
-                            userMap.get(i.getOwnerId()), 
-                            userMap.get(i.getJockeyId()));
+                            horseName, horseAvatar,
+                            ownerName, ownerAvatar,
+                            jockeyName, jockeyAvatar);
                     
                     com.horseracing.backend.entity.Race race = raceMap.get(i.getRaceId());
                     if (race != null) {
@@ -147,16 +158,23 @@ public class InvitationService {
         invite.setStatus("PENDING");
         RaceInvitation savedInvite = invitationRepository.save(invite);
 
-        Map<Integer, String> userMap = userRepository.findAll().stream()
-                .collect(Collectors.toMap(User::getId, User::getUsername));
-        String horseName = horseRepository.findById(savedInvite.getHorseId())
-                .map(Horse::getName)
-                .orElse(null);
+        Map<Integer, User> userEntityMap = userRepository.findAll().stream()
+                .collect(Collectors.toMap(User::getId, u -> u, (u1, u2) -> u1));
+        Horse horse = horseRepository.findById(savedInvite.getHorseId()).orElse(null);
+        User owner = userEntityMap.get(savedInvite.getOwnerId());
+        User jockey = userEntityMap.get(savedInvite.getJockeyId());
+
+        String horseName = horse != null ? horse.getName() : null;
+        String horseAvatar = horse != null ? horse.getAvatar() : null;
+        String ownerName = owner != null ? (owner.getFullName() != null && !owner.getFullName().isBlank() ? owner.getFullName() : owner.getUsername()) : null;
+        String ownerAvatar = owner != null ? owner.getAvatar() : null;
+        String jockeyName = jockey != null ? (jockey.getFullName() != null && !jockey.getFullName().isBlank() ? jockey.getFullName() : jockey.getUsername()) : null;
+        String jockeyAvatar = jockey != null ? jockey.getAvatar() : null;
 
         return invitationMapper.toDTO(savedInvite, 
-                horseName, 
-                userMap.get(savedInvite.getOwnerId()), 
-                userMap.get(savedInvite.getJockeyId()));
+                horseName, horseAvatar,
+                ownerName, ownerAvatar,
+                jockeyName, jockeyAvatar);
     }
 
     @Transactional

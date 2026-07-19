@@ -1106,7 +1106,18 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }:
                         <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
                           {inv.classLevel ? `${inv.classLevel} · ${formatDate(inv.startTime)}` : `Race #${inv.raceId}`}
                         </td>
-                        <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>{inv.horseName ?? `Horse #${inv.horseId}`}</td>
+                        <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", fontWeight: 700, color: "#f4f2ec" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                            <div style={{ width: 28, height: 28, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              {inv.horseAvatar ? (
+                                <img src={inv.horseAvatar} alt={inv.horseName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              ) : (
+                                <span style={{ fontSize: "0.8rem" }}>🐴</span>
+                              )}
+                            </div>
+                            <span>{inv.horseName ?? `Horse #${inv.horseId}`}</span>
+                          </div>
+                        </td>
                         <td style={{ padding: "0.875rem 1.25rem", fontSize: "0.8rem", color: "#f4f2ec" }}>
                           <button 
                             type="button" 

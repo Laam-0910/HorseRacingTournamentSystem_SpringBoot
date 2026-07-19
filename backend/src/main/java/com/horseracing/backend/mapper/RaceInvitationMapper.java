@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RaceInvitationMapper {
 
-    public RaceInvitationDTO toDTO(RaceInvitation invite, String horseName, String ownerName, String jockeyName) {
+    public RaceInvitationDTO toDTO(RaceInvitation invite, String horseName, String horseAvatar, String ownerName, String ownerAvatar, String jockeyName, String jockeyAvatar) {
         if (invite == null) {
             return null;
         }
@@ -16,16 +16,23 @@ public class RaceInvitationMapper {
                 .raceId(invite.getRaceId())
                 .horseId(invite.getHorseId())
                 .horseName(horseName)
+                .horseAvatar(horseAvatar)
                 .ownerId(invite.getOwnerId())
                 .ownerName(ownerName)
+                .ownerAvatar(ownerAvatar)
                 .jockeyId(invite.getJockeyId())
                 .jockeyName(jockeyName)
+                .jockeyAvatar(jockeyAvatar)
                 .status(invite.getStatus())
                 .build();
     }
 
+    public RaceInvitationDTO toDTO(RaceInvitation invite, String horseName, String ownerName, String jockeyName) {
+        return toDTO(invite, horseName, null, ownerName, null, jockeyName, null);
+    }
+
     public RaceInvitationDTO toDTO(RaceInvitation invite) {
-        return toDTO(invite, null, null, null);
+        return toDTO(invite, null, null, null, null, null, null);
     }
 
     public RaceInvitation toEntity(RaceInvitationDTO dto) {
