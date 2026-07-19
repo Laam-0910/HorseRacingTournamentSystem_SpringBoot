@@ -18,6 +18,7 @@ interface HorsePerf {
   name: string;
   breed: string;
   sex?: string;
+  avatar?: string;
   currentRating: number;
   totalRaces: number;
   totalWins: number;
@@ -217,9 +218,14 @@ function HorsePerformanceModal({
                     justifyContent: "center",
                     fontSize: "1.75rem",
                     flexShrink: 0,
+                    overflow: "hidden"
                   }}
                 >
-                  🐎
+                  {perf?.avatar ? (
+                    <img src={perf.avatar} alt={perf.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  ) : (
+                    "🐎"
+                  )}
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>

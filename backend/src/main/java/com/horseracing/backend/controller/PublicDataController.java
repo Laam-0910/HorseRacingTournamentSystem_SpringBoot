@@ -411,6 +411,7 @@ public class PublicDataController {
         response.put("horseName", horse.getName());
         response.put("breed", horse.getBreed());
         response.put("sex", horse.getSex());
+        response.put("avatar", horse.getAvatar());
         response.put("currentRating", horse.getCurrentRating());
         response.put("totalRaces", horse.getTotalRaces());
         response.put("totalWins", horse.getTotalWins());
