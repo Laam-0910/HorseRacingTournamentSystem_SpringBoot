@@ -2,6 +2,7 @@ import pandas as pd
 import requests
 import json
 import os
+from datetime import datetime
 from db_connector import get_connection
 
 class RAGEngine:
@@ -31,6 +32,9 @@ class RAGEngine:
         context_parts = []
         conn = get_connection()
         cursor = conn.cursor()
+
+        current_time_str = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        context_parts.append(f"[MỐC THỜI GIAN THỰC HỆ THỐNG] Hiện tại: {current_time_str}")
 
         # ── 1. LẤY THÔNG TIN CỤ THỂ (SPECIFIC ENTITY CONTEXT) ─────────────────
         # Lấy thông tin ngựa nếu có trong ngữ cảnh
@@ -89,8 +93,6 @@ class RAGEngine:
                 print(f"[RAG Query Error - Specific Race] {e}")
 
         # ── 2. LẤY THÔNG TIN GIẢI ĐẤU NỀN (BASELINE CONTEXT - ALWAYS DYNAMIC) ──
-        # Điều này cho phép AI trả lời các câu hỏi tổng quát ngay cả khi không có ngựa/trận đấu cụ thể nào hoạt động trong bộ nhớ chat
-        
         # A. Thống kê chung giải đấu
         try:
             cursor.execute("SELECT COUNT(*) FROM Race WHERE status='OFFICIAL'")
@@ -105,73 +107,75 @@ class RAGEngine:
         except Exception as e:
             print(f"[RAG Query Error - Stats] {e}")
 
-        # B. Top 5 Ngựa Rating cao nhất
+        # B. Top Ngựa Rating cao nhất
         try:
             cursor.execute("""
-                SELECT TOP 5 name, breed, current_rating, total_races, total_wins
+                SELECT name, breed, current_rating, total_races, total_wins
                 FROM Horse WHERE status='ACTIVE' ORDER BY current_rating DESC
             """)
             horses = cursor.fetchall()
             if horses:
-                context_parts.append("[DANH SÁCH TOP 5 NGỰA RATING CAO NHẤT]")
+                context_parts.append("[DANH SÁCH TẤT CẢ NGỰA HOẠT ĐỘNG]")
                 for idx, h in enumerate(horses, 1):
                     wr = (h[4] / h[3] * 100) if h[3] > 0 else 0
                     context_parts.append(f"{idx}. {h[0]} (Giống: {h[1]} | Rating: {h[2]} | Đua: {h[3]} trận, Thắng: {h[4]} trận, Tỷ lệ thắng: {wr:.1f}%)")
         except Exception as e:
             print(f"[RAG Query Error - Top Horses] {e}")
 
-        # C. Top 5 Nài ngựa xuất sắc nhất (Theo số lần lọt Top 3)
+        # C. Danh sách Nài ngựa
         try:
             cursor.execute("""
-                SELECT TOP 5 username, weight, total_races_participated, total_top3_finishes
+                SELECT username, weight, total_races_participated, total_top3_finishes
                 FROM [User] WHERE role_id=3 AND status='ACTIVE' ORDER BY total_top3_finishes DESC
             """)
             jockeys = cursor.fetchall()
             if jockeys:
-                context_parts.append("[DANH SÁCH TOP 5 NÀI NGỰA XUẤT SẮC NHẤT]")
+                context_parts.append("[DANH SÁCH NÀI NGỰA XUẤT SẮC]")
                 for idx, j in enumerate(jockeys, 1):
                     t3r = (j[3] / j[2] * 100) if j[2] > 0 else 0
                     context_parts.append(f"{idx}. {j[0]} (Nặng: {j[1]}kg | Số trận: {j[2]} | Top 3: {j[3]} lần, Tỷ lệ top 3: {t3r:.1f}%)")
         except Exception as e:
             print(f"[RAG Query Error - Top Jockeys] {e}")
 
-        # D. Các trận đấu sắp tới (Scheduled / Open)
+        # D. Tất cả các trận đấu và Buổi đua trong hệ thống (All Races & Meetings)
         try:
             cursor.execute("""
-                SELECT TOP 3 r.id, r.class_level, r.distance_meters, r.track_type, r.start_time, rm.name
+                SELECT r.id, r.class_level, r.distance_meters, r.track_type, r.status, r.start_time, rm.name, rm.venue
                 FROM Race r
-                JOIN RaceMeeting rm ON r.race_meeting_id = rm.id
-                WHERE r.status IN ('SCHEDULED','DECLARATION_OPEN','RACE_ASSIGNED')
-                ORDER BY r.start_time ASC
+                LEFT JOIN RaceMeeting rm ON r.race_meeting_id = rm.id
+                ORDER BY r.start_time DESC
             """)
-            upcoming = cursor.fetchall()
-            if upcoming:
-                context_parts.append("[LỊCH THI ĐẤU SẮP TỚI]")
-                for u in upcoming:
-                    context_parts.append(f"- Trận #{u[0]} ({u[1]}): Cự ly {u[2]}m, Sân {u[3]} | Giờ chạy: {u[4]} | Hội đua: {u[5]}")
+            all_races = cursor.fetchall()
+            if all_races:
+                context_parts.append("[DANH SÁCH TẤT CẢ CÁC TRẬN ĐẤU & BUỔI ĐƯA]")
+                for u in all_races:
+                    context_parts.append(f"- Trận #{u[0]} ({u[1]}): Cự ly {u[2]}m, Sân {u[3]} | Trạng thái: {u[4]} | Giờ chạy: {u[5]} | Buổi đua (Meeting): {u[6]} ({u[7]})")
         except Exception as e:
-            print(f"[RAG Query Error - Upcoming] {e}")
+            print(f"[RAG Query Error - All Races] {e}")
 
-        # E. Trận đấu đang diễn ra (Live)
+        # E. Thí sinh đang tham gia các trận đua (Active / Running Race Entries)
         try:
             cursor.execute("""
-                SELECT r.id, r.class_level, rm.name
-                FROM Race r
-                JOIN RaceMeeting rm ON r.race_meeting_id = rm.id
-                WHERE r.status='RUNNING'
+                SELECT r.id, rm.name, h.name, u.username, re.gate_number, re.status, r.status
+                FROM RaceEntry re
+                JOIN Race r ON re.race_id = r.id
+                LEFT JOIN RaceMeeting rm ON r.race_meeting_id = rm.id
+                JOIN Horse h ON re.horse_id = h.id
+                JOIN [User] u ON re.jockey_id = u.id
+                ORDER BY r.id, re.gate_number
             """)
-            running = cursor.fetchall()
-            if running:
-                context_parts.append("[TRẬN ĐẤU ĐANG DIỄN RA LIVE]")
-                for r in running:
-                    context_parts.append(f"- Trận #{r[0]} ({r[1]}) tại hội đua {r[2]} đang chạy!")
+            entries = cursor.fetchall()
+            if entries:
+                context_parts.append("[THÍ SINH THAM GIA CÁC TRẬN ĐỦA (HỘI ĐỦA - TRẬN - NGỰA - NÀI)]")
+                for e in entries:
+                    context_parts.append(f"- Buổi đua '{e[1]}' (Trận #{e[0]}, Trạng thái trận: {e[6]}): Cổng {e[4]} - Ngựa '{e[2]}' (Nài: {e[3]}, Trạng thái thí sinh: {e[5]})")
         except Exception as e:
-            print(f"[RAG Query Error - Live] {e}")
+            print(f"[RAG Query Error - Race Entries] {e}")
 
-        # F. Kết quả 3 trận gần đây nhất (Vô địch)
+        # F. Kết quả các trận đã kết thúc
         try:
             cursor.execute("""
-                SELECT TOP 3 r.id, r.class_level, h.name, re.finish_time, re.prize_money, u.username, rm.name
+                SELECT TOP 5 r.id, r.class_level, h.name, re.finish_time, re.prize_money, u.username, rm.name
                 FROM RaceEntry re
                 JOIN Race r ON re.race_id = r.id
                 JOIN Horse h ON re.horse_id = h.id
@@ -182,7 +186,7 @@ class RAGEngine:
             """)
             results = cursor.fetchall()
             if results:
-                context_parts.append("[KẾT QUẢ CÁC TRẬN GẦN NHẤT]")
+                context_parts.append("[KẾT QUẢ CÁC TRẬN VỪA QUA]")
                 for r in results:
                     context_parts.append(f"- Trận #{r[0]} ({r[1]}): Ngựa thắng: {r[2]} | Thời gian: {r[3]} | Thưởng: ${r[4]:,.0f} | Nài: {r[5]} | Hội đua: {r[6]}")
         except Exception as e:
