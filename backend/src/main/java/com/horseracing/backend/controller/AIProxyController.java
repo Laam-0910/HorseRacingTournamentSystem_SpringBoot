@@ -14,17 +14,17 @@ import org.springframework.web.client.RestTemplate;
 @RequestMapping({"/api/ai", "/ai"})
 @CrossOrigin(origins = "*")
 @Tag(
-    name = "AI Service (Python)",
-    description = "🤖 **Cấu trúc Mô-đun Trí Tuệ Nhân Tạo AI Gemini & ML Predictor (AI Architecture)**\n\n" +
+    name = "15. AI Gemini & Predictions (Python)",
+    description = "🤖 **BƯỚC 15: AI TRỢ LÝ GIẢI ĐÚA & DỰ ĐOÁN KẾT QUẢ (PYTHON AI ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Java Proxy**: `AIProxyController.java` (Spring Boot RestTemplate Proxy)\n" +
-                  "* **Python Microservice**: `backend/python_ai/app.py` (Flask App Gateway)\n" +
-                  "* **AI Chatbot & RAG Engine**: `backend/python_ai/ai_service.py`, `rag_engine.py`, `session_memory.py`\n" +
-                  "* **ML Predictor**: `backend/python_ai/predictor.py` (Mô hình dự đoán thắng trận)\n\n" +
+                  "* **Python Gateway**: `backend/python_ai/app.py` (Flask App Port 5000)\n" +
+                  "* **AI Chatbot & RAG**: `ai_service.py`, `rag_engine.py`, `session_memory.py`\n" +
+                  "* **ML Predictor**: `predictor.py` (Machine Learning Winning Probability)\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
-                  "1. Spring Boot `AIProxyController` nhận Request từ Frontend và chuyển tiếp (Reverse Proxy) tới Python Service tại cổng `http://localhost:5000`.\n" +
-                  "2. **Hỏi đáp AI Chatbot**: Python RAG Engine truy vấn dữ liệu thời gian thực từ MSSQL Database -> Kết hợp ngữ cảnh -> Trả lời câu hỏi tự nhiên qua Google Gemini API.\n" +
-                  "3. **Dự đoán kết quả**: Python Predictor lấy điểm Elo Rating, Cân nặng, Cự ly và Lịch sử thi đấu -> Tính toán xác suất chiến thắng (%) của từng chiến mã."
+                  "1. Reverse Proxy từ Spring Boot sang Python Microservice.\n" +
+                  "2. RAG Engine truy vấn dữ liệu SQL Server thời gian thực -> Google Gemini API trả lời câu hỏi tự nhiên.\n" +
+                  "3. Predictor tính toán tỷ lệ % chiến thắng dựa trên Rating, Cân nặng, Cự ly và Lịch sử thi đấu."
 )
 public class AIProxyController {
 
@@ -43,7 +43,7 @@ public class AIProxyController {
     }
 
     @PostMapping("/chat")
-    @Operation(summary = "Hỏi đáp với AI Gemini Chatbot", description = "📌 **Code Architecture**: `AIProxyController.chat()` (Spring Proxy) -> Python `app.py:chatbot()` -> `ai_service.py` -> `rag_engine.py` (Google Gemini API)")
+    @Operation(summary = "POST: Hỏi đáp với AI Gemini Chatbot", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AIProxyController.chat()` (Spring Proxy) -> Python `app.py:chatbot()` -> `ai_service.py` -> `rag_engine.py` (Google Gemini API)")
     public ResponseEntity<String> chat(@RequestBody AiChatRequestDTO body) {
         String url = aiBaseUrl + "/chat";
         HttpHeaders headers = new HttpHeaders();
@@ -63,7 +63,7 @@ public class AIProxyController {
     }
 
     @GetMapping("/predict/{raceId}")
-    @Operation(summary = "AI Dự đoán kết quả cho trận đua", description = "📌 **Code Architecture**: `AIProxyController.predict()` (Spring Proxy) -> Python `app.py` -> `predictor.py:predict_race()` (ML Algorithm)")
+    @Operation(summary = "GET: AI Dự đoán kết quả cho trận đua", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> Điền raceId -> 'Execute'.\n\n📌 **Code Architecture**: `AIProxyController.predict()` (Spring Proxy) -> Python `app.py` -> `predictor.py:predict_race()` (ML Algorithm)")
     public ResponseEntity<String> predict(@PathVariable("raceId") Integer raceId) {
         String url = aiBaseUrl + "/predict/" + raceId;
         try {
@@ -79,7 +79,7 @@ public class AIProxyController {
     }
 
     @GetMapping("/health")
-    @Operation(summary = "Kiểm tra sức khỏe dịch vụ Python AI", description = "📌 **Code Architecture**: `AIProxyController.health()` (Spring Proxy) -> Python `app.py:health()`")
+    @Operation(summary = "GET: Kiểm tra sức khỏe dịch vụ Python AI", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `AIProxyController.health()` (Spring Proxy) -> Python `app.py:health()`")
     public ResponseEntity<String> health() {
         String url = aiBaseUrl + "/health";
         try {

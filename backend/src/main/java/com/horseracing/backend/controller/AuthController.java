@@ -15,14 +15,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 @Tag(
-    name = "Auth Service",
-    description = "🔐 **Cấu trúc Mô-đun Xác Thực & Bảo Mật Nguồn (Security Architecture)**\n\n" +
+    name = "01. Auth & Security Service",
+    description = "🔐 **BƯỚC 1: XÁC THỰC & BẢO MẬT HỆ THỐNG (SECURITY ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `AuthController.java`\n" +
                   "* **Services**: `AuthService.java` (`AuthServiceImpl.java`), `JwtAuthenticationFilter.java`, `EmailSender.java`\n" +
                   "* **Security Config**: `SecurityConfig.java`, `JwtTokenProvider.java`, `PasswordEncoder` (BCrypt)\n" +
                   "* **Repositories**: `UserRepository.java`\n" +
-                  "* **Entities**: `User.java` (gồm RoleId, PasswordHash, Status, RequireOtp...)\n" +
+                  "* **Entities**: `User.java` (RoleId, PasswordHash, Status, RequireOtp...)\n" +
                   "* **DTOs**: `LoginRequestDTO.java`, `LoginResponseDTO.java`, `RegisterRequestDTO.java`, `VerifyOtpRequestDTO.java`...\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Đăng ký tài khoản mới -> Mã hóa mật khẩu BCrypt -> Gửi mã OTP xác nhận về Email -> Kích hoạt User.\n" +
@@ -36,7 +36,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(
-        summary = "Đăng nhập hệ thống",
+        summary = "POST: Đăng nhập hệ thống & lấy JWT Bearer Token",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.login()`\n" +
@@ -63,7 +63,7 @@ public class AuthController {
 
     @PostMapping("/verify-login")
     @Operation(
-        summary = "Xác thực OTP khi đăng nhập",
+        summary = "POST: Xác thực OTP 2FA khi đăng nhập",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.verifyLogin()`\n" +
@@ -86,7 +86,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @Operation(
-        summary = "Đăng ký tài khoản mới",
+        summary = "POST: Đăng ký tài khoản người dùng mới",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.register()`\n" +
@@ -113,7 +113,7 @@ public class AuthController {
 
     @PostMapping("/verify-register")
     @Operation(
-        summary = "Xác thực OTP đăng ký tài khoản",
+        summary = "POST: Xác thực OTP đăng ký tài khoản",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.verifyRegister()`\n" +
@@ -135,7 +135,7 @@ public class AuthController {
 
     @PostMapping("/forgot-password")
     @Operation(
-        summary = "Yêu cầu mã OTP cho Quên mật khẩu",
+        summary = "POST: Yêu cầu mã OTP khôi phục Quên mật khẩu",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.forgotPassword()`\n" +
@@ -157,7 +157,7 @@ public class AuthController {
 
     @PostMapping("/verify-forgot-password")
     @Operation(
-        summary = "Xác thực OTP và đặt lại mật khẩu mới",
+        summary = "POST: Xác thực OTP và đặt lại mật khẩu mới",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.verifyForgotPassword()`\n" +
@@ -178,7 +178,7 @@ public class AuthController {
 
     @PostMapping("/update-profile")
     @Operation(
-        summary = "Cập nhật thông tin trang cá nhân",
+        summary = "POST: Cập nhật thông tin trang cá nhân",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.updateProfile()`\n" +
@@ -200,7 +200,7 @@ public class AuthController {
 
     @PostMapping("/toggle-otp")
     @Operation(
-        summary = "Bật/Tắt xác thực OTP 2FA",
+        summary = "POST: Bật/Tắt xác thực OTP 2FA",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.toggleOtp()`\n" +

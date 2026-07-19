@@ -20,20 +20,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 @Tag(
-    name = "Race & Season Service",
-    description = "🏛️ **Cấu trúc Mô-đun Quản lý Đua Ngựa & Mùa Giải (Race Architecture)**\n\n" +
+    name = "05. Race Management Service",
+    description = "🏁 **BƯỚC 5: QUẢN LÝ TRẬN ĐUA & THỜI GIAN (RACE ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
-                  "* **Controllers**: `RaceController.java`, `RaceDayScheduleController.java`\n" +
+                  "* **Controllers**: `RaceController.java`\n" +
                   "* **Services**: `RaceService.java` (`RaceServiceImpl.java`), `SeasonService.java` (`SeasonServiceImpl.java`)\n" +
-                  "* **Repositories**: `RaceRepository.java`, `RaceMeetingRepository.java`, `RaceEntryRepository.java`, `SeasonRepository.java`, `SeasonClassRuleRepository.java`\n" +
-                  "* **Entities**: `Race.java`, `RaceMeeting.java`, `RaceEntry.java`, `Season.java`, `SeasonClassRule.java`\n" +
-                  "* **DTOs**: `RaceDTO.java`, `RaceMeetingDTO.java`, `SeasonDTO.java`, `SeasonClassRuleDTO.java`\n\n" +
+                  "* **Repositories**: `RaceRepository.java`, `RaceMeetingRepository.java`, `SeasonRepository.java`\n" +
+                  "* **Entities**: `Race.java`, `RaceMeeting.java`, `Season.java`\n" +
+                  "* **DTOs**: `RaceDTO.java`, `RaceMeetingDTO.java`, `SeasonDTO.java`\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
-                  "1. Admin khởi tạo **Mùa giải (`Season`)** và thiết lập **Quy tắc phân hạng Rating (`SeasonClassRule`)**.\n" +
-                  "2. Tạo các **Ngày đua (`RaceMeeting`)** và chia nhỏ thành các **Trận đua (`Race`)** theo từng cự ly (1000m, 1200m, 1600m...).\n" +
-                  "3. Mở cổng đăng ký thi đấu -> Tiếp nhận Ngựa & Nài -> Tự động sắp xếp **Cổng xuất phát (Gate)** và tính toán **Tạ gánh chì (Handicap Weight)**.\n" +
-                  "4. Trọng tài khởi tranh trận đua (`RUNNING`) -> Ghi nhận kết quả cán đích -> Chốt kết quả chính thức (`OFFICIAL`).\n" +
-                  "5. Tự động tính toán chia **Tiền thưởng (`Prize Money`)** và cập nhật **Điểm phong độ Elo Rating (`Current Rating`)** cho từng chiến mã."
+                  "1. Tạo các **Trận đua (`Race`)** trong từng Ngày đua theo phân hạng Class 1 - Class 5 và Cự ly (1000m - 2400m).\n" +
+                  "2. Cập nhật thông tin thời gian khởi tranh, link Livestream, trạng thái trận (`SCHEDULED`, `RUNNING`, `OFFICIAL`)."
 )
 public class RaceController {
 
@@ -41,13 +38,13 @@ public class RaceController {
     private final SeasonService seasonService;
 
     @GetMapping("/seasons")
-    @Operation(summary = "Lấy danh sách các mùa giải", description = "📌 **Code Architecture**: `RaceController.getSeasons()` -> `SeasonService.getAllSeasons()` -> `SeasonRepository.findAll()` -> Trả về `List<SeasonDTO>`")
+    @Operation(summary = "GET: Lấy danh sách các mùa giải", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute' để lấy danh sách Mùa giải.\n\n📌 **Code Architecture**: `RaceController.getSeasons()` -> `SeasonService.getAllSeasons()`")
     public ResponseEntity<List<SeasonDTO>> getSeasons() {
         return ResponseEntity.ok(seasonService.getAllSeasons());
     }
 
     @PostMapping("/seasons")
-    @Operation(summary = "Tạo mùa giải đua mới", description = "📌 **Code Architecture**: `RaceController.createSeason()` -> `SeasonService.createSeason()` -> Lưu `Season` Entity vào Database")
+    @Operation(summary = "POST: Tạo mùa giải đua mới", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RaceController.createSeason()` -> `SeasonService.createSeason()`")
     public ResponseEntity<?> createSeason(@RequestBody Map<String, Object> body) {
         try {
             SeasonDTO season = seasonService.createSeason(body);
@@ -58,7 +55,7 @@ public class RaceController {
     }
 
     @PostMapping("/seasons/{id}/toggle")
-    @Operation(summary = "Bật/Kích hoạt trạng thái mùa giải", description = "📌 **Code Architecture**: `RaceController.toggleSeasonStatus()` -> `SeasonService.toggleSeasonStatus()` -> Cập nhật trạng thái `ACTIVE/COMPLETED`")
+    @Operation(summary = "POST: Bật/Kích hoạt trạng thái mùa giải", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RaceController.toggleSeasonStatus()` -> `SeasonService.toggleSeasonStatus()`")
     public ResponseEntity<?> toggleSeasonStatus(@PathVariable Integer id) {
         try {
             String status = seasonService.toggleSeasonStatus(id);
@@ -69,7 +66,7 @@ public class RaceController {
     }
 
     @PostMapping("/seasons/{id}/extend")
-    @Operation(summary = "Gia hạn thời gian mùa giải", description = "📌 **Code Architecture**: `RaceController.extendSeason()` -> `SeasonService.extendSeason()` -> Cập nhật `startDate` & `endDate` của `Season`")
+    @Operation(summary = "POST: Gia hạn thời gian mùa giải", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RaceController.extendSeason()` -> `SeasonService.extendSeason()`")
     public ResponseEntity<?> extendSeason(@PathVariable Integer id, @RequestBody Map<String, String> body) {
         try {
             String newStartDate = body.get("startDate");
@@ -82,13 +79,13 @@ public class RaceController {
     }
 
     @GetMapping("/seasons/{seasonId}/rules")
-    @Operation(summary = "Lấy danh sách quy định phân hạng mùa giải", description = "📌 **Code Architecture**: `RaceController.getSeasonRules()` -> `SeasonService.getSeasonRules()` -> Lấy quy định `SeasonClassRule` theo `seasonId`")
+    @Operation(summary = "GET: Lấy quy định phân hạng mùa giải", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> Điền seasonId -> 'Execute'.\n\n📌 **Code Architecture**: `RaceController.getSeasonRules()` -> `SeasonService.getSeasonRules()`")
     public ResponseEntity<List<SeasonClassRuleDTO>> getSeasonRules(@PathVariable Integer seasonId) {
         return ResponseEntity.ok(seasonService.getSeasonRules(seasonId));
     }
 
     @PostMapping("/seasons/{seasonId}/rules")
-    @Operation(summary = "Lưu quy định phân hạng mùa giải", description = "📌 **Code Architecture**: `RaceController.saveSeasonRules()` -> `SeasonService.saveSeasonRules()` -> Lưu khoảng Rating (min/max rating) cho từng Class")
+    @Operation(summary = "POST: Lưu quy định phân hạng mùa giải", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RaceController.saveSeasonRules()` -> `SeasonService.saveSeasonRules()`")
     public ResponseEntity<?> saveSeasonRules(@PathVariable Integer seasonId, @RequestBody List<SeasonClassRuleDTO> rules) {
         try {
             seasonService.saveSeasonRules(seasonId, rules);
@@ -99,13 +96,13 @@ public class RaceController {
     }
 
     @GetMapping("/meetings")
-    @Operation(summary = "Lấy danh sách Ngày đua (Race Meetings)", description = "📌 **Code Architecture**: `RaceController.getMeetings()` -> `RaceService.getAllMeetings()` -> `RaceMeetingRepository.findAll()`")
+    @Operation(summary = "GET: Lấy danh sách Ngày đua (Race Meetings)", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `RaceController.getMeetings()` -> `RaceService.getAllMeetings()`")
     public ResponseEntity<List<RaceMeetingDTO>> getMeetings() {
         return ResponseEntity.ok(raceService.getAllMeetings());
     }
 
     @PostMapping("/meetings")
-    @Operation(summary = "Tạo mới Ngày đua (Race Meeting)", description = "📌 **Code Architecture**: `RaceController.createMeeting()` -> `RaceService.createMeeting()` -> Lưu `RaceMeeting` Entity")
+    @Operation(summary = "POST: Tạo mới Ngày đua (Race Meeting)", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RaceController.createMeeting()` -> `RaceService.createMeeting()`")
     public ResponseEntity<?> createMeeting(@RequestBody RaceMeetingDTO meetingDTO) {
         try {
             RaceMeetingDTO savedMeeting = raceService.createMeeting(meetingDTO);
@@ -116,7 +113,7 @@ public class RaceController {
     }
 
     @PostMapping("/meetings/{id}")
-    @Operation(summary = "Cập nhật Ngày đua", description = "📌 **Code Architecture**: `RaceController.updateMeeting()` -> `RaceService.updateMeeting()` -> Sửa thông tin Ngày đua")
+    @Operation(summary = "POST: Cập nhật Ngày đua", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RaceController.updateMeeting()` -> `RaceService.updateMeeting()`")
     public ResponseEntity<?> updateMeeting(@PathVariable Integer id, @RequestBody RaceMeetingDTO meetingDTO) {
         try {
             RaceMeetingDTO updated = raceService.updateMeeting(id, meetingDTO);
@@ -127,7 +124,7 @@ public class RaceController {
     }
 
     @DeleteMapping("/meetings/{id}")
-    @Operation(summary = "Xóa Ngày đua", description = "📌 **Code Architecture**: `RaceController.deleteMeeting()` -> `RaceService.deleteMeeting()` -> Xóa Ngày đua khỏi DB")
+    @Operation(summary = "DELETE: Xóa Ngày đua", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ DELETE API:**\n\n📌 **Code Architecture**: `RaceController.deleteMeeting()` -> `RaceService.deleteMeeting()`")
     public ResponseEntity<?> deleteMeeting(@PathVariable Integer id) {
         try {
             raceService.deleteMeeting(id);
@@ -138,13 +135,13 @@ public class RaceController {
     }
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách tất cả các trận đua (Races)", description = "📌 **Code Architecture**: `RaceController.getRaces()` -> `RaceService.getAllRaces()` -> `RaceRepository.findAll()`")
+    @Operation(summary = "GET: Lấy danh sách tất cả các trận đua (Races)", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute' để xem danh sách Trận đua.\n\n📌 **Code Architecture**: `RaceController.getRaces()` -> `RaceService.getAllRaces()`")
     public ResponseEntity<List<RaceDTO>> getRaces() {
         return ResponseEntity.ok(raceService.getAllRaces());
     }
 
     @PostMapping
-    @Operation(summary = "Tạo mới trận đua (Race)", description = "📌 **Code Architecture**: `RaceController.createRace()` -> `RaceService.createRace()` -> Khởi tạo trận đua mới")
+    @Operation(summary = "POST: Tạo mới trận đua (Race)", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RaceController.createRace()` -> `RaceService.createRace()`")
     public ResponseEntity<?> createRace(@RequestBody RaceDTO raceDTO) {
         try {
             RaceDTO savedRace = raceService.createRace(raceDTO);
@@ -155,7 +152,7 @@ public class RaceController {
     }
 
     @PostMapping("/{id}")
-    @Operation(summary = "Cập nhật thông tin trận đua", description = "📌 **Code Architecture**: `RaceController.updateRace()` -> `RaceService.updateRace()` -> Cập nhật thời gian, status, cự ly")
+    @Operation(summary = "POST: Cập nhật thông tin trận đua", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `RaceController.updateRace()` -> `RaceService.updateRace()`")
     public ResponseEntity<?> updateRace(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
         try {
             RaceDTO updated = raceService.updateRace(id, body);
@@ -166,7 +163,7 @@ public class RaceController {
     }
 
     @GetMapping("/live")
-    @Operation(summary = "Lấy danh sách các trận đua đang diễn ra trực tiếp (Live)", description = "📌 **Code Architecture**: `RaceController.getLiveRaces()` -> `RaceService.getLiveRaces()` -> Trả về danh sách trận đang `RUNNING`")
+    @Operation(summary = "GET: Lấy danh sách các trận đua đang trực tiếp (Live)", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `RaceController.getLiveRaces()` -> `RaceService.getLiveRaces()`")
     public ResponseEntity<List<RaceDTO>> getLiveRaces() {
         return ResponseEntity.ok(raceService.getLiveRaces());
     }

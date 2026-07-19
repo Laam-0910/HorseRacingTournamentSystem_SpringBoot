@@ -14,14 +14,21 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/public")
 @CrossOrigin(origins = "*")
-@Tag(name = "Public Service", description = "Các API công khai: Trò chuyện AI công khai, Lịch sử Chat")
+@Tag(
+    name = "14. Public Data & Statistics",
+    description = "📊 **PHÒNG CHAT CÔNG KHAI (PUBLIC CHAT ARCHITECTURE)**\n\n" +
+                  "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
+                  "* **Controllers**: `PublicChatController.java`\n" +
+                  "* **Repositories**: `ChatMessageRepository.java`\n" +
+                  "* **Entities**: `ChatMessage.java`"
+)
 public class PublicChatController {
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
     @PostMapping("/chat")
-    @Operation(summary = "Gửi tin nhắn hỏi đáp trợ lý AI công khai", description = "📌 **Code Handler**: `PublicChatController.chat()` | **DTO Request**: `PublicChatRequestDTO`")
+    @Operation(summary = "POST: Gửi tin nhắn hỏi đáp trợ lý AI công khai", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `PublicChatController.chat()` | **DTO Request**: `PublicChatRequestDTO`")
     public ResponseEntity<?> chat(@RequestBody PublicChatRequestDTO request) {
         String message = request.getMessage();
         String lang = request.getLang();
@@ -61,7 +68,7 @@ public class PublicChatController {
     }
 
     @GetMapping("/chat/history")
-    @Operation(summary = "Lấy lịch sử chat của phòng đua", description = "📌 **Code Handler**: `PublicChatController.getChatHistory()` -> `ChatMessageRepository.findByRaceIdOrderBySentAtAsc()`")
+    @Operation(summary = "GET: Lấy lịch sử chat của phòng đua", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> Điền raceId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicChatController.getChatHistory()` -> `ChatMessageRepository.findByRaceIdOrderBySentAtAsc()`")
     public ResponseEntity<List<Map<String, String>>> getChatHistory(@RequestParam Integer raceId) {
         List<ChatMessage> list = chatMessageRepository.findByRaceIdOrderBySentAtAsc(raceId);
         List<Map<String, String>> history = new ArrayList<>();

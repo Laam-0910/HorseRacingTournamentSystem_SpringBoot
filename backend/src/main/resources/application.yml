@@ -20,6 +20,10 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.SQLServerDialect
 
+springdoc:
+  swagger-ui:
+    tags-sorter: alpha
+
 ai:
   service:
     url: ${AI_SERVICE_URL:http://localhost:5000}
