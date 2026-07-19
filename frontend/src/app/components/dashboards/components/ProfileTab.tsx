@@ -232,18 +232,32 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const handleConfirmPassChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPassMsg(""); setPassErr("");
-    if (newPassword !== confirmPassword) { setPassErr("Passwords don't match"); return; }
+    const lang = localStorage.getItem('app-lang') || 'vi';
+
+    if (newPassword !== confirmPassword) { 
+      setPassErr($t("Mật khẩu xác nhận không khớp.", lang)); 
+      return; 
+    }
+
+    const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!pwdRegex.test(newPassword)) {
+      setPassErr(
+        $t("Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)", lang)
+      );
+      return;
+    }
+
     setPassLoading(true);
     try {
       const res = await api.post<any>("/auth/verify-forgot-password", { otpTxId, otp: otpCode.trim(), newPassword });
       if (res.success) {
-        setPassMsg("✅ Updated!");
+        setPassMsg("✅ " + $t("Đã lưu thành công!", lang));
         setTimeout(() => { setPassMode(false); setOtpCode(""); setNewPassword(""); setConfirmPassword(""); setPassMsg(""); }, 2000);
       } else {
-        setPassErr(res.error || "Invalid OTP");
+        setPassErr(res.error || $t("Xác minh thất bại", lang));
       }
     } catch (err: any) {
-      setPassErr("Error.");
+      setPassErr(err.message || "Error.");
     } finally {
       setPassLoading(false);
     }
@@ -544,7 +558,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                    <div style={{ display: "flex", gap: "1.25rem" }}>
                      <div style={{ flex: 1 }}>
                        <label style={labelStyle}>{$t("Mật khẩu mới", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                       <input type="password" className="bento-input" required placeholder={$t("Tối thiểu 4 ký tự", (localStorage.getItem('app-lang') || 'vi'))} value={newPassword} onChange={e => setNewPassword(e.target.value)} style={inputStyle} />
+                       <input type="password" className="bento-input" required placeholder={$t("Tối thiểu 8 ký tự (chữ hoa, số, @$!%*?&)", (localStorage.getItem('app-lang') || 'vi'))} value={newPassword} onChange={e => setNewPassword(e.target.value)} style={inputStyle} />
                      </div>
                      <div style={{ flex: 1 }}>
                        <label style={labelStyle}>{$t("Xác nhận", (localStorage.getItem('app-lang') || 'vi'))}</label>

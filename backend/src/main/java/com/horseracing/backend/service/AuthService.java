@@ -261,7 +261,7 @@ public class AuthService {
     @Transactional
     public Map<String, Object> verifyForgotPassword(String otpTxId, String enteredOtp, String newPassword) {
         if (newPassword == null || !newPassword.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
-            return Map.of("success", false, "error", "Mật khẩu mới không đạt yêu cầu bảo mật (Ít nhất 8 ký tự, 1 chữ hoa, 1 số, 1 ký tự đặc biệt)");
+            return Map.of("success", false, "error", "Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)");
         }
         OtpSession session = otpStorage.get(otpTxId);
         if (session == null || !session.getOtpCode().equals(enteredOtp)) {

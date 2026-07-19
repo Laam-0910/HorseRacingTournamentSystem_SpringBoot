@@ -1,19 +1,27 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { api } from "../../../lib/api";
+import { Link, useNavigate } from "react-router-dom";
+import { authService } from "../../../services/authService";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(""); setError(""); setLoading(true);
     try {
-      await api.post("/auth/forgot-password", { email });
-      setMessage("Verification code sent to your email address.");
+      const res = await authService.forgotPassword({ email: email.trim() });
+      if (res.success && res.otpTxId) {
+        setMessage("Verification code sent! Redirecting...");
+        setTimeout(() => {
+          navigate(`/verify-forgot?otpTxId=${res.otpTxId}`);
+        }, 800);
+      } else {
+        setError(res.error || "Failed to send code");
+      }
     } catch (err: any) {
       setError(err.message || "Failed to send code");
     } finally { setLoading(false); }
