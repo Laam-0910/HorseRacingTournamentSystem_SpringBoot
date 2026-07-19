@@ -166,6 +166,12 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMsg, setOtpMsg] = useState("");
 
+  useEffect(() => {
+    if (user?.requireOtp !== undefined) {
+      setOtpEnabled(!!user.requireOtp);
+    }
+  }, [user?.requireOtp]);
+
   const [passMode, setPassMode] = useState(false);
   const [otpTxId, setOtpTxId] = useState("");
   const [otpCode, setOtpCode] = useState("");
@@ -196,10 +202,10 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     try {
       const parsedWeight = user?.roleId === 3 ? parseFloat(weight) || null : null;
       const res = await api.post<any>("/auth/update-profile", {
-        id: user?.id, fullName: fullName.trim(), email: email.trim(), weight: parsedWeight, avatar: avatar || null, biography: biography.trim()
+        id: user?.id, fullName: fullName.trim(), email: email.trim(), weight: parsedWeight, avatar: avatar || null, biography: biography.trim(), requireOtp: otpEnabled
       });
       if (res.success && res.user) {
-        setUser({ ...user, fullName: res.user.fullName, email: res.user.email, weight: res.user.weight, avatar: res.user.avatar, biography: res.user.biography } as any);
+        setUser({ ...user, fullName: res.user.fullName, email: res.user.email, weight: res.user.weight, avatar: res.user.avatar, biography: res.user.biography, requireOtp: res.user.requireOtp ?? otpEnabled } as any);
         setProfileMsg($t("✅ Đã lưu thành công!", (localStorage.getItem('app-lang') || 'vi')));
         setTimeout(() => setProfileMsg(""), 3000);
       } else {

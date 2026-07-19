@@ -84,10 +84,9 @@ public class AuthService {
         }
 
         boolean requireOtp = (user.getRequireOtp() != null && user.getRequireOtp());
-        int roleId = user.getRoleId();
 
-        if (roleId == 1 || roleId == 5 || !requireOtp) {
-            // Admin, Referee, or general OTP disabled bypasses verification
+        if (!requireOtp) {
+            // General OTP disabled bypasses verification
             String token = tokenProvider.generateToken(user.getUsername(), user.getRoleId());
             return LoginResponseDTO.builder()
                     .success(true)
@@ -327,6 +326,10 @@ public class AuthService {
 
         if (dto.getBiography() != null) {
             user.setBiography(dto.getBiography().trim());
+        }
+
+        if (dto.getRequireOtp() != null) {
+            user.setRequireOtp(dto.getRequireOtp());
         }
 
         if (dto.getAvatar() != null) {
