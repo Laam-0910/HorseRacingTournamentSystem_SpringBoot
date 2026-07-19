@@ -250,14 +250,6 @@ export default function Race() {
       }
     }
 
-    const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
-    const regEnd = parseSafeDate(editRegEndTime);
-    const raceStart = parseSafeDate(editStartTime);
-    if (regEnd && raceStart && regEnd.getTime() > raceStart.getTime()) {
-      setEditError(isVi ? "Thời gian đóng đăng ký (Registration End) phải trước hoặc bằng Thời gian khởi tranh (Start Time)." : "Registration End time must be before or equal to Race Start Time.");
-      return;
-    }
-
     try {
       const res = await api.post<any>(`/races/${editingRace.id}`, {
         startTime: editStartTime,
