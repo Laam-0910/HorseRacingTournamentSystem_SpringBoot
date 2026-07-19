@@ -16,11 +16,12 @@ import java.util.*;
 @CrossOrigin(origins = "*")
 @Tag(
     name = "14. Public Data & Statistics",
-    description = "📊 **PHÒNG CHAT CÔNG KHAI (PUBLIC CHAT ARCHITECTURE)**\n\n" +
+    description = "💬 **PHÒNG CHAT CÔNG KHAI (PUBLIC CHAT ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `PublicChatController.java`\n" +
                   "* **Repositories**: `ChatMessageRepository.java`\n" +
-                  "* **Entities**: `ChatMessage.java`"
+                  "* **Entities**: `ChatMessage.java`\n" +
+                  "* **DTOs**: `PublicChatRequestDTO.java`"
 )
 public class PublicChatController {
 
@@ -28,7 +29,21 @@ public class PublicChatController {
     private ChatMessageRepository chatMessageRepository;
 
     @PostMapping("/chat")
-    @Operation(summary = "POST: Gửi tin nhắn hỏi đáp trợ lý AI công khai", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `PublicChatController.chat()` | **DTO Request**: `PublicChatRequestDTO`")
+    @Operation(
+        summary = "POST: Gửi tin nhắn hỏi đáp trợ lý AI công khai",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `PublicChatController.chat()`\n" +
+                      "* **Repository**: `ChatMessageRepository.save()`\n" +
+                      "* **Entity**: `ChatMessage.java`\n" +
+                      "* **DTO Request**: `PublicChatRequestDTO` (`message`, `lang`)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"reply\": \"...\"}`)\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Tiếp nhận tin nhắn người dùng và ngôn ngữ phản hồi (`vi` hoặc `en`).\n" +
+                      "2. Phân tích từ khóa trong câu hỏi (rating, dự đoán, nài ngựa, mùa giải...).\n" +
+                      "3. Tạo câu trả lời phù hợp bằng ngôn ngữ yêu cầu.\n" +
+                      "4. Trả về câu trả lời dạng text cho người dùng."
+    )
     public ResponseEntity<?> chat(@RequestBody PublicChatRequestDTO request) {
         String message = request.getMessage();
         String lang = request.getLang();
@@ -68,7 +83,19 @@ public class PublicChatController {
     }
 
     @GetMapping("/chat/history")
-    @Operation(summary = "GET: Lấy lịch sử chat của phòng đua", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> Điền raceId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicChatController.getChatHistory()` -> `ChatMessageRepository.findByRaceIdOrderBySentAtAsc()`")
+    @Operation(
+        summary = "GET: Lấy lịch sử chat của phòng đua",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền raceId -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `PublicChatController.getChatHistory()`\n" +
+                      "* **Repository**: `ChatMessageRepository.findByRaceIdOrderBySentAtAsc()`\n" +
+                      "* **Entity**: `ChatMessage.java`\n" +
+                      "* **DTO Response**: `List<Map<String, String>>` (`user`, `text`, `time`)\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Truy vấn danh sách tin nhắn trong phòng chat theo `raceId`.\n" +
+                      "2. Sắp xếp tin nhắn theo thứ tự thời gian từ cũ đến mới.\n" +
+                      "3. Định dạng thời gian tin nhắn (`HH:mm`) và trả về danh sách."
+    )
     public ResponseEntity<List<Map<String, String>>> getChatHistory(@RequestParam Integer raceId) {
         List<ChatMessage> list = chatMessageRepository.findByRaceIdOrderBySentAtAsc(raceId);
         List<Map<String, String>> history = new ArrayList<>();

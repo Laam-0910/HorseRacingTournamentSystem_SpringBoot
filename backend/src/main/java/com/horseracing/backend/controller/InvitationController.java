@@ -34,14 +34,42 @@ public class InvitationController {
     private final InvitationService invitationService;
 
     @GetMapping
-    @Operation(summary = "GET: Lấy danh sách lời mời thi đấu", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> Điền jockeyId hoặc ownerId -> 'Execute'.\n\n📌 **Code Architecture**: `InvitationController.getInvitations()` -> `InvitationService.getInvitations()`")
+    @Operation(
+        summary = "GET: Lấy danh sách lời mời thi đấu",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền jockeyId hoặc ownerId -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `InvitationController.getInvitations()`\n" +
+                      "* **Service**: `InvitationService.getInvitations()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Repository**: `RaceInvitationRepository.findByJockeyId()` / `findByOwnerId()`\n" +
+                      "* **Entity**: `RaceInvitation.java`\n" +
+                      "* **DTO Response**: `List<RaceInvitationDTO>`\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Tiếp nhận tham số lọc theo `jockeyId` hoặc `ownerId`.\n" +
+                      "2. Truy vấn danh sách lời mời thi đấu trong cơ sở dữ liệu.\n" +
+                      "3. Trả về danh sách `RaceInvitationDTO` đã được lọc."
+    )
     public ResponseEntity<List<RaceInvitationDTO>> getInvitations(@RequestParam(required = false) Integer jockeyId,
                                                                   @RequestParam(required = false) Integer ownerId) {
         return ResponseEntity.ok(invitationService.getInvitations(jockeyId, ownerId));
     }
 
     @PostMapping
-    @Operation(summary = "POST: Tạo lời mời Nài ngựa thi đấu (Chủ ngựa)", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `InvitationController.inviteJockey()` -> `InvitationService.inviteJockey()`")
+    @Operation(
+        summary = "POST: Tạo lời mời Nài ngựa thi đấu (Chủ ngựa)",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `InvitationController.inviteJockey()`\n" +
+                      "* **Service**: `InvitationService.inviteJockey()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Repository**: `RaceInvitationRepository.save()`\n" +
+                      "* **Entity**: `RaceInvitation.java`\n" +
+                      "* **DTO Request**: `RaceInvitationDTO` (`raceId`, `horseId`, `jockeyId`, `ownerId`)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"invitation\": RaceInvitationDTO}`)\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Chủ ngựa chọn Nài ngựa và Chiến mã muốn mời vào trận đua.\n" +
+                      "2. Kiểm tra xem Nài ngựa và Ngựa đã đăng ký Ngày đua chưa.\n" +
+                      "3. Tạo bản ghi `RaceInvitation` với trạng thái `PENDING` chờ Nài ngựa phản hồi.\n" +
+                      "4. Trả về thông tin lời mời vừa tạo."
+    )
     public ResponseEntity<?> inviteJockey(@RequestBody RaceInvitationDTO inviteDTO) {
         try {
             RaceInvitationDTO saved = invitationService.inviteJockey(inviteDTO);
@@ -52,7 +80,20 @@ public class InvitationController {
     }
 
     @PostMapping("/{id}/accept")
-    @Operation(summary = "POST: Chấp nhận lời mời thi đấu (Nài ngựa)", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `InvitationController.acceptInvitation()` -> `InvitationService.acceptInvitation()` -> Tự động tạo RaceEntry")
+    @Operation(
+        summary = "POST: Chấp nhận lời mời thi đấu (Nài ngựa)",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `InvitationController.acceptInvitation()`\n" +
+                      "* **Service**: `InvitationService.acceptInvitation()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Repositories**: `RaceInvitationRepository.save()`, `RaceEntryRepository.save()`\n" +
+                      "* **Entities**: `RaceInvitation.java`, `RaceEntry.java`\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Nài ngựa xác nhận chấp nhận lời mời theo `invitationId`.\n" +
+                      "2. Cập nhật trạng thái `RaceInvitation` sang `ACCEPTED`.\n" +
+                      "3. Tự động tạo bản ghi `RaceEntry` (Phiếu tham gia trận đua) với trạng thái `PENDING`.\n" +
+                      "4. Trả về kết quả xác nhận thành công."
+    )
     public ResponseEntity<?> acceptInvitation(@PathVariable Integer id) {
         try {
             invitationService.acceptInvitation(id);
@@ -63,7 +104,19 @@ public class InvitationController {
     }
 
     @PostMapping("/{id}/reject")
-    @Operation(summary = "POST: Từ chối lời mời thi đấu (Nài ngựa)", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `InvitationController.rejectInvitation()` -> `InvitationService.rejectInvitation()`")
+    @Operation(
+        summary = "POST: Từ chối lời mời thi đấu (Nài ngựa)",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `InvitationController.rejectInvitation()`\n" +
+                      "* **Service**: `InvitationService.rejectInvitation()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Repository**: `RaceInvitationRepository.save()`\n" +
+                      "* **Entity**: `RaceInvitation.java`\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Nài ngựa từ chối lời mời theo `invitationId`.\n" +
+                      "2. Cập nhật trạng thái `RaceInvitation` sang `REJECTED`.\n" +
+                      "3. Trả về kết quả từ chối thành công."
+    )
     public ResponseEntity<?> rejectInvitation(@PathVariable Integer id) {
         try {
             invitationService.rejectInvitation(id);
@@ -74,7 +127,19 @@ public class InvitationController {
     }
 
     @PostMapping("/entry/{entryId}/resubmit")
-    @Operation(summary = "POST: Nộp lại đơn tham gia thi đấu", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `InvitationController.resubmitRaceEntry()` -> `InvitationService.resubmitRaceEntry()`")
+    @Operation(
+        summary = "POST: Nộp lại đơn tham gia thi đấu",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `InvitationController.resubmitRaceEntry()`\n" +
+                      "* **Service**: `InvitationService.resubmitRaceEntry()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Repository**: `RaceEntryRepository.save()`\n" +
+                      "* **Entity**: `RaceEntry.java`\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Tìm bản ghi `RaceEntry` theo `entryId`.\n" +
+                      "2. Đặt lại trạng thái từ `REJECTED` về `PENDING` để Admin có thể xét duyệt lại.\n" +
+                      "3. Trả về kết quả nộp lại thành công."
+    )
     public ResponseEntity<?> resubmitRaceEntry(@PathVariable Integer entryId) {
         try {
             invitationService.resubmitRaceEntry(entryId);
@@ -85,7 +150,19 @@ public class InvitationController {
     }
 
     @PostMapping("/{id}/withdraw")
-    @Operation(summary = "POST: Rút lại lời mời thi đấu (Chủ ngựa)", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `InvitationController.withdrawInvitation()` -> `InvitationService.withdrawInvitation()`")
+    @Operation(
+        summary = "POST: Rút lại lời mời thi đấu (Chủ ngựa)",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `InvitationController.withdrawInvitation()`\n" +
+                      "* **Service**: `InvitationService.withdrawInvitation()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Repository**: `RaceInvitationRepository.save()`\n" +
+                      "* **Entity**: `RaceInvitation.java`\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Kiểm tra quyền sở hữu lời mời thuộc về Chủ ngựa (theo `ownerId`).\n" +
+                      "2. Cập nhật trạng thái `RaceInvitation` sang `WITHDRAWN`.\n" +
+                      "3. Trả về kết quả rút lời mời thành công."
+    )
     public ResponseEntity<?> withdrawInvitation(@PathVariable Integer id, @RequestParam Integer ownerId) {
         try {
             invitationService.withdrawInvitation(id, ownerId);
