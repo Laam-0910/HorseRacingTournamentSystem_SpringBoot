@@ -16,8 +16,8 @@ import java.util.Map;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 @Tag(
-    name = "Schedule Service",
-    description = "📅 **Cấu trúc Mô-đun Lịch Trình & Ngày Đua (Schedule Architecture)**\n\n" +
+    name = "04. Schedule & Race Meeting Service",
+    description = "📅 **BƯỚC 4: LỊCH TRÌNH & NGÀY ĐUA (SCHEDULE ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `RaceDayScheduleController.java`, `RaceController.java`\n" +
                   "* **Services**: `RaceService.java` (`RaceServiceImpl.java`)\n" +
@@ -35,7 +35,7 @@ public class RaceDayScheduleController {
 
     @GetMapping("/meetings")
     @Operation(
-        summary = "Lấy danh sách các Ngày đua (Race Meetings)",
+        summary = "GET: Lấy danh sách các Ngày đua (Race Meetings)",
         description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute' để xem danh sách toàn bộ Ngày đua đang có.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceDayScheduleController.getMeetings()`\n" +
@@ -49,7 +49,7 @@ public class RaceDayScheduleController {
 
     @PostMapping("/meetings")
     @Operation(
-        summary = "Tạo mới Ngày đua",
+        summary = "POST: Tạo mới Ngày đua (Race Meeting)",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceDayScheduleController.createMeeting()`\n" +

@@ -19,20 +19,18 @@ import java.util.Map;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 @Tag(
-    name = "Admin User Service",
-    description = "🛡️ **Cấu trúc Mô-đun Quản Trị Viên Hệ Thống (System Administration Architecture)**\n\n" +
+    name = "09. Admin & Racecard Service",
+    description = "🛡️ **BƯỚC 9: DỰỆT ĐƠN, GÁN TRỌNG TÀI & XẾP THẺ ĐUA RACECARD (ADMIN ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `AdminUserController.java`\n" +
-                  "* **Services**: `AdminUserService.java` (`AdminUserServiceImpl.java`), `UserService.java`, `SystemConfigService.java`, `RaceService.java`\n" +
-                  "* **Repositories**: `UserRepository.java`, `HorseRepository.java`, `RaceEntryRepository.java`, `SystemConfigRepository.java`\n" +
-                  "* **Entities**: `User.java`, `Horse.java`, `SystemConfig.java`, `RaceReferee.java`\n" +
-                  "* **DTOs**: `CreateUserRequestDTO.java`, `UpdateUserRequestDTO.java`, `AssignRefereeRequestDTO.java`, `UpdateLiveUrlRequestDTO.java`...\n\n" +
+                  "* **Services**: `AdminUserService.java` (`AdminUserServiceImpl.java`), `UserService.java`, `RaceService.java`\n" +
+                  "* **Repositories**: `UserRepository.java`, `HorseRepository.java`, `RaceEntryRepository.java`\n" +
+                  "* **Entities**: `User.java`, `Horse.java`, `RaceReferee.java`\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
-                  "1. Admin quản lý toàn bộ danh sách tài khoản (Khóa/Bật tài khoản, tạo mới người dùng, chỉnh sửa thông tin).\n" +
-                  "2. Xét duyệt toàn bộ đơn đăng ký thi đấu từ Chủ ngựa (`approveRaceEntry`), Nài ngựa (`approveJockeyReg`), Ngựa (`approveHorseReg`).\n" +
-                  "3. Phân công Trọng tài điều hành từng trận đua cụ thể (`assignReferee`).\n" +
-                  "4. Tự động hóa thẻ đua: Tự động sắp xếp cổng xuất phát (`autoAssignGates`) và tính toán tạ gánh chì (`autoCalculateWeights`).\n" +
-                  "5. Cập nhật link Youtube Livestream cho khán giả theo dõi trực tiếp trận đua."
+                  "1. Admin duyệt các đơn đăng ký thi đấu của Nài, Chủ và Ngựa (`pending-registrations`).\n" +
+                  "2. Gán Trọng tài vào trận đua (`assignReferee`).\n" +
+                  "3. Tự động hóa thẻ đua: Tự động sắp cổng xuất phát (`autoAssignGates`) và tính tạ gánh chì (`autoCalculateWeights`).\n" +
+                  "4. Gắn đường dẫn Youtube Livestream cho trận đua."
 )
 public class AdminUserController {
 
@@ -43,13 +41,13 @@ public class AdminUserController {
 
     // --- User Management ---
     @GetMapping("/users")
-    @Operation(summary = "Lấy danh sách tất cả người dùng", description = "📌 **Code Architecture**: `AdminUserController.getAllUsers()` -> `UserService.getAllUsers()` -> `UserRepository.findAll()` -> Trả về `List<UserDTO>`")
+    @Operation(summary = "GET: Lấy danh sách tất cả người dùng", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `AdminUserController.getAllUsers()` -> `UserService.getAllUsers()`")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @PostMapping("/users")
-    @Operation(summary = "Tạo mới người dùng thủ công", description = "📌 **Code Architecture**: `AdminUserController.createUser()` -> `UserService.createUserManual()` -> Mã hóa password BCrypt và lưu `User` vào DB")
+    @Operation(summary = "POST: Tạo mới người dùng thủ công", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.createUser()` -> `UserService.createUserManual()`")
     public ResponseEntity<?> createUser(@RequestBody CreateUserRequestDTO body) {
         try {
             UserDTO created = userService.createUserManual(
@@ -66,7 +64,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/users/{id}")
-    @Operation(summary = "Cập nhật thông tin người dùng", description = "📌 **Code Architecture**: `AdminUserController.updateUser()` -> `UserService.updateUser()` -> Cập nhật email, roleId, requireOtp, weight")
+    @Operation(summary = "POST: Cập nhật thông tin người dùng", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.updateUser()` -> `UserService.updateUser()`")
     public ResponseEntity<?> updateUser(@PathVariable Integer id, @RequestBody UpdateUserRequestDTO body) {
         try {
             UserDTO updated = userService.updateUser(
@@ -84,7 +82,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/users/{id}/toggle")
-    @Operation(summary = "Bật/Khóa tài khoản người dùng", description = "📌 **Code Architecture**: `AdminUserController.toggleUserStatus()` -> `UserService.toggleUserStatus()` -> Đổi status giữa `ACTIVE` và `LOCKED`")
+    @Operation(summary = "POST: Bật/Khóa tài khoản người dùng", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.toggleUserStatus()` -> `UserService.toggleUserStatus()`")
     public ResponseEntity<?> toggleUserStatus(@PathVariable Integer id) {
         try {
             String status = userService.toggleUserStatus(id);
@@ -96,7 +94,7 @@ public class AdminUserController {
 
     // --- Race & Referee Assignment ---
     @PostMapping("/races/{raceId}/referee")
-    @Operation(summary = "Gán Trọng tài vào trận đua", description = "📌 **Code Architecture**: `AdminUserController.assignReferee()` -> `AdminUserService.assignReferee()` -> Lưu phân công `RaceReferee` vào DB")
+    @Operation(summary = "POST: Gán Trọng tài vào trận đua", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.assignReferee()` -> `AdminUserService.assignReferee()`")
     public ResponseEntity<?> assignReferee(@PathVariable Integer raceId, @RequestBody AssignRefereeRequestDTO body) {
         try {
             adminUserService.assignReferee(raceId, body.getRefereeId());
@@ -107,7 +105,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/races/{raceId}/referee/remove")
-    @Operation(summary = "Hủy gán Trọng tài khỏi trận đua", description = "📌 **Code Architecture**: `AdminUserController.removeReferee()` -> `AdminUserService.removeReferee()` -> Xóa bản ghi `RaceReferee` khỏi DB")
+    @Operation(summary = "POST: Hủy gán Trọng tài khỏi trận đua", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.removeReferee()` -> `AdminUserService.removeReferee()`")
     public ResponseEntity<?> removeReferee(@PathVariable Integer raceId, @RequestBody AssignRefereeRequestDTO body) {
         try {
             adminUserService.removeReferee(raceId, body.getRefereeId());
@@ -118,14 +116,14 @@ public class AdminUserController {
     }
 
     @GetMapping("/races/referees")
-    @Operation(summary = "Lấy danh sách phân công Trọng tài", description = "📌 **Code Architecture**: `AdminUserController.getRaceReferees()` -> `AdminUserService.getRaceRefereesMap()` -> Map danh sách Trọng tài theo từng trận đua")
+    @Operation(summary = "GET: Lấy danh sách phân công Trọng tài", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `AdminUserController.getRaceReferees()` -> `AdminUserService.getRaceRefereesMap()`")
     public ResponseEntity<?> getRaceReferees() {
         return ResponseEntity.ok(adminUserService.getRaceRefereesMap());
     }
 
     // --- Livestream ---
     @PostMapping("/races/{raceId}/live")
-    @Operation(summary = "Cập nhật link Youtube Livestream", description = "📌 **Code Architecture**: `AdminUserController.setLiveUrl()` -> `RaceService.updateRace()` -> Lưu link Youtube Live")
+    @Operation(summary = "POST: Cập nhật link Youtube Livestream", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.setLiveUrl()` -> `RaceService.updateRace()`")
     public ResponseEntity<?> setLiveUrl(@PathVariable Integer raceId, @RequestBody UpdateLiveUrlRequestDTO body) {
         try {
             raceService.updateRace(raceId, Map.of("youtubeLiveUrl", body.getYoutubeLiveUrl()));
@@ -136,7 +134,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/races/{raceId}/live/remove")
-    @Operation(summary = "Xóa link Livestream", description = "📌 **Code Architecture**: `AdminUserController.removeLiveUrl()` -> `RaceService.updateRace()` -> Xóa link Livestream của trận")
+    @Operation(summary = "POST: Xóa link Livestream", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.removeLiveUrl()` -> `RaceService.updateRace()`")
     public ResponseEntity<?> removeLiveUrl(@PathVariable Integer raceId) {
         try {
             raceService.updateRace(raceId, Map.of("youtubeLiveUrl", ""));
@@ -148,13 +146,13 @@ public class AdminUserController {
 
     // --- System Config ---
     @GetMapping("/configs")
-    @Operation(summary = "Lấy cấu hình hệ thống", description = "📌 **Code Architecture**: `AdminUserController.getConfigs()` -> `SystemConfigService.getAllConfigs()` -> Lấy các tham số cấu hình hệ thống")
+    @Operation(summary = "GET: Lấy cấu hình hệ thống (Admin)", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `AdminUserController.getConfigs()` -> `SystemConfigService.getAllConfigs()`")
     public ResponseEntity<List<SystemConfigDTO>> getConfigs() {
         return ResponseEntity.ok(systemConfigService.getAllConfigs());
     }
 
     @PostMapping("/configs")
-    @Operation(summary = "Cập nhật cấu hình hệ thống", description = "📌 **Code Architecture**: `AdminUserController.updateConfigs()` -> `SystemConfigService.updateConfigs()` -> Cập nhật các tham số hệ thống")
+    @Operation(summary = "POST: Cập nhật cấu hình hệ thống (Admin)", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.updateConfigs()` -> `SystemConfigService.updateConfigs()`")
     public ResponseEntity<?> updateConfigs(@RequestBody Map<String, String> body) {
         try {
             systemConfigService.updateConfigs(body);
@@ -166,7 +164,7 @@ public class AdminUserController {
 
     // --- Registrations & Approvals ---
     @GetMapping("/pending-registrations")
-    @Operation(summary = "Lấy danh sách đơn đăng ký chờ duyệt", description = "📌 **Code Architecture**: `AdminUserController.getPendingRegistrations()` -> `AdminUserService.getPendingRegistrations()` -> Lấy các đơn `PENDING` của Nài, Chủ và Ngựa")
+    @Operation(summary = "GET: Lấy danh sách đơn đăng ký chờ duyệt", description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `AdminUserController.getPendingRegistrations()` -> `AdminUserService.getPendingRegistrations()`")
     public ResponseEntity<?> getPendingRegistrations() {
         try {
             Map<String, Object> pending = adminUserService.getPendingRegistrations();
@@ -177,7 +175,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/entries/{id}/approve")
-    @Operation(summary = "Phê duyệt đơn đăng ký trận đua", description = "📌 **Code Architecture**: `AdminUserController.approveRaceEntry()` -> `AdminUserService.approveRaceEntry()` -> Chuyển trạng thái `RaceEntry` sang `APPROVED`")
+    @Operation(summary = "POST: Phê duyệt đơn đăng ký trận đua", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.approveRaceEntry()` -> `AdminUserService.approveRaceEntry()`")
     public ResponseEntity<?> approveRaceEntry(@PathVariable Integer id) {
         try {
             adminUserService.approveRaceEntry(id);
@@ -188,7 +186,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/entries/{id}/reject")
-    @Operation(summary = "Từ chối đơn đăng ký trận đua", description = "📌 **Code Architecture**: `AdminUserController.rejectRaceEntry()` -> `AdminUserService.rejectRaceEntry()` -> Chuyển trạng thái `RaceEntry` sang `REJECTED`")
+    @Operation(summary = "POST: Từ chối đơn đăng ký trận đua", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.rejectRaceEntry()` -> `AdminUserService.rejectRaceEntry()`")
     public ResponseEntity<?> rejectRaceEntry(@PathVariable Integer id) {
         try {
             adminUserService.rejectRaceEntry(id);
@@ -199,7 +197,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/jockey-reg/{id}/approve")
-    @Operation(summary = "Phê duyệt đơn đăng ký Nài ngựa", description = "📌 **Code Architecture**: `AdminUserController.approveJockeyReg()` -> `AdminUserService.approveJockeyReg()` -> Duyệt đơn tham gia Ngày đua của Nài")
+    @Operation(summary = "POST: Phê duyệt đơn đăng ký Nài ngựa", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.approveJockeyReg()` -> `AdminUserService.approveJockeyReg()`")
     public ResponseEntity<?> approveJockeyReg(@PathVariable Integer id) {
         try {
             adminUserService.approveJockeyReg(id);
@@ -210,7 +208,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/jockey-reg/{id}/reject")
-    @Operation(summary = "Từ chối đơn đăng ký Nài ngựa", description = "📌 **Code Architecture**: `AdminUserController.rejectJockeyReg()` -> `AdminUserService.rejectJockeyReg()` -> Từ chối đơn Nài ngựa")
+    @Operation(summary = "POST: Từ chối đơn đăng ký Nài ngựa", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.rejectJockeyReg()` -> `AdminUserService.rejectJockeyReg()`")
     public ResponseEntity<?> rejectJockeyReg(@PathVariable Integer id) {
         try {
             adminUserService.rejectJockeyReg(id);
@@ -221,7 +219,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/owner-reg/{id}/approve")
-    @Operation(summary = "Phê duyệt đơn đăng ký Chủ ngựa", description = "📌 **Code Architecture**: `AdminUserController.approveOwnerReg()` -> `AdminUserService.approveOwnerReg()` -> Duyệt đơn Chủ ngựa")
+    @Operation(summary = "POST: Phê duyệt đơn đăng ký Chủ ngựa", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.approveOwnerReg()` -> `AdminUserService.approveOwnerReg()`")
     public ResponseEntity<?> approveOwnerReg(@PathVariable Integer id) {
         try {
             adminUserService.approveOwnerReg(id);
@@ -232,7 +230,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/owner-reg/{id}/reject")
-    @Operation(summary = "Từ chối đơn đăng ký Chủ ngựa", description = "📌 **Code Architecture**: `AdminUserController.rejectOwnerReg()` -> `AdminUserService.rejectOwnerReg()` -> Từ chối đơn Chủ ngựa")
+    @Operation(summary = "POST: Từ chối đơn đăng ký Chủ ngựa", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.rejectOwnerReg()` -> `AdminUserService.rejectOwnerReg()`")
     public ResponseEntity<?> rejectOwnerReg(@PathVariable Integer id) {
         try {
             adminUserService.rejectOwnerReg(id);
@@ -243,7 +241,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/horse-reg/{id}/approve")
-    @Operation(summary = "Phê duyệt đơn đăng ký Ngựa", description = "📌 **Code Architecture**: `AdminUserController.approveHorseReg()` -> `AdminUserService.approveHorseReg()` -> Duyệt đơn đăng ký thi đấu của con ngựa")
+    @Operation(summary = "POST: Phê duyệt đơn đăng ký Ngựa", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.approveHorseReg()` -> `AdminUserService.approveHorseReg()`")
     public ResponseEntity<?> approveHorseReg(@PathVariable Integer id) {
         try {
             adminUserService.approveHorseReg(id);
@@ -254,7 +252,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/horse-reg/{id}/reject")
-    @Operation(summary = "Từ chối đơn đăng ký Ngựa", description = "📌 **Code Architecture**: `AdminUserController.rejectHorseReg()` -> `AdminUserService.rejectHorseReg()` -> Từ chối đơn đăng ký thi đấu của con ngựa")
+    @Operation(summary = "POST: Từ chối đơn đăng ký Ngựa", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.rejectHorseReg()` -> `AdminUserService.rejectHorseReg()`")
     public ResponseEntity<?> rejectHorseReg(@PathVariable Integer id) {
         try {
             adminUserService.rejectHorseReg(id);
@@ -265,7 +263,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/system-horse/{id}/approve")
-    @Operation(summary = "Duyệt ngựa hệ thống", description = "📌 **Code Architecture**: `AdminUserController.approveSystemHorse()` -> `AdminUserService.approveSystemHorse()` -> Duyệt hồ sơ chiến mã hệ thống")
+    @Operation(summary = "POST: Duyệt ngựa hệ thống", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.approveSystemHorse()` -> `AdminUserService.approveSystemHorse()`")
     public ResponseEntity<?> approveSystemHorse(@PathVariable Integer id) {
         try {
             adminUserService.approveSystemHorse(id);
@@ -276,7 +274,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/system-horse/{id}/reject")
-    @Operation(summary = "Từ chối ngựa hệ thống", description = "📌 **Code Architecture**: `AdminUserController.rejectSystemHorse()` -> `AdminUserService.rejectSystemHorse()` -> Từ chối hồ sơ chiến mã hệ thống")
+    @Operation(summary = "POST: Từ chối ngựa hệ thống", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.rejectSystemHorse()` -> `AdminUserService.rejectSystemHorse()`")
     public ResponseEntity<?> rejectSystemHorse(@PathVariable Integer id) {
         try {
             adminUserService.rejectSystemHorse(id);
@@ -288,7 +286,7 @@ public class AdminUserController {
 
     // --- Racecard Automation ---
     @PostMapping("/races/{raceId}/auto-assign-gates")
-    @Operation(summary = "Tự động sắp xếp cổng xuất phát", description = "📌 **Code Architecture**: `AdminUserController.autoAssignGates()` -> `AdminUserService.autoAssignGates()` -> Thuật toán ngẫu nhiên phân cổng 1..N cho các `RaceEntry` trong trận")
+    @Operation(summary = "POST: Tự động sắp xếp cổng xuất phát", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.autoAssignGates()` -> `AdminUserService.autoAssignGates()`")
     public ResponseEntity<?> autoAssignGates(@PathVariable Integer raceId) {
         try {
             adminUserService.autoAssignGates(raceId);
@@ -299,7 +297,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/races/{raceId}/auto-calculate-weights")
-    @Operation(summary = "Tự động tính toán tạ gánh chì (Handicap Weight)", description = "📌 **Code Architecture**: `AdminUserController.autoCalculateWeights()` -> `AdminUserService.autoCalculateWeights()` -> Tính tạ chì căn cứ theo Rating hiện tại của ngựa và quy định Hạng đua")
+    @Operation(summary = "POST: Tự động tính toán tạ gánh chì (Handicap Weight)", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.autoCalculateWeights()` -> `AdminUserService.autoCalculateWeights()`")
     public ResponseEntity<?> autoCalculateWeights(@PathVariable Integer raceId) {
         try {
             adminUserService.autoCalculateWeights(raceId);
@@ -310,7 +308,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/races/{raceId}/racecard")
-    @Operation(summary = "Cập nhật thông tin thẻ đua (Racecard)", description = "📌 **Code Architecture**: `AdminUserController.updateRacecard()` -> `AdminUserService.updateRacecard()` -> Cập nhật danh sách cổng xuất phát và tạ gánh chì thủ công")
+    @Operation(summary = "POST: Cập nhật thông tin thẻ đua (Racecard)", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.updateRacecard()` -> `AdminUserService.updateRacecard()`")
     public ResponseEntity<?> updateRacecard(@PathVariable Integer raceId, @RequestBody List<Map<String, Object>> body) {
         try {
             adminUserService.updateRacecard(raceId, body);
@@ -321,7 +319,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/races/{raceId}/cancel")
-    @Operation(summary = "Hủy bỏ trận đua (Admin)", description = "📌 **Code Architecture**: `AdminUserController.cancelRace()` -> `AdminUserService.cancelRace()` -> Đổi trạng thái trận đua sang `CANCELLED`")
+    @Operation(summary = "POST: Hủy bỏ trận đua (Admin)", description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n📌 **Code Architecture**: `AdminUserController.cancelRace()` -> `AdminUserService.cancelRace()`")
     public ResponseEntity<?> cancelRace(@PathVariable Integer raceId) {
         try {
             adminUserService.cancelRace(raceId);
