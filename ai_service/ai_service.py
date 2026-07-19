@@ -252,7 +252,17 @@ def respond(it, lang):
             "• 🏆 Recent results\n• 📊 Statistics\n"
             "• 🐴 Horse info (e.g. 'horse Thunder King')")
 
-# ── Gemini Self-Training Configuration & Grounding ───────────────────────────
+from datetime import datetime
+
+def all_races():
+    return query(
+        "SELECT r.id, r.class_level AS classLevel, r.distance_meters AS distanceMeters, "
+        "r.track_type AS trackType, CONVERT(VARCHAR(19), r.start_time, 105) + ' ' + CONVERT(VARCHAR(8), r.start_time, 108) AS startTime, "
+        "r.status, rm.name as meetingName, rm.venue "
+        "FROM [Race] r LEFT JOIN [RaceMeeting] rm ON r.race_meeting_id=rm.id "
+        "ORDER BY r.start_time DESC"
+    )
+
 def load_gemini_config():
     config_path = os.path.join(os.path.dirname(__file__), "gemini_config.json")
     default_config = {
@@ -272,11 +282,13 @@ def load_gemini_config():
         return default_config
 
 def get_db_grounding_context(user_msg):
+    current_time_str = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
     horses = top_horses()
     jockeys = top_jockeys()
     upcoming = upcoming_races()
     running = running_races()
     results = recent_results()
+    all_r = all_races()
     st = stats()
 
     horse_info = ""
@@ -288,6 +300,8 @@ def get_db_grounding_context(user_msg):
             horse_info = f"\n- Specific Horse Queried ({name}): Name: {h['name']}, Breed: {h.get('breed','—')}, Rating: {h.get('currentRating','—')}, Wins/Races: {h.get('totalWins',0)}/{h.get('totalRaces',0)}"
 
     context = f"""[DATABASE REAL-TIME CONTEXT]
+System Current Date & Time: {current_time_str}
+
 1. General Stats:
    - Official Completed Races: {st.get('races', 0)}
    - Active Horses: {st.get('horses', 0)}
@@ -299,8 +313,8 @@ def get_db_grounding_context(user_msg):
 3. Top 5 Jockeys by Wins:
 {json.dumps(jockeys, default=str, ensure_ascii=False, indent=2)}
 
-4. Upcoming Scheduled Races:
-{json.dumps(upcoming, default=str, ensure_ascii=False, indent=2)}
+4. All Tournament Races (including Today, Scheduled, Running, and Past):
+{json.dumps(all_r, default=str, ensure_ascii=False, indent=2)}
 
 5. Live Running Races:
 {json.dumps(running, default=str, ensure_ascii=False, indent=2)}
