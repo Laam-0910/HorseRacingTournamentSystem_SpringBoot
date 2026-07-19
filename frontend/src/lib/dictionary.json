@@ -44,6 +44,11 @@
     "zh": "密码长度至少为8个字符，包括至少1个大写字母，1个数字和1个特殊字符（@$!%*?&）",
     "ja": "パスワードは少なくとも8文字以上で、大文字1つ、数字1つ、特殊文字（@$!%*?&）を1つ含む必要があります"
   },
+  "Mật khẩu phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (ví dụ: @$!%*?&^./,#-_+)": {
+    "en": "Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)",
+    "zh": "密码长度至少为8个字符，包括至少1个大写字母，1个数字和1个特殊字符（例如：@$!%*?&^./,#-_+）",
+    "ja": "パスワードは少なくとも8文字以上で、大文字1つ、数字1つ、特殊文字（例：@$!%*?&^./,#-_+）を1つ含む必要があります"
+  },
   "Mật khẩu xác nhận không khớp.": {
     "en": "Passwords do not match.",
     "zh": "确认密码不匹配。",

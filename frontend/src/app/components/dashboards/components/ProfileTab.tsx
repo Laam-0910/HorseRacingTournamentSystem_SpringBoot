@@ -245,10 +245,10 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
       return; 
     }
 
-    const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(newPassword)) {
       setPassErr(
-        $t("Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)", lang)
+        $t("Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (ví dụ: @$!%*?&^./,#-_+)", lang)
       );
       return;
     }

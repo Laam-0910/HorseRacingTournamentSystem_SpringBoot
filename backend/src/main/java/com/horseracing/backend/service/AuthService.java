@@ -156,8 +156,8 @@ public class AuthService {
 
         // Kiểm tra tính hợp lệ của mật khẩu ở phía Backend
         String password = request.getPassword();
-        if (password == null || !password.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
-            throw new IllegalArgumentException("Mật khẩu không đạt yêu cầu bảo mật (Ít nhất 8 ký tự, 1 chữ hoa, 1 số, 1 ký tự đặc biệt)");
+        if (password == null || !password.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")) {
+            throw new IllegalArgumentException("Mật khẩu phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (ví dụ: @$!%*?&^./,#-_+)");
         }
 
         int roleId = request.getRoleId() != null ? request.getRoleId() : 4; // Default Spectator
@@ -259,8 +259,8 @@ public class AuthService {
 
     @Transactional
     public Map<String, Object> verifyForgotPassword(String otpTxId, String enteredOtp, String newPassword) {
-        if (newPassword == null || !newPassword.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
-            return Map.of("success", false, "error", "Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (@$!%*?&)");
+        if (newPassword == null || !newPassword.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")) {
+            return Map.of("success", false, "error", "Mật khẩu mới phải dài ít nhất 8 ký tự, bao gồm ít nhất 1 chữ hoa, 1 số và 1 ký tự đặc biệt (ví dụ: @$!%*?&^./,#-_+)");
         }
         OtpSession session = otpStorage.get(otpTxId);
         if (session == null || !session.getOtpCode().equals(enteredOtp)) {
