@@ -1,3 +1,6 @@
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
 $baseUrl = "http://localhost:8080"
 
 Write-Host "`n=======================================================" -ForegroundColor Cyan
@@ -59,7 +62,7 @@ if (-not $token) {
 }
 
 if ($token) {
-    Write-Host " [OK] Dang nhap thành công với tài khoản: '$loggedUser'!" -ForegroundColor Green
+    Write-Host " [OK] Dang nhap thanh cong voi tai khoan: '$loggedUser'!" -ForegroundColor Green
     Write-Host "      Token: $($token.Substring(0, [Math]::Min(30, $token.Length)))...`n" -ForegroundColor Gray
 } else {
     Write-Host " [!] Vui long kiem tra tai khoan trong Database hoac tao user moi qua man hinh Register.`n" -ForegroundColor Yellow
@@ -69,7 +72,7 @@ if ($token) {
 Write-Host "[2/3] Dang kiem tra Public API (/api/public/races)..." -ForegroundColor Yellow
 try {
     $pub = Invoke-RestMethod -Uri "$baseUrl/api/public/races" -ErrorAction Stop
-    Write-Host " [OK] API Public Races hoat dong tốt! So luong: $($pub.Count)`n" -ForegroundColor Green
+    Write-Host " [OK] API Public Races hoat dong tot! So luong: $($pub.Count)`n" -ForegroundColor Green
 } catch {
     Write-Host " [!] API /api/public/races bao loi: $_`n" -ForegroundColor Red
 }
@@ -89,5 +92,5 @@ if ($token) {
 }
 
 Write-Host "=======================================================" -ForegroundColor Cyan
-Write-Host "   TẤT CẢ LUỒNG API ĐÃ HOẠT ĐỘNG XONG!" -ForegroundColor Cyan
+Write-Host "   TAT CA LUONG API DA HOAT DONG XONG!" -ForegroundColor Cyan
 Write-Host "=======================================================" -ForegroundColor Cyan
