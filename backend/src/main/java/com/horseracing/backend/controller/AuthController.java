@@ -1,10 +1,9 @@
 package com.horseracing.backend.controller;
 
-import com.horseracing.backend.dto.LoginRequestDTO;
-import com.horseracing.backend.dto.LoginResponseDTO;
-import com.horseracing.backend.dto.RegisterRequestDTO;
-import com.horseracing.backend.dto.UserDTO;
+import com.horseracing.backend.dto.*;
 import com.horseracing.backend.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,11 +14,13 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Auth Service", description = "Xác thực người dùng: Đăng nhập, Đăng ký, OTP, Đổi mật khẩu")
 public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/login")
+    @Operation(summary = "Đăng nhập hệ thống")
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO request) {
         LoginResponseDTO response = authService.login(request);
         if (!response.getSuccess()) {
@@ -29,10 +30,9 @@ public class AuthController {
     }
 
     @PostMapping("/verify-login")
-    public ResponseEntity<?> verifyLogin(@RequestBody Map<String, String> body) {
-        String otpTxId = body.get("otpTxId");
-        String otp = body.get("otp");
-        LoginResponseDTO response = authService.verifyLogin(otpTxId, otp);
+    @Operation(summary = "Xác thực OTP khi đăng nhập")
+    public ResponseEntity<?> verifyLogin(@RequestBody VerifyOtpRequestDTO body) {
+        LoginResponseDTO response = authService.verifyLogin(body.getOtpTxId(), body.getOtp());
         if (!response.getSuccess()) {
             return ResponseEntity.badRequest().body(response);
         }
@@ -40,6 +40,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @Operation(summary = "Đăng ký tài khoản mới")
     public ResponseEntity<?> register(@RequestBody RegisterRequestDTO request) {
         try {
             Map<String, Object> result = authService.register(request);
@@ -50,10 +51,9 @@ public class AuthController {
     }
 
     @PostMapping("/verify-register")
-    public ResponseEntity<?> verifyRegister(@RequestBody Map<String, String> body) {
-        String otpTxId = body.get("otpTxId");
-        String otp = body.get("otp");
-        Map<String, Object> result = authService.verifyRegister(otpTxId, otp);
+    @Operation(summary = "Xác thực OTP đăng ký tài khoản")
+    public ResponseEntity<?> verifyRegister(@RequestBody VerifyOtpRequestDTO body) {
+        Map<String, Object> result = authService.verifyRegister(body.getOtpTxId(), body.getOtp());
         if (Boolean.FALSE.equals(result.get("success"))) {
             return ResponseEntity.badRequest().body(result);
         }
@@ -61,10 +61,10 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
+    @Operation(summary = "Yêu cầu mã OTP cho Quên mật khẩu")
+    public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDTO body) {
         try {
-            Map<String, Object> result = authService.forgotPassword(email);
+            Map<String, Object> result = authService.forgotPassword(body.getEmail());
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -72,11 +72,9 @@ public class AuthController {
     }
 
     @PostMapping("/verify-forgot-password")
-    public ResponseEntity<?> verifyForgotPassword(@RequestBody Map<String, String> body) {
-        String otpTxId = body.get("otpTxId");
-        String otp = body.get("otp");
-        String newPassword = body.get("newPassword");
-        Map<String, Object> result = authService.verifyForgotPassword(otpTxId, otp, newPassword);
+    @Operation(summary = "Xác thực OTP và đặt lại mật khẩu mới")
+    public ResponseEntity<?> verifyForgotPassword(@RequestBody VerifyForgotPasswordRequestDTO body) {
+        Map<String, Object> result = authService.verifyForgotPassword(body.getOtpTxId(), body.getOtp(), body.getNewPassword());
         if (Boolean.FALSE.equals(result.get("success"))) {
             return ResponseEntity.badRequest().body(result);
         }
@@ -84,6 +82,7 @@ public class AuthController {
     }
 
     @PostMapping("/update-profile")
+    @Operation(summary = "Cập nhật thông tin trang cá nhân")
     public ResponseEntity<?> updateProfile(@RequestBody UserDTO userDTO) {
         try {
             UserDTO updated = authService.updateProfile(userDTO);
@@ -94,11 +93,10 @@ public class AuthController {
     }
 
     @PostMapping("/toggle-otp")
-    public ResponseEntity<?> toggleOtp(@RequestBody Map<String, Object> request) {
-        String username = (String) request.get("username");
-        Boolean requireOtp = (Boolean) request.get("requireOtp");
+    @Operation(summary = "Bật/Tắt xác thực OTP 2FA")
+    public ResponseEntity<?> toggleOtp(@RequestBody ToggleOtpRequestDTO request) {
         try {
-            Boolean result = authService.toggleOtp(username, requireOtp);
+            Boolean result = authService.toggleOtp(request.getUsername(), request.getRequireOtp());
             return ResponseEntity.ok(Map.of("success", true, "requireOtp", result));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
