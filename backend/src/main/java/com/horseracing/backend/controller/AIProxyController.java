@@ -1,5 +1,6 @@
 package com.horseracing.backend.controller;
 
+import com.horseracing.backend.dto.AiChatRequestDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,7 +9,6 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
-import java.util.Map;
 
 @RestController
 @RequestMapping({"/api/ai", "/ai"})
@@ -31,11 +31,12 @@ public class AIProxyController {
     }
 
     @PostMapping("/chat")
-    public ResponseEntity<String> chat(@RequestBody Map<String, Object> body) {
+    @Operation(summary = "Hỏi đáp với AI Gemini Chatbot")
+    public ResponseEntity<String> chat(@RequestBody AiChatRequestDTO body) {
         String url = aiBaseUrl + "/chat";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        HttpEntity<AiChatRequestDTO> entity = new HttpEntity<>(body, headers);
 
         try {
             return restTemplate.postForEntity(url, entity, String.class);
@@ -50,6 +51,7 @@ public class AIProxyController {
     }
 
     @GetMapping("/predict/{raceId}")
+    @Operation(summary = "AI Dự đoán kết quả cho trận đua")
     public ResponseEntity<String> predict(@PathVariable("raceId") Integer raceId) {
         String url = aiBaseUrl + "/predict/" + raceId;
         try {
@@ -65,6 +67,7 @@ public class AIProxyController {
     }
 
     @GetMapping("/health")
+    @Operation(summary = "Kiểm tra sức khỏe dịch vụ Python AI")
     public ResponseEntity<String> health() {
         String url = aiBaseUrl + "/health";
         try {

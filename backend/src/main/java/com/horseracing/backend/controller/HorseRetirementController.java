@@ -1,9 +1,13 @@
 package com.horseracing.backend.controller;
 
+import com.horseracing.backend.dto.ApproveRetirementRequestDTO;
 import com.horseracing.backend.dto.HorseRetirementRequestDTO;
+import com.horseracing.backend.dto.RetirementRequestDTO;
 import com.horseracing.backend.entity.User;
 import com.horseracing.backend.repository.UserRepository;
 import com.horseracing.backend.service.HorseRetirementService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,6 +21,7 @@ import java.util.Map;
 @RequestMapping("/api/retirement")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Horse Retirement Service", description = "Quản lý đơn xin giải nghệ cho chiến mã")
 public class HorseRetirementController {
 
     private final HorseRetirementService retirementService;
@@ -33,17 +38,15 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/request")
-    public ResponseEntity<?> requestRetirement(@RequestBody Map<String, Object> body) {
+    @Operation(summary = "Tạo đơn xin giải nghệ cho ngựa (Chủ ngựa)")
+    public ResponseEntity<?> requestRetirement(@RequestBody RetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
-            Integer horseId = Integer.parseInt(String.valueOf(body.get("horseId")));
-            String reason = (String) body.get("reason");
-
-            if (reason == null || reason.trim().isEmpty()) {
+            if (body.getReason() == null || body.getReason().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Reason is required"));
             }
 
-            HorseRetirementRequestDTO dto = retirementService.requestRetirement(horseId, user.getId(), reason);
+            HorseRetirementRequestDTO dto = retirementService.requestRetirement(body.getHorseId(), user.getId(), body.getReason());
             return ResponseEntity.ok(Map.of("success", true, "request", dto));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -51,6 +54,7 @@ public class HorseRetirementController {
     }
 
     @GetMapping("/requests")
+    @Operation(summary = "Lấy danh sách các đơn giải nghệ")
     public ResponseEntity<?> getRequests() {
         try {
             User user = getAuthenticatedUser();
@@ -69,13 +73,14 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/requests/{id}/approve")
-    public ResponseEntity<?> approveRequest(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
+    @Operation(summary = "Phê duyệt đơn giải nghệ (Admin)")
+    public ResponseEntity<?> approveRequest(@PathVariable Integer id, @RequestBody(required = false) ApproveRetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
             if (user.getRoleId() != 1) {
                 return ResponseEntity.status(403).body(Map.of("success", false, "error", "Only Admin can approve requests"));
             }
-            String adminRemarks = (String) body.get("adminRemarks");
+            String adminRemarks = body != null ? body.getAdminRemarks() : null;
             retirementService.approveRequest(id, adminRemarks);
             return ResponseEntity.ok(Map.of("success", true, "message", "Retirement request approved successfully"));
         } catch (Exception e) {
@@ -84,13 +89,14 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/requests/{id}/reject")
-    public ResponseEntity<?> rejectRequest(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
+    @Operation(summary = "Từ chối đơn giải nghệ (Admin)")
+    public ResponseEntity<?> rejectRequest(@PathVariable Integer id, @RequestBody(required = false) ApproveRetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
             if (user.getRoleId() != 1) {
                 return ResponseEntity.status(403).body(Map.of("success", false, "error", "Only Admin can reject requests"));
             }
-            String adminRemarks = (String) body.get("adminRemarks");
+            String adminRemarks = body != null ? body.getAdminRemarks() : null;
             retirementService.rejectRequest(id, adminRemarks);
             return ResponseEntity.ok(Map.of("success", true, "message", "Retirement request rejected successfully"));
         } catch (Exception e) {
@@ -99,20 +105,18 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/compulsory")
-    public ResponseEntity<?> compulsoryRetire(@RequestBody Map<String, Object> body) {
+    @Operation(summary = "Bắt buộc giải nghệ chiến mã (Admin)")
+    public ResponseEntity<?> compulsoryRetire(@RequestBody RetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
             if (user.getRoleId() != 1) {
                 return ResponseEntity.status(403).body(Map.of("success", false, "error", "Only Admin can perform compulsory retirement"));
             }
-            Integer horseId = Integer.parseInt(String.valueOf(body.get("horseId")));
-            String reason = (String) body.get("reason");
-
-            if (reason == null || reason.trim().isEmpty()) {
+            if (body.getReason() == null || body.getReason().trim().isEmpty()) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Reason is required"));
             }
 
-            HorseRetirementRequestDTO dto = retirementService.compulsoryRetire(horseId, reason);
+            HorseRetirementRequestDTO dto = retirementService.compulsoryRetire(body.getHorseId(), body.getReason());
             return ResponseEntity.ok(Map.of("success", true, "request", dto));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
