@@ -160,7 +160,6 @@ public class InvitationService {
 
         Map<Integer, User> userEntityMap = userRepository.findAll().stream()
                 .collect(Collectors.toMap(User::getId, u -> u, (u1, u2) -> u1));
-        Horse horse = horseRepository.findById(savedInvite.getHorseId()).orElse(null);
         User owner = userEntityMap.get(savedInvite.getOwnerId());
         User jockey = userEntityMap.get(savedInvite.getJockeyId());
 
