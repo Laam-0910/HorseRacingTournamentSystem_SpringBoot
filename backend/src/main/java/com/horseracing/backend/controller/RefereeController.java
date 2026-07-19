@@ -23,7 +23,7 @@ public class RefereeController {
     private final ProcessResultsService processResultsService;
 
     @PostMapping("/pre-check")
-    @Operation(summary = "Kiểm tra cân nặng & sức khỏe ngựa trước trận đua")
+    @Operation(summary = "Kiểm tra cân nặng & sức khỏe ngựa trước trận đua", description = "📌 **Code Handler**: `RefereeController.preRaceCheck()` -> `RefereeService.preRaceCheck()`")
     public ResponseEntity<?> preRaceCheck(@RequestBody Map<String, Object> request) {
         try {
             Integer raceId = (Integer) request.get("raceId");
@@ -37,7 +37,7 @@ public class RefereeController {
     }
 
     @PostMapping("/violations")
-    @Operation(summary = "Ghi nhận lỗi vi phạm của Nài ngựa/Chiến mã")
+    @Operation(summary = "Ghi nhận lỗi vi phạm của Nài ngựa/Chiến mã", description = "📌 **Code Handler**: `RefereeController.logViolation()` -> `RefereeService.logViolation()`")
     public ResponseEntity<?> logViolation(@RequestBody ViolationDTO violationDTO) {
         try {
             ViolationDTO saved = refereeService.logViolation(violationDTO);
@@ -48,7 +48,7 @@ public class RefereeController {
     }
 
     @PostMapping("/results")
-    @Operation(summary = "Xác nhận kết quả thi đấu của trận đua")
+    @Operation(summary = "Xác nhận kết quả thi đấu của trận đua", description = "📌 **Code Handler**: `RefereeController.confirmResults()` -> `ProcessResultsService.confirmResults()`")
     public ResponseEntity<?> confirmResults(@RequestBody Map<String, Object> request) {
         try {
             Integer raceId = (Integer) request.get("raceId");
@@ -63,13 +63,13 @@ public class RefereeController {
     }
 
     @GetMapping("/{id}/dashboard")
-    @Operation(summary = "Lấy dữ liệu Dashboard cá nhân Trọng tài")
+    @Operation(summary = "Lấy dữ liệu Dashboard cá nhân Trọng tài", description = "📌 **Code Handler**: `RefereeController.getRefereeDashboard()` -> `RefereeService.getRefereeDashboard()`")
     public ResponseEntity<Map<String, Object>> getRefereeDashboard(@PathVariable Integer id) {
         return ResponseEntity.ok(refereeService.getRefereeDashboard(id));
     }
 
     @PostMapping("/races/{raceId}/stop")
-    @Operation(summary = "Dừng khẩn cấp trận đua (Khẩn cấp/Hủy trận)")
+    @Operation(summary = "Dừng khẩn cấp trận đua (Khẩn cấp/Hủy trận)", description = "📌 **Code Handler**: `RefereeController.stopRace()` -> `RefereeService.stopRace()`")
     public ResponseEntity<?> stopRace(@PathVariable Integer raceId, @RequestBody Map<String, String> body) {
         try {
             String stewardReport = body.get("stewardReport");
@@ -81,7 +81,7 @@ public class RefereeController {
     }
 
     @PostMapping("/races/{raceId}/suspend")
-    @Operation(summary = "Tạm dừng trận đua đang diễn ra")
+    @Operation(summary = "Tạm dừng trận đua đang diễn ra", description = "📌 **Code Handler**: `RefereeController.suspendRace()` -> `RefereeService.suspendRace()`")
     public ResponseEntity<?> suspendRace(@PathVariable Integer raceId, @RequestBody Map<String, String> body) {
         try {
             String stewardReport = body.get("stewardReport");
@@ -93,7 +93,7 @@ public class RefereeController {
     }
 
     @PostMapping("/races/{raceId}/resume")
-    @Operation(summary = "Tiếp tục trận đua sau khi tạm dừng")
+    @Operation(summary = "Tiếp tục trận đua sau khi tạm dừng", description = "📌 **Code Handler**: `RefereeController.resumeRace()` -> `RefereeService.resumeRace()`")
     public ResponseEntity<?> resumeRace(@PathVariable Integer raceId) {
         try {
             refereeService.resumeRace(raceId);
@@ -104,7 +104,7 @@ public class RefereeController {
     }
 
     @PostMapping("/races/{raceId}/start")
-    @Operation(summary = "Bắt đầu xuất phát trận đua")
+    @Operation(summary = "Bắt đầu xuất phát trận đua", description = "📌 **Code Handler**: `RefereeController.startRace()` -> `RefereeService.startRace()`")
     public ResponseEntity<?> startRace(@PathVariable Integer raceId) {
         try {
             refereeService.startRace(raceId);
@@ -115,7 +115,7 @@ public class RefereeController {
     }
 
     @PostMapping("/violations/{violationId}/confirm")
-    @Operation(summary = "Xác nhận lỗi vi phạm")
+    @Operation(summary = "Xác nhận lỗi vi phạm", description = "📌 **Code Handler**: `RefereeController.confirmViolation()` -> `RefereeService.confirmViolation()`")
     public ResponseEntity<?> confirmViolation(@PathVariable Integer violationId) {
         try {
             refereeService.confirmViolation(violationId);
@@ -126,7 +126,7 @@ public class RefereeController {
     }
 
     @PostMapping("/violations/{violationId}/dismiss")
-    @Operation(summary = "Hủy bỏ lỗi vi phạm")
+    @Operation(summary = "Hủy bỏ lỗi vi phạm", description = "📌 **Code Handler**: `RefereeController.dismissViolation()` -> `RefereeService.dismissViolation()`")
     public ResponseEntity<?> dismissViolation(@PathVariable Integer violationId) {
         try {
             refereeService.dismissViolation(violationId);
@@ -137,7 +137,7 @@ public class RefereeController {
     }
 
     @PostMapping("/entry/{entryId}/stop")
-    @Operation(summary = "Dừng thi đấu 1 con ngựa trong trận")
+    @Operation(summary = "Dừng thi đấu 1 con ngựa trong trận", description = "📌 **Code Handler**: `RefereeController.stopEntry()` -> `RefereeService.stopEntry()`")
     public ResponseEntity<?> stopEntry(@PathVariable Integer entryId) {
         try {
             refereeService.stopEntry(entryId);
@@ -148,7 +148,7 @@ public class RefereeController {
     }
 
     @PostMapping("/entry/{entryId}/resume")
-    @Operation(summary = "Cho phép 1 con ngựa tiếp tục chạy")
+    @Operation(summary = "Cho phép 1 con ngựa tiếp tục chạy", description = "📌 **Code Handler**: `RefereeController.resumeEntry()` -> `RefereeService.resumeEntry()`")
     public ResponseEntity<?> resumeEntry(@PathVariable Integer entryId) {
         try {
             refereeService.resumeEntry(entryId);
@@ -159,7 +159,7 @@ public class RefereeController {
     }
 
     @PostMapping("/entry/{entryId}/disqualify")
-    @Operation(summary = "Truất quyền thi đấu (Disqualify) 1 con ngựa")
+    @Operation(summary = "Truất quyền thi đấu (Disqualify) 1 con ngựa", description = "📌 **Code Handler**: `RefereeController.disqualifyEntry()` -> `RefereeService.disqualifyEntry()`")
     public ResponseEntity<?> disqualifyEntry(@PathVariable Integer entryId) {
         try {
             refereeService.disqualifyEntry(entryId);

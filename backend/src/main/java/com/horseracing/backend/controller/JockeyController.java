@@ -25,31 +25,31 @@ public class JockeyController {
     private final RefereeService refereeService;
 
     @GetMapping("/{id}/invitations")
-    @Operation(summary = "Lấy danh sách lời mời thi đấu của Nài ngựa")
+    @Operation(summary = "Lấy danh sách lời mời thi đấu của Nài ngựa", description = "📌 **Code Handler**: `JockeyController.getJockeyInvitations()` -> `InvitationService.getInvitations()`")
     public ResponseEntity<List<RaceInvitationDTO>> getJockeyInvitations(@PathVariable Integer id) {
         return ResponseEntity.ok(invitationService.getInvitations(id, null));
     }
 
     @GetMapping("/{id}/dashboard")
-    @Operation(summary = "Lấy dữ liệu Dashboard cá nhân Nài ngựa")
+    @Operation(summary = "Lấy dữ liệu Dashboard cá nhân Nài ngựa", description = "📌 **Code Handler**: `JockeyController.getJockeyDashboard()` -> `JockeyOwnerDashboardService.getJockeyDashboard()`")
     public ResponseEntity<Map<String, Object>> getJockeyDashboard(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getJockeyDashboard(id));
     }
 
     @GetMapping("/{id}/mounts")
-    @Operation(summary = "Lấy danh sách các lượt cưỡi thi đấu của Nài ngựa")
+    @Operation(summary = "Lấy danh sách các lượt cưỡi thi đấu của Nài ngựa", description = "📌 **Code Handler**: `JockeyController.getJockeyMounts()` -> `JockeyOwnerDashboardService.getJockeyMounts()`")
     public ResponseEntity<List<Map<String, Object>>> getJockeyMounts(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getJockeyMounts(id));
     }
 
     @GetMapping("/{id}/violations")
-    @Operation(summary = "Lấy danh sách lỗi vi phạm thi đấu của Nài ngựa")
+    @Operation(summary = "Lấy danh sách lỗi vi phạm thi đấu của Nài ngựa", description = "📌 **Code Handler**: `JockeyController.getJockeyViolations()` -> `JockeyOwnerDashboardService.getJockeyViolations()`")
     public ResponseEntity<List<Map<String, Object>>> getJockeyViolations(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getJockeyViolations(id));
     }
 
     @PostMapping("/violations/{violationId}/confirm")
-    @Operation(summary = "Xác nhận nhận biên bản vi phạm")
+    @Operation(summary = "Xác nhận nhận biên bản vi phạm", description = "📌 **Code Handler**: `JockeyController.confirmViolation()` -> `RefereeService.confirmViolation()`")
     public ResponseEntity<?> confirmViolation(@PathVariable Integer violationId) {
         try {
             refereeService.confirmViolation(violationId);

@@ -38,7 +38,7 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/request")
-    @Operation(summary = "Tạo đơn xin giải nghệ cho ngựa (Chủ ngựa)")
+    @Operation(summary = "Tạo đơn xin giải nghệ cho ngựa (Chủ ngựa)", description = "📌 **Code Handler**: `HorseRetirementController.requestRetirement()` -> `HorseRetirementService.requestRetirement()`")
     public ResponseEntity<?> requestRetirement(@RequestBody RetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
@@ -54,7 +54,7 @@ public class HorseRetirementController {
     }
 
     @GetMapping("/requests")
-    @Operation(summary = "Lấy danh sách các đơn giải nghệ")
+    @Operation(summary = "Lấy danh sách các đơn giải nghệ", description = "📌 **Code Handler**: `HorseRetirementController.getRequests()` -> `HorseRetirementService.getAllRequests()`")
     public ResponseEntity<?> getRequests() {
         try {
             User user = getAuthenticatedUser();
@@ -73,7 +73,7 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/requests/{id}/approve")
-    @Operation(summary = "Phê duyệt đơn giải nghệ (Admin)")
+    @Operation(summary = "Phê duyệt đơn giải nghệ (Admin)", description = "📌 **Code Handler**: `HorseRetirementController.approveRequest()` -> `HorseRetirementService.approveRequest()`")
     public ResponseEntity<?> approveRequest(@PathVariable Integer id, @RequestBody(required = false) ApproveRetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
@@ -89,7 +89,7 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/requests/{id}/reject")
-    @Operation(summary = "Từ chối đơn giải nghệ (Admin)")
+    @Operation(summary = "Từ chối đơn giải nghệ (Admin)", description = "📌 **Code Handler**: `HorseRetirementController.rejectRequest()` -> `HorseRetirementService.rejectRequest()`")
     public ResponseEntity<?> rejectRequest(@PathVariable Integer id, @RequestBody(required = false) ApproveRetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
@@ -105,7 +105,7 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/compulsory")
-    @Operation(summary = "Bắt buộc giải nghệ chiến mã (Admin)")
+    @Operation(summary = "Bắt buộc giải nghệ chiến mã (Admin)", description = "📌 **Code Handler**: `HorseRetirementController.compulsoryRetire()` -> `HorseRetirementService.compulsoryRetire()`")
     public ResponseEntity<?> compulsoryRetire(@RequestBody RetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();

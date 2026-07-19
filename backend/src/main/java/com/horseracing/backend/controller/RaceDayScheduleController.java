@@ -21,13 +21,13 @@ public class RaceDayScheduleController {
     private final RaceService raceService;
 
     @GetMapping("/meetings")
-    @Operation(summary = "Lấy danh sách các Ngày đua (Race Meetings)")
+    @Operation(summary = "Lấy danh sách các Ngày đua (Race Meetings)", description = "📌 **Code Handler**: `RaceDayScheduleController.getMeetings()` -> `RaceService.getAllMeetings()`")
     public ResponseEntity<List<RaceMeetingDTO>> getMeetings() {
         return ResponseEntity.ok(raceService.getAllMeetings());
     }
 
     @PostMapping("/meetings")
-    @Operation(summary = "Tạo mới Ngày đua")
+    @Operation(summary = "Tạo mới Ngày đua", description = "📌 **Code Handler**: `RaceDayScheduleController.createMeeting()` -> `RaceService.createMeeting()`")
     public ResponseEntity<?> createMeeting(@RequestBody RaceMeetingDTO meetingDTO) {
         try {
             RaceMeetingDTO saved = raceService.createMeeting(meetingDTO);
