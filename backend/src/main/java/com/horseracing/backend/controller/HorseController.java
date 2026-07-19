@@ -22,14 +22,14 @@ public class HorseController {
     private final HorseService horseService;
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách tất cả các con ngựa")
+    @Operation(summary = "Lấy danh sách tất cả các con ngựa", description = "📌 **Code Handler**: `HorseController.getAllHorses()` -> `HorseService.getAllHorses()`")
     public ResponseEntity<List<HorseDTO>> getAllHorses(@RequestParam(required = false) String status,
                                                        @RequestParam(required = false) Integer ownerId) {
         return ResponseEntity.ok(horseService.getAllHorses(status, ownerId));
     }
 
     @PostMapping
-    @Operation(summary = "Đăng ký ngựa mới")
+    @Operation(summary = "Đăng ký ngựa mới", description = "📌 **Code Handler**: `HorseController.registerHorse()` -> `HorseService.registerHorse()`")
     public ResponseEntity<?> registerHorse(@RequestBody HorseDTO horseDTO) {
         try {
             HorseDTO savedHorse = horseService.registerHorse(horseDTO);
@@ -40,7 +40,7 @@ public class HorseController {
     }
 
     @PostMapping("/{id}/approve")
-    @Operation(summary = "Phê duyệt hồ sơ ngựa (Admin)")
+    @Operation(summary = "Phê duyệt hồ sơ ngựa (Admin)", description = "📌 **Code Handler**: `HorseController.approveHorse()` -> `HorseService.approveHorse()`")
     public ResponseEntity<?> approveHorse(@PathVariable Integer id) {
         try {
             horseService.approveHorse(id);
@@ -51,7 +51,7 @@ public class HorseController {
     }
 
     @PostMapping("/{id}/reject")
-    @Operation(summary = "Từ chối hồ sơ ngựa (Admin)")
+    @Operation(summary = "Từ chối hồ sơ ngựa (Admin)", description = "📌 **Code Handler**: `HorseController.rejectHorse()` -> `HorseService.rejectHorse()`")
     public ResponseEntity<?> rejectHorse(@PathVariable Integer id) {
         try {
             horseService.rejectHorse(id);
@@ -65,7 +65,7 @@ public class HorseController {
     private com.horseracing.backend.repository.UserRepository userRepository;
 
     @PutMapping("/{id}")
-    @Operation(summary = "Cập nhật thông tin ngựa")
+    @Operation(summary = "Cập nhật thông tin ngựa", description = "📌 **Code Handler**: `HorseController.updateHorse()` -> `HorseService.updateHorse()`")
     public ResponseEntity<?> updateHorse(@PathVariable Integer id, @RequestBody HorseDTO horseDTO) {
         try {
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();

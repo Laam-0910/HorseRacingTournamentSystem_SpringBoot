@@ -20,7 +20,7 @@ public class ProcessResultsController {
     private final ProcessResultsService processResultsService;
 
     @PostMapping("/confirm")
-    @Operation(summary = "Trọng tài nhập kết quả trận đua và báo cáo giám sát")
+    @Operation(summary = "Trọng tài nhập kết quả trận đua và báo cáo giám sát", description = "📌 **Code Handler**: `ProcessResultsController.confirmResults()` -> `ProcessResultsService.confirmResults()` | **DTO Request**: `ConfirmResultsRequestDTO`")
     public ResponseEntity<?> confirmResults(@RequestBody ConfirmResultsRequestDTO request) {
         try {
             processResultsService.confirmResults(request.getRaceId(), request.getStewardReport(), request.getResults());

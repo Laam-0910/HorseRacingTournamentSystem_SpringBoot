@@ -21,13 +21,13 @@ public class SeasonController {
     private final SeasonService seasonService;
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách tất cả các Mùa giải")
+    @Operation(summary = "Lấy danh sách tất cả các Mùa giải", description = "📌 **Code Handler**: `SeasonController.getAllSeasons()` -> `SeasonService.getAllSeasons()`")
     public ResponseEntity<List<SeasonDTO>> getAllSeasons() {
         return ResponseEntity.ok(seasonService.getAllSeasons());
     }
 
     @GetMapping("/{seasonId}/rules")
-    @Operation(summary = "Lấy danh sách quy định phân hạng của Mùa giải")
+    @Operation(summary = "Lấy danh sách quy định phân hạng của Mùa giải", description = "📌 **Code Handler**: `SeasonController.getSeasonRules()` -> `SeasonService.getSeasonRules()`")
     public ResponseEntity<List<SeasonClassRuleDTO>> getSeasonRules(@PathVariable Integer seasonId) {
         return ResponseEntity.ok(seasonService.getSeasonRules(seasonId));
     }

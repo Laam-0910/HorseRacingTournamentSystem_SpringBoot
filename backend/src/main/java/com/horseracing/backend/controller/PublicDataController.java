@@ -41,6 +41,7 @@ public class PublicDataController {
     private RaceRefereeRepository raceRefereeRepository;
 
     @GetMapping("/stats")
+    @Operation(summary = "Lấy thống kê tổng quan toàn hệ thống", description = "📌 **Code Handler**: `PublicDataController.getStats()`")
     public ResponseEntity<?> getStats() {
         long seasonsCompleted = seasonRepository.findAll().stream().filter(s -> "COMPLETED".equals(s.getStatus())).count();
         long totalRacesRun = raceRepository.findAll().stream().filter(r -> "OFFICIAL".equals(r.getStatus())).count();
@@ -71,6 +72,7 @@ public class PublicDataController {
     }
 
     @GetMapping("/results")
+    @Operation(summary = "Lấy kết quả xếp hạng trận đua", description = "📌 **Code Handler**: `PublicDataController.getResults()`")
     public ResponseEntity<?> getResults(@RequestParam Integer raceId) {
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
         
@@ -106,11 +108,13 @@ public class PublicDataController {
     }
 
     @GetMapping("/meetings")
+    @Operation(summary = "Lấy danh sách các Ngày đua công khai", description = "📌 **Code Handler**: `PublicDataController.getMeetings()`")
     public ResponseEntity<List<RaceMeeting>> getMeetings() {
         return ResponseEntity.ok(raceMeetingRepository.findAll());
     }
 
     @GetMapping("/races")
+    @Operation(summary = "Lấy danh sách các trận đua công khai", description = "📌 **Code Handler**: `PublicDataController.getRaces()`")
     public ResponseEntity<List<Race>> getRaces(@RequestParam(required = false) Integer meetingId) {
         if (meetingId != null) {
             return ResponseEntity.ok(raceRepository.findByRaceMeetingId(meetingId));
@@ -119,6 +123,7 @@ public class PublicDataController {
     }
 
     @GetMapping("/users")
+    @Operation(summary = "Lấy danh sách người dùng theo vai trò", description = "📌 **Code Handler**: `PublicDataController.getUsers()`")
     public ResponseEntity<List<User>> getUsers(@RequestParam(required = false) Integer roleId) {
         if (roleId != null) {
             return ResponseEntity.ok(userRepository.findByRoleId(roleId));
@@ -127,11 +132,13 @@ public class PublicDataController {
     }
 
     @GetMapping("/horses")
+    @Operation(summary = "Lấy danh sách tất cả các chiến mã công khai", description = "📌 **Code Handler**: `PublicDataController.getHorses()`")
     public ResponseEntity<List<Horse>> getHorses() {
         return ResponseEntity.ok(horseRepository.findAll());
     }
 
     @GetMapping("/violations")
+    @Operation(summary = "Lấy danh sách các lỗi vi phạm công khai", description = "📌 **Code Handler**: `PublicDataController.getViolations()`")
     public ResponseEntity<?> getViolations(@RequestParam(required = false) Integer raceId) {
         List<Violation> list;
         if (raceId != null) {
@@ -166,6 +173,7 @@ public class PublicDataController {
     }
 
     @GetMapping("/users/{id}/profile")
+    @Operation(summary = "Lấy hồ sơ cá nhân công khai của người dùng", description = "📌 **Code Handler**: `PublicDataController.getUserProfile()`")
     public ResponseEntity<?> getUserProfile(@PathVariable Integer id) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) {
@@ -191,7 +199,7 @@ public class PublicDataController {
         } else if (user.getRoleId() == 4) {
             // Referee Profile
             long totalRacesRefereed = raceRefereeRepository.findByRefereeId(id).size();
-            long totalViolationsIssued = violationRepository.findAll().stream().filter(v -> "APPROVED".equals(v.getStatus())).count(); // Just a generic stat for referees or could be specific if they issue it, but violation has no refereeId. Let's just use a general stat.
+            long totalViolationsIssued = violationRepository.findAll().stream().filter(v -> "APPROVED".equals(v.getStatus())).count();
             response.put("totalRacesRefereed", totalRacesRefereed);
             response.put("totalViolationsIssued", totalViolationsIssued);
         } else if (user.getRoleId() == 5) {
@@ -338,6 +346,7 @@ public class PublicDataController {
     }
 
     @GetMapping("/horses/{horseId}/performance")
+    @Operation(summary = "Lấy dữ liệu phong độ thi đấu chi tiết của 1 chiến mã", description = "📌 **Code Handler**: `PublicDataController.getHorsePerformance()`")
     public ResponseEntity<?> getHorsePerformance(@PathVariable Integer horseId) {
         Optional<Horse> horseOpt = horseRepository.findById(horseId);
         if (horseOpt.isEmpty()) {

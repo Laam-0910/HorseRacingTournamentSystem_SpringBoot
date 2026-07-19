@@ -26,13 +26,13 @@ public class RaceController {
     private final SeasonService seasonService;
 
     @GetMapping("/seasons")
-    @Operation(summary = "Lấy danh sách các mùa giải")
+    @Operation(summary = "Lấy danh sách các mùa giải", description = "📌 **Code Handler**: `RaceController.getSeasons()` -> `SeasonService.getAllSeasons()`")
     public ResponseEntity<List<SeasonDTO>> getSeasons() {
         return ResponseEntity.ok(seasonService.getAllSeasons());
     }
 
     @PostMapping("/seasons")
-    @Operation(summary = "Tạo mùa giải đua mới")
+    @Operation(summary = "Tạo mùa giải đua mới", description = "📌 **Code Handler**: `RaceController.createSeason()` -> `SeasonService.createSeason()`")
     public ResponseEntity<?> createSeason(@RequestBody Map<String, Object> body) {
         try {
             SeasonDTO season = seasonService.createSeason(body);
@@ -43,7 +43,7 @@ public class RaceController {
     }
 
     @PostMapping("/seasons/{id}/toggle")
-    @Operation(summary = "Bật/Kích hoạt trạng thái mùa giải")
+    @Operation(summary = "Bật/Kích hoạt trạng thái mùa giải", description = "📌 **Code Handler**: `RaceController.toggleSeasonStatus()` -> `SeasonService.toggleSeasonStatus()`")
     public ResponseEntity<?> toggleSeasonStatus(@PathVariable Integer id) {
         try {
             String status = seasonService.toggleSeasonStatus(id);
@@ -54,7 +54,7 @@ public class RaceController {
     }
 
     @PostMapping("/seasons/{id}/extend")
-    @Operation(summary = "Gia hạn thời gian mùa giải")
+    @Operation(summary = "Gia hạn thời gian mùa giải", description = "📌 **Code Handler**: `RaceController.extendSeason()` -> `SeasonService.extendSeason()`")
     public ResponseEntity<?> extendSeason(@PathVariable Integer id, @RequestBody Map<String, String> body) {
         try {
             String newStartDate = body.get("startDate");
@@ -67,13 +67,13 @@ public class RaceController {
     }
 
     @GetMapping("/seasons/{seasonId}/rules")
-    @Operation(summary = "Lấy danh sách quy định phân hạng mùa giải")
+    @Operation(summary = "Lấy danh sách quy định phân hạng mùa giải", description = "📌 **Code Handler**: `RaceController.getSeasonRules()` -> `SeasonService.getSeasonRules()`")
     public ResponseEntity<List<SeasonClassRuleDTO>> getSeasonRules(@PathVariable Integer seasonId) {
         return ResponseEntity.ok(seasonService.getSeasonRules(seasonId));
     }
 
     @PostMapping("/seasons/{seasonId}/rules")
-    @Operation(summary = "Lưu quy định phân hạng mùa giải")
+    @Operation(summary = "Lưu quy định phân hạng mùa giải", description = "📌 **Code Handler**: `RaceController.saveSeasonRules()` -> `SeasonService.saveSeasonRules()`")
     public ResponseEntity<?> saveSeasonRules(@PathVariable Integer seasonId, @RequestBody List<SeasonClassRuleDTO> rules) {
         try {
             seasonService.saveSeasonRules(seasonId, rules);
@@ -84,13 +84,13 @@ public class RaceController {
     }
 
     @GetMapping("/meetings")
-    @Operation(summary = "Lấy danh sách Ngày đua (Race Meetings)")
+    @Operation(summary = "Lấy danh sách Ngày đua (Race Meetings)", description = "📌 **Code Handler**: `RaceController.getMeetings()` -> `RaceService.getAllMeetings()`")
     public ResponseEntity<List<RaceMeetingDTO>> getMeetings() {
         return ResponseEntity.ok(raceService.getAllMeetings());
     }
 
     @PostMapping("/meetings")
-    @Operation(summary = "Tạo mới Ngày đua (Race Meeting)")
+    @Operation(summary = "Tạo mới Ngày đua (Race Meeting)", description = "📌 **Code Handler**: `RaceController.createMeeting()` -> `RaceService.createMeeting()`")
     public ResponseEntity<?> createMeeting(@RequestBody RaceMeetingDTO meetingDTO) {
         try {
             RaceMeetingDTO savedMeeting = raceService.createMeeting(meetingDTO);
@@ -101,7 +101,7 @@ public class RaceController {
     }
 
     @PostMapping("/meetings/{id}")
-    @Operation(summary = "Cập nhật Ngày đua")
+    @Operation(summary = "Cập nhật Ngày đua", description = "📌 **Code Handler**: `RaceController.updateMeeting()` -> `RaceService.updateMeeting()`")
     public ResponseEntity<?> updateMeeting(@PathVariable Integer id, @RequestBody RaceMeetingDTO meetingDTO) {
         try {
             RaceMeetingDTO updated = raceService.updateMeeting(id, meetingDTO);
@@ -112,7 +112,7 @@ public class RaceController {
     }
 
     @DeleteMapping("/meetings/{id}")
-    @Operation(summary = "Xóa Ngày đua")
+    @Operation(summary = "Xóa Ngày đua", description = "📌 **Code Handler**: `RaceController.deleteMeeting()` -> `RaceService.deleteMeeting()`")
     public ResponseEntity<?> deleteMeeting(@PathVariable Integer id) {
         try {
             raceService.deleteMeeting(id);
@@ -123,13 +123,13 @@ public class RaceController {
     }
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách tất cả các trận đua (Races)")
+    @Operation(summary = "Lấy danh sách tất cả các trận đua (Races)", description = "📌 **Code Handler**: `RaceController.getRaces()` -> `RaceService.getAllRaces()`")
     public ResponseEntity<List<RaceDTO>> getRaces() {
         return ResponseEntity.ok(raceService.getAllRaces());
     }
 
     @PostMapping
-    @Operation(summary = "Tạo mới trận đua (Race)")
+    @Operation(summary = "Tạo mới trận đua (Race)", description = "📌 **Code Handler**: `RaceController.createRace()` -> `RaceService.createRace()`")
     public ResponseEntity<?> createRace(@RequestBody RaceDTO raceDTO) {
         try {
             RaceDTO savedRace = raceService.createRace(raceDTO);
@@ -140,7 +140,7 @@ public class RaceController {
     }
 
     @PostMapping("/{id}")
-    @Operation(summary = "Cập nhật thông tin trận đua")
+    @Operation(summary = "Cập nhật thông tin trận đua", description = "📌 **Code Handler**: `RaceController.updateRace()` -> `RaceService.updateRace()`")
     public ResponseEntity<?> updateRace(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
         try {
             RaceDTO updated = raceService.updateRace(id, body);
@@ -151,7 +151,7 @@ public class RaceController {
     }
 
     @GetMapping("/live")
-    @Operation(summary = "Lấy danh sách các trận đua đang diễn ra trực tiếp (Live)")
+    @Operation(summary = "Lấy danh sách các trận đua đang diễn ra trực tiếp (Live)", description = "📌 **Code Handler**: `RaceController.getLiveRaces()` -> `RaceService.getLiveRaces()`")
     public ResponseEntity<List<RaceDTO>> getLiveRaces() {
         return ResponseEntity.ok(raceService.getLiveRaces());
     }

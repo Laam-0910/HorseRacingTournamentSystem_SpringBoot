@@ -21,7 +21,7 @@ public class PublicChatController {
     private ChatMessageRepository chatMessageRepository;
 
     @PostMapping("/chat")
-    @Operation(summary = "Gửi tin nhắn hỏi đáp trợ lý AI công khai")
+    @Operation(summary = "Gửi tin nhắn hỏi đáp trợ lý AI công khai", description = "📌 **Code Handler**: `PublicChatController.chat()` | **DTO Request**: `PublicChatRequestDTO`")
     public ResponseEntity<?> chat(@RequestBody PublicChatRequestDTO request) {
         String message = request.getMessage();
         String lang = request.getLang();
@@ -61,7 +61,7 @@ public class PublicChatController {
     }
 
     @GetMapping("/chat/history")
-    @Operation(summary = "Lấy lịch sử chat của phòng đua")
+    @Operation(summary = "Lấy lịch sử chat của phòng đua", description = "📌 **Code Handler**: `PublicChatController.getChatHistory()` -> `ChatMessageRepository.findByRaceIdOrderBySentAtAsc()`")
     public ResponseEntity<List<Map<String, String>>> getChatHistory(@RequestParam Integer raceId) {
         List<ChatMessage> list = chatMessageRepository.findByRaceIdOrderBySentAtAsc(raceId);
         List<Map<String, String>> history = new ArrayList<>();

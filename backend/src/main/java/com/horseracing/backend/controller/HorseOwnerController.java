@@ -26,31 +26,31 @@ public class HorseOwnerController {
     private final JockeyOwnerDashboardService dashboardService;
 
     @GetMapping("/{id}/horses")
-    @Operation(summary = "Lấy danh sách ngựa của Chủ sở hữu")
+    @Operation(summary = "Lấy danh sách ngựa của Chủ sở hữu", description = "📌 **Code Handler**: `HorseOwnerController.getOwnerHorses()` -> `HorseService.getAllHorses()`")
     public ResponseEntity<List<HorseDTO>> getOwnerHorses(@PathVariable Integer id) {
         return ResponseEntity.ok(horseService.getAllHorses(null, id));
     }
 
     @GetMapping("/{id}/invitations")
-    @Operation(summary = "Lấy danh sách lời mời thi đấu của Chủ ngựa")
+    @Operation(summary = "Lấy danh sách lời mời thi đấu của Chủ ngựa", description = "📌 **Code Handler**: `HorseOwnerController.getOwnerInvitations()` -> `InvitationService.getInvitations()`")
     public ResponseEntity<List<RaceInvitationDTO>> getOwnerInvitations(@PathVariable Integer id) {
         return ResponseEntity.ok(invitationService.getInvitations(null, id));
     }
 
     @GetMapping("/{id}/dashboard")
-    @Operation(summary = "Lấy dữ liệu Dashboard tổng quan của Chủ ngựa")
+    @Operation(summary = "Lấy dữ liệu Dashboard tổng quan của Chủ ngựa", description = "📌 **Code Handler**: `HorseOwnerController.getOwnerDashboard()` -> `JockeyOwnerDashboardService.getOwnerDashboard()`")
     public ResponseEntity<Map<String, Object>> getOwnerDashboard(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getOwnerDashboard(id));
     }
 
     @GetMapping("/{id}/stable")
-    @Operation(summary = "Lấy danh sách chuồng ngựa của Chủ sở hữu")
+    @Operation(summary = "Lấy danh sách chuồng ngựa của Chủ sở hữu", description = "📌 **Code Handler**: `HorseOwnerController.getOwnerStable()` -> `JockeyOwnerDashboardService.getOwnerStable()`")
     public ResponseEntity<List<Map<String, Object>>> getOwnerStable(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getOwnerStable(id));
     }
 
     @GetMapping("/{id}/results")
-    @Operation(summary = "Lấy lịch sử kết quả thi đấu của các con ngựa thuộc Chủ sở hữu")
+    @Operation(summary = "Lấy lịch sử kết quả thi đấu của các con ngựa thuộc Chủ sở hữu", description = "📌 **Code Handler**: `HorseOwnerController.getOwnerResults()` -> `JockeyOwnerDashboardService.getOwnerResults()`")
     public ResponseEntity<List<Map<String, Object>>> getOwnerResults(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getOwnerResults(id));
     }

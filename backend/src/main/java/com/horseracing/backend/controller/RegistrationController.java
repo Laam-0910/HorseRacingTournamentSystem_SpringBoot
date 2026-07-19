@@ -23,7 +23,7 @@ public class RegistrationController {
     private final RegistrationService registrationService;
 
     @PostMapping("/jockey")
-    @Operation(summary = "Nài ngựa đăng ký tham gia Ngày đua")
+    @Operation(summary = "Nài ngựa đăng ký tham gia Ngày đua", description = "📌 **Code Handler**: `RegistrationController.registerJockey()` -> `RegistrationService.registerJockey()`")
     public ResponseEntity<?> registerJockey(@RequestBody RegistrationMeetingRequestDTO body) {
         try {
             JockeyRaceMeetingRegistrationDTO reg = registrationService.registerJockey(body.getMeetingId(), body.getJockeyId());
@@ -34,7 +34,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/owner")
-    @Operation(summary = "Chủ ngựa đăng ký tham gia Ngày đua")
+    @Operation(summary = "Chủ ngựa đăng ký tham gia Ngày đua", description = "📌 **Code Handler**: `RegistrationController.registerOwner()` -> `RegistrationService.registerOwner()`")
     public ResponseEntity<?> registerOwner(@RequestBody RegistrationMeetingRequestDTO body) {
         try {
             OwnerRaceMeetingRegistrationDTO reg = registrationService.registerOwner(body.getMeetingId(), body.getOwnerId());
@@ -45,7 +45,7 @@ public class RegistrationController {
     }
 
     @PostMapping("/horse")
-    @Operation(summary = "Ngựa đăng ký tham gia Ngày đua")
+    @Operation(summary = "Ngựa đăng ký tham gia Ngày đua", description = "📌 **Code Handler**: `RegistrationController.registerHorse()` -> `RegistrationService.registerHorse()`")
     public ResponseEntity<?> registerHorse(@RequestBody RegistrationMeetingRequestDTO body) {
         try {
             HorseRaceMeetingRegistrationDTO reg = registrationService.registerHorse(body.getMeetingId(), body.getHorseId());

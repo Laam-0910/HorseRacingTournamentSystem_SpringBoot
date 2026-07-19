@@ -23,7 +23,7 @@ public class SystemConfigController {
     private final SystemConfigService systemConfigService;
 
     @GetMapping
-    @Operation(summary = "Lấy danh sách tham số cấu hình hệ thống")
+    @Operation(summary = "Lấy danh sách tham số cấu hình hệ thống", description = "📌 **Code Handler**: `SystemConfigController.getConfigs()` -> `SystemConfigService.getAllConfigs()`")
     public ResponseEntity<List<SystemConfigDTO>> getConfigs() {
         return ResponseEntity.ok(systemConfigService.getAllConfigs());
     }
