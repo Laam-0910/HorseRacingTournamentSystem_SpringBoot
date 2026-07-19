@@ -4866,5 +4866,41 @@
     "vi": "lớp 10",
     "ja": "クラス10",
     "zh": "10级"
+  },
+  "Đồng ý": {
+    "en": "Confirm",
+    "vi": "Đồng ý",
+    "ja": "はい",
+    "zh": "同意"
+  },
+  "Are you sure you want to cancel this race?": {
+    "en": "Are you sure you want to cancel this race?",
+    "vi": "Bạn có chắc chắn muốn hủy trận đấu này không?",
+    "ja": "このレースをキャンセルしてもよろしいですか？",
+    "zh": "您确定要取消这场比赛吗？"
+  },
+  "Are you sure you want to delete this race meeting? This action cannot be undone.": {
+    "en": "Are you sure you want to delete this race meeting? This action cannot be undone.",
+    "vi": "Bạn có chắc chắn muốn xóa ngày hội đua này không? Hành động này không thể hoàn tác.",
+    "ja": "このレースミーティングを削除してもよろしいですか？この操作は取り消せません。",
+    "zh": "您确定要删除此赛事集会吗？此操作无法撤销。"
+  },
+  "Are you sure you want to cancel this race? This will reset all entries.": {
+    "en": "Are you sure you want to cancel this race? This will reset all entries.",
+    "vi": "Bạn có chắc chắn muốn hủy trận đấu này không? Thao tác này sẽ đặt lại tất cả lượt đăng ký.",
+    "ja": "このレースをキャンセルしてもよろしいですか？すべてのエントリーがリセットされます。",
+    "zh": "您确定要取消这场比赛吗？这将重置所有参赛条目。"
+  },
+  "Are you sure you want to disqualify this horse?": {
+    "en": "Are you sure you want to disqualify this horse?",
+    "vi": "Bạn có chắc chắn muốn tước quyền thi đấu của chiến mã này không?",
+    "ja": "この馬を失格にしてもよろしいですか？",
+    "zh": "您确定要取消这匹马的比赛资格吗？"
+  },
+  "CRITICAL: Are you sure you want to stop this race?": {
+    "en": "CRITICAL: Are you sure you want to stop this race?",
+    "vi": "CẢNH BÁO: Bạn có chắc chắn muốn dừng trận đấu này ngay lập tức không?",
+    "ja": "緊急：このレースを停止してもよろしいですか？",
+    "zh": "紧急：您确定要停止这场比赛吗？"
   }
 }
