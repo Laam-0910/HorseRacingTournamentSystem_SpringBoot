@@ -894,13 +894,15 @@ export default function RefereeHub() {
   };
 
   const handleStartSupervise = async (race: any) => {
-    setSelectedRace(race);
     setLoading(true);
     try {
-      const [entriesData, violationsData] = await Promise.all([
+      const [entriesData, violationsData, allRacesData] = await Promise.all([
         api.get<any[]>(`/public/results?raceId=${race.id}`),
         api.get<any[]>(`/public/violations?raceId=${race.id}`).catch(() => []),
+        api.get<any[]>(`/races`).catch(() => []),
       ]);
+      const currentRace = (allRacesData || []).find((r: any) => r.id === race.id) || {};
+      setSelectedRace({ ...race, ...currentRace });
       setRaceEntries(entriesData || []);
       setViolations(violationsData || []);
       setActiveView("supervise");

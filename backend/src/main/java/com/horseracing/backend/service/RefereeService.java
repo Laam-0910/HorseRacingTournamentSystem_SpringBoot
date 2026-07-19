@@ -212,6 +212,7 @@ public class RefereeService {
                 resolved.put("purse", race.getPurse());
                 resolved.put("minEntries", race.getMinEntries());
                 resolved.put("maxEntries", race.getMaxEntries());
+                resolved.put("youtubeLiveUrl", race.getYoutubeLiveUrl());
 
                 RaceMeeting meeting = meetingMap.get(race.getRaceMeetingId());
                 resolved.put("meetingName", meeting != null ? meeting.getName() : "Unknown Meeting");

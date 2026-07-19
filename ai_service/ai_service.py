@@ -117,9 +117,10 @@ def upcoming_races():
 
 def running_races():
     return query(
-        "SELECT r.id, r.class_level AS classLevel, rm.name as meetingName "
+        "SELECT r.id, r.class_level AS classLevel, r.distance_meters AS distanceMeters, "
+        "r.track_type AS trackType, r.status, rm.name as meetingName, rm.venue, r.youtube_live_url AS youtubeLiveUrl "
         "FROM [Race] r LEFT JOIN [RaceMeeting] rm ON r.race_meeting_id=rm.id "
-        "WHERE r.status='RUNNING'"
+        "WHERE r.status IN ('RUNNING', 'STOPPED', 'STEWARDS_INQUIRY')"
     )
 
 def recent_results():
