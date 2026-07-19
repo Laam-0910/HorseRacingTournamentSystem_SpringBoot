@@ -1,25 +1,53 @@
 package com.horseracing.backend.controller;
 
+import com.horseracing.backend.dto.PublicChatRequestDTO;
 import com.horseracing.backend.entity.ChatMessage;
 import com.horseracing.backend.repository.ChatMessageRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/public")
 @CrossOrigin(origins = "*")
+@Tag(
+    name = "14. Public Data & Statistics",
+    description = "💬 **PHÒNG CHAT CÔNG KHAI (PUBLIC CHAT ARCHITECTURE)**\n\n" +
+                  "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
+                  "* **Controllers**: `PublicChatController.java`\n" +
+                  "* **Repositories**: `ChatMessageRepository.java`\n" +
+                  "* **Entities**: `ChatMessage.java`\n" +
+                  "* **DTOs**: `PublicChatRequestDTO.java`"
+)
 public class PublicChatController {
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
     @PostMapping("/chat")
-    public ResponseEntity<?> chat(@RequestBody Map<String, String> request) {
-        String message = request.get("message");
-        String lang = request.get("lang");
-        if (message == null) {
+    @Operation(
+        summary = "POST: Gửi tin nhắn hỏi đáp trợ lý AI công khai",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `PublicChatController.chat()`\n" +
+                      "* **Repository**: `ChatMessageRepository.save()`\n" +
+                      "* **Entity**: `ChatMessage.java`\n" +
+                      "* **DTO Request**: `PublicChatRequestDTO` (`message`, `lang`)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"reply\": \"...\"}`)\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Tiếp nhận tin nhắn người dùng và ngôn ngữ phản hồi (`vi` hoặc `en`).\n" +
+                      "2. Phân tích từ khóa trong câu hỏi (rating, dự đoán, nài ngựa, mùa giải...).\n" +
+                      "3. Tạo câu trả lời phù hợp bằng ngôn ngữ yêu cầu.\n" +
+                      "4. Trả về câu trả lời dạng text cho người dùng."
+    )
+    public ResponseEntity<?> chat(@RequestBody PublicChatRequestDTO request) {
+        String message = request.getMessage();
+        String lang = request.getLang();
+        if (message == null || message.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Message is required"));
         }
 
@@ -55,6 +83,19 @@ public class PublicChatController {
     }
 
     @GetMapping("/chat/history")
+    @Operation(
+        summary = "GET: Lấy lịch sử chat của phòng đua",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền raceId -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `PublicChatController.getChatHistory()`\n" +
+                      "* **Repository**: `ChatMessageRepository.findByRaceIdOrderBySentAtAsc()`\n" +
+                      "* **Entity**: `ChatMessage.java`\n" +
+                      "* **DTO Response**: `List<Map<String, String>>` (`user`, `text`, `time`)\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Truy vấn danh sách tin nhắn trong phòng chat theo `raceId`.\n" +
+                      "2. Sắp xếp tin nhắn theo thứ tự thời gian từ cũ đến mới.\n" +
+                      "3. Định dạng thời gian tin nhắn (`HH:mm`) và trả về danh sách."
+    )
     public ResponseEntity<List<Map<String, String>>> getChatHistory(@RequestParam Integer raceId) {
         List<ChatMessage> list = chatMessageRepository.findByRaceIdOrderBySentAtAsc(raceId);
         List<Map<String, String>> history = new ArrayList<>();

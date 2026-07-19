@@ -2,6 +2,8 @@ package com.horseracing.backend.controller;
 
 import com.horseracing.backend.entity.*;
 import com.horseracing.backend.repository.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,17 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/public")
 @CrossOrigin(origins = "*")
+@Tag(
+    name = "14. Public Data & Statistics",
+    description = "📊 **BƯỚC 14: DỮ LIỆU CÔNG KHAI & THỐNG KÊ (PUBLIC ARCHITECTURE)**\n\n" +
+                  "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
+                  "* **Controllers**: `PublicDataController.java`, `PublicChatController.java`\n" +
+                  "* **Repositories**: `SeasonRepository.java`, `RaceRepository.java`, `RaceEntryRepository.java`, `HorseRepository.java`, `UserRepository.java`\n" +
+                  "* **Entities**: `Season.java`, `Race.java`, `RaceEntry.java`, `Horse.java`, `User.java`\n\n" +
+                  "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
+                  "1. Cung cấp dữ liệu công khai cho khán giả/khách ghé thăm.\n" +
+                  "2. Xem kết quả trận đua, lịch sử thành tích chiến mã, hồ sơ cá nhân và phòng chat công khai."
+)
 public class PublicDataController {
 
     @Autowired
@@ -38,6 +51,18 @@ public class PublicDataController {
     private RaceRefereeRepository raceRefereeRepository;
 
     @GetMapping("/stats")
+    @Operation(
+        summary = "GET: Lấy thống kê tổng quan toàn hệ thống",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute' để xem thống kê toàn hệ thống.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `PublicDataController.getStats()`\n" +
+                      "* **Repositories**: `SeasonRepository.findAll()`, `RaceRepository.findAll()`, `RaceEntryRepository.findAll()`, `HorseRepository.findByStatus()`\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`activeSeason`, `seasonsCompleted`, `totalRacesRun`, `totalPrizeDistributed`, `totalActiveHorses`, `totalActiveJockeys`)\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Đếm tổng số mùa giải hoàn thành, số trận đua chính thức đã chạy.\n" +
+                      "2. Cộng dồn tổng số tiền thưởng đã trao cho các chủ ngựa & nài ngựa.\n" +
+                      "3. Đếm tổng số chiến mã và nài ngựa đang hoạt động trong hệ thống."
+    )
     public ResponseEntity<?> getStats() {
         long seasonsCompleted = seasonRepository.findAll().stream().filter(s -> "COMPLETED".equals(s.getStatus())).count();
         long totalRacesRun = raceRepository.findAll().stream().filter(r -> "OFFICIAL".equals(r.getStatus())).count();
@@ -68,6 +93,18 @@ public class PublicDataController {
     }
 
     @GetMapping("/results")
+    @Operation(
+        summary = "GET: Lấy kết quả xếp hạng trận đua",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền raceId -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `PublicDataController.getResults()`\n" +
+                      "* **Repositories**: `RaceEntryRepository.findByRaceId()`, `HorseRepository.findById()`, `UserRepository.findById()`\n" +
+                      "* **DTO Response**: `List<Map<String, Object>>` (Chứa `entry`, `horse`, `jockey`, `owner`)\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Tìm danh sách `RaceEntry` của trận đua theo `raceId`.\n" +
+                      "2. Liên kết ghép dữ liệu Ngựa, Nài ngựa và Chủ sở hữu.\n" +
+                      "3. Sắp xếp thứ tự cán đích từ vị trí số 1 đến cuối cùng."
+    )
     public ResponseEntity<?> getResults(@RequestParam Integer raceId) {
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
         
@@ -103,11 +140,13 @@ public class PublicDataController {
     }
 
     @GetMapping("/meetings")
+    @Operation(summary = "GET: Lấy danh sách các Ngày đua công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getMeetings()` -> `RaceMeetingRepository.findAll()`")
     public ResponseEntity<List<RaceMeeting>> getMeetings() {
         return ResponseEntity.ok(raceMeetingRepository.findAll());
     }
 
     @GetMapping("/races")
+    @Operation(summary = "GET: Lấy danh sách các trận đua công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền meetingId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getRaces()` -> `RaceRepository.findByRaceMeetingId()`")
     public ResponseEntity<List<Race>> getRaces(@RequestParam(required = false) Integer meetingId) {
         if (meetingId != null) {
             return ResponseEntity.ok(raceRepository.findByRaceMeetingId(meetingId));
@@ -116,6 +155,7 @@ public class PublicDataController {
     }
 
     @GetMapping("/users")
+    @Operation(summary = "GET: Lấy danh sách người dùng theo vai trò", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền roleId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getUsers()` -> `UserRepository.findByRoleId()`")
     public ResponseEntity<List<User>> getUsers(@RequestParam(required = false) Integer roleId) {
         if (roleId != null) {
             return ResponseEntity.ok(userRepository.findByRoleId(roleId));
@@ -124,11 +164,13 @@ public class PublicDataController {
     }
 
     @GetMapping("/horses")
+    @Operation(summary = "GET: Lấy danh sách tất cả các chiến mã công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getHorses()` -> `HorseRepository.findAll()`")
     public ResponseEntity<List<Horse>> getHorses() {
         return ResponseEntity.ok(horseRepository.findAll());
     }
 
     @GetMapping("/violations")
+    @Operation(summary = "GET: Lấy danh sách các lỗi vi phạm công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền raceId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getViolations()` -> `ViolationRepository.findAll()`")
     public ResponseEntity<?> getViolations(@RequestParam(required = false) Integer raceId) {
         List<Violation> list;
         if (raceId != null) {
@@ -163,6 +205,17 @@ public class PublicDataController {
     }
 
     @GetMapping("/users/{id}/profile")
+    @Operation(
+        summary = "GET: Lấy hồ sơ cá nhân công khai của người dùng",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id User -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `PublicDataController.getUserProfile()`\n" +
+                      "* **Repositories**: `UserRepository.findById()`, `RaceEntryRepository.findByJockeyId()`, `HorseRepository.findByOwnerId()`\n" +
+                      "* **DTO Response**: `Map<String, Object>` (Chứa `username`, `email`, `roleId`, `avatar`, `history`, `winRate`, `totalEarnings`...)\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Kiểm tra vai trò của người dùng (Admin, Nài ngựa, Chủ ngựa, Trọng tài).\n" +
+                      "2. Tổng hợp các chỉ số thống kê cá nhân cụ thể theo từng vai trò."
+    )
     public ResponseEntity<?> getUserProfile(@PathVariable Integer id) {
         Optional<User> userOpt = userRepository.findById(id);
         if (userOpt.isEmpty()) {
@@ -188,7 +241,7 @@ public class PublicDataController {
         } else if (user.getRoleId() == 4) {
             // Referee Profile
             long totalRacesRefereed = raceRefereeRepository.findByRefereeId(id).size();
-            long totalViolationsIssued = violationRepository.findAll().stream().filter(v -> "APPROVED".equals(v.getStatus())).count(); // Just a generic stat for referees or could be specific if they issue it, but violation has no refereeId. Let's just use a general stat.
+            long totalViolationsIssued = violationRepository.findAll().stream().filter(v -> "APPROVED".equals(v.getStatus())).count();
             response.put("totalRacesRefereed", totalRacesRefereed);
             response.put("totalViolationsIssued", totalViolationsIssued);
         } else if (user.getRoleId() == 5) {
@@ -335,6 +388,17 @@ public class PublicDataController {
     }
 
     @GetMapping("/horses/{horseId}/performance")
+    @Operation(
+        summary = "GET: Lấy dữ liệu phong độ thi đấu chi tiết của 1 chiến mã",
+        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền horseId -> 'Execute'.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `PublicDataController.getHorsePerformance()`\n" +
+                      "* **Repositories**: `HorseRepository.findById()`, `RaceEntryRepository.findByHorseId()`\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`horseName`, `currentRating`, `totalRaces`, `totalWins`, `raceHistory`)\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Lấy thông tin tổng quan của chiến mã (Tên, Giống, Điểm Rating hiện tại).\n" +
+                      "2. Truy vấn danh sách tất cả các trận đấu mà chiến mã đã tham gia, sắp xếp theo thời gian mới nhất."
+    )
     public ResponseEntity<?> getHorsePerformance(@PathVariable Integer horseId) {
         Optional<Horse> horseOpt = horseRepository.findById(horseId);
         if (horseOpt.isEmpty()) {
