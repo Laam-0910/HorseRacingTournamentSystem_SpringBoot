@@ -389,11 +389,8 @@ def chat():
         except Exception as e:
             err_str = str(e)
             last_error = err_str
-            print(f"[AI] Key #{idx+1} thất bại: {err_str[:120]}")
-            # Tiếp tục thử key tiếp theo nếu lỗi xác thực hoặc hết quota
-            if any(x in err_str for x in ["401", "429", "RESOURCE_EXHAUSTED", "UNAUTHENTICATED", "ACCESS_TOKEN_TYPE_UNSUPPORTED", "ACCESSTOKENTYPE_UNSUPPORTED", "ClientError"]):
-                continue
-            break  # Lỗi khác (500, network...) → dừng ngay
+            print(f"[AI] Gemini Key #{idx+1} thất bại ({type(e).__name__}): {err_str[:120]}")
+            continue
 
     # ── Tất cả Gemini key thất bại → thử Groq ───────────────────────────────
     groq_key = os.getenv("GROQ_API_KEY", "").strip()
@@ -415,7 +412,10 @@ def chat():
             print("[AI] Groq phản hồi thành công.")
             return jsonify({"success": True, "reply": reply})
         except Exception as ge:
-            print(f"[AI] Groq cũng thất bại: {str(ge)[:120]}")
+            import traceback
+            traceback.print_exc()
+            last_error = f"Groq Error: {str(ge)}"
+            print(f"[AI] Groq thất bại: {str(ge)}")
 
     # Tất cả provider đều thất bại → rule-based fallback
     print(f"[AI] Tất cả provider đều thất bại. Dùng chế độ dự phòng.")
