@@ -192,6 +192,21 @@ class RAGEngine:
         except Exception as e:
             print(f"[RAG Query Error - Recent Results] {e}")
 
+        # G. Thông tin các mùa giải (Season info)
+        try:
+            cursor.execute("""
+                SELECT name, start_date, end_date, status
+                FROM Season
+                ORDER BY start_date DESC
+            """)
+            seasons = cursor.fetchall()
+            if seasons:
+                context_parts.append("[DANH SÁCH CÁC MÙA GIẢI]")
+                for s in seasons:
+                    context_parts.append(f"- Mùa giải: '{s[0]}' | Thời gian: {s[1]} đến {s[2]} | Trạng thái: {s[3]}")
+        except Exception as e:
+            print(f"[RAG Query Error - Seasons] {e}")
+
         conn.close()
         return "\n".join(context_parts) if context_parts else "Không tìm thấy dữ liệu liên quan cụ thể trong Database giải đấu."
 

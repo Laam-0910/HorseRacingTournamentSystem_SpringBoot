@@ -83,12 +83,34 @@ public class ProcessResultsService {
                     continue;
                 }
                 
+                // Nếu trọng tài loại trực tiếp (manual DQ) ở bước xác nhận kết quả
+                if ("DQ".equals(finishTime)) {
+                    entry.setStatus("DISQUALIFIED");
+                    entry.setFinalPosition(null);
+                    entry.setFinishTime("DQ");
+                    entry.setPrizeMoney(BigDecimal.ZERO);
+                    entry.setRatingAdjustment(-2);
+
+                    Optional<Horse> horseOpt = horseRepository.findById(entry.getHorseId());
+                    if (horseOpt.isPresent()) {
+                        Horse horse = horseOpt.get();
+                        horse.setTotalRaces(horse.getTotalRaces() + 1);
+                        int newRating = horse.getCurrentRating() + entry.getRatingAdjustment();
+                        horse.setCurrentRating(Math.max(0, newRating));
+                        horseRepository.save(horse);
+                    }
+                    raceEntryRepository.save(entry);
+                    continue;
+                }
+
                 // Kiểm tra chênh lệch cân nặng sau trận đấu (Weighing-in underweight check)
                 // Nếu cân nặng thực tế sau trận (weigh-in) nhẹ hơn mức đăng ký (carriedWeight) quá 0.5kg
-                BigDecimal diff = entry.getCarriedWeight().subtract(weighInWeight);
+                BigDecimal carriedWeight = entry.getCarriedWeight() != null ? entry.getCarriedWeight() : BigDecimal.ZERO;
+                BigDecimal diff = carriedWeight.subtract(weighInWeight);
                 if (diff.compareTo(new BigDecimal("0.5")) > 0) {
                     entry.setStatus("DISQUALIFIED");
                     entry.setFinalPosition(null);
+                    entry.setFinishTime("DQ");
                     entry.setPrizeMoney(BigDecimal.ZERO);
                     entry.setRatingAdjustment(-2);
                 } else {
