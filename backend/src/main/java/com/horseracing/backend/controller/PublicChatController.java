@@ -1,25 +1,31 @@
 package com.horseracing.backend.controller;
 
+import com.horseracing.backend.dto.PublicChatRequestDTO;
 import com.horseracing.backend.entity.ChatMessage;
 import com.horseracing.backend.repository.ChatMessageRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/public")
 @CrossOrigin(origins = "*")
+@Tag(name = "Public Service", description = "Các API công khai: Trò chuyện AI công khai, Lịch sử Chat")
 public class PublicChatController {
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
     @PostMapping("/chat")
-    public ResponseEntity<?> chat(@RequestBody Map<String, String> request) {
-        String message = request.get("message");
-        String lang = request.get("lang");
-        if (message == null) {
+    @Operation(summary = "Gửi tin nhắn hỏi đáp trợ lý AI công khai")
+    public ResponseEntity<?> chat(@RequestBody PublicChatRequestDTO request) {
+        String message = request.getMessage();
+        String lang = request.getLang();
+        if (message == null || message.trim().isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Message is required"));
         }
 
@@ -55,6 +61,7 @@ public class PublicChatController {
     }
 
     @GetMapping("/chat/history")
+    @Operation(summary = "Lấy lịch sử chat của phòng đua")
     public ResponseEntity<List<Map<String, String>>> getChatHistory(@RequestParam Integer raceId) {
         List<ChatMessage> list = chatMessageRepository.findByRaceIdOrderBySentAtAsc(raceId);
         List<Map<String, String>> history = new ArrayList<>();

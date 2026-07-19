@@ -1,11 +1,12 @@
 package com.horseracing.backend.controller;
 
-import com.horseracing.backend.dto.SystemConfigDTO;
-import com.horseracing.backend.dto.UserDTO;
+import com.horseracing.backend.dto.*;
 import com.horseracing.backend.service.AdminUserService;
 import com.horseracing.backend.service.RaceService;
 import com.horseracing.backend.service.SystemConfigService;
 import com.horseracing.backend.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +18,7 @@ import java.util.Map;
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Admin User Service", description = "Quản trị hệ thống: Quản lý người dùng, gán trọng tài, livestream, duyệt đơn")
 public class AdminUserController {
 
     private final AdminUserService adminUserService;
@@ -26,23 +28,22 @@ public class AdminUserController {
 
     // --- User Management ---
     @GetMapping("/users")
+    @Operation(summary = "Lấy danh sách tất cả người dùng")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
     @PostMapping("/users")
-    public ResponseEntity<?> createUser(@RequestBody Map<String, Object> body) {
+    @Operation(summary = "Tạo mới người dùng thủ công")
+    public ResponseEntity<?> createUser(@RequestBody CreateUserRequestDTO body) {
         try {
-            String username = (String) body.get("username");
-            String email = (String) body.get("email");
-            String password = (String) body.get("password");
-            Integer roleId = Integer.parseInt(String.valueOf(body.get("roleId")));
-            java.math.BigDecimal weight = null;
-            if (body.get("weight") != null && !String.valueOf(body.get("weight")).trim().isEmpty()) {
-                weight = new java.math.BigDecimal(String.valueOf(body.get("weight")));
-            }
-
-            UserDTO created = userService.createUserManual(username, email, password, roleId, weight);
+            UserDTO created = userService.createUserManual(
+                    body.getUsername(),
+                    body.getEmail(),
+                    body.getPassword(),
+                    body.getRoleId(),
+                    body.getWeight()
+            );
             return ResponseEntity.ok(Map.of("success", true, "user", created));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -50,18 +51,17 @@ public class AdminUserController {
     }
 
     @PostMapping("/users/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
+    @Operation(summary = "Cập nhật thông tin người dùng")
+    public ResponseEntity<?> updateUser(@PathVariable Integer id, @RequestBody UpdateUserRequestDTO body) {
         try {
-            String username = (String) body.get("username");
-            String email = (String) body.get("email");
-            Integer roleId = (Integer) body.get("roleId");
-            Boolean requireOtp = (Boolean) body.get("requireOtp");
-            java.math.BigDecimal weight = null;
-            if (body.get("weight") != null && !String.valueOf(body.get("weight")).trim().isEmpty()) {
-                weight = new java.math.BigDecimal(String.valueOf(body.get("weight")));
-            }
-
-            UserDTO updated = userService.updateUser(id, username, email, roleId, requireOtp, weight);
+            UserDTO updated = userService.updateUser(
+                    id,
+                    body.getUsername(),
+                    body.getEmail(),
+                    body.getRoleId(),
+                    body.getRequireOtp(),
+                    body.getWeight()
+            );
             return ResponseEntity.ok(Map.of("success", true, "user", updated));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -69,6 +69,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/users/{id}/toggle")
+    @Operation(summary = "Bật/Khóa tài khoản người dùng")
     public ResponseEntity<?> toggleUserStatus(@PathVariable Integer id) {
         try {
             String status = userService.toggleUserStatus(id);
@@ -80,10 +81,10 @@ public class AdminUserController {
 
     // --- Race & Referee Assignment ---
     @PostMapping("/races/{raceId}/referee")
-    public ResponseEntity<?> assignReferee(@PathVariable Integer raceId, @RequestBody Map<String, Integer> body) {
+    @Operation(summary = "Gán Trọng tài vào trận đua")
+    public ResponseEntity<?> assignReferee(@PathVariable Integer raceId, @RequestBody AssignRefereeRequestDTO body) {
         try {
-            Integer refereeId = body.get("refereeId");
-            adminUserService.assignReferee(raceId, refereeId);
+            adminUserService.assignReferee(raceId, body.getRefereeId());
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -91,10 +92,10 @@ public class AdminUserController {
     }
 
     @PostMapping("/races/{raceId}/referee/remove")
-    public ResponseEntity<?> removeReferee(@PathVariable Integer raceId, @RequestBody Map<String, Integer> body) {
+    @Operation(summary = "Hủy gán Trọng tài khỏi trận đua")
+    public ResponseEntity<?> removeReferee(@PathVariable Integer raceId, @RequestBody AssignRefereeRequestDTO body) {
         try {
-            Integer refereeId = body.get("refereeId");
-            adminUserService.removeReferee(raceId, refereeId);
+            adminUserService.removeReferee(raceId, body.getRefereeId());
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -102,15 +103,17 @@ public class AdminUserController {
     }
 
     @GetMapping("/races/referees")
+    @Operation(summary = "Lấy danh sách phân công Trọng tài")
     public ResponseEntity<?> getRaceReferees() {
         return ResponseEntity.ok(adminUserService.getRaceRefereesMap());
     }
 
     // --- Livestream ---
     @PostMapping("/races/{raceId}/live")
-    public ResponseEntity<?> setLiveUrl(@PathVariable Integer raceId, @RequestBody Map<String, String> body) {
+    @Operation(summary = "Cập nhật link Youtube Livestream")
+    public ResponseEntity<?> setLiveUrl(@PathVariable Integer raceId, @RequestBody UpdateLiveUrlRequestDTO body) {
         try {
-            raceService.updateRace(raceId, Map.of("youtubeLiveUrl", body.get("youtubeLiveUrl")));
+            raceService.updateRace(raceId, Map.of("youtubeLiveUrl", body.getYoutubeLiveUrl()));
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -118,9 +121,10 @@ public class AdminUserController {
     }
 
     @PostMapping("/races/{raceId}/live/remove")
+    @Operation(summary = "Xóa link Livestream")
     public ResponseEntity<?> removeLiveUrl(@PathVariable Integer raceId) {
         try {
-            raceService.updateRace(raceId, Map.of("youtubeLiveUrl", "")); // Trống
+            raceService.updateRace(raceId, Map.of("youtubeLiveUrl", ""));
             return ResponseEntity.ok(Map.of("success", true));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -129,11 +133,13 @@ public class AdminUserController {
 
     // --- System Config ---
     @GetMapping("/configs")
+    @Operation(summary = "Lấy cấu hình hệ thống")
     public ResponseEntity<List<SystemConfigDTO>> getConfigs() {
         return ResponseEntity.ok(systemConfigService.getAllConfigs());
     }
 
     @PostMapping("/configs")
+    @Operation(summary = "Cập nhật cấu hình hệ thống")
     public ResponseEntity<?> updateConfigs(@RequestBody Map<String, String> body) {
         try {
             systemConfigService.updateConfigs(body);
@@ -145,6 +151,7 @@ public class AdminUserController {
 
     // --- Registrations & Approvals ---
     @GetMapping("/pending-registrations")
+    @Operation(summary = "Lấy danh sách đơn đăng ký chờ duyệt")
     public ResponseEntity<?> getPendingRegistrations() {
         try {
             Map<String, Object> pending = adminUserService.getPendingRegistrations();

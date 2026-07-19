@@ -3,7 +3,10 @@ package com.horseracing.backend.controller;
 import com.horseracing.backend.dto.HorseRaceMeetingRegistrationDTO;
 import com.horseracing.backend.dto.JockeyRaceMeetingRegistrationDTO;
 import com.horseracing.backend.dto.OwnerRaceMeetingRegistrationDTO;
+import com.horseracing.backend.dto.RegistrationMeetingRequestDTO;
 import com.horseracing.backend.service.RegistrationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -14,16 +17,16 @@ import java.util.Map;
 @RequestMapping("/api/registrations")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Registration Service", description = "Đăng ký tham gia Ngày đua cho Nài ngựa, Chủ ngựa và Ngựa")
 public class RegistrationController {
 
     private final RegistrationService registrationService;
 
     @PostMapping("/jockey")
-    public ResponseEntity<?> registerJockey(@RequestBody Map<String, Integer> body) {
+    @Operation(summary = "Nài ngựa đăng ký tham gia Ngày đua")
+    public ResponseEntity<?> registerJockey(@RequestBody RegistrationMeetingRequestDTO body) {
         try {
-            Integer meetingId = body.get("meetingId");
-            Integer jockeyId = body.get("jockeyId");
-            JockeyRaceMeetingRegistrationDTO reg = registrationService.registerJockey(meetingId, jockeyId);
+            JockeyRaceMeetingRegistrationDTO reg = registrationService.registerJockey(body.getMeetingId(), body.getJockeyId());
             return ResponseEntity.ok(reg);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -31,11 +34,10 @@ public class RegistrationController {
     }
 
     @PostMapping("/owner")
-    public ResponseEntity<?> registerOwner(@RequestBody Map<String, Integer> body) {
+    @Operation(summary = "Chủ ngựa đăng ký tham gia Ngày đua")
+    public ResponseEntity<?> registerOwner(@RequestBody RegistrationMeetingRequestDTO body) {
         try {
-            Integer meetingId = body.get("meetingId");
-            Integer ownerId = body.get("ownerId");
-            OwnerRaceMeetingRegistrationDTO reg = registrationService.registerOwner(meetingId, ownerId);
+            OwnerRaceMeetingRegistrationDTO reg = registrationService.registerOwner(body.getMeetingId(), body.getOwnerId());
             return ResponseEntity.ok(reg);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
@@ -43,11 +45,10 @@ public class RegistrationController {
     }
 
     @PostMapping("/horse")
-    public ResponseEntity<?> registerHorse(@RequestBody Map<String, Integer> body) {
+    @Operation(summary = "Ngựa đăng ký tham gia Ngày đua")
+    public ResponseEntity<?> registerHorse(@RequestBody RegistrationMeetingRequestDTO body) {
         try {
-            Integer meetingId = body.get("meetingId");
-            Integer horseId = body.get("horseId");
-            HorseRaceMeetingRegistrationDTO reg = registrationService.registerHorse(meetingId, horseId);
+            HorseRaceMeetingRegistrationDTO reg = registrationService.registerHorse(body.getMeetingId(), body.getHorseId());
             return ResponseEntity.ok(reg);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
