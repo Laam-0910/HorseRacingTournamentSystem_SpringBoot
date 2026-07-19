@@ -254,6 +254,33 @@ def respond(it, lang):
 
 from datetime import datetime
 
+def all_horses():
+    return query(
+        "SELECT h.id, h.name, h.breed, h.sex, h.current_rating AS currentRating, "
+        "h.total_wins AS totalWins, h.total_races AS totalRaces, h.status, u.username AS ownerName "
+        "FROM [Horse] h LEFT JOIN [User] u ON h.owner_id=u.id "
+        "ORDER BY h.current_rating DESC"
+    )
+
+def all_jockeys():
+    return query(
+        "SELECT u.id, u.username, u.full_name AS fullName, u.weight, "
+        "u.total_races_participated AS totalRacesParticipated, u.total_top3_finishes AS totalTop3Finishes, "
+        "COALESCE(w.wins, 0) AS totalWins, u.status "
+        "FROM [User] u LEFT JOIN ("
+        "  SELECT jockey_id, COUNT(*) AS wins FROM [RaceEntry] WHERE final_position = 1 GROUP BY jockey_id"
+        ") w ON u.id = w.jockey_id "
+        "WHERE u.role_id=3 ORDER BY totalWins DESC"
+    )
+
+def all_race_meetings():
+    return query(
+        "SELECT rm.id, rm.name, rm.venue, rm.status, CONVERT(VARCHAR(10), rm.start_date, 105) AS startDate, "
+        "rs.name AS seasonName "
+        "FROM [RaceMeeting] rm LEFT JOIN [RaceSeason] rs ON rm.season_id=rs.id "
+        "ORDER BY rm.start_date DESC"
+    )
+
 def all_races():
     return query(
         "SELECT r.id, r.class_level AS classLevel, r.distance_meters AS distanceMeters, "
@@ -263,6 +290,30 @@ def all_races():
         "ORDER BY r.start_time DESC"
     )
 
+def all_race_entries():
+    return query(
+        "SELECT re.id, re.race_id AS raceId, r.class_level AS classLevel, "
+        "CONVERT(VARCHAR(19), r.start_time, 105) + ' ' + CONVERT(VARCHAR(8), r.start_time, 108) AS raceStartTime, "
+        "h.name AS horseName, u.username AS jockeyName, re.gate_number AS gateNumber, "
+        "re.status, re.carried_weight AS carriedWeight, re.final_position AS finalPosition, "
+        "re.finish_time AS finishTime, re.prize_money AS prizeMoney "
+        "FROM [RaceEntry] re "
+        "JOIN [Race] r ON re.race_id=r.id "
+        "JOIN [Horse] h ON re.horse_id=h.id "
+        "JOIN [User] u ON re.jockey_id=u.id "
+        "ORDER BY r.start_time DESC, re.final_position ASC"
+    )
+
+def all_violations():
+    return query(
+        "SELECT v.id, v.race_id AS raceId, h.name AS horseName, u.username AS jockeyName, "
+        "v.description, v.penalty, v.status "
+        "FROM [Violation] v "
+        "LEFT JOIN [Horse] h ON v.horse_id=h.id "
+        "LEFT JOIN [User] u ON v.jockey_id=u.id "
+        "ORDER BY v.id DESC"
+    )
+
 def load_gemini_config():
     config_path = os.path.join(os.path.dirname(__file__), "gemini_config.json")
     default_config = {
@@ -270,7 +321,7 @@ def load_gemini_config():
         "temperature": 0.3,
         "top_p": 0.95,
         "top_k": 40,
-        "system_instruction": "You are the Gemini HKJC Assistant, an expert AI chatbot designed for the Hong Kong Jockey Club (HKJC) Horse Racing Tournament System. Your job is to answer spectator questions about horses, ratings, jockeys, upcoming/live races, and race results using ONLY the database context provided in the user prompt."
+        "system_instruction": "You are the Gemini HKJC Assistant, an expert AI chatbot designed for the Hong Kong Jockey Club (HKJC) Horse Racing Tournament System. You have FULL access to the live SQL database context provided in the prompt. Answer spectator and admin questions accurately using the full database context provided."
     }
     if not os.path.exists(config_path):
         return default_config
@@ -283,45 +334,43 @@ def load_gemini_config():
 
 def get_db_grounding_context(user_msg):
     current_time_str = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-    horses = top_horses()
-    jockeys = top_jockeys()
-    upcoming = upcoming_races()
-    running = running_races()
-    results = recent_results()
+    horses = all_horses()
+    jockeys = all_jockeys()
+    meetings = all_race_meetings()
     all_r = all_races()
+    running = running_races()
+    entries = all_race_entries()
+    violations = all_violations()
     st = stats()
 
-    horse_info = ""
-    m2 = re.search(r"(?:ngựa|horse|con)\s+([A-Za-zÀ-ỹ0-9\s]+)", user_msg, re.IGNORECASE)
-    if m2:
-        name = m2.group(1).strip()
-        h = get_horse(name)
-        if h:
-            horse_info = f"\n- Specific Horse Queried ({name}): Name: {h['name']}, Breed: {h.get('breed','—')}, Rating: {h.get('currentRating','—')}, Wins/Races: {h.get('totalWins',0)}/{h.get('totalRaces',0)}"
-
-    context = f"""[DATABASE REAL-TIME CONTEXT]
+    context = f"""[FULL SYSTEM DATABASE REAL-TIME CONTEXT]
 System Current Date & Time: {current_time_str}
 
-1. General Stats:
+1. Tournament Overview Stats:
    - Official Completed Races: {st.get('races', 0)}
-   - Active Horses: {st.get('horses', 0)}
-   - Active Jockeys: {st.get('jockeys', 0)}
+   - Total Active Horses: {st.get('horses', 0)}
+   - Total Active Jockeys: {st.get('jockeys', 0)}
 
-2. Top 5 Rated Horses:
+2. All Registered Horses (Ratings, Wins, Breed, Owner):
 {json.dumps(horses, default=str, ensure_ascii=False, indent=2)}
 
-3. Top 5 Jockeys by Wins:
+3. All Registered Jockeys (Races, Top 3, Wins, Weight):
 {json.dumps(jockeys, default=str, ensure_ascii=False, indent=2)}
 
-4. All Tournament Races (including Today, Scheduled, Running, and Past):
+4. All Race Meetings:
+{json.dumps(meetings, default=str, ensure_ascii=False, indent=2)}
+
+5. All Tournament Races (Today, Scheduled, Running, Finished, Official):
 {json.dumps(all_r, default=str, ensure_ascii=False, indent=2)}
 
-5. Live Running Races:
+6. Currently Live / Running Races:
 {json.dumps(running, default=str, ensure_ascii=False, indent=2)}
 
-6. Recent Official Race Results:
-{json.dumps(results, default=str, ensure_ascii=False, indent=2)}
-{horse_info}
+7. All Race Participants & Official Entry Results:
+{json.dumps(entries, default=str, ensure_ascii=False, indent=2)}
+
+8. Steward Recorded Violations:
+{json.dumps(violations, default=str, ensure_ascii=False, indent=2)}
 [END OF DATABASE CONTEXT]"""
     return context
 
