@@ -2,6 +2,8 @@ package com.horseracing.backend.controller;
 
 import com.horseracing.backend.dto.RaceMeetingDTO;
 import com.horseracing.backend.service.RaceService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,16 +15,19 @@ import java.util.Map;
 @RequestMapping("/api/schedule")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Schedule Service", description = "Quản lý lịch trình và các Ngày đua (Race Meeting)")
 public class RaceDayScheduleController {
 
     private final RaceService raceService;
 
     @GetMapping("/meetings")
+    @Operation(summary = "Lấy danh sách các Ngày đua (Race Meetings)")
     public ResponseEntity<List<RaceMeetingDTO>> getMeetings() {
         return ResponseEntity.ok(raceService.getAllMeetings());
     }
 
     @PostMapping("/meetings")
+    @Operation(summary = "Tạo mới Ngày đua")
     public ResponseEntity<?> createMeeting(@RequestBody RaceMeetingDTO meetingDTO) {
         try {
             RaceMeetingDTO saved = raceService.createMeeting(meetingDTO);

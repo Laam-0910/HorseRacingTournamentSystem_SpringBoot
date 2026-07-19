@@ -2,6 +2,8 @@ package com.horseracing.backend.controller;
 
 import com.horseracing.backend.dto.HorseDTO;
 import com.horseracing.backend.service.HorseService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,17 +16,20 @@ import java.util.Map;
 @RequestMapping("/api/horses")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Horse Service", description = "Quản lý danh sách chiến mã, đăng ký và duyệt ngựa")
 public class HorseController {
 
     private final HorseService horseService;
 
     @GetMapping
+    @Operation(summary = "Lấy danh sách tất cả các con ngựa")
     public ResponseEntity<List<HorseDTO>> getAllHorses(@RequestParam(required = false) String status,
                                                        @RequestParam(required = false) Integer ownerId) {
         return ResponseEntity.ok(horseService.getAllHorses(status, ownerId));
     }
 
     @PostMapping
+    @Operation(summary = "Đăng ký ngựa mới")
     public ResponseEntity<?> registerHorse(@RequestBody HorseDTO horseDTO) {
         try {
             HorseDTO savedHorse = horseService.registerHorse(horseDTO);
@@ -35,6 +40,7 @@ public class HorseController {
     }
 
     @PostMapping("/{id}/approve")
+    @Operation(summary = "Phê duyệt hồ sơ ngựa (Admin)")
     public ResponseEntity<?> approveHorse(@PathVariable Integer id) {
         try {
             horseService.approveHorse(id);
@@ -45,6 +51,7 @@ public class HorseController {
     }
 
     @PostMapping("/{id}/reject")
+    @Operation(summary = "Từ chối hồ sơ ngựa (Admin)")
     public ResponseEntity<?> rejectHorse(@PathVariable Integer id) {
         try {
             horseService.rejectHorse(id);
@@ -58,6 +65,7 @@ public class HorseController {
     private com.horseracing.backend.repository.UserRepository userRepository;
 
     @PutMapping("/{id}")
+    @Operation(summary = "Cập nhật thông tin ngựa")
     public ResponseEntity<?> updateHorse(@PathVariable Integer id, @RequestBody HorseDTO horseDTO) {
         try {
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();

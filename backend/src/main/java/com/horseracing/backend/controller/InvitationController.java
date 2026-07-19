@@ -2,6 +2,8 @@ package com.horseracing.backend.controller;
 
 import com.horseracing.backend.dto.RaceInvitationDTO;
 import com.horseracing.backend.service.InvitationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,17 +15,20 @@ import java.util.Map;
 @RequestMapping("/api/invitations")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Invitation Service", description = "Quản lý lời mời thi đấu giữa Chủ ngựa và Nài ngựa")
 public class InvitationController {
 
     private final InvitationService invitationService;
 
     @GetMapping
+    @Operation(summary = "Lấy danh sách lời mời thi đấu")
     public ResponseEntity<List<RaceInvitationDTO>> getInvitations(@RequestParam(required = false) Integer jockeyId,
                                                                   @RequestParam(required = false) Integer ownerId) {
         return ResponseEntity.ok(invitationService.getInvitations(jockeyId, ownerId));
     }
 
     @PostMapping
+    @Operation(summary = "Tạo lời mời Nài ngựa thi đấu (Chủ ngựa)")
     public ResponseEntity<?> inviteJockey(@RequestBody RaceInvitationDTO inviteDTO) {
         try {
             RaceInvitationDTO saved = invitationService.inviteJockey(inviteDTO);
@@ -34,6 +39,7 @@ public class InvitationController {
     }
 
     @PostMapping("/{id}/accept")
+    @Operation(summary = "Chấp nhận lời mời thi đấu (Nài ngựa)")
     public ResponseEntity<?> acceptInvitation(@PathVariable Integer id) {
         try {
             invitationService.acceptInvitation(id);
@@ -44,6 +50,7 @@ public class InvitationController {
     }
 
     @PostMapping("/{id}/reject")
+    @Operation(summary = "Từ chối lời mời thi đấu (Nài ngựa)")
     public ResponseEntity<?> rejectInvitation(@PathVariable Integer id) {
         try {
             invitationService.rejectInvitation(id);
@@ -54,6 +61,7 @@ public class InvitationController {
     }
 
     @PostMapping("/entry/{entryId}/resubmit")
+    @Operation(summary = "Nộp lại đơn tham gia thi đấu")
     public ResponseEntity<?> resubmitRaceEntry(@PathVariable Integer entryId) {
         try {
             invitationService.resubmitRaceEntry(entryId);
@@ -64,6 +72,7 @@ public class InvitationController {
     }
 
     @PostMapping("/{id}/withdraw")
+    @Operation(summary = "Rút lại lời mời thi đấu (Chủ ngựa)")
     public ResponseEntity<?> withdrawInvitation(@PathVariable Integer id, @RequestParam Integer ownerId) {
         try {
             invitationService.withdrawInvitation(id, ownerId);
