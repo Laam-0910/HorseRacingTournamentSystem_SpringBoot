@@ -21,7 +21,20 @@ import java.util.Map;
 @RequestMapping("/api/retirement")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@Tag(name = "Horse Retirement Service", description = "Quản lý đơn xin giải nghệ cho chiến mã")
+@Tag(
+    name = "Horse Retirement Service",
+    description = "🎗️ **Cấu trúc Mô-đun Giải Nghệ Chiến Mã (Horse Retirement Architecture)**\n\n" +
+                  "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
+                  "* **Controllers**: `HorseRetirementController.java`\n" +
+                  "* **Services**: `HorseRetirementService.java` (`HorseRetirementServiceImpl.java`)\n" +
+                  "* **Repositories**: `HorseRetirementRequestRepository.java`, `HorseRepository.java`\n" +
+                  "* **Entities**: `HorseRetirementRequest.java`, `Horse.java`\n" +
+                  "* **DTOs**: `RetirementRequestDTO.java`, `ApproveRetirementRequestDTO.java`, `HorseRetirementRequestDTO.java`\n\n" +
+                  "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
+                  "1. Chủ ngựa nộp đơn xin giải nghệ cho chiến mã kèm lý do.\n" +
+                  "2. Admin xem xét và phê duyệt (`APPROVE`) hoặc từ chối (`REJECT`).\n" +
+                  "3. Nếu phê duyệt: Trạng thái ngựa đổi sang `RETIRED` và ngưng tham gia giải đua."
+)
 public class HorseRetirementController {
 
     private final HorseRetirementService retirementService;
@@ -38,7 +51,20 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/request")
-    @Operation(summary = "Tạo đơn xin giải nghệ cho ngựa (Chủ ngựa)", description = "📌 **Code Handler**: `HorseRetirementController.requestRetirement()` -> `HorseRetirementService.requestRetirement()`")
+    @Operation(
+        summary = "Tạo đơn xin giải nghệ cho ngựa (Chủ ngựa)",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `HorseRetirementController.requestRetirement()`\n" +
+                      "* **Service**: `HorseRetirementService.requestRetirement()` (`HorseRetirementServiceImpl.java`)\n" +
+                      "* **Repository**: `HorseRetirementRequestRepository.save()`\n" +
+                      "* **Entity**: `HorseRetirementRequest.java`\n" +
+                      "* **DTO Request**: `RetirementRequestDTO` (`horseId`, `reason`)\n" +
+                      "* **DTO Response**: `HorseRetirementRequestDTO`\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Chủ ngựa chọn chiến mã và nhập lý do giải nghệ (chấn thương, tuổi tác...).\n" +
+                      "2. Lưu đơn giải nghệ ở trạng thái `PENDING` chờ Admin duyệt."
+    )
     public ResponseEntity<?> requestRetirement(@RequestBody RetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
@@ -54,7 +80,15 @@ public class HorseRetirementController {
     }
 
     @GetMapping("/requests")
-    @Operation(summary = "Lấy danh sách các đơn giải nghệ", description = "📌 **Code Handler**: `HorseRetirementController.getRequests()` -> `HorseRetirementService.getAllRequests()`")
+    @Operation(
+        summary = "Lấy danh sách các đơn giải nghệ",
+        description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute' để xem danh sách đơn giải nghệ.\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `HorseRetirementController.getRequests()`\n" +
+                      "* **Service**: `HorseRetirementService.getAllRequests()` / `getRequestsByOwner()`\n" +
+                      "* **Repository**: `HorseRetirementRequestRepository.findAll()`\n" +
+                      "* **DTO Response**: `List<HorseRetirementRequestDTO>`"
+    )
     public ResponseEntity<?> getRequests() {
         try {
             User user = getAuthenticatedUser();
@@ -73,7 +107,18 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/requests/{id}/approve")
-    @Operation(summary = "Phê duyệt đơn giải nghệ (Admin)", description = "📌 **Code Handler**: `HorseRetirementController.approveRequest()` -> `HorseRetirementService.approveRequest()`")
+    @Operation(
+        summary = "Phê duyệt đơn giải nghệ (Admin)",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `HorseRetirementController.approveRequest()`\n" +
+                      "* **Service**: `HorseRetirementService.approveRequest()` (`HorseRetirementServiceImpl.java`)\n" +
+                      "* **Repository**: `HorseRepository.save()`, `HorseRetirementRequestRepository.save()`\n" +
+                      "* **DTO Request**: `ApproveRetirementRequestDTO` (`adminRemarks`)\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Admin chấp thuận đơn giải nghệ.\n" +
+                      "2. Cập nhật trạng thái `Horse.status = RETIRED` và lưu nhận xét của Admin."
+    )
     public ResponseEntity<?> approveRequest(@PathVariable Integer id, @RequestBody(required = false) ApproveRetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
@@ -89,7 +134,17 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/requests/{id}/reject")
-    @Operation(summary = "Từ chối đơn giải nghệ (Admin)", description = "📌 **Code Handler**: `HorseRetirementController.rejectRequest()` -> `HorseRetirementService.rejectRequest()`")
+    @Operation(
+        summary = "Từ chối đơn giải nghệ (Admin)",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `HorseRetirementController.rejectRequest()`\n" +
+                      "* **Service**: `HorseRetirementService.rejectRequest()` (`HorseRetirementServiceImpl.java`)\n" +
+                      "* **DTO Request**: `ApproveRetirementRequestDTO` (`adminRemarks`)\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Admin từ chối đơn giải nghệ.\n" +
+                      "2. Chiến mã giữ nguyên trạng thái `ACTIVE`."
+    )
     public ResponseEntity<?> rejectRequest(@PathVariable Integer id, @RequestBody(required = false) ApproveRetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
@@ -105,7 +160,16 @@ public class HorseRetirementController {
     }
 
     @PostMapping("/compulsory")
-    @Operation(summary = "Bắt buộc giải nghệ chiến mã (Admin)", description = "📌 **Code Handler**: `HorseRetirementController.compulsoryRetire()` -> `HorseRetirementService.compulsoryRetire()`")
+    @Operation(
+        summary = "Bắt buộc giải nghệ chiến mã (Admin)",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controller**: `HorseRetirementController.compulsoryRetire()`\n" +
+                      "* **Service**: `HorseRetirementService.compulsoryRetire()` (`HorseRetirementServiceImpl.java`)\n" +
+                      "* **DTO Request**: `RetirementRequestDTO` (`horseId`, `reason`)\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Admin trực tiếp cưỡng chế giải nghệ 1 con ngựa do vi phạm nghiêm trọng hoặc lý do đặc biệt."
+    )
     public ResponseEntity<?> compulsoryRetire(@RequestBody RetirementRequestDTO body) {
         try {
             User user = getAuthenticatedUser();
