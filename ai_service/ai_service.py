@@ -10,7 +10,13 @@ sys.stdout.reconfigure(encoding="utf-8")
 from flask import Flask, request, jsonify
 import pyodbc, os, re, json
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
+from google.genai import types
+try:
+    from groq import Groq as GroqClient
+    GROQ_AVAILABLE = True
+except ImportError:
+    GROQ_AVAILABLE = False
 
 load_dotenv()
 
@@ -322,43 +328,101 @@ def chat():
         return jsonify({"success": False, "reply": reply})
 
     config = load_gemini_config()
-    api_key = os.getenv("GEMINI_API_KEY")
 
-    if not api_key:
-        print("[AI Service] GEMINI_API_KEY not found. Falling back to rule-based responder.")
+    # ── Thu thập tất cả API keys (từ .env và gemini_config.json) ──────────────
+    all_keys = []
+    PLACEHOLDERS = {"YOUR_GEMINI_API_KEY", "YOUR_GEMINI_API_KEY_HERE", ""}
+
+    # 1. Key chính từ .env: GEMINI_API_KEY
+    k = os.getenv("GEMINI_API_KEY", "").strip()
+    if k not in PLACEHOLDERS:
+        all_keys.append(k)
+
+    # 2. Các key phụ từ .env: GEMINI_API_KEY_2, GEMINI_API_KEY_3, ...
+    for i in range(2, 10):
+        k = os.getenv(f"GEMINI_API_KEY_{i}", "").strip()
+        if k not in PLACEHOLDERS and k not in all_keys:
+            all_keys.append(k)
+
+    # 3. Các key từ gemini_config.json → gemini_api_keys (array)
+    for k in config.get("gemini_api_keys", []):
+        k = k.strip()
+        if k not in PLACEHOLDERS and k not in all_keys:
+            all_keys.append(k)
+
+    # 4. Key đơn từ gemini_config.json → gemini_api_key
+    k = config.get("gemini_api_key", "").strip()
+    if k not in PLACEHOLDERS and k not in all_keys:
+        all_keys.append(k)
+
+    if not all_keys:
+        print("[AI Service] Không tìm thấy GEMINI_API_KEY nào. Dùng chế độ dự phòng.")
         it = intent(msg)
         reply = respond(it, lang)
         hint = "\n\n*(Chế độ dự phòng: Hãy cấu hình API Key trong file .env để kích hoạt trợ lý ảo AI)*" if lang != "en" else "\n\n*(Fallback mode: Configure API Key in .env to activate AI Assistant)*"
         return jsonify({"success": True, "reply": reply + hint})
 
-    try:
-        db_context = get_db_grounding_context(msg)
-        
-        generation_config = {
-            "temperature": config.get("temperature", 0.3),
-            "top_p": config.get("top_p", 0.95),
-            "top_k": config.get("top_k", 40),
-        }
-        
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel(
-            model_name=config.get("model_name", "gemini-1.5-flash"),
-            system_instruction=config.get("system_instruction"),
-            generation_config=generation_config
-        )
-        
-        prompt = f"{db_context}\n\nUser Question: {msg}\nAnswer:"
-        response = model.generate_content(prompt)
-        
-        reply = response.text if response.text else "Sorry, I couldn't generate a reply."
-        return jsonify({"success": True, "reply": reply})
-        
-    except Exception as e:
-        print(f"[Gemini API Error] {e}")
-        it = intent(msg)
-        reply = respond(it, lang)
-        error_hint = f"\n\n*(Lỗi kết nối dịch vụ AI: {str(e)}. Sử dụng câu trả lời dự phòng)*" if lang != "en" else f"\n\n*(AI Service connection error: {str(e)}. Using fallback response)*"
-        return jsonify({"success": True, "reply": reply + error_hint})
+    # ── Thử lần lượt từng key ─────────────────────────────────────────────────
+    db_context = get_db_grounding_context(msg)
+    prompt = f"{db_context}\n\nUser Question: {msg}\nAnswer:"
+    last_error = None
+
+    for idx, api_key in enumerate(all_keys):
+        try:
+            print(f"[AI] Thử key #{idx+1}/{len(all_keys)}: ...{api_key[-8:]}")
+            client = genai.Client(api_key=api_key)
+            response = client.models.generate_content(
+                model=config.get("model_name", "gemini-2.0-flash"),
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    system_instruction=config.get("system_instruction"),
+                    temperature=config.get("temperature", 0.3),
+                    top_p=config.get("top_p", 0.95),
+                    top_k=config.get("top_k", 40),
+                )
+            )
+            reply = response.text if response.text else "Sorry, I couldn't generate a reply."
+            if idx > 0:
+                print(f"[AI] Thành công với key #{idx+1}")
+            return jsonify({"success": True, "reply": reply})
+
+        except Exception as e:
+            err_str = str(e)
+            last_error = err_str
+            print(f"[AI] Key #{idx+1} thất bại: {err_str[:120]}")
+            # Tiếp tục thử key tiếp theo nếu lỗi xác thực hoặc hết quota
+            if any(x in err_str for x in ["401", "429", "RESOURCE_EXHAUSTED", "UNAUTHENTICATED", "ACCESS_TOKEN_TYPE_UNSUPPORTED"]):
+                continue
+            break  # Lỗi khác (500, network...) → dừng ngay
+
+    # ── Tất cả Gemini key thất bại → thử Groq ───────────────────────────────
+    groq_key = os.getenv("GROQ_API_KEY", "").strip()
+    if GROQ_AVAILABLE and groq_key and groq_key not in ("YOUR_GROQ_API_KEY", ""):
+        try:
+            print("[AI] Gemini thất bại. Chuyển sang Groq...")
+            groq_client = GroqClient(api_key=groq_key)
+            system_instr = config.get("system_instruction", "You are a helpful assistant for horse racing.")
+            groq_response = groq_client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[
+                    {"role": "system", "content": system_instr},
+                    {"role": "user",   "content": prompt},
+                ],
+                temperature=config.get("temperature", 0.3),
+                max_tokens=1024,
+            )
+            reply = groq_response.choices[0].message.content
+            print("[AI] Groq phản hồi thành công.")
+            return jsonify({"success": True, "reply": reply})
+        except Exception as ge:
+            print(f"[AI] Groq cũng thất bại: {str(ge)[:120]}")
+
+    # Tất cả provider đều thất bại → rule-based fallback
+    print(f"[AI] Tất cả provider đều thất bại. Dùng chế độ dự phòng.")
+    it = intent(msg)
+    reply = respond(it, lang)
+    error_hint = f"\n\n*(Lỗi kết nối dịch vụ AI: {last_error}. Sử dụng câu trả lời dự phòng)*" if lang != "en" else f"\n\n*(AI Service connection error: {last_error}. Using fallback response)*"
+    return jsonify({"success": True, "reply": reply + error_hint})
 
 @app.route("/health")
 def health():
