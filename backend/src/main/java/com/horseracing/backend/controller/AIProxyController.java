@@ -31,7 +31,7 @@ public class AIProxyController {
     }
 
     @PostMapping("/chat")
-    @Operation(summary = "Hỏi đáp với AI Gemini Chatbot")
+    @Operation(summary = "Hỏi đáp với AI Gemini Chatbot", description = "📌 **Code Handler**: `AIProxyController.chat()` -> Python `ai_service.py` / `app.py:chatbot()`")
     public ResponseEntity<String> chat(@RequestBody AiChatRequestDTO body) {
         String url = aiBaseUrl + "/chat";
         HttpHeaders headers = new HttpHeaders();
@@ -51,7 +51,7 @@ public class AIProxyController {
     }
 
     @GetMapping("/predict/{raceId}")
-    @Operation(summary = "AI Dự đoán kết quả cho trận đua")
+    @Operation(summary = "AI Dự đoán kết quả cho trận đua", description = "📌 **Code Handler**: `AIProxyController.predict()` -> Python `predictor.py:predict_race()`")
     public ResponseEntity<String> predict(@PathVariable("raceId") Integer raceId) {
         String url = aiBaseUrl + "/predict/" + raceId;
         try {
@@ -67,7 +67,7 @@ public class AIProxyController {
     }
 
     @GetMapping("/health")
-    @Operation(summary = "Kiểm tra sức khỏe dịch vụ Python AI")
+    @Operation(summary = "Kiểm tra sức khỏe dịch vụ Python AI", description = "📌 **Code Handler**: `AIProxyController.health()` -> Python `app.py:health()`")
     public ResponseEntity<String> health() {
         String url = aiBaseUrl + "/health";
         try {
