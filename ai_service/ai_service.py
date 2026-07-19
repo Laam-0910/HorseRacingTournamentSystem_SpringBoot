@@ -316,6 +316,20 @@ def all_violations():
         "ORDER BY v.id DESC"
     )
 
+def currently_running_participants():
+    return query(
+        "SELECT r.id AS raceId, rm.name AS meetingName, r.class_level AS classLevel, "
+        "r.status AS raceStatus, h.name AS horseName, u.username AS jockeyName, "
+        "re.gate_number AS gateNumber, re.status AS entryStatus "
+        "FROM [RaceEntry] re "
+        "JOIN [Race] r ON re.race_id=r.id "
+        "LEFT JOIN [RaceMeeting] rm ON r.race_meeting_id=rm.id "
+        "JOIN [Horse] h ON re.horse_id=h.id "
+        "JOIN [User] u ON re.jockey_id=u.id "
+        "WHERE r.status IN ('RUNNING', 'STOPPED', 'STEWARDS_INQUIRY', 'RACE_ASSIGNED') "
+        "ORDER BY r.id, re.gate_number"
+    )
+
 def load_gemini_config():
     config_path = os.path.join(os.path.dirname(__file__), "gemini_config.json")
     default_config = {
@@ -341,6 +355,7 @@ def get_db_grounding_context(user_msg):
     meetings = all_race_meetings()
     all_r = all_races()
     running = running_races()
+    live_participants = currently_running_participants()
     entries = all_race_entries()
     violations = all_violations()
     st = stats()
@@ -368,10 +383,13 @@ System Current Date & Time: {current_time_str}
 6. Currently Live / Running Races:
 {json.dumps(running, default=str, ensure_ascii=False, indent=2)}
 
-7. All Race Participants & Official Entry Results:
+7. Active Participants in Currently Live/Running Races (Horse Name & Jockey Name):
+{json.dumps(live_participants, default=str, ensure_ascii=False, indent=2)}
+
+8. All Race Participants & Official Entry Results:
 {json.dumps(entries, default=str, ensure_ascii=False, indent=2)}
 
-8. Steward Recorded Violations:
+9. Steward Recorded Violations:
 {json.dumps(violations, default=str, ensure_ascii=False, indent=2)}
 [END OF DATABASE CONTEXT]"""
     return context
