@@ -391,7 +391,7 @@ def chat():
             last_error = err_str
             print(f"[AI] Key #{idx+1} thất bại: {err_str[:120]}")
             # Tiếp tục thử key tiếp theo nếu lỗi xác thực hoặc hết quota
-            if any(x in err_str for x in ["401", "429", "RESOURCE_EXHAUSTED", "UNAUTHENTICATED", "ACCESS_TOKEN_TYPE_UNSUPPORTED"]):
+            if any(x in err_str for x in ["401", "429", "RESOURCE_EXHAUSTED", "UNAUTHENTICATED", "ACCESS_TOKEN_TYPE_UNSUPPORTED", "ACCESSTOKENTYPE_UNSUPPORTED", "ClientError"]):
                 continue
             break  # Lỗi khác (500, network...) → dừng ngay
 
