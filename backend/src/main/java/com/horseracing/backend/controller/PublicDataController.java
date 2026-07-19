@@ -2,6 +2,8 @@ package com.horseracing.backend.controller;
 
 import com.horseracing.backend.entity.*;
 import com.horseracing.backend.repository.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/public")
 @CrossOrigin(origins = "*")
+@Tag(name = "Public Data Service", description = "Các API dữ liệu công khai: Thống kê, Bảng xếp hạng, Kết quả thi đấu")
 public class PublicDataController {
 
     @Autowired
