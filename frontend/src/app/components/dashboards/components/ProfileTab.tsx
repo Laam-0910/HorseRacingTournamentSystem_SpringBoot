@@ -28,7 +28,7 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
     enterOtp: "Nhập OTP 6 số",
     newPass: "Mật khẩu mới",
     confirmPass: "Xác nhận",
-    atLeast4: "Tối thiểu 4 ký tự",
+    atLeast4: "Tối thiểu 8 ký tự (chữ hoa, số, ký tự đặc biệt)",
     reEnter: "Nhập lại mật khẩu",
     updatePass: "Cập nhật",
     updating: "Đang xử lý...",
@@ -56,11 +56,11 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
     fullName: "Full Name",
     weight: "Weight (kg)",
     verCode: "OTP Code",
-    enterOtp: "6-digit OTP",
+    enterOtp: "Enter 6-digit OTP",
     newPass: "New Password",
     confirmPass: "Confirm",
-    atLeast4: "Min 4 chars",
-    reEnter: "Re-enter",
+    atLeast4: "Min 8 chars (uppercase, digit, special)",
+    reEnter: "Re-enter Password",
     updatePass: "Update",
     updating: "Processing...",
     cancel: "Cancel",
@@ -90,8 +90,8 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
     enterOtp: "6位数OTP",
     newPass: "新密码",
     confirmPass: "确认",
-    atLeast4: "至少4个字符",
-    reEnter: "重新输入",
+    atLeast4: "至少8个字符（含大写字母、数字、特殊字符）",
+    reEnter: "重新输入密码",
     updatePass: "更新",
     updating: "处理中...",
     cancel: "取消",
@@ -121,8 +121,8 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
     enterOtp: "6桁のOTP",
     newPass: "新しいパスワード",
     confirmPass: "確認",
-    atLeast4: "4文字以上",
-    reEnter: "再入力",
+    atLeast4: "8文字以上（大文字、数字、特殊文字）",
+    reEnter: "パスワード再入力",
     updatePass: "更新",
     updating: "処理中...",
     cancel: "キャンセル",
@@ -558,24 +558,24 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                ) : (
                  <form onSubmit={handleConfirmPassChange} style={{ display: "flex", flexDirection: "column", gap: "1.25rem", height: "100%" }}>
                    <div>
-                     <label style={labelStyle}>{$t("Mã OTP", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                     <input type="text" className="bento-input" maxLength={6} required placeholder={$t("Nhập OTP 6 số", (localStorage.getItem('app-lang') || 'vi'))} value={otpCode} onChange={e => setOtpCode(e.target.value)} style={inputStyle} />
+                     <label style={labelStyle}>{st.verCode}</label>
+                     <input type="text" className="bento-input" maxLength={6} required placeholder={st.enterOtp} value={otpCode} onChange={e => setOtpCode(e.target.value)} style={inputStyle} />
                    </div>
                    <div style={{ display: "flex", gap: "1.25rem" }}>
                      <div style={{ flex: 1 }}>
-                       <label style={labelStyle}>{$t("Mật khẩu mới", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                       <input type="password" className="bento-input" required placeholder={$t("Tối thiểu 8 ký tự (chữ hoa, số, @$!%*?&)", (localStorage.getItem('app-lang') || 'vi'))} value={newPassword} onChange={e => setNewPassword(e.target.value)} style={inputStyle} />
+                       <label style={labelStyle}>{st.newPass}</label>
+                       <input type="password" className="bento-input" required placeholder={st.atLeast4} value={newPassword} onChange={e => setNewPassword(e.target.value)} style={inputStyle} />
                      </div>
                      <div style={{ flex: 1 }}>
-                       <label style={labelStyle}>{$t("Xác nhận", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                       <input type="password" className="bento-input" required placeholder={$t("Nhập lại mật khẩu", (localStorage.getItem('app-lang') || 'vi'))} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={inputStyle} />
+                       <label style={labelStyle}>{st.confirmPass}</label>
+                       <input type="password" className="bento-input" required placeholder={st.reEnter} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={inputStyle} />
                      </div>
                    </div>
                    {passMsg && <div style={{ color: "#10b981", fontSize: "0.85rem", fontWeight: 600, textAlign: "center" }}>{passMsg}</div>}
                    {passErr && <div style={{ color: "#ef4444", fontSize: "0.85rem", fontWeight: 600, textAlign: "center" }}>{passErr}</div>}
                    <div style={{ display: "flex", gap: "1rem", marginTop: "auto", paddingTop: "0.5rem" }}>
-                     <button type="submit" disabled={passLoading} className="bento-btn" style={{ flex: 2, padding: "1.1rem", background: "#fff", color: "#000", border: "none", borderRadius: "16px", fontSize: "1rem", fontWeight: 700, cursor: passLoading ? "not-allowed" : "pointer" }}>{$t("Cập nhật", (localStorage.getItem('app-lang') || 'vi'))}</button>
-                     <button type="button" onClick={() => setPassMode(false)} style={{ flex: 1, padding: "1.1rem", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: "16px", fontSize: "1rem", fontWeight: 600, cursor: "pointer" }}>{$t("Hủy", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                     <button type="submit" disabled={passLoading} className="bento-btn" style={{ flex: 2, padding: "1.1rem", background: "#fff", color: "#000", border: "none", borderRadius: "16px", fontSize: "1rem", fontWeight: 700, cursor: passLoading ? "not-allowed" : "pointer" }}>{st.updatePass}</button>
+                     <button type="button" onClick={() => setPassMode(false)} style={{ flex: 1, padding: "1.1rem", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: "16px", fontSize: "1rem", fontWeight: 600, cursor: "pointer" }}>{st.cancel}</button>
                    </div>
                  </form>
                )}
