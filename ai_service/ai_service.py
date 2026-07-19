@@ -292,13 +292,14 @@ def all_races():
 
 def all_race_entries():
     return query(
-        "SELECT re.id, re.race_id AS raceId, r.class_level AS classLevel, "
+        "SELECT re.id, re.race_id AS raceId, rm.name AS meetingName, r.class_level AS classLevel, "
         "CONVERT(VARCHAR(19), r.start_time, 105) + ' ' + CONVERT(VARCHAR(8), r.start_time, 108) AS raceStartTime, "
         "h.name AS horseName, u.username AS jockeyName, re.gate_number AS gateNumber, "
         "re.status, re.carried_weight AS carriedWeight, re.final_position AS finalPosition, "
         "re.finish_time AS finishTime, re.prize_money AS prizeMoney "
         "FROM [RaceEntry] re "
         "JOIN [Race] r ON re.race_id=r.id "
+        "LEFT JOIN [RaceMeeting] rm ON r.race_meeting_id=rm.id "
         "JOIN [Horse] h ON re.horse_id=h.id "
         "JOIN [User] u ON re.jockey_id=u.id "
         "ORDER BY r.start_time DESC, re.final_position ASC"
