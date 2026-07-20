@@ -20,7 +20,8 @@ import org.springframework.web.client.RestTemplate;
                   "* **Java Proxy**: `AIProxyController.java` (Spring Boot RestTemplate Proxy)\n" +
                   "* **Python Gateway**: `backend/python_ai/app.py` (Flask App Port 5000)\n" +
                   "* **AI Chatbot & RAG**: `ai_service.py`, `rag_engine.py`, `session_memory.py`\n" +
-                  "* **ML Predictor**: `predictor.py` (Machine Learning Winning Probability)\n\n" +
+                  "* **ML Predictor**: `predictor.py` (Machine Learning Winning Probability)\n" +
+                  "* **Frontend**: `Chatbot.tsx` (landing - AI hỏi đáp & dự đoán), `Landing.tsx` (embedded chatbot widget)\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Reverse Proxy từ Spring Boot sang Python Microservice.\n" +
                   "2. RAG Engine truy vấn dữ liệu SQL Server thời gian thực -> Google Gemini API trả lời câu hỏi tự nhiên.\n" +

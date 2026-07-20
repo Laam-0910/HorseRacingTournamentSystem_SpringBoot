@@ -26,10 +26,11 @@ import java.util.Map;
     description = "🎗️ **BƯỚC 13: QUẢN LÝ GIẢI NGHỆ CHIẾN MÃ (RETIREMENT ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `HorseRetirementController.java`\n" +
-                  "* **Services**: `HorseRetirementService.java` (`HorseRetirementServiceImpl.java`)\n" +
+                  "* **Services**: `HorseRetirementService.java`\n" +
                   "* **Repositories**: `HorseRetirementRequestRepository.java`, `HorseRepository.java`\n" +
                   "* **Entities**: `HorseRetirementRequest.java`, `Horse.java`\n" +
-                  "* **DTOs**: `RetirementRequestDTO.java`, `ApproveRetirementRequestDTO.java`\n\n" +
+                  "* **DTOs**: `RetirementRequestDTO.java`, `ApproveRetirementRequestDTO.java`\n" +
+                  "* **Frontend**: `AdminHorseRetirement.tsx` (admin-workflow), `HorseOwner.tsx` (dashboards)\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Chủ ngựa gửi đơn xin giải nghệ cho chiến mã.\n" +
                   "2. Admin duyệt (`approveRequest`) hoặc Từ chối (`rejectRequest`).\n" +
@@ -56,7 +57,7 @@ public class HorseRetirementController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseRetirementController.requestRetirement()`\n" +
-                      "* **Service**: `HorseRetirementService.requestRetirement()` (`HorseRetirementServiceImpl.java`)\n" +
+                      "* **Service**: `HorseRetirementService.requestRetirement()`\n" +
                       "* **Repository**: `HorseRetirementRequestRepository.save()`\n" +
                       "* **Entity**: `HorseRetirementRequest.java`\n" +
                       "* **DTO Request**: `RetirementRequestDTO` (`horseId`, `reason`)\n" +
@@ -85,7 +86,7 @@ public class HorseRetirementController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute' để lấy danh sách đơn giải nghệ.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseRetirementController.getRequests()`\n" +
-                      "* **Service**: `HorseRetirementService.getAllRequests()` / `getRequestsByOwner()` (`HorseRetirementServiceImpl.java`)\n" +
+                      "* **Service**: `HorseRetirementService.getAllRequests()` / `getRequestsByOwner()`\n" +
                       "* **Repository**: `HorseRetirementRequestRepository.findAll()` / `findByOwnerId()`\n" +
                       "* **Entity**: `HorseRetirementRequest.java`\n" +
                       "* **DTO Response**: `List<HorseRetirementRequestDTO>`\n\n" +
@@ -116,7 +117,7 @@ public class HorseRetirementController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseRetirementController.approveRequest()`\n" +
-                      "* **Service**: `HorseRetirementService.approveRequest()` (`HorseRetirementServiceImpl.java`)\n" +
+                      "* **Service**: `HorseRetirementService.approveRequest()`\n" +
                       "* **Repositories**: `HorseRetirementRequestRepository.save()`, `HorseRepository.save()`\n" +
                       "* **Entities**: `HorseRetirementRequest.java`, `Horse.java`\n" +
                       "* **DTO Request**: `ApproveRetirementRequestDTO` (`adminRemarks`)\n\n" +
@@ -145,7 +146,7 @@ public class HorseRetirementController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseRetirementController.rejectRequest()`\n" +
-                      "* **Service**: `HorseRetirementService.rejectRequest()` (`HorseRetirementServiceImpl.java`)\n" +
+                      "* **Service**: `HorseRetirementService.rejectRequest()`\n" +
                       "* **Repository**: `HorseRetirementRequestRepository.save()`\n" +
                       "* **Entity**: `HorseRetirementRequest.java`\n" +
                       "* **DTO Request**: `ApproveRetirementRequestDTO` (`adminRemarks`)\n\n" +
@@ -174,7 +175,7 @@ public class HorseRetirementController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseRetirementController.compulsoryRetire()`\n" +
-                      "* **Service**: `HorseRetirementService.compulsoryRetire()` (`HorseRetirementServiceImpl.java`)\n" +
+                      "* **Service**: `HorseRetirementService.compulsoryRetire()`\n" +
                       "* **Repositories**: `HorseRetirementRequestRepository.save()`, `HorseRepository.save()`\n" +
                       "* **DTO Request**: `RetirementRequestDTO` (`horseId`, `reason`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +

@@ -19,10 +19,11 @@ import java.util.Map;
     description = "🏁 **BƯỚC 11: NHẬP KẾT QUẢ, TÍNH TIỀN THƯỞNG & ELO RATING (RESULTS ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `ProcessResultsController.java`, `RefereeController.java`\n" +
-                  "* **Services**: `ProcessResultsService.java` (`ProcessResultsServiceImpl.java`)\n" +
+                  "* **Services**: `ProcessResultsService.java`\n" +
                   "* **Repositories**: `RaceEntryRepository.java`, `RaceRepository.java`, `HorseRepository.java`\n" +
                   "* **Entities**: `RaceEntry.java`, `Race.java`, `Horse.java`\n" +
-                  "* **DTOs**: `ConfirmResultsRequestDTO.java`\n\n" +
+                  "* **DTOs**: `ConfirmResultsRequestDTO.java`\n" +
+                  "* **Frontend**: `RefereeHub.tsx`, `RefereeConfirm.tsx`, `Results.tsx` (admin-workflow)\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Trọng tài nhập kết quả thứ hạng về đích 1-2-3..., thời gian chạy (`Finish Time`) và Báo cáo giám sát (`Steward Report`).\n" +
                   "2. Đổi trạng thái trận sang `OFFICIAL`.\n" +
@@ -39,7 +40,7 @@ public class ProcessResultsController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `ProcessResultsController.confirmResults()`\n" +
-                      "* **Service**: `ProcessResultsService.confirmResults()` (`ProcessResultsServiceImpl.java`)\n" +
+                      "* **Service**: `ProcessResultsService.confirmResults()`\n" +
                       "* **Repositories**: `RaceEntryRepository.save()`, `HorseRepository.save()`, `RaceRepository.save()`\n" +
                       "* **Entities**: `RaceEntry.java`, `Horse.java`, `Race.java`\n" +
                       "* **DTO Request**: `ConfirmResultsRequestDTO` (`raceId`, `stewardReport`, `results: [{entryId, finalPosition, finishTime}]`)\n" +

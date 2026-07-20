@@ -23,9 +23,10 @@ import java.util.Map;
     description = "🛡️ **BƯỚC 9: DUYỆT ĐƠN, GÁN TRỌNG TÀI & XẾP THẺ ĐUA RACECARD (ADMIN ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `AdminUserController.java`\n" +
-                  "* **Services**: `AdminUserService.java` (`AdminUserServiceImpl.java`), `UserService.java`, `RaceService.java`\n" +
+                  "* **Services**: `AdminUserService.java`, `UserService.java`, `RaceService.java`\n" +
                   "* **Repositories**: `UserRepository.java`, `HorseRepository.java`, `RaceEntryRepository.java`\n" +
-                  "* **Entities**: `User.java`, `Horse.java`, `RaceReferee.java`\n\n" +
+                  "* **Entities**: `User.java`, `Horse.java`, `RaceReferee.java`\n" +
+                  "* **Frontend**: `Users.tsx` (admin-workflow), `RegistrationProcessing.tsx`, `Racecard.tsx` (admin-workflow), `Race.tsx`, `Admin.tsx` (dashboards), `adminService.ts`\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Admin duyệt các đơn đăng ký thi đấu của Nài, Chủ và Ngựa (`pending-registrations`).\n" +
                   "2. Gán Trọng tài vào trận đua (`assignReferee`).\n" +
@@ -46,7 +47,7 @@ public class AdminUserController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute' để lấy danh sách người dùng.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.getAllUsers()`\n" +
-                      "* **Service**: `UserService.getAllUsers()` (`UserServiceImpl.java`)\n" +
+                      "* **Service**: `UserService.getAllUsers()`\n" +
                       "* **Repository**: `UserRepository.findAll()`\n" +
                       "* **Entity**: `User.java`\n" +
                       "* **DTO Response**: `List<UserDTO>`"
@@ -61,7 +62,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.createUser()`\n" +
-                      "* **Service**: `UserService.createUserManual()` (`UserServiceImpl.java`)\n" +
+                      "* **Service**: `UserService.createUserManual()`\n" +
                       "* **Repository**: `UserRepository.save()`\n" +
                       "* **Entity**: `User.java`\n" +
                       "* **DTO Request**: `CreateUserRequestDTO` (`username`, `email`, `password`, `roleId`, `weight`)\n" +
@@ -88,7 +89,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.updateUser()`\n" +
-                      "* **Service**: `UserService.updateUser()` (`UserServiceImpl.java`)\n" +
+                      "* **Service**: `UserService.updateUser()`\n" +
                       "* **Repository**: `UserRepository.save()`\n" +
                       "* **DTO Request**: `UpdateUserRequestDTO` (`username`, `email`, `roleId`, `requireOtp`, `weight`)"
     )
@@ -114,7 +115,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.toggleUserStatus()`\n" +
-                      "* **Service**: `UserService.toggleUserStatus()` (`UserServiceImpl.java`)\n" +
+                      "* **Service**: `UserService.toggleUserStatus()`\n" +
                       "* **Repository**: `UserRepository.save()`"
     )
     public ResponseEntity<?> toggleUserStatus(@PathVariable Integer id) {
@@ -133,7 +134,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.assignReferee()`\n" +
-                      "* **Service**: `AdminUserService.assignReferee()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.assignReferee()`\n" +
                       "* **Repository**: `RaceRefereeRepository.save()`\n" +
                       "* **Entity**: `RaceReferee.java`\n" +
                       "* **DTO Request**: `AssignRefereeRequestDTO` (`refereeId`)"
@@ -153,7 +154,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.removeReferee()`\n" +
-                      "* **Service**: `AdminUserService.removeReferee()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.removeReferee()`\n" +
                       "* **Repository**: `RaceRefereeRepository.delete()`"
     )
     public ResponseEntity<?> removeReferee(@PathVariable Integer raceId, @RequestBody AssignRefereeRequestDTO body) {
@@ -171,7 +172,7 @@ public class AdminUserController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.getRaceReferees()`\n" +
-                      "* **Service**: `AdminUserService.getRaceRefereesMap()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.getRaceRefereesMap()`\n" +
                       "* **Repository**: `RaceRefereeRepository.findAll()`"
     )
     public ResponseEntity<?> getRaceReferees() {
@@ -185,7 +186,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.setLiveUrl()`\n" +
-                      "* **Service**: `RaceService.updateRace()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.updateRace()`\n" +
                       "* **Repository**: `RaceRepository.save()`\n" +
                       "* **DTO Request**: `UpdateLiveUrlRequestDTO` (`youtubeLiveUrl`)"
     )
@@ -204,7 +205,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.removeLiveUrl()`\n" +
-                      "* **Service**: `RaceService.updateRace()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.updateRace()`\n" +
                       "* **Repository**: `RaceRepository.save()`"
     )
     public ResponseEntity<?> removeLiveUrl(@PathVariable Integer raceId) {
@@ -223,7 +224,7 @@ public class AdminUserController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.getConfigs()`\n" +
-                      "* **Service**: `SystemConfigService.getAllConfigs()` (`SystemConfigServiceImpl.java`)\n" +
+                      "* **Service**: `SystemConfigService.getAllConfigs()`\n" +
                       "* **Repository**: `SystemConfigRepository.findAll()`\n" +
                       "* **DTO Response**: `List<SystemConfigDTO>`"
     )
@@ -237,7 +238,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.updateConfigs()`\n" +
-                      "* **Service**: `SystemConfigService.updateConfigs()` (`SystemConfigServiceImpl.java`)\n" +
+                      "* **Service**: `SystemConfigService.updateConfigs()`\n" +
                       "* **Repository**: `SystemConfigRepository.saveAll()`"
     )
     public ResponseEntity<?> updateConfigs(@RequestBody Map<String, String> body) {
@@ -256,7 +257,7 @@ public class AdminUserController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.getPendingRegistrations()`\n" +
-                      "* **Service**: `AdminUserService.getPendingRegistrations()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.getPendingRegistrations()`\n" +
                       "* **Repositories**: `JockeyRaceMeetingRegistrationRepository`, `OwnerRaceMeetingRegistrationRepository`, `HorseRaceMeetingRegistrationRepository`"
     )
     public ResponseEntity<?> getPendingRegistrations() {
@@ -274,7 +275,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.approveRaceEntry()`\n" +
-                      "* **Service**: `AdminUserService.approveRaceEntry()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.approveRaceEntry()`\n" +
                       "* **Repository**: `RaceEntryRepository.save()`"
     )
     public ResponseEntity<?> approveRaceEntry(@PathVariable Integer id) {
@@ -292,7 +293,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.rejectRaceEntry()`\n" +
-                      "* **Service**: `AdminUserService.rejectRaceEntry()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.rejectRaceEntry()`\n" +
                       "* **Repository**: `RaceEntryRepository.save()`"
     )
     public ResponseEntity<?> rejectRaceEntry(@PathVariable Integer id) {
@@ -310,7 +311,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.approveJockeyReg()`\n" +
-                      "* **Service**: `AdminUserService.approveJockeyReg()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.approveJockeyReg()`\n" +
                       "* **Repository**: `JockeyRaceMeetingRegistrationRepository.save()`"
     )
     public ResponseEntity<?> approveJockeyReg(@PathVariable Integer id) {
@@ -328,7 +329,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.rejectJockeyReg()`\n" +
-                      "* **Service**: `AdminUserService.rejectJockeyReg()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.rejectJockeyReg()`\n" +
                       "* **Repository**: `JockeyRaceMeetingRegistrationRepository.save()`"
     )
     public ResponseEntity<?> rejectJockeyReg(@PathVariable Integer id) {
@@ -346,7 +347,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.approveOwnerReg()`\n" +
-                      "* **Service**: `AdminUserService.approveOwnerReg()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.approveOwnerReg()`\n" +
                       "* **Repository**: `OwnerRaceMeetingRegistrationRepository.save()`"
     )
     public ResponseEntity<?> approveOwnerReg(@PathVariable Integer id) {
@@ -364,7 +365,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.rejectOwnerReg()`\n" +
-                      "* **Service**: `AdminUserService.rejectOwnerReg()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.rejectOwnerReg()`\n" +
                       "* **Repository**: `OwnerRaceMeetingRegistrationRepository.save()`"
     )
     public ResponseEntity<?> rejectOwnerReg(@PathVariable Integer id) {
@@ -382,7 +383,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.approveHorseReg()`\n" +
-                      "* **Service**: `AdminUserService.approveHorseReg()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.approveHorseReg()`\n" +
                       "* **Repository**: `HorseRaceMeetingRegistrationRepository.save()`"
     )
     public ResponseEntity<?> approveHorseReg(@PathVariable Integer id) {
@@ -400,7 +401,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.rejectHorseReg()`\n" +
-                      "* **Service**: `AdminUserService.rejectHorseReg()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.rejectHorseReg()`\n" +
                       "* **Repository**: `HorseRaceMeetingRegistrationRepository.save()`"
     )
     public ResponseEntity<?> rejectHorseReg(@PathVariable Integer id) {
@@ -418,7 +419,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.approveSystemHorse()`\n" +
-                      "* **Service**: `AdminUserService.approveSystemHorse()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.approveSystemHorse()`\n" +
                       "* **Repository**: `HorseRepository.save()`"
     )
     public ResponseEntity<?> approveSystemHorse(@PathVariable Integer id) {
@@ -436,7 +437,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.rejectSystemHorse()`\n" +
-                      "* **Service**: `AdminUserService.rejectSystemHorse()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.rejectSystemHorse()`\n" +
                       "* **Repository**: `HorseRepository.save()`"
     )
     public ResponseEntity<?> rejectSystemHorse(@PathVariable Integer id) {
@@ -455,7 +456,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.autoAssignGates()`\n" +
-                      "* **Service**: `AdminUserService.autoAssignGates()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.autoAssignGates()`\n" +
                       "* **Repository**: `RaceEntryRepository.saveAll()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Thuật toán ngẫu nhiên phân bổ cổng xuất phát `gateNumber` (1..N) cho các `RaceEntry` tham gia trận đua."
@@ -475,7 +476,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.autoCalculateWeights()`\n" +
-                      "* **Service**: `AdminUserService.autoCalculateWeights()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.autoCalculateWeights()`\n" +
                       "* **Repository**: `RaceEntryRepository.saveAll()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Tính toán số tạ chì gánh (`assignedWeight`) dựa trên Rating hiện tại của ngựa so với chuẩn Rating của Hạng đua."
@@ -495,7 +496,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.updateRacecard()`\n" +
-                      "* **Service**: `AdminUserService.updateRacecard()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.updateRacecard()`\n" +
                       "* **Repository**: `RaceEntryRepository.saveAll()`"
     )
     public ResponseEntity<?> updateRacecard(@PathVariable Integer raceId, @RequestBody List<Map<String, Object>> body) {
@@ -513,7 +514,7 @@ public class AdminUserController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AdminUserController.cancelRace()`\n" +
-                      "* **Service**: `AdminUserService.cancelRace()` (`AdminUserServiceImpl.java`)\n" +
+                      "* **Service**: `AdminUserService.cancelRace()`\n" +
                       "* **Repository**: `RaceRepository.save()`"
     )
     public ResponseEntity<?> cancelRace(@PathVariable Integer raceId) {

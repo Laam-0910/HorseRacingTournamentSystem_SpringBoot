@@ -15,13 +15,20 @@ import java.util.*;
 @RequestMapping("/api/public")
 @CrossOrigin(origins = "*")
 @Tag(
-    name = "14. Public Data & Statistics",
-    description = "💬 **PHÒNG CHAT CÔNG KHAI (PUBLIC CHAT ARCHITECTURE)**\n\n" +
+    name = "16. Public Chat & Livestream WebSocket",
+    description = "💬 **CHAT TRONG CỘNG ĐỒNG & LIVESTREAM WEBSOCKET (CHAT ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
-                  "* **Controllers**: `PublicChatController.java`\n" +
+                  "* **REST Controllers**: `PublicChatController.java` (HTTP REST - lịch sử chat)\n" +
+                  "* **WebSocket Handler**: `ChatWebSocketHandler.java` (Full-Duplex `/ws/chat/{raceId}`)\n" +
+                  "* **WebSocket Config**: `WebSocketConfig.java`\n" +
                   "* **Repositories**: `ChatMessageRepository.java`\n" +
                   "* **Entities**: `ChatMessage.java`\n" +
-                  "* **DTOs**: `PublicChatRequestDTO.java`"
+                  "* **DTOs**: `PublicChatRequestDTO.java`\n" +
+                  "* **Frontend**: `Chatbot.tsx` (landing - AI chatbot), `Livestream.tsx` (landing - WebSocket phòng đua), `ViewLive.tsx` (dashboards - xem video + chat)\n\n" +
+                  "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
+                  "1. **REST Chat (HTTP)**: Khán giả gửi tin nhắn, câu hỏi và lấy lịch sử chat qua REST API.\n" +
+                  "2. **Livestream WebSocket**: Khán giả kết nối Full-Duplex `/ws/chat/{raceId}` - tin nhắn được phát tức thì tới tất cả người dùng trong phòng.\n" +
+                  "3. Tin nhắn được lưu lịch sử kèm mốc thời gian `sent_at` vào bảng `ChatMessage`."
 )
 public class PublicChatController {
 

@@ -21,10 +21,11 @@ import java.util.Map;
     description = "🐎 **BƯỚC 6: QUẢN LÝ CHIẾN MÃ (HORSE ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `HorseController.java`\n" +
-                  "* **Services**: `HorseService.java` (`HorseServiceImpl.java`)\n" +
+                  "* **Services**: `HorseService.java`\n" +
                   "* **Repositories**: `HorseRepository.java`, `UserRepository.java`\n" +
                   "* **Entities**: `Horse.java`\n" +
-                  "* **DTOs**: `HorseDTO.java`\n\n" +
+                  "* **DTOs**: `HorseDTO.java`\n" +
+                  "* **Frontend**: `Horses.tsx` (admin-workflow), `HorseOwner.tsx` (dashboards)\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Chủ ngựa gửi đơn đăng ký hồ sơ chiến mã mới (`registerHorse`).\n" +
                   "2. Admin xét duyệt hồ sơ (`approveHorse`/`rejectHorse`). Ngựa được duyệt cấp Rating khởi điểm 52.\n" +
@@ -40,7 +41,7 @@ public class HorseController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền status hoặc ownerId -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseController.getAllHorses()`\n" +
-                      "* **Service**: `HorseService.getAllHorses()` (`HorseServiceImpl.java`)\n" +
+                      "* **Service**: `HorseService.getAllHorses()`\n" +
                       "* **Repository**: `HorseRepository.findByStatus/findByOwnerId()`\n" +
                       "* **Entity**: `Horse.java`\n" +
                       "* **DTO Response**: `List<HorseDTO>`\n\n" +
@@ -60,7 +61,7 @@ public class HorseController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseController.registerHorse()`\n" +
-                      "* **Service**: `HorseService.registerHorse()` (`HorseServiceImpl.java`)\n" +
+                      "* **Service**: `HorseService.registerHorse()`\n" +
                       "* **Repository**: `HorseRepository.save()`\n" +
                       "* **Entity**: `Horse.java`\n" +
                       "* **DTO Request**: `HorseDTO` (`name`, `breed`, `sex`, `birthDate`, `ownerId`, `avatar`)\n" +
@@ -85,7 +86,7 @@ public class HorseController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseController.approveHorse()`\n" +
-                      "* **Service**: `HorseService.approveHorse()` (`HorseServiceImpl.java`)\n" +
+                      "* **Service**: `HorseService.approveHorse()`\n" +
                       "* **Repository**: `HorseRepository.save()`\n" +
                       "* **Entity**: `Horse.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -108,7 +109,7 @@ public class HorseController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseController.rejectHorse()`\n" +
-                      "* **Service**: `HorseService.rejectHorse()` (`HorseServiceImpl.java`)\n" +
+                      "* **Service**: `HorseService.rejectHorse()`\n" +
                       "* **Repository**: `HorseRepository.save()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Admin từ chối hồ sơ ngựa không đủ tiêu chuẩn.\n" +
@@ -132,7 +133,7 @@ public class HorseController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ PUT API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseController.updateHorse()`\n" +
-                      "* **Service**: `HorseService.updateHorse()` (`HorseServiceImpl.java`)\n" +
+                      "* **Service**: `HorseService.updateHorse()`\n" +
                       "* **Repository**: `HorseRepository.save()`\n" +
                       "* **DTO Request**: `HorseDTO` (`name`, `breed`, `avatar`, `sex`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +

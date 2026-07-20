@@ -20,10 +20,11 @@ import java.util.Map;
     description = "📅 **BƯỚC 4: LỊCH TRÌNH & NGÀY ĐUA (SCHEDULE ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `RaceDayScheduleController.java`, `RaceController.java`\n" +
-                  "* **Services**: `RaceService.java` (`RaceServiceImpl.java`)\n" +
+                  "* **Services**: `RaceService.java`\n" +
                   "* **Repositories**: `RaceMeetingRepository.java`, `RaceRepository.java`\n" +
                   "* **Entities**: `RaceMeeting.java`, `Race.java`\n" +
-                  "* **DTOs**: `RaceMeetingDTO.java`\n\n" +
+                  "* **DTOs**: `RaceMeetingDTO.java`\n" +
+                  "* **Frontend**: `RaceDaySchedule.tsx` (admin-workflow), `RaceMeeting.tsx`, `raceDayScheduleService.ts`\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Admin tạo **Ngày đua (`RaceMeeting`)** trên lịch thi đấu.\n" +
                   "2. Hệ thống kiểm tra trùng lặp thời điểm tổ chức.\n" +
@@ -39,7 +40,7 @@ public class RaceDayScheduleController {
         description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute' để xem danh sách toàn bộ Ngày đua đang có.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceDayScheduleController.getMeetings()`\n" +
-                      "* **Service**: `RaceService.getAllMeetings()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.getAllMeetings()`\n" +
                       "* **Repository**: `RaceMeetingRepository.findAll()`\n" +
                       "* **DTO Response**: `List<RaceMeetingDTO>`"
     )
@@ -53,7 +54,7 @@ public class RaceDayScheduleController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceDayScheduleController.createMeeting()`\n" +
-                      "* **Service**: `RaceService.createMeeting()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.createMeeting()`\n" +
                       "* **Repository**: `RaceMeetingRepository.save()`\n" +
                       "* **Entity**: `RaceMeeting.java`\n" +
                       "* **DTO Request**: `RaceMeetingDTO` (`name`, `location`, `meetingDate`, `status`)\n" +

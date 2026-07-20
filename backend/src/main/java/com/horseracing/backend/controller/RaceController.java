@@ -24,13 +24,16 @@ import java.util.Map;
     description = "🏁 **BƯỚC 5: QUẢN LÝ TRẬN ĐUA & THỜI GIAN (RACE ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `RaceController.java`\n" +
-                  "* **Services**: `RaceService.java` (`RaceServiceImpl.java`), `SeasonService.java` (`SeasonServiceImpl.java`)\n" +
+                  "* **Services**: `RaceService.java`, `SeasonService.java`\n" +
                   "* **Repositories**: `RaceRepository.java`, `RaceMeetingRepository.java`, `SeasonRepository.java`\n" +
                   "* **Entities**: `Race.java`, `RaceMeeting.java`, `Season.java`\n" +
-                  "* **DTOs**: `RaceDTO.java`, `RaceMeetingDTO.java`, `SeasonDTO.java`\n\n" +
+                  "* **DTOs**: `RaceDTO.java`, `RaceMeetingDTO.java`, `SeasonDTO.java`\n" +
+                  "* **Frontend**: `Race.tsx` (admin-workflow), `Racecard.tsx`, `LiveSettings.tsx`, `Results.tsx`, `Season.tsx`\n" +
+                  "* **Scheduler**: `RaceStatusScheduler.java` (Tự động hủy trận nếu < 3 ngựa đăng ký)\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Tạo các **Trận đua (`Race`)** trong từng Ngày đua theo phân hạng Class 1 - Class 5 và Cự ly (1000m - 2400m).\n" +
-                  "2. Cập nhật thông tin thời gian khởi tranh, link Livestream, trạng thái trận (`SCHEDULED`, `RUNNING`, `OFFICIAL`)."
+                  "2. Cập nhật thông tin thời gian khởi tranh, link Livestream, trạng thái trận (`SCHEDULED`, `RUNNING`, `OFFICIAL`).\n" +
+                  "3. **Tự động hủy (`CANCELLED`)**: `RaceStatusScheduler` chạy định kỳ, kiểm tra trận nào chốt sổ nhưng < 3 ngựa được duyệt sẽ tự động hủy."
 )
 public class RaceController {
 
@@ -43,7 +46,7 @@ public class RaceController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute' để lấy danh sách Mùa giải.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.getSeasons()`\n" +
-                      "* **Service**: `SeasonService.getAllSeasons()` (`SeasonServiceImpl.java`)\n" +
+                      "* **Service**: `SeasonService.getAllSeasons()`\n" +
                       "* **Repository**: `SeasonRepository.findAll()`\n" +
                       "* **Entity**: `Season.java`\n" +
                       "* **DTO Response**: `List<SeasonDTO>`\n\n" +
@@ -62,7 +65,7 @@ public class RaceController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.createSeason()`\n" +
-                      "* **Service**: `SeasonService.createSeason()` (`SeasonServiceImpl.java`)\n" +
+                      "* **Service**: `SeasonService.createSeason()`\n" +
                       "* **Repository**: `SeasonRepository.save()`\n" +
                       "* **Entity**: `Season.java`\n" +
                       "* **DTO Request**: `Map<String, Object>` (`name`, `startDate`, `endDate`)\n" +
@@ -87,7 +90,7 @@ public class RaceController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.toggleSeasonStatus()`\n" +
-                      "* **Service**: `SeasonService.toggleSeasonStatus()` (`SeasonServiceImpl.java`)\n" +
+                      "* **Service**: `SeasonService.toggleSeasonStatus()`\n" +
                       "* **Repository**: `SeasonRepository.save()`\n" +
                       "* **Entity**: `Season.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -110,7 +113,7 @@ public class RaceController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.extendSeason()`\n" +
-                      "* **Service**: `SeasonService.extendSeason()` (`SeasonServiceImpl.java`)\n" +
+                      "* **Service**: `SeasonService.extendSeason()`\n" +
                       "* **Repository**: `SeasonRepository.save()`\n" +
                       "* **Entity**: `Season.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -134,7 +137,7 @@ public class RaceController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền seasonId -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.getSeasonRules()`\n" +
-                      "* **Service**: `SeasonService.getSeasonRules()` (`SeasonServiceImpl.java`)\n" +
+                      "* **Service**: `SeasonService.getSeasonRules()`\n" +
                       "* **Repository**: `SeasonClassRuleRepository.findBySeasonId()`\n" +
                       "* **Entity**: `SeasonClassRule.java`\n" +
                       "* **DTO Response**: `List<SeasonClassRuleDTO>`"
@@ -149,7 +152,7 @@ public class RaceController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.saveSeasonRules()`\n" +
-                      "* **Service**: `SeasonService.saveSeasonRules()` (`SeasonServiceImpl.java`)\n" +
+                      "* **Service**: `SeasonService.saveSeasonRules()`\n" +
                       "* **Repository**: `SeasonClassRuleRepository.saveAll()`\n" +
                       "* **Entity**: `SeasonClassRule.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -171,7 +174,7 @@ public class RaceController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.getMeetings()`\n" +
-                      "* **Service**: `RaceService.getAllMeetings()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.getAllMeetings()`\n" +
                       "* **Repository**: `RaceMeetingRepository.findAll()`\n" +
                       "* **Entity**: `RaceMeeting.java`\n" +
                       "* **DTO Response**: `List<RaceMeetingDTO>`"
@@ -186,7 +189,7 @@ public class RaceController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.createMeeting()`\n" +
-                      "* **Service**: `RaceService.createMeeting()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.createMeeting()`\n" +
                       "* **Repository**: `RaceMeetingRepository.save()`\n" +
                       "* **Entity**: `RaceMeeting.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -208,7 +211,7 @@ public class RaceController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.updateMeeting()`\n" +
-                      "* **Service**: `RaceService.updateMeeting()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.updateMeeting()`\n" +
                       "* **Repository**: `RaceMeetingRepository.save()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Tìm `RaceMeeting` theo ID và cập nhật thông tin tên ngày đua, địa điểm hoặc trạng thái."
@@ -228,7 +231,7 @@ public class RaceController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ DELETE API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.deleteMeeting()`\n" +
-                      "* **Service**: `RaceService.deleteMeeting()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.deleteMeeting()`\n" +
                       "* **Repository**: `RaceMeetingRepository.deleteById()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Kiểm tra Ngày đua có chứa các trận đua đang diễn ra không.\n" +
@@ -249,7 +252,7 @@ public class RaceController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute' để xem danh sách Trận đua.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.getRaces()`\n" +
-                      "* **Service**: `RaceService.getAllRaces()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.getAllRaces()`\n" +
                       "* **Repository**: `RaceRepository.findAll()`\n" +
                       "* **Entity**: `Race.java`\n" +
                       "* **DTO Response**: `List<RaceDTO>`\n\n" +
@@ -267,7 +270,7 @@ public class RaceController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.createRace()`\n" +
-                      "* **Service**: `RaceService.createRace()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.createRace()`\n" +
                       "* **Repository**: `RaceRepository.save()`\n" +
                       "* **Entity**: `Race.java`\n" +
                       "* **DTO Request**: `RaceDTO` (`raceMeetingId`, `name`, `distance`, `classLevel`, `startTime`)\n" +
@@ -292,7 +295,7 @@ public class RaceController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.updateRace()`\n" +
-                      "* **Service**: `RaceService.updateRace()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.updateRace()`\n" +
                       "* **Repository**: `RaceRepository.save()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Cập nhật các trường thông tin cự ly, thời gian, trạng thái hoặc link Livestream cho trận đua."
@@ -312,7 +315,7 @@ public class RaceController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.getLiveRaces()`\n" +
-                      "* **Service**: `RaceService.getLiveRaces()` (`RaceServiceImpl.java`)\n" +
+                      "* **Service**: `RaceService.getLiveRaces()`\n" +
                       "* **Repository**: `RaceRepository.findByStatus(\"RUNNING\")`\n" +
                       "* **DTO Response**: `List<RaceDTO>`"
     )
