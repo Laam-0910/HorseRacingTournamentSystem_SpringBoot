@@ -19,11 +19,12 @@ import java.util.Map;
     description = "🔐 **BƯỚC 1: XÁC THỰC & BẢO MẬT HỆ THỐNG (SECURITY ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `AuthController.java`\n" +
-                  "* **Services**: `AuthService.java` (`AuthServiceImpl.java`), `JwtAuthenticationFilter.java`, `EmailSender.java`\n" +
+                  "* **Services**: `AuthService.java`, `JwtAuthenticationFilter.java`, `EmailSender.java`\n" +
                   "* **Security Config**: `SecurityConfig.java`, `JwtTokenProvider.java`, `PasswordEncoder` (BCrypt)\n" +
                   "* **Repositories**: `UserRepository.java`\n" +
                   "* **Entities**: `User.java` (RoleId, PasswordHash, Status, RequireOtp...)\n" +
-                  "* **DTOs**: `LoginRequestDTO.java`, `LoginResponseDTO.java`, `RegisterRequestDTO.java`, `VerifyOtpRequestDTO.java`...\n\n" +
+                  "* **DTOs**: `LoginRequestDTO.java`, `LoginResponseDTO.java`, `RegisterRequestDTO.java`, `VerifyOtpRequestDTO.java`...\n" +
+                  "* **Frontend**: `Login.tsx`, `Register.tsx`, `VerifyLogin.tsx`, `VerifyRegister.tsx`, `ForgotPassword.tsx`, `VerifyForgot.tsx`, `AuthContext.tsx`, `authService.ts`\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Đăng ký tài khoản mới -> Mã hóa mật khẩu BCrypt -> Gửi mã OTP xác nhận về Email -> Kích hoạt User.\n" +
                   "2. Đăng nhập hệ thống (Username/Email + Password) -> Kiểm tra status tài khoản -> Khởi tạo chuỗi JWT Bearer Token.\n" +
@@ -40,7 +41,7 @@ public class AuthController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.login()`\n" +
-                      "* **Service**: `AuthService.login()` (`AuthServiceImpl.java`)\n" +
+                      "* **Service**: `AuthService.login()`\n" +
                       "* **Security**: `JwtTokenProvider.generateToken()`, `PasswordEncoder.matches()`\n" +
                       "* **Repository**: `UserRepository.findByUsernameOrEmail()`\n" +
                       "* **Entity**: `User.java`\n" +
@@ -67,7 +68,7 @@ public class AuthController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.verifyLogin()`\n" +
-                      "* **Service**: `AuthService.verifyLogin()` (`AuthServiceImpl.java`)\n" +
+                      "* **Service**: `AuthService.verifyLogin()`\n" +
                       "* **Security**: `JwtTokenProvider.generateToken()`\n" +
                       "* **DTO Request**: `VerifyOtpRequestDTO` (`otpTxId`, `otp`)\n" +
                       "* **DTO Response**: `LoginResponseDTO` (`token`, `user`)\n\n" +
@@ -90,7 +91,7 @@ public class AuthController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.register()`\n" +
-                      "* **Service**: `AuthService.register()` (`AuthServiceImpl.java`)\n" +
+                      "* **Service**: `AuthService.register()`\n" +
                       "* **Notification**: `EmailSender.sendOtpEmail()`\n" +
                       "* **Repository**: `UserRepository.save()`\n" +
                       "* **Entity**: `User.java`\n" +
@@ -117,7 +118,7 @@ public class AuthController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.verifyRegister()`\n" +
-                      "* **Service**: `AuthService.verifyRegister()` (`AuthServiceImpl.java`)\n" +
+                      "* **Service**: `AuthService.verifyRegister()`\n" +
                       "* **Repository**: `UserRepository.save()`\n" +
                       "* **DTO Request**: `VerifyOtpRequestDTO` (`otpTxId`, `otp`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -139,7 +140,7 @@ public class AuthController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.forgotPassword()`\n" +
-                      "* **Service**: `AuthService.forgotPassword()` (`AuthServiceImpl.java`)\n" +
+                      "* **Service**: `AuthService.forgotPassword()`\n" +
                       "* **Notification**: `EmailSender.sendOtpEmail()`\n" +
                       "* **DTO Request**: `ForgotPasswordRequestDTO` (`email`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -161,7 +162,7 @@ public class AuthController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.verifyForgotPassword()`\n" +
-                      "* **Service**: `AuthService.verifyForgotPassword()` (`AuthServiceImpl.java`)\n" +
+                      "* **Service**: `AuthService.verifyForgotPassword()`\n" +
                       "* **Repository**: `UserRepository.save()`\n" +
                       "* **DTO Request**: `VerifyForgotPasswordRequestDTO` (`otpTxId`, `otp`, `newPassword`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -182,7 +183,7 @@ public class AuthController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.updateProfile()`\n" +
-                      "* **Service**: `AuthService.updateProfile()` (`AuthServiceImpl.java`)\n" +
+                      "* **Service**: `AuthService.updateProfile()`\n" +
                       "* **Repository**: `UserRepository.save()`\n" +
                       "* **DTO Request**: `UserDTO` (`email`, `avatar`, `biography`, `weight`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -204,7 +205,7 @@ public class AuthController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `AuthController.toggleOtp()`\n" +
-                      "* **Service**: `AuthService.toggleOtp()` (`AuthServiceImpl.java`)\n" +
+                      "* **Service**: `AuthService.toggleOtp()`\n" +
                       "* **Repository**: `UserRepository.save()`\n" +
                       "* **DTO Request**: `ToggleOtpRequestDTO` (`username`, `requireOtp`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +

@@ -22,9 +22,10 @@ import java.util.Map;
     description = "🤠 **DỊCH VỤ DÀNH CHO NÀI NGỰA (JOCKEY ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `JockeyController.java`, `InvitationController.java`\n" +
-                  "* **Services**: `JockeyOwnerDashboardService.java` (`JockeyOwnerDashboardServiceImpl.java`), `InvitationService.java`, `RefereeService.java`\n" +
+                  "* **Services**: `JockeyOwnerDashboardService.java`, `InvitationService.java`, `RefereeService.java`\n" +
                   "* **Repositories**: `RaceInvitationRepository.java`, `RaceEntryRepository.java`, `ViolationRepository.java`\n" +
-                  "* **Entities**: `User.java` (roleId = 3), `RaceInvitation.java`, `Violation.java`"
+                  "* **Entities**: `User.java` (roleId = 3), `RaceInvitation.java`, `Violation.java`\n" +
+                  "* **Frontend**: `Jockey.tsx` (dashboards), `jockeyService.ts`"
 )
 public class JockeyController {
 
@@ -38,7 +39,7 @@ public class JockeyController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Nài ngựa -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `JockeyController.getJockeyInvitations()`\n" +
-                      "* **Service**: `InvitationService.getInvitations()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Service**: `InvitationService.getInvitations()`\n" +
                       "* **Repository**: `RaceInvitationRepository.findByJockeyId()`\n" +
                       "* **Entity**: `RaceInvitation.java`\n" +
                       "* **DTO Response**: `List<RaceInvitationDTO>`\n\n" +
@@ -56,7 +57,7 @@ public class JockeyController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Nài ngựa -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `JockeyController.getJockeyDashboard()`\n" +
-                      "* **Service**: `JockeyOwnerDashboardService.getJockeyDashboard()` (`JockeyOwnerDashboardServiceImpl.java`)\n" +
+                      "* **Service**: `JockeyOwnerDashboardService.getJockeyDashboard()`\n" +
                       "* **Repository**: `RaceEntryRepository.findByJockeyId()`\n" +
                       "* **DTO Response**: `Map<String, Object>` (`totalRides`, `wins`, `top3`, `winRate`, `totalEarnings`)\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
@@ -73,7 +74,7 @@ public class JockeyController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Nài ngựa -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `JockeyController.getJockeyMounts()`\n" +
-                      "* **Service**: `JockeyOwnerDashboardService.getJockeyMounts()` (`JockeyOwnerDashboardServiceImpl.java`)\n" +
+                      "* **Service**: `JockeyOwnerDashboardService.getJockeyMounts()`\n" +
                       "* **Repository**: `RaceEntryRepository.findByJockeyId()`\n" +
                       "* **DTO Response**: `List<Map<String, Object>>` (Chứa thông tin Horse, Race, Position)\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
@@ -90,7 +91,7 @@ public class JockeyController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Nài ngựa -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `JockeyController.getJockeyViolations()`\n" +
-                      "* **Service**: `JockeyOwnerDashboardService.getJockeyViolations()` (`JockeyOwnerDashboardServiceImpl.java`)\n" +
+                      "* **Service**: `JockeyOwnerDashboardService.getJockeyViolations()`\n" +
                       "* **Repository**: `ViolationRepository.findByJockeyId()`\n" +
                       "* **Entity**: `Violation.java`\n" +
                       "* **DTO Response**: `List<Map<String, Object>>`\n\n" +
@@ -108,7 +109,7 @@ public class JockeyController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `JockeyController.confirmViolation()`\n" +
-                      "* **Service**: `RefereeService.confirmViolation()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.confirmViolation()`\n" +
                       "* **Repository**: `ViolationRepository.save()`\n" +
                       "* **Entity**: `Violation.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +

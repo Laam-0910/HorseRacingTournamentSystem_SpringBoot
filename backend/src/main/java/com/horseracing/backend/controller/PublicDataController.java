@@ -19,10 +19,11 @@ import java.util.*;
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `PublicDataController.java`, `PublicChatController.java`\n" +
                   "* **Repositories**: `SeasonRepository.java`, `RaceRepository.java`, `RaceEntryRepository.java`, `HorseRepository.java`, `UserRepository.java`\n" +
-                  "* **Entities**: `Season.java`, `Race.java`, `RaceEntry.java`, `Horse.java`, `User.java`\n\n" +
+                  "* **Entities**: `Season.java`, `Race.java`, `RaceEntry.java`, `Horse.java`, `User.java`\n" +
+                  "* **Frontend**: `Landing.tsx` (landing), `Fixtures.tsx` (dashboards/components), `Results.tsx` (dashboards/components), `Spectator.tsx` (dashboards), `Statistics.tsx`, `ProfileModal.tsx`, `HorsePerformanceModal.tsx`\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
-                  "1. Cung cấp dữ liệu công khai cho khán giả/khách ghé thăm.\n" +
-                  "2. Xem kết quả trận đua, lịch sử thành tích chiến mã, hồ sơ cá nhân và phòng chat công khai."
+                  "1. Cung cấp dữ liệu công khai cho khán giả/khách ghé thăm (không cần đăng nhập): Lịch đua, kết quả, thống kê.\n" +
+                  "2. Xem kết quả trận đua, lịch sử thành tích chiến mã, hồ sơ cá nhân và biểu đồ thống kê phông độ."
 )
 public class PublicDataController {
 

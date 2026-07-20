@@ -23,9 +23,10 @@ import java.util.Map;
     description = "📊 **BƯỚC 12: DASHBOARD THỐNG KÊ DOANH THU & CHUỒNG NGỰA (DASHBOARD ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `HorseOwnerController.java`, `JockeyController.java`\n" +
-                  "* **Services**: `JockeyOwnerDashboardService.java` (`JockeyOwnerDashboardServiceImpl.java`)\n" +
+                  "* **Services**: `JockeyOwnerDashboardService.java`\n" +
                   "* **Repositories**: `HorseRepository.java`, `RaceEntryRepository.java`\n" +
-                  "* **Entities**: `Horse.java`, `RaceEntry.java`\n\n" +
+                  "* **Entities**: `Horse.java`, `RaceEntry.java`\n" +
+                  "* **Frontend**: `HorseOwner.tsx` (dashboards), `Jockey.tsx` (dashboards), `Spectator.tsx` (dashboards), `Statistics.tsx`, `HorsePerformanceModal.tsx`, `ProfileTab.tsx`, `horseOwnerService.ts`, `jockeyService.ts`\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Chủ ngựa theo dõi tổng số tiền thưởng tích lũy (`Total Earnings`), số ngựa active trong chuồng (`Stable`).\n" +
                   "2. Xem tỷ lệ vị trí trung bình (`Avg Position`) và lịch sử các giải đua của chuồng ngựa."
@@ -42,7 +43,7 @@ public class HorseOwnerController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseOwnerController.getOwnerHorses()`\n" +
-                      "* **Service**: `HorseService.getAllHorses()` (`HorseServiceImpl.java`)\n" +
+                      "* **Service**: `HorseService.getAllHorses()`\n" +
                       "* **Repository**: `HorseRepository.findByOwnerId()`\n" +
                       "* **Entity**: `Horse.java`\n" +
                       "* **DTO Response**: `List<HorseDTO>`\n\n" +
@@ -60,7 +61,7 @@ public class HorseOwnerController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseOwnerController.getOwnerInvitations()`\n" +
-                      "* **Service**: `InvitationService.getInvitations()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Service**: `InvitationService.getInvitations()`\n" +
                       "* **Repository**: `RaceInvitationRepository.findByOwnerId()`\n" +
                       "* **DTO Response**: `List<RaceInvitationDTO>`\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
@@ -76,7 +77,7 @@ public class HorseOwnerController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseOwnerController.getOwnerDashboard()`\n" +
-                      "* **Service**: `JockeyOwnerDashboardService.getOwnerDashboard()` (`JockeyOwnerDashboardServiceImpl.java`)\n" +
+                      "* **Service**: `JockeyOwnerDashboardService.getOwnerDashboard()`\n" +
                       "* **Repositories**: `HorseRepository.findByOwnerId()`, `RaceEntryRepository.findByHorseId()`\n" +
                       "* **DTO Response**: `Map<String, Object>` (`stableSize`, `totalEarnings`, `avgPosition`, `activeHorses`, `history`)\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
@@ -94,7 +95,7 @@ public class HorseOwnerController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseOwnerController.getOwnerStable()`\n" +
-                      "* **Service**: `JockeyOwnerDashboardService.getOwnerStable()` (`JockeyOwnerDashboardServiceImpl.java`)\n" +
+                      "* **Service**: `JockeyOwnerDashboardService.getOwnerStable()`\n" +
                       "* **Repository**: `HorseRepository.findByOwnerId()`\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
                       "1. Tra cứu danh sách chiến mã đang ở trạng thái `ACTIVE` trong chuồng ngựa."
@@ -109,7 +110,7 @@ public class HorseOwnerController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Chủ ngựa -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `HorseOwnerController.getOwnerResults()`\n" +
-                      "* **Service**: `JockeyOwnerDashboardService.getOwnerResults()` (`JockeyOwnerDashboardServiceImpl.java`)\n" +
+                      "* **Service**: `JockeyOwnerDashboardService.getOwnerResults()`\n" +
                       "* **Repository**: `RaceEntryRepository.findByHorseId()`\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
                       "1. Tổng hợp lịch sử kết quả tất cả các trận đua mà các con ngựa của Chủ này từng tham gia."

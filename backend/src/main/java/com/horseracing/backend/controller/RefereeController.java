@@ -21,9 +21,10 @@ import java.util.Map;
     description = "👮 **BƯỚC 10: QUẢN LÝ TRỌNG TÀI & GIÁM SÁT TRẬN ĐUA (REFEREE ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `RefereeController.java`, `ProcessResultsController.java`\n" +
-                  "* **Services**: `RefereeService.java` (`RefereeServiceImpl.java`), `ProcessResultsService.java` (`ProcessResultsServiceImpl.java`)\n" +
+                  "* **Services**: `RefereeService.java`, `ProcessResultsService.java`\n" +
                   "* **Repositories**: `ViolationRepository.java`, `RaceRefereeRepository.java`, `RaceEntryRepository.java`\n" +
-                  "* **Entities**: `Violation.java`, `RaceReferee.java`, `RaceEntry.java`\n\n" +
+                  "* **Entities**: `Violation.java`, `RaceReferee.java`, `RaceEntry.java`\n" +
+                  "* **Frontend**: `RefereeHub.tsx`, `RefereeDuties.tsx`, `RefereeCheck.tsx`, `RefereeConfirm.tsx`, `RefereeIncidents.tsx`, `RefereeSupervision.tsx`, `Referee.tsx` (dashboards), `refereeService.ts`\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Pre-check cân nặng & sức khỏe chiến mã trước giờ đua (`preRaceCheck`).\n" +
                   "2. Phát lệnh khởi tranh xuất phát (`startRace`). Ghi lỗi vi phạm (`logViolation`).\n" +
@@ -40,7 +41,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.preRaceCheck()`\n" +
-                      "* **Service**: `RefereeService.preRaceCheck()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.preRaceCheck()`\n" +
                       "* **Repositories**: `RaceEntryRepository.save()`, `RaceRepository.save()`\n" +
                       "* **Entities**: `RaceEntry.java`, `Race.java`\n" +
                       "* **DTO Request**: `Map<String, Object>` (`raceId`, `entries: [{entryId, actualWeight}]`)\n\n" +
@@ -66,7 +67,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.logViolation()`\n" +
-                      "* **Service**: `RefereeService.logViolation()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.logViolation()`\n" +
                       "* **Repository**: `ViolationRepository.save()`\n" +
                       "* **Entity**: `Violation.java`\n" +
                       "* **DTO Request**: `ViolationDTO` (`raceId`, `jockeyId`, `horseId`, `description`, `type`)\n" +
@@ -91,7 +92,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.confirmResults()`\n" +
-                      "* **Service**: `ProcessResultsService.confirmResults()` (`ProcessResultsServiceImpl.java`)\n" +
+                      "* **Service**: `ProcessResultsService.confirmResults()`\n" +
                       "* **Repositories**: `RaceEntryRepository.save()`, `HorseRepository.save()`, `RaceRepository.save()`\n" +
                       "* **DTO Request**: `Map<String, Object>` (`raceId`, `stewardReport`, `results: [{entryId, finalPosition, finishTime}]`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -117,7 +118,7 @@ public class RefereeController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id Trọng tài -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.getRefereeDashboard()`\n" +
-                      "* **Service**: `RefereeService.getRefereeDashboard()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.getRefereeDashboard()`\n" +
                       "* **Repository**: `RaceRefereeRepository.findByRefereeId()`, `ViolationRepository.findAll()`\n" +
                       "* **DTO Response**: `Map<String, Object>` (`totalRacesRefereed`, `totalViolationsIssued`)\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
@@ -134,7 +135,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.startRace()`\n" +
-                      "* **Service**: `RefereeService.startRace()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.startRace()`\n" +
                       "* **Repository**: `RaceRepository.save()`\n" +
                       "* **Entity**: `Race.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -157,7 +158,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.stopRace()`\n" +
-                      "* **Service**: `RefereeService.stopRace()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.stopRace()`\n" +
                       "* **Repository**: `RaceRepository.save()`\n" +
                       "* **DTO Request**: `Map<String, String>` (`stewardReport`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -181,7 +182,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.suspendRace()`\n" +
-                      "* **Service**: `RefereeService.suspendRace()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.suspendRace()`\n" +
                       "* **Repository**: `RaceRepository.save()`\n" +
                       "* **DTO Request**: `Map<String, String>` (`stewardReport`)\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -204,7 +205,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.resumeRace()`\n" +
-                      "* **Service**: `RefereeService.resumeRace()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.resumeRace()`\n" +
                       "* **Repository**: `RaceRepository.save()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Kiểm tra trận đua đang ở trạng thái `STOPPED`.\n" +
@@ -225,7 +226,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.confirmViolation()`\n" +
-                      "* **Service**: `RefereeService.confirmViolation()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.confirmViolation()`\n" +
                       "* **Repository**: `ViolationRepository.save()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Trọng tài xác nhận biên bản vi phạm theo `violationId`.\n" +
@@ -246,7 +247,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.dismissViolation()`\n" +
-                      "* **Service**: `RefereeService.dismissViolation()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.dismissViolation()`\n" +
                       "* **Repository**: `ViolationRepository.save()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Trọng tài hủy bỏ biên bản vi phạm sau khi xem xét lại.\n" +
@@ -267,7 +268,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.stopEntry()`\n" +
-                      "* **Service**: `RefereeService.stopEntry()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.stopEntry()`\n" +
                       "* **Repository**: `RaceEntryRepository.save()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Trọng tài ra lệnh dừng cho 1 chiến mã cụ thể theo `entryId`.\n" +
@@ -288,7 +289,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.resumeEntry()`\n" +
-                      "* **Service**: `RefereeService.resumeEntry()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.resumeEntry()`\n" +
                       "* **Repository**: `RaceEntryRepository.save()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Trọng tài cho phép chiến mã tiếp tục thi đấu sau khi dừng.\n" +
@@ -309,7 +310,7 @@ public class RefereeController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RefereeController.disqualifyEntry()`\n" +
-                      "* **Service**: `RefereeService.disqualifyEntry()` (`RefereeServiceImpl.java`)\n" +
+                      "* **Service**: `RefereeService.disqualifyEntry()`\n" +
                       "* **Repository**: `RaceEntryRepository.save()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Trọng tài truất quyền chiến mã theo `entryId` do vi phạm nghiêm trọng.\n" +

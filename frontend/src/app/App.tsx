@@ -1,5 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider, useAuth } from "../context/AuthContext";
+import { AnimatePresence } from "framer-motion";
+import PageTransition from "./components/ui/PageTransition";
 
 // ===== Auth =====
 import Login from "./components/auth/Login";
@@ -34,81 +36,91 @@ function ProtectedRoute({
   return children;
 }
 
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Public */}
+        <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
+        <Route path="/chatbot" element={<PageTransition><Chatbot /></PageTransition>} />
+        <Route
+          path="/livestream"
+          element={
+            <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}>
+              <PageTransition><Livestream /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/livestream/:raceId"
+          element={
+            <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}>
+              <PageTransition><Livestream /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+        <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+        <Route path="/verify-login" element={<PageTransition><VerifyLogin /></PageTransition>} />
+        <Route path="/verify-register" element={<PageTransition><VerifyRegister /></PageTransition>} />
+        <Route path="/verify-forgot" element={<PageTransition><VerifyForgot /></PageTransition>} />
+
+        {/* Role-based dashboards (roleId: 1=Admin, 2=Owner, 3=Jockey, 4=Spectator, 5=Referee) */}
+        <Route
+          path="/dashboard/admin"
+          element={
+            <ProtectedRoute allowedRoles={[1]}>
+              <PageTransition><Admin /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/owner"
+          element={
+            <ProtectedRoute allowedRoles={[2]}>
+              <PageTransition><HorseOwner /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/jockey"
+          element={
+            <ProtectedRoute allowedRoles={[3]}>
+              <PageTransition><Jockey /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/spectator"
+          element={
+            <ProtectedRoute allowedRoles={[4]}>
+              <PageTransition><Spectator /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/referee"
+          element={
+            <ProtectedRoute allowedRoles={[5]}>
+              <PageTransition><Referee /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          {/* Public */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/chatbot" element={<Chatbot />} />
-          <Route
-            path="/livestream"
-            element={
-              <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}>
-                <Livestream />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/livestream/:raceId"
-            element={
-              <ProtectedRoute allowedRoles={[1, 2, 3, 4, 5]}>
-                <Livestream />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/verify-login" element={<VerifyLogin />} />
-          <Route path="/verify-register" element={<VerifyRegister />} />
-          <Route path="/verify-forgot" element={<VerifyForgot />} />
-
-          {/* Role-based dashboards (roleId: 1=Admin, 2=Owner, 3=Jockey, 4=Spectator, 5=Referee) */}
-          <Route
-            path="/dashboard/admin"
-            element={
-              <ProtectedRoute allowedRoles={[1]}>
-                <Admin />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/owner"
-            element={
-              <ProtectedRoute allowedRoles={[2]}>
-                <HorseOwner />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/jockey"
-            element={
-              <ProtectedRoute allowedRoles={[3]}>
-                <Jockey />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/spectator"
-            element={
-              <ProtectedRoute allowedRoles={[4]}>
-                <Spectator />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard/referee"
-            element={
-              <ProtectedRoute allowedRoles={[5]}>
-                <Referee />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <AnimatedRoutes />
       </BrowserRouter>
     </AuthProvider>
   );

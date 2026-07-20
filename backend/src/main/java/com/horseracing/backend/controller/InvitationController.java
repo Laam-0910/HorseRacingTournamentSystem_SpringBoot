@@ -20,10 +20,11 @@ import java.util.Map;
     description = "✉️ **BƯỚC 8: LỜI MỜI THI ĐẤU GIỮA CHỦ NGỰA VÀ NÀI NGỰA (INVITATION ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `InvitationController.java`, `JockeyController.java`\n" +
-                  "* **Services**: `InvitationService.java` (`InvitationServiceImpl.java`)\n" +
+                  "* **Services**: `InvitationService.java`\n" +
                   "* **Repositories**: `RaceInvitationRepository.java`, `RaceEntryRepository.java`\n" +
                   "* **Entities**: `RaceInvitation.java`, `RaceEntry.java`\n" +
-                  "* **DTOs**: `RaceInvitationDTO.java`\n\n" +
+                  "* **DTOs**: `RaceInvitationDTO.java`\n" +
+                  "* **Frontend**: `HorseOwner.tsx` (dashboards), `Jockey.tsx` (dashboards), `horseOwnerService.ts`, `jockeyService.ts`\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Chủ ngựa gửi lời mời Nài ngựa thi đấu (`inviteJockey`).\n" +
                   "2. Nài ngựa Chấp nhận (`acceptInvitation`) hoặc Từ chối (`rejectInvitation`).\n" +
@@ -39,7 +40,7 @@ public class InvitationController {
         description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền jockeyId hoặc ownerId -> 'Execute'.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `InvitationController.getInvitations()`\n" +
-                      "* **Service**: `InvitationService.getInvitations()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Service**: `InvitationService.getInvitations()`\n" +
                       "* **Repository**: `RaceInvitationRepository.findByJockeyId()` / `findByOwnerId()`\n" +
                       "* **Entity**: `RaceInvitation.java`\n" +
                       "* **DTO Response**: `List<RaceInvitationDTO>`\n\n" +
@@ -59,7 +60,7 @@ public class InvitationController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `InvitationController.inviteJockey()`\n" +
-                      "* **Service**: `InvitationService.inviteJockey()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Service**: `InvitationService.inviteJockey()`\n" +
                       "* **Repository**: `RaceInvitationRepository.save()`\n" +
                       "* **Entity**: `RaceInvitation.java`\n" +
                       "* **DTO Request**: `RaceInvitationDTO` (`raceId`, `horseId`, `jockeyId`, `ownerId`)\n" +
@@ -85,7 +86,7 @@ public class InvitationController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `InvitationController.acceptInvitation()`\n" +
-                      "* **Service**: `InvitationService.acceptInvitation()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Service**: `InvitationService.acceptInvitation()`\n" +
                       "* **Repositories**: `RaceInvitationRepository.save()`, `RaceEntryRepository.save()`\n" +
                       "* **Entities**: `RaceInvitation.java`, `RaceEntry.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -109,7 +110,7 @@ public class InvitationController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `InvitationController.rejectInvitation()`\n" +
-                      "* **Service**: `InvitationService.rejectInvitation()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Service**: `InvitationService.rejectInvitation()`\n" +
                       "* **Repository**: `RaceInvitationRepository.save()`\n" +
                       "* **Entity**: `RaceInvitation.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -132,7 +133,7 @@ public class InvitationController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `InvitationController.resubmitRaceEntry()`\n" +
-                      "* **Service**: `InvitationService.resubmitRaceEntry()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Service**: `InvitationService.resubmitRaceEntry()`\n" +
                       "* **Repository**: `RaceEntryRepository.save()`\n" +
                       "* **Entity**: `RaceEntry.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
@@ -155,7 +156,7 @@ public class InvitationController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `InvitationController.withdrawInvitation()`\n" +
-                      "* **Service**: `InvitationService.withdrawInvitation()` (`InvitationServiceImpl.java`)\n" +
+                      "* **Service**: `InvitationService.withdrawInvitation()`\n" +
                       "* **Repository**: `RaceInvitationRepository.save()`\n" +
                       "* **Entity**: `RaceInvitation.java`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +

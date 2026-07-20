@@ -22,10 +22,11 @@ import java.util.Map;
     description = "📋 **BƯỚC 7: ĐĂNG KÝ THAM GIA NGÀY ĐUA (REGISTRATION ARCHITECTURE)**\n\n" +
                   "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
                   "* **Controllers**: `RegistrationController.java`\n" +
-                  "* **Services**: `RegistrationService.java` (`RegistrationServiceImpl.java`)\n" +
+                  "* **Services**: `RegistrationService.java`\n" +
                   "* **Repositories**: `JockeyRaceMeetingRegistrationRepository.java`, `OwnerRaceMeetingRegistrationRepository.java`, `HorseRaceMeetingRegistrationRepository.java`\n" +
                   "* **Entities**: `JockeyRaceMeetingRegistration.java`, `OwnerRaceMeetingRegistration.java`, `HorseRaceMeetingRegistration.java`\n" +
-                  "* **DTOs**: `RegistrationMeetingRequestDTO.java`\n\n" +
+                  "* **DTOs**: `RegistrationMeetingRequestDTO.java`\n" +
+                  "* **Frontend**: `RegistrationProcessing.tsx` (admin-workflow), `Jockey.tsx` (dashboards), `HorseOwner.tsx` (dashboards), `registrationProcessingService.ts`\n\n" +
                   "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
                   "1. Nài ngựa/Chủ ngựa/Ngựa nộp đơn đăng ký Ngày đua (`Race Meeting`).\n" +
                   "2. Đơn được lưu ở trạng thái `PENDING` chờ Admin duyệt."
@@ -40,7 +41,7 @@ public class RegistrationController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RegistrationController.registerJockey()`\n" +
-                      "* **Service**: `RegistrationService.registerJockey()` (`RegistrationServiceImpl.java`)\n" +
+                      "* **Service**: `RegistrationService.registerJockey()`\n" +
                       "* **Repository**: `JockeyRaceMeetingRegistrationRepository.save()`\n" +
                       "* **Entity**: `JockeyRaceMeetingRegistration.java`\n" +
                       "* **DTO Request**: `RegistrationMeetingRequestDTO` (`meetingId`, `jockeyId`)\n" +
@@ -66,7 +67,7 @@ public class RegistrationController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RegistrationController.registerOwner()`\n" +
-                      "* **Service**: `RegistrationService.registerOwner()` (`RegistrationServiceImpl.java`)\n" +
+                      "* **Service**: `RegistrationService.registerOwner()`\n" +
                       "* **Repository**: `OwnerRaceMeetingRegistrationRepository.save()`\n" +
                       "* **Entity**: `OwnerRaceMeetingRegistration.java`\n" +
                       "* **DTO Request**: `RegistrationMeetingRequestDTO` (`meetingId`, `ownerId`)\n" +
@@ -92,7 +93,7 @@ public class RegistrationController {
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RegistrationController.registerHorse()`\n" +
-                      "* **Service**: `RegistrationService.registerHorse()` (`RegistrationServiceImpl.java`)\n" +
+                      "* **Service**: `RegistrationService.registerHorse()`\n" +
                       "* **Repository**: `HorseRaceMeetingRegistrationRepository.save()`\n" +
                       "* **Entity**: `HorseRaceMeetingRegistration.java`\n" +
                       "* **DTO Request**: `RegistrationMeetingRequestDTO` (`meetingId`, `horseId`)\n" +
