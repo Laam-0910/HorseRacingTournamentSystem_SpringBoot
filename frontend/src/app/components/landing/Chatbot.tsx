@@ -19,12 +19,17 @@ export default function Chatbot() {
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const [sessionId] = useState(() => "session-" + Math.random().toString(36).substr(2, 9));
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   };
 
   useEffect(() => {
@@ -62,7 +67,7 @@ export default function Chatbot() {
   };
 
   return (
-    <div className="min-h-screen bg-black/60 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
+    <div className="h-screen overflow-hidden bg-black/60 flex flex-col selection:bg-amber-500/30 selection:text-amber-200">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-black/40 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate("/")}>
@@ -83,7 +88,10 @@ export default function Chatbot() {
 
       {/* Chat Area */}
       <div className="flex-1 max-w-4xl w-full mx-auto p-4 md:p-6 flex flex-col justify-between overflow-hidden">
-        <div className="flex-1 overflow-y-auto mb-6 pr-2 space-y-4 max-h-[calc(100vh-230px)]">
+        <div 
+          ref={chatContainerRef}
+          className="flex-1 overflow-y-auto mb-6 pr-2 space-y-4 max-h-[calc(100vh-230px)]"
+        >
           {messages.map((m, idx) => (
             <div
               key={idx}
@@ -116,7 +124,6 @@ export default function Chatbot() {
               </div>
             </div>
           )}
-          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Form */}
