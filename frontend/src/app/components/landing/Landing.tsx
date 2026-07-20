@@ -255,14 +255,21 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
   const [messages, setMessages] = useState([{ id: "welcome", type: "bot", text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.vi.welcome }]);
   const [input, setInput] = useState("");
   const [waiting, setWaiting] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
   const [sessionId] = useState(() => "session-" + Math.random().toString(36).substr(2, 9));
 
   useEffect(() => {
     setMessages(prev => prev.map(m => m.id === "welcome" ? { ...m, text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.vi.welcome } : m));
   }, [lang]);
 
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
+  useEffect(() => { 
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: "smooth"
+      });
+    }
+  }, [messages]);
 
   const changeLang = (l: string) => {
     setLang(l);
@@ -335,7 +342,7 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 8, background: "#1a1a1a" }}>
+          <div ref={chatContainerRef} style={{ flex: 1, overflowY: "auto", padding: 12, display: "flex", flexDirection: "column", gap: 8, background: "#1a1a1a" }}>
             {messages.map(m => {
               const isUser = m.type === "user";
               const isTyping = m.type === "typing";
@@ -365,7 +372,6 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
                 </div>
               );
             })}
-            <div ref={messagesEndRef} />
           </div>
 
           {/* Input */}
