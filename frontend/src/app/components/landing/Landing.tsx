@@ -1915,9 +1915,6 @@ export default function Landing() {
       case "jockeys_owners":
         return (
           <div>
-            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
-              <button onClick={() => setView("jockeys_owners")} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontWeight: "bold" }}>{$t("Tổng quan Danh bạ", (localStorage.getItem('app-lang') || 'vi')) || "Directories Overview"}</button>
-            </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "1.5rem" }}>
               <GenericTableView 
                 title={$t("Danh sách Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Jockeys"} 
