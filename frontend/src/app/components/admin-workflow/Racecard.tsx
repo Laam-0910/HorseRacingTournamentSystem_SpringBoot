@@ -1,19 +1,19 @@
-import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
-import { $t } from '@/lib/i18n';
-import { confirm } from "../../../lib/confirm";
+import { useState, useEffect } from "react"; // Import các hook của React
+import { api } from "../../../lib/api"; // Import module để gọi API
+import { $t } from '@/lib/i18n'; // Import hàm dịch ngôn ngữ
+import { confirm } from "../../../lib/confirm"; // Import hàm hiển thị popup xác nhận
 
-export default function Racecard() {
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null);
-  const [races, setRaces] = useState<any[]>([]);
-  const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
-  const [entries, setEntries] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const lang = localStorage.getItem("app-lang") || "vi";
-  const [isMobile, setIsMobile] = useState(false);
+export default function Racecard() { // Component hiển thị thông tin danh sách thi đấu (Racecard)
+  const [meetings, setMeetings] = useState<any[]>([]); // State lưu danh sách giải đấu
+  const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null); // State lưu ID giải đấu được chọn
+  const [races, setRaces] = useState<any[]>([]); // State lưu danh sách vòng đua của giải đấu
+  const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null); // State lưu ID vòng đua được chọn
+  const [entries, setEntries] = useState<any[]>([]); // State lưu danh sách đăng ký tham gia (ngựa + nài ngựa)
+  const [loading, setLoading] = useState(false); // State quản lý trạng thái đang tải dữ liệu
+  const [error, setError] = useState(""); // State hiển thị lỗi
+  const [success, setSuccess] = useState(""); // State hiển thị thành công
+  const lang = localStorage.getItem("app-lang") || "vi"; // Lấy ngôn ngữ hiện tại từ localStorage
+  const [isMobile, setIsMobile] = useState(false); // State kiểm tra màn hình thiết bị di động
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -22,7 +22,8 @@ export default function Racecard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const fetchMeetings = async () => {
+  const fetchMeetings = async () => { // Hàm lấy danh sách các giải đua từ API
+
     setLoading(true);
     setError("");
     try {
@@ -38,7 +39,8 @@ export default function Racecard() {
     }
   };
 
-  const fetchRaces = async (meetingId: number) => {
+  const fetchRaces = async (meetingId: number) => { // Hàm lấy danh sách vòng đua theo ID giải đua
+
     try {
       const data = await api.get<any[]>(`/public/races?meetingId=${meetingId}`);
       setRaces(data);
@@ -53,7 +55,8 @@ export default function Racecard() {
     }
   };
 
-  const fetchEntries = async (raceId: number) => {
+  const fetchEntries = async (raceId: number) => { // Hàm lấy danh sách những người đăng ký (kết quả tạm tính) cho vòng đua
+
     try {
       const data = await api.get<any[]>(`/public/results?raceId=${raceId}`);
       setEntries(data);
@@ -62,23 +65,24 @@ export default function Racecard() {
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { // Lấy danh sách giải đua khi component được mount
     fetchMeetings();
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { // Tải danh sách vòng đua khi ID giải đua thay đổi
     if (selectedMeetingId !== null) {
       fetchRaces(selectedMeetingId);
     }
   }, [selectedMeetingId]);
 
-  useEffect(() => {
+  useEffect(() => { // Tải danh sách ngựa tham gia khi vòng đua thay đổi
     if (selectedRaceId !== null) {
       fetchEntries(selectedRaceId);
     }
   }, [selectedRaceId]);
 
-  const handleAutoAssignGates = async () => {
+  const handleAutoAssignGates = async () => { // Hàm tự động phân cổng (gate) ngẫu nhiên
+
     if (selectedRaceId === null) return;
     setError("");
     setSuccess("");
@@ -93,7 +97,8 @@ export default function Racecard() {
     }
   };
 
-  const handleAutoCalculateWeights = async () => {
+  const handleAutoCalculateWeights = async () => { // Hàm tự động tính toán trọng lượng chấp (Handicap weights)
+
     if (selectedRaceId === null) return;
     setError("");
     setSuccess("");
@@ -108,7 +113,8 @@ export default function Racecard() {
     }
   };
 
-  const handleCancelRace = async () => {
+  const handleCancelRace = async () => { // Hàm hủy vòng đua
+
     if (selectedRaceId === null) return;
     if (!await confirm("Are you sure you want to cancel this race? This will reset all entries.")) return;
     setError("");
@@ -128,7 +134,8 @@ export default function Racecard() {
     }
   };
 
-  const handleGateChange = (idx: number, val: string) => {
+  const handleGateChange = (idx: number, val: string) => { // Hàm xử lý khi thay đổi cổng xuất phát thủ công
+
     setEntries((prev) => {
       const copy = [...prev];
       copy[idx].entry.gateNumber = val ? parseInt(val) : null;
@@ -136,7 +143,8 @@ export default function Racecard() {
     });
   };
 
-  const handleWeightChange = (idx: number, val: string) => {
+  const handleWeightChange = (idx: number, val: string) => { // Hàm xử lý khi thay đổi khối lượng chấp thủ công
+
     setEntries((prev) => {
       const copy = [...prev];
       copy[idx].entry.carriedWeight = val ? parseFloat(val) : null;
@@ -144,7 +152,8 @@ export default function Racecard() {
     });
   };
 
-  const handleSaveRacecard = async () => {
+  const handleSaveRacecard = async () => { // Hàm lưu cấu hình Racecard (cổng và khối lượng) lên server
+
     if (selectedRaceId === null) return;
     setError("");
     setSuccess("");
@@ -169,8 +178,9 @@ export default function Racecard() {
     }
   };
 
-  const selectedRace = races.find((r) => r.id === selectedRaceId);
-  const isCompleted = selectedRace && (selectedRace.status === "OFFICIAL" || selectedRace.status === "FINISHED" || selectedRace.status === "CANCELLED");
+  const selectedRace = races.find((r) => r.id === selectedRaceId); // Lấy thông tin vòng đua đang được chọn
+  const isCompleted = selectedRace && (selectedRace.status === "OFFICIAL" || selectedRace.status === "FINISHED" || selectedRace.status === "CANCELLED"); // Kiểm tra xem vòng đua đã kết thúc hay chưa để vô hiệu hóa chức năng sửa
+
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
