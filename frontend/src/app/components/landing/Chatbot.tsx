@@ -9,7 +9,9 @@ interface Message {
   isHtml?: boolean;
 }
 
+// ── Component hiển thị giao diện Chatbot AI ────────────────────────────────
 export default function Chatbot() {
+  // State quản lý danh sách tin nhắn (mặc định có 1 tin nhắn chào mừng)
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
@@ -17,12 +19,14 @@ export default function Chatbot() {
       isHtml: false,
     },
   ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const [input, setInput] = useState(""); // Nơi lưu trữ nội dung người dùng nhập vào
+  const [loading, setLoading] = useState(false); // Trạng thái đang tải (chờ AI phản hồi)
+  const chatContainerRef = useRef<HTMLDivElement>(null); // Tham chiếu tới vùng hiển thị tin nhắn để cuộn xuống
   const navigate = useNavigate();
+  // Tạo Session ID duy nhất cho phiên chat hiện tại
   const [sessionId] = useState(() => "session-" + Math.random().toString(36).substr(2, 9));
 
+  // Hàm cuộn màn hình chat xuống dòng cuối cùng
   const scrollToBottom = () => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTo({
@@ -32,13 +36,15 @@ export default function Chatbot() {
     }
   };
 
+  // Tự động cuộn xuống dưới khi có tin nhắn mới
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  // Hàm xử lý gửi tin nhắn
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || loading) return;
+    if (!input.trim() || loading) return; // Nếu đang chờ bot trả lời hoặc rỗng thì bỏ qua
 
     const userMessage = input.trim();
     setInput("");
@@ -46,7 +52,7 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      // Calls Spring Boot proxy -> Python Chatbot App
+      // Gọi API qua Spring Boot proxy tới ứng dụng Python Chatbot (Calls Spring Boot proxy -> Python Chatbot App)
       const res = await api.post<any>("/ai/chat", { message: userMessage, lang: "vi", sessionId });
       if (res.success && res.reply) {
         setMessages((prev) => [...prev, { sender: "bot", text: res.reply, isHtml: true }]);
