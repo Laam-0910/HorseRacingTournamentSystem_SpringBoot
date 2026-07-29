@@ -7,12 +7,13 @@ interface RefereeSupervisionProps {
   onBack: () => void;
 }
 
+// ── Component Trọng tài giám sát trận đấu (RefereeSupervision) ────────────────
 export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisionProps) {
-  const [entries, setEntries] = useState<any[]>([]);
+  const [entries, setEntries] = useState<any[]>([]); // Danh sách đăng ký thi đấu
   const [selectedJockeyId, setSelectedJockeyId] = useState("");
   const [description, setDescription] = useState("");
   const [penalty, setPenalty] = useState("");
-  const [stewardReport, setStewardReport] = useState("");
+  const [stewardReport, setStewardReport] = useState(""); // Báo cáo của trọng tài
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -26,10 +27,12 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
     }
   };
 
+  // Hook lấy danh sách thi đấu
   useEffect(() => {
     fetchEntries();
   }, [raceId]);
 
+  // Xử lý báo cáo vi phạm (Log Violation)
   const handleLogViolation = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -66,6 +69,7 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
     }
   };
 
+  // Xử lý dừng trận đấu khẩn cấp
   const handleEmergencyStop = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!stewardReport.trim()) {
