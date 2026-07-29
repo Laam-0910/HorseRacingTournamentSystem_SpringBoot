@@ -1,9 +1,10 @@
-import { $t } from "../../../lib/i18n";
-import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
-import { formatDateTime, formatForDateTimeLocal, formatForApi, formatClassLevel, parseSafeDate } from "../../utils/dateTimeHelper";
-import InlineDateTimePicker from "../ui/InlineDateTimePicker";
+import { $t } from "../../../lib/i18n"; // Import hàm hỗ trợ đa ngôn ngữ
+import { useState, useEffect } from "react"; // Import hook cơ bản của React
+import { api } from "../../../lib/api"; // Import module gọi API
+import { formatDateTime, formatForDateTimeLocal, formatForApi, formatClassLevel, parseSafeDate } from "../../utils/dateTimeHelper"; // Import các hàm tiện ích xử lý ngày giờ
+import InlineDateTimePicker from "../ui/InlineDateTimePicker"; // Import component chọn ngày giờ
 
+// Interface định nghĩa kiểu dữ liệu cho một giải đua (Meeting)
 interface Meeting {
   id: number;
   name: string;
@@ -12,6 +13,7 @@ interface Meeting {
   totalBudget: number;
 }
 
+// Interface định nghĩa kiểu dữ liệu người dùng (dùng cho trọng tài - referee)
 interface User {
   id: number;
   username: string;
@@ -19,6 +21,7 @@ interface User {
   roleId: number;
 }
 
+// Interface định nghĩa kiểu dữ liệu cho một vòng đua (Race)
 interface Race {
   id: number;
   raceMeetingId: number;
@@ -39,26 +42,26 @@ interface Race {
 }
 
 export default function Race() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
+  const [isMobile, setIsMobile] = useState(false); // State kiểm tra có phải thiết bị di động không
+  useEffect(() => { // Hook lắng nghe sự kiện thay đổi kích thước màn hình
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    handleResize(); // Chạy ngay lần đầu
+    window.addEventListener("resize", handleResize); // Đăng ký sự kiện
+    return () => window.removeEventListener("resize", handleResize); // Hủy sự kiện khi unmount
   }, []);
 
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [races, setRaces] = useState<Race[]>([]);
-  const [referees, setReferees] = useState<User[]>([]);
-  const [refereesMap, setRefereesMap] = useState<Record<number, User[]>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [editError, setEditError] = useState("");
+  const [meetings, setMeetings] = useState<Meeting[]>([]); // State lưu danh sách giải đua
+  const [races, setRaces] = useState<Race[]>([]); // State lưu danh sách vòng đua
+  const [referees, setReferees] = useState<User[]>([]); // State lưu danh sách trọng tài
+  const [refereesMap, setRefereesMap] = useState<Record<number, User[]>>({}); // State lưu mapping trọng tài theo từng vòng đua
+  const [loading, setLoading] = useState(true); // State theo dõi trạng thái tải dữ liệu
+  const [error, setError] = useState(""); // State hiển thị thông báo lỗi
+  const [success, setSuccess] = useState(""); // State hiển thị thông báo thành công
+  const [editError, setEditError] = useState(""); // State hiển thị lỗi khi sửa
 
-  // Create Form State
+  // Create Form State (State cho form tạo vòng đua mới)
   const [meetingId, setMeetingId] = useState("");
   const [classLevel, setClassLevel] = useState("Class 1");
   const [trackType, setTrackType] = useState("Turf");
@@ -70,8 +73,8 @@ export default function Race() {
   const [minEntries, setMinEntries] = useState("3");
   const [purse, setPurse] = useState("0");
 
-  // Edit Modal State
-  const [editingRace, setEditingRace] = useState<Race | null>(null);
+  // Edit Modal State (State cho modal chỉnh sửa vòng đua)
+  const [editingRace, setEditingRace] = useState<Race | null>(null); // Lưu vòng đua đang sửa
   const [editStartTime, setEditStartTime] = useState("");
   const [editRegStartTime, setEditRegStartTime] = useState("");
   const [editRegEndTime, setEditRegEndTime] = useState("");
@@ -81,45 +84,48 @@ export default function Race() {
   const [editMaxEntries, setEditMaxEntries] = useState("12");
   const [editMinEntries, setEditMinEntries] = useState("3");
 
-  // Livestream states
+  // Livestream states (State lưu URL livestream của các vòng đua)
   const [liveUrls, setLiveUrls] = useState<Record<number, string>>({});
-  // Referee assignment selections
+  // Referee assignment selections (State lưu lựa chọn phân công trọng tài)
   const [assignRefSelection, setAssignRefSelection] = useState<Record<number, string>>({});
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async () => { // Hàm lấy toàn bộ dữ liệu cần thiết từ server
+    setLoading(true); // Bật trạng thái loading
     try {
+      // Chạy song song nhiều API bằng Promise.all để tối ưu thời gian
       const [meetingsData, racesData, usersData, refsMapData] = await Promise.all([
-        api.get<Meeting[]>("/public/meetings").catch(() => []),
-        api.get<Race[]>("/races").catch(() => []),
-        api.get<User[]>("/public/users?roleId=5").catch(() => []),
-        api.get<Record<number, User[]>>("/admin/races/referees").catch(() => ({})),
+        api.get<Meeting[]>("/public/meetings").catch(() => []), // Lấy danh sách giải đua
+        api.get<Race[]>("/races").catch(() => []), // Lấy danh sách vòng đua
+        api.get<User[]>("/public/users?roleId=5").catch(() => []), // Lấy danh sách trọng tài (roleId=5)
+        api.get<Record<number, User[]>>("/admin/races/referees").catch(() => ({})), // Lấy danh sách trọng tài đã được phân công cho từng vòng
       ]);
+      // Cập nhật state
       setMeetings(meetingsData);
       setRaces(racesData);
       setReferees(usersData);
       setRefereesMap(refsMapData);
     } catch (err: any) {
-      setError(err.message || "Failed to fetch data.");
+      setError(err.message || "Failed to fetch data."); // Hiển thị lỗi nếu có
     } finally {
-      setLoading(false);
+      setLoading(false); // Tắt trạng thái loading
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { // Hook gọi hàm fetchData khi component vừa được render
     fetchData();
   }, []);
 
-  const handleSelectMeeting = (idStr: string) => {
-    setMeetingId(idStr);
+  const handleSelectMeeting = (idStr: string) => { // Xử lý khi người dùng chọn một giải đua trong form
+    setMeetingId(idStr); // Cập nhật state ID giải đua
     if (!idStr) {
-      setStartTime("");
+      setStartTime(""); // Xóa thời gian bắt đầu nếu không chọn giải
       return;
     }
-    const meeting = meetings.find(m => m.id === parseInt(idStr));
+    const meeting = meetings.find(m => m.id === parseInt(idStr)); // Tìm giải đua được chọn
     if (meeting) {
-      const dt = parseSafeDate(meeting.startDate);
+      const dt = parseSafeDate(meeting.startDate); // Lấy ngày bắt đầu của giải
       if (dt) {
+        // Tự động gán thời gian bắt đầu vòng đua là 13:00 của ngày giải khai mạc
         const pad = (n: number) => String(n).padStart(2, "0");
         const dateStr = `${pad(dt.getDate())}-${pad(dt.getMonth() + 1)}-${dt.getFullYear()}`;
         setStartTime(`${dateStr} 13:00:00`);
@@ -127,10 +133,10 @@ export default function Race() {
     }
   };
 
-  const handleCreateRace = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  const handleCreateRace = async (e: React.FormEvent) => { // Hàm xử lý submit form tạo vòng đua mới
+    e.preventDefault(); // Ngăn chặn trang bị reload
+    setError(""); // Xóa lỗi cũ
+    setSuccess(""); // Xóa thông báo thành công cũ
 
     const minVal = parseInt(minEntries, 10);
     const maxVal = parseInt(maxEntries, 10);
@@ -197,22 +203,22 @@ export default function Race() {
     }
   };
 
-  const handleOpenEdit = (race: Race) => {
+  const handleOpenEdit = (race: Race) => { // Hàm mở modal và đổ dữ liệu vòng đua cũ vào form chỉnh sửa
     setError("");
     setSuccess("");
     setEditError("");
-    setEditingRace(race);
-    setEditStartTime(formatDateTime(race.startTime));
-    setEditRegStartTime(formatDateTime(race.registrationStartTime));
-    setEditRegEndTime(formatDateTime(race.registrationEndTime));
-    setEditDistance(race.distanceMeters.toString());
-    setEditTrackType(race.trackType);
-    setEditPurse(race.purse.toString());
-    setEditMinEntries((race.minEntries || 3).toString());
-    setEditMaxEntries(race.maxEntries.toString());
+    setEditingRace(race); // Đánh dấu vòng đua nào đang được sửa
+    setEditStartTime(formatDateTime(race.startTime)); // Đổ dữ liệu thời gian bắt đầu
+    setEditRegStartTime(formatDateTime(race.registrationStartTime)); // Đổ dữ liệu thời gian mở đăng ký
+    setEditRegEndTime(formatDateTime(race.registrationEndTime)); // Đổ dữ liệu thời gian đóng đăng ký
+    setEditDistance(race.distanceMeters.toString()); // Đổ dữ liệu khoảng cách
+    setEditTrackType(race.trackType); // Đổ dữ liệu loại đường chạy
+    setEditPurse(race.purse.toString()); // Đổ dữ liệu tiền thưởng
+    setEditMinEntries((race.minEntries || 3).toString()); // Đổ dữ liệu số người tối thiểu
+    setEditMaxEntries(race.maxEntries.toString()); // Đổ dữ liệu số người tối đa
   };
 
-  const handleSaveEdit = async (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => { // Hàm xử lý khi submit form chỉnh sửa
     e.preventDefault();
     if (!editingRace) return;
     setError("");
@@ -278,13 +284,13 @@ export default function Race() {
     }
   };
 
-  const handleGoLive = async (raceId: number) => {
+  const handleGoLive = async (raceId: number) => { // Hàm lưu URL Livestream (đánh dấu vòng đua bắt đầu phát sóng trực tiếp)
     const url = (liveUrls[raceId] || "").trim();
     if (!url) return;
     setError("");
     setSuccess("");
 
-    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    if (!url.startsWith("http://") && !url.startsWith("https://")) { // Bắt buộc phải là link HTTP/HTTPS
       setError("URL must start with http:// or https://");
       return;
     }
@@ -300,30 +306,30 @@ export default function Race() {
     }
   };
 
-  const handleEndLive = async (raceId: number) => {
+  const handleEndLive = async (raceId: number) => { // Hàm kết thúc phát sóng (xóa link livestream)
     setError("");
     setSuccess("");
     try {
-      const res = await api.post<any>(`/admin/races/${raceId}/live/remove`);
+      const res = await api.post<any>(`/admin/races/${raceId}/live/remove`); // Gửi request báo kết thúc live
       if (res.success) {
         setSuccess("Livestream ended.");
-        fetchData();
+        fetchData(); // Load lại data mới
       }
     } catch (err: any) {
       setError(err.message || "Failed to end live.");
     }
   };
 
-  const handleAssignReferee = async (raceId: number) => {
+  const handleAssignReferee = async (raceId: number) => { // Hàm chỉ định (assign) trọng tài cho vòng đua
     const refId = assignRefSelection[raceId];
-    if (!refId) return;
+    if (!refId) return; // Nếu chưa chọn ai thì bỏ qua
     setError("");
     setSuccess("");
     try {
-      const res = await api.post<any>(`/admin/races/${raceId}/referee`, { refereeId: parseInt(refId) });
+      const res = await api.post<any>(`/admin/races/${raceId}/referee`, { refereeId: parseInt(refId) }); // Gọi API phân công
       if (res.success) {
         alert("Referee assigned successfully.");
-        setAssignRefSelection(prev => ({ ...prev, [raceId]: "" }));
+        setAssignRefSelection(prev => ({ ...prev, [raceId]: "" })); // Reset ô chọn sau khi thành công
         fetchData();
       }
     } catch (err: any) {
@@ -331,11 +337,11 @@ export default function Race() {
     }
   };
 
-  const handleRemoveReferee = async (raceId: number, refId: number) => {
+  const handleRemoveReferee = async (raceId: number, refId: number) => { // Hàm hủy phân công (gỡ) trọng tài khỏi vòng đua
     setError("");
     setSuccess("");
     try {
-      const res = await api.post<any>(`/admin/races/${raceId}/referee/remove`, { refereeId: refId });
+      const res = await api.post<any>(`/admin/races/${raceId}/referee/remove`, { refereeId: refId }); // Gọi API xóa trọng tài
       if (res.success) {
         alert("Referee removed successfully.");
         fetchData();
@@ -345,7 +351,7 @@ export default function Race() {
     }
   };
 
-  const statusBadge = (status: string) => {
+  const statusBadge = (status: string) => { // Hàm render UI hiển thị trạng thái của vòng đua dưới dạng một chiếc huy hiệu (Badge)
     const s = (status ?? "").toUpperCase();
     const cfg: Record<string, { bg: string; color: string; label: string }> = {
       SCHEDULED:          { bg: "rgba(59,130,246,0.1)",  color: "#3b82f6", label: "Scheduled" },
