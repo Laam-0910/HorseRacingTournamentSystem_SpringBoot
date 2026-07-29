@@ -1,20 +1,25 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { api } from "../../../lib/api";
-import { $t } from '@/lib/i18n';
+import { useState } from "react"; // Import hook cơ bản của React
+import { useNavigate, Link } from "react-router-dom"; // Import hook và component điều hướng
+import { api } from "../../../lib/api"; // Import module gọi API
+import { $t } from '@/lib/i18n'; // Import hàm hỗ trợ dịch đa ngôn ngữ
 
+// Component Đăng ký tài khoản
 export default function Register() {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Hook chuyển trang
+  
+  // Khởi tạo các state cho form đăng ký
   const [form, setForm] = useState({ fullName: "", username: "", email: "", password: "", confirmPassword: "" });
-  const [showPwd, setShowPwd] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const lang = localStorage.getItem("app-lang") || "vi";
+  const [showPwd, setShowPwd] = useState(false); // Trạng thái ẩn/hiện mật khẩu
+  const [showConfirm, setShowConfirm] = useState(false); // Trạng thái ẩn/hiện xác nhận mật khẩu
+  const [error, setError] = useState(""); // Thông báo lỗi
+  const [loading, setLoading] = useState(false); // Trạng thái đang tải dữ liệu
+  const lang = localStorage.getItem("app-lang") || "vi"; // Lấy ngôn ngữ hiện tại
 
+  // Hàm xử lý gửi form đăng ký
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Validate fullName
+    
+    // Kiểm tra tính hợp lệ của họ và tên (fullName)
     if (!form.fullName.trim()) {
       setError($t("Vui lòng nhập họ và tên đầy đủ", lang));
       return;
@@ -23,6 +28,8 @@ export default function Register() {
       setError($t("Họ và tên phải có ít nhất 3 ký tự", lang));
       return;
     }
+    
+    // Kiểm tra tính hợp lệ của tên đăng nhập (username)
     if (!form.username.trim()) {
       setError($t("Vui lòng nhập username đăng nhập", lang));
       return;
@@ -31,10 +38,13 @@ export default function Register() {
       setError($t("Username must be at least 3 characters long", lang));
       return;
     }
+    
+    // Kiểm tra mật khẩu và xác nhận mật khẩu
     if (form.password !== form.confirmPassword) {
       setError($t("Passwords do not match.", lang));
       return;
     }
+    
     // Kiểm tra độ phức tạp của mật khẩu (Chữ hoa, số, ký tự đặc biệt)
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(form.password)) {
@@ -46,17 +56,19 @@ export default function Register() {
 
     setError(""); setLoading(true);
     try {
+      // Gọi API đăng ký tài khoản
       const res = await api.post<any>("/auth/register", { username: form.username.trim(), fullName: form.fullName.trim(), email: form.email, password: form.password });
       if (res.requireOtp) {
-        navigate(`/verify-register?otpTxId=${res.otpTxId}`, { state: { email: form.email } });
+        navigate(`/verify-register?otpTxId=${res.otpTxId}`, { state: { email: form.email } }); // Chuyển hướng xác thực OTP
       } else {
-        navigate("/login");
+        navigate("/login"); // Chuyển hướng trang đăng nhập
       }
     } catch (err: any) {
-      setError(err.message || "Registration failed");
-    } finally { setLoading(false); }
+      setError(err.message || "Registration failed"); // Báo lỗi khi đăng ký thất bại
+    } finally { setLoading(false); } // Tắt trạng thái tải
   };
 
+  // Trả về giao diện trang Đăng ký
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
       <div style={{
@@ -80,11 +92,12 @@ export default function Register() {
             </div>
           </div>
 
-          {/* Card */}
+          {/* Hộp thoại Đăng ký */}
           <div style={{ background: "rgba(21,19,16,0.95)", backdropFilter: "blur(8px)", border: "1px solid #2a2825", borderRadius: "0.5rem", padding: "2rem", boxShadow: "0 25px 50px rgba(0,0,0,0.5)" }}>
             <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f0f0f0", marginBottom: "0.25rem" }}>Create Account</h2>
             <p style={{ color: "#a0a0a0", fontSize: "0.875rem", marginBottom: "1.5rem" }}>Join the racing season system</p>
 
+            {/* Hiển thị lỗi (nếu có) */}
             {error && (
               <div style={{ marginBottom: "1rem", padding: "0.75rem", borderRadius: "0.25rem", background: "#c0392b", color: "#fff", fontSize: "0.875rem", fontFamily: "monospace" }}>{error}</div>
             )}
@@ -136,6 +149,7 @@ export default function Register() {
               </button>
             </form>
 
+            {/* Liên kết Đăng nhập */}
             <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #2a2825", textAlign: "center" }}>
               <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>
                 Already have an account?{" "}
