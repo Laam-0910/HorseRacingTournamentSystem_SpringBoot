@@ -7,7 +7,9 @@ interface ModalProps {
   children: React.ReactNode;
 }
 
+// ── Component hiển thị Modal UI ────────────────────────────────
 export default function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  // Nếu modal không mở, không hiển thị gì cả
   if (!isOpen) return null;
 
   return (
