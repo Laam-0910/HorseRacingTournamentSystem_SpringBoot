@@ -518,25 +518,30 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
   );
 }
 
-// ── Main Component ────────────────────────────────────────────────────────────
+// ── Component chính (Jockey Dashboard) ────────────────────────────────────────────────────────────
 export default function Jockey() {
-  const { user } = useAuth();
-  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
-  const [selectedHorse, setSelectedHorse] = useState<{ id: number; name: string } | null>(null);
+  const { user } = useAuth(); // Lấy thông tin người dùng đang đăng nhập
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null); // State chọn hồ sơ để xem
+  const [selectedHorse, setSelectedHorse] = useState<{ id: number; name: string } | null>(null); // State xem lịch sử ngựa
+  
+  // State quản lý tab hiện tại
   const [activeTab, setActiveTab] = useState<JockeyTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as JockeyTab) || "hub";
   });
-  const [dashboard, setDashboard] = useState<any>(null);
-  const [mounts, setMounts] = useState<any[]>([]);
-  const [invitations, setInvitations] = useState<any[]>([]);
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [violations, setViolations] = useState<any[]>([]);
-  const [allRaces, setAllRaces] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  
+  // Các state lưu trữ dữ liệu
+  const [dashboard, setDashboard] = useState<any>(null); // Dữ liệu thống kê nài ngựa
+  const [mounts, setMounts] = useState<any[]>([]); // Danh sách ngựa đã đăng ký cưỡi
+  const [invitations, setInvitations] = useState<any[]>([]); // Danh sách lời mời
+  const [meetings, setMeetings] = useState<any[]>([]); // Danh sách sự kiện đua
+  const [violations, setViolations] = useState<any[]>([]); // Danh sách vi phạm luật
+  const [allRaces, setAllRaces] = useState<any[]>([]); // Toàn bộ các chặng đua
+  const [loading, setLoading] = useState(false); // State báo trạng thái tải dữ liệu
+  const [successMsg, setSuccessMsg] = useState(""); // Thông báo thành công
+  const [errorMsg, setErrorMsg] = useState(""); // Thông báo lỗi
 
+  // Hàm tải dữ liệu từ API
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
@@ -560,13 +565,15 @@ export default function Jockey() {
     } finally { setLoading(false); }
   };
 
+  // Gọi hàm fetchData khi component mount hoặc khi user đổi
   useEffect(() => { fetchData(); }, [user]);
 
+  // Hàm đồng ý lời mời
   const handleAcceptInvite = async (id: number) => {
     try {
       await api.post(`/invitations/${id}/accept`);
       setSuccessMsg("Invitation accepted and race entry created!");
-      fetchData();
+      fetchData(); // Tải lại dữ liệu sau khi chấp nhận
     } catch (err: any) { setErrorMsg(err.message || "Failed to accept invitation."); }
   };
 
