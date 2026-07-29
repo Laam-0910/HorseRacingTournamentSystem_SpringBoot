@@ -1,17 +1,19 @@
-import { $t } from "../../../lib/i18n";
-import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
-import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
+import { $t } from "../../../lib/i18n"; // Import hàm hỗ trợ đa ngôn ngữ
+import { useState, useEffect } from "react"; // Import hook cơ bản của React
+import { api } from "../../../lib/api"; // Import thư viện gọi API
+import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper"; // Import các hàm xử lý ngày tháng
 
+// Khai báo cấu trúc dữ liệu cho Component chọn ngày
 interface InlineDatePickerProps {
   label: string;
   value: string; // format: dd-MM-yyyy
   onChange: (val: string) => void;
 }
 
+// Component chọn ngày (Inline Date Picker)
 function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [currentDate, setCurrentDate] = useState(() => {
+  const [isOpen, setIsOpen] = useState(false); // State quản lý trạng thái đóng mở của bảng chọn ngày
+  const [currentDate, setCurrentDate] = useState(() => { // State lưu trữ tháng/năm hiện tại đang xem
     const today = new Date();
     return { month: today.getMonth(), year: today.getFullYear() };
   });
@@ -22,7 +24,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
   const selectedMonth = match ? parseInt(match[2]) - 1 : null;
   const selectedYear = match ? parseInt(match[3]) : null;
 
-  useEffect(() => {
+  useEffect(() => { // Hook cập nhật lại tháng/năm hiển thị khi người dùng mở bảng chọn
     if (isOpen && selectedMonth !== null && selectedYear !== null) {
       setCurrentDate({ month: selectedMonth, year: selectedYear });
     }
@@ -32,21 +34,21 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
   let firstDay = new Date(currentDate.year, currentDate.month, 1).getDay();
   firstDay = firstDay === 0 ? 6 : firstDay - 1;
 
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]; // Danh sách tên các tháng
 
-  const handlePrevMonth = () => {
+  const handlePrevMonth = () => { // Hàm chuyển về tháng trước
     setCurrentDate(prev =>
       prev.month === 0 ? { month: 11, year: prev.year - 1 } : { month: prev.month - 1, year: prev.year }
     );
   };
 
-  const handleNextMonth = () => {
+  const handleNextMonth = () => { // Hàm chuyển sang tháng sau
     setCurrentDate(prev =>
       prev.month === 11 ? { month: 0, year: prev.year + 1 } : { month: prev.month + 1, year: prev.year }
     );
   };
 
-  const handleSelectDay = (day: number) => {
+  const handleSelectDay = (day: number) => { // Hàm xử lý khi người dùng chọn một ngày
     const formattedDay = String(day).padStart(2, "0");
     const formattedMonth = String(currentDate.month + 1).padStart(2, "0");
     onChange(`${formattedDay}-${formattedMonth}-${currentDate.year}`);
@@ -56,7 +58,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const blanksArray = Array.from({ length: firstDay }, (_, i) => i);
 
-  return (
+  return ( // Trả về giao diện của DatePicker
     <div className="relative">
       <label className="block text-[9px] font-mono uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>
         {label}
@@ -142,6 +144,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
   );
 }
 
+// Quy tắc mẫu mặc định cho các Class đua ngựa
 const DEFAULT_TEMPLATE_RULES = [
   { classLevelName: "Class 1", minRating: 95, maxRating: null as number | null, minPrize: 300000, maxPrize: 1000000 },
   { classLevelName: "Class 2", minRating: 80, maxRating: 94, minPrize: 200000, maxPrize: 299999 },
@@ -150,15 +153,16 @@ const DEFAULT_TEMPLATE_RULES = [
   { classLevelName: "Class 5", minRating: 0,  maxRating: 39, minPrize: 20000, maxPrize: 49999 },
 ];
 
+// Component chính quản lý Mùa giải (Season)
 export default function Season() {
-  const [seasons, setSeasons] = useState<any[]>([]);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
-  const [seasonRules, setSeasonRules] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [seasons, setSeasons] = useState<any[]>([]); // State danh sách mùa giải
+  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null); // State lưu ID mùa giải đang chọn
+  const [seasonRules, setSeasonRules] = useState<any[]>([]); // State danh sách luật của mùa giải
+  const [loading, setLoading] = useState(false); // State trạng thái tải dữ liệu
+  const [error, setError] = useState(""); // State hiển thị lỗi
+  const [success, setSuccess] = useState(""); // State hiển thị thông báo thành công
 
-  // Create form states
+  // Khởi tạo các state cho form tạo mới mùa giải
   const [newSeasonName, setNewSeasonName] = useState("2026–2027 Grand Prix Season");
   const [newSeasonStartDate, setNewSeasonStartDate] = useState("");
   const [newSeasonEndDate, setNewSeasonEndDate] = useState("");
@@ -174,7 +178,7 @@ export default function Season() {
 
   const toDbFormat = (d: string) => d ? `${d} 00:00:00` : "";
 
-  const toDisplayFormat = (d: string) => {
+  const toDisplayFormat = (d: string) => { // Hàm định dạng hiển thị ngày ra giao diện
     if (!d) return "";
     const parts = d.substring(0, 10).replace(/\//g, "-").split("-");
     if (parts.length === 3) {
@@ -187,13 +191,13 @@ export default function Season() {
     return d;
   };
 
-  const fetchSeasons = async () => {
+  const fetchSeasons = async () => { // Hàm gọi API lấy danh sách mùa giải
     setLoading(true);
     setError("");
     try {
       const data = await api.get<any[]>("/races/seasons");
       setSeasons(data);
-      if (data.length > 0 && selectedSeasonId === null) setSelectedSeasonId(data[0].id);
+      if (data.length > 0 && selectedSeasonId === null) setSelectedSeasonId(data[0].id); // Tự động chọn mùa giải đầu tiên
     } catch (err: any) {
       setError(err.message || "Failed to fetch seasons.");
     } finally {
@@ -201,7 +205,7 @@ export default function Season() {
     }
   };
 
-  const fetchRules = async (seasonId: number) => {
+  const fetchRules = async (seasonId: number) => { // Hàm gọi API lấy danh sách quy tắc cho một mùa giải cụ thể
     try {
       const rules = await api.get<any[]>(`/races/seasons/${seasonId}/rules`);
       setSeasonRules(rules);
@@ -210,17 +214,17 @@ export default function Season() {
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { // Hook xử lý kiểm tra kích thước màn hình thiết bị
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => { fetchSeasons(); }, []);
-  useEffect(() => { if (selectedSeasonId !== null) fetchRules(selectedSeasonId); }, [selectedSeasonId]);
+  useEffect(() => { fetchSeasons(); }, []); // Hook tự động lấy danh sách mùa giải khi load component
+  useEffect(() => { if (selectedSeasonId !== null) fetchRules(selectedSeasonId); }, [selectedSeasonId]); // Hook lấy rule khi người dùng chọn mùa giải khác
 
-  const handleToggle = async (id: number) => {
+  const handleToggle = async (id: number) => { // Hàm kích hoạt hoặc hủy kích hoạt một mùa giải
     try {
       await api.post(`/races/seasons/${id}/toggle`);
       fetchSeasons();
@@ -229,7 +233,7 @@ export default function Season() {
     }
   };
 
-  const handleExtend = (season: any) => {
+  const handleExtend = (season: any) => { // Hàm mở popup để gia hạn mùa giải
     setExtendingSeason(season);
     
     // Safely extract the date part (yyyy-MM-dd) before displaying
@@ -241,7 +245,7 @@ export default function Season() {
     setExtendError("");
   };
 
-  const handleExtendSubmit = async (e: React.FormEvent) => {
+  const handleExtendSubmit = async (e: React.FormEvent) => { // Hàm xử lý gửi yêu cầu gia hạn mùa giải lên server
     e.preventDefault();
     setExtendError("");
     
@@ -269,7 +273,7 @@ export default function Season() {
     }
   };
 
-  const handleCreateSeason = async (e: React.FormEvent) => {
+  const handleCreateSeason = async (e: React.FormEvent) => { // Hàm xử lý tạo mới một mùa giải
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -309,13 +313,13 @@ export default function Season() {
     }
   };
 
-  const updateManualRule = (index: number, field: string, value: string) => {
+  const updateManualRule = (index: number, field: string, value: string) => { // Hàm cập nhật cấu hình rule khi ở chế độ tạo thủ công
     setManualRules(prev => prev.map((r, i) =>
       i === index ? { ...r, [field]: field === "classLevelName" ? value : (value === "" ? null : Number(value)) } : r
     ));
   };
 
-  return (
+  return ( // Trả về giao diện chính của trang Quản lý Mùa giải
     <div className="space-y-6">
       {/* Alerts */}
       {error && (
