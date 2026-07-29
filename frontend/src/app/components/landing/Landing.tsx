@@ -1017,21 +1017,25 @@ function AboutView({ t }: { t: any }) {
 
 // ─────────────────────────────────────────────
 // MAIN LANDING COMPONENT
-// ─────────────────────────────────────────────
+// ── Component chính trang chủ (Landing Page) ────────────────
 export default function Landing() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [view, setView] = useState<SubView>("home");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [view, setView] = useState<SubView>("home"); // Giao diện phụ hiện tại
+  const [searchQuery, setSearchQuery] = useState(""); // Lưu truy vấn tìm kiếm
+  
+  // Trạng thái hiển thị menu drop-down
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showDashboardMenu, setShowDashboardMenu] = useState(false);
+  
+  // Quản lý ngôn ngữ
   const [lang, setLangRaw] = useState(() => localStorage.getItem('app-lang') || 'vi');
   const setLang = (code: string) => { setLangRaw(code); localStorage.setItem('app-lang', code); window.location.reload(); };
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
   const langLabel = lang.toUpperCase();
 
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false); // Trạng thái mobile
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
