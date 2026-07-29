@@ -10,10 +10,13 @@ import { parseMarkdownToHtml } from "../../utils/markdownParser";
 import { formatDate, parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
 import { $t } from '@/lib/i18n';
 
+// Các tab trong giao diện Spectator
 type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "profile";
 
+// Màu chủ đạo cho vai trò Khán giả
 const ROLE_COLOR = "#ef4444";
 
+// Cấu hình thanh điều hướng
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: $t("Overview", (localStorage.getItem('app-lang') || 'vi')),   view: "home"         },
   { index: "02", icon: "tv",               label: $t("Live Watch", (localStorage.getItem('app-lang') || 'vi')), view: "live"         },
@@ -24,49 +27,53 @@ const NAV_ITEMS = [
   { index: "07", icon: "mail",             label: $t("AI Assistant", (localStorage.getItem('app-lang') || 'vi')), view: "ai-assistant" },
 ];
 
+// Cấu trúc dữ liệu tin nhắn Chat AI
 interface ChatMessage {
   sender: "user" | "ai";
   text: string;
   time: string;
 }
 
+// ── Component chính (Dashboard Khán giả) ──────────────────────────────────
 export default function Spectator() {
-  const { user } = useAuth();
-  const lang = localStorage.getItem("app-lang") || "vi";
+  const { user } = useAuth(); // Lấy thông tin người dùng
+  const lang = localStorage.getItem("app-lang") || "vi"; // Lấy ngôn ngữ hiện tại
 
+  // State lưu trữ tab hiện đang hiển thị
   const [activeTab, setActiveTab] = useState<SpectatorTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as SpectatorTab) || "home";
   });
   
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [races, setRaces] = useState<any[]>([]);
-  const [horses, setHorses] = useState<any[]>([]);
-  const [seasons, setSeasons] = useState<any[]>([]);
-  const [extraStats, setExtraStats] = useState<any>(null);
+  // State lưu trữ dữ liệu từ API
+  const [meetings, setMeetings] = useState<any[]>([]); // Sự kiện
+  const [races, setRaces] = useState<any[]>([]); // Chặng đua
+  const [horses, setHorses] = useState<any[]>([]); // Ngựa
+  const [seasons, setSeasons] = useState<any[]>([]); // Mùa giải
+  const [extraStats, setExtraStats] = useState<any>(null); // Thống kê thêm
   const [statsSubTab, setStatsSubTab] = useState<"leaderboards" | "analysis">("leaderboards");
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Live stream cross-navigation state
+  // State điều hướng Live stream
   const [selectedLiveRaceId, setSelectedLiveRaceId] = useState<number | null>(null);
 
-  // Profile modal state (for jockey profiles)
+  // State cho Modal hồ sơ nài ngựa (jockey profile)
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
 
-  // Horse performance modal state
+  // State cho Modal lịch sử ngựa
   const [selectedHorseId, setSelectedHorseId] = useState<number | null>(null);
   const [selectedHorseName, setSelectedHorseName] = useState<string>("");
 
-  // Expandable Racecard State
+  // State hiển thị chi tiết Racecard
   const [expandedRaceId, setExpandedRaceId] = useState<number | null>(null);
   const [raceDetails, setRaceDetails] = useState<Record<number, any[]>>({});
   const [loadingDetails, setLoadingDetails] = useState<Record<number, boolean>>({});
 
-  // Mobile responsive
+  // State thiết bị di động
   const [isMobile, setIsMobile] = useState(false);
 
-  // AI Assistant Chat State
+  // State cho Trợ lý AI (AI Assistant)
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
     const welcome = $t("Chào bạn! Tôi là trợ lý AI. Hỏi tôi về ngựa, nài, xếp hạng rating hoặc dự đoán trận đấu nhé.", lang);
     return [{
