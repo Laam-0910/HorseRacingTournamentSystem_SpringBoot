@@ -26,6 +26,7 @@ interface HorsePerf {
   history: RaceRecord[];
 }
 
+// ── Component hiển thị Modal Lịch sử hiệu suất của ngựa ────────────────
 function HorsePerformanceModal({
   horseId,
   horseName,
@@ -35,10 +36,12 @@ function HorsePerformanceModal({
   horseName: string;
   onClose: () => void;
 }) {
+  // State lưu dữ liệu hiệu suất của ngựa
   const [perf, setPerf] = useState<HorsePerf | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true); // Trạng thái đang tải
+  const [error, setError] = useState(""); // Thông báo lỗi
 
+  // Gọi API lấy thông tin lịch sử hiệu suất khi ID ngựa thay đổi
   useEffect(() => {
     const fetchPerf = async () => {
       setLoading(true);
