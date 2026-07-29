@@ -1,44 +1,53 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
-import { authService } from "../../../services/authService";
+import { useState } from "react"; // Import hook cơ bản của React
+import { useNavigate, Link } from "react-router-dom"; // Import hook và component điều hướng
+import { useAuth } from "../../../context/AuthContext"; // Import context xác thực người dùng
+import { authService } from "../../../services/authService"; // Import dịch vụ API xác thực
 
+// Component Đăng nhập
 export default function Login() {
-  const navigate = useNavigate();
-  const { setUser } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // Hook chuyển trang
+  const { setUser } = useAuth(); // Lấy hàm cập nhật thông tin người dùng từ context
+  
+  // Khởi tạo các state
+  const [email, setEmail] = useState(""); // State lưu email hoặc username
+  const [password, setPassword] = useState(""); // State lưu mật khẩu
+  const [showPassword, setShowPassword] = useState(false); // Trạng thái ẩn/hiện mật khẩu
+  const [error, setError] = useState(""); // Thông báo lỗi
+  const [loading, setLoading] = useState(false); // Trạng thái đang tải dữ liệu
 
+  // Hàm xử lý gửi form đăng nhập
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
     try {
-      const res = await authService.login({ username: email, password });
+      const res = await authService.login({ username: email, password }); // Gọi API đăng nhập
       if (res.requireOtp) {
+        // Chuyển sang trang xác thực OTP nếu yêu cầu
         navigate("/verify-login", { state: { otpTxId: res.otpTxId } });
       } else if (res.user && res.token) {
+        // Lưu token vào session và cập nhật thông tin người dùng
         sessionStorage.setItem("token", res.token);
         setUser(res.user);
+        
+        // Điều hướng dựa vào vai trò (Role)
         const roleId = res.user.roleId;
         if (roleId === 1) navigate("/dashboard/admin");
         else if (roleId === 2) navigate("/dashboard/owner");
         else if (roleId === 3) navigate("/dashboard/jockey");
         else if (roleId === 5) navigate("/dashboard/referee");
-        else navigate("/dashboard/spectator");
+        else navigate("/dashboard/spectator"); // Mặc định cho khán giả
       } else {
         throw new Error(res.error || "Login failed");
       }
     } catch (err: any) {
-      setError(err.message || "Invalid credentials");
+      setError(err.message || "Invalid credentials"); // Hiển thị lỗi đăng nhập
     } finally {
-      setLoading(false);
+      setLoading(false); // Tắt trạng thái tải
     }
   };
 
+  // Trả về giao diện trang đăng nhập
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
       {/* Background – same horse image as JSP */}
@@ -56,7 +65,7 @@ export default function Login() {
         }} />
       </div>
 
-      {/* Centered Form */}
+      {/* Căn giữa Form đăng nhập */}
       <div style={{
         position: "relative", zIndex: 10,
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -74,7 +83,7 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Card */}
+          {/* Hộp thoại đăng nhập (Card) */}
           <div style={{
             background: "rgba(21,19,16,0.95)", backdropFilter: "blur(8px)",
             border: "1px solid #2a2825", borderRadius: "0.5rem",
@@ -85,7 +94,7 @@ export default function Login() {
               Sign in to access your dashboard. New accounts await role assignment by an Admin before a dashboard unlocks.
             </p>
 
-            {/* Success flash */}
+            {/* Hiển thị thông báo lỗi (nếu có) */}
             {error && (
               <div style={{ marginBottom: "1rem", padding: "0.75rem", borderRadius: "0.25rem", background: "#c0392b", color: "#fff", fontSize: "0.875rem", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "0.375rem" }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
@@ -136,14 +145,14 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Forgot link */}
+              {/* Liên kết Quên mật khẩu */}
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
                 <Link to="/forgot-password" style={{ fontSize: "0.75rem", color: "#c9a227", textDecoration: "none" }}>
                   Forgot password?
                 </Link>
               </div>
 
-              {/* Submit */}
+              {/* Nút Đăng nhập */}
               <button
                 type="submit"
                 disabled={loading}
@@ -161,7 +170,7 @@ export default function Login() {
               </button>
             </form>
 
-            {/* Footer link */}
+            {/* Liên kết Đăng ký */}
             <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #2a2825", textAlign: "center" }}>
               <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>
                 Don't have an account?{" "}
