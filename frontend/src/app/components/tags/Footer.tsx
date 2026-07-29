@@ -1,3 +1,4 @@
+// ── Component hiển thị Chân trang (Footer) ────────────────────────────────
 export default function Footer() {
   return (
     <footer className="bg-black/60 border-t border-white/10 py-8 text-center text-xs text-white/40">
