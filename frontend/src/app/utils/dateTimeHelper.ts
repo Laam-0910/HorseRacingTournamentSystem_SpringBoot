@@ -5,104 +5,104 @@
  * - yyyy-MM-ddTHH:mm:ss
  * - yyyy-MM-dd HH:mm:ss
  */
-export const parseSafeDate = (str: string): Date | null => { // Function to safely parse a string into a Date object
-  if (!str) return null; // If input string is empty or null, return null immediately
-  const cleanStr = str.trim(); // Remove leading and trailing whitespaces from the input string
+export const parseSafeDate = (str: string): Date | null => { // Hàm để phân tích cú pháp an toàn một chuỗi thành đối tượng Date
+  if (!str) return null; // Nếu chuỗi đầu vào bị trống hoặc null, trả về null ngay lập tức
+  const cleanStr = str.trim(); // Xóa khoảng trắng thừa ở đầu và cuối chuỗi
   // Try matching dd-MM-yyyy HH:mm:ss or dd-MM-yyyy HH:mm FIRST
   // (Must check before native Date() which misreads dd-MM-yyyy as MM-DD-YYYY)
-  const dmyMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})[ T](\d{2})[-:](\d{2})(?:[-:](\d{2}))?/); // Regex to match dd-MM-yyyy format with time
-  if (dmyMatch) { // If the regex matches the string
-    const [_, day, month, year, hours, minutes, seconds] = dmyMatch; // Extract the date and time components from the regex match
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), seconds ? parseInt(seconds) : 0); // Create and return a new Date object based on the extracted components
+  const dmyMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})[ T](\d{2})[-:](\d{2})(?:[-:](\d{2}))?/); // Dùng regex để khớp chuỗi có định dạng dd-MM-yyyy kèm thời gian
+  if (dmyMatch) { // Nếu regex khớp với chuỗi
+    const [_, day, month, year, hours, minutes, seconds] = dmyMatch; // Trích xuất ngày, tháng, năm và thời gian từ kết quả regex
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day), parseInt(hours), parseInt(minutes), seconds ? parseInt(seconds) : 0); // Tạo và trả về đối tượng Date mới từ các thành phần đã trích xuất
   }
 
   // Try matching dd-MM-yyyy or dd/MM/yyyy (date only) first
-  const dmyDateMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/); // Regex to match dd-MM-yyyy format without time
-  if (dmyDateMatch) { // If the regex matches the date only string
-    const [_, day, month, year] = dmyDateMatch; // Extract day, month, and year components
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)); // Create and return a new Date object using just the date parts
+  const dmyDateMatch = cleanStr.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/); // Dùng regex để khớp chuỗi có định dạng dd-MM-yyyy không có thời gian
+  if (dmyDateMatch) { // Nếu regex khớp với chuỗi ngày
+    const [_, day, month, year] = dmyDateMatch; // Trích xuất ngày, tháng và năm
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)); // Tạo và trả về đối tượng Date mới chỉ với phần ngày
   }
 
   // For ISO 8601 format (yyyy-MM-ddTHH:mm:ss or yyyy-MM-dd HH:mm:ss), use native Date()
-  const parsed = new Date(cleanStr.includes(" ") ? cleanStr.replace(" ", "T") : cleanStr); // Replace space with T for ISO format and parse using native Date
-  if (!isNaN(parsed.getTime())) { // Check if the parsed Date is a valid date (not NaN)
-    return parsed; // Return the valid Date object
+  const parsed = new Date(cleanStr.includes(" ") ? cleanStr.replace(" ", "T") : cleanStr); // Thay thế khoảng trắng bằng 'T' cho chuẩn ISO và dùng hàm Date mặc định để parse
+  if (!isNaN(parsed.getTime())) { // Kiểm tra xem đối tượng Date được tạo ra có hợp lệ không (không phải NaN)
+    return parsed; // Trả về đối tượng Date hợp lệ
   }
 
-  return null; // If all parsing attempts fail, return null
+  return null; // Nếu tất cả các cách phân tích đều thất bại, trả về null
 };
 
 
 /**
  * Formats a Date object or string into dd-MM-yyyy
  */
-export const formatDate = (dateInput: Date | string | null | undefined): string => { // Function to format a date to dd-MM-yyyy string
-  if (!dateInput) return ""; // Return empty string if input is falsy
-  const d = typeof dateInput === "string" ? parseSafeDate(dateInput) : dateInput; // Convert string to Date using safe parser if needed
-  if (!d || isNaN(d.getTime())) return typeof dateInput === "string" ? dateInput.split(" ")[0] : ""; // Return the original date string part or empty if invalid
+export const formatDate = (dateInput: Date | string | null | undefined): string => { // Hàm để định dạng ngày thành chuỗi dd-MM-yyyy
+  if (!dateInput) return ""; // Trả về chuỗi rỗng nếu đầu vào không hợp lệ
+  const d = typeof dateInput === "string" ? parseSafeDate(dateInput) : dateInput; // Chuyển chuỗi thành Date bằng parseSafeDate nếu cần thiết
+  if (!d || isNaN(d.getTime())) return typeof dateInput === "string" ? dateInput.split(" ")[0] : ""; // Trả về chuỗi gốc hoặc rỗng nếu đối tượng Date không hợp lệ
 
-  const pad = (n: number) => String(n).padStart(2, '0'); // Helper function to pad numbers with a leading zero if they are single digits
-  const day = pad(d.getDate()); // Get day and pad with leading zero
-  const month = pad(d.getMonth() + 1); // Get month (0-indexed so add 1) and pad
-  const year = d.getFullYear(); // Get the full 4-digit year
+  const pad = (n: number) => String(n).padStart(2, '0'); // Hàm hỗ trợ thêm số 0 đằng trước nếu số chỉ có 1 chữ số
+  const day = pad(d.getDate()); // Lấy phần ngày và thêm số 0 nếu cần
+  const month = pad(d.getMonth() + 1); // Lấy phần tháng (do tháng bắt đầu từ 0 nên cộng 1) và thêm số 0
+  const year = d.getFullYear(); // Lấy phần năm đầy đủ 4 chữ số
 
-  return `${day}-${month}-${year}`; // Construct and return the formatted date string
+  return `${day}-${month}-${year}`; // Ghép và trả về chuỗi ngày đã định dạng
 };
 
 /**
  * Formats a Date object or string into dd-MM-yyyy HH:mm:ss
  */
-export const formatDateTime = (dateInput: Date | string | null | undefined): string => { // Function to format a date to dd-MM-yyyy HH:mm:ss string
-  if (!dateInput) return ""; // Return empty string if input is falsy
-  const d = typeof dateInput === "string" ? parseSafeDate(dateInput) : dateInput; // Parse input to Date object if it is a string
-  if (!d || isNaN(d.getTime())) return typeof dateInput === "string" ? dateInput : ""; // If invalid date, return original string or empty string
+export const formatDateTime = (dateInput: Date | string | null | undefined): string => { // Hàm để định dạng ngày thành chuỗi dd-MM-yyyy HH:mm:ss
+  if (!dateInput) return ""; // Trả về chuỗi rỗng nếu đầu vào không hợp lệ
+  const d = typeof dateInput === "string" ? parseSafeDate(dateInput) : dateInput; // Chuyển đổi đầu vào thành đối tượng Date nếu nó là chuỗi
+  if (!d || isNaN(d.getTime())) return typeof dateInput === "string" ? dateInput : ""; // Nếu ngày không hợp lệ, trả về chuỗi gốc hoặc chuỗi rỗng
 
-  const pad = (n: number) => String(n).padStart(2, '0'); // Helper function to pad single digit numbers with zero
-  const day = pad(d.getDate()); // Extract and pad day
-  const month = pad(d.getMonth() + 1); // Extract and pad month
-  const year = d.getFullYear(); // Extract 4-digit year
-  const hours = pad(d.getHours()); // Extract and pad hours
-  const minutes = pad(d.getMinutes()); // Extract and pad minutes
-  const seconds = pad(d.getSeconds()); // Extract and pad seconds
+  const pad = (n: number) => String(n).padStart(2, '0'); // Hàm hỗ trợ thêm số 0 đằng trước cho số có 1 chữ số
+  const day = pad(d.getDate()); // Trích xuất và định dạng phần ngày
+  const month = pad(d.getMonth() + 1); // Trích xuất và định dạng phần tháng
+  const year = d.getFullYear(); // Trích xuất phần năm đầy đủ
+  const hours = pad(d.getHours()); // Trích xuất và định dạng phần giờ
+  const minutes = pad(d.getMinutes()); // Trích xuất và định dạng phần phút
+  const seconds = pad(d.getSeconds()); // Trích xuất và định dạng phần giây
 
-  return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`; // Combine components into final date-time string
+  return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`; // Kết hợp các thành phần lại thành chuỗi thời gian hoàn chỉnh
 };
 
 /**
  * Formats a Date object or string into yyyy-MM-ddTHH:mm:ss for <input type="datetime-local">
  */
-export const formatForDateTimeLocal = (dateInput: Date | string | null | undefined): string => { // Function to format date for datetime-local input fields
-  if (!dateInput) return ""; // Return empty string if input is not provided
-  const d = typeof dateInput === "string" ? parseSafeDate(dateInput) : dateInput; // Convert string input to Date object
-  if (!d || isNaN(d.getTime())) return ""; // Return empty string if the date object is invalid
+export const formatForDateTimeLocal = (dateInput: Date | string | null | undefined): string => { // Hàm để định dạng ngày cho thẻ input type="datetime-local"
+  if (!dateInput) return ""; // Trả về chuỗi rỗng nếu đầu vào bị bỏ trống
+  const d = typeof dateInput === "string" ? parseSafeDate(dateInput) : dateInput; // Đổi chuỗi đầu vào thành đối tượng Date
+  if (!d || isNaN(d.getTime())) return ""; // Trả về chuỗi rỗng nếu đối tượng Date không hợp lệ
 
-  const pad = (n: number) => String(n).padStart(2, '0'); // Pad helper function
-  const day = pad(d.getDate()); // Get padded day
-  const month = pad(d.getMonth() + 1); // Get padded month
-  const year = d.getFullYear(); // Get full year
-  const hours = pad(d.getHours()); // Get padded hours
-  const minutes = pad(d.getMinutes()); // Get padded minutes
-  const seconds = pad(d.getSeconds()); // Get padded seconds
+  const pad = (n: number) => String(n).padStart(2, '0'); // Hàm đệm thêm số 0
+  const day = pad(d.getDate()); // Lấy phần ngày đã được đệm
+  const month = pad(d.getMonth() + 1); // Lấy phần tháng đã được đệm
+  const year = d.getFullYear(); // Lấy phần năm
+  const hours = pad(d.getHours()); // Lấy phần giờ đã được đệm
+  const minutes = pad(d.getMinutes()); // Lấy phần phút đã được đệm
+  const seconds = pad(d.getSeconds()); // Lấy phần giây đã được đệm
 
-  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`; // Return ISO-like format required by datetime-local
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`; // Trả về định dạng chuẩn ISO cho thẻ datetime-local
 };
 
 /**
  * Formats a Date object or string to dd-MM-yyyy HH:mm:ss for API payload submission
  */
-export const formatForApi = (htmlInputStr: string): string => { // Function to format HTML input string for API submission
-  if (!htmlInputStr) return ""; // Return empty string if input is missing
-  const d = new Date(htmlInputStr.replace(" ", "T")); // Create Date object, replacing space with T for compatibility
-  if (isNaN(d.getTime())) return htmlInputStr; // If invalid date, return original string unformatted
-  return formatDateTime(d); // Return formatted date-time string
+export const formatForApi = (htmlInputStr: string): string => { // Hàm để định dạng chuỗi HTML đầu vào dùng để gửi lên API
+  if (!htmlInputStr) return ""; // Trả về rỗng nếu chuỗi đầu vào bị thiếu
+  const d = new Date(htmlInputStr.replace(" ", "T")); // Tạo đối tượng Date, thay thế khoảng trắng bằng 'T' cho tính tương thích
+  if (isNaN(d.getTime())) return htmlInputStr; // Nếu ngày không hợp lệ, trả về chuỗi gốc chưa định dạng
+  return formatDateTime(d); // Trả về chuỗi ngày giờ đã được định dạng
 };
 
 /**
  * Formats class level string to "Class X" if it is a number
  */
-export const formatClassLevel = (level: string | null | undefined): string => { // Function to format the class level string
-  if (!level) return "—"; // If no level is provided, return a dash character
-  const trimmed = level.trim(); // Remove whitespace from the level string
-  return /^\d+$/.test(trimmed) ? `Class ${trimmed}` : trimmed; // If the level is purely digits, prepend "Class ", otherwise return it as is
+export const formatClassLevel = (level: string | null | undefined): string => { // Hàm để định dạng chuỗi cấp độ class
+  if (!level) return "—"; // Nếu cấp độ không được truyền vào, trả về ký tự dấu gạch ngang
+  const trimmed = level.trim(); // Xóa các khoảng trắng thừa từ chuỗi cấp độ
+  return /^\d+$/.test(trimmed) ? `Class ${trimmed}` : trimmed; // Nếu cấp độ chỉ chứa toàn chữ số, thêm chữ "Class " vào đầu, nếu không thì giữ nguyên
 };
 
