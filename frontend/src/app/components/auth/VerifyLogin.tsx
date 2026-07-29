@@ -1,45 +1,56 @@
-import { useState } from "react";
-import { useNavigate, Link, useLocation } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
-import { authService } from "../../../services/authService";
+import { useState } from "react"; // Import hook cơ bản của React
+import { useNavigate, Link, useLocation } from "react-router-dom"; // Import công cụ điều hướng
+import { useAuth } from "../../../context/AuthContext"; // Import context xác thực
+import { authService } from "../../../services/authService"; // Import dịch vụ API
 
+// Component Xác thực bước 2 khi đăng nhập
 export default function VerifyLogin() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { setUser } = useAuth();
-  const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
+  const navigate = useNavigate(); // Hook chuyển trang
+  const location = useLocation(); // Hook lấy thông tin trạng thái URL
+  const { setUser } = useAuth(); // Lấy hàm cập nhật người dùng từ context
+  
+  // Khởi tạo các state
+  const [otp, setOtp] = useState(""); // State lưu mã OTP
+  const [error, setError] = useState(""); // Thông báo lỗi
+  const [loading, setLoading] = useState(false); // Trạng thái đang tải
+  
+  // Lấy mã giao dịch OTP được truyền qua state khi chuyển hướng từ Login
   const otpTxId = location.state?.otpTxId || "";
 
+  // Hàm xử lý gửi yêu cầu xác thực OTP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(""); setLoading(true);
     try {
       if (!otpTxId) {
-        throw new Error("Missing OTP transaction ID. Please log in again.");
+        throw new Error("Missing OTP transaction ID. Please log in again."); // Lỗi thiếu ID giao dịch
       }
+      
+      // Gọi API xác minh OTP
       const data = await authService.verifyLogin({ otpTxId, otp });
       if (data?.user && data?.token) {
-        sessionStorage.setItem("token", data.token);
-        setUser(data.user);
+        sessionStorage.setItem("token", data.token); // Lưu token vào session
+        setUser(data.user); // Cập nhật state người dùng
+        
+        // Điều hướng theo vai trò người dùng (Role)
         const roleId = data.user.roleId;
         if (roleId === 1) navigate("/dashboard/admin");
         else if (roleId === 2) navigate("/dashboard/owner");
         else if (roleId === 3) navigate("/dashboard/jockey");
         else if (roleId === 5) navigate("/dashboard/referee");
-        else navigate("/dashboard/spectator");
+        else navigate("/dashboard/spectator"); // Mặc định cho Khán giả
       } else {
         throw new Error(data?.error || "Verification failed");
       }
     } catch (err: any) {
-      setError(err.message || "Invalid or expired code");
-    } finally { setLoading(false); }
+      setError(err.message || "Invalid or expired code"); // Báo lỗi mã không hợp lệ
+    } finally { setLoading(false); } // Tắt trạng thái tải
   };
 
+  // Trả về giao diện người dùng
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
+      {/* Nền giao diện */}
       <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/anhngua1-1.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.75) 100%)" }} />
       </div>
@@ -57,13 +68,14 @@ export default function VerifyLogin() {
             </div>
           </div>
 
-          {/* Card */}
+          {/* Hộp thoại xác minh */}
           <div style={{ background: "rgba(21,19,16,0.95)", backdropFilter: "blur(8px)", border: "1px solid #2a2825", borderRadius: "0.5rem", padding: "2rem", boxShadow: "0 25px 50px rgba(0,0,0,0.5)" }}>
             <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f0f0f0", marginBottom: "0.25rem" }}>Enter Verification Code</h2>
             <p style={{ color: "#a0a0a0", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
               We've sent a 6-digit verification code to your email. Please enter it below to complete login.
             </p>
 
+            {/* Hiển thị lỗi */}
             {error && (
               <div style={{ marginBottom: "1rem", padding: "0.75rem", borderRadius: "0.25rem", background: "#c0392b", color: "#fff", fontSize: "0.875rem", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "0.375rem" }}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
@@ -92,6 +104,7 @@ export default function VerifyLogin() {
               </button>
             </form>
 
+            {/* Link quay về đăng nhập */}
             <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #2a2825", textAlign: "center" }}>
               <Link to="/login" style={{ fontSize: "0.75rem", color: "#c9a227", textDecoration: "none", fontWeight: 500 }}>Cancel and return to login</Link>
             </div>
