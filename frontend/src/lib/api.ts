@@ -20,7 +20,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     throw new Error(err.error || `Request failed: ${res.status}`); // Ném ra một ngoại lệ với nội dung lỗi từ server hoặc mã lỗi mặc định
   }
 
-  // Some endpoints may return empty body
+  // Một số API endpoint có thể trả về phần body rỗng (không có dữ liệu)
   const text = await res.text(); // Lấy toàn bộ nội dung phản hồi dưới dạng text (chuỗi văn bản)
   return (text ? JSON.parse(text) : null) as T; // Nếu chuỗi không rỗng thì chuyển đổi thành JSON, ngược lại trả về null, sau đó ép kiểu sang kiểu dữ liệu chung T
 }
