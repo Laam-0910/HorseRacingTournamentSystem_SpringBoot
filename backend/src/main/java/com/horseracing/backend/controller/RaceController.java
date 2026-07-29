@@ -15,10 +15,17 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller RaceController - Lớp kiểm soát các endpoint liên quan đến Mùa giải, Ngày hội đua và các Trận đua.
+ * - Quản lý mùa giải (Tạo mùa giải mới, Bật/Tắt kích hoạt, Gia hạn thời gian, Xem/Sửa quy định phân hạng điểm).
+ * - Quản lý Ngày hội đua (CRUD ngày hội đua - Race Meetings).
+ * - Quản lý Trận đua (Xem danh sách, Tạo mới trận đua Class 1-5, Cập nhật thông số cự ly/thời gian/link live).
+ * - Lấy danh sách các trận đua đang phát trực tiếp (Live races).
+ */
 @RestController
 @RequestMapping("/api/races")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "05. Race Management Service",
     description = "🏁 **BƯỚC 5: QUẢN LÝ TRẬN ĐUA & THỜI GIAN (RACE ARCHITECTURE)**\n\n" +
@@ -37,9 +44,10 @@ import java.util.Map;
 )
 public class RaceController {
 
-    private final RaceService raceService;
-    private final SeasonService seasonService;
+    private final RaceService raceService; // Dịch vụ quản lý giải đua, trận đua
+    private final SeasonService seasonService; // Dịch vụ quản lý mùa giải
 
+    // Lấy toàn bộ danh sách các mùa giải đua
     @GetMapping("/seasons")
     @Operation(
         summary = "GET: Lấy danh sách các mùa giải",
@@ -59,6 +67,7 @@ public class RaceController {
         return ResponseEntity.ok(seasonService.getAllSeasons());
     }
 
+    // Tạo mùa giải đua mới
     @PostMapping("/seasons")
     @Operation(
         summary = "POST: Tạo mùa giải đua mới",
@@ -84,6 +93,7 @@ public class RaceController {
         }
     }
 
+    // Đảo trạng thái hoạt động của mùa giải đua (Active / Completed)
     @PostMapping("/seasons/{id}/toggle")
     @Operation(
         summary = "POST: Bật/Kích hoạt trạng thái mùa giải",
@@ -107,6 +117,7 @@ public class RaceController {
         }
     }
 
+    // Gia hạn khoảng thời gian tổ chức của một mùa giải đua
     @PostMapping("/seasons/{id}/extend")
     @Operation(
         summary = "POST: Gia hạn thời gian mùa giải",
@@ -131,6 +142,7 @@ public class RaceController {
         }
     }
 
+    // Xem quy định phân hạng điểm Rating của mùa giải
     @GetMapping("/seasons/{seasonId}/rules")
     @Operation(
         summary = "GET: Lấy quy định phân hạng mùa giải",
@@ -146,6 +158,7 @@ public class RaceController {
         return ResponseEntity.ok(seasonService.getSeasonRules(seasonId));
     }
 
+    // Ghi đè hoặc lưu mới danh sách các quy định phân hạng điểm Rating cho mùa giải
     @PostMapping("/seasons/{seasonId}/rules")
     @Operation(
         summary = "POST: Lưu quy định phân hạng mùa giải",
@@ -168,10 +181,11 @@ public class RaceController {
         }
     }
 
+    // Lấy toàn bộ danh sách Ngày hội đua (Meetings)
     @GetMapping("/meetings")
     @Operation(
         summary = "GET: Lấy danh sách Ngày đua (Race Meetings)",
-        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n" +
+        description = "🔍 **BƯỚC XEM NGÀY ĐUA**: Trả về danh sách tất cả các ngày đua.\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controller**: `RaceController.getMeetings()`\n" +
                       "* **Service**: `RaceService.getAllMeetings()`\n" +
@@ -183,6 +197,7 @@ public class RaceController {
         return ResponseEntity.ok(raceService.getAllMeetings());
     }
 
+    // Tạo mới một Ngày hội đua (Chỉ dành cho Admin thiết lập lịch)
     @PostMapping("/meetings")
     @Operation(
         summary = "POST: Tạo mới Ngày đua (Race Meeting)",
@@ -205,6 +220,7 @@ public class RaceController {
         }
     }
 
+    // Cập nhật thông tin chi tiết của một Ngày hội đua
     @PostMapping("/meetings/{id}")
     @Operation(
         summary = "POST: Cập nhật Ngày đua",
@@ -225,6 +241,7 @@ public class RaceController {
         }
     }
 
+    // Xóa Ngày hội đua khỏi hệ thống
     @DeleteMapping("/meetings/{id}")
     @Operation(
         summary = "DELETE: Xóa Ngày đua",
@@ -246,6 +263,7 @@ public class RaceController {
         }
     }
 
+    // Lấy toàn bộ danh sách trận đua có trong hệ thống
     @GetMapping
     @Operation(
         summary = "GET: Lấy danh sách tất cả các trận đua (Races)",
@@ -264,6 +282,7 @@ public class RaceController {
         return ResponseEntity.ok(raceService.getAllRaces());
     }
 
+    // Tạo mới một trận đua trực thuộc một Ngày hội đua
     @PostMapping
     @Operation(
         summary = "POST: Tạo mới trận đua (Race)",
@@ -289,6 +308,7 @@ public class RaceController {
         }
     }
 
+    // Cập nhật chi tiết thông tin trận đua (Thời gian, cự ly, link stream, trạng thái...)
     @PostMapping("/{id}")
     @Operation(
         summary = "POST: Cập nhật thông tin trận đua",
@@ -309,6 +329,7 @@ public class RaceController {
         }
     }
 
+    // Tra cứu danh sách các trận đua đang phát trực tiếp (Đang chạy - RUNNING)
     @GetMapping("/live")
     @Operation(
         summary = "GET: Lấy danh sách các trận đua đang trực tiếp (Live)",

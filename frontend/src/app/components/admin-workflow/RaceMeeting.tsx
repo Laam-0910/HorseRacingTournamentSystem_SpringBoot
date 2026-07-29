@@ -5,19 +5,32 @@ import { formatDate, formatDateTime, formatForDateTimeLocal, formatForApi } from
 import InlineDatePicker from "../ui/InlineDatePicker";
 import { confirm } from "../../../lib/confirm";
 
+/**
+ * Component RaceMeeting - Phân hệ cấu hình Ngày hội đua (Race Meeting) dành cho Admin.
+ * Cho phép xem danh sách, tạo mới, chỉnh sửa và xóa bỏ các Ngày hội đua ngựa trong hệ thống,
+ * đồng thời gắn Ngày hội đua đó vào một Mùa giải (Season) tương ứng.
+ */
 export default function RaceMeeting() {
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [seasons, setSeasons] = useState<any[]>([]);
-  const [name, setName] = useState("");
-  const [date, setDate] = useState("");
-  const [venue, setVenue] = useState("");
-  const [seasonId, setSeasonId] = useState("");
+  // Các state lưu trữ dữ liệu kéo về từ API
+  const [meetings, setMeetings] = useState<any[]>([]); // Danh sách ngày hội đua
+  const [seasons, setSeasons] = useState<any[]>([]);   // Danh sách các mùa giải trong hệ thống
+
+  // Các state lưu giá trị input phục vụ Form tạo mới/chỉnh sửa
+  const [name, setName] = useState(""); // Tên ngày hội đua
+  const [date, setDate] = useState(""); // Ngày tổ chức
+  const [venue, setVenue] = useState(""); // Địa điểm (Trường đua)
+  const [seasonId, setSeasonId] = useState(""); // ID mùa giải gắn kết
+
+  // Trạng thái hệ thống
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  
+  // State lưu trữ dữ liệu ngày hội đua đang trong chế độ chỉnh sửa (nếu có)
   const [editingMeeting, setEditingMeeting] = useState<any | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Hàm tải danh sách ngày hội đua và mùa giải từ API
   const fetchData = async () => {
     setLoading(true);
     setError("");
@@ -27,6 +40,7 @@ export default function RaceMeeting() {
 
       const ss = await api.get<any[]>("/races/seasons");
       setSeasons(ss);
+      // Mặc định chọn mùa giải đầu tiên nếu chưa có mùa giải nào được chọn
       if (ss.length > 0 && !seasonId) {
         setSeasonId(ss[0].id.toString());
       }
@@ -37,6 +51,7 @@ export default function RaceMeeting() {
     }
   };
 
+  // Lắng nghe kích thước màn hình để tự động căn chỉnh responsive
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -44,10 +59,12 @@ export default function RaceMeeting() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Tải dữ liệu ban đầu khi mount component
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Kích hoạt chế độ chỉnh sửa ngày hội đua (Edit mode), chuyển dữ liệu cũ lên Form
   const handleEdit = (m: any) => {
     setEditingMeeting(m);
     setName(m.name || "");
@@ -58,6 +75,7 @@ export default function RaceMeeting() {
     setSuccess("");
   };
 
+  // Hủy bỏ chế độ chỉnh sửa, làm sạch Form
   const handleCancelEdit = () => {
     setEditingMeeting(null);
     setName("");
@@ -70,7 +88,9 @@ export default function RaceMeeting() {
     setSuccess("");
   };
 
+  // Xử lý xóa một Ngày hội đua bằng mã ID
   const handleDelete = async (id: number) => {
+    // Hiện hộp thoại xác nhận tùy biến trước khi xóa
     if (!await confirm("Are you sure you want to delete this race meeting? This action cannot be undone.")) {
       return;
     }
@@ -79,7 +99,8 @@ export default function RaceMeeting() {
     try {
       await api.delete(`/races/meetings/${id}`);
       setSuccess("Race meeting deleted successfully.");
-      fetchData();
+      fetchData(); // Tải lại danh sách
+      // Nếu đang sửa chính ngày hội đua vừa bị xóa, thoát chế độ sửa
       if (editingMeeting?.id === id) {
         handleCancelEdit();
       }
@@ -88,28 +109,32 @@ export default function RaceMeeting() {
     }
   };
 
+  // Xử lý gửi Form để lưu dữ liệu (Tạo mới hoặc Cập nhật)
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Ngăn việc reload trang
     setError("");
     setSuccess("");
 
     try {
       const payload = {
         name,
-        startDate: formatDateTime(date),
+        startDate: formatDateTime(date), // Định dạng lại chuỗi thời gian phù hợp API
         venue,
         seasonId: parseInt(seasonId),
       };
 
       if (editingMeeting) {
+        // Gửi POST cập nhật nếu đang chỉnh sửa
         await api.post(`/races/meetings/${editingMeeting.id}`, payload);
         setSuccess("Race meeting updated successfully.");
         setEditingMeeting(null);
       } else {
+        // Gửi POST tạo mới nếu không ở chế độ sửa
         await api.post("/races/meetings", payload);
         setSuccess("Race meeting created successfully.");
       }
 
+      // Làm sạch Form và tải lại danh sách mới
       setName("");
       setDate("");
       setVenue("");
@@ -121,7 +146,7 @@ export default function RaceMeeting() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Meetings List */}
+      {/* Cột hiển thị Danh sách các Ngày hội đua */}
       <div className="lg:col-span-2 space-y-4 order-last lg:order-first">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
@@ -131,7 +156,7 @@ export default function RaceMeeting() {
         {loading ? (
           <p className="text-sm text-white/40">{$t("Loading meetings...", (localStorage.getItem('app-lang') || 'vi'))}</p>
         ) : isMobile ? (
-          /* Mobile: stacked cards */
+          /* Bố cục dạng danh sách thẻ xếp chồng trên di động */
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {meetings.length === 0 ? (
               <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>{$t("No meetings found.", (localStorage.getItem('app-lang') || 'vi'))}</p>
@@ -151,6 +176,7 @@ export default function RaceMeeting() {
                       📍 {m.venue}
                     </div>
                   </div>
+                  {/* Nút sửa / xóa nhanh */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", flexShrink: 0 }}>
                     <button
                       onClick={() => handleEdit(m)}
@@ -166,7 +192,7 @@ export default function RaceMeeting() {
             ))}
           </div>
         ) : (
-          /* Desktop: table */
+          /* Bố cục dạng Bảng chi tiết cho màn hình lớn Desktop */
           <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[650px]">
               <thead>
@@ -205,19 +231,21 @@ export default function RaceMeeting() {
         )}
       </div>
 
-      {/* Creation form */}
+      {/* Cột hiển thị Biểu mẫu Tạo mới / Cập nhật Ngày hội đua */}
       <div className="space-y-4 order-first lg:order-last">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
           <span>{editingMeeting ? `${$t("Edit Meeting", (localStorage.getItem('app-lang') || 'vi'))} #${editingMeeting.id}` : $t("Add New Meeting", (localStorage.getItem('app-lang') || 'vi'))}</span>
         </h3>
 
+        {/* Banner thông báo lỗi */}
         {error && (
           <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
             {error}
           </div>
         )}
 
+        {/* Banner thông báo thành công */}
         {success && (
           <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-sm">
             {success}
@@ -225,6 +253,7 @@ export default function RaceMeeting() {
         )}
 
         <form onSubmit={handleSubmit} className="bg-white/[0.015] border border-white/10 rounded-2xl p-5 space-y-4">
+          {/* Nhập Tên buổi đua */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Meeting Name", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <input
@@ -237,6 +266,7 @@ export default function RaceMeeting() {
             />
           </div>
 
+          {/* Chọn ngày tổ chức thông qua bộ chọn ngày InlineDatePicker */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Date", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <InlineDatePicker
@@ -245,6 +275,7 @@ export default function RaceMeeting() {
             />
           </div>
 
+          {/* Nhập địa điểm trường đua */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Venue", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <input
@@ -257,6 +288,7 @@ export default function RaceMeeting() {
             />
           </div>
 
+          {/* Chọn mùa giải tương ứng để phân bổ */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Season Association", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <select
@@ -272,6 +304,7 @@ export default function RaceMeeting() {
             </select>
           </div>
 
+          {/* Nút gửi hoặc hủy */}
           <button
             type="submit"
             className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-xl transition"

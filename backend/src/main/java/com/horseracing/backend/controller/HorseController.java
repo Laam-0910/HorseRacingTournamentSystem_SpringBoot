@@ -12,10 +12,18 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller HorseController - Lớp kiểm soát các endpoint liên quan đến quản lý ngựa đua ( chiến mã).
+ * - Tra cứu danh sách ngựa lọc theo trạng thái (status) hoặc chủ sở hữu (ownerId).
+ * - Cho phép chủ ngựa đăng ký ngựa mới (chờ duyệt).
+ * - Cho phép Admin phê duyệt (Approve) ngựa, tự động gán điểm rating mặc định ban đầu là 52.
+ * - Cho phép Admin từ chối (Reject) hồ sơ ngựa không đạt chuẩn.
+ * - Cho phép chủ sở hữu cập nhật thông tin chi tiết ngựa (Tên, Giống, Ảnh, Giới tính).
+ */
 @RestController
 @RequestMapping("/api/horses")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "06. Horse Management Service",
     description = "🐎 **BƯỚC 6: QUẢN LÝ CHIẾN MÃ (HORSE ARCHITECTURE)**\n\n" +
@@ -33,8 +41,12 @@ import java.util.Map;
 )
 public class HorseController {
 
-    private final HorseService horseService;
+    private final HorseService horseService; // Dịch vụ quản lý ngựa đua
 
+    @Autowired
+    private com.horseracing.backend.repository.UserRepository userRepository; // Kho lưu trữ người dùng để xác minh quyền sở hữu
+
+    // Lấy danh sách toàn bộ ngựa đua lọc theo trạng thái hoặc chủ sở hữu
     @GetMapping
     @Operation(
         summary = "GET: Lấy danh sách tất cả các con ngựa",
@@ -55,6 +67,7 @@ public class HorseController {
         return ResponseEntity.ok(horseService.getAllHorses(status, ownerId));
     }
 
+    // Đăng ký hồ sơ ngựa mới (Chủ ngựa gửi yêu cầu)
     @PostMapping
     @Operation(
         summary = "POST: Đăng ký chiến mã mới (Chủ ngựa)",
@@ -80,6 +93,7 @@ public class HorseController {
         }
     }
 
+    // Admin phê duyệt hồ sơ ngựa đua để đưa vào trạng thái ACTIVE thi đấu
     @PostMapping("/{id}/approve")
     @Operation(
         summary = "POST: Phê duyệt hồ sơ ngựa (Admin)",
@@ -103,6 +117,7 @@ public class HorseController {
         }
     }
 
+    // Admin từ chối hồ sơ ngựa đua
     @PostMapping("/{id}/reject")
     @Operation(
         summary = "POST: Từ chối hồ sơ ngựa (Admin)",
@@ -124,9 +139,7 @@ public class HorseController {
         }
     }
 
-    @Autowired
-    private com.horseracing.backend.repository.UserRepository userRepository;
-
+    // Cập nhật thông tin chiến mã (Yêu cầu xác thực tài khoản)
     @PutMapping("/{id}")
     @Operation(
         summary = "PUT: Cập nhật thông tin chiến mã",
@@ -142,6 +155,7 @@ public class HorseController {
     )
     public ResponseEntity<?> updateHorse(@PathVariable Integer id, @RequestBody HorseDTO horseDTO) {
         try {
+            // Xác thực phiên làm việc người dùng hiện tại
             org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
             if (auth == null || !auth.isAuthenticated()) {
                 return ResponseEntity.status(401).body(Map.of("success", false, "error", "Unauthorized"));
@@ -150,6 +164,7 @@ public class HorseController {
             com.horseracing.backend.entity.User user = userRepository.findByUsername(username)
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
+            // Gọi tầng nghiệp vụ kiểm tra quyền và thực hiện cập nhật
             HorseDTO updated = horseService.updateHorse(id, horseDTO, user.getId(), user.getRoleId());
             return ResponseEntity.ok(Map.of("success", true, "horse", updated));
         } catch (Exception e) {

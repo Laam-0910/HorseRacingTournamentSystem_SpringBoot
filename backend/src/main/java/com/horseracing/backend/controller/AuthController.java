@@ -10,10 +10,19 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * Controller AuthController - Lớp kiểm soát các endpoint bảo mật hệ thống và xác thực người dùng.
+ * - Đăng nhập tài khoản bằng tên đăng nhập/email và mật khẩu, cấp mã JWT Token.
+ * - Xác thực 2 lớp qua mã giao dịch OTP 2FA (Double-factor authentication).
+ * - Đăng ký tài khoản mới và xác nhận kích hoạt bằng mã OTP gửi về Email.
+ * - Khôi phục mật khẩu (Quên mật khẩu) thông qua mã xác thực OTP.
+ * - Thay đổi cấu hình thông tin cá nhân (Avatar, Tiểu sử, Cân nặng...).
+ * - Bật/Tắt chế độ xác thực OTP khi đăng nhập.
+ */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "01. Auth & Security Service",
     description = "🔐 **BƯỚC 1: XÁC THỰC & BẢO MẬT HỆ THỐNG (SECURITY ARCHITECTURE)**\n\n" +
@@ -33,8 +42,9 @@ import java.util.Map;
 )
 public class AuthController {
 
-    private final AuthService authService;
+    private final AuthService authService; // Dịch vụ xác thực tài khoản
 
+    // Đăng nhập vào hệ thống
     @PostMapping("/login")
     @Operation(
         summary = "POST: Đăng nhập hệ thống & lấy JWT Bearer Token",
@@ -55,13 +65,15 @@ public class AuthController {
                       "5. Nếu không bật 2FA: Phát hành chuỗi JWT Bearer Token có thời hạn và trả về thông tin User."
     )
     public ResponseEntity<?> login(@RequestBody LoginRequestDTO request) {
+        // Thực thi login tại tầng dịch vụ
         LoginResponseDTO response = authService.login(request);
         if (!response.getSuccess()) {
-            return ResponseEntity.badRequest().body(response);
+            return ResponseEntity.badRequest().body(response); // Trả về thông tin lỗi (Mật khẩu sai, tài khoản khóa...)
         }
         return ResponseEntity.ok(response);
     }
 
+    // Xác thực mã OTP 2FA sau khi nhập đúng tên đăng nhập/mật khẩu
     @PostMapping("/verify-login")
     @Operation(
         summary = "POST: Xác thực OTP 2FA khi đăng nhập",
@@ -78,6 +90,7 @@ public class AuthController {
                       "3. Nếu hợp lệ: Phát hành chuỗi JWT Bearer Token chính thức cho người dùng."
     )
     public ResponseEntity<?> verifyLogin(@RequestBody VerifyOtpRequestDTO body) {
+        // Gọi hàm xác thực OTP 2FA tại tầng dịch vụ
         LoginResponseDTO response = authService.verifyLogin(body.getOtpTxId(), body.getOtp());
         if (!response.getSuccess()) {
             return ResponseEntity.badRequest().body(response);
@@ -85,6 +98,7 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    // Đăng ký tài khoản người dùng mới (User, Owner, Jockey, Referee...)
     @PostMapping("/register")
     @Operation(
         summary = "POST: Đăng ký tài khoản người dùng mới",
@@ -105,6 +119,7 @@ public class AuthController {
     )
     public ResponseEntity<?> register(@RequestBody RegisterRequestDTO request) {
         try {
+            // Đăng ký tài khoản ở tầng dịch vụ
             Map<String, Object> result = authService.register(request);
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
@@ -112,6 +127,7 @@ public class AuthController {
         }
     }
 
+    // Xác nhận mã OTP gửi về email để kích hoạt tài khoản vừa đăng ký
     @PostMapping("/verify-register")
     @Operation(
         summary = "POST: Xác thực OTP đăng ký tài khoản",
@@ -134,6 +150,7 @@ public class AuthController {
         return ResponseEntity.ok(result);
     }
 
+    // Gửi yêu cầu lấy mã OTP khôi phục mật khẩu
     @PostMapping("/forgot-password")
     @Operation(
         summary = "POST: Yêu cầu mã OTP khôi phục Quên mật khẩu",
@@ -149,6 +166,7 @@ public class AuthController {
     )
     public ResponseEntity<?> forgotPassword(@RequestBody ForgotPasswordRequestDTO body) {
         try {
+            // Khởi tạo tiến trình quên mật khẩu ở tầng dịch vụ
             Map<String, Object> result = authService.forgotPassword(body.getEmail());
             return ResponseEntity.ok(result);
         } catch (IllegalArgumentException e) {
@@ -156,6 +174,7 @@ public class AuthController {
         }
     }
 
+    // Xác nhận mã OTP khôi phục mật khẩu và cập nhật mật khẩu mới
     @PostMapping("/verify-forgot-password")
     @Operation(
         summary = "POST: Xác thực OTP và đặt lại mật khẩu mới",
@@ -177,6 +196,7 @@ public class AuthController {
         return ResponseEntity.ok(result);
     }
 
+    // Cập nhật hồ sơ thông tin cá nhân (Avatar, Tiểu sử, Email, Cân nặng kỵ sĩ)
     @PostMapping("/update-profile")
     @Operation(
         summary = "POST: Cập nhật thông tin trang cá nhân",
@@ -199,6 +219,7 @@ public class AuthController {
         }
     }
 
+    // Bật hoặc tắt xác thực OTP khi thực hiện đăng nhập vào hệ thống
     @PostMapping("/toggle-otp")
     @Operation(
         summary = "POST: Bật/Tắt xác thực OTP 2FA",

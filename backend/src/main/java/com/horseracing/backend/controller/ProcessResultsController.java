@@ -10,10 +10,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * Controller ProcessResultsController - Lớp kiểm soát các endpoint liên quan đến xử lý kết quả sau trận đấu.
+ * - Nhập kết quả thứ hạng, thời gian chạy chính thức, báo cáo giám sát của trọng tài.
+ * - Tự động hóa quá trình phân bổ tiền thưởng và tính toán cập nhật điểm rating cho ngựa đua.
+ */
 @RestController
 @RequestMapping("/api/results")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "11. Race Results & Payout Service",
     description = "🏁 **BƯỚC 11: NHẬP KẾT QUẢ, TÍNH TIỀN THƯỞNG & ELO RATING (RESULTS ARCHITECTURE)**\n\n" +
@@ -32,8 +37,9 @@ import java.util.Map;
 )
 public class ProcessResultsController {
 
-    private final ProcessResultsService processResultsService;
+    private final ProcessResultsService processResultsService; // Dịch vụ xử lý kết quả
 
+    // Endpoint nhập kết quả chính thức cho cuộc đua
     @PostMapping("/confirm")
     @Operation(
         summary = "POST: Trọng tài nhập kết quả trận đua và báo cáo giám sát",
@@ -54,9 +60,12 @@ public class ProcessResultsController {
     )
     public ResponseEntity<?> confirmResults(@RequestBody ConfirmResultsRequestDTO request) {
         try {
+            // Gọi tầng nghiệp vụ để lưu trữ và tính toán kết quả
             processResultsService.confirmResults(request.getRaceId(), request.getStewardReport(), request.getResults());
+            // Trả về kết quả thành công
             return ResponseEntity.ok(Map.of("success", true, "message", "Results processed successfully"));
         } catch (IllegalArgumentException e) {
+            // Trả về mã lỗi 400 Bad Request nếu đầu vào không hợp lệ
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }

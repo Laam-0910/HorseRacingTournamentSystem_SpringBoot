@@ -4,6 +4,7 @@ import { api } from "../../../lib/api";
 import { formatDateTime, formatForDateTimeLocal, formatForApi, formatClassLevel, parseSafeDate } from "../../utils/dateTimeHelper";
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 
+// Cấu trúc đối tượng Ngày hội đua
 interface Meeting {
   id: number;
   name: string;
@@ -12,6 +13,7 @@ interface Meeting {
   totalBudget: number;
 }
 
+// Cấu trúc đối tượng người dùng (được lọc vai trò Trọng tài)
 interface User {
   id: number;
   username: string;
@@ -19,6 +21,7 @@ interface User {
   roleId: number;
 }
 
+// Cấu trúc đối tượng cuộc đua
 interface Race {
   id: number;
   raceMeetingId: number;
@@ -38,7 +41,15 @@ interface Race {
   raceMeetingName?: string;
 }
 
+/**
+ * Component Race - Phân hệ Thiết lập và Lên lịch cuộc đua (Race Scheduler) dành cho Admin.
+ * - Cho phép tạo cuộc đua mới thuộc một Ngày hội đua (Race Meeting).
+ * - Kiểm tra ràng buộc ngày bắt đầu trùng khớp ngày hội đua, kiểm tra trùng lặp giờ chạy.
+ * - Cho phép chỉnh sửa lịch trình, phân công trọng tài giám sát (Assign/Remove Referee).
+ * - Quản lý link phát trực tiếp khi cuộc đua chính thức chạy (RUNNING).
+ */
 export default function Race() {
+  // Trạng thái Responsive Mobile
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => {
@@ -49,16 +60,19 @@ export default function Race() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [races, setRaces] = useState<Race[]>([]);
-  const [referees, setReferees] = useState<User[]>([]);
-  const [refereesMap, setRefereesMap] = useState<Record<number, User[]>>({});
+  // Các state lưu trữ dữ liệu từ API
+  const [meetings, setMeetings] = useState<Meeting[]>([]); // Danh sách ngày hội đua
+  const [races, setRaces] = useState<Race[]>([]); // Danh sách các cuộc đua trong hệ thống
+  const [referees, setReferees] = useState<User[]>([]); // Danh sách tài khoản trọng tài (roleId=5)
+  const [refereesMap, setRefereesMap] = useState<Record<number, User[]>>({}); // Bản đồ trọng tài được phân công theo raceId
+  
+  // Trạng thái chờ và thông báo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [editError, setEditError] = useState("");
 
-  // Create Form State
+  // --- Các State phục vụ Biểu mẫu Tạo mới cuộc đua ---
   const [meetingId, setMeetingId] = useState("");
   const [classLevel, setClassLevel] = useState("Class 1");
   const [trackType, setTrackType] = useState("Turf");
@@ -70,7 +84,7 @@ export default function Race() {
   const [minEntries, setMinEntries] = useState("3");
   const [purse, setPurse] = useState("0");
 
-  // Edit Modal State
+  // --- Các State phục vụ Modal Chỉnh sửa cuộc đua ---
   const [editingRace, setEditingRace] = useState<Race | null>(null);
   const [editStartTime, setEditStartTime] = useState("");
   const [editRegStartTime, setEditRegStartTime] = useState("");
@@ -81,19 +95,20 @@ export default function Race() {
   const [editMaxEntries, setEditMaxEntries] = useState("12");
   const [editMinEntries, setEditMinEntries] = useState("3");
 
-  // Livestream states
+  // State lưu tạm link livestream youtube của từng trận đang RUNNING
   const [liveUrls, setLiveUrls] = useState<Record<number, string>>({});
-  // Referee assignment selections
+  // Trọng tài được chọn để phân công theo từng cuộc đua
   const [assignRefSelection, setAssignRefSelection] = useState<Record<number, string>>({});
 
+  // Hàm tải đồng bộ dữ liệu cuộc đua, hội đua, trọng tài và bản đồ phân công trọng tài
   const fetchData = async () => {
     setLoading(true);
     try {
       const [meetingsData, racesData, usersData, refsMapData] = await Promise.all([
         api.get<Meeting[]>("/public/meetings").catch(() => []),
         api.get<Race[]>("/races").catch(() => []),
-        api.get<User[]>("/public/users?roleId=5").catch(() => []),
-        api.get<Record<number, User[]>>("/admin/races/referees").catch(() => ({})),
+        api.get<User[]>("/public/users?roleId=5").catch(() => []), // Tải trọng tài
+        api.get<Record<number, User[]>>("/admin/races/referees").catch(() => ({})), // Tải ánh xạ phân công trọng tài
       ]);
       setMeetings(meetingsData);
       setRaces(racesData);
@@ -106,10 +121,12 @@ export default function Race() {
     }
   };
 
+  // Kéo dữ liệu khi mount component
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Xử lý khi Admin chọn Ngày hội đua trong Select box: Tự động điền ngày giờ bắt đầu mặc định
   const handleSelectMeeting = (idStr: string) => {
     setMeetingId(idStr);
     if (!idStr) {
@@ -122,16 +139,18 @@ export default function Race() {
       if (dt) {
         const pad = (n: number) => String(n).padStart(2, "0");
         const dateStr = `${pad(dt.getDate())}-${pad(dt.getMonth() + 1)}-${dt.getFullYear()}`;
-        setStartTime(`${dateStr} 13:00:00`);
+        setStartTime(`${dateStr} 13:00:00`); // Mặc định mở màn lúc 13h chiều cùng ngày
       }
     }
   };
 
+  // Xử lý tạo cuộc đua mới
   const handleCreateRace = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
+    // Ràng buộc số lượng ngựa tham gia (min <= max)
     const minVal = parseInt(minEntries, 10);
     const maxVal = parseInt(maxEntries, 10);
     if (isNaN(minVal) || minVal <= 0) {
@@ -147,6 +166,7 @@ export default function Race() {
       return;
     }
 
+    // Ràng buộc thời gian cuộc đua: Phải diễn ra trong đúng ngày tổ chức Ngày hội đua
     const selectedMeeting = meetings.find(m => m.id === parseInt(meetingId));
     if (selectedMeeting) {
       const meetDate = parseSafeDate(selectedMeeting.startDate);
@@ -178,7 +198,7 @@ export default function Race() {
       });
       if (res.success) {
         setSuccess("Race created successfully.");
-        // reset form
+        // reset biểu mẫu
         setMeetingId("");
         setStartTime("");
         setRegStartTime("");
@@ -189,6 +209,7 @@ export default function Race() {
       }
     } catch (err: any) {
       const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
+      // Báo lỗi trùng lặp thời gian trong cùng buổi hội đua
       if (err.message?.includes("DUPLICATE_RACE_TIME")) {
         setError(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
       } else {
@@ -197,6 +218,7 @@ export default function Race() {
     }
   };
 
+  // Mở hộp thoại chỉnh sửa thông tin lịch trình cuộc đua
   const handleOpenEdit = (race: Race) => {
     setError("");
     setSuccess("");
@@ -212,6 +234,7 @@ export default function Race() {
     setEditMaxEntries(race.maxEntries.toString());
   };
 
+  // Lưu thông tin chỉnh sửa lịch trình
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRace) return;
@@ -278,6 +301,7 @@ export default function Race() {
     }
   };
 
+  // Bật chế độ livestream cho trận đua
   const handleGoLive = async (raceId: number) => {
     const url = (liveUrls[raceId] || "").trim();
     if (!url) return;
@@ -300,6 +324,7 @@ export default function Race() {
     }
   };
 
+  // Tắt livestream
   const handleEndLive = async (raceId: number) => {
     setError("");
     setSuccess("");
@@ -314,6 +339,7 @@ export default function Race() {
     }
   };
 
+  // Phân công trọng tài (Assign Referee)
   const handleAssignReferee = async (raceId: number) => {
     const refId = assignRefSelection[raceId];
     if (!refId) return;
@@ -331,6 +357,7 @@ export default function Race() {
     }
   };
 
+  // Gỡ bỏ phân công trọng tài (Remove Referee)
   const handleRemoveReferee = async (raceId: number, refId: number) => {
     setError("");
     setSuccess("");
@@ -345,6 +372,7 @@ export default function Race() {
     }
   };
 
+  // Hàm chuyển đổi nhãn trạng thái và trả về Badge màu tương ứng
   const statusBadge = (status: string) => {
     const s = (status ?? "").toUpperCase();
     const cfg: Record<string, { bg: string; color: string; label: string }> = {
@@ -367,7 +395,7 @@ export default function Race() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Create New Race */}
+      {/* KHỐI 1: TẠO MỚI CUỘC ĐUA (Create New Race) */}
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)", position: "relative", zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)" }}>
           <div>
@@ -446,13 +474,14 @@ export default function Race() {
         </div>
       </div>
 
-      {/* Races Database */}
+      {/* KHỐI 2: CƠ SỞ DỮ LIỆU CUỘC ĐUA (Races Database) */}
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)", position: "relative", zIndex: 1 }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)" }}>
           <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>{$t("Races Database", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <p style={{ fontSize: "10px", fontFamily: "monospace", marginTop: "2px", color: "rgba(255,255,255,0.4)" }}>{$t("List of all scheduled races across active meetings", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         {isMobile ? (
+          // Bố cục dạng thẻ xếp dọc trên Mobile
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "1rem" }}>
             {loading ? (
               <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace", textAlign: "center", padding: "2rem" }}>{$t("Loading races database...", (localStorage.getItem('app-lang') || 'vi'))}</p>
@@ -465,7 +494,6 @@ export default function Race() {
 
               return (
                 <div key={race.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(201,162,39,0.14)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                  {/* Top header row: ID, Class and Status badge */}
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227", fontWeight: "bold" }}>R-{race.id}</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -474,7 +502,6 @@ export default function Race() {
                     </div>
                   </div>
 
-                  {/* Mid details */}
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "12px" }}>
                     <div>
                       <span style={{ color: "rgba(255,255,255,0.35)", display: "block", fontSize: "10px" }}>{$t("Race Meeting", (localStorage.getItem('app-lang') || 'vi'))}</span>
@@ -494,7 +521,7 @@ export default function Race() {
                     </div>
                   </div>
 
-                  {/* Assigned Referee Mobile List */}
+                  {/* Phân công trọng tài trên Mobile */}
                   <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", flexDirection: "column", gap: "4px" }}>
                     <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "10px", display: "block" }}>Referees Assigned ({assigned.length})</span>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
@@ -521,7 +548,7 @@ export default function Race() {
                     )}
                   </div>
 
-                  {/* Livestream Controls Mobile */}
+                  {/* Điều khiển Livestream trên Mobile */}
                   {!isCompleted && (
                     <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", flexDirection: "column", gap: "4px" }}>
                       {race.youtubeLiveUrl ? (
@@ -541,7 +568,6 @@ export default function Race() {
                     </div>
                   )}
 
-                  {/* Action Row */}
                   <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.75rem", display: "flex", justifyContent: "flex-end" }}>
                     <button
                       disabled={isCompleted}
@@ -564,6 +590,7 @@ export default function Race() {
             })}
           </div>
         ) : (
+          // Bố cục dạng bảng (Desktop)
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
               <thead>
@@ -586,7 +613,7 @@ export default function Race() {
                     <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
                       <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
                       
-                      {/* Edit button (Moved to 2nd column for horizontal scroll visibility) */}
+                      {/* Nút sửa lịch */}
                       <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
                         <button
                           disabled={isCompleted}
@@ -614,7 +641,7 @@ export default function Race() {
 
                       <td style={{ padding: "0.75rem 0.75rem", textAlign: "right" }}>{statusBadge(race.status)}</td>
 
-                      {/* Livestream */}
+                      {/* Quản lý Livestream */}
                       <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
                         {isCompleted ? (
                           <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
@@ -636,7 +663,7 @@ export default function Race() {
                         )}
                       </td>
 
-                      {/* Referee */}
+                      {/* Phân công trọng tài */}
                       <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
                           {assigned.map(ref => (
@@ -672,7 +699,7 @@ export default function Race() {
         </div>
       </div>
 
-      {/* Edit Modal */}
+      {/* MODAL CHỈNH SỬA LỊCH TRÌNH CUỘC ĐUA (Edit Modal) */}
       {editingRace && (
         <div style={{ position: "fixed", inset: 0, zIndex: 99, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "32rem", position: "relative" }}>

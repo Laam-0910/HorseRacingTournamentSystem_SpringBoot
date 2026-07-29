@@ -1280,23 +1280,36 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────
+/**
+ * Component HorseOwner - Bảng điều khiển chính của Chủ ngựa (Horse Owner).
+ * Quản lý danh sách ngựa đua thuộc chuồng (stable), đăng ký tham gia các sự kiện ngày hội đua,
+ * gửi lời mời nài ngựa (jockey invitations), xem kết quả thi đấu và quản lý thông tin cá nhân.
+ */
 export default function HorseOwner() {
   const { user } = useAuth();
+  // State lưu ID của kỵ sĩ/chủ ngựa khác cần xem hồ sơ chi tiết (ProfileModal)
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+  
+  // State quản lý Tab đang hoạt động, mặc định là "hub"
   const [activeTab, setActiveTab] = useState<OwnerTab>(() => {
     const p = new URLSearchParams(window.location.search).get("tab");
     return (p as OwnerTab) || "hub";
   });
-  const [dashboard, setDashboard] = useState<any>(null);
-  const [stable, setStable] = useState<any[]>([]);
-  const [invitations, setInvitations] = useState<any[]>([]);
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [allRaces, setAllRaces] = useState<any[]>([]);
-  const [seasons, setSeasons] = useState<any[]>([]);
-  const [results, setResults] = useState<any[]>([]);
+  
+  // Các state lưu trữ dữ liệu nghiệp vụ
+  const [dashboard, setDashboard] = useState<any>(null);      // Tổng quan thống kê chuồng ngựa
+  const [stable, setStable] = useState<any[]>([]);            // Danh sách ngựa trong chuồng
+  const [invitations, setInvitations] = useState<any[]>([]);  // Lời mời và kết quả đăng ký thi đấu
+  const [meetings, setMeetings] = useState<any[]>([]);        // Các ngày hội đua ngựa
+  const [allRaces, setAllRaces] = useState<any[]>([]);        // Tất cả các cuộc đua
+  const [seasons, setSeasons] = useState<any[]>([]);          // Thông tin các mùa giải
+  const [results, setResults] = useState<any[]>([]);          // Lịch sử về đích của chuồng ngựa
+  
+  // Banner thông báo lỗi / thành công
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Hàm tải đồng bộ dữ liệu liên quan đến Chủ ngựa từ backend Spring Boot
   const fetchData = async () => {
     if (!user) return;
     try {
@@ -1316,10 +1329,15 @@ export default function HorseOwner() {
       setResults(Array.isArray(ownerResults) ? ownerResults : []);
       setSeasons(Array.isArray(allSeasonsData) ? allSeasonsData : []);
       setAllRaces(Array.isArray(racesData) ? racesData : []);
-    } catch (err: any) { setErrorMsg(err.message || "Failed to load owner data."); }
+    } catch (err: any) { 
+      setErrorMsg(err.message || "Failed to load owner data."); 
+    }
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  // Tải lại dữ liệu mỗi khi user đăng nhập thay đổi
+  useEffect(() => { 
+    fetchData(); 
+  }, [user]);
 
   const handleRegisterOwner = async (meetingId: number) => {
     if (!user) return;

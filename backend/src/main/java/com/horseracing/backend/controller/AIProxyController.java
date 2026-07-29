@@ -10,9 +10,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * Controller AIProxyController - Lớp Proxy chuyển tiếp cuộc gọi đến dịch vụ Python AI (Reverse Proxy).
+ * - Chuyển tiếp câu hỏi trò chuyện chatbot AI đến API Google Gemini (thông qua Python gateway).
+ * - Chuyển tiếp yêu cầu dự đoán xác suất chiến thắng của các chiến mã cho một trận đấu cụ thể.
+ * - Hỗ trợ cơ chế catch-all (getProxy, postProxy) để ủy quyền toàn bộ các API Python AI khác.
+ */
 @RestController
 @RequestMapping({"/api/ai", "/ai"})
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS đa nguồn
 @Tag(
     name = "15. AI Gemini & Predictions (Python)",
     description = "🤖 **BƯỚC 15: AI TRỢ LÝ GIẢI ĐUA & DỰ ĐOÁN KẾT QUẢ (PYTHON AI ARCHITECTURE)**\n\n" +
@@ -29,11 +35,14 @@ import org.springframework.web.client.RestTemplate;
 )
 public class AIProxyController {
 
+    // Nạp đường dẫn URL của dịch vụ Python AI từ file application.properties (mặc định là http://localhost:5000)
     @Value("${ai.service.url:http://localhost:5000}")
     private String aiBaseUrl;
 
+    // Sử dụng RestTemplate để thực hiện HTTP Client chuyển tiếp yêu cầu
     private final RestTemplate restTemplate = new RestTemplate();
 
+    // Hàm tiện ích phân tích URI nhận được từ servlet request để dựng URL chuyển tiếp đến Python Flask
     private String buildUrl(HttpServletRequest request) {
         String path = request.getRequestURI().replaceFirst("^/api/ai", "").replaceFirst("^/ai", "");
         String url = aiBaseUrl + (path.startsWith("/") ? path : "/" + path);
@@ -43,6 +52,7 @@ public class AIProxyController {
         return url;
     }
 
+    // Chuyển tiếp câu hỏi Chatbot AI sang Flask gateway
     @PostMapping("/chat")
     @Operation(
         summary = "POST: Hỏi đáp với AI Gemini Chatbot",
@@ -66,8 +76,10 @@ public class AIProxyController {
         HttpEntity<AiChatRequestDTO> entity = new HttpEntity<>(body, headers);
 
         try {
+            // Forward POST request và trả về phản hồi nguyên bản của Python AI
             return restTemplate.postForEntity(url, entity, String.class);
         } catch (HttpStatusCodeException e) {
+            // Chuyển giao mã trạng thái HTTP lỗi từ microservice
             return ResponseEntity.status(e.getStatusCode())
                     .headers(e.getResponseHeaders())
                     .body(e.getResponseBodyAsString());
@@ -77,6 +89,7 @@ public class AIProxyController {
         }
     }
 
+    // Chuyển tiếp yêu cầu dự đoán xác suất chiến thắng của trận đấu kịch bản Machine Learning
     @GetMapping("/predict/{raceId}")
     @Operation(
         summary = "GET: AI Dự đoán kết quả cho trận đua",
@@ -94,6 +107,7 @@ public class AIProxyController {
     public ResponseEntity<String> predict(@PathVariable("raceId") Integer raceId) {
         String url = aiBaseUrl + "/predict/" + raceId;
         try {
+            // Gửi yêu cầu GET đến endpoint /predict/{raceId} của Python AI
             return restTemplate.getForEntity(url, String.class);
         } catch (HttpStatusCodeException e) {
             return ResponseEntity.status(e.getStatusCode())
@@ -105,6 +119,7 @@ public class AIProxyController {
         }
     }
 
+    // Kiểm tra tính sẵn sàng (Healthcheck) của dịch vụ Python AI Flask
     @GetMapping("/health")
     @Operation(
         summary = "GET: Kiểm tra sức khỏe dịch vụ Python AI",
@@ -131,6 +146,7 @@ public class AIProxyController {
         }
     }
 
+    // Uỷ thác (proxy) toàn bộ cuộc gọi GET không khớp cấu hình đường dẫn cụ thể nào khác
     @GetMapping("/**")
     public ResponseEntity<String> getProxy(HttpServletRequest request) {
         String url = buildUrl(request);
@@ -146,6 +162,7 @@ public class AIProxyController {
         }
     }
 
+    // Uỷ thác (proxy) toàn bộ cuộc gọi POST không khớp cấu hình đường dẫn cụ thể nào khác
     @PostMapping("/**")
     public ResponseEntity<String> postProxy(@RequestBody(required = false) String body, HttpServletRequest request) {
         String url = buildUrl(request);

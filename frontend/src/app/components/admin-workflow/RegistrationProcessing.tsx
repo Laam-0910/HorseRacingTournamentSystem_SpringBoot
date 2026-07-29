@@ -3,20 +3,34 @@ import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { parseSafeDate } from "../../utils/dateTimeHelper";
 
+/**
+ * Component RegistrationProcessing - Phân hệ Xử lý đơn đăng ký của hệ thống dành cho Admin.
+ * Quản lý và phê duyệt (Approve/Reject) 5 loại đơn đăng ký đang chờ duyệt từ chủ ngựa/kỵ sĩ:
+ * 1. Đăng ký lượt chạy cuộc đua (Race Entries) đi kèm dự đoán tỉ lệ thắng AI (AI Win Chance).
+ * 2. Đăng ký chiến mã tham gia buổi hội đua (Horse Meeting Registrations).
+ * 3. Đăng ký chủ ngựa tham gia buổi hội đua (Owner Meeting Registrations).
+ * 4. Đăng ký kỵ sĩ tham gia buổi hội đua (Jockey Meeting Registrations).
+ * 5. Khai báo ngựa mới vào chuồng hệ thống (System Horse Approvals).
+ */
 export default function RegistrationProcessing() {
-  const [pendingEntries, setPendingEntries] = useState<any[]>([]);
-  const [pendingHorseRegs, setPendingHorseRegs] = useState<any[]>([]);
-  const [pendingJockeyRegs, setPendingJockeyRegs] = useState<any[]>([]);
-  const [pendingOwnerRegs, setPendingOwnerRegs] = useState<any[]>([]);
-  const [pendingSystemHorses, setPendingSystemHorses] = useState<any[]>([]);
+  // Các state lưu trữ danh sách đơn đăng ký chờ duyệt theo từng loại
+  const [pendingEntries, setPendingEntries] = useState<any[]>([]); // Lượt chạy cuộc đua
+  const [pendingHorseRegs, setPendingHorseRegs] = useState<any[]>([]); // Ngựa tham gia hội đua
+  const [pendingJockeyRegs, setPendingJockeyRegs] = useState<any[]>([]); // Kỵ sĩ tham gia hội đua
+  const [pendingOwnerRegs, setPendingOwnerRegs] = useState<any[]>([]); // Chủ ngựa tham gia hội đua
+  const [pendingSystemHorses, setPendingSystemHorses] = useState<any[]>([]); // Khai báo ngựa mới
 
+  // Các state lưu số liệu thống kê tổng hợp đơn
   const [awaitingDecisionCount, setAwaitingDecisionCount] = useState(0);
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
+  
+  // Trạng thái chờ và thông báo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  // Tiện ích format ngày giờ thô thành dd-MM-yyyy
   const formatSimpleDate = (dateStr: string) => {
     if (!dateStr) return "";
     const d = parseSafeDate(dateStr);
@@ -27,6 +41,7 @@ export default function RegistrationProcessing() {
     return `${day}-${month}-${year}`;
   };
 
+  // Tải toàn bộ đơn đăng ký chờ duyệt từ endpoint /admin/pending-registrations
   const fetchData = async () => {
     setLoading(true);
     setError("");
@@ -47,10 +62,12 @@ export default function RegistrationProcessing() {
     }
   };
 
+  // Tải dữ liệu khi khởi chạy component
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Trạng thái Responsive Mobile
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -59,17 +76,18 @@ export default function RegistrationProcessing() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Tiện ích hiển thị thông báo thành công và tự xóa sau 4 giây
   const showSuccess = (msg: string) => {
     setSuccess(msg);
     setTimeout(() => setSuccess(""), 4000);
   };
 
-  // 1. Race Entries
+  // --- 1. Xử lý Đăng ký Lượt chạy cuộc đua (Race Entries) ---
   const handleEntryApprove = async (id: number) => {
     try {
       await api.post(`/admin/entries/${id}/approve`);
       showSuccess(`Approved race entry #${id}`);
-      fetchData();
+      fetchData(); // Tải lại để đồng bộ số lượng
     } catch (err: any) {
       alert("Approve failed: " + err.message);
     }
@@ -85,7 +103,7 @@ export default function RegistrationProcessing() {
     }
   };
 
-  // 2. Horse Meeting Regs
+  // --- 2. Xử lý Đăng ký Chiến mã tham gia Hội đua (Horse Meeting Regs) ---
   const handleHorseRegApprove = async (id: number) => {
     try {
       await api.post(`/admin/horse-reg/${id}/approve`);
@@ -106,7 +124,7 @@ export default function RegistrationProcessing() {
     }
   };
 
-  // 3. Jockey Meeting Regs
+  // --- 3. Xử lý Đăng ký Kỵ sĩ tham gia Hội đua (Jockey Meeting Regs) ---
   const handleJockeyRegApprove = async (id: number) => {
     try {
       await api.post(`/admin/jockey-reg/${id}/approve`);
@@ -127,7 +145,7 @@ export default function RegistrationProcessing() {
     }
   };
 
-  // 3.5. Owner Meeting Regs
+  // --- 3.5. Xử lý Đăng ký Chủ ngựa tham gia Hội đua (Owner Meeting Regs) ---
   const handleOwnerRegApprove = async (id: number) => {
     try {
       await api.post(`/admin/owner-reg/${id}/approve`);
@@ -148,7 +166,7 @@ export default function RegistrationProcessing() {
     }
   };
 
-  // 4. System Horse Approvals (New Horses)
+  // --- 4. Xử lý Khai báo Ngựa mới vào hệ thống (System Horse Approvals) ---
   const handleSystemHorseApprove = async (id: number) => {
     try {
       await api.post(`/admin/system-horse/${id}/approve`);
@@ -171,18 +189,21 @@ export default function RegistrationProcessing() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Overview Cards */}
+      {/* Các Thẻ Thống kê Tổng quan (Overview Cards) */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+        {/* Số đơn chờ duyệt */}
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(201,162,39,0.14)", padding: "1.25rem" }}>
           <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>{$t("Awaiting Decision", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#c9a227" }}>{awaitingDecisionCount}</h3>
           <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>{$t("pending review", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
+        {/* Số đơn đã duyệt */}
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(74,157,111,0.14)", padding: "1.25rem" }}>
           <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>{$t("Approved", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#4ade80" }}>{approvedCount}</h3>
           <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>{$t("cleared to race", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
+        {/* Số đơn từ chối */}
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(239,68,68,0.14)", padding: "1.25rem" }}>
           <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>{$t("Rejected", (localStorage.getItem('app-lang') || 'vi'))}</p>
           <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#f87171" }}>{rejectedCount}</h3>
@@ -190,25 +211,28 @@ export default function RegistrationProcessing() {
         </div>
       </div>
 
+      {/* Banner báo lỗi */}
       {error && (
         <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "13px" }}>
           ⚠️ {error}
         </div>
       )}
 
+      {/* Banner báo thành công */}
       {success && (
         <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "13px" }}>
           ✓ {success}
         </div>
       )}
 
-      {/* 1. Pending Race Entries */}
+      {/* 1. KHỐI ĐƠN: ĐĂNG KÝ LƯỢT CHẠY CUỘC ĐUA (Pending Race Entries) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Race Entries & Predictions", (localStorage.getItem('app-lang') || 'vi'))}</h4>
           <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Race meeting entry submissions awaiting steward approval", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
         {isMobile ? (
+          // Bố cục di động
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
             {loading ? (
               <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</div>
@@ -216,7 +240,6 @@ export default function RegistrationProcessing() {
               <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending race entries found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingEntries.map((e) => (
               <div key={e.entry?.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
-                {/* top row: ref + actions */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                   <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>REG-{e.entry?.id}</span>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -224,18 +247,15 @@ export default function RegistrationProcessing() {
                     <button onClick={() => handleEntryApprove(e.entry?.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
                   </div>
                 </div>
-                {/* horse name + rating */}
                 <div style={{ marginBottom: '0.5rem' }}>
                   <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px' }}>{e.horse?.name}</div>
                   <span style={{ fontSize: '9px', fontFamily: 'monospace', color: '#c9a227', background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.2)', padding: '2px 6px', borderRadius: '3px', display: 'inline-block', marginTop: '4px' }}>⭐ Rating: {e.horse?.currentRating}</span>
                 </div>
-                {/* owner + jockey */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '12px' }}>
                   <span style={{ color: 'rgba(255,255,255,0.5)' }}>{$t("Owner:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username || `Owner #${e.horse?.ownerId}`}</span></span>
                   <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
                   <span style={{ color: 'rgba(255,255,255,0.5)' }}>{$t("Jockey:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: '#3b82c4' }}>{e.jockey?.username}</span> <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>({e.jockey?.weight} kg)</span></span>
                 </div>
-                {/* race info */}
                 <div style={{ marginBottom: '0.5rem' }}>
                   <div style={{ fontSize: '12px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
                     <span>{e.meeting?.name || `Race #${e.race?.id}`}</span>
@@ -245,7 +265,6 @@ export default function RegistrationProcessing() {
                   </div>
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Distance: {e.race?.distanceMeters}m ({e.race?.trackType})</div>
                 </div>
-                {/* weight + prediction */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', fontSize: '12px' }}>
                   <span style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>Carried: {e.entry?.carriedWeight} kg</span>
                   <span style={{ padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', background: parseFloat(e.predictionScore) >= 70 ? 'rgba(16,185,129,0.1)' : parseFloat(e.predictionScore) >= 40 ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)', color: parseFloat(e.predictionScore) >= 70 ? '#34d399' : parseFloat(e.predictionScore) >= 40 ? '#fbbf24' : 'rgba(255,255,255,0.6)', border: `1px solid ${parseFloat(e.predictionScore) >= 70 ? '#34d39940' : parseFloat(e.predictionScore) >= 40 ? '#fbbf2440' : 'transparent'}` }}>AI: {e.predictionScore}%</span>
@@ -254,6 +273,7 @@ export default function RegistrationProcessing() {
             ))}
           </div>
         ) : (
+          // Bảng Desktop
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
               <thead>
@@ -313,7 +333,7 @@ export default function RegistrationProcessing() {
         )}
       </div>
 
-      {/* 2. Pending Horse Meeting Registrations */}
+      {/* 2. KHỐI ĐƠN: ĐĂNG KÝ CHIẾN MÃ THAM GIA HỘI ĐUA (Pending Horse Meeting Registrations) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Horse Meeting Registrations", (localStorage.getItem('app-lang') || 'vi'))}</h4>
@@ -327,7 +347,6 @@ export default function RegistrationProcessing() {
               <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending horse meeting registrations found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingHorseRegs.map((e) => (
               <div key={e.registration.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
-                {/* top row: ref + actions */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                   <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>REG-H-{e.registration.id}</span>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -335,16 +354,12 @@ export default function RegistrationProcessing() {
                     <button onClick={() => handleHorseRegApprove(e.registration.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
                   </div>
                 </div>
-                {/* horse name + rating/breed */}
                 <div style={{ marginBottom: '0.5rem' }}>
                   <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px' }}>{e.horse?.name}</div>
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Rating: {e.horse?.currentRating} | Breed: {e.horse?.breed}</div>
                 </div>
-                {/* owner */}
                 <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginBottom: '0.4rem' }}>{$t("Owner:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username}</span></div>
-                {/* meeting */}
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#f4f2ec', marginBottom: '0.25rem' }}>{e.meeting?.name}</div>
-                {/* submitted */}
                 <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>Submitted: {e.registration?.registeredAt}</div>
               </div>
             ))}
@@ -388,7 +403,7 @@ export default function RegistrationProcessing() {
         )}
       </div>
 
-      {/* 2.5. Pending Owner Meeting Registrations */}
+      {/* 2.5. KHỐI ĐƠN: ĐĂNG KÝ CHỦ NGỰA THAM GIA HỘI ĐUA (Pending Owner Meeting Registrations) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Owner Meeting Registrations", (localStorage.getItem('app-lang') || 'vi'))}</h4>
@@ -402,7 +417,6 @@ export default function RegistrationProcessing() {
               <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending owner meeting registrations found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingOwnerRegs.map((e) => (
               <div key={e.registration.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
-                {/* top row: ref + actions */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                   <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>REG-O-{e.registration.id}</span>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -410,14 +424,11 @@ export default function RegistrationProcessing() {
                     <button onClick={() => handleOwnerRegApprove(e.registration.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
                   </div>
                 </div>
-                {/* owner username + email */}
                 <div style={{ marginBottom: '0.5rem' }}>
                   <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px' }}>{e.owner?.username}</div>
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Email: {e.owner?.email}</div>
                 </div>
-                {/* meeting */}
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#f4f2ec', marginBottom: '0.25rem' }}>{e.meeting?.name}</div>
-                {/* submitted */}
                 <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>Submitted: {e.registration?.registeredAt}</div>
               </div>
             ))}
@@ -460,7 +471,7 @@ export default function RegistrationProcessing() {
         )}
       </div>
 
-      {/* 3. Pending Jockey Meeting Registrations */}
+      {/* 3. KHỐI ĐƠN: ĐĂNG KÝ KỴ SĨ THAM GIA HỘI ĐUA (Pending Jockey Meeting Registrations) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Jockey Meeting Registrations", (localStorage.getItem('app-lang') || 'vi'))}</h4>
@@ -474,7 +485,6 @@ export default function RegistrationProcessing() {
               <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending jockey meeting registrations found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingJockeyRegs.map((e) => (
               <div key={e.registration.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
-                {/* top row: ref + actions */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                   <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>REG-J-{e.registration.id}</span>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -482,14 +492,11 @@ export default function RegistrationProcessing() {
                     <button onClick={() => handleJockeyRegApprove(e.registration.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
                   </div>
                 </div>
-                {/* jockey username + weight */}
                 <div style={{ marginBottom: '0.5rem' }}>
                   <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px' }}>{e.jockey?.username}</div>
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Base weight: {e.jockey?.weight} kg</div>
                 </div>
-                {/* meeting */}
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#f4f2ec', marginBottom: '0.25rem' }}>{e.meeting?.name}</div>
-                {/* submitted */}
                 <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>Submitted: {e.registration?.registeredAt}</div>
               </div>
             ))}
@@ -532,7 +539,7 @@ export default function RegistrationProcessing() {
         )}
       </div>
 
-      {/* 4. Pending System Horse Approvals (New Horses) */}
+      {/* 4. KHỐI ĐƠN: ĐĂNG KÝ KHAI BÁO NGỰA MỚI (Pending System Horse Approvals) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending System Horse Approvals", (localStorage.getItem('app-lang') || 'vi'))}</h4>
@@ -546,7 +553,6 @@ export default function RegistrationProcessing() {
               <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending system horses found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : pendingSystemHorses.map((e) => (
               <div key={e.horse.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
-                {/* top row: ref + actions */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
                   <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>HORSE-{e.horse.id}</span>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -554,15 +560,12 @@ export default function RegistrationProcessing() {
                     <button onClick={() => handleSystemHorseApprove(e.horse.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
                   </div>
                 </div>
-                {/* horse name */}
                 <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px', marginBottom: '0.5rem' }}>{e.horse.name}</div>
-                {/* breed + owner */}
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.4rem', fontSize: '12px' }}>
                   <span style={{ color: 'rgba(255,255,255,0.5)' }}>{$t("Breed:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.horse.breed}</span></span>
                   <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
                   <span style={{ color: 'rgba(255,255,255,0.5)' }}>{$t("Owner:", (localStorage.getItem('app-lang') || 'vi'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username}</span></span>
                 </div>
-                {/* DOB */}
                 <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>DOB: {formatSimpleDate(e.horse.dateOfBirth)}</div>
               </div>
             ))}

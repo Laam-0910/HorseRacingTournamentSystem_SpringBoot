@@ -1,18 +1,31 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 
+// Cấu trúc thuộc tính truyền vào component
 interface RefereeCheckProps {
-  raceId: number;
-  onBack: () => void;
+  raceId: number; // Mã trận đua cần thực hiện kiểm tra trước giờ chạy
+  onBack: () => void; // Hàm callback quay lại màn hình trước đó
 }
 
+/**
+ * Component RefereeCheck - Phân hệ kiểm tra trước trận đấu của Trọng tài.
+ * Thực hiện công tác cân đo kiểm tra kỵ sĩ trước giờ xuất phát (Weigh-Out Weight)
+ * và kiểm tra y tế/thể chất ngựa đua (Veterinary Status).
+ * Xác minh thành công sẽ đổi trạng thái cuộc đua thành đang chạy (RUNNING).
+ */
 export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
+  // State lưu danh sách ngựa chạy đăng ký trong trận đấu
   const [entries, setEntries] = useState<any[]>([]);
+  // Lưu trạng thái y tế ngựa đua theo mã lượt đăng ký (APPROVED: Đủ điều kiện, REJECTED: Chấn thương/Loại bỏ)
   const [statuses, setStatuses] = useState<Record<number, string>>({});
+  // Lưu cân nặng thực tế cân đo trước trận của kỵ sĩ theo mã lượt đăng ký
   const [weighOutWeights, setWeighOutWeights] = useState<Record<number, string>>({});
+  // Trạng thái chờ gọi API
   const [loading, setLoading] = useState(false);
+  // State lưu thông tin lỗi
   const [error, setError] = useState("");
 
+  // Tải danh sách lượt đăng ký của trận đua khi mount hoặc đổi raceId
   useEffect(() => {
     const fetchEntries = async () => {
       setLoading(true);
@@ -20,10 +33,12 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
       try {
         const data = await api.get<any[]>(`/public/results?raceId=${raceId}`);
         setEntries(data);
+        
+        // Khởi tạo trạng thái mặc định: Cấp phép cho chạy và gán cân nặng dự kiến
         const initialStatuses: Record<number, string> = {};
         const initialWeights: Record<number, string> = {};
         data.forEach((e) => {
-          initialStatuses[e.entry.id] = "APPROVED"; // Default clear
+          initialStatuses[e.entry.id] = "APPROVED"; // Mặc định là thông qua y tế
           initialWeights[e.entry.id] = e.entry.carriedWeight ? e.entry.carriedWeight.toString() : "52.0";
         });
         setStatuses(initialStatuses);
@@ -38,6 +53,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
     fetchEntries();
   }, [raceId]);
 
+  // Đồng bộ thay đổi trạng thái y tế của ngựa đua
   const handleStatusChange = (entryId: number, status: string) => {
     setStatuses((prev) => ({
       ...prev,
@@ -45,6 +61,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
     }));
   };
 
+  // Đồng bộ thay đổi cân nặng cân đo trước trận của kỵ sĩ
   const handleWeightChange = (entryId: number, val: string) => {
     setWeighOutWeights((prev) => ({
       ...prev,
@@ -52,18 +69,21 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
     }));
   };
 
+  // Xử lý submit lưu kết quả cân đo kiểm tra và chính thức mở cổng xuất phát (Start Race)
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Ngăn việc reload trang
     setError("");
     setLoading(true);
 
     try {
+      // Map các cặp key-value thô từ State thành mảng DTO gửi lên API
       const payload = entries.map((e) => ({
         entryId: e.entry.id,
         status: statuses[e.entry.id] || "APPROVED",
         weighOutWeight: weighOutWeights[e.entry.id] ? parseFloat(weighOutWeights[e.entry.id]) : 52.0,
       }));
 
+      // Gọi API gửi biểu mẫu kiểm tra trước giờ chạy
       const res = await api.post<any>("/referee/pre-check", {
         raceId,
         entries: payload,
@@ -71,7 +91,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
 
       if (res.success) {
         alert("Pre-race check completed. Race is now RUNNING.");
-        onBack();
+        onBack(); // Quay lại bảng điều khiển trọng tài
       }
     } catch (err: any) {
       setError(err.message || "Failed to submit check.");
@@ -82,6 +102,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
 
   return (
     <div className="space-y-6">
+      {/* Banner thông báo lỗi nếu có */}
       {error && (
         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
           {error}
@@ -89,6 +110,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Khung Bảng chứa danh sách kỵ sĩ - chiến mã tham gia */}
         <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -113,6 +135,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
                     <td className="px-6 py-4 font-semibold text-white">{e.horse?.name}</td>
                     <td className="px-6 py-4 text-white/80">{e.jockey?.username}</td>
                     <td className="px-6 py-4 font-mono font-bold text-amber-500">{e.entry.gateNumber || "N/A"}</td>
+                    {/* Cột cân nặng cân đo trước trận */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1.5">
                         <input
@@ -127,6 +150,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
                         <span className="text-xs text-white/40">kg</span>
                       </div>
                     </td>
+                    {/* Cột trạng thái y tế ngựa */}
                     <td className="px-6 py-4">
                       <select
                         value={statuses[e.entry.id] || "APPROVED"}
@@ -150,6 +174,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
           </table>
         </div>
 
+        {/* Khối nút thao tác chân trang */}
         <div className="flex justify-between items-center">
           <button
             type="button"

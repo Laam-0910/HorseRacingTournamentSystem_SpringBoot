@@ -12,10 +12,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller RefereeController - Lớp kiểm soát các endpoint liên quan đến công tác trọng tài và kiểm soát trận đấu.
+ * - Kiểm tra trước trận đua (cân nặng thực tế, đổi trạng thái sang RUNNING).
+ * - Ghi nhận và xử lý các lỗi vi phạm của ngựa/kỵ sĩ trên đường chạy.
+ * - Phê duyệt hoặc hủy bỏ biên bản vi phạm đã lập.
+ * - Phát lệnh xuất phát, tạm dừng, dừng khẩn cấp hoặc tiếp tục trận đấu.
+ * - Điều khiển trạng thái chạy của từng ngựa đua (Dừng chạy, Chạy tiếp, Truất quyền thi đấu).
+ * - Xác nhận kết quả thi đấu chính thức (đổi trạng thái sang OFFICIAL và tính Elo/tiền thưởng).
+ */
 @RestController
 @RequestMapping("/api/referee")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "10. Referee & Race Control Service",
     description = "👮 **BƯỚC 10: QUẢN LÝ TRỌNG TÀI & GIÁM SÁT TRẬN ĐUA (REFEREE ARCHITECTURE)**\n\n" +
@@ -32,9 +41,10 @@ import java.util.Map;
 )
 public class RefereeController {
 
-    private final RefereeService refereeService;
-    private final ProcessResultsService processResultsService;
+    private final RefereeService refereeService; // Dịch vụ trọng tài điều khiển đường đua
+    private final ProcessResultsService processResultsService; // Dịch vụ xử lý kết quả cuộc đua
 
+    // Thực hiện kiểm tra thông số cân nặng thực tế và sức khỏe của chiến mã trước giờ xuất phát
     @PostMapping("/pre-check")
     @Operation(
         summary = "POST: Kiểm tra cân nặng & sức khỏe trước trận đua",
@@ -61,6 +71,7 @@ public class RefereeController {
         }
     }
 
+    // Trọng tài lập biên bản ghi lỗi vi phạm luật thi đấu của kỵ sĩ/ngựa đua
     @PostMapping("/violations")
     @Operation(
         summary = "POST: Ghi nhận lỗi vi phạm của Nài ngựa/Chiến mã",
@@ -86,6 +97,7 @@ public class RefereeController {
         }
     }
 
+    // Trọng tài gửi chốt kết quả thứ hạng, thời gian chạy và báo cáo của giám sát đường đua
     @PostMapping("/results")
     @Operation(
         summary = "POST: Xác nhận kết quả thi đấu của trận đua",
@@ -112,6 +124,7 @@ public class RefereeController {
         }
     }
 
+    // Lấy thông số Dashboard thống kê hiệu suất giám sát của Trọng tài hiện tại
     @GetMapping("/{id}/dashboard")
     @Operation(
         summary = "GET: Lấy dữ liệu Dashboard cá nhân Trọng tài",
@@ -129,6 +142,7 @@ public class RefereeController {
         return ResponseEntity.ok(refereeService.getRefereeDashboard(id));
     }
 
+    // Phát lệnh xuất phát trận đua (Đổi trạng thái từ SCHEDULED sang RUNNING)
     @PostMapping("/races/{raceId}/start")
     @Operation(
         summary = "POST: Bắt đầu xuất phát trận đua",
@@ -152,6 +166,7 @@ public class RefereeController {
         }
     }
 
+    // Phát lệnh dừng khẩn cấp trận đua (Hủy trận đua)
     @PostMapping("/races/{raceId}/stop")
     @Operation(
         summary = "POST: Dừng khẩn cấp trận đua",
@@ -176,6 +191,7 @@ public class RefereeController {
         }
     }
 
+    // Tạm dừng trận đua đang diễn ra (Đổi trạng thái trận sang STOPPED)
     @PostMapping("/races/{raceId}/suspend")
     @Operation(
         summary = "POST: Tạm dừng trận đua đang diễn ra",
@@ -199,6 +215,7 @@ public class RefereeController {
         }
     }
 
+    // Cho phép trận đua đang bị tạm dừng (STOPPED) được chạy tiếp tục (RUNNING)
     @PostMapping("/races/{raceId}/resume")
     @Operation(
         summary = "POST: Tiếp tục trận đua sau khi tạm dừng",
@@ -220,6 +237,7 @@ public class RefereeController {
         }
     }
 
+    // Trọng tài xác nhận biên bản vi phạm là hợp lệ (Chuyển trạng thái sang APPROVED)
     @PostMapping("/violations/{violationId}/confirm")
     @Operation(
         summary = "POST: Xác nhận lỗi vi phạm",
@@ -241,6 +259,7 @@ public class RefereeController {
         }
     }
 
+    // Trọng tài bác bỏ biên bản vi phạm (Chuyển trạng thái sang DISMISSED)
     @PostMapping("/violations/{violationId}/dismiss")
     @Operation(
         summary = "POST: Hủy bỏ lỗi vi phạm",
@@ -262,6 +281,7 @@ public class RefereeController {
         }
     }
 
+    // Trọng tài yêu cầu dừng thi đấu khẩn cấp cho một ngựa đua cụ thể
     @PostMapping("/entry/{entryId}/stop")
     @Operation(
         summary = "POST: Dừng thi đấu 1 con ngựa trong trận",
@@ -283,6 +303,7 @@ public class RefereeController {
         }
     }
 
+    // Cho phép ngựa đua đang bị dừng (STOPPED) quay trở lại tiếp tục chạy (RUNNING)
     @PostMapping("/entry/{entryId}/resume")
     @Operation(
         summary = "POST: Cho phép 1 con ngựa tiếp tục chạy",
@@ -304,6 +325,7 @@ public class RefereeController {
         }
     }
 
+    // Truất quyền thi đấu (Disqualify) của một ngựa đua do vi phạm luật nghiêm trọng (Ví dụ: Cản đường trái phép)
     @PostMapping("/entry/{entryId}/disqualify")
     @Operation(
         summary = "POST: Truất quyền thi đấu (Disqualify) 1 con ngựa",

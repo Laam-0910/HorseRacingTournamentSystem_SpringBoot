@@ -13,10 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Controller SystemConfigController - Lớp kiểm soát các endpoint cấu hình tham số hệ thống.
+ * - Cho phép truy xuất danh sách các tham số cấu hình mặc định (phần trăm phân bổ tiền thưởng, giới hạn tuổi, hệ số handicap...).
+ */
 @RestController
 @RequestMapping("/api/configs")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS đa nguồn
 @Tag(
     name = "02. System Config Service",
     description = "⚙️ **BƯỚC 2: CẤU HÌNH THAM SỐ HỆ THỐNG (SYSTEM CONFIG ARCHITECTURE)**\n\n" +
@@ -33,8 +37,9 @@ import java.util.List;
 )
 public class SystemConfigController {
 
-    private final SystemConfigService systemConfigService;
+    private final SystemConfigService systemConfigService; // Khai báo dịch vụ cấu hình hệ thống
 
+    // Lấy toàn bộ danh sách tham số cấu hình của hệ thống
     @GetMapping
     @Operation(
         summary = "GET: Lấy danh sách tham số cấu hình hệ thống",
@@ -46,6 +51,7 @@ public class SystemConfigController {
                       "* **DTO Response**: `List<SystemConfigDTO>`"
     )
     public ResponseEntity<List<SystemConfigDTO>> getConfigs() {
+        // Trả về mã HTTP 200 OK kèm danh sách DTO cấu hình
         return ResponseEntity.ok(systemConfigService.getAllConfigs());
     }
 }

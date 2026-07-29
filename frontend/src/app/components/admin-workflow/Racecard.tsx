@@ -3,18 +3,28 @@ import { api } from "../../../lib/api";
 import { $t } from '@/lib/i18n';
 import { confirm } from "../../../lib/confirm";
 
+/**
+ * Component Racecard - Phân hệ cấu hình Thẻ đua (Racecard Setup) dành cho Admin.
+ * Cho phép thiết lập số cổng xuất phát (gateNumber) và trọng lượng carriedWeight của ngựa đua,
+ * tự động xếp cổng (Auto Gates), tự động tính trọng lượng gánh dựa trên rating (Auto Weights),
+ * hoặc hủy bỏ trận đấu (Cancel Race).
+ */
 export default function Racecard() {
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null);
-  const [races, setRaces] = useState<any[]>([]);
-  const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
-  const [entries, setEntries] = useState<any[]>([]);
+  // Các state chứa dữ liệu từ API
+  const [meetings, setMeetings] = useState<any[]>([]); // Danh sách ngày hội đua
+  const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null); // Mã ngày hội đua được lựa chọn
+  const [races, setRaces] = useState<any[]>([]); // Danh sách cuộc đua thuộc ngày hội đua đã chọn
+  const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null); // Mã cuộc đua được lựa chọn
+  const [entries, setEntries] = useState<any[]>([]); // Danh sách lượt đăng ký ngựa đua đã duyệt của cuộc đua đó
+
+  // Các state quản lý trạng thái hệ thống
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const lang = localStorage.getItem("app-lang") || "vi";
   const [isMobile, setIsMobile] = useState(false);
 
+  // Lắng nghe kích thước màn hình để hỗ trợ Responsive
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -22,6 +32,7 @@ export default function Racecard() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Tải danh sách ngày hội đua từ endpoint /races/meetings
   const fetchMeetings = async () => {
     setLoading(true);
     setError("");
@@ -38,6 +49,7 @@ export default function Racecard() {
     }
   };
 
+  // Tải danh sách các cuộc đua thuộc ngày hội đua
   const fetchRaces = async (meetingId: number) => {
     try {
       const data = await api.get<any[]>(`/public/races?meetingId=${meetingId}`);
@@ -53,6 +65,7 @@ export default function Racecard() {
     }
   };
 
+  // Tải danh sách lượt đăng ký thi đấu của cuộc đua (results API dùng chung)
   const fetchEntries = async (raceId: number) => {
     try {
       const data = await api.get<any[]>(`/public/results?raceId=${raceId}`);
@@ -62,22 +75,26 @@ export default function Racecard() {
     }
   };
 
+  // Tải danh sách hội đua khi component mount
   useEffect(() => {
     fetchMeetings();
   }, []);
 
+  // Tải danh sách các trận đua khi đổi Ngày hội đua
   useEffect(() => {
     if (selectedMeetingId !== null) {
       fetchRaces(selectedMeetingId);
     }
   }, [selectedMeetingId]);
 
+  // Tải danh sách ngựa chạy khi đổi trận đua
   useEffect(() => {
     if (selectedRaceId !== null) {
       fetchEntries(selectedRaceId);
     }
   }, [selectedRaceId]);
 
+  // Gọi API tự động phân cổng ngẫu nhiên cho ngựa chạy (Auto Assign Gates)
   const handleAutoAssignGates = async () => {
     if (selectedRaceId === null) return;
     setError("");
@@ -86,13 +103,14 @@ export default function Racecard() {
       const res = await api.post<any>(`/admin/races/${selectedRaceId}/auto-assign-gates`);
       if (res.success) {
         setSuccess("Gates auto-assigned successfully.");
-        fetchEntries(selectedRaceId);
+        fetchEntries(selectedRaceId); // Tải lại danh sách
       }
     } catch (err: any) {
       setError(err.message || "Failed to auto-assign gates.");
     }
   };
 
+  // Gọi API tự động tính toán trọng lượng carriedWeight của ngựa chạy (Auto Calculate Weights)
   const handleAutoCalculateWeights = async () => {
     if (selectedRaceId === null) return;
     setError("");
@@ -101,16 +119,18 @@ export default function Racecard() {
       const res = await api.post<any>(`/admin/races/${selectedRaceId}/auto-calculate-weights`);
       if (res.success) {
         setSuccess("Handicap weights auto-calculated successfully.");
-        fetchEntries(selectedRaceId);
+        fetchEntries(selectedRaceId); // Tải lại danh sách
       }
     } catch (err: any) {
       setError(err.message || "Failed to calculate weights.");
     }
   };
 
+  // Hủy bỏ cuộc đua (Cancel Race)
   const handleCancelRace = async () => {
     if (selectedRaceId === null) return;
-    if (!await confirm("Are you sure you want to cancel this race? This will reset all entries.")) return;
+    // Cảnh báo xác nhận trước khi thực hiện hủy
+    if (!await confirm("Are you sure you want to delete this race meeting? This action cannot be undone.")) return;
     setError("");
     setSuccess("");
     try {
@@ -118,7 +138,7 @@ export default function Racecard() {
       if (res.success) {
         setSuccess("Race has been CANCELLED.");
         fetchEntries(selectedRaceId);
-        // Refresh races list
+        // Tải lại danh sách cuộc đua để cập nhật trạng thái CANCELLED
         if (selectedMeetingId !== null) {
           fetchRaces(selectedMeetingId);
         }
@@ -128,6 +148,7 @@ export default function Racecard() {
     }
   };
 
+  // Cập nhật tạm số cổng xuất phát được nhập thủ công vào State
   const handleGateChange = (idx: number, val: string) => {
     setEntries((prev) => {
       const copy = [...prev];
@@ -136,6 +157,7 @@ export default function Racecard() {
     });
   };
 
+  // Cập nhật tạm trọng lượng gánh được nhập thủ công vào State
   const handleWeightChange = (idx: number, val: string) => {
     setEntries((prev) => {
       const copy = [...prev];
@@ -144,6 +166,7 @@ export default function Racecard() {
     });
   };
 
+  // Gửi mảng danh sách cổng xuất phát và trọng lượng gánh đã chỉnh sửa lên API để lưu trữ
   const handleSaveRacecard = async () => {
     if (selectedRaceId === null) return;
     setError("");
@@ -161,6 +184,7 @@ export default function Racecard() {
       }
     } catch (err: any) {
       const errMsg = err.response?.data?.error || err.message || "";
+      // Xử lý thông báo lỗi cổng bị trùng lắp (DUPLICATE_GATE_NUMBER) thân thiện hơn bằng tiếng Việt
       if (errMsg.includes("DUPLICATE_GATE_NUMBER")) {
         setError($t("Cổng xuất phát không được trùng nhau giữa các ngựa hoạt động trong cùng một trận đấu.", lang));
       } else {
@@ -169,12 +193,13 @@ export default function Racecard() {
     }
   };
 
+  // Tìm đối tượng trận đua hiện tại và kiểm tra xem đã khóa biên bản kết quả (FINISHED / CANCELLED...) hay chưa
   const selectedRace = races.find((r) => r.id === selectedRaceId);
   const isCompleted = selectedRace && (selectedRace.status === "OFFICIAL" || selectedRace.status === "FINISHED" || selectedRace.status === "CANCELLED");
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Selector Area */}
+      {/* Khối bên trái: Bộ chọn dropdown giải đấu và danh sách cuộc đua */}
       <div className="space-y-4">
         <div>
           <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block mb-1.5">{$t("Select Meeting", (localStorage.getItem('app-lang') || 'vi'))}</label>
@@ -217,7 +242,7 @@ export default function Racecard() {
         </div>
       </div>
 
-      {/* Racecard grid and actions */}
+      {/* Khối bên phải: Bảng điều chỉnh Racecard và các nút thao tác nhanh */}
       <div className="lg:col-span-2 space-y-6">
         {selectedRaceId !== null ? (
           <>
@@ -243,12 +268,14 @@ export default function Racecard() {
               </div>
             </div>
 
+            {/* Banner lỗi */}
             {error && (
               <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
                 {error}
               </div>
             )}
 
+            {/* Banner thành công */}
             {success && (
               <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-sm">
                 {success}
@@ -256,6 +283,7 @@ export default function Racecard() {
             )}
 
             {isMobile ? (
+              // Bố cục dạng thẻ (card) trên Mobile
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {entries.length > 0 ? (
                   entries.map((e, idx) => (
@@ -284,6 +312,7 @@ export default function Racecard() {
                 )}
               </div>
             ) : (
+              // Bố cục Bảng trên Desktop
               <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
                 <table className="w-full text-left border-collapse">
                   <thead>

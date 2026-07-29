@@ -5,16 +5,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * Lớp khởi tạo DatabaseInitializer - Kiểm tra và cập nhật cấu trúc cơ sở dữ liệu (Database Schema Evolution).
+ * - Triển khai từ InitializingBean để chạy ngay sau khi Spring Boot thiết lập cấu hình thuộc tính xong.
+ * - Sử dụng JdbcTemplate để thực thi các lệnh SQL trực tiếp.
+ * - Kiểm tra sự tồn tại của các cột bổ sung trong bảng Horse, [User], Race và tự động chạy lệnh ALTER TABLE để thêm cột mới nếu chưa có.
+ * - Tự động tạo mới các bảng HorseRetirementRequest và ChatMessage nếu chưa tồn tại trong cơ sở dữ liệu.
+ */
 @Component
 public class DatabaseInitializer implements InitializingBean {
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    private JdbcTemplate jdbcTemplate; // Đối tượng tương tác trực tiếp với database qua JDBC
 
     @Override
     public void afterPropertiesSet() throws Exception {
         try {
-            // Check and add description to Horse table
+            // 1. Kiểm tra và thêm cột description (mô tả) vào bảng Horse
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Horse') AND name = 'description') " +
                 "BEGIN " +
@@ -22,7 +29,7 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
             
-            // Check and add avatar to Horse table
+            // 2. Kiểm tra và thêm cột avatar (ảnh đại diện) dạng base64/URL vào bảng Horse
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Horse') AND name = 'avatar') " +
                 "BEGIN " +
@@ -30,7 +37,7 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            // Check and add avatar to User table
+            // 3. Kiểm tra và thêm cột avatar vào bảng User
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'avatar') " +
                 "BEGIN " +
@@ -38,7 +45,7 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            // Check and add biography to User table
+            // 4. Kiểm tra và thêm cột biography (tiểu sử) vào bảng User
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'biography') " +
                 "BEGIN " +
@@ -46,7 +53,7 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            // Check and add min_entries to Race table
+            // 5. Kiểm tra và thêm cột min_entries (số lượng ngựa chạy tối thiểu, mặc định là 3) vào bảng Race
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'min_entries') " +
                 "BEGIN " +
@@ -54,7 +61,7 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            // Check and add max_entries to Race table
+            // 6. Kiểm tra và thêm cột max_entries (số lượng ngựa chạy tối đa, mặc định là 14) vào bảng Race
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'max_entries') " +
                 "BEGIN " +
@@ -62,7 +69,7 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            // Check and add steward_report to Race table
+            // 7. Kiểm tra và thêm cột steward_report (báo cáo của trọng tài) vào bảng Race
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'steward_report') " +
                 "BEGIN " +
@@ -70,7 +77,7 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            // Check and add youtube_live_url to Race table
+            // 8. Kiểm tra và thêm cột youtube_live_url (đường dẫn livestream) vào bảng Race
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'youtube_live_url') " +
                 "BEGIN " +
@@ -78,7 +85,7 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            // Check and create HorseRetirementRequest table if it does not exist
+            // 9. Kiểm tra và tạo bảng HorseRetirementRequest (yêu cầu giải nghệ ngựa) nếu chưa tồn tại
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('HorseRetirementRequest') AND type = 'U') " +
                 "BEGIN " +
@@ -97,7 +104,7 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            // Check and create ChatMessage table if missing
+            // 10. Kiểm tra và tạo bảng ChatMessage (lịch sử trò chuyện trong trận đấu) nếu chưa tồn tại
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('ChatMessage') AND type = 'U') " +
                 "BEGIN " +

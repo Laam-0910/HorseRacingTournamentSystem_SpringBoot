@@ -13,10 +13,17 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
+/**
+ * Controller RegistrationController - Lớp kiểm soát các endpoint liên quan đến Đăng ký tham gia Ngày hội đua.
+ * - Hỗ trợ kỵ sĩ gửi yêu cầu đăng ký tham gia ngày đua.
+ * - Hỗ trợ chủ ngựa gửi yêu cầu đăng ký tham gia ngày đua.
+ * - Hỗ trợ đăng ký chiến mã cụ thể tham gia ngày đua.
+ * - Các yêu cầu đăng ký mặc định ở trạng thái PENDING chờ Admin phê duyệt.
+ */
 @RestController
 @RequestMapping("/api/registrations")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "07. Registration Service",
     description = "📋 **BƯỚC 7: ĐĂNG KÝ THAM GIA NGÀY ĐUA (REGISTRATION ARCHITECTURE)**\n\n" +
@@ -33,8 +40,9 @@ import java.util.Map;
 )
 public class RegistrationController {
 
-    private final RegistrationService registrationService;
+    private final RegistrationService registrationService; // Dịch vụ đăng ký ngày đua
 
+    // API phục vụ Nài ngựa đăng ký tham gia thi đấu tại Ngày hội đua
     @PostMapping("/jockey")
     @Operation(
         summary = "POST: Nài ngựa đăng ký tham gia Ngày đua",
@@ -61,6 +69,7 @@ public class RegistrationController {
         }
     }
 
+    // API phục vụ Chủ ngựa đăng ký tham gia Ngày hội đua
     @PostMapping("/owner")
     @Operation(
         summary = "POST: Chủ ngựa đăng ký tham gia Ngày đua",
@@ -87,6 +96,7 @@ public class RegistrationController {
         }
     }
 
+    // API phục vụ Chủ ngựa đăng ký từng con Ngựa đua cụ thể tham gia Ngày hội đua
     @PostMapping("/horse")
     @Operation(
         summary = "POST: Ngựa đăng ký tham gia Ngày đua",

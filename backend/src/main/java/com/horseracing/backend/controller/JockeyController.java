@@ -13,10 +13,17 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller JockeyController - Lớp kiểm soát các endpoint dành riêng cho kỵ sĩ/nài ngựa (Jockey).
+ * - Xem danh sách lời mời cưỡi ngựa từ chủ ngựa.
+ * - Xem thống kê hiệu suất cá nhân trên Dashboard (tỷ lệ thắng, số lượt đua...).
+ * - Xem danh sách các lượt cưỡi thi đấu thực tế.
+ * - Xem và ký xác nhận các biên bản vi phạm luật do trọng tài lập.
+ */
 @RestController
 @RequestMapping("/api/jockey")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "08. Invitation & Jockey Service",
     description = "🤠 **DỊCH VỤ DÀNH CHO NÀI NGỰA (JOCKEY ARCHITECTURE)**\n\n" +
@@ -29,10 +36,11 @@ import java.util.Map;
 )
 public class JockeyController {
 
-    private final InvitationService invitationService;
-    private final JockeyOwnerDashboardService dashboardService;
-    private final RefereeService refereeService;
+    private final InvitationService invitationService; // Dịch vụ quản lý lời mời
+    private final JockeyOwnerDashboardService dashboardService; // Dịch vụ tổng hợp dữ liệu Dashboard
+    private final RefereeService refereeService; // Dịch vụ trọng tài (quản lý vi phạm)
 
+    // Lấy danh sách toàn bộ lời mời cưỡi ngựa của kỵ sĩ hiện tại theo ID tài khoản
     @GetMapping("/{id}/invitations")
     @Operation(
         summary = "GET: Lấy danh sách lời mời thi đấu của Nài ngựa",
@@ -51,6 +59,7 @@ public class JockeyController {
         return ResponseEntity.ok(invitationService.getInvitations(id, null));
     }
 
+    // Lấy thông tin thống kê hiệu suất thi đấu hiển thị trên Dashboard của kỵ sĩ
     @GetMapping("/{id}/dashboard")
     @Operation(
         summary = "GET: Lấy dữ liệu Dashboard cá nhân Nài ngựa",
@@ -68,6 +77,7 @@ public class JockeyController {
         return ResponseEntity.ok(dashboardService.getJockeyDashboard(id));
     }
 
+    // Lấy thông tin chi tiết về các trận đấu mà kỵ sĩ này được đăng ký tham gia (Mounts)
     @GetMapping("/{id}/mounts")
     @Operation(
         summary = "GET: Lấy danh sách các lượt cưỡi thi đấu của Nài ngựa",
@@ -85,6 +95,7 @@ public class JockeyController {
         return ResponseEntity.ok(dashboardService.getJockeyMounts(id));
     }
 
+    // Lấy danh sách vi phạm của kỵ sĩ này do trọng tài ghi nhận trong quá trình thi đấu
     @GetMapping("/{id}/violations")
     @Operation(
         summary = "GET: Lấy danh sách lỗi vi phạm thi đấu của Nài ngựa",
@@ -103,6 +114,7 @@ public class JockeyController {
         return ResponseEntity.ok(dashboardService.getJockeyViolations(id));
     }
 
+    // Kỵ sĩ ký xác nhận (Acknowledge) đã nắm được biên bản vi phạm luật thi đấu
     @PostMapping("/violations/{violationId}/confirm")
     @Operation(
         summary = "POST: Xác nhận nhận biên bản vi phạm",
@@ -119,9 +131,11 @@ public class JockeyController {
     )
     public ResponseEntity<?> confirmViolation(@PathVariable Integer violationId) {
         try {
+            // Xác nhận biên bản vi phạm ở tầng nghiệp vụ trọng tài
             refereeService.confirmViolation(violationId);
             return ResponseEntity.ok(Map.of("success", true, "message", "Violation acknowledged successfully"));
         } catch (Exception e) {
+            // Phản hồi lỗi nếu vi phạm không tồn tại hoặc lỗi SQL
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }

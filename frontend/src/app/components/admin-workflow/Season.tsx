@@ -3,12 +3,17 @@ import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
 import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
 
+// Cấu trúc thuộc tính truyền vào component InlineDatePicker
 interface InlineDatePickerProps {
   label: string;
   value: string; // format: dd-MM-yyyy
   onChange: (val: string) => void;
 }
 
+/**
+ * Component InlineDatePicker - Bộ chọn ngày tùy biến thả xuống.
+ * Hỗ trợ chọn ngày bắt đầu/ngày kết thúc của Mùa giải.
+ */
 function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(() => {
@@ -142,6 +147,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
   );
 }
 
+// Luật cấu hình hạng mặc định của hệ thống
 const DEFAULT_TEMPLATE_RULES = [
   { classLevelName: "Class 1", minRating: 95, maxRating: null as number | null, minPrize: 300000, maxPrize: 1000000 },
   { classLevelName: "Class 2", minRating: 80, maxRating: 94, minPrize: 200000, maxPrize: 299999 },
@@ -150,30 +156,42 @@ const DEFAULT_TEMPLATE_RULES = [
   { classLevelName: "Class 5", minRating: 0,  maxRating: 39, minPrize: 20000, maxPrize: 49999 },
 ];
 
+/**
+ * Component Season - Phân hệ Thiết lập và Quản lý Mùa giải (Season Management) dành cho Admin.
+ * - Khởi tạo mùa giải đua mới (Initialize Season), cho phép chọn cấu hình tự động (AUTOMATIC)
+ *   hoặc nhập thủ công ngưỡng rating cho 5 hạng Class 1 - Class 5 (MANUAL).
+ * - Hiển thị danh sách các mùa giải trong hệ thống.
+ * - Cho phép chuyển đổi trạng thái Kích hoạt/Vô hiệu hóa (Activate/Deactivate) để cài làm mùa giải chính.
+ * - Cho phép Gia hạn ngày bắt đầu/kết thúc mùa giải (Extend Season).
+ */
 export default function Season() {
-  const [seasons, setSeasons] = useState<any[]>([]);
-  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null);
-  const [seasonRules, setSeasonRules] = useState<any[]>([]);
+  const [seasons, setSeasons] = useState<any[]>([]); // Danh sách mùa giải đua
+  const [selectedSeasonId, setSelectedSeasonId] = useState<number | null>(null); // Mùa giải đang được chọn để xem luật
+  const [seasonRules, setSeasonRules] = useState<any[]>([]); // Danh sách luật hạng của mùa giải đang chọn
+  
+  // Trạng thái hệ thống
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Create form states
+  // --- Các State phục vụ Biểu mẫu Tạo Mùa giải mới ---
   const [newSeasonName, setNewSeasonName] = useState("2026–2027 Grand Prix Season");
   const [newSeasonStartDate, setNewSeasonStartDate] = useState("");
   const [newSeasonEndDate, setNewSeasonEndDate] = useState("");
-  const [classRuleMethod, setClassRuleMethod] = useState<"AUTOMATIC" | "MANUAL">("AUTOMATIC");
-  const [manualRules, setManualRules] = useState(DEFAULT_TEMPLATE_RULES.map(r => ({ ...r })));
+  const [classRuleMethod, setClassRuleMethod] = useState<"AUTOMATIC" | "MANUAL">("AUTOMATIC"); // Lựa chọn phương thức phân hạng
+  const [manualRules, setManualRules] = useState(DEFAULT_TEMPLATE_RULES.map(r => ({ ...r }))); // Bộ luật nhập thủ công
 
-  // Extend modal states
-  const [extendingSeason, setExtendingSeason] = useState<any | null>(null);
+  // --- Các State phục vụ hộp thoại Gia hạn Mùa giải ---
+  const [extendingSeason, setExtendingSeason] = useState<any | null>(null); // Lưu thông tin mùa giải đang gia hạn
   const [extendStartDateInput, setExtendStartDateInput] = useState("");
   const [extendDateInput, setExtendDateInput] = useState("");
   const [extendError, setExtendError] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
+  // Quy đổi chuỗi ngày dd-MM-yyyy sang chuỗi timestamp API yêu cầu (yyyy-MM-dd 00:00:00)
   const toDbFormat = (d: string) => d ? `${d} 00:00:00` : "";
 
+  // Quy đổi ngược từ chuỗi ngày API sang dd-MM-yyyy để hiển thị ở date picker
   const toDisplayFormat = (d: string) => {
     if (!d) return "";
     const parts = d.substring(0, 10).replace(/\//g, "-").split("-");
@@ -187,12 +205,14 @@ export default function Season() {
     return d;
   };
 
+  // Tải danh sách mùa giải
   const fetchSeasons = async () => {
     setLoading(true);
     setError("");
     try {
       const data = await api.get<any[]>("/races/seasons");
       setSeasons(data);
+      // Mặc định chọn mùa giải đầu tiên nếu chưa chọn gì
       if (data.length > 0 && selectedSeasonId === null) setSelectedSeasonId(data[0].id);
     } catch (err: any) {
       setError(err.message || "Failed to fetch seasons.");
@@ -201,6 +221,7 @@ export default function Season() {
     }
   };
 
+  // Tải quy chế phân hạng Class Rules của một mùa giải cụ thể
   const fetchRules = async (seasonId: number) => {
     try {
       const rules = await api.get<any[]>(`/races/seasons/${seasonId}/rules`);
@@ -210,6 +231,7 @@ export default function Season() {
     }
   };
 
+  // Lắng nghe kích thước Responsive
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -217,9 +239,13 @@ export default function Season() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Tải danh sách khi khởi chạy
   useEffect(() => { fetchSeasons(); }, []);
+  
+  // Tải luật tương ứng khi thay đổi mùa giải đang chọn
   useEffect(() => { if (selectedSeasonId !== null) fetchRules(selectedSeasonId); }, [selectedSeasonId]);
 
+  // Kích hoạt/Vô hiệu hóa mùa giải (chuyển đổi status ACTIVE/INACTIVE)
   const handleToggle = async (id: number) => {
     try {
       await api.post(`/races/seasons/${id}/toggle`);
@@ -229,10 +255,10 @@ export default function Season() {
     }
   };
 
+  // Mở modal gia hạn mùa giải và gán thông số cũ lên ô nhập liệu
   const handleExtend = (season: any) => {
     setExtendingSeason(season);
     
-    // Safely extract the date part (yyyy-MM-dd) before displaying
     const rawStart = season.startDate ? season.startDate.substring(0, 10) : "";
     const rawEnd = season.endDate ? season.endDate.substring(0, 10) : "";
 
@@ -241,6 +267,7 @@ export default function Season() {
     setExtendError("");
   };
 
+  // Gửi thông số gia hạn mùa giải đua lên máy chủ
   const handleExtendSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setExtendError("");
@@ -253,6 +280,7 @@ export default function Season() {
     const dbStart = toDbFormat(extendStartDateInput);
     const dbEnd = toDbFormat(extendDateInput);
 
+    // Ràng buộc thời gian: Ngày bắt đầu phải đứng trước ngày kết thúc
     const startD = parseSafeDate(dbStart);
     const endD = parseSafeDate(dbEnd);
     if (startD && endD && startD >= endD) {
@@ -263,12 +291,13 @@ export default function Season() {
     try {
       await api.post(`/races/seasons/${extendingSeason.id}/extend`, { startDate: dbStart, endDate: dbEnd });
       fetchSeasons();
-      setExtendingSeason(null);
+      setExtendingSeason(null); // Đóng Modal
     } catch (err: any) {
       setExtendError("Failed to extend season: " + err.message);
     }
   };
 
+  // Xử lý Gửi biểu mẫu Tạo Mùa giải đua mới
   const handleCreateSeason = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -289,7 +318,9 @@ export default function Season() {
       return;
     }
 
+    // Thiết lập payload tạo mùa giải mới
     const payload: any = { name: newSeasonName, startDate: dbStart, endDate: dbEnd, classRuleMethod, status: "PENDING" };
+    // Đính kèm danh sách Class rules tùy biến nếu chọn phương pháp thiết lập MANUAL
     if (classRuleMethod === "MANUAL") {
       payload.manualClasses = manualRules;
     }
@@ -297,6 +328,7 @@ export default function Season() {
     try {
       await api.post("/races/seasons", payload);
       setSuccess("Season initialized successfully!");
+      // Reset biểu mẫu nhập liệu
       setNewSeasonName("2026–2027 Grand Prix Season");
       setNewSeasonStartDate("");
       setNewSeasonEndDate("");
@@ -309,6 +341,7 @@ export default function Season() {
     }
   };
 
+  // Cập nhật giá trị nhập của bảng Class rules (chỉ áp dụng ở chế độ MANUAL)
   const updateManualRule = (index: number, field: string, value: string) => {
     setManualRules(prev => prev.map((r, i) =>
       i === index ? { ...r, [field]: field === "classLevelName" ? value : (value === "" ? null : Number(value)) } : r
@@ -317,19 +350,21 @@ export default function Season() {
 
   return (
     <div className="space-y-6">
-      {/* Alerts */}
+      {/* Banner báo lỗi */}
       {error && (
         <div className="p-3 rounded-lg text-sm font-mono flex items-center gap-2" style={{ backgroundColor: "rgba(239,91,91,0.15)", color: "#ef5b5b", border: "1px solid rgba(239,91,91,0.3)" }}>
           ⚠ {error}
         </div>
       )}
+      
+      {/* Banner báo thành công */}
       {success && (
         <div className="p-3 rounded-lg text-sm font-mono flex items-center gap-2" style={{ backgroundColor: "rgba(74,157,111,0.15)", color: "#4a9d6f", border: "1px solid rgba(74,157,111,0.3)" }}>
           ✓ {success}
         </div>
       )}
 
-      {/* Create Season Form */}
+      {/* KHỐI 1: KHỞI TẠO MÙA GIẢI MỚI (Create Season Form) */}
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "rgba(201,162,39,0.10)" }}>
           <div>
@@ -340,7 +375,7 @@ export default function Season() {
 
         <div className="p-6">
           <form onSubmit={handleCreateSeason} className="space-y-6">
-            {/* Season basic info */}
+            {/* Nhập Tên, Ngày bắt đầu, Ngày kết thúc */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               <div className="md:col-span-2">
                 <label className="block text-[9px] font-mono uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Season Name", (localStorage.getItem('app-lang') || 'vi'))}</label>
@@ -358,11 +393,11 @@ export default function Season() {
               <InlineDatePicker label={$t("Season End Date", (localStorage.getItem('app-lang') || 'vi'))} value={newSeasonEndDate} onChange={setNewSeasonEndDate} />
             </div>
 
-            {/* Class Rule Method */}
+            {/* Chọn phương thức phân hạng cho mùa giải */}
             <div className="space-y-3">
               <label className="block text-[9px] font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Class Rule Setup Method", (localStorage.getItem('app-lang') || 'vi'))}</label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Automatic */}
+                {/* Lựa chọn Tự động (AUTOMATIC) */}
                 <div
                   onClick={() => setClassRuleMethod("AUTOMATIC")}
                   className="p-4 rounded-xl border cursor-pointer transition-all"
@@ -390,7 +425,7 @@ export default function Season() {
                   </div>
                 </div>
 
-                {/* Manual */}
+                {/* Lựa chọn Thủ công (MANUAL) */}
                 <div
                   onClick={() => setClassRuleMethod("MANUAL")}
                   className="p-4 rounded-xl border cursor-pointer transition-all"
@@ -420,7 +455,7 @@ export default function Season() {
               </div>
             </div>
 
-            {/* Manual Class Rules Table */}
+            {/* Bảng nhập Class rules thủ công (chỉ hiện khi chọn MANUAL) */}
             {classRuleMethod === "MANUAL" && (
               <div className="rounded-xl p-5 border space-y-3" style={{ background: "rgba(255,255,255,0.015)", borderColor: "rgba(201,162,39,0.15)" }}>
                 <div>
@@ -479,7 +514,7 @@ export default function Season() {
         </div>
       </div>
 
-      {/* Historical Seasons Table */}
+      {/* KHỐI 2: DANH SÁCH LỊCH SỬ MÙA GIẢI (Historical Seasons Table) */}
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "rgba(201,162,39,0.10)" }}>
           <div>
@@ -489,7 +524,7 @@ export default function Season() {
         </div>
 
         {isMobile ? (
-          /* Mobile card list */
+          // Bố cục Mobile (dạng thẻ)
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
               <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>{$t("Loading seasons...", (localStorage.getItem('app-lang') || 'vi'))}</p>
@@ -539,7 +574,7 @@ export default function Season() {
             ))}
           </div>
         ) : (
-          /* ── Desktop: original table ── */
+          // Bố cục Desktop (Bảng biểu)
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[700px]">
               <thead>
@@ -597,7 +632,7 @@ export default function Season() {
           </div>
         )}
 
-        {/* Season Class Rules Footer */}
+        {/* Khối hiển thị Class rules tương ứng dưới bảng (chỉ hiện khi click chọn hàng mùa giải) */}
         {selectedSeasonId !== null && seasonRules.length > 0 && (
           <div className="px-6 py-4 border-t" style={{ borderColor: "rgba(201,162,39,0.08)" }}>
             <p className="text-[9px] font-mono uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.35)" }}>
@@ -608,7 +643,6 @@ export default function Season() {
                 <div key={rule.id} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(201,162,39,0.12)" }}>
                   <p className="text-[10px] font-mono font-bold" style={{ color: "#c9a227" }}>{rule.classLevel}</p>
                   <p className="text-[9px] font-mono mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Rating", (localStorage.getItem('app-lang') || 'vi'))}: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
-
                 </div>
               ))}
             </div>
@@ -616,7 +650,7 @@ export default function Season() {
         )}
       </div>
 
-      {/* Extend Season Modal */}
+      {/* MODAL GIA HẠN MÙA GIẢI (Extend Season Modal) */}
       {extendingSeason && (
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="border rounded-2xl p-6 w-full max-w-md shadow-2xl space-y-4" style={{ background: "#151310", borderColor: "#2a2825" }}>

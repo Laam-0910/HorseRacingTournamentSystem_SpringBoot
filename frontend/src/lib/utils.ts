@@ -1,13 +1,14 @@
 /**
- * Parses a YouTube URL and returns its 11-character video ID.
- * Supports standard watch URLs, mobile youtu.be, embed, and various query parameters.
+ * Phân tích cú pháp URL YouTube và trích xuất mã ID video 11 ký tự độc nhất.
+ * - Hỗ trợ các định dạng URL xem tiêu chuẩn (watch?v=), dạng rút gọn trên di động (youtu.be/),
+ *   dạng phát trực tiếp (/live/), dạng video ngắn (/shorts/), và liên kết nhúng (/embed/).
  */
 export function getYouTubeId(url: string): string | null {
   if (!url) return null;
   
-  const tempUrl = url.trim();
+  const tempUrl = url.trim(); // Loại bỏ khoảng trắng thừa hai đầu
   
-  // Support for /live/VIDEO_ID, /shorts/VIDEO_ID, /embed/VIDEO_ID, /v/VIDEO_ID
+  // Khai báo các mẫu Regex cho các đường dẫn đặc thù của YouTube
   const pathPatterns = [
     /\/live\/([^"&?\/\s]{11})/,
     /\/shorts\/([^"&?\/\s]{11})/,
@@ -15,6 +16,7 @@ export function getYouTubeId(url: string): string | null {
     /\/v\/([^"&?\/\s]{11})/
   ];
   
+  // Duyệt qua từng mẫu Regex để tìm kiếm ID khớp có độ dài đúng 11 ký tự
   for (const pattern of pathPatterns) {
     const match = tempUrl.match(pattern);
     if (match && match[1].length === 11) {
@@ -22,7 +24,7 @@ export function getYouTubeId(url: string): string | null {
     }
   }
   
-  // Support for youtu.be/VIDEO_ID
+  // Hỗ trợ rút gọn dạng: youtu.be/VIDEO_ID
   if (tempUrl.includes("youtu.be/")) {
     const parts = tempUrl.split("youtu.be/");
     if (parts.length > 1) {
@@ -31,26 +33,28 @@ export function getYouTubeId(url: string): string | null {
     }
   }
   
-  // Support for watch?v=VIDEO_ID
+  // Hỗ trợ dạng chuẩn: watch?v=VIDEO_ID
   const regExp = /[?&]v=([^"&?\/\s]{11})/;
   const match = tempUrl.match(regExp);
   if (match && match[1].length === 11) {
     return match[1];
   }
   
-  return null;
+  return null; // Trả về null nếu không khớp định dạng video YouTube nào
 }
 
 /**
- * Parses any YouTube URL and generates a valid iframe embed URL.
- * Returns null if the URL is invalid.
+ * Tạo URL liên kết nhúng (Embed URL) cho thẻ iframe từ bất kỳ liên kết YouTube nào.
+ * - Nếu không tìm được ID YouTube nhưng chuỗi là URL hợp lệ, trả về nguyên bản.
  */
 export function getYouTubeEmbedUrl(url: string): string | null {
   if (!url) return null;
   const id = getYouTubeId(url);
   if (id) {
+    // Trả về liên kết nhúng chuẩn của YouTube
     return `https://www.youtube.com/embed/${id}`;
   }
+  // Nếu là URL web khác bắt đầu bằng giao thức http/https, trả về chính nó làm liên kết thay thế
   if (url.startsWith("http://") || url.startsWith("https://")) {
     return url;
   }

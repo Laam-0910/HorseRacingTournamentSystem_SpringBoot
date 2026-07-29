@@ -11,10 +11,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller SeasonController - Lớp kiểm soát các endpoint liên quan đến mùa giải đua (Season).
+ * - Cung cấp thông tin danh sách toàn bộ mùa giải.
+ * - Cung cấp các quy định phân hạng điểm rating tương ứng với từng mùa giải được chỉ định.
+ */
 @RestController
 @RequestMapping("/api/seasons")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Cho phép gọi API chéo miền
 @Tag(
     name = "03. Season & Class Rule Service",
     description = "🏆 **BƯỚC 3: QUẢN LÝ MÙA GIẢI & QUY ĐỊNH HẠNG (SEASON ARCHITECTURE)**\n\n" +
@@ -31,8 +36,9 @@ import java.util.List;
 )
 public class SeasonController {
 
-    private final SeasonService seasonService;
+    private final SeasonService seasonService; // Khai báo dịch vụ mùa giải
 
+    // Lấy toàn bộ danh sách các mùa giải đua có trong hệ thống
     @GetMapping
     @Operation(
         summary = "GET: Lấy danh sách tất cả các Mùa giải đua",
@@ -44,9 +50,11 @@ public class SeasonController {
                       "* **DTO Response**: `List<SeasonDTO>`"
     )
     public ResponseEntity<List<SeasonDTO>> getAllSeasons() {
+        // Trả về danh sách DTO của các mùa giải
         return ResponseEntity.ok(seasonService.getAllSeasons());
     }
 
+    // Lấy quy định phân hạng điểm (rating) của một mùa giải theo khóa chính seasonId
     @GetMapping("/{seasonId}/rules")
     @Operation(
         summary = "GET: Lấy danh sách quy định phân hạng theo Mùa giải",
@@ -58,6 +66,7 @@ public class SeasonController {
                       "* **DTO Response**: `List<SeasonClassRuleDTO>`"
     )
     public ResponseEntity<List<SeasonClassRuleDTO>> getSeasonRules(@PathVariable Integer seasonId) {
+        // Trả về danh sách DTO quy định hạng
         return ResponseEntity.ok(seasonService.getSeasonRules(seasonId));
     }
 }
