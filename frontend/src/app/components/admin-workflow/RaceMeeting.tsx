@@ -1,32 +1,32 @@
-import { $t } from "../../../lib/i18n";
-import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
-import { formatDate, formatDateTime, formatForDateTimeLocal, formatForApi } from "../../utils/dateTimeHelper";
-import InlineDatePicker from "../ui/InlineDatePicker";
-import { confirm } from "../../../lib/confirm";
+import { $t } from "../../../lib/i18n"; // Import hàm hỗ trợ dịch đa ngôn ngữ
+import { useState, useEffect } from "react"; // Import hook cơ bản của React
+import { api } from "../../../lib/api"; // Import module gọi API
+import { formatDate, formatDateTime, formatForDateTimeLocal, formatForApi } from "../../utils/dateTimeHelper"; // Import các hàm xử lý ngày tháng
+import InlineDatePicker from "../ui/InlineDatePicker"; // Import component chọn ngày
+import { confirm } from "../../../lib/confirm"; // Import hàm hiển thị popup xác nhận
 
-export default function RaceMeeting() {
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [seasons, setSeasons] = useState<any[]>([]);
-  const [name, setName] = useState("");
-  const [date, setDate] = useState("");
-  const [venue, setVenue] = useState("");
-  const [seasonId, setSeasonId] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [editingMeeting, setEditingMeeting] = useState<any | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+export default function RaceMeeting() { // Component quản lý danh sách các giải đua (Race Meeting)
+  const [meetings, setMeetings] = useState<any[]>([]); // State lưu danh sách giải đua
+  const [seasons, setSeasons] = useState<any[]>([]); // State lưu danh sách các mùa giải
+  const [name, setName] = useState(""); // State lưu tên giải đua
+  const [date, setDate] = useState(""); // State lưu ngày tổ chức
+  const [venue, setVenue] = useState(""); // State lưu địa điểm tổ chức
+  const [seasonId, setSeasonId] = useState(""); // State lưu ID của mùa giải liên kết
+  const [loading, setLoading] = useState(false); // State trạng thái đang tải dữ liệu
+  const [error, setError] = useState(""); // State thông báo lỗi
+  const [success, setSuccess] = useState(""); // State thông báo thành công
+  const [editingMeeting, setEditingMeeting] = useState<any | null>(null); // State lưu trữ giải đua đang được chỉnh sửa
+  const [isMobile, setIsMobile] = useState(false); // State kiểm tra màn hình thiết bị di động
 
-  const fetchData = async () => {
+  const fetchData = async () => { // Hàm lấy danh sách giải đua và mùa giải từ API
     setLoading(true);
     setError("");
     try {
-      const ms = await api.get<any[]>("/races/meetings");
-      setMeetings(ms);
+      const ms = await api.get<any[]>("/races/meetings"); // Lấy danh sách giải đua
+      setMeetings(ms); // Cập nhật danh sách giải đua vào state
 
-      const ss = await api.get<any[]>("/races/seasons");
-      setSeasons(ss);
+      const ss = await api.get<any[]>("/races/seasons"); // Lấy danh sách mùa giải
+      setSeasons(ss); // Cập nhật danh sách mùa giải vào state
       if (ss.length > 0 && !seasonId) {
         setSeasonId(ss[0].id.toString());
       }
@@ -37,19 +37,20 @@ export default function RaceMeeting() {
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { // Hook xử lý tự động cập nhật state khi màn hình thay đổi kích thước
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { // Hook gọi hàm fetchData ngay sau khi component mount
     fetchData();
   }, []);
 
-  const handleEdit = (m: any) => {
-    setEditingMeeting(m);
+  const handleEdit = (m: any) => { // Hàm xử lý khi nhấn nút Sửa một giải đua
+    setEditingMeeting(m); // Điền dữ liệu của giải đua vào form
+
     setName(m.name || "");
     setVenue(m.venue || "");
     setSeasonId(m.seasonId ? m.seasonId.toString() : "");
@@ -58,8 +59,9 @@ export default function RaceMeeting() {
     setSuccess("");
   };
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = () => { // Hàm hủy bỏ chế độ chỉnh sửa, reset lại form
     setEditingMeeting(null);
+
     setName("");
     setVenue("");
     setDate("");
@@ -70,16 +72,16 @@ export default function RaceMeeting() {
     setSuccess("");
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number) => { // Hàm xử lý khi nhấn nút Xóa giải đua
     if (!await confirm("Are you sure you want to delete this race meeting? This action cannot be undone.")) {
       return;
     }
     setError("");
     setSuccess("");
     try {
-      await api.delete(`/races/meetings/${id}`);
+      await api.delete(`/races/meetings/${id}`); // Gọi API xóa giải đua
       setSuccess("Race meeting deleted successfully.");
-      fetchData();
+      fetchData(); // Load lại dữ liệu sau khi xóa thành công
       if (editingMeeting?.id === id) {
         handleCancelEdit();
       }
@@ -88,8 +90,8 @@ export default function RaceMeeting() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e: React.FormEvent) => { // Hàm xử lý lưu giải đua (Thêm mới hoặc Cập nhật)
+    e.preventDefault(); // Ngăn hành vi reload trang mặc định của form
     setError("");
     setSuccess("");
 
@@ -102,11 +104,11 @@ export default function RaceMeeting() {
       };
 
       if (editingMeeting) {
-        await api.post(`/races/meetings/${editingMeeting.id}`, payload);
+        await api.post(`/races/meetings/${editingMeeting.id}`, payload); // Nếu đang sửa, gọi API cập nhật
         setSuccess("Race meeting updated successfully.");
-        setEditingMeeting(null);
+        setEditingMeeting(null); // Tắt chế độ sửa
       } else {
-        await api.post("/races/meetings", payload);
+        await api.post("/races/meetings", payload); // Nếu thêm mới, gọi API tạo mới
         setSuccess("Race meeting created successfully.");
       }
 
