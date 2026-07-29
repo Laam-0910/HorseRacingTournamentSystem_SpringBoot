@@ -6,16 +6,16 @@ import { formatDateTime, formatDate, formatForApi, parseSafeDate } from "../../u
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 import { confirm } from "../../../lib/confirm";
 
-export default function RaceDaySchedule() {
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null);
-  const [seasons, setSeasons] = useState<any[]>([]);
-  const [enrichedRaces, setEnrichedRaces] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [loadingRaces, setLoadingRaces] = useState(false);
-  const [error, setError] = useState("");
+export default function RaceDaySchedule() { // Component Quản lý lịch trình ngày đua
+  const [meetings, setMeetings] = useState<any[]>([]); // State danh sách giải đua (meetings)
+  const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null); // State ID giải đua được chọn
+  const [seasons, setSeasons] = useState<any[]>([]); // State danh sách mùa giải (seasons)
+  const [enrichedRaces, setEnrichedRaces] = useState<any[]>([]); // State chứa danh sách vòng đua kèm dữ liệu bổ sung (ngựa, nài ngựa, trọng tài)
+  const [loading, setLoading] = useState(false); // State trạng thái tải dữ liệu chung
+  const [loadingRaces, setLoadingRaces] = useState(false); // State trạng thái tải dữ liệu chi tiết vòng đua
+  const [error, setError] = useState(""); // State hiển thị lỗi
 
-  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false); // State điều khiển bật/tắt Modal tạo lịch vòng đua
   const [classLevel, setClassLevel] = useState("Class 1 (Rating 95+)");
   const [trackType, setTrackType] = useState("Turf");
   const [startTime, setStartTime] = useState("");
@@ -24,7 +24,7 @@ export default function RaceDaySchedule() {
   const [maxEntries, setMaxEntries] = useState("12");
   const [purse, setPurse] = useState("0");
 
-  const fetchData = async () => {
+  const fetchData = async () => { // Hàm lấy dữ liệu khởi tạo (Danh sách Meeting và Season)
     setLoading(true);
     setError("");
     try {
@@ -44,7 +44,7 @@ export default function RaceDaySchedule() {
     }
   };
 
-  const fetchRacesDetails = async (meetingId: number) => {
+  const fetchRacesDetails = async (meetingId: number) => { // Hàm lấy thông tin chi tiết các vòng đua theo Meeting ID
     setLoadingRaces(true);
     try {
       const [racesData, refereesMap] = await Promise.all([
@@ -78,11 +78,11 @@ export default function RaceDaySchedule() {
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { // Hook tải dữ liệu khởi tạo khi component render
     fetchData();
   }, []);
 
-  useEffect(() => {
+  useEffect(() => { // Hook lấy chi tiết vòng đua khi đổi Meeting ID
     if (selectedMeetingId !== null) {
       fetchRacesDetails(selectedMeetingId);
     }
@@ -94,7 +94,7 @@ export default function RaceDaySchedule() {
     : seasons.find((s) => s.status === "ACTIVE");
 
 
-  const handleScheduleRaceSubmit = async (e: React.FormEvent) => {
+  const handleScheduleRaceSubmit = async (e: React.FormEvent) => { // Hàm xử lý submit form lên lịch một vòng đua mới
     e.preventDefault();
     if (!selectedMeetingId) {
       alert("Please select a race meeting first.");
@@ -151,7 +151,7 @@ export default function RaceDaySchedule() {
     }
   };
 
-  const handleOpenScheduleModal = () => {
+  const handleOpenScheduleModal = () => { // Hàm hiển thị Modal và gán giờ bắt đầu mặc định
     if (!selectedMeetingId) {
       alert("Please select a race meeting first.");
       return;
@@ -168,7 +168,7 @@ export default function RaceDaySchedule() {
     setShowScheduleModal(true);
   };
 
-  const handleCancelRace = async (raceId: number) => {
+  const handleCancelRace = async (raceId: number) => { // Hàm xử lý hủy một vòng đua
     if (!await confirm("Are you sure you want to cancel this race?")) return;
     try {
       await api.post(`/admin/races/${raceId}/cancel`);
