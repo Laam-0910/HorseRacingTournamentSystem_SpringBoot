@@ -150,9 +150,9 @@ export default function Livestream() {
   const [newMsg, setNewMsg] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connectionState, setConnectionState] = useState<"connecting" | "connected" | "disconnected">("connecting");
-  const [isTheaterMode, setIsTheaterMode] = useState(false);
+  const [isTheaterMode, setIsTheaterMode] = useState(false); // Trạng thái chế độ rạp phim
 
-  // Generate or retrieve persistent guest username
+  // Tạo hoặc lấy tên người dùng ẩn danh (Guest) từ session storage
   const [username] = useState<string>(() => {
     if (user?.username) return user.username;
     const cached = sessionStorage.getItem("chat-guest-username");
@@ -162,7 +162,7 @@ export default function Livestream() {
     return newGuest;
   });
 
-  // Set initial localized mock chat messages
+  // Gán danh sách tin nhắn mẫu ảo ban đầu tùy theo ngôn ngữ (Set initial localized mock chat messages)
   useEffect(() => {
     setChatMessages([
       { user: "RaceFan_99", text: $t("Khởi đầu ấn tượng quá! Ngựa số 3 đang bứt tốc!", (localStorage.getItem('app-lang') || 'vi')), time: `1 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
@@ -172,7 +172,7 @@ export default function Livestream() {
     ]);
   }, [lang]);
 
-  // Handle active races list loading
+  // Hook lấy danh sách các luồng trực tiếp đang phát (Handle active races list loading)
   useEffect(() => {
     const fetchLiveRaces = async () => {
       try {
