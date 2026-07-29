@@ -457,8 +457,9 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
   }
 };
 
+// ── Component Trung tâm quản lý nghiệp vụ trọng tài (RefereeHub) ────────────────
 export default function RefereeHub() {
-  const { user } = useAuth();
+  const { user } = useAuth(); // Lấy dữ liệu người dùng (Trọng tài)
   
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -470,12 +471,13 @@ export default function RefereeHub() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Lấy ngôn ngữ cấu hình từ localStorage
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
 
-  const [assignedRaces, setAssignedRaces] = useState<any[]>([]);
-  const [completedCount, setCompletedCount] = useState(0);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [assignedRaces, setAssignedRaces] = useState<any[]>([]); // Danh sách các trận được phân công
+  const [completedCount, setCompletedCount] = useState(0); // Số lượng trận đã hoàn thành
+  const [pendingCount, setPendingCount] = useState(0); // Số lượng trận đang chờ xử lý
   const [loading, setLoading] = useState(true);
 
   // Sub-view state
