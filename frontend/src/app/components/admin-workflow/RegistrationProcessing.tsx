@@ -1,23 +1,23 @@
-import { $t } from "../../../lib/i18n";
-import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
-import { parseSafeDate } from "../../utils/dateTimeHelper";
+import { $t } from "../../../lib/i18n"; // Import hàm đa ngôn ngữ
+import { useState, useEffect } from "react"; // Import hook cơ bản của React
+import { api } from "../../../lib/api"; // Import thư viện gọi API
+import { parseSafeDate } from "../../utils/dateTimeHelper"; // Import hàm xử lý ngày tháng an toàn
 
-export default function RegistrationProcessing() {
-  const [pendingEntries, setPendingEntries] = useState<any[]>([]);
-  const [pendingHorseRegs, setPendingHorseRegs] = useState<any[]>([]);
-  const [pendingJockeyRegs, setPendingJockeyRegs] = useState<any[]>([]);
-  const [pendingOwnerRegs, setPendingOwnerRegs] = useState<any[]>([]);
-  const [pendingSystemHorses, setPendingSystemHorses] = useState<any[]>([]);
+export default function RegistrationProcessing() { // Component xử lý duyệt đơn đăng ký của quản trị viên
+  const [pendingEntries, setPendingEntries] = useState<any[]>([]); // State danh sách đăng ký tham gia cuộc đua chờ duyệt
+  const [pendingHorseRegs, setPendingHorseRegs] = useState<any[]>([]); // State danh sách đăng ký ngựa chờ duyệt
+  const [pendingJockeyRegs, setPendingJockeyRegs] = useState<any[]>([]); // State danh sách đăng ký nài ngựa chờ duyệt
+  const [pendingOwnerRegs, setPendingOwnerRegs] = useState<any[]>([]); // State danh sách đăng ký chủ ngựa chờ duyệt
+  const [pendingSystemHorses, setPendingSystemHorses] = useState<any[]>([]); // State danh sách ngựa mới hệ thống chờ duyệt
 
-  const [awaitingDecisionCount, setAwaitingDecisionCount] = useState(0);
-  const [approvedCount, setApprovedCount] = useState(0);
-  const [rejectedCount, setRejectedCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [awaitingDecisionCount, setAwaitingDecisionCount] = useState(0); // State đếm số lượng chờ quyết định
+  const [approvedCount, setApprovedCount] = useState(0); // State đếm số lượng đã duyệt
+  const [rejectedCount, setRejectedCount] = useState(0); // State đếm số lượng đã từ chối
+  const [loading, setLoading] = useState(false); // State trạng thái tải dữ liệu
+  const [error, setError] = useState(""); // State hiển thị lỗi
+  const [success, setSuccess] = useState(""); // State hiển thị thông báo thành công
 
-  const formatSimpleDate = (dateStr: string) => {
+  const formatSimpleDate = (dateStr: string) => { // Hàm định dạng ngày tháng hiển thị đơn giản
     if (!dateStr) return "";
     const d = parseSafeDate(dateStr);
     if (!d || isNaN(d.getTime())) return dateStr;
@@ -27,7 +27,7 @@ export default function RegistrationProcessing() {
     return `${day}-${month}-${year}`;
   };
 
-  const fetchData = async () => {
+  const fetchData = async () => { // Hàm lấy dữ liệu các đơn đăng ký chờ duyệt từ server
     setLoading(true);
     setError("");
     try {
@@ -43,31 +43,32 @@ export default function RegistrationProcessing() {
     } catch (err: any) {
       setError(err.message || "Failed to load registrations.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Tắt trạng thái tải
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { // Hook tự động gọi API lấy dữ liệu khi component được load
     fetchData();
   }, []);
 
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
+  const [isMobile, setIsMobile] = useState(false); // State nhận diện giao diện di động
+  useEffect(() => { // Hook lắng nghe sự kiện thay đổi kích thước màn hình
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const showSuccess = (msg: string) => {
+  const showSuccess = (msg: string) => { // Hàm hiển thị thông báo thành công dạng toast
     setSuccess(msg);
-    setTimeout(() => setSuccess(""), 4000);
+    setTimeout(() => setSuccess(""), 4000); // Tự động ẩn sau 4 giây
   };
 
   // 1. Race Entries
-  const handleEntryApprove = async (id: number) => {
+  const handleEntryApprove = async (id: number) => { // Hàm duyệt đơn đăng ký tham gia cuộc đua
     try {
-      await api.post(`/admin/entries/${id}/approve`);
+      await api.post(`/admin/entries/${id}/approve`); // Gửi yêu cầu duyệt
+
       showSuccess(`Approved race entry #${id}`);
       fetchData();
     } catch (err: any) {
@@ -75,9 +76,10 @@ export default function RegistrationProcessing() {
     }
   };
 
-  const handleEntryReject = async (id: number) => {
+  const handleEntryReject = async (id: number) => { // Hàm từ chối đơn đăng ký tham gia cuộc đua
     try {
-      await api.post(`/admin/entries/${id}/reject`);
+      await api.post(`/admin/entries/${id}/reject`); // Gửi yêu cầu từ chối
+
       showSuccess(`Rejected race entry #${id}`);
       fetchData();
     } catch (err: any) {
@@ -86,9 +88,10 @@ export default function RegistrationProcessing() {
   };
 
   // 2. Horse Meeting Regs
-  const handleHorseRegApprove = async (id: number) => {
+  const handleHorseRegApprove = async (id: number) => { // Hàm duyệt đơn đăng ký ngựa
     try {
       await api.post(`/admin/horse-reg/${id}/approve`);
+
       showSuccess(`Approved horse meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
@@ -96,9 +99,10 @@ export default function RegistrationProcessing() {
     }
   };
 
-  const handleHorseRegReject = async (id: number) => {
+  const handleHorseRegReject = async (id: number) => { // Hàm từ chối đơn đăng ký ngựa
     try {
       await api.post(`/admin/horse-reg/${id}/reject`);
+
       showSuccess(`Rejected horse meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
@@ -107,9 +111,10 @@ export default function RegistrationProcessing() {
   };
 
   // 3. Jockey Meeting Regs
-  const handleJockeyRegApprove = async (id: number) => {
+  const handleJockeyRegApprove = async (id: number) => { // Hàm duyệt đăng ký của nài ngựa
     try {
       await api.post(`/admin/jockey-reg/${id}/approve`);
+
       showSuccess(`Approved jockey meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
@@ -117,9 +122,10 @@ export default function RegistrationProcessing() {
     }
   };
 
-  const handleJockeyRegReject = async (id: number) => {
+  const handleJockeyRegReject = async (id: number) => { // Hàm từ chối đăng ký của nài ngựa
     try {
       await api.post(`/admin/jockey-reg/${id}/reject`);
+
       showSuccess(`Rejected jockey meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
@@ -128,9 +134,10 @@ export default function RegistrationProcessing() {
   };
 
   // 3.5. Owner Meeting Regs
-  const handleOwnerRegApprove = async (id: number) => {
+  const handleOwnerRegApprove = async (id: number) => { // Hàm duyệt đăng ký chủ ngựa tham gia giải
     try {
       await api.post(`/admin/owner-reg/${id}/approve`);
+
       showSuccess(`Approved owner meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
@@ -138,9 +145,10 @@ export default function RegistrationProcessing() {
     }
   };
 
-  const handleOwnerRegReject = async (id: number) => {
+  const handleOwnerRegReject = async (id: number) => { // Hàm từ chối đăng ký chủ ngựa tham gia giải
     try {
       await api.post(`/admin/owner-reg/${id}/reject`);
+
       showSuccess(`Rejected owner meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
@@ -149,9 +157,10 @@ export default function RegistrationProcessing() {
   };
 
   // 4. System Horse Approvals (New Horses)
-  const handleSystemHorseApprove = async (id: number) => {
+  const handleSystemHorseApprove = async (id: number) => { // Hàm duyệt kích hoạt ngựa mới trên hệ thống
     try {
       await api.post(`/admin/system-horse/${id}/approve`);
+
       showSuccess(`Approved system horse activation #${id}`);
       fetchData();
     } catch (err: any) {
@@ -159,9 +168,10 @@ export default function RegistrationProcessing() {
     }
   };
 
-  const handleSystemHorseReject = async (id: number) => {
+  const handleSystemHorseReject = async (id: number) => { // Hàm từ chối kích hoạt ngựa mới
     try {
       await api.post(`/admin/system-horse/${id}/reject`);
+
       showSuccess(`Rejected system horse activation #${id}`);
       fetchData();
     } catch (err: any) {
@@ -169,7 +179,7 @@ export default function RegistrationProcessing() {
     }
   };
 
-  return (
+  return ( // JSX hiển thị giao diện Component
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Overview Cards */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
