@@ -1,38 +1,43 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { authService } from "../../../services/authService";
-import { $t } from '@/lib/i18n';
+import { useState, useEffect } from "react"; // Import các hook cơ bản của React
+import { useNavigate, useSearchParams } from "react-router-dom"; // Import công cụ điều hướng
+import { authService } from "../../../services/authService"; // Import dịch vụ xác thực
+import { $t } from '@/lib/i18n'; // Import hàm hỗ trợ dịch đa ngôn ngữ
 
+// Component Xác thực mã OTP và đặt lại mật khẩu mới
 export default function VerifyForgot() {
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const otpTxId = searchParams.get("otpTxId");
+  // Khởi tạo các state
+  const [otp, setOtp] = useState(""); // State lưu mã OTP
+  const [newPassword, setNewPassword] = useState(""); // State lưu mật khẩu mới
+  const [confirmPassword, setConfirmPassword] = useState(""); // State xác nhận mật khẩu mới
+  const [error, setError] = useState(""); // Thông báo lỗi
+  const [success, setSuccess] = useState(""); // Thông báo thành công
+  const [loading, setLoading] = useState(false); // Trạng thái tải dữ liệu
+  const [searchParams] = useSearchParams(); // Hook lấy tham số trên URL
+  const navigate = useNavigate(); // Hook chuyển trang
+  const otpTxId = searchParams.get("otpTxId"); // Lấy mã giao dịch OTP từ URL
 
+  // Hook kiểm tra nếu không có mã giao dịch thì quay lại trang Quên mật khẩu
   useEffect(() => {
     if (!otpTxId) {
       navigate("/forgot-password");
     }
   }, [otpTxId, navigate]);
 
+  // Hàm xử lý gửi yêu cầu đặt lại mật khẩu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
 
-    const lang = localStorage.getItem("app-lang") || "vi";
+    const lang = localStorage.getItem("app-lang") || "vi"; // Lấy ngôn ngữ hiện tại
 
+    // Kiểm tra mật khẩu mới và xác nhận mật khẩu
     if (newPassword !== confirmPassword) {
       setError($t("Passwords do not match.", lang));
       return;
     }
 
-    // Kiểm tra độ phức tạp mật khẩu
+    // Kiểm tra độ phức tạp của mật khẩu mới
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(newPassword)) {
       setError(
@@ -46,6 +51,7 @@ export default function VerifyForgot() {
     setLoading(true);
 
     try {
+      // Gọi API xác thực mã OTP và cập nhật mật khẩu
       const res = await authService.verifyForgotPassword({
         otpTxId,
         otp,
@@ -53,17 +59,18 @@ export default function VerifyForgot() {
       });
       if (res.success) {
         setSuccess("Password updated successfully! Redirecting to login...");
-        setTimeout(() => navigate("/login"), 2500);
+        setTimeout(() => navigate("/login"), 2500); // Chuyển về trang đăng nhập sau 2.5s
       } else {
         setError(res.error || "Verification failed. Please check the code.");
       }
     } catch (err: any) {
-      setError(err.message || "An error occurred during verification.");
+      setError(err.message || "An error occurred during verification."); // Báo lỗi
     } finally {
-      setLoading(false);
+      setLoading(false); // Tắt trạng thái tải
     }
   };
 
+  // Trả về giao diện người dùng
   return (
     <div className="min-h-screen flex items-center justify-center bg-black/60 px-4 py-12 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-[#151310]/60 border border-white/5 p-8 rounded-2xl backdrop-blur-xl shadow-2xl">
@@ -79,12 +86,14 @@ export default function VerifyForgot() {
           </p>
         </div>
 
+        {/* Hiển thị lỗi (nếu có) */}
         {error && (
           <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm text-center">
             {error}
           </div>
         )}
 
+        {/* Hiển thị thông báo thành công */}
         {success && (
           <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-sm text-center">
             {success}
