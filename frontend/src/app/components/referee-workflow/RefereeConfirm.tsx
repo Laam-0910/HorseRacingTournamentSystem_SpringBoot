@@ -6,15 +6,17 @@ interface RefereeConfirmProps {
   onBack: () => void;
 }
 
+// ── Component Trọng tài xác nhận kết quả sau trận (RefereeConfirm) ────────────────
 export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) {
-  const [entries, setEntries] = useState<any[]>([]);
-  const [positions, setPositions] = useState<Record<number, string>>({});
-  const [times, setTimes] = useState<Record<number, string>>({});
-  const [weighInWeights, setWeighInWeights] = useState<Record<number, string>>({});
-  const [stewardReport, setStewardReport] = useState("");
+  const [entries, setEntries] = useState<any[]>([]); // Danh sách ngựa tham gia
+  const [positions, setPositions] = useState<Record<number, string>>({}); // Thứ hạng về đích
+  const [times, setTimes] = useState<Record<number, string>>({}); // Thời gian hoàn thành
+  const [weighInWeights, setWeighInWeights] = useState<Record<number, string>>({}); // Trọng lượng cân sau trận
+  const [stewardReport, setStewardReport] = useState(""); // Báo cáo chung của trọng tài
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Hook lấy danh sách ngựa và kết quả hiện tại
   useEffect(() => {
     const fetchEntries = async () => {
       setLoading(true);
@@ -43,6 +45,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
     fetchEntries();
   }, [raceId]);
 
+  // Cập nhật thứ hạng
   const handlePositionChange = (entryId: number, val: string) => {
     setPositions((prev) => ({
       ...prev,
@@ -64,6 +67,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
     }));
   };
 
+  // Xử lý nộp kết quả chính thức
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
