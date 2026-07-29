@@ -70,13 +70,14 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
   }
 };
 
+// ── Component Trọng tài xem nhật ký sự cố (RefereeIncidents) ────────────────
 export default function RefereeIncidents() {
-  const { user } = useAuth();
-  const [incidents, setIncidents] = useState<any[]>([]);
+  const { user } = useAuth(); // Lấy thông tin tài khoản trọng tài
+  const [incidents, setIncidents] = useState<any[]>([]); // Danh sách các sự cố vi phạm
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Steward report modal state
+  // Trạng thái cho modal hiển thị báo cáo chi tiết của trọng tài
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
 
@@ -90,6 +91,7 @@ export default function RefereeIncidents() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Lấy dữ liệu vi phạm của các trận đấu do trọng tài này phụ trách
   useEffect(() => {
     if (!user) return;
     api.get<any>(`/referee/${user.id}/dashboard`)
