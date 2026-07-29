@@ -1,8 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 
+// ── Component hiển thị Thanh điều hướng (Header) ────────────────
 export default function Header() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuth(); // Lấy thông tin người dùng và hàm đăng xuất từ context
   const navigate = useNavigate();
 
   return (
