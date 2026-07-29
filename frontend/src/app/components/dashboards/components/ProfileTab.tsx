@@ -135,11 +135,15 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
   }
 };
 
+// ── Component hiển thị Tab Hồ sơ cá nhân ──────────────────────────────
 export default function ProfileTab({ roleColor, roleLabel }: Props) {
-  const { user, setUser } = useAuth();
+  const { user, setUser } = useAuth(); // Quản lý thông tin đăng nhập
   
+  // State phục vụ việc responsive
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  
+  // Lắng nghe kích thước màn hình
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -150,18 +154,20 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const lang = localStorage.getItem("app-lang") || "vi";
+  const lang = localStorage.getItem("app-lang") || "vi"; // Ngôn ngữ đang chọn
   const st = PROFILE_TRANSLATIONS[lang] || PROFILE_TRANSLATIONS.vi;
   
-  const [fullName, setFullName] = useState(user?.fullName || user?.username || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [weight, setWeight] = useState(user?.weight?.toString() || "");
-  const [biography, setBiography] = useState(user?.biography || "");
-  const [avatar, setAvatar] = useState(user?.avatar || "");
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileMsg, setProfileMsg] = useState("");
-  const [profileErr, setProfileErr] = useState("");
+  // Khởi tạo các state thông tin cá nhân
+  const [fullName, setFullName] = useState(user?.fullName || user?.username || ""); // Họ và tên
+  const [email, setEmail] = useState(user?.email || ""); // Địa chỉ Email
+  const [weight, setWeight] = useState(user?.weight?.toString() || ""); // Cân nặng
+  const [biography, setBiography] = useState(user?.biography || ""); // Tiểu sử
+  const [avatar, setAvatar] = useState(user?.avatar || ""); // Ảnh đại diện
+  const [profileLoading, setProfileLoading] = useState(false); // Trạng thái đang tải
+  const [profileMsg, setProfileMsg] = useState(""); // Thông báo cập nhật thành công
+  const [profileErr, setProfileErr] = useState(""); // Thông báo cập nhật lỗi
 
+  // State cho tính năng OTP/2FA
   const [otpEnabled, setOtpEnabled] = useState<boolean>(user?.requireOtp ?? false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMsg, setOtpMsg] = useState("");

@@ -1,7 +1,8 @@
+// ── Component hiển thị thẻ thông tin cuộc đua (Racecard) ────────────────
 export default function Racecard() {
   return (
     <div>
-      {/* TODO: chuyen noi dung tu component mau (HR.zip) hoac JSP tuong ung vao day */}
+      {/* TODO: chuyển nội dung từ component mẫu (HR.zip) hoặc JSP tương ứng vào đây */}
       <h1>Racecard</h1>
     </div>
   );
