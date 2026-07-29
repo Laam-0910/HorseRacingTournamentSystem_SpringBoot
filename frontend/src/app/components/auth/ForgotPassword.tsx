@@ -1,14 +1,17 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { authService } from "../../../services/authService";
+import { useState } from "react"; // Import hook cơ bản của React
+import { Link, useNavigate } from "react-router-dom"; // Import công cụ điều hướng
+import { authService } from "../../../services/authService"; // Import dịch vụ xác thực
 
+// Component Quên mật khẩu
 export default function ForgotPassword() {
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  // Khởi tạo các state
+  const [email, setEmail] = useState(""); // State lưu email hoặc username
+  const [message, setMessage] = useState(""); // Thông báo thành công
+  const [error, setError] = useState(""); // Thông báo lỗi
+  const [loading, setLoading] = useState(false); // Trạng thái đang tải
+  const navigate = useNavigate(); // Hook chuyển trang
 
+  // Hàm xử lý gửi yêu cầu reset mật khẩu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage(""); setError(""); setLoading(true);
@@ -17,18 +20,20 @@ export default function ForgotPassword() {
       if (res.success && res.otpTxId) {
         setMessage("Verification code sent! Redirecting...");
         setTimeout(() => {
-          navigate(`/verify-forgot?otpTxId=${res.otpTxId}`);
+          navigate(`/verify-forgot?otpTxId=${res.otpTxId}`); // Chuyển sang trang nhập mã OTP
         }, 800);
       } else {
         setError(res.error || "Failed to send code");
       }
     } catch (err: any) {
       setError(err.message || "Failed to send code");
-    } finally { setLoading(false); }
+    } finally { setLoading(false); } // Tắt trạng thái tải
   };
 
+  // Trả về giao diện người dùng
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
+      {/* Hình nền */}
       <div style={{ position: "absolute", inset: 0, backgroundImage: "url('/anhngua1-1.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.75) 100%)" }} />
       </div>
@@ -46,7 +51,7 @@ export default function ForgotPassword() {
             </div>
           </div>
 
-          {/* Card */}
+          {/* Khung nội dung */}
           <div style={{ background: "rgba(21,19,16,0.95)", backdropFilter: "blur(8px)", border: "1px solid #2a2825", borderRadius: "0.5rem", padding: "2rem", boxShadow: "0 25px 50px rgba(0,0,0,0.5)" }}>
             <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f0f0f0", marginBottom: "0.25rem" }}>Reset Password</h2>
             <p style={{ color: "#a0a0a0", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
