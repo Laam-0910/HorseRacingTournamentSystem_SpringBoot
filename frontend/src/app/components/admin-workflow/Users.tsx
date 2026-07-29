@@ -1,23 +1,24 @@
-import { $t } from "../../../lib/i18n";
-import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
-import { api } from "../../../lib/api";
+import { $t } from "../../../lib/i18n"; // Import hàm hỗ trợ dịch đa ngôn ngữ
+import { useState, useEffect } from "react"; // Import hook cơ bản của React
+import { createPortal } from "react-dom"; // Import createPortal để render modal
+import { api } from "../../../lib/api"; // Import module gọi API
 
+// Component quản lý danh sách Người dùng (dành cho Admin)
 export default function Users() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
+  const [isMobile, setIsMobile] = useState(false); // State kiểm tra thiết bị di động
+  useEffect(() => { // Hook xử lý sự kiện resize cửa sổ
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [users, setUsers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [filterRole, setFilterRole] = useState<string>("ALL");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [users, setUsers] = useState<any[]>([]); // State danh sách người dùng
+  const [loading, setLoading] = useState(false); // State trạng thái tải dữ liệu
+  const [error, setError] = useState(""); // Thông báo lỗi
+  const [success, setSuccess] = useState(""); // Thông báo thành công
+  const [filterRole, setFilterRole] = useState<string>("ALL"); // Trạng thái bộ lọc vai trò (Role)
+  const [searchQuery, setSearchQuery] = useState(""); // Trạng thái ô tìm kiếm
 
   const lang = localStorage.getItem("app-lang") || "vi";
   const placeholderText = 
@@ -26,14 +27,14 @@ export default function Users() {
     lang === "ja" ? "ユーザー名、メール、または馬を検索..." :
     "Tìm kiếm tên người dùng, email, hoặc ngựa...";
 
-  // Create User Form State
+  // Khởi tạo State cho form Tạo người dùng mới
   const [createUsername, setCreateUsername] = useState("");
   const [createEmail, setCreateEmail] = useState("");
   const [createPassword, setCreatePassword] = useState("");
-  const [createRoleId, setCreateRoleId] = useState("4"); // Default Spectator
+  const [createRoleId, setCreateRoleId] = useState("4"); // Mặc định là Khán giả (Spectator)
   const [createWeight, setCreateWeight] = useState("");
 
-  // Edit User Modal State
+  // Khởi tạo State cho form Chỉnh sửa người dùng
   const [editingUser, setEditingUser] = useState<any | null>(null);
   const [editUsername, setEditUsername] = useState("");
   const [editEmail, setEditEmail] = useState("");
@@ -41,6 +42,7 @@ export default function Users() {
   const [editWeight, setEditWeight] = useState("");
   const [editRequireOtp, setEditRequireOtp] = useState(false);
 
+  // Hàm gọi API lấy danh sách người dùng từ server
   const fetchData = async () => {
     setLoading(true);
     setError("");
@@ -54,15 +56,18 @@ export default function Users() {
     }
   };
 
+  // Hook tự động gọi API lấy dữ liệu khi component khởi tạo
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Hàm hiển thị thông báo thành công trong 4 giây
   const showSuccess = (msg: string) => {
     setSuccess(msg);
     setTimeout(() => setSuccess(""), 4000);
   };
 
+  // Hàm xử lý tạo người dùng mới
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -109,6 +114,7 @@ export default function Users() {
     }
   };
 
+  // Hàm mở modal chỉnh sửa và nạp thông tin người dùng
   const handleOpenEdit = (user: any) => {
     setEditingUser(user);
     setEditUsername(user.username);
@@ -118,6 +124,7 @@ export default function Users() {
     setEditRequireOtp(!!user.requireOtp);
   };
 
+  // Hàm xử lý lưu thông tin người dùng sau khi chỉnh sửa
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
@@ -143,6 +150,7 @@ export default function Users() {
     }
   };
 
+  // Hàm xử lý kích hoạt/khóa tài khoản người dùng
   const handleToggleStatus = async (id: number) => {
     try {
       await api.post(`/admin/users/${id}/toggle`);
@@ -153,8 +161,7 @@ export default function Users() {
     }
   };
 
-
-
+  // Logic lọc danh sách người dùng theo vai trò và từ khóa tìm kiếm
   const filteredUsers = users.filter((u) => {
     let matchesRole = true;
     if (filterRole === "ADMIN") matchesRole = (u.roleId === 1);
@@ -174,8 +181,7 @@ export default function Users() {
     return matchesRole && matchesSearch;
   });
 
-
-
+  // Hàm lấy tên vai trò (Role Name) dựa vào Role ID
   const getRoleName = (roleId: number) => {
     if (roleId === 1) return $t("Admin", (localStorage.getItem('app-lang') || 'vi'));
     if (roleId === 2) return $t("Horse Owner", (localStorage.getItem('app-lang') || 'vi'));
