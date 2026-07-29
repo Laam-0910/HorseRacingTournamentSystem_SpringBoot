@@ -19,18 +19,20 @@ function parseDMY(val: string): Date | null {
 
 function fmt2(n: number) { return String(n).padStart(2, "0"); }
 
+// Hàm chuyển Date thành chuỗi DMY
 function toDMY(d: Date) {
   return `${fmt2(d.getDate())}-${fmt2(d.getMonth() + 1)}-${d.getFullYear()}`;
 }
 
+// ── Component hiển thị Date Picker (Inline) ────────────────────────────────
 export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM-yyyy" }: Props) {
-  const parsed = parseDMY(value);
+  const parsed = parseDMY(value); // Parse chuỗi ban đầu
   const today = new Date();
-  const [open, setOpen] = useState(false);
-  const [view, setView] = useState<Date>(parsed ?? today);
+  const [open, setOpen] = useState(false); // Trạng thái mở menu chọn ngày
+  const [view, setView] = useState<Date>(parsed ?? today); // Tháng đang xem
   const ref = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  // Tự động đóng khi click ra ngoài (Close on outside click)
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
