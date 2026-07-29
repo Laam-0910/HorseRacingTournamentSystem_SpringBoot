@@ -17,24 +17,29 @@ function parseDMYHMS(val: string): { date: Date; hh: number; mm: number; ss: num
   return { date, hh: parseInt(m[4]), mm: parseInt(m[5]), ss: parseInt(m[6]) };
 }
 
+// Hàm format số nguyên về chuỗi 2 chữ số
 function fmt2(n: number) { return String(n).padStart(2, "0"); }
 
+// Hàm chuyển Date và Thời gian thành chuỗi DMY HMS
 function toDMYHMS(d: Date, hh: number, mm: number, ss: number) {
   return `${fmt2(d.getDate())}-${fmt2(d.getMonth() + 1)}-${d.getFullYear()} ${fmt2(hh)}:${fmt2(mm)}:${fmt2(ss)}`;
 }
 
+// ── Component hiển thị Date & Time Picker (Inline) ────────────────────────
 export default function InlineDateTimePicker({ value, onChange, placeholder = "dd-MM-yyyy HH:mm:ss" }: Props) {
-  const parsed = parseDMYHMS(value);
+  const parsed = parseDMYHMS(value); // Dữ liệu phân tách từ chuỗi ngày ban đầu
   const today = new Date();
-  const [open, setOpen] = useState(false);
-  const [view, setView] = useState<Date>(parsed?.date ?? today);
-  const [pickedDate, setPickedDate] = useState<Date | null>(parsed?.date ?? null);
+  const [open, setOpen] = useState(false); // Trạng thái mở menu chọn
+  const [view, setView] = useState<Date>(parsed?.date ?? today); // Tháng đang xem
+  const [pickedDate, setPickedDate] = useState<Date | null>(parsed?.date ?? null); // Ngày đã chọn
+  
+  // State quản lý giờ, phút, giây
   const [hh, setHh] = useState(parsed?.hh ?? 0);
   const [mm, setMm] = useState(parsed?.mm ?? 0);
   const [ss, setSs] = useState(parsed?.ss ?? 0);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Sync internal state when value changes externally
+  // Đồng bộ lại state khi có thay đổi từ bên ngoài (Sync internal state when value changes externally)
   useEffect(() => {
     const p = parseDMYHMS(value);
     if (p) {
