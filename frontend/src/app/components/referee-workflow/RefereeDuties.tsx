@@ -16,6 +16,7 @@ const statusLabels: Record<string, Record<string, string>> = {
   CANCELLED:          { vi: "Đã hủy", en: "Cancelled", zh: "已取消", ja: "中止" }
 };
 
+// Hàm tạo badge trạng thái hiển thị màu sắc tùy theo trạng thái
 function statusBadge(status: string) {
   const s = (status ?? "").toUpperCase();
   const lang = localStorage.getItem("app-lang") || "vi";
@@ -81,12 +82,14 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
   }
 };
 
+// ── Component Trọng tài xem lịch trình làm nhiệm vụ (RefereeDuties) ────────────────
 export default function RefereeDuties() {
-  const { user } = useAuth();
-  const [schedule, setSchedule] = useState<any[]>([]);
+  const { user } = useAuth(); // Lấy thông tin user hiện tại
+  const [schedule, setSchedule] = useState<any[]>([]); // Lưu lịch trình
   const [loading, setLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false); // Trạng thái màn hình nhỏ
 
+  // Cài đặt ngôn ngữ hiển thị
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
 
