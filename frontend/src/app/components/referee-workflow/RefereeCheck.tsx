@@ -6,13 +6,15 @@ interface RefereeCheckProps {
   onBack: () => void;
 }
 
+// ── Component Trọng tài kiểm tra trước trận (RefereeCheck) ────────────────
 export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
-  const [entries, setEntries] = useState<any[]>([]);
-  const [statuses, setStatuses] = useState<Record<number, string>>({});
-  const [weighOutWeights, setWeighOutWeights] = useState<Record<number, string>>({});
+  const [entries, setEntries] = useState<any[]>([]); // Danh sách ngựa tham gia
+  const [statuses, setStatuses] = useState<Record<number, string>>({}); // Trạng thái sức khỏe (Veterinary Status)
+  const [weighOutWeights, setWeighOutWeights] = useState<Record<number, string>>({}); // Trọng lượng cân trước trận
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Hook lấy danh sách ngựa tham gia trận đấu
   useEffect(() => {
     const fetchEntries = async () => {
       setLoading(true);
@@ -38,6 +40,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
     fetchEntries();
   }, [raceId]);
 
+  // Cập nhật trạng thái sức khỏe
   const handleStatusChange = (entryId: number, status: string) => {
     setStatuses((prev) => ({
       ...prev,
@@ -52,6 +55,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
     }));
   };
 
+  // Xử lý nộp kết quả kiểm tra trước trận
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
