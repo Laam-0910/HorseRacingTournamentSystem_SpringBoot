@@ -1,22 +1,26 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { authService } from "../../../services/authService";
+import { useState, useEffect } from "react"; // Import hook cơ bản của React
+import { useNavigate, useSearchParams } from "react-router-dom"; // Import công cụ điều hướng
+import { authService } from "../../../services/authService"; // Import dịch vụ xác thực
 
+// Component Xác thực tài khoản sau khi đăng ký
 export default function VerifyRegister() {
-  const [otp, setOtp] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const otpTxId = searchParams.get("otpTxId");
+  // Khởi tạo các state
+  const [otp, setOtp] = useState(""); // State lưu mã OTP
+  const [error, setError] = useState(""); // Thông báo lỗi
+  const [success, setSuccess] = useState(""); // Thông báo thành công
+  const [loading, setLoading] = useState(false); // Trạng thái đang tải dữ liệu
+  const [searchParams] = useSearchParams(); // Hook lấy tham số trên URL
+  const navigate = useNavigate(); // Hook chuyển trang
+  const otpTxId = searchParams.get("otpTxId"); // Lấy mã giao dịch OTP từ URL
 
+  // Hook kiểm tra nếu không có mã giao dịch thì quay lại trang Đăng ký
   useEffect(() => {
     if (!otpTxId) {
       navigate("/register");
     }
   }, [otpTxId, navigate]);
 
+  // Hàm xử lý gửi yêu cầu xác thực tài khoản
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -26,22 +30,25 @@ export default function VerifyRegister() {
     if (!otpTxId) return;
 
     try {
+      // Gọi API xác thực tài khoản đăng ký
       const res = await authService.verifyRegister({ otpTxId, otp });
       if (res.success) {
         setSuccess("Account verified successfully! Redirecting to login page...");
-        setTimeout(() => navigate("/login"), 2500);
+        setTimeout(() => navigate("/login"), 2500); // Chuyển về trang đăng nhập sau 2.5s
       } else {
         setError(res.error || "Verification failed. Please check the code.");
       }
     } catch (err: any) {
-      setError(err.message || "An error occurred during verification.");
+      setError(err.message || "An error occurred during verification."); // Báo lỗi xác minh
     } finally {
-      setLoading(false);
+      setLoading(false); // Tắt trạng thái tải
     }
   };
 
+  // Trả về giao diện trang xác thực đăng ký
   return (
     <div className="min-h-screen flex items-center justify-center bg-black/60 px-4 py-12 sm:px-6 lg:px-8">
+      {/* Khung nội dung chính */}
       <div className="max-w-md w-full space-y-8 bg-[#151310]/60 border border-white/5 p-8 rounded-2xl backdrop-blur-xl shadow-2xl">
         <div>
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
@@ -55,12 +62,14 @@ export default function VerifyRegister() {
           </p>
         </div>
 
+        {/* Thông báo lỗi */}
         {error && (
           <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm text-center">
             {error}
           </div>
         )}
 
+        {/* Thông báo thành công */}
         {success && (
           <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-sm text-center">
             {success}
@@ -94,6 +103,7 @@ export default function VerifyRegister() {
           </div>
         </form>
 
+        {/* Nút quay lại trang đăng ký */}
         <div className="text-center text-sm mt-6">
           <button
             onClick={() => navigate("/register")}
