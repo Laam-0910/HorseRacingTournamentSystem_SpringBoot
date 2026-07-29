@@ -20,6 +20,7 @@ import Race from "../admin-workflow/Race";
 import Results from "../admin-workflow/Results";
 import AdminHorseRetirement from "../admin-workflow/AdminHorseRetirement";
 
+// Khai báo các loại tab hiển thị trong Admin Dashboard
 type AdminTab =
   | "welcome"
   | "season"
@@ -36,8 +37,10 @@ type AdminTab =
   | "retirement"
   | "profile";
 
+// Màu sắc đại diện cho vai trò Admin
 const ROLE_COLOR = "#c9a227";
 
+// Cấu hình các mục điều hướng trong thanh Sidebar của Admin
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: $t("Dashboard Overview", (localStorage.getItem('app-lang') || 'vi')),        view: "welcome"       },
   { index: "02", icon: "layers",           label: $t("Season Initialization", (localStorage.getItem('app-lang') || 'vi')),     view: "season"        },
@@ -54,12 +57,14 @@ const NAV_ITEMS = [
   { index: "13", icon: "heart-off",        label: $t("Horse Retirement", (localStorage.getItem('app-lang') || 'vi')),          view: "retirement"    },
 ];
 
-// ─── AdminWelcome Component (matches AdminWelcome.jsp exactly) ────────────────
+// ─── Component hiển thị giao diện tổng quan (AdminWelcome) ────────────────
 function AdminWelcome({ onViewChange }: { onViewChange: (view: any) => void }) {
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth(); // Lấy thông tin người dùng từ context
+  const navigate = useNavigate(); // Hook chuyển trang
   
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false); // State kiểm tra màn hình nhỏ
+  
+  // Lắng nghe sự kiện thay đổi kích thước cửa sổ để điều chỉnh giao diện
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -69,8 +74,10 @@ function AdminWelcome({ onViewChange }: { onViewChange: (view: any) => void }) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Khởi tạo state thống kê tổng quan
   const [stats, setStats] = useState({ seasons: 0, meetings: 0, races: 0, users: 0, pending: 0, activeSeason: "None" });
 
+  // Gọi API lấy dữ liệu thống kê từ máy chủ
   useEffect(() => {
     api.get<any>("/admin/stats/overview").then(d => {
       setStats({
@@ -238,24 +245,30 @@ function AdminWelcome({ onViewChange }: { onViewChange: (view: any) => void }) {
   );
 }
 
-// ─── Main Admin Dashboard ─────────────────────────────────────────────────────
+// ─── Component Main Admin Dashboard (Giao diện chính) ──────────────────────
 export default function Admin() {
-  const { user } = useAuth();
+  const { user } = useAuth(); // Lấy thông tin người dùng
+  
+  // Quản lý tab đang hiển thị
   const [activeTab, setActiveTab] = useState<AdminTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as AdminTab) || "welcome";
   });
+  // Trạng thái thông báo thành công hoặc lỗi
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Tìm label tương ứng với tab đang được chọn
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Overview";
 
+  // Hàm thay đổi view
   const handleViewChange = (view: string) => {
     setActiveTab(view as AdminTab);
     setSuccessMsg("");
     setErrorMsg("");
   };
 
+  // Hàm render giao diện tùy theo tab đang được chọn
   const renderContent = () => {
     switch (activeTab) {
       case "welcome":       return <AdminWelcome onViewChange={setActiveTab} />;
@@ -276,6 +289,7 @@ export default function Admin() {
     }
   };
 
+  // Trả về bố cục chính của Dashboard
   return (
     <DashboardLayout
       roleLabel="Admin"
