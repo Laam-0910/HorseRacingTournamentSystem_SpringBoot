@@ -1279,24 +1279,29 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────
+// ── Component chính (HorseOwner) ─────────────────────────────────────────────────────────
 export default function HorseOwner() {
-  const { user } = useAuth();
-  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+  const { user } = useAuth(); // Lấy thông tin user đăng nhập
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null); // State quản lý ID profile đang được chọn
+
+  // State quản lý tab hiển thị trên giao diện
   const [activeTab, setActiveTab] = useState<OwnerTab>(() => {
     const p = new URLSearchParams(window.location.search).get("tab");
     return (p as OwnerTab) || "hub";
   });
-  const [dashboard, setDashboard] = useState<any>(null);
-  const [stable, setStable] = useState<any[]>([]);
-  const [invitations, setInvitations] = useState<any[]>([]);
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [allRaces, setAllRaces] = useState<any[]>([]);
-  const [seasons, setSeasons] = useState<any[]>([]);
-  const [results, setResults] = useState<any[]>([]);
-  const [successMsg, setSuccessMsg] = useState("");
-  const [errorMsg, setErrorMsg] = useState("");
+  
+  // Khởi tạo các state lưu dữ liệu
+  const [dashboard, setDashboard] = useState<any>(null); // Dữ liệu thống kê chủ ngựa
+  const [stable, setStable] = useState<any[]>([]); // Danh sách ngựa trong chuồng
+  const [invitations, setInvitations] = useState<any[]>([]); // Danh sách lời mời tham gia đua
+  const [meetings, setMeetings] = useState<any[]>([]); // Danh sách sự kiện đua
+  const [allRaces, setAllRaces] = useState<any[]>([]); // Danh sách tất cả các vòng đua
+  const [seasons, setSeasons] = useState<any[]>([]); // Danh sách mùa giải
+  const [results, setResults] = useState<any[]>([]); // Lịch sử thành tích
+  const [successMsg, setSuccessMsg] = useState(""); // Thông báo thành công
+  const [errorMsg, setErrorMsg] = useState(""); // Thông báo lỗi
 
+  // Hàm tải toàn bộ dữ liệu cần thiết từ API
   const fetchData = async () => {
     if (!user) return;
     try {
@@ -1319,21 +1324,24 @@ export default function HorseOwner() {
     } catch (err: any) { setErrorMsg(err.message || "Failed to load owner data."); }
   };
 
+  // Tải dữ liệu khi component được mount hoặc khi user thay đổi
   useEffect(() => { fetchData(); }, [user]);
 
+  // Hàm xử lý đăng ký chủ ngựa vào một sự kiện
   const handleRegisterOwner = async (meetingId: number) => {
     if (!user) return;
     try {
       await api.post("/registrations/owner", { meetingId, ownerId: user.id });
       setSuccessMsg("Successfully registered as Owner for meeting.");
-      fetchData();
+      fetchData(); // Tải lại dữ liệu sau khi đăng ký
     } catch (err: any) { setErrorMsg(err.message || "Failed to register for meeting."); }
   };
 
+  // Hàm xử lý đăng ký ngựa vào sự kiện
   const handleRegisterHorses = async (meetingId: number, horseIds: number[]) => {
     try {
       setErrorMsg(""); setSuccessMsg("");
-      // Automatically register owner if not registered yet
+      // Tự động đăng ký chủ ngựa nếu chưa đăng ký
       const isOwnerReg = dashboard?.registeredMeetingIds?.includes(meetingId);
       if (!isOwnerReg && user) {
         await api.post("/registrations/owner", { meetingId, ownerId: user.id });
