@@ -1,7 +1,8 @@
-import { $t } from "../../../lib/i18n";
-import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { $t } from "../../../lib/i18n"; // Import hàm hỗ trợ dịch đa ngôn ngữ
+import { useState, useEffect } from "react"; // Import hook cơ bản của React
+import { api } from "../../../lib/api"; // Import module gọi API
 
+// Bảng mô tả cấu hình hệ thống
 const CONFIG_DESC_MAP: Record<string, string> = {
   MAX_TOP_WEIGHT: "Maximum top weight (kg)",
   MIN_BOTTOM_WEIGHT: "Minimum bottom weight (kg)",
@@ -10,13 +11,16 @@ const CONFIG_DESC_MAP: Record<string, string> = {
   SEX_ALLOWANCE: "Sex weight allowance for female horses (Fillies/Mares) (kg)",
 };
 
+// Component quản lý Cấu hình hệ thống (dành cho Admin)
 export default function SystemConfig() {
-  const [configs, setConfigs] = useState<any[]>([]);
-  const [formValues, setFormValues] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  // Khởi tạo các state lưu trữ trạng thái component
+  const [configs, setConfigs] = useState<any[]>([]); // Danh sách cấu hình gốc
+  const [formValues, setFormValues] = useState<Record<string, string>>({}); // Giá trị form đang chỉnh sửa
+  const [loading, setLoading] = useState(false); // Trạng thái đang tải dữ liệu
+  const [error, setError] = useState(""); // Thông báo lỗi
+  const [success, setSuccess] = useState(""); // Thông báo thành công
 
+  // Hàm gọi API lấy cấu hình từ server
   const fetchConfigs = async () => {
     setLoading(true);
     setError("");
@@ -32,14 +36,16 @@ export default function SystemConfig() {
     } catch (err: any) {
       setError(err.message || "Failed to load system configurations.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Kết thúc tải dữ liệu
     }
   };
 
+  // Hook gọi hàm lấy cấu hình khi component mới render lần đầu
   useEffect(() => {
     fetchConfigs();
   }, []);
 
+  // Hàm xử lý khi người dùng nhập giá trị mới vào ô input
   const handleChange = (key: string, value: string) => {
     setFormValues((prev) => ({
       ...prev,
@@ -47,6 +53,7 @@ export default function SystemConfig() {
     }));
   };
 
+  // Hàm xử lý gửi form (lưu các thay đổi cấu hình)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -56,14 +63,15 @@ export default function SystemConfig() {
     try {
       await api.post("/admin/configs", formValues);
       setSuccess("System configurations updated successfully.");
-      fetchConfigs();
+      fetchConfigs(); // Tải lại dữ liệu sau khi lưu
     } catch (err: any) {
       setError(err.message || "Failed to update configurations.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Kết thúc trạng thái lưu
     }
   };
 
+  // Trả về giao diện của trang quản lý cấu hình
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {error && (
