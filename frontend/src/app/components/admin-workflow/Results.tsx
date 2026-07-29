@@ -1,7 +1,8 @@
-import { $t } from "../../../lib/i18n";
-import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { $t } from "../../../lib/i18n"; // Import hàm hỗ trợ đa ngôn ngữ
+import { useState, useEffect } from "react"; // Import các hook cơ bản của React
+import { api } from "../../../lib/api"; // Import thư viện gọi API
 
+// Khai báo cấu trúc dữ liệu cho Giải đua
 interface Meeting {
   id: number;
   name: string;
@@ -10,6 +11,7 @@ interface Meeting {
   totalBudget: number;
 }
 
+// Khai báo cấu trúc dữ liệu cho Chặng đua (Race)
 interface Race {
   id: number;
   raceMeetingId: number;
@@ -20,6 +22,7 @@ interface Race {
   distanceMeters: number;
 }
 
+// Khai báo cấu trúc dữ liệu cho Quy tắc phân hạng (Class Rule)
 interface ClassRule {
   id: number;
   classLevel: string;
@@ -30,6 +33,7 @@ interface ClassRule {
   maxPrize: number;
 }
 
+// Khai báo cấu trúc dữ liệu cho Đăng ký thi đấu (Race Entry)
 interface RaceEntry {
   entryId: number;
   gateNumber: number;
@@ -41,15 +45,17 @@ interface RaceEntry {
   jockeyWeight: number;
 }
 
+// Component chính để nhập kết quả và đóng cuộc đua
 export default function Results() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
+  const [isMobile, setIsMobile] = useState(false); // State kiểm tra thiết bị di động
+  useEffect(() => { // Hook xử lý khi thay đổi kích thước màn hình
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Khởi tạo state lưu trữ dữ liệu
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [races, setRaces] = useState<Race[]>([]);
   const [classRules, setClassRules] = useState<ClassRule[]>([]);
@@ -57,46 +63,45 @@ export default function Results() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Processing mode
+  // State cho quá trình nhập kết quả
   const [processingRace, setProcessingRace] = useState<Race | null>(null);
   const [entries, setEntries] = useState<RaceEntry[]>([]);
-  const [positions, setPositions] = useState<Record<number, string>>({});
-  const [times, setTimes] = useState<Record<number, string>>({});
-  const [weighInWeights, setWeighInWeights] = useState<Record<number, string>>({});
-  const [stewardReport, setStewardReport] = useState("");
-  const [procLoading, setProcLoading] = useState(false);
+  const [positions, setPositions] = useState<Record<number, string>>({}); // Lưu thứ hạng
+  const [times, setTimes] = useState<Record<number, string>>({}); // Lưu thời gian hoàn thành
+  const [weighInWeights, setWeighInWeights] = useState<Record<number, string>>({}); // Lưu cân nặng sau khi đua
+  const [stewardReport, setStewardReport] = useState(""); // Báo cáo của trọng tài
+  const [procLoading, setProcLoading] = useState(false); // Trạng thái đang xử lý lưu kết quả
 
-  const fetchData = async () => {
+  const fetchData = async () => { // Hàm lấy danh sách các giải đua, chặng đua và quy tắc phân hạng
     setLoading(true);
     try {
       const [meetingsData, racesData, rulesData] = await Promise.all([
-        api.get<Meeting[]>("/public/meetings").catch(() => []),
-        api.get<Race[]>("/races").catch(() => []),
-        // Fetch rules for season 1 or active season, let's fallback to get first season rules or default empty
-        api.get<ClassRule[]>("/races/seasons/1/rules").catch(() => []),
+        api.get<Meeting[]>("/public/meetings").catch(() => []), // Lấy danh sách giải đua
+        api.get<Race[]>("/races").catch(() => []), // Lấy danh sách chặng đua
+        api.get<ClassRule[]>("/races/seasons/1/rules").catch(() => []), // Lấy quy tắc phân hạng
       ]);
       setMeetings(meetingsData);
-      // Filter races to process (only show races that have run/finished/inquiry; filter out pre-race and official/cancelled statuses)
+      // Lọc các cuộc đua cần xử lý kết quả (bỏ qua các trạng thái không hợp lệ)
       const ineligibleStatuses = ["SCHEDULED", "DECLARATION_OPEN", "DECLARATION_CLOSED", "RACE_ASSIGNED", "OFFICIAL", "CANCELLED"];
       setRaces((racesData || []).filter(r => !ineligibleStatuses.includes(r.status)));
       setClassRules(rulesData);
     } catch (err: any) {
       setError(err.message || "Failed to load data.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Tắt loading
     }
   };
 
-  useEffect(() => {
+  useEffect(() => { // Hook gọi API khi component được mount
     fetchData();
   }, []);
 
-  const handleStartProcess = async (race: Race) => {
+  const handleStartProcess = async (race: Race) => { // Hàm mở form nhập kết quả cho một cuộc đua
     setError("");
     setSuccess("");
     setProcLoading(true);
     try {
-      const data = await api.get<any[]>(`/public/results?raceId=${race.id}`);
+      const data = await api.get<any[]>(`/public/results?raceId=${race.id}`); // Lấy danh sách ngựa tham gia cuộc đua
       const mapped = (data || []).map(d => ({
         entryId: d.entry?.id,
         gateNumber: d.entry?.gateNumber,
@@ -107,19 +112,18 @@ export default function Results() {
         jockeyName: d.jockey?.username || "Unknown",
         jockeyWeight: d.jockey?.weight || 0,
       }));
-      setEntries(mapped);
-      setProcessingRace(race);
-      setStewardReport("");
+      setEntries(mapped); // Lưu dữ liệu vào state
+      setProcessingRace(race); // Đặt trạng thái cuộc đua đang được xử lý
+      setStewardReport(""); // Xóa trắng báo cáo trọng tài
 
-      // Initialize values
+      // Khởi tạo các giá trị mặc định cho form
       const initialPos: Record<number, string> = {};
       const initialTimes: Record<number, string> = {};
       const initialWeights: Record<number, string> = {};
       mapped.forEach(e => {
         initialPos[e.entryId] = "";
         initialTimes[e.entryId] = "";
-        // Default weighIn weight matches carried weight
-        initialWeights[e.entryId] = e.carriedWeight.toString();
+        initialWeights[e.entryId] = e.carriedWeight.toString(); // Trọng lượng cân sau đua mặc định bằng trọng lượng mang theo
       });
       setPositions(initialPos);
       setTimes(initialTimes);
@@ -131,7 +135,7 @@ export default function Results() {
     }
   };
 
-  const handleConfirmResults = async (e: React.FormEvent) => {
+  const handleConfirmResults = async (e: React.FormEvent) => { // Hàm xác nhận và lưu kết quả cuộc đua
     e.preventDefault();
     if (!processingRace) return;
     setError("");
@@ -139,11 +143,13 @@ export default function Results() {
     setProcLoading(true);
 
     try {
+      // Chuẩn bị payload (dữ liệu gửi lên API)
       const resultsPayload = entries.map(e => {
         const pos = parseInt(positions[e.entryId]);
         const time = times[e.entryId];
         const wIn = parseFloat(weighInWeights[e.entryId]);
 
+        // Kiểm tra tính hợp lệ của dữ liệu đầu vào
         if (isNaN(pos) || pos <= 0) {
           throw new Error(`Invalid position for horse ${e.horseName}`);
         }
@@ -168,6 +174,7 @@ export default function Results() {
         };
       });
 
+      // Gọi API cập nhật kết quả
       const res = await api.post<any>("/results/confirm", {
         raceId: processingRace.id,
         stewardReport,
@@ -176,18 +183,19 @@ export default function Results() {
 
       if (res.success) {
         setSuccess("Results successfully processed and race is closed.");
-        setProcessingRace(null);
-        fetchData();
+        setProcessingRace(null); // Đóng form nhập
+        fetchData(); // Tải lại danh sách cuộc đua
       } else {
         throw new Error(res.error || "Failed to process results.");
       }
     } catch (err: any) {
       setError(err.message || "Failed to submit results.");
     } finally {
-      setProcLoading(false);
+      setProcLoading(false); // Kết thúc trạng thái tải
     }
   };
 
+  // Giao diện khi đang nhập kết quả cuộc đua
   if (processingRace) {
     return (
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
@@ -280,6 +288,7 @@ export default function Results() {
     );
   }
 
+  // Giao diện chính: Danh sách cuộc đua cần xử lý kết quả
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Process Results */}
