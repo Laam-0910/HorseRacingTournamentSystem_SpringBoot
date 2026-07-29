@@ -109,6 +109,7 @@ const translateLabel = (label: string, lang: string): string => {
   return label;
 };
 
+// ── Component Layout chung cho các Dashboard ────────────────────────────────
 export default function DashboardLayout({
   roleLabel,
   roleColor,
@@ -120,13 +121,17 @@ export default function DashboardLayout({
   successMsg,
   errorMsg,
 }: DashboardLayoutProps) {
-  const { user, logout } = useAuth();
+  const { user, logout } = useAuth(); // Lấy thông tin người dùng và hàm đăng xuất
   const navigate = useNavigate();
+  // State quản lý trạng thái thanh sidebar đóng/mở
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem('sidebar-pinned') === 'false';
   });
-  const [hovering, setHovering] = useState(false);
-  const [today, setToday] = useState('');
+  });
+  const [hovering, setHovering] = useState(false); // Trạng thái hover sidebar
+  const [today, setToday] = useState(''); // Lưu trữ chuỗi ngày tháng hiện tại
+  
+  // State quản lý ngôn ngữ hiển thị
   const [lang, setLang] = useState(() => localStorage.getItem('app-lang') || 'vi');
   const [showLangMenu, setShowLangMenu] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
