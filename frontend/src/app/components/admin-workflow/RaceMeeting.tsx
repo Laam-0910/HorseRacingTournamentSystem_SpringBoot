@@ -116,6 +116,19 @@ export default function RaceMeeting() {
     setSuccess("");
 
     try {
+      const selectedSeason = seasons.find(s => s.id === parseInt(seasonId));
+      if (selectedSeason && date) {
+        const meetingTime = new Date(date).getTime();
+        if (selectedSeason.startDate && meetingTime < new Date(selectedSeason.startDate).getTime()) {
+          setError($t("Ngày của Race Meeting phải nằm trong thời gian Mùa giải", (localStorage.getItem('app-lang') || 'vi')) + ` (${selectedSeason.startDate} - ${selectedSeason.endDate})`);
+          return;
+        }
+        if (selectedSeason.endDate && meetingTime > new Date(selectedSeason.endDate).getTime()) {
+          setError($t("Ngày của Race Meeting phải nằm trong thời gian Mùa giải", (localStorage.getItem('app-lang') || 'vi')) + ` (${selectedSeason.startDate} - ${selectedSeason.endDate})`);
+          return;
+        }
+      }
+
       const payload = {
         name,
         startDate: formatDateTime(date), // Định dạng lại chuỗi thời gian phù hợp API

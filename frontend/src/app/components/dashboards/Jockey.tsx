@@ -186,15 +186,24 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
                     {m.status}
                   </span>
                 </div>
-                <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.8rem", color: "#f4f2ec", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", fontFamily: "monospace" }}>
-                  <div>
-                    <span style={{ color: "rgba(255,255,255,0.4)" }}>Gate: </span>
-                    <span style={{ color: "#c9a227", fontWeight: "bold" }}>{m.gateNumber ?? "TBD"}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.8rem", color: "#f4f2ec", fontFamily: "monospace" }}>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Gate: </span>
+                      <span style={{ color: "#c9a227", fontWeight: "bold" }}>{m.gateNumber ?? "TBD"}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Weight: </span>
+                      <span>{m.carriedWeight ?? "TBD"} kg</span>
+                    </div>
                   </div>
-                  <div>
-                    <span style={{ color: "rgba(255,255,255,0.4)" }}>Weight: </span>
-                    <span>{m.carriedWeight ?? "TBD"} kg</span>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onViewHorse({ id: m.horseId, name: m.horseName || `Horse #${m.horseId}` })}
+                    style={{ padding: "0.3rem 0.6rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.375rem", color: "#c9a227", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}
+                  >
+                    📈 {$t("Lịch sử đua", (localStorage.getItem('app-lang') || 'vi'))}
+                  </button>
                 </div>
               </div>
             ))}
@@ -212,16 +221,16 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: `rgba(59,130,196,0.08)`, borderBottom: "1px solid #2a2825" }}>
-              {["Race ID", "Horse", "Gate", "Weight (kg)", "Status"].map(h => (
+              {["Race ID", "Horse", "Gate", "Weight (kg)", "Status", "Race History"].map(h => (
                 <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{loadingText}</td></tr>
+              <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{loadingText}</td></tr>
             ) : mounts.length === 0 ? (
-              <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>{emptyText}</td></tr>
+              <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>{emptyText}</td></tr>
             ) : mounts.map((m, i) => (
               <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
                 <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", color: "#a0a0a0" }}>#{m.raceId}</td>
@@ -239,6 +248,15 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
                 <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec" }}>{m.carriedWeight ?? "TBD"} kg</td>
                 <td style={{ padding: "0.75rem 1rem" }}>
                   <span style={{ padding: "0.125rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.6rem", fontFamily: "monospace", fontWeight: 700, textTransform: "uppercase", background: m.status === "APPROVED" ? "rgba(74,222,128,0.1)" : "rgba(42,40,37,0.5)", color: m.status === "APPROVED" ? "#4ade80" : "#a0a0a0" }}>{$t(m.status || '', (localStorage.getItem('app-lang') || 'vi'))}</span>
+                </td>
+                <td style={{ padding: "0.75rem 1rem" }}>
+                  <button
+                    type="button"
+                    onClick={() => onViewHorse({ id: m.horseId, name: m.horseName || `Horse #${m.horseId}` })}
+                    style={{ padding: "0.35rem 0.75rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.375rem", color: "#c9a227", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}
+                  >
+                    📈 {$t("Lịch sử đua", (localStorage.getItem('app-lang') || 'vi'))}
+                  </button>
                 </td>
               </tr>
             ))}

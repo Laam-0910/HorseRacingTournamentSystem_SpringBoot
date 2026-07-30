@@ -83,6 +83,12 @@ public class UserService {
             throw new IllegalArgumentException("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)");
         }
 
+        if (roleId != null && roleId == 3 && weight != null) {
+            if (weight.doubleValue() < 45.0 || weight.doubleValue() > 100.0) {
+                throw new IllegalArgumentException("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.");
+            }
+        }
+
         User user = new User();
         user.setUsername(username.trim());
         user.setEmail(email != null ? email.trim() : null);
@@ -104,9 +110,14 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
         user.setUsername(username);
-        user.setEmail(email);
+        // Do not allow changing email
         user.setRoleId(roleId);
         user.setRequireOtp(requireOtp);
+        if (roleId != null && roleId == 3 && weight != null) {
+            if (weight.doubleValue() < 45.0 || weight.doubleValue() > 100.0) {
+                throw new IllegalArgumentException("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.");
+            }
+        }
         user.setWeight(weight);
 
         User savedUser = userRepository.save(user);

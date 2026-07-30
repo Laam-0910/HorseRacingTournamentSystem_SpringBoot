@@ -105,9 +105,14 @@ export default function Users() {
         password: createPassword,
         roleId: parseInt(createRoleId, 10),
       };
-      // Đính kèm cân nặng nếu là kỵ sĩ
+      // Đính kèm cân nặng nếu là kỵ sĩ (ràng buộc 45-100kg)
       if (createRoleId === "3" && createWeight) {
-        body.weight = parseFloat(createWeight);
+        const wVal = parseFloat(createWeight);
+        if (isNaN(wVal) || wVal < 45 || wVal > 100) {
+          setError($t("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.", (localStorage.getItem('app-lang') || 'vi')));
+          return;
+        }
+        body.weight = wVal;
       }
 
       const res = await api.post<any>("/admin/users", body);
@@ -149,9 +154,14 @@ export default function Users() {
         roleId: parseInt(editRoleId, 10),
         requireOtp: editRequireOtp,
       };
-      // Đính kèm cân nặng nếu vai trò là Jockey
+      // Đính kèm cân nặng nếu vai trò là Jockey (ràng buộc 45-100kg)
       if (editRoleId === "3" && editWeight) {
-        body.weight = parseFloat(editWeight);
+        const wVal = parseFloat(editWeight);
+        if (isNaN(wVal) || wVal < 45 || wVal > 100) {
+          alert($t("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.", (localStorage.getItem('app-lang') || 'vi')));
+          return;
+        }
+        body.weight = wVal;
       }
 
       await api.post(`/admin/users/${editingUser.id}`, body);
@@ -420,10 +430,10 @@ export default function Users() {
                 <label style={labelStyle}>{$t("Username", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <input type="text" required value={editUsername} onChange={e => setEditUsername(e.target.value)} style={inputStyle} />
               </div>
-              {/* Sửa Email */}
+              {/* Sửa Email - Đã khóa không cho sửa */}
               <div>
                 <label style={labelStyle}>{$t("Email", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                <input type="email" required value={editEmail} onChange={e => setEditEmail(e.target.value)} style={inputStyle} />
+                <input type="email" disabled readOnly value={editEmail} style={{ ...inputStyle, opacity: 0.6, cursor: "not-allowed" }} />
               </div>
               {/* Sửa Vai trò */}
               <div>

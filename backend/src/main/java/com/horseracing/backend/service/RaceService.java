@@ -106,6 +106,7 @@ public class RaceService {
         }
 
         race.setStatus("SCHEDULED");
+        validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries());
         Race savedRace = raceRepository.save(race);
 
         String meetingName = raceMeetingRepository.findById(savedRace.getRaceMeetingId())
@@ -156,6 +157,7 @@ public class RaceService {
             race.setStewardReport((String) body.get("stewardReport"));
         }
 
+        validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries());
         Race savedRace = raceRepository.save(race);
         String meetingName = raceMeetingRepository.findById(savedRace.getRaceMeetingId())
                 .map(RaceMeeting::getName)
@@ -173,8 +175,35 @@ public class RaceService {
                 .collect(Collectors.toList());
     }
 
+    private void validateMeetingDateInSeason(Integer seasonId, java.util.Date meetingDate) {
+        if (seasonId == null || meetingDate == null) return;
+        Season season = seasonRepository.findById(seasonId).orElse(null);
+        if (season == null) return;
+        if (season.getStartDate() != null && meetingDate.before(season.getStartDate())) {
+            throw new IllegalArgumentException("Ngày của Race Meeting (" + meetingDate + ") không được trước ngày bắt đầu Mùa giải (" + season.getStartDate() + ").");
+        }
+        if (season.getEndDate() != null && meetingDate.after(season.getEndDate())) {
+            throw new IllegalArgumentException("Ngày của Race Meeting (" + meetingDate + ") không được sau ngày kết thúc Mùa giải (" + season.getEndDate() + ").");
+        }
+    }
+
+    private void validateRaceEntriesLimits(Integer minEntries, Integer maxEntries) {
+        int min = minEntries != null ? minEntries : 3;
+        int max = maxEntries != null ? maxEntries : 14;
+        if (min <= 1) {
+            throw new IllegalArgumentException("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1).");
+        }
+        if (max >= 15) {
+            throw new IllegalArgumentException("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15).");
+        }
+        if (min > max) {
+            throw new IllegalArgumentException("Số lượng ngựa tối thiểu (" + min + ") không được lớn hơn số lượng tối đa (" + max + ").");
+        }
+    }
+
     @Transactional
     public RaceMeetingDTO createMeeting(RaceMeetingDTO dto) {
+        validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate());
         RaceMeeting meeting = raceMeetingMapper.toEntity(dto);
         if (meeting.getTotalBudget() == null) {
             meeting.setTotalBudget(java.math.BigDecimal.ZERO);
@@ -188,6 +217,7 @@ public class RaceService {
 
     @Transactional
     public RaceMeetingDTO updateMeeting(Integer id, RaceMeetingDTO dto) {
+        validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate());
         RaceMeeting meeting = raceMeetingRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found with id: " + id));
         meeting.setName(dto.getName());

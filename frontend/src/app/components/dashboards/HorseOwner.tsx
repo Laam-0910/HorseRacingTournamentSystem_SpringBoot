@@ -454,6 +454,12 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
       age--;
     }
     
+    if (age < 2 || age > 10) {
+      const isVi = (localStorage.getItem('app-lang') || 'vi') === 'vi';
+      alert(isVi ? "Tuổi của ngựa đăng ký phải nằm trong khoảng từ 2 đến 10 tuổi." : "Horse age must be between 2 and 10 years old.");
+      return false;
+    }
+
     if (age >= 4) {
       if (sexVal === "Colt") {
         alert("A Colt must be under 4 years old. For uncastrated male horses 4 years or older, please select 'Horse'.");
@@ -546,7 +552,9 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
             {h.status !== "RETIRED" && h.status !== "REJECTED" && (
               <>
                 <button type="button" onClick={() => startEdit(item)} style={{ width: "100%", padding: "0.45rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.375rem", color: "#f4f2ec", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer" }}>{$t("Edit Details", (localStorage.getItem('app-lang') || 'vi'))}</button>
-                <button type="button" onClick={() => setRetiringHorse(h)} style={{ width: "100%", padding: "0.45rem", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "0.375rem", color: "#f87171", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer" }}>{$t("Request Retirement", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                {h.status !== "PENDING" && h.status !== "PENDING_APPROVAL" && (
+                  <button type="button" onClick={() => setRetiringHorse(h)} style={{ width: "100%", padding: "0.45rem", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "0.375rem", color: "#f87171", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer" }}>{$t("Request Retirement", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                )}
               </>
             )}
           </div>

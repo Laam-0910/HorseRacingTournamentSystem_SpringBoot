@@ -124,12 +124,16 @@ export default function RaceDaySchedule() {
     }
     const minVal = parseInt(minEntries);
     const maxVal = parseInt(maxEntries);
-    if (isNaN(minVal) || minVal <= 0 || isNaN(maxVal) || maxVal <= 0) {
-      alert("Min entries and Max entries must be positive integers.");
+    if (isNaN(minVal) || minVal <= 1) {
+      alert($t("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1).", (localStorage.getItem('app-lang') || 'vi')));
+      return;
+    }
+    if (isNaN(maxVal) || maxVal >= 15) {
+      alert($t("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15).", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
     if (maxVal < minVal) {
-      alert("Max entries cannot be less than Min entries.");
+      alert($t("Số lượng ngựa tối thiểu không được lớn hơn số lượng tối đa.", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
 
