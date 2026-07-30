@@ -8,8 +8,10 @@ function swaggerLinkPlugin() {
     configureServer(server: any) {
       server.httpServer?.once("listening", () => {
         setTimeout(() => {
-          console.log("  \x1b[36m➜\x1b[0m  \x1b[1mSwagger UI:\x1b[0m \x1b[36mhttp://localhost:8080/swagger-ui/index.html\x1b[0m");
-        }, 100);
+          server.config.logger.info(
+            "  \x1b[36m➜\x1b[0m  \x1b[1mSwagger UI:\x1b[0m \x1b[36mhttp://localhost:8080/swagger-ui/index.html\x1b[0m"
+          );
+        }, 10);
       });
     },
   };
@@ -30,4 +32,3 @@ export default defineConfig({
     outDir: "dist",
   },
 });
-

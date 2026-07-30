@@ -62,11 +62,15 @@ public class PublicDataController {
     @GetMapping("/stats")
     @Operation(
         summary = "GET: Lấy thống kê tổng quan toàn hệ thống",
-        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute' để xem thống kê toàn hệ thống.\n\n" +
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `PublicDataController.getStats()`\n" +
+                      "* **Controllers**: `PublicDataController.getStats()`\n" +
+                      "* **Services**: (Direct Repository access)\n" +
                       "* **Repositories**: `SeasonRepository.findAll()`, `RaceRepository.findAll()`, `RaceEntryRepository.findAll()`, `HorseRepository.findByStatus()`\n" +
-                      "* **DTO Response**: `Map<String, Object>` (`activeSeason`, `seasonsCompleted`, `totalRacesRun`, `totalPrizeDistributed`, `totalActiveHorses`, `totalActiveJockeys`)\n\n" +
+                      "* **Entities**: `Season.java`, `Race.java`, `RaceEntry.java`, `Horse.java`, `User.java`\n" +
+                      "* **DTOs**: `Map<String, Object>` (`activeSeason`, `seasonsCompleted`, `totalRacesRun`, `totalPrizeDistributed`, `totalActiveHorses`, `totalActiveJockeys`)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`activeSeason`, `seasonsCompleted`, `totalRacesRun`, `totalPrizeDistributed`, `totalActiveHorses`, `totalActiveJockeys`)\n" +
+                      "* **Frontend**: `Landing.tsx` (landing), `Spectator.tsx` (dashboards), `publicDataService.ts`\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
                       "1. Đếm tổng số mùa giải hoàn thành, số trận đua chính thức đã chạy.\n" +
                       "2. Cộng dồn tổng số tiền thưởng đã trao cho các chủ ngựa & nài ngựa.\n" +
@@ -110,11 +114,15 @@ public class PublicDataController {
     @GetMapping("/results")
     @Operation(
         summary = "GET: Lấy kết quả xếp hạng trận đua",
-        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền raceId -> 'Execute'.\n\n" +
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `PublicDataController.getResults()`\n" +
+                      "* **Controllers**: `PublicDataController.getResults()`\n" +
+                      "* **Services**: (Direct Repository access)\n" +
                       "* **Repositories**: `RaceEntryRepository.findByRaceId()`, `HorseRepository.findById()`, `UserRepository.findById()`\n" +
-                      "* **DTO Response**: `List<Map<String, Object>>` (Chứa `entry`, `horse`, `jockey`, `owner`)\n\n" +
+                      "* **Entities**: `RaceEntry.java`, `Horse.java`, `User.java`\n" +
+                      "* **DTOs**: `List<Map<String, Object>>` (Chứa `entry`, `horse`, `jockey`, `owner`)\n" +
+                      "* **DTO Response**: `List<Map<String, Object>>` (`entry`, `horse`, `jockey`, `owner`)\n" +
+                      "* **Frontend**: `Results.tsx` (dashboards), `Spectator.tsx`, `publicDataService.ts`\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
                       "1. Tìm danh sách `RaceEntry` của trận đua theo `raceId`.\n" +
                       "2. Liên kết ghép dữ liệu Ngựa, Nài ngựa và Chủ sở hữu.\n" +
@@ -160,14 +168,41 @@ public class PublicDataController {
 
     // Lấy danh sách toàn bộ ngày hội đua công khai
     @GetMapping("/meetings")
-    @Operation(summary = "GET: Lấy danh sách các Ngày đua công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getMeetings()` -> `RaceMeetingRepository.findAll()`")
+    @Operation(
+        summary = "GET: Lấy danh sách các Ngày đua công khai",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controllers**: `PublicDataController.getMeetings()`\n" +
+                      "* **Services**: (Direct Repository access)\n" +
+                      "* **Repositories**: `RaceMeetingRepository.findAll()`\n" +
+                      "* **Entities**: `RaceMeeting.java`\n" +
+                      "* **DTOs**: `RaceMeeting`\n" +
+                      "* **DTO Response**: `List<RaceMeeting>`\n" +
+                      "* **Frontend**: `Fixtures.tsx` (dashboards), `Landing.tsx`, `publicDataService.ts`\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Truy vấn toàn bộ danh sách Ngày hội đua công khai trong cơ sở dữ liệu."
+    )
     public ResponseEntity<List<RaceMeeting>> getMeetings() {
         return ResponseEntity.ok(raceMeetingRepository.findAll());
     }
 
     // Lấy danh sách các trận đua, có thể lọc theo ID ngày hội đua (meetingId)
     @GetMapping("/races")
-    @Operation(summary = "GET: Lấy danh sách các trận đua công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền meetingId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getRaces()` -> `RaceRepository.findByRaceMeetingId()`")
+    @Operation(
+        summary = "GET: Lấy danh sách các trận đua công khai",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controllers**: `PublicDataController.getRaces()`\n" +
+                      "* **Services**: (Direct Repository access)\n" +
+                      "* **Repositories**: `RaceRepository.findByRaceMeetingId()`, `RaceRepository.findAll()`\n" +
+                      "* **Entities**: `Race.java`\n" +
+                      "* **DTOs**: `Race`\n" +
+                      "* **DTO Response**: `List<Race>`\n" +
+                      "* **Frontend**: `Fixtures.tsx` (dashboards), `Spectator.tsx`, `publicDataService.ts`\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Nếu có `meetingId`: Trả về danh sách trận đua thuộc Ngày hội đua cụ thể.\n" +
+                      "2. Nếu không: Trả về toàn bộ danh sách trận đua trong hệ thống."
+    )
     public ResponseEntity<List<Race>> getRaces(@RequestParam(required = false) Integer meetingId) {
         if (meetingId != null) {
             return ResponseEntity.ok(raceRepository.findByRaceMeetingId(meetingId));
@@ -177,7 +212,21 @@ public class PublicDataController {
 
     // Lấy danh sách người dùng, lọc theo vai trò (roleId)
     @GetMapping("/users")
-    @Operation(summary = "GET: Lấy danh sách người dùng theo vai trò", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền roleId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getUsers()` -> `UserRepository.findByRoleId()`")
+    @Operation(
+        summary = "GET: Lấy danh sách người dùng theo vai trò",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controllers**: `PublicDataController.getUsers()`\n" +
+                      "* **Services**: (Direct Repository access)\n" +
+                      "* **Repositories**: `UserRepository.findByRoleId()`, `UserRepository.findAll()`\n" +
+                      "* **Entities**: `User.java`\n" +
+                      "* **DTOs**: `User`\n" +
+                      "* **DTO Response**: `List<User>`\n" +
+                      "* **Frontend**: `ProfileModal.tsx`, `Spectator.tsx`, `publicDataService.ts`\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Nếu có `roleId`: Lọc danh sách người dùng theo vai trò cụ thể (Admin=1, Owner=2, Jockey=3...).\n" +
+                      "2. Nếu không: Trả về toàn bộ người dùng trong hệ thống."
+    )
     public ResponseEntity<List<User>> getUsers(@RequestParam(required = false) Integer roleId) {
         if (roleId != null) {
             return ResponseEntity.ok(userRepository.findByRoleId(roleId));
@@ -187,14 +236,41 @@ public class PublicDataController {
 
     // Lấy toàn bộ danh sách ngựa đua trong hệ thống
     @GetMapping("/horses")
-    @Operation(summary = "GET: Lấy danh sách tất cả các chiến mã công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getHorses()` -> `HorseRepository.findAll()`")
+    @Operation(
+        summary = "GET: Lấy danh sách tất cả các chiến mã công khai",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controllers**: `PublicDataController.getHorses()`\n" +
+                      "* **Services**: (Direct Repository access)\n" +
+                      "* **Repositories**: `HorseRepository.findAll()`\n" +
+                      "* **Entities**: `Horse.java`\n" +
+                      "* **DTOs**: `Horse`\n" +
+                      "* **DTO Response**: `List<Horse>`\n" +
+                      "* **Frontend**: `Spectator.tsx`, `HorsePerformanceModal.tsx`, `publicDataService.ts`\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Truy vấn toàn bộ danh sách chiến mã đang có trong cơ sở dữ liệu."
+    )
     public ResponseEntity<List<Horse>> getHorses() {
         return ResponseEntity.ok(horseRepository.findAll());
     }
 
     // Lấy danh sách các biên bản vi phạm luật thi đấu, lọc theo ID trận đua (raceId)
     @GetMapping("/violations")
-    @Operation(summary = "GET: Lấy danh sách các lỗi vi phạm công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền raceId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getViolations()` -> `ViolationRepository.findAll()`")
+    @Operation(
+        summary = "GET: Lấy danh sách các lỗi vi phạm công khai",
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
+                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+                      "* **Controllers**: `PublicDataController.getViolations()`\n" +
+                      "* **Services**: (Direct Repository access)\n" +
+                      "* **Repositories**: `ViolationRepository.findByRaceId()`, `ViolationRepository.findAll()`, `UserRepository.findAll()`, `HorseRepository.findAll()`\n" +
+                      "* **Entities**: `Violation.java`, `User.java`, `Horse.java`\n" +
+                      "* **DTOs**: `List<Map<String, Object>>` (`violation`, `horseName`, `jockeyName`)\n" +
+                      "* **DTO Response**: `List<Map<String, Object>>` (`violation`, `horseName`, `jockeyName`)\n" +
+                      "* **Frontend**: `RefereeIncidents.tsx`, `Spectator.tsx`, `publicDataService.ts`\n\n" +
+                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
+                      "1. Lấy danh sách biên bản vi phạm, có thể lọc theo `raceId`.\n" +
+                      "2. Liên kết tên ngựa và nài ngựa tương ứng để dễ tra cứu."
+    )
     public ResponseEntity<?> getViolations(@RequestParam(required = false) Integer raceId) {
         List<Violation> list;
         if (raceId != null) {
@@ -233,11 +309,15 @@ public class PublicDataController {
     @GetMapping("/users/{id}/profile")
     @Operation(
         summary = "GET: Lấy hồ sơ cá nhân công khai của người dùng",
-        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền id User -> 'Execute'.\n\n" +
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `PublicDataController.getUserProfile()`\n" +
-                      "* **Repositories**: `UserRepository.findById()`, `RaceEntryRepository.findByJockeyId()`, `HorseRepository.findByOwnerId()`\n" +
-                      "* **DTO Response**: `Map<String, Object>` (Chứa `username`, `email`, `roleId`, `avatar`, `history`, `winRate`, `totalEarnings`...)\n\n" +
+                      "* **Controllers**: `PublicDataController.getUserProfile()`\n" +
+                      "* **Services**: (Direct Repository access)\n" +
+                      "* **Repositories**: `UserRepository.findById()`, `RaceEntryRepository.findByJockeyId()`, `HorseRepository.findByOwnerId()`, `ViolationRepository.findAll()`, `RaceRefereeRepository.findByRefereeId()`\n" +
+                      "* **Entities**: `User.java`, `RaceEntry.java`, `Horse.java`, `Violation.java`\n" +
+                      "* **DTOs**: `Map<String, Object>` (Chứa `username`, `email`, `roleId`, `avatar`, `history`, `winRate`, `totalEarnings`...)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`id`, `username`, `email`, `roleId`, `avatar`, `history`, `winRate`...)\n" +
+                      "* **Frontend**: `ProfileModal.tsx`, `Spectator.tsx`, `publicDataService.ts`\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
                       "1. Kiểm tra vai trò của người dùng (Admin, Nài ngựa, Chủ ngựa, Trọng tài).\n" +
                       "2. Tổng hợp các chỉ số thống kê cá nhân cụ thể theo từng vai trò."
@@ -421,11 +501,15 @@ public class PublicDataController {
     @GetMapping("/horses/{horseId}/performance")
     @Operation(
         summary = "GET: Lấy dữ liệu phong độ thi đấu chi tiết của 1 chiến mã",
-        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền horseId -> 'Execute'.\n\n" +
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `PublicDataController.getHorsePerformance()`\n" +
+                      "* **Controllers**: `PublicDataController.getHorsePerformance()`\n" +
+                      "* **Services**: (Direct Repository access)\n" +
                       "* **Repositories**: `HorseRepository.findById()`, `RaceEntryRepository.findByHorseId()`\n" +
-                      "* **DTO Response**: `Map<String, Object>` (`horseName`, `currentRating`, `totalRaces`, `totalWins`, `raceHistory`)\n\n" +
+                      "* **Entities**: `Horse.java`, `RaceEntry.java`\n" +
+                      "* **DTOs**: `Map<String, Object>` (`horseName`, `currentRating`, `totalRaces`, `totalWins`, `raceHistory`)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`horseName`, `currentRating`, `totalRaces`, `totalWins`, `raceHistory`)\n" +
+                      "* **Frontend**: `HorsePerformanceModal.tsx`, `Spectator.tsx`, `publicDataService.ts`\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
                       "1. Lấy thông tin tổng quan của chiến mã (Tên, Giống, Điểm Rating hiện tại).\n" +
                       "2. Truy vấn danh sách tất cả các trận đấu mà chiến mã đã tham gia, sắp xếp theo thời gian mới nhất."

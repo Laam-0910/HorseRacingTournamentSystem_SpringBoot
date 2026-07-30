@@ -20,10 +20,10 @@ import java.util.Map;
  * - Nộp lại hồ sơ tham gia lượt đua (resubmitRaceEntry) sau khi chỉnh sửa nếu bị từ chối trước đó.
  * - Chủ ngựa rút lại lời mời thi đấu đã gửi (withdrawInvitation).
  */
-@RestController
-@RequestMapping("/api/invitations")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*") // Hỗ trợ CORS
+@RestController // Đánh dấu lớp này là một Spring REST Controller để xử lý các HTTP request
+@RequestMapping("/api/invitations") // Định nghĩa đường dẫn tiền tố cho tất cả các endpoint trong controller này
+@RequiredArgsConstructor // Tự động tạo constructor injection cho các trường final
+@CrossOrigin(origins = "*") // Hỗ trợ CORS cho phép truy cập từ mọi nguồn
 @Tag(
     name = "08. Invitation & Jockey Service",
     description = "✉️ **BƯỚC 8: LỜI MỜI THI ĐẤU GIỮA CHỦ NGỰA VÀ NÀI NGỰA (INVITATION ARCHITECTURE)**\n\n" +
@@ -44,16 +44,18 @@ public class InvitationController {
     private final InvitationService invitationService; // Dịch vụ quản lý lời mời thi đấu
 
     // Lấy danh sách lời mời thi đấu có bộ lọc theo kỵ sĩ hoặc chủ ngựa
-    @GetMapping
+    @GetMapping // Xử lý HTTP GET request gửi tới /api/invitations
     @Operation(
         summary = "GET: Lấy danh sách lời mời thi đấu",
-        description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền jockeyId hoặc ownerId -> 'Execute'.\n\n" +
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `InvitationController.getInvitations()`\n" +
-                      "* **Service**: `InvitationService.getInvitations()`\n" +
-                      "* **Repository**: `RaceInvitationRepository.findByJockeyId()` / `findByOwnerId()`\n" +
-                      "* **Entity**: `RaceInvitation.java`\n" +
-                      "* **DTO Response**: `List<RaceInvitationDTO>`\n\n" +
+                      "* **Controllers**: `InvitationController.getInvitations()`\n" +
+                      "* **Services**: `InvitationService.getInvitations()`\n" +
+                      "* **Repositories**: `RaceInvitationRepository.findByJockeyId()` / `findByOwnerId()`\n" +
+                      "* **Entities**: `RaceInvitation.java`\n" +
+                      "* **DTOs**: `RaceInvitationDTO`\n" +
+                      "* **DTO Response**: `List<RaceInvitationDTO>`\n" +
+                      "* **Frontend**: `HorseOwner.tsx` (dashboards), `Jockey.tsx` (dashboards), `invitationService.ts`\n\n" +
                       "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
                       "1. Tiếp nhận tham số lọc theo `jockeyId` hoặc `ownerId`.\n" +
                       "2. Truy vấn danh sách lời mời thi đấu trong cơ sở dữ liệu.\n" +
@@ -61,21 +63,24 @@ public class InvitationController {
     )
     public ResponseEntity<List<RaceInvitationDTO>> getInvitations(@RequestParam(required = false) Integer jockeyId,
                                                                   @RequestParam(required = false) Integer ownerId) {
+        // Gọi dịch vụ invitationService để lấy danh sách lời mời thi đấu theo jockeyId hoặc ownerId và trả về HTTP 200 OK
         return ResponseEntity.ok(invitationService.getInvitations(jockeyId, ownerId));
     }
 
     // Gửi lời mời thi đấu mới (Chủ ngựa mời kỵ sĩ cưỡi chiến mã của mình)
-    @PostMapping
+    @PostMapping // Xử lý HTTP POST request gửi tới /api/invitations
     @Operation(
         summary = "POST: Tạo lời mời Nài ngựa thi đấu (Chủ ngựa)",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `InvitationController.inviteJockey()`\n" +
-                      "* **Service**: `InvitationService.inviteJockey()`\n" +
-                      "* **Repository**: `RaceInvitationRepository.save()`\n" +
-                      "* **Entity**: `RaceInvitation.java`\n" +
+                      "* **Controllers**: `InvitationController.inviteJockey()`\n" +
+                      "* **Services**: `InvitationService.inviteJockey()`\n" +
+                      "* **Repositories**: `RaceInvitationRepository.save()`\n" +
+                      "* **Entities**: `RaceInvitation.java`\n" +
+                      "* **DTOs**: `RaceInvitationDTO` (`raceId`, `horseId`, `jockeyId`, `ownerId`), `Map<String, Object>` (`{\"success\": true}`)\n" +
                       "* **DTO Request**: `RaceInvitationDTO` (`raceId`, `horseId`, `jockeyId`, `ownerId`)\n" +
-                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"invitation\": RaceInvitationDTO}`)\n\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"invitation\": RaceInvitationDTO}`)\n" +
+                      "* **Frontend**: `HorseOwner.tsx` (dashboards), `invitationService.ts`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Chủ ngựa chọn Nài ngựa và Chiến mã muốn mời vào trận đua.\n" +
                       "2. Kiểm tra xem Nài ngựa và Ngựa đã đăng ký Ngày đua chưa.\n" +
@@ -84,23 +89,29 @@ public class InvitationController {
     )
     public ResponseEntity<?> inviteJockey(@RequestBody RaceInvitationDTO inviteDTO) {
         try {
+            // Gọi tầng nghiệp vụ để thực hiện gửi lời mời thi đấu đến kỵ sĩ
             RaceInvitationDTO saved = invitationService.inviteJockey(inviteDTO);
+            // Trả về kết quả thành công kèm thông tin bản ghi lời mời đã lưu
             return ResponseEntity.ok(Map.of("success", true, "invitation", saved));
         } catch (IllegalArgumentException e) {
+            // Xử lý ngoại lệ nếu dữ liệu không hợp lệ và trả về mã lỗi 400 Bad Request
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
 
     // Kỵ sĩ Chấp nhận lời mời thi đấu
-    @PostMapping("/{id}/accept")
+    @PostMapping("/{id}/accept") // Xử lý HTTP POST request gửi tới /api/invitations/{id}/accept
     @Operation(
         summary = "POST: Chấp nhận lời mời thi đấu (Nài ngựa)",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `InvitationController.acceptInvitation()`\n" +
-                      "* **Service**: `InvitationService.acceptInvitation()`\n" +
+                      "* **Controllers**: `InvitationController.acceptInvitation()`\n" +
+                      "* **Services**: `InvitationService.acceptInvitation()`\n" +
                       "* **Repositories**: `RaceInvitationRepository.save()`, `RaceEntryRepository.save()`\n" +
-                      "* **Entities**: `RaceInvitation.java`, `RaceEntry.java`\n\n" +
+                      "* **Entities**: `RaceInvitation.java`, `RaceEntry.java`\n" +
+                      "* **DTOs**: `Map<String, Object>` (`{\"success\": true}`)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
+                      "* **Frontend**: `Jockey.tsx` (dashboards), `invitationService.ts`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Nài ngựa xác nhận chấp nhận lời mời theo `invitationId`.\n" +
                       "2. Cập nhật trạng thái `RaceInvitation` sang `ACCEPTED`.\n" +
@@ -109,23 +120,29 @@ public class InvitationController {
     )
     public ResponseEntity<?> acceptInvitation(@PathVariable Integer id) {
         try {
+            // Gọi dịch vụ xử lý chấp nhận lời mời và khởi tạo đơn tham gia lượt đua
             invitationService.acceptInvitation(id);
+            // Trả về thông báo chấp nhận lời mời thành công
             return ResponseEntity.ok(Map.of("success", true, "message", "Invitation accepted and entry submitted."));
         } catch (IllegalArgumentException e) {
+            // Xử lý khi có lỗi nghiệp vụ xảy ra và trả về phản hồi lỗi Bad Request
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
 
     // Kỵ sĩ từ chối lời mời thi đấu
-    @PostMapping("/{id}/reject")
+    @PostMapping("/{id}/reject") // Xử lý HTTP POST request gửi tới /api/invitations/{id}/reject
     @Operation(
         summary = "POST: Từ chối lời mời thi đấu (Nài ngựa)",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `InvitationController.rejectInvitation()`\n" +
-                      "* **Service**: `InvitationService.rejectInvitation()`\n" +
-                      "* **Repository**: `RaceInvitationRepository.save()`\n" +
-                      "* **Entity**: `RaceInvitation.java`\n\n" +
+                      "* **Controllers**: `InvitationController.rejectInvitation()`\n" +
+                      "* **Services**: `InvitationService.rejectInvitation()`\n" +
+                      "* **Repositories**: `RaceInvitationRepository.save()`\n" +
+                      "* **Entities**: `RaceInvitation.java`\n" +
+                      "* **DTOs**: `Map<String, Object>` (`{\"success\": true}`)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
+                      "* **Frontend**: `Jockey.tsx` (dashboards), `invitationService.ts`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Nài ngựa từ chối lời mời theo `invitationId`.\n" +
                       "2. Cập nhật trạng thái `RaceInvitation` sang `REJECTED`.\n" +
@@ -133,23 +150,29 @@ public class InvitationController {
     )
     public ResponseEntity<?> rejectInvitation(@PathVariable Integer id) {
         try {
+            // Gọi tầng nghiệp vụ để cập nhật trạng thái từ chối lời mời
             invitationService.rejectInvitation(id);
+            // Trả về phản hồi thành công thông báo đã từ chối lời mời
             return ResponseEntity.ok(Map.of("success", true, "message", "Invitation rejected successfully."));
         } catch (IllegalArgumentException e) {
+            // Trả về lỗi 400 Bad Request kèm theo nội dung ngoại lệ nếu không tìm thấy lời mời
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
 
     // Gửi lại hồ sơ lượt chạy (đổi trạng thái từ REJECTED về PENDING để xem xét lại)
-    @PostMapping("/entry/{entryId}/resubmit")
+    @PostMapping("/entry/{entryId}/resubmit") // Xử lý HTTP POST request gửi tới /api/invitations/entry/{entryId}/resubmit
     @Operation(
         summary = "POST: Nộp lại đơn tham gia thi đấu",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `InvitationController.resubmitRaceEntry()`\n" +
-                      "* **Service**: `InvitationService.resubmitRaceEntry()`\n" +
-                      "* **Repository**: `RaceEntryRepository.save()`\n" +
-                      "* **Entity**: `RaceEntry.java`\n\n" +
+                      "* **Controllers**: `InvitationController.resubmitRaceEntry()`\n" +
+                      "* **Services**: `InvitationService.resubmitRaceEntry()`\n" +
+                      "* **Repositories**: `RaceEntryRepository.save()`\n" +
+                      "* **Entities**: `RaceEntry.java`\n" +
+                      "* **DTOs**: `Map<String, Object>` (`{\"success\": true}`)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
+                      "* **Frontend**: `RegistrationProcessing.tsx`, `invitationService.ts`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Tìm bản ghi `RaceEntry` theo `entryId`.\n" +
                       "2. Đặt lại trạng thái từ `REJECTED` về `PENDING` để Admin có thể xét duyệt lại.\n" +
@@ -157,23 +180,29 @@ public class InvitationController {
     )
     public ResponseEntity<?> resubmitRaceEntry(@PathVariable Integer entryId) {
         try {
+            // Gọi dịch vụ để nộp lại đơn đăng ký tham gia thi đấu bị từ chối
             invitationService.resubmitRaceEntry(entryId);
+            // Trả về kết quả thông báo nộp lại đơn thành công
             return ResponseEntity.ok(Map.of("success", true, "message", "Entry resubmitted successfully."));
         } catch (IllegalArgumentException e) {
+            // Trả về thông báo lỗi nếu quá trình nộp lại gặp sự cố
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
 
     // Rút lại lời mời thi đấu đã gửi (Chủ ngựa thực hiện)
-    @PostMapping("/{id}/withdraw")
+    @PostMapping("/{id}/withdraw") // Xử lý HTTP POST request gửi tới /api/invitations/{id}/withdraw
     @Operation(
         summary = "POST: Rút lại lời mời thi đấu (Chủ ngựa)",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `InvitationController.withdrawInvitation()`\n" +
-                      "* **Service**: `InvitationService.withdrawInvitation()`\n" +
-                      "* **Repository**: `RaceInvitationRepository.save()`\n" +
-                      "* **Entity**: `RaceInvitation.java`\n\n" +
+                      "* **Controllers**: `InvitationController.withdrawInvitation()`\n" +
+                      "* **Services**: `InvitationService.withdrawInvitation()`\n" +
+                      "* **Repositories**: `RaceInvitationRepository.save()`\n" +
+                      "* **Entities**: `RaceInvitation.java`\n" +
+                      "* **DTOs**: `Map<String, Object>` (`{\"success\": true}`)\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
+                      "* **Frontend**: `HorseOwner.tsx` (dashboards), `invitationService.ts`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Kiểm tra quyền sở hữu lời mời thuộc về Chủ ngựa (theo `ownerId`).\n" +
                       "2. Cập nhật trạng thái `RaceInvitation` sang `WITHDRAWN`.\n" +
@@ -181,9 +210,12 @@ public class InvitationController {
     )
     public ResponseEntity<?> withdrawInvitation(@PathVariable Integer id, @RequestParam Integer ownerId) {
         try {
+            // Gọi tầng nghiệp vụ để rút lại lời mời thi đấu theo ID lời mời và ID chủ ngựa
             invitationService.withdrawInvitation(id, ownerId);
+            // Trả về thông báo rút lời mời thi đấu thành công
             return ResponseEntity.ok(Map.of("success", true, "message", "Invitation withdrawn successfully."));
         } catch (Exception e) {
+            // Phản hồi mã lỗi Bad Request nếu thao tác rút lời mời không hợp lệ
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
