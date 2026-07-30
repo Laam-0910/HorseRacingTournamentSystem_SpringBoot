@@ -143,12 +143,16 @@ public class HorseService {
         return horseMapper.toDTO(saved, ownerName);
     }
 
-    // Kiểm tra tính hợp lệ về mối tương quan giữa tuổi và giới tính ngựa
+    // Kiểm tra tính hợp lệ về mối tương quan giữa tuổi và giới tính ngựa (Tuổi từ 2 đến 10)
     private void validateHorseAgeAndSex(java.sql.Date dob, String sex) {
         if (dob == null || sex == null) return;
         java.time.LocalDate birthDate = dob.toLocalDate();
         java.time.LocalDate currentDate = java.time.LocalDate.now();
         int age = java.time.Period.between(birthDate, currentDate).getYears();
+
+        if (age < 2 || age > 10) {
+            throw new IllegalArgumentException("Tuổi của ngựa đăng ký phải nằm trong khoảng từ 2 đến 10 tuổi (Horse age must be between 2 and 10 years old).");
+        }
 
         if (age >= 4) {
             // Ngựa đực từ 4 tuổi trở lên không được gọi là Colt (phải gọi là Horse)

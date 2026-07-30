@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import { confirm } from "../../../lib/confirm";
@@ -503,6 +504,8 @@ export default function RefereeHub() {
   const [liveMonitorSize, setLiveMonitorSize] = useState<"small" | "medium" | "large">("small");
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [reasonModal, setReasonModal] = useState<{ type: "suspend" | "emergency"; title: string } | null>(null);
+  const [reasonInput, setReasonInput] = useState("");
   const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number }>({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -1505,10 +1508,8 @@ export default function RefereeHub() {
             {(selectedRace.status === "RUNNING" || selectedRace.status === "STEWARDS_INQUIRY") && (
               <button
                 onClick={() => {
-                  const reason = prompt($t("Nhập lý do tạm hoãn cuộc đua (Steward's Report):", (localStorage.getItem('app-lang') || 'vi')));
-                  if (reason && reason.trim()) {
-                    handleSuspendRace(reason);
-                  }
+                  setReasonInput("");
+                  setReasonModal({ type: "suspend", title: $t("Nhập lý do tạm hoãn cuộc đua (Steward's Report):", (localStorage.getItem('app-lang') || 'vi')) });
                 }}
                 style={{ padding: "0.5rem 1.25rem", background: "#fbbf24", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
               >
@@ -1525,10 +1526,8 @@ export default function RefereeHub() {
             )}
             <button
               onClick={() => {
-                const reason = prompt($t("Nhập lý do tạm dừng/hoãn cuộc đua khẩn cấp (Steward's Report):", (localStorage.getItem('app-lang') || 'vi')));
-                if (reason && reason.trim()) {
-                  handleStopRace(reason);
-                }
+                setReasonInput("");
+                setReasonModal({ type: "emergency", title: $t("Nhập lý do tạm dừng/hoãn cuộc đua khẩn cấp (Steward's Report):", (localStorage.getItem('app-lang') || 'vi')) });
               }}
               style={{ padding: "0.5rem 1.25rem", background: "#f59e0b", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
             >
@@ -2334,6 +2333,43 @@ export default function RefereeHub() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal nhập lý do Steward's Report khi Tạm hoãn hoặc Dừng khẩn cấp */}
+      {reasonModal && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "28rem" }}>
+            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "1rem", marginBottom: "1rem" }}>{reasonModal.title}</h4>
+            <textarea
+              value={reasonInput}
+              onChange={e => setReasonInput(e.target.value)}
+              placeholder={$t("Nhập chi tiết lý do (Steward's Report)...", (localStorage.getItem('app-lang') || 'vi'))}
+              style={{ width: "100%", height: "90px", padding: "0.75rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.5rem", color: "#fff", fontSize: "0.85rem", outline: "none", resize: "none", marginBottom: "1rem" }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+              <button
+                type="button"
+                onClick={() => setReasonModal(null)}
+                style={{ padding: "0.5rem 1rem", background: "rgba(255,255,255,0.1)", color: "#aaa", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", cursor: "pointer" }}
+              >
+                {$t("Hủy", (localStorage.getItem('app-lang') || 'vi'))}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!reasonInput.trim()) return;
+                  if (reasonModal.type === "suspend") handleSuspendRace(reasonInput);
+                  else if (reasonModal.type === "emergency") handleStopRace(reasonInput);
+                  setReasonModal(null);
+                }}
+                style={{ padding: "0.5rem 1.25rem", background: reasonModal.type === "emergency" ? "#f59e0b" : "#fbbf24", color: "#000", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer" }}
+              >
+                {$t("Xác nhận", (localStorage.getItem('app-lang') || 'vi'))}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

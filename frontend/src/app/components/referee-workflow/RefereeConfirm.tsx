@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api } from "../../../lib/api";
+import { $t } from "../../../lib/i18n";
 
 // Cấu trúc thuộc tính truyền vào component RefereeConfirm
 interface RefereeConfirmProps {
@@ -91,6 +92,20 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
     setLoading(true);
 
     try {
+      // Ràng buộc: Tất cả ngựa thi đấu (chưa bị DQ) phải có thời gian về đích
+      for (const e of entries) {
+        const isDq = e.entry.status === "DISQUALIFIED" || times[e.entry.id] === "DQ";
+        if (!isDq) {
+          const tVal = times[e.entry.id];
+          if (!tVal || !tVal.trim()) {
+            const lang = localStorage.getItem('app-lang') || 'vi';
+            setError($t("Vui lòng nhập thời gian về đích cho tất cả ngựa thi đấu trước khi hoàn tất trận đua.", lang));
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
       // Chuẩn bị payload danh sách kết quả về đích của từng ngựa đua
       const resultsPayload = entries.map((e) => ({
         entryId: e.entry.id,

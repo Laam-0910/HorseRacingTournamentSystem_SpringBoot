@@ -204,7 +204,16 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfileMsg(""); setProfileErr(""); setProfileLoading(true);
+    setProfileMsg(""); setProfileErr("");
+    if (user?.roleId === 3 && weight) {
+      const wVal = parseFloat(weight);
+      if (isNaN(wVal) || wVal < 45 || wVal > 100) {
+        setProfileErr($t("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.", (localStorage.getItem('app-lang') || 'vi')));
+        return;
+      }
+    }
+
+    setProfileLoading(true);
     try {
       const parsedWeight = user?.roleId === 3 ? parseFloat(weight) || null : null;
       const res = await api.post<any>("/auth/update-profile", {
@@ -529,7 +538,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
 
                 <div>
                   <label style={labelStyle}>{$t("Địa chỉ Email", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                  <input type="email" className="bento-input" required value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
+                  <input type="email" className="bento-input" disabled readOnly value={email} style={{ ...inputStyle, opacity: 0.6, cursor: "not-allowed" }} />
                 </div>
 
                 <div style={{ marginTop: "auto", paddingTop: "1.5rem" }}>

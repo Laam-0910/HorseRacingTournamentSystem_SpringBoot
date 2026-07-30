@@ -1,4 +1,39 @@
 {
+  "Lịch sử đua": {
+    "en": "Race History",
+    "zh": "参赛历史",
+    "ja": "レース履歴"
+  },
+  "Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1).": {
+    "en": "Minimum entries must be greater than 1 (> 1).",
+    "zh": "最小参赛马匹数必须大于 1 (> 1)。",
+    "ja": "最小出走頭数は 1 より大きくなければなりません (> 1)。"
+  },
+  "Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15).": {
+    "en": "Maximum entries must be less than 15 (< 15).",
+    "zh": "最大参赛马匹数必须小于 15 (< 15)。",
+    "ja": "最大出走頭数は 15 未満でなければなりません (< 15)。"
+  },
+  "Số lượng ngựa tối thiểu không được lớn hơn số lượng tối đa.": {
+    "en": "Minimum entries cannot be greater than maximum entries.",
+    "zh": "最小参赛数不能大于最大参赛数。",
+    "ja": "最小出走頭数は最大出走頭数より大きくすることはできません。"
+  },
+  "Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.": {
+    "en": "Jockey weight must be between 45kg and 100kg.",
+    "zh": "骑师体重必须在 45kg 到 100kg 之间。",
+    "ja": "騎手の体重は 45kg から 100kg の間でなければなりません。"
+  },
+  "Tuổi của ngựa đăng ký phải nằm trong khoảng từ 2 đến 10 tuổi.": {
+    "en": "Registered horse age must be between 2 and 10 years old.",
+    "zh": "注册马匹年龄必须在 2 至 10 岁之间。",
+    "ja": "登録馬の年齢は 2 歳から 10 歳の間でなければなりません。"
+  },
+  "Vui lòng nhập thời gian về đích cho tất cả ngựa thi đấu trước khi hoàn tất trận đua.": {
+    "en": "Please enter finishing time for all participating horses before completing the race.",
+    "zh": "完成比赛前请输入所有参赛马匹的冲线时间。",
+    "ja": "レースを完了する前に、すべての出走馬のゴールタイムを入力してください。"
+  },
   "Lưu thông tin Racecard thành công.": {
     "en": "Racecard saved successfully.",
     "zh": "赛马排位表保存成功。",

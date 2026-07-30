@@ -150,19 +150,19 @@ export default function Race() {
     setError("");
     setSuccess("");
 
-    // Ràng buộc số lượng ngựa tham gia (min <= max)
+    // Ràng buộc số lượng ngựa tham gia (min > 1 và max < 15, min <= max)
     const minVal = parseInt(minEntries, 10);
     const maxVal = parseInt(maxEntries, 10);
-    if (isNaN(minVal) || minVal <= 0) {
-      setError("Min entries must be a positive integer greater than 0.");
+    if (isNaN(minVal) || minVal <= 1) {
+      setError($t("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1).", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
-    if (isNaN(maxVal) || maxVal <= 0) {
-      setError("Max entries must be a positive integer greater than 0.");
+    if (isNaN(maxVal) || maxVal >= 15) {
+      setError($t("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15).", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
     if (maxVal < minVal) {
-      setError("Max entries must be greater than or equal to Min entries.");
+      setError($t("Số lượng ngựa tối thiểu không được lớn hơn số lượng tối đa.", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
 
@@ -244,16 +244,16 @@ export default function Race() {
 
     const minVal = parseInt(editMinEntries, 10);
     const maxVal = parseInt(editMaxEntries, 10);
-    if (isNaN(minVal) || minVal <= 0) {
-      alert("Min entries must be a positive integer greater than 0.");
+    if (isNaN(minVal) || minVal <= 1) {
+      alert($t("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1).", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
-    if (isNaN(maxVal) || maxVal <= 0) {
-      alert("Max entries must be a positive integer greater than 0.");
+    if (isNaN(maxVal) || maxVal >= 15) {
+      alert($t("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15).", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
     if (maxVal < minVal) {
-      alert("Max entries must be greater than or equal to Min entries.");
+      alert($t("Số lượng ngựa tối thiểu không được lớn hơn số lượng tối đa.", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
 

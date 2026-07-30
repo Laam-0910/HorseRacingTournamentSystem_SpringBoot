@@ -38,6 +38,20 @@ public class ProcessResultsService {
         for (Map<String, Object> res : entriesResults) {
             Object entryIdObj = res.get("entryId");
             Integer entryId = entryIdObj != null ? Integer.parseInt(entryIdObj.toString()) : null;
+            String finishTime = (String) res.get("finishTime");
+            if (entryId != null) {
+                Optional<RaceEntry> entryOpt = raceEntryRepository.findById(entryId);
+                if (entryOpt.isPresent() && !"DISQUALIFIED".equalsIgnoreCase(entryOpt.get().getStatus())) {
+                    if (finishTime == null || finishTime.trim().isEmpty()) {
+                        throw new IllegalArgumentException("Vui lòng nhập thời gian hoàn thành cho tất cả ngựa thi đấu trước khi hoàn tất trận đua.");
+                    }
+                }
+            }
+        }
+
+        for (Map<String, Object> res : entriesResults) {
+            Object entryIdObj = res.get("entryId");
+            Integer entryId = entryIdObj != null ? Integer.parseInt(entryIdObj.toString()) : null;
 
             Integer finalPosition = null;
             Object fpObj = res.get("finalPosition");
