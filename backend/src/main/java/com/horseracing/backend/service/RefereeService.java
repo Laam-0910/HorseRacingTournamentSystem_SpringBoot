@@ -305,15 +305,23 @@ public class RefereeService {
     public void stopRace(Integer raceId, String stewardReport) {
         Race race = raceRepository.findById(raceId) // Tra cứu trận đua theo raceId
                 .orElseThrow(() -> new IllegalArgumentException("Race not found")); // Ném ngoại lệ nếu không tìm thấy trận đua
+        // Chỉ cho phép dừng khẩn cấp khi trận đua đang RUNNING, STOPPED hoặc STEWARDS_INQUIRY
+        if (!"RUNNING".equals(race.getStatus()) && !"STOPPED".equals(race.getStatus()) && !"STEWARDS_INQUIRY".equals(race.getStatus())) {
+            throw new IllegalStateException("Race must be RUNNING, STOPPED or STEWARDS_INQUIRY to perform an emergency stop. Current status: " + race.getStatus());
+        }
         race.setStatus("CANCELLED"); // Đổi trạng thái trận đua sang CANCELLED (bị hủy)
         race.setStewardReport(stewardReport); // Lưu lý do dừng khẩn cấp vào báo cáo trọng tài
-        race.setYoutubeLiveUrl(null); // Automatically remove livestream URL on emergency stop
+        race.setYoutubeLiveUrl(null); // Xóa URL livestream khi dừng khẩn cấp
         raceRepository.save(race); // Lưu trận đua đã cập nhật vào DB
 
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId); // Lấy danh sách lượt thi đấu của trận đua
         for (RaceEntry entry : entries) { // Duyệt qua từng lượt thi đấu
-            entry.setStatus("REJECTED"); // Đổi trạng thái lượt thi đấu sang REJECTED
-            raceEntryRepository.save(entry); // Lưu lượt thi đấu đã cập nhật vào DB
+            // Chỉ hủy các entry chưa có kết quả cuối (DISQUALIFIED / FINISHED giữ nguyên)
+            String es = entry.getStatus();
+            if ("APPROVED".equals(es) || "RUNNING".equals(es) || "STOPPED".equals(es) || "PENDING_ADMIN".equals(es)) {
+                entry.setStatus("REJECTED"); // Đổi trạng thái lượt thi đấu sang REJECTED
+                raceEntryRepository.save(entry); // Lưu lượt thi đấu đã cập nhật vào DB
+            }
         }
     }
 
@@ -421,6 +429,15 @@ public class RefereeService {
         race.setStatus("STOPPED"); // Chuyển trạng thái trận đua sang STOPPED (tạm dừng)
         race.setStewardReport(stewardReport); // Lưu báo cáo lý do tạm dừng của Ban Giám sát
         raceRepository.save(race); // Lưu đối tượng trận đua vào DB
+
+        List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId); // Lấy danh sách tất cả các lượt đua trong trận
+        for (RaceEntry entry : entries) { // Duyệt từng lượt đua
+            String es = entry.getStatus();
+            if ("RUNNING".equals(es) || "APPROVED".equals(es)) { // Chuyển trạng thái lượt đua của ngựa đang chạy sang STOPPED
+                entry.setStatus("STOPPED"); // Đổi trạng thái lượt thi đấu sang STOPPED
+                raceEntryRepository.save(entry); // Lưu lượt thi đấu vào DB
+            }
+        }
     }
 
     @Transactional
@@ -432,5 +449,13 @@ public class RefereeService {
         }
         race.setStatus("RUNNING"); // Đổi trạng thái trận đua trở lại RUNNING
         raceRepository.save(race); // Lưu đối tượng trận đua vào DB
+
+        List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId); // Lấy danh sách tất cả các lượt đua trong trận
+        for (RaceEntry entry : entries) { // Duyệt từng lượt đua
+            if ("STOPPED".equals(entry.getStatus())) { // Khôi phục các con ngựa đang tạm dừng
+                entry.setStatus("RUNNING"); // Đổi trạng thái lượt thi đấu trở lại RUNNING
+                raceEntryRepository.save(entry); // Lưu lượt thi đấu vào DB
+            }
+        }
     }
 }

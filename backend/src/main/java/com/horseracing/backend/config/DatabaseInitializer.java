@@ -4,6 +4,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import java.util.List;
 
 /**
  * Lớp khởi tạo DatabaseInitializer - Kiểm tra và cập nhật cấu trúc cơ sở dữ liệu (Database Schema Evolution).
@@ -119,7 +120,34 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            System.out.println("Database columns, ChatMessage table, and HorseRetirementRequest table verified and added successfully if missing.");
+            // 11. Tự động kiểm tra và khởi tạo dữ liệu lượt thi đấu (RaceEntry) mẫu cho tất cả các trận đua chưa có thí sinh
+            try {
+                List<Integer> raceIdsWithoutEntries = jdbcTemplate.queryForList(
+                    "SELECT r.id FROM Race r WHERE NOT EXISTS (SELECT 1 FROM RaceEntry re WHERE re.race_id = r.id)",
+                    Integer.class
+                );
+                List<Integer> horseIds = jdbcTemplate.queryForList("SELECT id FROM Horse WHERE status = 'ACTIVE' OR status IS NULL", Integer.class);
+                List<Integer> jockeyIds = jdbcTemplate.queryForList("SELECT id FROM [User] WHERE role_id = 3", Integer.class);
+
+                if (!raceIdsWithoutEntries.isEmpty() && !horseIds.isEmpty() && !jockeyIds.isEmpty()) {
+                    for (Integer rId : raceIdsWithoutEntries) {
+                        int countToInsert = Math.min(3, Math.min(horseIds.size(), jockeyIds.size()));
+                        for (int i = 0; i < countToInsert; i++) {
+                            Integer hId = horseIds.get(i % horseIds.size());
+                            Integer jId = jockeyIds.get(i % jockeyIds.size());
+                            int gate = i + 1;
+                            jdbcTemplate.update(
+                                "INSERT INTO RaceEntry (race_id, horse_id, jockey_id, gate_number, status, carried_weight) VALUES (?, ?, ?, ?, 'APPROVED', 55.0)",
+                                rId, hId, jId, gate
+                            );
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                System.err.println("Failed to auto-seed RaceEntry: " + ex.getMessage());
+            }
+
+            System.out.println("Database columns, ChatMessage table, HorseRetirementRequest table, and RaceEntry auto-seeding verified successfully.");
         } catch (Exception e) {
             System.err.println("Failed to update database schema: " + e.getMessage());
         }

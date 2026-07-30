@@ -379,8 +379,8 @@ function RaceRow({ race }: { race: any }) {
       setLoading(true);
       api.get<any[]>(`/public/results?raceId=${race.id}`)
         .then(data => {
-          // Lọc chỉ hiển thị các lượt đăng ký có trạng thái APPROVED
-          const approved = data.filter((e: any) => e.entry?.status === "APPROVED");
+          // Hiển thị các lượt đăng ký hợp lệ (APPROVED, RUNNING, FINISHED, STOPPED, OFFICIAL)
+          const approved = data.filter((e: any) => e.entry?.status && e.entry?.status !== "REJECTED" && e.entry?.status !== "PENDING_ADMIN");
           setEntries(approved);
         })
         .catch(() => {})
