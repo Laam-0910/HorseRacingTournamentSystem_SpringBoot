@@ -14,10 +14,17 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller HorseOwnerController - Lớp kiểm soát các endpoint dành cho Chủ ngựa (Horse Owner).
+ * - Xem danh mục các ngựa đang sở hữu.
+ * - Xem các lời mời gửi nài ngựa cưỡi thi đấu.
+ * - Tải dữ liệu Dashboard chủ ngựa (doanh thu giải thưởng, thứ hạng trung bình, quy mô chuồng).
+ * - Tra cứu lịch sử kết quả của các con ngựa thuộc chuồng.
+ */
 @RestController
 @RequestMapping("/api/owner")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "12. Owner & Jockey Dashboards",
     description = "📊 **BƯỚC 12: DASHBOARD THỐNG KÊ DOANH THU & CHUỒNG NGỰA (DASHBOARD ARCHITECTURE)**\n\n" +
@@ -33,10 +40,11 @@ import java.util.Map;
 )
 public class HorseOwnerController {
 
-    private final HorseService horseService;
-    private final InvitationService invitationService;
-    private final JockeyOwnerDashboardService dashboardService;
+    private final HorseService horseService; // Dịch vụ quản lý thông tin ngựa
+    private final InvitationService invitationService; // Dịch vụ quản lý lời mời cưỡi ngựa
+    private final JockeyOwnerDashboardService dashboardService; // Dịch vụ xử lý dữ liệu Dashboard kỵ sĩ/chủ ngựa
 
+    // Lấy danh sách toàn bộ ngựa thuộc sở hữu của chủ ngựa theo ID chủ ngựa
     @GetMapping("/{id}/horses")
     @Operation(
         summary = "GET: Lấy danh sách ngựa của Chủ sở hữu",
@@ -55,6 +63,7 @@ public class HorseOwnerController {
         return ResponseEntity.ok(horseService.getAllHorses(null, id));
     }
 
+    // Lấy danh sách lời mời (invitations) do chủ ngựa này tạo ra gửi tới các kỵ sĩ
     @GetMapping("/{id}/invitations")
     @Operation(
         summary = "GET: Lấy danh sách lời mời thi đấu của Chủ ngựa",
@@ -71,6 +80,7 @@ public class HorseOwnerController {
         return ResponseEntity.ok(invitationService.getInvitations(null, id));
     }
 
+    // Lấy thông tin Dashboard của chủ ngựa (quy mô chuồng, tổng tiền thưởng, thứ hạng trung bình,...)
     @GetMapping("/{id}/dashboard")
     @Operation(
         summary = "GET: Lấy dữ liệu Dashboard tổng quan của Chủ ngựa",
@@ -89,6 +99,7 @@ public class HorseOwnerController {
         return ResponseEntity.ok(dashboardService.getOwnerDashboard(id));
     }
 
+    // Lấy thông tin chi tiết trạng thái hoạt động của chuồng ngựa hiện tại
     @GetMapping("/{id}/stable")
     @Operation(
         summary = "GET: Lấy danh sách chuồng ngựa của Chủ sở hữu",
@@ -104,6 +115,7 @@ public class HorseOwnerController {
         return ResponseEntity.ok(dashboardService.getOwnerStable(id));
     }
 
+    // Lấy lịch sử kết quả thi đấu của các con ngựa thuộc chủ sở hữu này
     @GetMapping("/{id}/results")
     @Operation(
         summary = "GET: Lấy lịch sử kết quả thi đấu của các con ngựa thuộc Chủ sở hữu",

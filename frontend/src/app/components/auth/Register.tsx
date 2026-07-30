@@ -3,18 +3,33 @@ import { useNavigate, Link } from "react-router-dom";
 import { api } from "../../../lib/api";
 import { $t } from '@/lib/i18n';
 
+/**
+ * Component Register - Trang đăng ký tài khoản mới cho hệ thống trường đua.
+ * Cung cấp form thu thập Họ tên, Username, Email, Mật khẩu và xác nhận mật khẩu.
+ * Thực hiện kiểm tra tính hợp lệ dữ liệu ở frontend (độ dài, trùng khớp mật khẩu, mật khẩu phức tạp)
+ * trước khi gọi API đăng ký và chuyển tiếp sang xác thực mã OTP đăng ký.
+ */
 export default function Register() {
   const navigate = useNavigate();
+  
+  // State lưu trữ dữ liệu form đăng ký tài khoản
   const [form, setForm] = useState({ fullName: "", username: "", email: "", password: "", confirmPassword: "" });
+  // Trạng thái ẩn/hiện trường nhập mật khẩu
   const [showPwd, setShowPwd] = useState(false);
+  // Trạng thái ẩn/hiện trường nhập mật khẩu xác nhận
   const [showConfirm, setShowConfirm] = useState(false);
+  // State lưu thông báo lỗi dữ liệu nhập không hợp lệ
   const [error, setError] = useState("");
+  // Trạng thái hiển thị vòng chờ gọi API đăng ký
   const [loading, setLoading] = useState(false);
+  // Đọc ngôn ngữ hiện tại của ứng dụng
   const lang = localStorage.getItem("app-lang") || "vi";
 
+  // Hàm xử lý khi người dùng submit form đăng ký
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    // Validate fullName
+    e.preventDefault(); // Ngăn trình duyệt tự tải lại trang
+    
+    // 1. Kiểm tra họ và tên hợp lệ (không trống và dài ít nhất 3 ký tự)
     if (!form.fullName.trim()) {
       setError($t("Vui lòng nhập họ và tên đầy đủ", lang));
       return;
@@ -23,6 +38,8 @@ export default function Register() {
       setError($t("Họ và tên phải có ít nhất 3 ký tự", lang));
       return;
     }
+    
+    // 2. Kiểm tra tên đăng nhập (username) hợp lệ
     if (!form.username.trim()) {
       setError($t("Vui lòng nhập username đăng nhập", lang));
       return;
@@ -31,11 +48,15 @@ export default function Register() {
       setError($t("Username must be at least 3 characters long", lang));
       return;
     }
+    
+    // 3. So sánh mật khẩu và mật khẩu nhập lại có trùng khớp không
     if (form.password !== form.confirmPassword) {
       setError($t("Passwords do not match.", lang));
       return;
     }
-    // Kiểm tra độ phức tạp của mật khẩu (Chữ hoa, số, ký tự đặc biệt)
+    
+    // 4. Kiểm tra độ phức tạp của mật khẩu bằng Regular Expression
+    // Yêu cầu: Ít nhất 8 ký tự, 1 chữ cái hoa, 1 số, 1 ký tự đặc biệt
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(form.password)) {
       setError(
@@ -44,21 +65,37 @@ export default function Register() {
       return;
     }
 
-    setError(""); setLoading(true);
+    setError(""); // Reset thông báo lỗi cũ
+    setLoading(true); // Bật hiệu ứng chờ
+    
     try {
-      const res = await api.post<any>("/auth/register", { username: form.username.trim(), fullName: form.fullName.trim(), email: form.email, password: form.password });
+      // Gọi API POST /auth/register để tạo tài khoản mới ở backend Spring Boot
+      const res = await api.post<any>("/auth/register", { 
+        username: form.username.trim(), 
+        fullName: form.fullName.trim(), 
+        email: form.email, 
+        password: form.password 
+      });
+      
       if (res.requireOtp) {
+        // Nếu hệ thống cấu hình yêu cầu xác minh email đăng ký:
+        // Chuyển hướng người dùng sang trang verify-register cùng mã giao dịch OTP
         navigate(`/verify-register?otpTxId=${res.otpTxId}`, { state: { email: form.email } });
       } else {
+        // Nếu không yêu cầu xác minh OTP, chuyển thẳng về trang Đăng nhập
         navigate("/login");
       }
     } catch (err: any) {
+      // Cập nhật thông báo lỗi trả về từ server
       setError(err.message || "Registration failed");
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false); // Tắt hiệu ứng chờ
+    }
   };
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
+      {/* Hình nền chiến mã tương tự trang Login */}
       <div style={{
         position: "absolute", inset: 0,
         backgroundImage: "url('/anhngua1-1.jpg')",
@@ -80,35 +117,36 @@ export default function Register() {
             </div>
           </div>
 
-          {/* Card */}
+          {/* Khung Card chứa form Đăng ký */}
           <div style={{ background: "rgba(21,19,16,0.95)", backdropFilter: "blur(8px)", border: "1px solid #2a2825", borderRadius: "0.5rem", padding: "2rem", boxShadow: "0 25px 50px rgba(0,0,0,0.5)" }}>
             <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f0f0f0", marginBottom: "0.25rem" }}>Create Account</h2>
             <p style={{ color: "#a0a0a0", fontSize: "0.875rem", marginBottom: "1.5rem" }}>Join the racing season system</p>
 
+            {/* Banner hiển thị lỗi */}
             {error && (
               <div style={{ marginBottom: "1rem", padding: "0.75rem", borderRadius: "0.25rem", background: "#c0392b", color: "#fff", fontSize: "0.875rem", fontFamily: "monospace" }}>{error}</div>
             )}
 
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {/* Full Name */}
+              {/* Ô nhập Họ và Tên */}
               <div>
                 <label style={{ display: "block", fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Full Name</label>
                 <input type="text" value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} placeholder="Nguyen Van A" required style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.25rem", fontSize: "0.875rem" }} />
               </div>
 
-              {/* Username */}
+              {/* Ô nhập Tên đăng nhập */}
               <div>
                 <label style={{ display: "block", fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Username <span style={{ color: "#c9a227" }}>(for login)</span></label>
                 <input type="text" value={form.username} onChange={e => setForm({...form, username: e.target.value})} placeholder="e.g. nguyenvana99" required style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.25rem", fontSize: "0.875rem" }} />
               </div>
 
-              {/* Email */}
+              {/* Ô nhập Email */}
               <div>
                 <label style={{ display: "block", fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Email</label>
                 <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} placeholder="your.email@example.com" required style={{ width: "100%", padding: "0.75rem 1rem", borderRadius: "0.25rem", fontSize: "0.875rem" }} />
               </div>
 
-              {/* Password */}
+              {/* Ô nhập Mật khẩu */}
               <div>
                 <label style={{ display: "block", fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Password</label>
                 <div style={{ position: "relative" }}>
@@ -119,7 +157,7 @@ export default function Register() {
                 </div>
               </div>
 
-              {/* Confirm Password */}
+              {/* Ô xác nhận lại Mật khẩu */}
               <div>
                 <label style={{ display: "block", fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>Confirm Password</label>
                 <div style={{ position: "relative" }}>
@@ -130,12 +168,14 @@ export default function Register() {
                 </div>
               </div>
 
+              {/* Nút gửi yêu cầu đăng ký */}
               <button type="submit" disabled={loading} style={{ width: "100%", background: "#c9a227", color: "#0e0c09", padding: "0.75rem", borderRadius: "0.25rem", border: "none", fontFamily: "monospace", fontWeight: 500, fontSize: "0.875rem", cursor: loading ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", opacity: loading ? 0.7 : 1 }}>
                 {loading ? "Creating..." : "Create Account"}
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
               </button>
             </form>
 
+            {/* Link dẫn về trang Đăng nhập nếu đã có tài khoản */}
             <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #2a2825", textAlign: "center" }}>
               <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>
                 Already have an account?{" "}

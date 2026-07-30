@@ -9,20 +9,32 @@ import { $t } from '@/lib/i18n';
 
 
 // ─────────────────────────────────────────────
-// Types
+// Types (Khai báo các kiểu dữ liệu sử dụng trong Trang chủ Landing)
 // ─────────────────────────────────────────────
+// Định nghĩa các view con (SubView) có thể chuyển đổi trên thanh điều hướng công khai
 type SubView = "home" | "live" | "racecard" | "results" | "fixtures" | "statistics" | "horses" | "jockeys_owners" | "incident" | "about" | "search";
 
+// Interface Season đại diện cho một Mùa giải đua ngựa
 interface Season { id: number; name: string; startDate: string; endDate: string; status?: string; }
+// Interface Meeting đại diện cho một Ngày hội đua (chứa nhiều trận đấu)
 interface Meeting { id: number; name: string; venue: string; startDate: string; totalBudget: number; }
+// Interface Horse đại diện cho thông tin Ngựa đua
 interface Horse { id: number; name: string; age: number; breed: string; ownerName: string; rating: number; wins: number; races: number; }
+// Interface Jockey đại diện cho thông tin Kỵ sĩ/Nài ngựa
 interface Jockey { id: number; name: string; wins: number; races: number; winRate: number; }
+// Interface Result đại diện cho kết quả của một Trận đua
 interface Result { id: number; raceName: string; meetingName: string; date: string; entries: ResultEntry[]; }
+// Interface ResultEntry đại diện cho thứ tự về đích và phần thưởng của từng cặp ngựa-nài trong trận đấu
 interface ResultEntry { position: number; horseName: string; jockeyName: string; finishTime: string; prize: number; }
+// Interface Fixture đại diện cho lịch trình thi đấu sắp tới
 interface Fixture { id: number; name: string; venue: string; date: string; numRaces: number; status: string; }
+// Interface Stat đại diện cho thống kê hiệu suất (tỷ lệ thắng, tiền thưởng) của nài và ngựa
 interface Stat { jockeyName: string; horseName: string; wins: number; races: number; winRate: number; top3Rate: number; earnings: number; }
+// Interface Incident đại diện cho báo cáo vi phạm/sự cố của trọng tài trong trận đấu
 interface Incident { id: number; raceName: string; date: string; horseName: string; jockeyName: string; type: string; description: string; penalty: string; }
+// Interface RacecardEntry đại diện cho danh sách đăng ký tham gia của ngựa và kỵ sĩ trong bảng đua
 interface RacecardEntry { position: number; horseName: string; jockeyName: string; ownerName: string; age: number; weight: string; rating: number; }
+// Interface Racecard chứa thông tin cấu hình trận đấu và danh sách ngựa tham gia
 interface Racecard { id: number; name: string; class: string; distance: string; going: string; prize: number; entries: RacecardEntry[]; }
 
 const TRANSLATIONS: Record<string, any> = {
@@ -241,8 +253,9 @@ const TRANSLATIONS: Record<string, any> = {
 };
 
 // ─────────────────────────────────────────────
-// Chatbot
+// Chatbot - Trợ lý ảo Chatbot AI dưới dạng bóng nổi (Floating Bubble)
 // ─────────────────────────────────────────────
+// Bản dịch đa ngôn ngữ cho giao diện Chatbot AI bóng nổi
 const CHAT_LANG: Record<string, any> = {
   vi: { label: "AI Horse Racing", placeholder: "Nhập câu hỏi...", typing: "Đang phân tích...", welcome: "Xin chào! Hỏi tôi về ngựa, nài, race, dự đoán kết quả nhé.", error: "Lỗi: ", noconn: "Không kết nối được server AI.", quick: ["Rating cao nhất","Dự đoán race","Nài xuất sắc","Mùa giải"], quickQ: ["Ngựa nào rating cao nhất?","Dự đoán kết quả race mới nhất","Nài ngựa xuất sắc nhất?","Mùa giải hiện tại"] },
   en: { label: "AI Horse Racing", placeholder: "Ask a question...", typing: "Analyzing...", welcome: "Hello! Ask me about horses, jockeys, races, or predictions.", error: "Error: ", noconn: "Cannot connect to AI server.", quick: ["Top Rating","Predict Race","Best Jockey","Season"], quickQ: ["Which horse has the highest rating?","Predict the latest race result","Which jockey has the best top-3 rate?","Current season summary"] },
@@ -250,8 +263,13 @@ const CHAT_LANG: Record<string, any> = {
   zh: { label: "AI赛马助手", placeholder: "输入问题...", typing: "分析中...", welcome: "你好！请问关于马匹、骑师、比赛或预测的问题。", error: "错误：", noconn: "无法连接AI服务器。", quick: ["最高评分","预测赛事","优秀骑师","赛季"], quickQ: ["哪匹马评分最高？","预测最新比赛结果","哪位骑师前三率最高？","本赛季总结"] },
 };
 
+/**
+ * Component ChatBot - Bong bóng chat nhỏ nổi ở góc phải màn hình của Trang chủ Landing
+ */
 function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void }) {
+  // Trạng thái đóng/mở khung chat
   const [open, setOpen] = useState(false);
+  // Danh sách các tin nhắn trao đổi
   const [messages, setMessages] = useState([{ id: "welcome", type: "bot", text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.vi.welcome }]);
   const [input, setInput] = useState("");
   const [waiting, setWaiting] = useState(false);
@@ -1016,21 +1034,40 @@ function AboutView({ t }: { t: any }) {
 }
 
 // ─────────────────────────────────────────────
-// MAIN LANDING COMPONENT
+// MAIN LANDING COMPONENT - Component trang chủ Landing Page chính của ứng dụng
 // ─────────────────────────────────────────────
+/**
+ * Component Landing - Quản lý cấu trúc header/footer công khai,
+ * thanh tìm kiếm toàn hệ thống, các thông báo động và chuyển đổi
+ * hiển thị giữa các sub-view (Trực tiếp, Lịch thi đấu, Thống kê, v.v.).
+ */
 export default function Landing() {
+  // Lấy user đăng nhập hiện tại và hàm đăng xuất từ AuthContext
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  // State quản lý View hiện tại đang được hiển thị ở vùng nội dung (mặc định: "home")
   const [view, setView] = useState<SubView>("home");
+  // Từ khóa tìm kiếm toàn cục nhập từ Header
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Các state quản lý ẩn/hiện dropdown UI
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showDashboardMenu, setShowDashboardMenu] = useState(false);
+  
+  // State quản lý ngôn ngữ hiển thị và hàm đồng bộ reload trang khi đổi ngôn ngữ
   const [lang, setLangRaw] = useState(() => localStorage.getItem('app-lang') || 'vi');
-  const setLang = (code: string) => { setLangRaw(code); localStorage.setItem('app-lang', code); window.location.reload(); };
+  const setLang = (code: string) => { 
+    setLangRaw(code); 
+    localStorage.setItem('app-lang', code); 
+    window.location.reload(); 
+  };
+  
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
   const langLabel = lang.toUpperCase();
 
+  // Kiểm tra độ rộng màn hình để tối ưu hiển thị menu trên mobile (<768px)
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => {
@@ -1915,9 +1952,6 @@ export default function Landing() {
       case "jockeys_owners":
         return (
           <div>
-            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
-              <button onClick={() => setView("jockeys_owners")} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0e0c09", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontWeight: "bold" }}>{$t("Tổng quan Danh bạ", (localStorage.getItem('app-lang') || 'vi')) || "Directories Overview"}</button>
-            </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "1.5rem" }}>
               <GenericTableView 
                 title={$t("Danh sách Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Jockeys"} 

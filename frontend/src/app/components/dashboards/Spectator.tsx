@@ -30,43 +30,58 @@ interface ChatMessage {
   time: string;
 }
 
+/**
+ * Component Spectator - Bảng điều khiển dành cho Khán giả (Spectator / Guest).
+ * Cung cấp giao diện công khai để xem lịch hội đua, thông tin thẻ đua (racecard) tích hợp
+ * dự đoán tỷ lệ thắng từ AI, kết quả thi đấu chính thức, bảng xếp hạng chiến mã (leaderboards),
+ * xem livestream buổi đua đang diễn ra và trò chuyện cùng trợ lý ảo AI chatbot.
+ */
 export default function Spectator() {
   const { user } = useAuth();
+  // Đọc ngôn ngữ hiện tại của ứng dụng
   const lang = localStorage.getItem("app-lang") || "vi";
 
+  // State lưu Tab đang được xem, mặc định là "home"
   const [activeTab, setActiveTab] = useState<SpectatorTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as SpectatorTab) || "home";
   });
   
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [races, setRaces] = useState<any[]>([]);
-  const [horses, setHorses] = useState<any[]>([]);
-  const [seasons, setSeasons] = useState<any[]>([]);
-  const [extraStats, setExtraStats] = useState<any>(null);
+  // Các state lưu trữ danh sách dữ liệu kéo về từ API công khai
+  const [meetings, setMeetings] = useState<any[]>([]); // Danh sách ngày hội đua
+  const [races, setRaces] = useState<any[]>([]);       // Danh sách trận đua ngựa
+  const [horses, setHorses] = useState<any[]>([]);     // Danh sách ngựa đua hệ thống
+  const [seasons, setSeasons] = useState<any[]>([]);   // Danh sách các mùa giải
+  const [extraStats, setExtraStats] = useState<any>(null); // Dữ liệu thống kê hệ thống (tổng tiền thưởng, số ngựa...)
+  
+  // State quản lý tab phụ trong trang Thống kê (Bảng xếp hạng / Phân tích biểu đồ)
   const [statsSubTab, setStatsSubTab] = useState<"leaderboards" | "analysis">("leaderboards");
+  
+  // Banner thông báo lỗi / thành công
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Live stream cross-navigation state
+  // Điều hướng nhanh sang Livestream dựa trên mã trận đua được click
   const [selectedLiveRaceId, setSelectedLiveRaceId] = useState<number | null>(null);
 
-  // Profile modal state (for jockey profiles)
+  // ID tài khoản kỵ sĩ/chủ ngựa khác cần xem hồ sơ chi tiết (ProfileModal)
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
 
-  // Horse performance modal state
+  // Mã ngựa và tên ngựa cần xem thống kê thành tích lịch sử (HorsePerformanceModal)
   const [selectedHorseId, setSelectedHorseId] = useState<number | null>(null);
   const [selectedHorseName, setSelectedHorseName] = useState<string>("");
 
-  // Expandable Racecard State
+  // Lưu ID của trận đua đang được bấm mở rộng xem chi tiết danh sách ngựa chạy
   const [expandedRaceId, setExpandedRaceId] = useState<number | null>(null);
+  
+  // Cache lưu trữ danh sách ngựa chạy của từng trận đua để tránh gọi API lặp lại
   const [raceDetails, setRaceDetails] = useState<Record<number, any[]>>({});
   const [loadingDetails, setLoadingDetails] = useState<Record<number, boolean>>({});
 
-  // Mobile responsive
+  // Cờ hiệu xác định thiết bị di động phục vụ Responsive UI
   const [isMobile, setIsMobile] = useState(false);
 
-  // AI Assistant Chat State
+  // --- Hệ thống Chatbot AI trợ lý ảo dành cho Khán giả ---
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
     const welcome = $t("Chào bạn! Tôi là trợ lý AI. Hỏi tôi về ngựa, nài, xếp hạng rating hoặc dự đoán trận đấu nhé.", lang);
     return [{
@@ -80,6 +95,7 @@ export default function Spectator() {
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [sessionId] = useState(() => "session-" + Math.random().toString(36).substr(2, 9));
 
+  // Lắng nghe sự kiện đổi kích thước màn hình để tự động điều chỉnh Responsive
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -87,6 +103,7 @@ export default function Spectator() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Effect tải song song toàn bộ dữ liệu công khai khi trang được mở
   useEffect(() => {
     Promise.all([
       api.get<any[]>("/public/meetings").catch(() => []),

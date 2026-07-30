@@ -14,10 +14,21 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller AdminUserController - Lớp kiểm soát các endpoint nghiệp vụ của Quản trị viên (Admin).
+ * - Quản lý tài khoản (Xem danh sách người dùng, tạo tài khoản thủ công, cập nhật thông tin và khóa/mở khóa tài khoản).
+ * - Phân công Trọng tài vào các trận đua và hủy phân công.
+ * - Xem danh sách Trọng tài đang phụ trách các trận đấu.
+ * - Cập nhật link Youtube livestream phát sóng trực tiếp trận đua.
+ * - Quản lý các đơn đăng ký (ngựa, chủ ngựa, kỵ sĩ, phiếu tham gia trận đua) đang ở trạng thái PENDING.
+ * - Phê duyệt hoặc từ chối đơn đăng ký.
+ * - Tự động hóa thiết lập Thẻ đua (Racecard): tự động phân bổ cổng xuất phát (gate), tự động tính cân nặng gánh chì (weight) cho chiến mã.
+ * - Hủy bỏ (Cancel) trận đấu.
+ */
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "09. Admin & Racecard Service",
     description = "🛡️ **BƯỚC 9: DUYỆT ĐƠN, GÁN TRỌNG TÀI & XẾP THẺ ĐUA RACECARD (ADMIN ARCHITECTURE)**\n\n" +
@@ -40,7 +51,9 @@ public class AdminUserController {
     private final SystemConfigService systemConfigService;
     private final RaceService raceService;
 
-    // --- User Management ---
+    // --- Quản lý Tài khoản (User Management) ---
+    
+    // Lấy danh sách toàn bộ người dùng trong hệ thống
     @GetMapping("/users")
     @Operation(
         summary = "GET: Lấy danh sách tất cả người dùng",
@@ -56,6 +69,7 @@ public class AdminUserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    // Tạo mới thủ công tài khoản người dùng (chỉ Admin)
     @PostMapping("/users")
     @Operation(
         summary = "POST: Tạo mới người dùng thủ công",
@@ -83,6 +97,7 @@ public class AdminUserController {
         }
     }
 
+    // Cập nhật thông tin chi tiết của người dùng
     @PostMapping("/users/{id}")
     @Operation(
         summary = "POST: Cập nhật thông tin người dùng",
@@ -109,6 +124,7 @@ public class AdminUserController {
         }
     }
 
+    // Khóa hoặc mở khóa trạng thái tài khoản của người dùng (ACTIVE / INACTIVE)
     @PostMapping("/users/{id}/toggle")
     @Operation(
         summary = "POST: Bật/Khóa tài khoản người dùng",
@@ -127,7 +143,9 @@ public class AdminUserController {
         }
     }
 
-    // --- Race & Referee Assignment ---
+    // --- Quản lý phân công Trọng tài (Race & Referee Assignment) ---
+    
+    // Gán một Trọng tài chịu trách nhiệm giám sát trận đua
     @PostMapping("/races/{raceId}/referee")
     @Operation(
         summary = "POST: Gán Trọng tài vào trận đua",
@@ -148,6 +166,7 @@ public class AdminUserController {
         }
     }
 
+    // Hủy phân công nhiệm vụ giám sát của Trọng tài trong trận đua
     @PostMapping("/races/{raceId}/referee/remove")
     @Operation(
         summary = "POST: Hủy gán Trọng tài khỏi trận đua",
@@ -166,6 +185,7 @@ public class AdminUserController {
         }
     }
 
+    // Lấy sơ đồ chi tiết các Trọng tài đang giám sát từng trận đua
     @GetMapping("/races/referees")
     @Operation(
         summary = "GET: Lấy danh sách phân công Trọng tài",
@@ -179,7 +199,9 @@ public class AdminUserController {
         return ResponseEntity.ok(adminUserService.getRaceRefereesMap());
     }
 
-    // --- Livestream ---
+    // --- Quản lý Livestream ---
+    
+    // Cập nhật đường dẫn URL livestream phát sóng trận đua
     @PostMapping("/races/{raceId}/live")
     @Operation(
         summary = "POST: Cập nhật link Youtube Livestream",
@@ -199,6 +221,7 @@ public class AdminUserController {
         }
     }
 
+    // Gỡ bỏ đường dẫn Youtube livestream của trận đua
     @PostMapping("/races/{raceId}/live/remove")
     @Operation(
         summary = "POST: Xóa link Livestream",
@@ -217,7 +240,9 @@ public class AdminUserController {
         }
     }
 
-    // --- System Config ---
+    // --- Cấu hình Tham số vận hành (System Config) ---
+    
+    // Xem danh sách cấu hình tham số hệ thống hiện tại
     @GetMapping("/configs")
     @Operation(
         summary = "GET: Lấy cấu hình hệ thống (Admin)",
@@ -232,6 +257,7 @@ public class AdminUserController {
         return ResponseEntity.ok(systemConfigService.getAllConfigs());
     }
 
+    // Ghi nhận cập nhật các cấu hình tham số hệ thống mới
     @PostMapping("/configs")
     @Operation(
         summary = "POST: Cập nhật cấu hình hệ thống (Admin)",
@@ -250,7 +276,9 @@ public class AdminUserController {
         }
     }
 
-    // --- Registrations & Approvals ---
+    // --- Quản lý Phê duyệt Đơn đăng ký (Registrations & Approvals) ---
+    
+    // Tải toàn bộ đơn đăng ký tham gia Ngày đua đang chờ duyệt (kỵ sĩ, chủ ngựa, chiến mã)
     @GetMapping("/pending-registrations")
     @Operation(
         summary = "GET: Lấy danh sách đơn đăng ký chờ duyệt",
@@ -269,6 +297,7 @@ public class AdminUserController {
         }
     }
 
+    // Duyệt đơn tham gia trận đua (RaceEntry) của chiến mã và kỵ sĩ
     @PostMapping("/entries/{id}/approve")
     @Operation(
         summary = "POST: Phê duyệt đơn đăng ký trận đua",
@@ -287,6 +316,7 @@ public class AdminUserController {
         }
     }
 
+    // Từ chối đơn tham gia trận đua
     @PostMapping("/entries/{id}/reject")
     @Operation(
         summary = "POST: Từ chối đơn đăng ký trận đua",
@@ -305,6 +335,7 @@ public class AdminUserController {
         }
     }
 
+    // Duyệt hồ sơ kỵ sĩ (Jockey) đăng ký tham gia Ngày hội đua
     @PostMapping("/jockey-reg/{id}/approve")
     @Operation(
         summary = "POST: Phê duyệt đơn đăng ký Nài ngựa",
@@ -323,6 +354,7 @@ public class AdminUserController {
         }
     }
 
+    // Từ chối hồ sơ kỵ sĩ đăng ký tham gia Ngày hội đua
     @PostMapping("/jockey-reg/{id}/reject")
     @Operation(
         summary = "POST: Từ chối đơn đăng ký Nài ngựa",
@@ -341,6 +373,7 @@ public class AdminUserController {
         }
     }
 
+    // Duyệt hồ sơ chủ ngựa (Owner) đăng ký tham gia Ngày hội đua
     @PostMapping("/owner-reg/{id}/approve")
     @Operation(
         summary = "POST: Phê duyệt đơn đăng ký Chủ ngựa",
@@ -359,6 +392,7 @@ public class AdminUserController {
         }
     }
 
+    // Từ chối hồ sơ chủ ngựa đăng ký tham gia Ngày hội đua
     @PostMapping("/owner-reg/{id}/reject")
     @Operation(
         summary = "POST: Từ chối đơn đăng ký Chủ ngựa",
@@ -377,6 +411,7 @@ public class AdminUserController {
         }
     }
 
+    // Duyệt hồ sơ ngựa đua đăng ký tham gia Ngày hội đua
     @PostMapping("/horse-reg/{id}/approve")
     @Operation(
         summary = "POST: Phê duyệt đơn đăng ký Ngựa",
@@ -395,6 +430,7 @@ public class AdminUserController {
         }
     }
 
+    // Từ chối hồ sơ ngựa đua đăng ký tham gia Ngày hội đua
     @PostMapping("/horse-reg/{id}/reject")
     @Operation(
         summary = "POST: Từ chối đơn đăng ký Ngựa",
@@ -413,6 +449,7 @@ public class AdminUserController {
         }
     }
 
+    // Duyệt hồ sơ ngựa đua khai báo ban đầu để đưa vào hệ thống quản lý
     @PostMapping("/system-horse/{id}/approve")
     @Operation(
         summary = "POST: Duyệt ngựa hệ thống",
@@ -431,6 +468,7 @@ public class AdminUserController {
         }
     }
 
+    // Từ chối hồ sơ ngựa đua khai báo ban đầu
     @PostMapping("/system-horse/{id}/reject")
     @Operation(
         summary = "POST: Từ chối ngựa hệ thống",
@@ -449,7 +487,9 @@ public class AdminUserController {
         }
     }
 
-    // --- Racecard Automation ---
+    // --- Tự động thiết lập Thẻ đua (Racecard Automation) ---
+    
+    // Tự động phân bổ ngẫu nhiên cổng xuất phát cho ngựa đua (1st gate, 2nd gate...)
     @PostMapping("/races/{raceId}/auto-assign-gates")
     @Operation(
         summary = "POST: Tự động sắp xếp cổng xuất phát",
@@ -470,6 +510,7 @@ public class AdminUserController {
         }
     }
 
+    // Tự động tính toán số cân nặng gánh thêm (Handicap assignedWeight) dựa trên Rating ngựa
     @PostMapping("/races/{raceId}/auto-calculate-weights")
     @Operation(
         summary = "POST: Tự động tính toán tạ gánh chì (Handicap Weight)",
@@ -490,6 +531,7 @@ public class AdminUserController {
         }
     }
 
+    // Cập nhật thủ công các thông số Thẻ đua (Racecard) như cổng xuất phát hay trọng lượng gánh
     @PostMapping("/races/{raceId}/racecard")
     @Operation(
         summary = "POST: Cập nhật thông tin thẻ đua (Racecard)",
@@ -508,6 +550,7 @@ public class AdminUserController {
         }
     }
 
+    // Hủy bỏ trận đua (Trạng thái đổi sang CANCELLED)
     @PostMapping("/races/{raceId}/cancel")
     @Operation(
         summary = "POST: Hủy bỏ trận đua (Admin)",

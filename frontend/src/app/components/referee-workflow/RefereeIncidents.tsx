@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 
+// Bảng dịch nghĩa đa ngôn ngữ phục vụ nhãn trong component
 const TRANSLATIONS: Record<string, Record<string, string>> = {
   vi: {
     stewardIncidentLog: "Nhật ký sự cố cuộc đua",
@@ -70,19 +71,26 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
   }
 };
 
+/**
+ * Component RefereeIncidents - Nhật ký Sự cố và Vi phạm luật đua dành cho Trọng tài.
+ * - Trích xuất lịch sử toàn bộ sự cố đã được trọng tài hiện tại ghi nhận từ dashboard.
+ * - Hiển thị chi tiết vi phạm, hình phạt áp dụng (phạt tiền, loại trực tiếp DQ,...).
+ * - Cung cấp cửa sổ xem nhanh Báo cáo chính thức của Trọng tài (Steward Report) liên quan đến sự cố đó.
+ */
 export default function RefereeIncidents() {
   const { user } = useAuth();
-  const [incidents, setIncidents] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<any[]>([]); // Danh sách sự cố vi phạm
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Steward report modal state
+  // --- Các State phục vụ Modal xem báo cáo giám sát chính thức ---
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
 
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
 
+  // Lắng nghe kích thước màn hình để thực hiện Responsive di động
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -90,11 +98,13 @@ export default function RefereeIncidents() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Tải danh sách sự cố từ API dashboard của Trọng tài hiện tại
   useEffect(() => {
     if (!user) return;
     api.get<any>(`/referee/${user.id}/dashboard`)
       .then(res => {
         const allViolations: any[] = [];
+        // Lọc tất cả vi phạm (violations) từ các trận đua được giao nhiệm vụ
         (res.assignedRaces || []).forEach((race: any) => {
           (race.violations || []).forEach((viol: any) => {
             allViolations.push({
@@ -117,14 +127,16 @@ export default function RefereeIncidents() {
   return (
     <div className="space-y-6">
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
-        {/* Header */}
+        
+        {/* Tiêu đề vùng nhật ký sự cố */}
         <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)" }}>
           <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{$t("Nhật ký sự cố cuộc đua", (localStorage.getItem('app-lang') || 'vi'))}</h3>
           <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Danh sách lịch sử các vi phạm quy tắc và hình phạt đã được bạn ghi nhận.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
 
-        {/* Table / Cards content */}
+        {/* Nội dung danh sách sự cố */}
         {isMobile ? (
+          // Giao diện Responsive dạng Thẻ (Mobile)
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
               <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>{$t("Đang tải dữ liệu...", (localStorage.getItem('app-lang') || 'vi'))}</p>
@@ -146,6 +158,7 @@ export default function RefereeIncidents() {
                         Race #{item.raceId} · {item.classLevel}
                       </span>
                     </div>
+                    {/* Nhãn hình phạt */}
                     <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.7rem", fontWeight: 700, color: "#ef4444", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", fontFamily: "monospace" }}>
                       {item.violation?.penalty ?? item.penalty}
                     </span>
@@ -160,10 +173,12 @@ export default function RefereeIncidents() {
                       <span style={{ color: "#fbbf24" }}>{item.jockeyName}</span>
                     </div>
                   </div>
+                  {/* Chi tiết mô tả lỗi vi phạm */}
                   <div style={{ fontSize: "0.8rem", color: "#a0a0a0", background: "rgba(255,255,255,0.01)", padding: "0.625rem", borderRadius: "0.375rem", border: "1px solid rgba(255,255,255,0.03)" }}>
                     <strong>{$t("Chi tiết vi phạm", (localStorage.getItem('app-lang') || 'vi'))}: </strong>
                     {item.violation?.description ?? item.description}
                   </div>
+                  {/* Nút Xem Báo cáo Trọng tài */}
                   {item.stewardReport && (
                     <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.25rem" }}>
                       <button
@@ -179,6 +194,7 @@ export default function RefereeIncidents() {
             )}
           </div>
         ) : (
+          // Bảng Desktop (Bảng biểu nhiều cột)
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
@@ -242,7 +258,7 @@ export default function RefereeIncidents() {
         )}
       </div>
 
-      {/* Steward Report Modal */}
+      {/* MODAL XEM BÁO CÁO GIÁM SÁT CHÍNH THỨC (Steward Report Modal) */}
       {selectedReport && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }} className="flex items-center justify-center">
           <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "32rem", overflow: "hidden", margin: "auto" }}>

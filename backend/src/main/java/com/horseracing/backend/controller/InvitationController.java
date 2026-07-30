@@ -11,10 +11,19 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller InvitationController - Lớp kiểm soát các endpoint liên quan đến Lời mời thi đấu giữa Chủ ngựa và Nài ngựa.
+ * - Lấy danh sách toàn bộ lời mời, lọc theo jockeyId hoặc ownerId.
+ * - Chủ ngựa gửi lời mời Nài ngựa cùng chiến mã cụ thể tham gia giải đấu (inviteJockey).
+ * - Nài ngựa Chấp nhận (Accept) lời mời, hệ thống tự động tạo bản ghi tham gia lượt đua (RaceEntry).
+ * - Nài ngựa Từ chối (Reject) lời mời.
+ * - Nộp lại hồ sơ tham gia lượt đua (resubmitRaceEntry) sau khi chỉnh sửa nếu bị từ chối trước đó.
+ * - Chủ ngựa rút lại lời mời thi đấu đã gửi (withdrawInvitation).
+ */
 @RestController
 @RequestMapping("/api/invitations")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "08. Invitation & Jockey Service",
     description = "✉️ **BƯỚC 8: LỜI MỜI THI ĐẤU GIỮA CHỦ NGỰA VÀ NÀI NGỰA (INVITATION ARCHITECTURE)**\n\n" +
@@ -32,8 +41,9 @@ import java.util.Map;
 )
 public class InvitationController {
 
-    private final InvitationService invitationService;
+    private final InvitationService invitationService; // Dịch vụ quản lý lời mời thi đấu
 
+    // Lấy danh sách lời mời thi đấu có bộ lọc theo kỵ sĩ hoặc chủ ngựa
     @GetMapping
     @Operation(
         summary = "GET: Lấy danh sách lời mời thi đấu",
@@ -54,6 +64,7 @@ public class InvitationController {
         return ResponseEntity.ok(invitationService.getInvitations(jockeyId, ownerId));
     }
 
+    // Gửi lời mời thi đấu mới (Chủ ngựa mời kỵ sĩ cưỡi chiến mã của mình)
     @PostMapping
     @Operation(
         summary = "POST: Tạo lời mời Nài ngựa thi đấu (Chủ ngựa)",
@@ -80,6 +91,7 @@ public class InvitationController {
         }
     }
 
+    // Kỵ sĩ Chấp nhận lời mời thi đấu
     @PostMapping("/{id}/accept")
     @Operation(
         summary = "POST: Chấp nhận lời mời thi đấu (Nài ngựa)",
@@ -104,6 +116,7 @@ public class InvitationController {
         }
     }
 
+    // Kỵ sĩ từ chối lời mời thi đấu
     @PostMapping("/{id}/reject")
     @Operation(
         summary = "POST: Từ chối lời mời thi đấu (Nài ngựa)",
@@ -127,6 +140,7 @@ public class InvitationController {
         }
     }
 
+    // Gửi lại hồ sơ lượt chạy (đổi trạng thái từ REJECTED về PENDING để xem xét lại)
     @PostMapping("/entry/{entryId}/resubmit")
     @Operation(
         summary = "POST: Nộp lại đơn tham gia thi đấu",
@@ -150,6 +164,7 @@ public class InvitationController {
         }
     }
 
+    // Rút lại lời mời thi đấu đã gửi (Chủ ngựa thực hiện)
     @PostMapping("/{id}/withdraw")
     @Operation(
         summary = "POST: Rút lại lời mời thi đấu (Chủ ngựa)",

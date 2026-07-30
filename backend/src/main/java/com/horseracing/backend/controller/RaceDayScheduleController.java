@@ -11,10 +11,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Controller RaceDayScheduleController - Lớp kiểm soát các endpoint liên quan đến Lịch trình và Ngày hội đua (Race Meetings).
+ * - Cung cấp danh sách các ngày hội đua đã lập lịch.
+ * - Cho phép Admin tạo mới các ngày hội đua (lễ hội đua).
+ */
 @RestController
 @RequestMapping("/api/schedule")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "04. Schedule & Race Meeting Service",
     description = "📅 **BƯỚC 4: LỊCH TRÌNH & NGÀY ĐUA (SCHEDULE ARCHITECTURE)**\n\n" +
@@ -32,8 +37,9 @@ import java.util.Map;
 )
 public class RaceDayScheduleController {
 
-    private final RaceService raceService;
+    private final RaceService raceService; // Khai báo dịch vụ liên quan đến đua ngựa (quản lý meeting, race)
 
+    // Lấy toàn bộ danh sách ngày hội đua
     @GetMapping("/meetings")
     @Operation(
         summary = "GET: Lấy danh sách các Ngày đua (Race Meetings)",
@@ -48,6 +54,7 @@ public class RaceDayScheduleController {
         return ResponseEntity.ok(raceService.getAllMeetings());
     }
 
+    // Tạo mới một ngày hội đua mới (Ví dụ: Xuân Hội, Hạ Hội)
     @PostMapping("/meetings")
     @Operation(
         summary = "POST: Tạo mới Ngày đua (Race Meeting)",
@@ -67,9 +74,11 @@ public class RaceDayScheduleController {
     )
     public ResponseEntity<?> createMeeting(@RequestBody RaceMeetingDTO meetingDTO) {
         try {
+            // Thực thi lưu trữ ngày hội đua ở tầng dịch vụ
             RaceMeetingDTO saved = raceService.createMeeting(meetingDTO);
             return ResponseEntity.ok(Map.of("success", true, "meeting", saved));
         } catch (Exception e) {
+            // Trả về mã lỗi 400 Bad Request kèm thông điệp chi tiết lỗi
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }

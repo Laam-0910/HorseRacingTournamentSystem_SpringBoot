@@ -11,9 +11,14 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 
+/**
+ * Controller PublicChatController - Lớp kiểm soát các endpoint liên quan đến nhắn tin công khai và trợ lý AI trả lời nhanh.
+ * - Cung cấp lịch sử phòng chat (chat history) của từng trận đấu qua REST API phục vụ tải trang.
+ * - Mô phỏng một trợ lý AI hỏi đáp nhanh dựa trên quy luật từ khóa đơn giản (Keyword Matching) phục vụ kiểm thử chatbot.
+ */
 @RestController
 @RequestMapping("/api/public")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "16. Public Chat & Livestream WebSocket",
     description = "💬 **CHAT TRONG CỘNG ĐỒNG & LIVESTREAM WEBSOCKET (CHAT ARCHITECTURE)**\n\n" +
@@ -33,8 +38,9 @@ import java.util.*;
 public class PublicChatController {
 
     @Autowired
-    private ChatMessageRepository chatMessageRepository;
+    private ChatMessageRepository chatMessageRepository; // Kho lưu trữ tin nhắn chat
 
+    // Gửi tin nhắn hỏi đáp trợ lý AI nhanh dạng REST API (Không dùng WebSocket)
     @PostMapping("/chat")
     @Operation(
         summary = "POST: Gửi tin nhắn hỏi đáp trợ lý AI công khai",
@@ -59,7 +65,9 @@ public class PublicChatController {
         }
 
         String reply = "";
+        // Kiểm tra ngôn ngữ phản hồi
         if ("en".equalsIgnoreCase(lang)) {
+            // Lọc từ khóa Tiếng Anh
             if (message.contains("rating") || message.contains("highest")) {
                 reply = "According to records, 'Golden Flash' has the highest rating of 91, followed by 'Thunder King' at 88.";
             } else if (message.contains("predict")) {
@@ -72,7 +80,7 @@ public class PublicChatController {
                 reply = "I am the AI Horse Racing Assistant. Ask me about horses, ratings, jockeys, or predictions!";
             }
         } else {
-            // Default to Vietnamese (vi)
+            // Lọc từ khóa Tiếng Việt (mặc định)
             if (message.contains("rating") || message.contains("cao nhất")) {
                 reply = "Theo dữ liệu, ngựa 'Golden Flash' có rating cao nhất là 91, theo sau là 'Thunder King' với 88 điểm.";
             } else if (message.contains("dự đoán") || message.contains("race")) {
@@ -89,6 +97,7 @@ public class PublicChatController {
         return ResponseEntity.ok(Map.of("success", true, "reply", reply));
     }
 
+    // Lấy lịch sử chat đã lưu trong cơ sở dữ liệu cho phòng chat của cuộc đua (raceId)
     @GetMapping("/chat/history")
     @Operation(
         summary = "GET: Lấy lịch sử chat của phòng đua",
@@ -104,6 +113,7 @@ public class PublicChatController {
                       "3. Định dạng thời gian tin nhắn (`HH:mm`) và trả về danh sách."
     )
     public ResponseEntity<List<Map<String, String>>> getChatHistory(@RequestParam Integer raceId) {
+        // Lấy danh sách tin nhắn cũ xếp tăng dần theo mốc thời gian gửi
         List<ChatMessage> list = chatMessageRepository.findByRaceIdOrderBySentAtAsc(raceId);
         List<Map<String, String>> history = new ArrayList<>();
         java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm");

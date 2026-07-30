@@ -111,21 +111,24 @@ interface ViewLiveProps {
   onClearPreselect?: () => void;
 }
 
+// ── Component hiển thị phòng xem Live Stream và Chat ────────────────────────
 export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLiveProps) {
-  const lang = localStorage.getItem("app-lang") || "vi";
+  const lang = localStorage.getItem("app-lang") || "vi"; // Ngôn ngữ
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
-  const { user } = useAuth();
+  const { user } = useAuth(); // Thông tin người dùng hiện tại
 
+  // State quản lý danh sách live và lựa chọn
   const [liveRaces, setLiveRaces] = useState<Race[]>([]);
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
+  // State quản lý Chat
   const [chatMessages, setChatMessages] = useState<{ user: string; text: string; time: string }[]>([]);
   const [newMsg, setNewMsg] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connectionState, setConnectionState] = useState<"connecting" | "connected" | "disconnected">("connecting");
-  const [isTheaterMode, setIsTheaterMode] = useState(false);
+  const [isTheaterMode, setIsTheaterMode] = useState(false); // Chế độ rạp phim
 
   // Generate or retrieve persistent guest username
   const [username] = useState<string>(() => {

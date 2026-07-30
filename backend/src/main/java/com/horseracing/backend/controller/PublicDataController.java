@@ -10,9 +10,16 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.*;
 
+/**
+ * Controller PublicDataController - Lớp kiểm soát các endpoint cung cấp dữ liệu công khai và thống kê hiệu suất.
+ * - Cho phép người xem/khách (không cần đăng nhập) tra cứu lịch trình đua, kết quả xếp hạng.
+ * - Lấy thống kê tổng quan toàn hệ thống (mùa giải hoàn tất, tổng giải thưởng đã trao, số ngựa hoạt động...).
+ * - Tra cứu hồ sơ chi tiết công khai của kỵ sĩ, chủ ngựa, trọng tài, admin.
+ * - Xem chi tiết biểu đồ phong độ và lịch sử thi đấu của một chiến mã cụ thể.
+ */
 @RestController
 @RequestMapping("/api/public")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "*") // Hỗ trợ CORS
 @Tag(
     name = "14. Public Data & Statistics",
     description = "📊 **BƯỚC 14: DỮ LIỆU CÔNG KHAI & THỐNG KÊ (PUBLIC ARCHITECTURE)**\n\n" +
@@ -51,6 +58,7 @@ public class PublicDataController {
     @Autowired
     private RaceRefereeRepository raceRefereeRepository;
 
+    // Lấy thống kê tổng hợp toàn hệ thống
     @GetMapping("/stats")
     @Operation(
         summary = "GET: Lấy thống kê tổng quan toàn hệ thống",
@@ -65,17 +73,22 @@ public class PublicDataController {
                       "3. Đếm tổng số chiến mã và nài ngựa đang hoạt động trong hệ thống."
     )
     public ResponseEntity<?> getStats() {
+        // Đếm số mùa giải đã hoàn tất
         long seasonsCompleted = seasonRepository.findAll().stream().filter(s -> "COMPLETED".equals(s.getStatus())).count();
+        // Đếm số trận đua chính thức (trọng tài đã xác nhận kết quả)
         long totalRacesRun = raceRepository.findAll().stream().filter(r -> "OFFICIAL".equals(r.getStatus())).count();
         
+        // Cộng tổng số tiền thưởng lũy kế đã phân bổ cho nài ngựa và chủ ngựa
         BigDecimal totalPrizeDistributed = raceEntryRepository.findAll().stream()
                 .map(RaceEntry::getPrizeMoney)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // Lấy số lượng ngựa ACTIVE và nài ngựa ACTIVE
         long totalActiveHorses = horseRepository.findByStatus("ACTIVE").size();
         long totalActiveJockeys = userRepository.findByRoleId(3).stream().filter(u -> "ACTIVE".equals(u.getStatus())).count();
 
+        // Lấy tên mùa giải đang hoạt động hiện tại
         String activeSeason = seasonRepository.findAll().stream()
                 .filter(s -> "ACTIVE".equals(s.getStatus()))
                 .map(Season::getName)
@@ -93,6 +106,7 @@ public class PublicDataController {
         return ResponseEntity.ok(stats);
     }
 
+    // Lấy bảng xếp hạng vị trí cán đích chính thức của cuộc đua
     @GetMapping("/results")
     @Operation(
         summary = "GET: Lấy kết quả xếp hạng trận đua",
@@ -114,12 +128,15 @@ public class PublicDataController {
             Map<String, Object> map = new HashMap<>();
             map.put("entry", entry);
             
+            // Lấy thông tin chiến mã tham gia chạy
             Optional<Horse> horse = horseRepository.findById(entry.getHorseId());
             map.put("horse", horse.orElse(null));
 
+            // Lấy thông tin kỵ sĩ/nài ngựa điều khiển
             Optional<User> jockey = userRepository.findById(entry.getJockeyId());
             map.put("jockey", jockey.orElse(null));
 
+            // Lấy thông tin chủ sở hữu của con ngựa này
             if (horse.isPresent()) {
                 Optional<User> owner = userRepository.findById(horse.get().getOwnerId());
                 map.put("owner", owner.orElse(null));
@@ -129,6 +146,7 @@ public class PublicDataController {
             results.add(map);
         }
 
+        // Sắp xếp thứ tự cán đích từ vị trí cao nhất (1st, 2nd, 3rd...) đến cuối
         results.sort((a, b) -> {
             RaceEntry ea = (RaceEntry) a.get("entry");
             RaceEntry eb = (RaceEntry) b.get("entry");
@@ -140,12 +158,14 @@ public class PublicDataController {
         return ResponseEntity.ok(results);
     }
 
+    // Lấy danh sách toàn bộ ngày hội đua công khai
     @GetMapping("/meetings")
     @Operation(summary = "GET: Lấy danh sách các Ngày đua công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getMeetings()` -> `RaceMeetingRepository.findAll()`")
     public ResponseEntity<List<RaceMeeting>> getMeetings() {
         return ResponseEntity.ok(raceMeetingRepository.findAll());
     }
 
+    // Lấy danh sách các trận đua, có thể lọc theo ID ngày hội đua (meetingId)
     @GetMapping("/races")
     @Operation(summary = "GET: Lấy danh sách các trận đua công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền meetingId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getRaces()` -> `RaceRepository.findByRaceMeetingId()`")
     public ResponseEntity<List<Race>> getRaces(@RequestParam(required = false) Integer meetingId) {
@@ -155,6 +175,7 @@ public class PublicDataController {
         return ResponseEntity.ok(raceRepository.findAll());
     }
 
+    // Lấy danh sách người dùng, lọc theo vai trò (roleId)
     @GetMapping("/users")
     @Operation(summary = "GET: Lấy danh sách người dùng theo vai trò", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền roleId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getUsers()` -> `UserRepository.findByRoleId()`")
     public ResponseEntity<List<User>> getUsers(@RequestParam(required = false) Integer roleId) {
@@ -164,12 +185,14 @@ public class PublicDataController {
         return ResponseEntity.ok(userRepository.findAll());
     }
 
+    // Lấy toàn bộ danh sách ngựa đua trong hệ thống
     @GetMapping("/horses")
     @Operation(summary = "GET: Lấy danh sách tất cả các chiến mã công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getHorses()` -> `HorseRepository.findAll()`")
     public ResponseEntity<List<Horse>> getHorses() {
         return ResponseEntity.ok(horseRepository.findAll());
     }
 
+    // Lấy danh sách các biên bản vi phạm luật thi đấu, lọc theo ID trận đua (raceId)
     @GetMapping("/violations")
     @Operation(summary = "GET: Lấy danh sách các lỗi vi phạm công khai", description = "🔍 **CHẠY THỬ TRY IT OUT**: Bấm 'Try it out' -> Điền raceId -> 'Execute'.\n\n📌 **Code Architecture**: `PublicDataController.getViolations()` -> `ViolationRepository.findAll()`")
     public ResponseEntity<?> getViolations(@RequestParam(required = false) Integer raceId) {
@@ -181,6 +204,7 @@ public class PublicDataController {
         }
 
         List<Map<String, Object>> resolved = new ArrayList<>();
+        // Tải trước bản đồ người dùng và ngựa để liên kết nhanh trong vòng lặp
         Map<Integer, User> userMap = new HashMap<>();
         for (User u : userRepository.findAll()) {
             userMap.put(u.getId(), u);
@@ -205,6 +229,7 @@ public class PublicDataController {
         return ResponseEntity.ok(resolved);
     }
 
+    // Lấy thông tin hồ sơ chi tiết của người dùng dựa trên vai trò của họ
     @GetMapping("/users/{id}/profile")
     @Operation(
         summary = "GET: Lấy hồ sơ cá nhân công khai của người dùng",
@@ -232,7 +257,7 @@ public class PublicDataController {
         response.put("biography", user.getBiography() != null ? user.getBiography() : "");
 
         if (user.getRoleId() == 1) {
-            // Admin Profile
+            // Thống kê dành riêng cho Admin
             long managedUsersCount = userRepository.count();
             long managedHorsesCount = horseRepository.count();
             long totalSeasons = seasonRepository.count();
@@ -240,25 +265,28 @@ public class PublicDataController {
             response.put("managedHorsesCount", managedHorsesCount);
             response.put("totalSeasons", totalSeasons);
         } else if (user.getRoleId() == 4) {
-            // Referee Profile
+            // Thống kê dành riêng cho Trọng tài
             long totalRacesRefereed = raceRefereeRepository.findByRefereeId(id).size();
             long totalViolationsIssued = violationRepository.findAll().stream().filter(v -> "APPROVED".equals(v.getStatus())).count();
             response.put("totalRacesRefereed", totalRacesRefereed);
             response.put("totalViolationsIssued", totalViolationsIssued);
         } else if (user.getRoleId() == 5) {
-            // Spectator Profile
+            // Khán giả
             response.put("memberSince", "2024");
         } else if (user.getRoleId() == 3) {
-            // Jockey Profile
+            // Thống kê chi tiết dành cho kỵ sĩ/nài ngựa (Jockey)
             response.put("weight", user.getWeight());
 
             List<RaceEntry> entries = raceEntryRepository.findByJockeyId(id);
+            // Đếm số lượt cưỡi ngựa thi đấu thực tế
             long totalRides = entries.stream()
                 .filter(e -> "FINISHED".equalsIgnoreCase(e.getStatus()) || "DISQUALIFIED".equalsIgnoreCase(e.getStatus()))
                 .count();
+            // Đếm số lần đạt hạng 1 (Vô địch)
             long wins = entries.stream()
                 .filter(e -> "FINISHED".equalsIgnoreCase(e.getStatus()) && Integer.valueOf(1).equals(e.getFinalPosition()))
                 .count();
+            // Đếm số lần về đích top 3
             long top3 = entries.stream()
                 .filter(e -> "FINISHED".equalsIgnoreCase(e.getStatus()) && e.getFinalPosition() != null && e.getFinalPosition() <= 3)
                 .count();
@@ -272,7 +300,7 @@ public class PublicDataController {
             response.put("winRate", winRate);
             response.put("top3Rate", top3Rate);
 
-            // Recent history
+            // Thu thập lịch sử 10 trận đấu gần đây nhất của kỵ sĩ này
             List<Map<String, Object>> history = new ArrayList<>();
             List<RaceEntry> sortedEntries = new ArrayList<>(entries);
             sortedEntries.sort((e1, e2) -> {
@@ -307,18 +335,19 @@ public class PublicDataController {
             response.put("history", history);
 
         } else if (user.getRoleId() == 2) {
-            // Owner Profile
+            // Thống kê chi tiết dành cho Chủ ngựa (Owner)
             List<Horse> horses = horseRepository.findByOwnerId(id);
             List<Horse> activeHorses = horses.stream()
                 .filter(h -> "ACTIVE".equalsIgnoreCase(h.getStatus()))
                 .toList();
-            response.put("stableSize", activeHorses.size());
+            response.put("stableSize", activeHorses.size()); // Quy mô chuồng ngựa active
 
             double totalEarnings = 0.0;
             double sumPos = 0.0;
             int finishedRaces = 0;
             List<RaceEntry> ownerEntries = new ArrayList<>();
 
+            // Tính tổng tiền thưởng thu về và thứ hạng trung bình của chuồng
             for (Horse h : horses) {
                 List<RaceEntry> hEntries = raceEntryRepository.findByHorseId(h.getId());
                 ownerEntries.addAll(hEntries);
@@ -339,7 +368,7 @@ public class PublicDataController {
             response.put("totalEarnings", totalEarnings);
             response.put("avgPosition", avgPosition);
 
-            // Active horses list
+            // Danh sách các chiến mã đang hoạt động
             List<Map<String, Object>> activeHorsesList = new ArrayList<>();
             for (Horse h : activeHorses) {
                 Map<String, Object> hMap = new HashMap<>();
@@ -351,7 +380,7 @@ public class PublicDataController {
             }
             response.put("activeHorses", activeHorsesList);
 
-            // Recent history of stable
+            // Lịch sử 10 trận đấu gần nhất của toàn bộ chuồng ngựa
             List<Map<String, Object>> history = new ArrayList<>();
             ownerEntries.sort((e1, e2) -> {
                 Optional<Race> r1 = raceRepository.findById(e1.getRaceId());
@@ -388,6 +417,7 @@ public class PublicDataController {
         return ResponseEntity.ok(response);
     }
 
+    // Tra cứu phong độ chi tiết của một con ngựa theo ID
     @GetMapping("/horses/{horseId}/performance")
     @Operation(
         summary = "GET: Lấy dữ liệu phong độ thi đấu chi tiết của 1 chiến mã",
@@ -430,7 +460,7 @@ public class PublicDataController {
             item.put("status", entry.getStatus());
             item.put("gateNumber", entry.getGateNumber());
 
-            // Jockey name
+            // Điền tên nài ngựa cưỡi chiến mã này
             if (entry.getJockeyId() != null) {
                 userRepository.findById(entry.getJockeyId())
                         .ifPresent(u -> item.put("jockeyName", u.getUsername()));
@@ -439,7 +469,7 @@ public class PublicDataController {
                 item.put("jockeyName", null);
             }
 
-            // Race details
+            // Điền thông tin chi tiết trận đấu
             if (entry.getRaceId() != null) {
                 Optional<Race> raceOpt = raceRepository.findById(entry.getRaceId());
                 if (raceOpt.isPresent()) {
@@ -461,7 +491,7 @@ public class PublicDataController {
             history.add(item);
         }
 
-        // Sort by startTime descending (nulls last)
+        // Sắp xếp lịch sử thi đấu theo thời gian giảm dần (trận đua mới nhất lên trước)
         history.sort((a, b) -> {
             Object st1 = a.get("startTime");
             Object st2 = b.get("startTime");
