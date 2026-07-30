@@ -182,14 +182,15 @@ public class RefereeController {
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controllers**: `RefereeController.stopRace()`\n" +
                       "* **Services**: `RefereeService.stopRace()`\n" +
-                      "* **Repositories**: `RaceRepository.save()`\n" +
+                      "* **Repositories**: `RaceRepository.save()`, `RaceEntryRepository.findByRaceId()`, `RaceEntryRepository.save()`\n" +
                       "* **DTO Request**: `Map<String, String>` (`stewardReport`)\n" +
-                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
-                      "* **Frontend**: `RefereeSupervision.tsx`, `RefereeHub.tsx`, `refereeService.ts`\n\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)  |  `{\"success\": false, \"error\": \"...\"}` khi thất bại\n" +
+                      "* **Frontend**: `RefereeHub.tsx` → `handleStopRace()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
-                      "1. Tiếp nhận lý do dừng khẩn cấp (`stewardReport`).\n" +
-                      "2. Đổi trạng thái `Race` sang `CANCELLED`.\n" +
-                      "3. Ghi nhận Báo cáo giám sát và thời gian dừng vào bản ghi trận đua."
+                      "1. Kiểm tra trận đua phải đang ở trạng thái `RUNNING`, `STOPPED` hoặc `STEWARDS_INQUIRY`. Nếu không, ném `IllegalStateException` → HTTP 400.\n" +
+                      "2. Chuyển trạng thái `Race` sang `CANCELLED` và ghi nhận `stewardReport` + xóa URL livestream.\n" +
+                      "3. Duyệt danh sách `RaceEntry`: chỉ chuyển sang `REJECTED` các entry đang ở trạng thái `APPROVED`, `RUNNING`, `STOPPED`, `PENDING_ADMIN`.\n" +
+                      "4. Entry đã là `DISQUALIFIED` hoặc `FINISHED` được giữ nguyên trạng thái."
     )
     public ResponseEntity<?> stopRace(@PathVariable Integer raceId, @RequestBody Map<String, String> body) {
         try { // Khối xử lý ngoại lệ khi dừng khẩn cấp trận đua
@@ -209,13 +210,14 @@ public class RefereeController {
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controllers**: `RefereeController.suspendRace()`\n" +
                       "* **Services**: `RefereeService.suspendRace()`\n" +
-                      "* **Repositories**: `RaceRepository.save()`\n" +
+                      "* **Repositories**: `RaceRepository.save()`, `RaceEntryRepository.findByRaceId()`, `RaceEntryRepository.save()`\n" +
                       "* **DTO Request**: `Map<String, String>` (`stewardReport`)\n" +
                       "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
-                      "* **Frontend**: `RefereeSupervision.tsx`, `RefereeHub.tsx`, `refereeService.ts`\n\n" +
+                      "* **Frontend**: `RefereeHub.tsx` → `handleSuspendRace()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
-                      "1. Tiếp nhận lý do tạm dừng (`stewardReport`).\n" +
-                      "2. Đổi trạng thái `Race` sang `STOPPED` để tạm dừng theo dõi."
+                      "1. Kiểm tra trận đua đang ở trạng thái `RUNNING` hoặc `STEWARDS_INQUIRY`.\n" +
+                      "2. Đổi trạng thái `Race` sang `STOPPED` và ghi nhận `stewardReport`.\n" +
+                      "3. Duyệt danh sách các lượt đua `RaceEntry` của trận: chuyển trạng thái từ `RUNNING`/`APPROVED` sang `STOPPED` để đồng bộ hiển thị cho từng thí sinh."
     )
     public ResponseEntity<?> suspendRace(@PathVariable Integer raceId, @RequestBody Map<String, String> body) {
         try { // Khối xử lý ngoại lệ khi tạm dừng trận đua
@@ -235,12 +237,13 @@ public class RefereeController {
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
                       "* **Controllers**: `RefereeController.resumeRace()`\n" +
                       "* **Services**: `RefereeService.resumeRace()`\n" +
-                      "* **Repositories**: `RaceRepository.save()`\n" +
+                      "* **Repositories**: `RaceRepository.save()`, `RaceEntryRepository.findByRaceId()`, `RaceEntryRepository.save()`\n" +
                       "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
-                      "* **Frontend**: `RefereeSupervision.tsx`, `RefereeHub.tsx`, `refereeService.ts`\n\n" +
+                      "* **Frontend**: `RefereeHub.tsx` → `handleResumeRace()`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Kiểm tra trận đua đang ở trạng thái `STOPPED`.\n" +
-                      "2. Đổi trạng thái `Race` về `RUNNING` để tiếp tục theo dõi."
+                      "2. Đổi trạng thái `Race` về `RUNNING`.\n" +
+                      "3. Duyệt danh sách `RaceEntry`: khôi phục trạng thái từ `STOPPED` trở lại `RUNNING` cho tất cả thí sinh tham gia."
     )
     public ResponseEntity<?> resumeRace(@PathVariable Integer raceId) {
         try { // Khối xử lý ngoại lệ khi cho trận đua chạy tiếp tục
