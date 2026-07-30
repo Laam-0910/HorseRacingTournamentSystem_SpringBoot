@@ -3,6 +3,40 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
 
 /**
+ * Trích xuất thông báo lỗi sạch từ một Error object bất kỳ.
+ * - Ưu tiên lấy message từ response body của backend (field "error" hoặc "message").
+ * - Loại bỏ mọi URL localhost/IP khỏi chuỗi thông báo.
+ * - Trả về fallback nếu không có thông tin hữu ích.
+ */
+export function getErrMsg(err: unknown, fallback = "An error occurred. Please try again."): string {
+  if (!err) return fallback;
+
+  let raw = "";
+
+  // Ưu tiên lấy message từ Error object
+  if (err instanceof Error) {
+    raw = err.message;
+  } else if (typeof err === "string") {
+    raw = err;
+  } else {
+    raw = String(err);
+  }
+
+  // Xóa URL localhost và http://... khỏi thông báo
+  raw = raw
+    .replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?\/[^\s,]*/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  // Nếu sau khi lọc thông báo trống hoặc chỉ còn status code → dùng fallback
+  if (!raw || /^request failed:?\s*\d*$/i.test(raw) || raw.length < 3) {
+    return fallback;
+  }
+
+  return raw;
+}
+
+/**
  * Hàm chung thực hiện các yêu cầu HTTP gửi đến server (fetch API wrapper).
  * - Tự động đính kèm mã JWT Token lấy từ sessionStorage vào Header Authorization (Bearer Token).
  * - Đảm bảo cấu hình mặc định Content-Type là application/json.
@@ -26,8 +60,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 
   // Nếu máy chủ phản hồi mã lỗi (status khác 2xx)
   if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Request failed: ${res.status}`);
+    const body = await res.json().catch(() => ({}));
+    // Lấy message từ body phản hồi backend, fallback về HTTP status
+    const msg = body?.error || body?.message || body?.detail
+      || `Server returned ${res.status} ${res.statusText || "error"}`;
+    throw new Error(msg);
   }
 
   // Đọc dữ liệu thô từ phản hồi (vì một số endpoint Spring Boot trả về body rỗng)

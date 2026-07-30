@@ -1,7 +1,7 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
 
 // Cấu trúc thuộc tính truyền vào component InlineDatePicker
@@ -209,7 +209,7 @@ export default function Horses() {
       const allHorses = await api.get<any[]>("/public/horses");
       setHorses(allHorses);
     } catch (err: any) {
-      setError(err.message || "Failed to load horse directory.");
+      setError(getErrMsg(err, "Failed to load horse directory."));
     } finally {
       setLoading(false);
     }
@@ -331,7 +331,7 @@ export default function Horses() {
       setEditingHorse(null); // Đóng Modal
       fetchData(); // Tải lại danh sách cập nhật
     } catch (err: any) {
-      setError(err.message || "Failed to update horse.");
+      setError(getErrMsg(err, "Failed to update horse."));
     }
   };
 

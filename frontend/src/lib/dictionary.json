@@ -1480,6 +1480,30 @@
     "zh": "🛑 紧急停止比赛",
     "ja": "🛑 緊急レース停止"
   },
+  "Màn hình nổi (Floating)": {
+    "en": "Floating Monitor",
+    "vi": "Màn hình nổi (Floating)"
+  },
+  "Màn hình dưới bảng (Embedded)": {
+    "en": "Embedded Monitor",
+    "vi": "Màn hình dưới bảng (Embedded)"
+  },
+  "Bật Live Monitor": {
+    "en": "Turn on Live Monitor",
+    "vi": "Bật Live Monitor"
+  },
+  "📌 Floating (Góc)": {
+    "en": "📌 Floating Mode",
+    "vi": "📌 Floating (Góc)"
+  },
+  "📌 Below Table (Dưới bảng)": {
+    "en": "📌 Below Table",
+    "vi": "📌 Below Table (Dưới bảng)"
+  },
+  "Nhập chi tiết lý do (Steward's Report)...": {
+    "en": "Enter detailed reason (Steward's Report)...",
+    "vi": "Nhập chi tiết lý do (Steward's Report)..."
+  },
   "⚠️ Ghi nhận vi phạm": {
     "en": "⚠️ Record Violation",
     "zh": "⚠️ 记录违规",

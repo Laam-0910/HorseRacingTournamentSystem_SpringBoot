@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { $t } from '@/lib/i18n';
 import { confirm } from "../../../lib/confirm";
 
@@ -43,7 +43,7 @@ export default function Racecard() {
         setSelectedMeetingId(data[0].id);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to load meetings.");
+      setError(getErrMsg(err, "Failed to load meetings."));
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ export default function Racecard() {
         fetchEntries(selectedRaceId); // Tải lại danh sách
       }
     } catch (err: any) {
-      setError(err.message || "Failed to auto-assign gates.");
+      setError(getErrMsg(err, "Failed to auto-assign gates."));
     }
   };
 
@@ -122,7 +122,7 @@ export default function Racecard() {
         fetchEntries(selectedRaceId); // Tải lại danh sách
       }
     } catch (err: any) {
-      setError(err.message || "Failed to calculate weights.");
+      setError(getErrMsg(err, "Failed to calculate weights."));
     }
   };
 
@@ -144,7 +144,7 @@ export default function Racecard() {
         }
       }
     } catch (err: any) {
-      setError(err.message || "Failed to cancel race.");
+      setError(getErrMsg(err, "Failed to cancel race."));
     }
   };
 
@@ -183,12 +183,12 @@ export default function Racecard() {
         fetchEntries(selectedRaceId);
       }
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || err.message || "";
+      const errMsg = err.response?.data?.error || getErrMsg(err, "");
       // Xử lý thông báo lỗi cổng bị trùng lắp (DUPLICATE_GATE_NUMBER) thân thiện hơn bằng tiếng Việt
       if (errMsg.includes("DUPLICATE_GATE_NUMBER")) {
         setError($t("Cổng xuất phát không được trùng nhau giữa các ngựa hoạt động trong cùng một trận đấu.", lang));
       } else {
-        setError(err.message || ($t("Không thể lưu thông tin Racecard.", lang)));
+        setError(getErrMsg(err, ($t("Không thể lưu thông tin Racecard.", lang))));
       }
     }
   };

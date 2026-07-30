@@ -1,6 +1,6 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { parseSafeDate } from "../../utils/dateTimeHelper";
 
 /**
@@ -56,7 +56,7 @@ export default function RegistrationProcessing() {
       setApprovedCount(data.approvedCount || 0);
       setRejectedCount(data.rejectedCount || 0);
     } catch (err: any) {
-      setError(err.message || "Failed to load registrations.");
+      setError(getErrMsg(err, "Failed to load registrations."));
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ export default function RegistrationProcessing() {
       showSuccess(`Approved race entry #${id}`);
       fetchData(); // Tải lại để đồng bộ số lượng
     } catch (err: any) {
-      alert("Approve failed: " + err.message);
+      alert(getErrMsg(err, "Approve failed: "));
     }
   };
 
@@ -99,7 +99,7 @@ export default function RegistrationProcessing() {
       showSuccess(`Rejected race entry #${id}`);
       fetchData();
     } catch (err: any) {
-      alert("Reject failed: " + err.message);
+      alert(getErrMsg(err, "Reject failed: "));
     }
   };
 
@@ -110,7 +110,7 @@ export default function RegistrationProcessing() {
       showSuccess(`Approved horse meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
-      alert("Approve failed: " + err.message);
+      alert(getErrMsg(err, "Approve failed: "));
     }
   };
 
@@ -120,7 +120,7 @@ export default function RegistrationProcessing() {
       showSuccess(`Rejected horse meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
-      alert("Reject failed: " + err.message);
+      alert(getErrMsg(err, "Reject failed: "));
     }
   };
 
@@ -131,7 +131,7 @@ export default function RegistrationProcessing() {
       showSuccess(`Approved jockey meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
-      alert("Approve failed: " + err.message);
+      alert(getErrMsg(err, "Approve failed: "));
     }
   };
 
@@ -141,7 +141,7 @@ export default function RegistrationProcessing() {
       showSuccess(`Rejected jockey meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
-      alert("Reject failed: " + err.message);
+      alert(getErrMsg(err, "Reject failed: "));
     }
   };
 
@@ -152,7 +152,7 @@ export default function RegistrationProcessing() {
       showSuccess(`Approved owner meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
-      alert("Approve failed: " + err.message);
+      alert(getErrMsg(err, "Approve failed: "));
     }
   };
 
@@ -162,7 +162,7 @@ export default function RegistrationProcessing() {
       showSuccess(`Rejected owner meeting registration #${id}`);
       fetchData();
     } catch (err: any) {
-      alert("Reject failed: " + err.message);
+      alert(getErrMsg(err, "Reject failed: "));
     }
   };
 
@@ -173,7 +173,7 @@ export default function RegistrationProcessing() {
       showSuccess(`Approved system horse activation #${id}`);
       fetchData();
     } catch (err: any) {
-      alert("Approve failed: " + err.message);
+      alert(getErrMsg(err, "Approve failed: "));
     }
   };
 
@@ -183,7 +183,7 @@ export default function RegistrationProcessing() {
       showSuccess(`Rejected system horse activation #${id}`);
       fetchData();
     } catch (err: any) {
-      alert("Reject failed: " + err.message);
+      alert(getErrMsg(err, "Reject failed: "));
     }
   };
 

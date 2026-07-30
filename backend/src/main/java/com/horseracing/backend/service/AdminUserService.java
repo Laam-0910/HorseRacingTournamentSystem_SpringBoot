@@ -566,6 +566,10 @@ public class AdminUserService {
         Race targetRace = raceRepository.findById(raceId)
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
 
+        if (targetRace.getStatus() != null && java.util.Arrays.asList("RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED").contains(targetRace.getStatus().toUpperCase())) {
+            throw new IllegalStateException("Cannot assign referee while race is running, suspended, or completed.");
+        }
+
         if (targetRace.getStartTime() == null) {
             throw new IllegalArgumentException("Target race does not have a start time scheduled yet.");
         }
@@ -604,6 +608,11 @@ public class AdminUserService {
 
     @Transactional
     public void removeReferee(Integer raceId, Integer refereeId) {
+        Race targetRace = raceRepository.findById(raceId)
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+        if (targetRace.getStatus() != null && java.util.Arrays.asList("RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED").contains(targetRace.getStatus().toUpperCase())) {
+            throw new IllegalStateException("Cannot remove referee while race is running, suspended, or completed.");
+        }
         raceRefereeRepository.deleteByRaceIdAndRefereeId(raceId, refereeId);
     }
 

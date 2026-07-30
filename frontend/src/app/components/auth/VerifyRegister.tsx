@@ -1,3 +1,4 @@
+import { getErrMsg } from "../../../lib/api";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../../../services/authService";
@@ -52,7 +53,7 @@ export default function VerifyRegister() {
       }
     } catch (err: any) {
       // Trường hợp lỗi mạng hoặc lỗi server khác
-      setError(err.message || "An error occurred during verification.");
+      setError(getErrMsg(err, "An error occurred during verification."));
     } finally {
       setLoading(false); // Tắt trạng thái chờ gọi API
     }

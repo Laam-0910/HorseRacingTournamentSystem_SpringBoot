@@ -1,6 +1,6 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, formatForDateTimeLocal, formatForApi, formatClassLevel, parseSafeDate } from "../../utils/dateTimeHelper";
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 
@@ -115,7 +115,7 @@ export default function Race() {
       setReferees(usersData);
       setRefereesMap(refsMapData);
     } catch (err: any) {
-      setError(err.message || "Failed to fetch data.");
+      setError(getErrMsg(err, "Failed to fetch data."));
     } finally {
       setLoading(false);
     }
@@ -213,7 +213,7 @@ export default function Race() {
       if (err.message?.includes("DUPLICATE_RACE_TIME")) {
         setError(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
       } else {
-        setError(err.message || "Failed to create race.");
+        setError(getErrMsg(err, "Failed to create race."));
       }
     }
   };
@@ -296,7 +296,7 @@ export default function Race() {
       if (err.message?.includes("DUPLICATE_RACE_TIME")) {
         setEditError(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
       } else {
-        setEditError(err.message || "Failed to update race.");
+        setEditError(getErrMsg(err, "Failed to update race."));
       }
     }
   };
@@ -320,7 +320,7 @@ export default function Race() {
         fetchData();
       }
     } catch (err: any) {
-      setError(err.message || "Failed to set live URL.");
+      setError(getErrMsg(err, "Failed to set live URL."));
     }
   };
 
@@ -335,7 +335,7 @@ export default function Race() {
         fetchData();
       }
     } catch (err: any) {
-      setError(err.message || "Failed to end live.");
+      setError(getErrMsg(err, "Failed to end live."));
     }
   };
 
@@ -343,6 +343,11 @@ export default function Race() {
   const handleAssignReferee = async (raceId: number) => {
     const refId = assignRefSelection[raceId];
     if (!refId) return;
+    const race = races.find(r => r.id === raceId);
+    if (race && ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase())) {
+      alert($t("Trận đấu đang diễn ra hoặc đã kết thúc, không thể phân công trọng tài.", (localStorage.getItem('app-lang') || 'vi')));
+      return;
+    }
     setError("");
     setSuccess("");
     try {
@@ -353,12 +358,17 @@ export default function Race() {
         fetchData();
       }
     } catch (err: any) {
-      alert(err.message || "Failed to assign referee.");
+      alert(getErrMsg(err, "Failed to assign referee."));
     }
   };
 
   // Gỡ bỏ phân công trọng tài (Remove Referee)
   const handleRemoveReferee = async (raceId: number, refId: number) => {
+    const race = races.find(r => r.id === raceId);
+    if (race && ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase())) {
+      alert($t("Trận đấu đang diễn ra hoặc đã kết thúc, không thể xóa trọng tài.", (localStorage.getItem('app-lang') || 'vi')));
+      return;
+    }
     setError("");
     setSuccess("");
     try {
@@ -368,7 +378,7 @@ export default function Race() {
         fetchData();
       }
     } catch (err: any) {
-      alert(err.message || "Failed to remove referee.");
+      alert(getErrMsg(err, "Failed to remove referee."));
     }
   };
 
@@ -490,6 +500,7 @@ export default function Race() {
             ) : races.map(race => {
               const assigned = refereesMap[race.id] || [];
               const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+              const isRefLocked = ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
               const meetingName = meetingMap.get(race.raceMeetingId) || race.raceMeetingName;
 
               return (
@@ -528,14 +539,14 @@ export default function Race() {
                       {assigned.map(ref => (
                         <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.125rem 0.5rem", borderRadius: "0.25rem", border: "1px solid #2e2e33" }}>
                           <span>{ref.username}</span>
-                          {!isCompleted && (
+                          {!isRefLocked && (
                             <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }}>×</button>
                           )}
                         </div>
                       ))}
                       {assigned.length === 0 && <span style={{ color: "rgba(255,255,255,0.25)", fontSize: "11px", fontStyle: "italic" }}>{$t("No referee assigned yet", (localStorage.getItem('app-lang') || 'vi'))}</span>}
                     </div>
-                    {!isCompleted && (
+                    {!isRefLocked && (
                       <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
                         <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none", flex: 1 }}>
                           <option value="">{$t("-- Assign Referee --", (localStorage.getItem('app-lang') || 'vi'))}</option>
@@ -591,7 +602,7 @@ export default function Race() {
           </div>
         ) : (
           // Bố cục dạng bảng (Desktop)
-          <div style={{ overflowX: "auto" }}>
+<div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
@@ -608,6 +619,7 @@ export default function Race() {
                 ) : races.map(race => {
                   const assigned = refereesMap[race.id] || [];
                   const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+                  const isRefLocked = ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
 
                   return (
                     <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
@@ -669,12 +681,12 @@ export default function Race() {
                           {assigned.map(ref => (
                             <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.125rem 0.5rem", borderRadius: "0.25rem", border: "1px solid #2e2e33" }}>
                               <span>{ref.username}</span>
-                              {!isCompleted && (
+                              {!isRefLocked && (
                                 <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "4px", fontSize: "10px" }} title="Remove referee">×</button>
                               )}
                             </div>
                           ))}
-                          {!isCompleted && (
+                          {!isRefLocked && (
                             <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
                               <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none" }}>
                                 <option value="">{$t("-- Assign Referee --", (localStorage.getItem('app-lang') || 'vi'))}</option>

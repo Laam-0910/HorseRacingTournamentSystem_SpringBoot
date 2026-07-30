@@ -1,6 +1,6 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 
 // Định nghĩa cấu trúc dữ liệu yêu cầu giải nghệ ngựa của Chủ ngựa
 interface Request {
@@ -74,7 +74,7 @@ export default function AdminHorseRetirement() {
       setRequests(reqList);
       setActiveHorses(horseList);
     } catch (err: any) {
-      setError(err.message || "Failed to load data.");
+      setError(getErrMsg(err, "Failed to load data."));
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ export default function AdminHorseRetirement() {
         throw new Error(res.error || "Failed to retire horse.");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to retire horse.");
+      setError(getErrMsg(err, "Failed to retire horse."));
     }
   };
 
@@ -130,7 +130,7 @@ export default function AdminHorseRetirement() {
         throw new Error(res.error || "Failed to process request.");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to process request.");
+      setError(getErrMsg(err, "Failed to process request."));
     }
   };
 

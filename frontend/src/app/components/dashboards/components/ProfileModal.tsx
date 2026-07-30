@@ -1,6 +1,6 @@
 import { $t } from '@/lib/i18n';
 import { useState, useEffect } from "react";
-import { api } from "../../../../lib/api";
+import { api, getErrMsg } from "../../../../lib/api";
 
 interface ProfileModalProps {
   userId: number;
@@ -90,7 +90,7 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
         const data = await api.get<any>(`/public/users/${userId}/profile`);
         setProfile(data);
       } catch (err: any) {
-        setError(err.message || "Failed to load profile.");
+        setError(getErrMsg(err, "Failed to load profile."));
       } finally {
         setLoading(false);
       }

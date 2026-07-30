@@ -1,6 +1,6 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 
 // Cấu trúc dữ liệu của Ngày hội đua
 interface Meeting {
@@ -97,7 +97,7 @@ export default function Results() {
       setRaces((racesData || []).filter(r => !ineligibleStatuses.includes(r.status)));
       setClassRules(rulesData);
     } catch (err: any) {
-      setError(err.message || "Failed to load data.");
+      setError(getErrMsg(err, "Failed to load data."));
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,7 @@ export default function Results() {
       setTimes(initialTimes);
       setWeighInWeights(initialWeights);
     } catch (err: any) {
-      setError("Failed to load race entries: " + err.message);
+      setError(getErrMsg(err, "Failed to load race entries: "));
     } finally {
       setProcLoading(false);
     }
@@ -210,7 +210,7 @@ export default function Results() {
         throw new Error(res.error || "Failed to process results.");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to submit results.");
+      setError(getErrMsg(err, "Failed to submit results."));
     } finally {
       setProcLoading(false);
     }

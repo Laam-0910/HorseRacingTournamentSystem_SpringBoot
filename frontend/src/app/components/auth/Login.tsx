@@ -1,3 +1,4 @@
+import { getErrMsg } from "../../../lib/api";
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
@@ -59,7 +60,7 @@ export default function Login() {
       }
     } catch (err: any) {
       // Bắt lỗi hệ thống hoặc thông tin đăng nhập sai từ backend
-      setError(err.message || "Invalid credentials");
+      setError(getErrMsg(err, "Invalid credentials"));
     } finally {
       setLoading(false); // Tắt trạng thái chờ gọi API
     }
