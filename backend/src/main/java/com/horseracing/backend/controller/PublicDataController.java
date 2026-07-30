@@ -439,6 +439,7 @@ public class PublicDataController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("horseId", horse.getId());
+        response.put("name", horse.getName());
         response.put("horseName", horse.getName());
         response.put("breed", horse.getBreed());
         response.put("sex", horse.getSex());
@@ -446,6 +447,10 @@ public class PublicDataController {
         response.put("currentRating", horse.getCurrentRating());
         response.put("totalRaces", horse.getTotalRaces());
         response.put("totalWins", horse.getTotalWins());
+        double winRate = (horse.getTotalRaces() != null && horse.getTotalRaces() > 0)
+                ? (double) (horse.getTotalWins() != null ? horse.getTotalWins() : 0) / horse.getTotalRaces() * 100.0
+                : 0.0;
+        response.put("winRate", Math.round(winRate * 10.0) / 10.0);
 
         List<RaceEntry> entries = raceEntryRepository.findByHorseId(horseId);
 
@@ -453,7 +458,8 @@ public class PublicDataController {
         for (RaceEntry entry : entries) {
             Map<String, Object> item = new HashMap<>();
             item.put("raceId", entry.getRaceId());
-            item.put("finalPosition", entry.getFinalPosition());
+            item.put("finalPosition", entry.getFinalPosition() != null ? String.valueOf(entry.getFinalPosition()) : (entry.getFinishTime() != null ? entry.getFinishTime() : "—"));
+            item.put("position", entry.getFinalPosition() != null ? String.valueOf(entry.getFinalPosition()) : (entry.getFinishTime() != null ? entry.getFinishTime() : "—"));
             item.put("finishTime", entry.getFinishTime());
             item.put("ratingAdjustment", entry.getRatingAdjustment());
             item.put("prizeMoney", entry.getPrizeMoney());
@@ -501,6 +507,7 @@ public class PublicDataController {
             return ((Comparable) st2).compareTo(st1);
         });
 
+        response.put("history", history);
         response.put("raceHistory", history);
         return ResponseEntity.ok(response);
     }

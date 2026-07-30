@@ -182,8 +182,16 @@ public class RaceService {
         if (season.getStartDate() != null && meetingDate.before(season.getStartDate())) {
             throw new IllegalArgumentException("Ngày của Race Meeting (" + meetingDate + ") không được trước ngày bắt đầu Mùa giải (" + season.getStartDate() + ").");
         }
-        if (season.getEndDate() != null && meetingDate.after(season.getEndDate())) {
-            throw new IllegalArgumentException("Ngày của Race Meeting (" + meetingDate + ") không được sau ngày kết thúc Mùa giải (" + season.getEndDate() + ").");
+        if (season.getEndDate() != null) {
+            Calendar calEnd = Calendar.getInstance();
+            calEnd.setTime(season.getEndDate());
+            calEnd.set(Calendar.HOUR_OF_DAY, 23);
+            calEnd.set(Calendar.MINUTE, 59);
+            calEnd.set(Calendar.SECOND, 59);
+            calEnd.set(Calendar.MILLISECOND, 999);
+            if (meetingDate.after(calEnd.getTime())) {
+                throw new IllegalArgumentException("Ngày của Race Meeting (" + meetingDate + ") không được sau ngày kết thúc Mùa giải (" + season.getEndDate() + ").");
+            }
         }
     }
 

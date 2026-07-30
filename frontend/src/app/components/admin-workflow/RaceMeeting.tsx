@@ -120,12 +120,16 @@ export default function RaceMeeting() {
       if (selectedSeason && date) {
         const meetingTime = new Date(date).getTime();
         if (selectedSeason.startDate && meetingTime < new Date(selectedSeason.startDate).getTime()) {
-          setError($t("Ngày của Race Meeting phải nằm trong thời gian Mùa giải", (localStorage.getItem('app-lang') || 'vi')) + ` (${selectedSeason.startDate} - ${selectedSeason.endDate})`);
+          setError($t("Ngày của Race Meeting không được trước ngày bắt đầu Mùa giải", (localStorage.getItem('app-lang') || 'vi')) + ` (${selectedSeason.startDate} - ${selectedSeason.endDate})`);
           return;
         }
-        if (selectedSeason.endDate && meetingTime > new Date(selectedSeason.endDate).getTime()) {
-          setError($t("Ngày của Race Meeting phải nằm trong thời gian Mùa giải", (localStorage.getItem('app-lang') || 'vi')) + ` (${selectedSeason.startDate} - ${selectedSeason.endDate})`);
-          return;
+        if (selectedSeason.endDate) {
+          const endDate = new Date(selectedSeason.endDate);
+          endDate.setHours(23, 59, 59, 999);
+          if (meetingTime > endDate.getTime()) {
+            setError($t("Ngày của Race Meeting không được sau ngày kết thúc Mùa giải", (localStorage.getItem('app-lang') || 'vi')) + ` (${selectedSeason.startDate} - ${selectedSeason.endDate})`);
+            return;
+          }
         }
       }
 
