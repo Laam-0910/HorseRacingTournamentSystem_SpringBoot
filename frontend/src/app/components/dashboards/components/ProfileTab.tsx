@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../../context/AuthContext";
-import { api } from "../../../../lib/api";
+import { api, getErrMsg } from "../../../../lib/api";
 import { $t } from '@/lib/i18n';
 
 interface Props {
@@ -227,7 +227,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
         setProfileErr(res.error || "Failed to update profile.");
       }
     } catch (err: any) {
-      setProfileErr(err.message || "Error.");
+      setProfileErr(getErrMsg(err, "Error."));
     } finally {
       setProfileLoading(false);
     }
@@ -278,7 +278,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
         setPassErr(res.error || $t("Verification failed", lang));
       }
     } catch (err: any) {
-      setPassErr(err.message || "Error.");
+      setPassErr(getErrMsg(err, "Error."));
     } finally {
       setPassLoading(false);
     }

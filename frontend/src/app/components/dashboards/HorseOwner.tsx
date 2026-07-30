@@ -1,7 +1,7 @@
 import { $t } from "@/lib/i18n";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { parseSafeDate, formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
 import DashboardLayout from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
@@ -490,7 +490,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
       setMsg("✅ Horse declaration submitted for approval.");
       setHorseName(""); setBreed(""); setSex("Gelding"); setDateOfBirth(""); setAvatar(""); setDescription("");
       onRefresh();
-    } catch (err: any) { setMsg("❌ " + (err.message || "Failed to submit horse registration.")); }
+    } catch (err: any) { setMsg("❌ " + (getErrMsg(err, "Failed to submit horse registration."))); }
   };
 
   const startEdit = (item: any) => {
@@ -510,7 +510,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
     try {
       await api.put(`/horses/${editingHorse.id}`, { name: editName, breed: editBreed, sex: editSex, dateOfBirth: formatDobForApi(editDob), currentRating: editRating, avatar: editAvatar, description: editDescription });
       setEditingHorse(null); onRefresh();
-    } catch (err: any) { setMsg("❌ " + (err.message || "Failed to update horse.")); }
+    } catch (err: any) { setMsg("❌ " + (getErrMsg(err, "Failed to update horse."))); }
   };
 
   const handleRequestRetirement = async (e: React.FormEvent) => {
@@ -525,7 +525,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
       fetchRetireRequests();
       onRefresh();
     } catch (err: any) {
-      setMsg("❌ " + (err.message || "Failed to submit retirement request."));
+      setMsg("❌ " + (getErrMsg(err, "Failed to submit retirement request.")));
     }
   };
 
@@ -1338,7 +1338,7 @@ export default function HorseOwner() {
       setSeasons(Array.isArray(allSeasonsData) ? allSeasonsData : []);
       setAllRaces(Array.isArray(racesData) ? racesData : []);
     } catch (err: any) { 
-      setErrorMsg(err.message || "Failed to load owner data."); 
+      setErrorMsg(getErrMsg(err, "Failed to load owner data.")); 
     }
   };
 
@@ -1353,7 +1353,7 @@ export default function HorseOwner() {
       await api.post("/registrations/owner", { meetingId, ownerId: user.id });
       setSuccessMsg("Successfully registered as Owner for meeting.");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to register for meeting."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to register for meeting.")); }
   };
 
   const handleRegisterHorses = async (meetingId: number, horseIds: number[]) => {
@@ -1367,7 +1367,7 @@ export default function HorseOwner() {
       await Promise.all(horseIds.map(horseId => api.post("/registrations/horse", { meetingId, horseId })));
       setSuccessMsg(`Successfully registered ${horseIds.length} horse(s) for meeting.`);
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to register horse(s)."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to register horse(s).")); }
   };
 
   const handleSendInvitation = async (form: { horseId: number; raceId: number; jockeyId: number }) => {
@@ -1379,7 +1379,7 @@ export default function HorseOwner() {
       setSuccessMsg(lang === "vi" ? "Đã gửi lời mời tới nài ngựa." : "Invitation sent to jockey.");
       fetchData();
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || err.message || "";
+      const errMsg = err.response?.data?.error || getErrMsg(err, "");
       if (errMsg.includes("JOCKEY_NOT_APPROVED")) {
         setErrorMsg(lang === "vi"
           ? "Nài ngựa này chưa được phê duyệt đăng ký tham gia buổi đua này."
@@ -1393,7 +1393,7 @@ export default function HorseOwner() {
           ? "Chiến mã được chọn chưa được duyệt tham gia buổi đua này."
           : "The selected horse has not been approved for this race meeting yet.");
       } else {
-        setErrorMsg(err.message || (lang === "vi" ? "Gửi lời mời thất bại." : "Failed to send invitation."));
+        setErrorMsg(getErrMsg(err) || (lang === "vi" ? "Gửi lời mời thất bại." : "Failed to send invitation."));
       }
     }
   };
@@ -1406,7 +1406,7 @@ export default function HorseOwner() {
       setSuccessMsg(lang === "vi" ? "Gửi lại đăng ký chạy thành công." : "Successfully resubmitted race entry.");
       fetchData();
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || err.message || "";
+      const errMsg = err.response?.data?.error || getErrMsg(err, "");
       if (errMsg.includes("REGISTRATION_CLOSED")) {
         setErrorMsg(lang === "vi" 
           ? "Hạn đăng ký cho trận đấu này đã kết thúc, không thể nộp lại đăng ký." 
@@ -1424,7 +1424,7 @@ export default function HorseOwner() {
           ? "Chiến mã này đã bận lịch thi đấu hoặc có lượt đăng ký hoạt động khác trong trận đấu này." 
           : "This horse is already booked or has another active entry in this race.");
       } else {
-        setErrorMsg(err.message || (lang === "vi" ? "Không thể gửi lại đăng ký chạy." : "Failed to resubmit race entry."));
+        setErrorMsg(getErrMsg(err) || (lang === "vi" ? "Không thể gửi lại đăng ký chạy." : "Failed to resubmit race entry."));
       }
     }
   };
@@ -1438,13 +1438,13 @@ export default function HorseOwner() {
       setSuccessMsg(lang === "vi" ? "Đã rút lời mời/đăng ký thành công." : "Successfully withdrew invitation/entry.");
       fetchData();
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || err.message || "";
+      const errMsg = err.response?.data?.error || getErrMsg(err, "");
       if (errMsg.includes("REGISTRATION_CLOSED")) {
         setErrorMsg(lang === "vi"
           ? "Hạn đăng ký cho trận đấu này đã kết thúc, không thể rút đăng ký."
           : "Registration period for this race has closed.");
       } else {
-        setErrorMsg(err.message || (lang === "vi" ? "Không thể rút đăng ký." : "Failed to withdraw registration."));
+        setErrorMsg(getErrMsg(err) || (lang === "vi" ? "Không thể rút đăng ký." : "Failed to withdraw registration."));
       }
     }
   };

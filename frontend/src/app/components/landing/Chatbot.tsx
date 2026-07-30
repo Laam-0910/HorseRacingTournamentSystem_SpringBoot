@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
 
 // Khai báo kiểu cấu trúc dữ liệu cho một Tin nhắn (Message) trong Chatbot
@@ -77,7 +77,7 @@ export default function Chatbot() {
       // Trường hợp xảy ra lỗi mạng hoặc lỗi kết nối đến server Spring Boot/AI
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "Đã xảy ra lỗi khi kết nối tới máy chủ AI: " + (err.message || "Unknown error") },
+        { sender: "bot", text: "Đã xảy ra lỗi khi kết nối tới máy chủ AI: " + (getErrMsg(err, "Unknown error")) },
       ]);
     } finally {
       setLoading(false); // Tắt trạng thái chờ

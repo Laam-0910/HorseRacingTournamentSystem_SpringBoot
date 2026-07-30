@@ -1,3 +1,4 @@
+import { getErrMsg } from "../../../lib/api";
 import { useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
@@ -60,7 +61,7 @@ export default function VerifyLogin() {
       }
     } catch (err: any) {
       // Cập nhật thông báo lỗi hiển thị lên màn hình
-      setError(err.message || "Invalid or expired code");
+      setError(getErrMsg(err, "Invalid or expired code"));
     } finally {
       setLoading(false); // Tắt trạng thái chờ gọi API
     }

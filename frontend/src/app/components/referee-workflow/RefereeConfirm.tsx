@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { $t } from "../../../lib/i18n";
 
 // Cấu trúc thuộc tính truyền vào component RefereeConfirm
@@ -52,7 +52,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
         setTimes(initialTimes);
         setWeighInWeights(initialWeights);
       } catch (err: any) {
-        setError(err.message || "Failed to load race entries.");
+        setError(getErrMsg(err, "Failed to load race entries."));
       } finally {
         setLoading(false);
       }
@@ -131,7 +131,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
         onBack(); // Trở về màn hình danh sách điều khiển trọng tài
       }
     } catch (err: any) {
-      setError(err.message || "Failed to verify results.");
+      setError(getErrMsg(err, "Failed to verify results."));
     } finally {
       setLoading(false);
     }

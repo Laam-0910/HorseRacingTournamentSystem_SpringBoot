@@ -1,3 +1,4 @@
+import { getErrMsg } from "../../../lib/api";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { authService } from "../../../services/authService";
@@ -43,7 +44,7 @@ export default function ForgotPassword() {
       }
     } catch (err: any) {
       // Nếu có lỗi kết nối mạng hoặc lỗi server khác
-      setError(err.message || "Failed to send code");
+      setError(getErrMsg(err, "Failed to send code"));
     } finally {
       setLoading(false); // Tắt hiệu ứng chờ
     }

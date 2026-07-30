@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { confirm } from "../../../lib/confirm";
 
 // Cấu trúc thuộc tính truyền vào component RefereeSupervision
@@ -37,7 +37,7 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
       const data = await api.get<any[]>(`/public/results?raceId=${raceId}`);
       setEntries(data);
     } catch (err: any) {
-      setError(err.message || "Failed to load entries.");
+      setError(getErrMsg(err, "Failed to load entries."));
     }
   };
 
@@ -80,7 +80,7 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
         setSelectedJockeyId("");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to log violation.");
+      setError(getErrMsg(err, "Failed to log violation."));
     } finally {
       setLoading(false);
     }
@@ -110,7 +110,7 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
         onBack(); // Quay lại trang nhiệm vụ
       }
     } catch (err: any) {
-      setError(err.message || "Emergency stop failed.");
+      setError(getErrMsg(err, "Emergency stop failed."));
     } finally {
       setLoading(false);
     }

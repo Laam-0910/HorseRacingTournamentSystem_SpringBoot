@@ -1,6 +1,6 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 
 // Từ điển ánh xạ giải thích chi tiết ý nghĩa của từng khóa cấu hình tham số hệ thống
 const CONFIG_DESC_MAP: Record<string, string> = {
@@ -42,7 +42,7 @@ export default function SystemConfig() {
       });
       setFormValues(values);
     } catch (err: any) {
-      setError(err.message || "Failed to load system configurations.");
+      setError(getErrMsg(err, "Failed to load system configurations."));
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ export default function SystemConfig() {
       setSuccess("System configurations updated successfully.");
       fetchConfigs(); // Tải lại cấu hình mới nhất
     } catch (err: any) {
-      setError(err.message || "Failed to update configurations.");
+      setError(getErrMsg(err, "Failed to update configurations."));
     } finally {
       setLoading(false);
     }

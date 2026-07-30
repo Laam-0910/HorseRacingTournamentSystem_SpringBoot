@@ -1,3 +1,4 @@
+import { getErrMsg } from "../../../lib/api";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../../../services/authService";
@@ -80,7 +81,7 @@ export default function VerifyForgot() {
       }
     } catch (err: any) {
       // Nếu gặp lỗi kết nối
-      setError(err.message || "An error occurred during verification.");
+      setError(getErrMsg(err, "An error occurred during verification."));
     } finally {
       setLoading(false); // Tắt hiệu ứng chờ gọi API
     }

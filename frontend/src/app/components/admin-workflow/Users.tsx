@@ -1,7 +1,7 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 
 /**
  * Component Users - Phân hệ Quản lý Tài khoản người dùng (User Accounts Management) dành cho Admin.
@@ -59,7 +59,7 @@ export default function Users() {
       const allUsers = await api.get<any[]>("/admin/users");
       setUsers(allUsers);
     } catch (err: any) {
-      setError(err.message || "Failed to load users data.");
+      setError(getErrMsg(err, "Failed to load users data."));
     } finally {
       setLoading(false);
     }
@@ -127,7 +127,7 @@ export default function Users() {
         fetchData();
       }
     } catch (err: any) {
-      setError(err.message || "Failed to create user.");
+      setError(getErrMsg(err, "Failed to create user."));
     }
   };
 
@@ -169,7 +169,7 @@ export default function Users() {
       setEditingUser(null); // Đóng modal
       fetchData();
     } catch (err: any) {
-      alert("Failed to update user: " + err.message);
+      alert(getErrMsg(err, "Failed to update user: "));
     }
   };
 
@@ -180,7 +180,7 @@ export default function Users() {
       showSuccess("User status changed.");
       fetchData();
     } catch (err: any) {
-      alert("Failed to change status: " + err.message);
+      alert(getErrMsg(err, "Failed to change status: "));
     }
   };
 

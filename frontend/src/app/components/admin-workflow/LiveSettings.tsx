@@ -1,6 +1,6 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 
 /**
  * Component LiveSettings - Phân hệ cấu hình Livestream buổi đua dành cho Admin.
@@ -39,7 +39,7 @@ export default function LiveSettings() {
         setSelectedMeetingId(data[0].id);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to load meetings.");
+      setError(getErrMsg(err, "Failed to load meetings."));
     } finally {
       setLoading(false);
     }
@@ -99,7 +99,7 @@ export default function LiveSettings() {
       setSuccess("Livestream URL updated successfully.");
       if (selectedMeetingId !== null) fetchRaces(selectedMeetingId); // Tải lại danh sách để đồng bộ trạng thái mới
     } catch (err: any) {
-      setError(err.message || "Failed to update livestream link.");
+      setError(getErrMsg(err, "Failed to update livestream link."));
     }
   };
 
@@ -113,7 +113,7 @@ export default function LiveSettings() {
       setSuccess("Livestream URL removed.");
       if (selectedMeetingId !== null) fetchRaces(selectedMeetingId); // Tải lại danh sách
     } catch (err: any) {
-      setError(err.message || "Failed to remove livestream link.");
+      setError(getErrMsg(err, "Failed to remove livestream link."));
     }
   };
 

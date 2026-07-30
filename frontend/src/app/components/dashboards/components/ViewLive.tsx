@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../../lib/api";
+import { api, getErrMsg } from "../../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../../lib/utils";
 import { useAuth } from "../../../../context/AuthContext";
 import { $t } from '@/lib/i18n';
@@ -165,7 +165,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
         setSelectedRace(null);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to load live broadcasts.");
+      setError(getErrMsg(err, "Failed to load live broadcasts."));
     } finally {
       setLoading(false);
     }

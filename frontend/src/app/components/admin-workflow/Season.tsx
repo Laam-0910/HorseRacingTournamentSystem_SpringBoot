@@ -1,6 +1,6 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
 
 // Cấu trúc thuộc tính truyền vào component InlineDatePicker
@@ -215,7 +215,7 @@ export default function Season() {
       // Mặc định chọn mùa giải đầu tiên nếu chưa chọn gì
       if (data.length > 0 && selectedSeasonId === null) setSelectedSeasonId(data[0].id);
     } catch (err: any) {
-      setError(err.message || "Failed to fetch seasons.");
+      setError(getErrMsg(err, "Failed to fetch seasons."));
     } finally {
       setLoading(false);
     }
@@ -251,7 +251,7 @@ export default function Season() {
       await api.post(`/races/seasons/${id}/toggle`);
       fetchSeasons();
     } catch (err: any) {
-      alert("Failed to toggle status: " + err.message);
+      alert(getErrMsg(err, "Failed to toggle status: "));
     }
   };
 
@@ -293,7 +293,7 @@ export default function Season() {
       fetchSeasons();
       setExtendingSeason(null); // Đóng Modal
     } catch (err: any) {
-      setExtendError("Failed to extend season: " + err.message);
+      setExtendError(getErrMsg(err, "Failed to extend season: "));
     }
   };
 
@@ -337,7 +337,7 @@ export default function Season() {
       fetchSeasons();
       setTimeout(() => setSuccess(""), 4000);
     } catch (err: any) {
-      setError("Failed to create season: " + err.message);
+      setError(getErrMsg(err, "Failed to create season: "));
     }
   };
 

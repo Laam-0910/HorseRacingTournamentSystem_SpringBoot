@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 
 // Cấu trúc thuộc tính truyền vào component
 interface RefereeCheckProps {
@@ -44,7 +44,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
         setStatuses(initialStatuses);
         setWeighOutWeights(initialWeights);
       } catch (err: any) {
-        setError(err.message || "Failed to load race entries.");
+        setError(getErrMsg(err, "Failed to load race entries."));
       } finally {
         setLoading(false);
       }
@@ -94,7 +94,7 @@ export default function RefereeCheck({ raceId, onBack }: RefereeCheckProps) {
         onBack(); // Quay lại bảng điều khiển trọng tài
       }
     } catch (err: any) {
-      setError(err.message || "Failed to submit check.");
+      setError(getErrMsg(err, "Failed to submit check."));
     } finally {
       setLoading(false);
     }

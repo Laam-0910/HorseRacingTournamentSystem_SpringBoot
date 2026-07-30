@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../../lib/api";
+import { api, getErrMsg } from "../../../../lib/api";
 import { parseSafeDate } from "../../../utils/dateTimeHelper";
 
 interface RaceRecord {
@@ -71,7 +71,7 @@ function HorsePerformanceModal({
         };
         setPerf(formatted);
       } catch (err: any) {
-        setError(err.message || "Failed to load horse performance data.");
+        setError(getErrMsg(err, "Failed to load horse performance data."));
       } finally {
         setLoading(false);
       }

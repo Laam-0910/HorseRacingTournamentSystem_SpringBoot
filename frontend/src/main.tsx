@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./app/App";
 import "./styles/index.css";
+import "@/lib/confirm";
 
 // Global Document Click Ripple and Spark Animation
 if (typeof window !== "undefined") {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { parseSafeDate, formatDateTime, formatDate } from "../../utils/dateTimeHelper";
 import { useAuth } from "../../../context/AuthContext";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { $t } from "../../../lib/i18n";
 import DashboardLayout from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
@@ -625,7 +625,7 @@ export default function Jockey() {
       setViolations(Array.isArray(viols) ? viols : []);
       setAllRaces(Array.isArray(racesData) ? racesData : []);
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to load jockey data.");
+      setErrorMsg(getErrMsg(err, "Failed to load jockey data."));
     } finally { setLoading(false); }
   };
 
@@ -639,7 +639,7 @@ export default function Jockey() {
       await api.post(`/invitations/${id}/accept`);
       setSuccessMsg("Invitation accepted and race entry created!");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to accept invitation."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to accept invitation.")); }
   };
 
   // Hàm xử lý từ chối lời mời thuê cưỡi ngựa
@@ -648,7 +648,7 @@ export default function Jockey() {
       await api.post(`/invitations/${id}/reject`);
       setSuccessMsg("Invitation rejected.");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to reject invitation."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to reject invitation.")); }
   };
 
   // Đăng ký tham gia Ngày hội đua đua ngựa
@@ -658,7 +658,7 @@ export default function Jockey() {
       await api.post("/registrations/jockey", { meetingId, jockeyId: user.id });
       setSuccessMsg("Successfully registered for meeting!");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to register for meeting."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to register for meeting.")); }
   };
 
   // Xác nhận lỗi vi phạm quy chế thi đấu do Trọng tài ghi nhận
@@ -667,7 +667,7 @@ export default function Jockey() {
       await api.post(`/jockey/violations/${violationId}/confirm`);
       setSuccessMsg("Violation acknowledged successfully!");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to acknowledge violation."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to acknowledge violation.")); }
   };
 
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Jockey Hub";

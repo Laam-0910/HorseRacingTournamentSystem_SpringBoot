@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../../context/AuthContext";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { confirm } from "../../../lib/confirm";
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
@@ -494,6 +494,7 @@ export default function RefereeHub() {
   // Confirm Results State
   const [finalPositions, setFinalPositions] = useState<Record<number, string>>({});
   const [finishTimes, setFinishTimes] = useState<Record<number, string>>({});
+  const [finishTimeErrors, setFinishTimeErrors] = useState<Record<number, string>>({});
   const [weighInWeights, setWeighInWeights] = useState<Record<number, string>>({});
   const [disqualifiedList, setDisqualifiedList] = useState<Record<number, boolean>>({});
   const [stewardReport, setStewardReport] = useState("");
@@ -902,7 +903,7 @@ export default function RefereeHub() {
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      notify("Pre-check failed: " + err.message, "error");
+      notify(getErrMsg(err, "Pre-check failed: "), "error");
       setLoading(false);
     }
   };
@@ -916,7 +917,7 @@ export default function RefereeHub() {
       // Chuyển thẳng sang phân hệ Giám sát trực tiếp (Live Supervision)
       handleStartSupervise({ ...race, status: "RUNNING" });
     } catch (err: any) {
-      notify("Failed to start race: " + err.message, "error");
+      notify(getErrMsg(err, "Failed to start race: "), "error");
       setLoading(false);
     }
   };
@@ -963,7 +964,7 @@ export default function RefereeHub() {
       await api.post(`/referee/entry/${entryId}/stop`);
       refreshSupervisionData();
     } catch (err: any) {
-      alert(err.response?.data?.error || err.message || "Failed to stop horse.");
+      alert(err.response?.data?.error || getErrMsg(err, "Failed to stop horse."));
     } finally {
       setActionLoadingId(null);
     }
@@ -975,7 +976,7 @@ export default function RefereeHub() {
       await api.post(`/referee/entry/${entryId}/resume`);
       refreshSupervisionData();
     } catch (err: any) {
-      alert(err.response?.data?.error || err.message || "Failed to resume horse.");
+      alert(err.response?.data?.error || getErrMsg(err, "Failed to resume horse."));
     } finally {
       setActionLoadingId(null);
     }
@@ -988,7 +989,7 @@ export default function RefereeHub() {
       await api.post(`/referee/entry/${entryId}/disqualify`);
       refreshSupervisionData();
     } catch (err: any) {
-      alert(err.response?.data?.error || err.message || "Failed to disqualify horse.");
+      alert(err.response?.data?.error || getErrMsg(err, "Failed to disqualify horse."));
     } finally {
       setActionLoadingId(null);
     }
@@ -1019,7 +1020,7 @@ export default function RefereeHub() {
       // Tải lại dữ liệu giám sát trực tiếp
       handleStartSupervise(selectedRace);
     } catch (err: any) {
-      notify($t("Ghi nhận vi phạm thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + err.message, "error");
+      notify($t("Ghi nhận vi phạm thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
     }
   };
 
@@ -1034,7 +1035,7 @@ export default function RefereeHub() {
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      notify($t("Không thể dừng cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message, "error");
+      notify($t("Không thể dừng cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
       setLoading(false);
     }
   };
@@ -1058,7 +1059,7 @@ export default function RefereeHub() {
         fetchDashboard();
       }
     } catch (err: any) {
-      notify($t("Không thể tạm hoãn cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message, "error");
+      notify($t("Không thể tạm hoãn cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
       setLoading(false);
     }
   };
@@ -1081,7 +1082,7 @@ export default function RefereeHub() {
         fetchDashboard();
       }
     } catch (err: any) {
-      notify($t("Không thể khôi phục cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message, "error");
+      notify($t("Không thể khôi phục cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
       setLoading(false);
     }
   };
@@ -1193,7 +1194,7 @@ export default function RefereeHub() {
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      notify($t("Gửi kết quả thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + err.message, "error");
+      notify($t("Gửi kết quả thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
     } finally {
       setLoading(false);
     }
@@ -1984,7 +1985,46 @@ export default function RefereeHub() {
                               DQ
                             </span>
                           ) : (
-                            <input type="text" required={!isDq} placeholder="e.g. 1:48.35" value={isDq ? "DQ" : finishTimes[entryId] || ""} disabled={isDq} onChange={e => setFinishTimes(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: "100%", padding: "0.375rem 0.5rem", fontSize: "12px", outline: "none", background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.375rem", color: "#fff" }} />
+                            <div>
+                              <input
+                                type="text"
+                                required={!isDq}
+                                placeholder="e.g. 1:48.35"
+                                value={isDq ? "DQ" : finishTimes[entryId] || ""}
+                                disabled={isDq}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setFinishTimes(prev => ({ ...prev, [entryId]: val }));
+                                  if (!val.trim()) {
+                                    setFinishTimeErrors(prev => ({ ...prev, [entryId]: "" }));
+                                  } else if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(val.trim())) {
+                                    setFinishTimeErrors(prev => ({
+                                      ...prev,
+                                      [entryId]: lang === "vi" 
+                                        ? "Sai định dạng! Số giây phải từ 00 đến 59 (ví dụ: 1:48.35)" 
+                                        : "Invalid format! Seconds must be between 00 and 59 (e.g. 1:48.35)"
+                                    }));
+                                  } else {
+                                    setFinishTimeErrors(prev => ({ ...prev, [entryId]: "" }));
+                                  }
+                                }}
+                                style={{
+                                  width: "100%",
+                                  padding: "0.375rem 0.5rem",
+                                  fontSize: "12px",
+                                  outline: "none",
+                                  background: finishTimeErrors[entryId] ? "rgba(239,68,68,0.15)" : "rgba(0,0,0,0.6)",
+                                  border: finishTimeErrors[entryId] ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.08)",
+                                  borderRadius: "0.375rem",
+                                  color: finishTimeErrors[entryId] ? "#fca5a5" : "#fff"
+                                }}
+                              />
+                              {finishTimeErrors[entryId] && (
+                                <div style={{ fontSize: "10px", color: "#f87171", marginTop: "3px", fontFamily: "monospace", fontWeight: "bold" }}>
+                                  ⚠ {finishTimeErrors[entryId]}
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -2066,7 +2106,46 @@ export default function RefereeHub() {
                                 DQ
                               </span>
                             ) : (
-                              <input type="text" required={!isDq} placeholder="e.g. 1:48.35" value={isDq ? "DQ" : finishTimes[entryId] || ""} disabled={isDq} onChange={e => setFinishTimes(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: 120, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                              <div>
+                                <input
+                                  type="text"
+                                  required={!isDq}
+                                  placeholder="e.g. 1:48.35"
+                                  value={isDq ? "DQ" : finishTimes[entryId] || ""}
+                                  disabled={isDq}
+                                  onChange={e => {
+                                    const val = e.target.value;
+                                    setFinishTimes(prev => ({ ...prev, [entryId]: val }));
+                                    if (!val.trim()) {
+                                      setFinishTimeErrors(prev => ({ ...prev, [entryId]: "" }));
+                                    } else if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(val.trim())) {
+                                      setFinishTimeErrors(prev => ({
+                                        ...prev,
+                                        [entryId]: lang === "vi" 
+                                          ? "Sai định dạng! Số giây phải từ 00 đến 59 (ví dụ: 1:48.35)" 
+                                          : "Invalid format! Seconds must be between 00 and 59 (e.g. 1:48.35)"
+                                      }));
+                                    } else {
+                                      setFinishTimeErrors(prev => ({ ...prev, [entryId]: "" }));
+                                    }
+                                  }}
+                                  style={{
+                                    width: 140,
+                                    padding: "0.375rem 0.5rem",
+                                    fontSize: "12px",
+                                    outline: "none",
+                                    background: finishTimeErrors[entryId] ? "rgba(239,68,68,0.15)" : "rgba(0,0,0,0.6)",
+                                    border: finishTimeErrors[entryId] ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.08)",
+                                    borderRadius: "0.375rem",
+                                    color: finishTimeErrors[entryId] ? "#fca5a5" : "#fff"
+                                  }}
+                                />
+                                {finishTimeErrors[entryId] && (
+                                  <div style={{ fontSize: "10px", color: "#f87171", marginTop: "3px", fontFamily: "monospace", fontWeight: "bold" }}>
+                                    ⚠ {finishTimeErrors[entryId]}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </td>
                           <td style={{ padding: "1rem", textAlign: "center" }}>
@@ -2099,6 +2178,15 @@ export default function RefereeHub() {
             </button>
           </div>
         </form>
+
+        {/* Toast notification */}
+        {toast && (
+          <div style={{ position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 10001, background: toast.type === "error" ? "#7f1d1d" : toast.type === "success" ? "#064e3b" : "#1e1b4b", border: toast.type === "error" ? "1px solid #ef4444" : toast.type === "success" ? "1px solid #10b981" : "1px solid #6366f1", color: "#fff", padding: "0.875rem 1.25rem", borderRadius: "0.5rem", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.5)", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.75rem", maxWidth: "24rem" }}>
+            <span>{toast.type === "error" ? "⚠️" : toast.type === "success" ? "✅" : "ℹ️"}</span>
+            <span style={{ flex: 1 }}>{toast.msg}</span>
+            <button onClick={() => setToast(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
+          </div>
+        )}
       </div>
     );
   }

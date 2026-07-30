@@ -1,7 +1,7 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, formatDate, formatForApi, parseSafeDate } from "../../utils/dateTimeHelper";
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 import { confirm } from "../../../lib/confirm";
@@ -50,7 +50,7 @@ export default function RaceDaySchedule() {
         setSelectedMeetingId(meetingsData[0].id);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to load schedule data.");
+      setError(getErrMsg(err, "Failed to load schedule data."));
     } finally {
       setLoading(false);
     }
@@ -174,7 +174,7 @@ export default function RaceDaySchedule() {
       if (err.message?.includes("DUPLICATE_RACE_TIME")) {
         alert(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
       } else {
-        alert("Failed to schedule race: " + err.message);
+        alert(getErrMsg(err, "Failed to schedule race: "));
       }
     }
   };
@@ -206,7 +206,7 @@ export default function RaceDaySchedule() {
         fetchRacesDetails(selectedMeetingId);
       }
     } catch (err: any) {
-      alert("Failed to cancel race: " + err.message);
+      alert(getErrMsg(err, "Failed to cancel race: "));
     }
   };
 

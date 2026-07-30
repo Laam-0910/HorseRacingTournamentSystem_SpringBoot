@@ -1,6 +1,6 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { formatDate, formatDateTime, formatForDateTimeLocal, formatForApi } from "../../utils/dateTimeHelper";
 import InlineDatePicker from "../ui/InlineDatePicker";
 import { confirm } from "../../../lib/confirm";
@@ -45,7 +45,7 @@ export default function RaceMeeting() {
         setSeasonId(ss[0].id.toString());
       }
     } catch (err: any) {
-      setError(err.message || "Failed to load data.");
+      setError(getErrMsg(err, "Failed to load data."));
     } finally {
       setLoading(false);
     }
@@ -105,7 +105,7 @@ export default function RaceMeeting() {
         handleCancelEdit();
       }
     } catch (err: any) {
-      setError(err.message || "Failed to delete meeting.");
+      setError(getErrMsg(err, "Failed to delete meeting."));
     }
   };
 
@@ -157,7 +157,7 @@ export default function RaceMeeting() {
       setVenue("");
       fetchData();
     } catch (err: any) {
-      setError(err.message || "Failed to save meeting.");
+      setError(getErrMsg(err, "Failed to save meeting."));
     }
   };
 

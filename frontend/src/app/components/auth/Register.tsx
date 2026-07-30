@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 import { $t } from '@/lib/i18n';
 
 /**
@@ -87,7 +87,7 @@ export default function Register() {
       }
     } catch (err: any) {
       // Cập nhật thông báo lỗi trả về từ server
-      setError(err.message || "Registration failed");
+      setError(getErrMsg(err, "Registration failed"));
     } finally {
       setLoading(false); // Tắt hiệu ứng chờ
     }
