@@ -770,6 +770,14 @@ export default function RefereeHub() {
   const [violPenalty, setViolPenalty] = useState("");
   const [isSevereDq, setIsSevereDq] = useState(false);
 
+  // Notification Toast State (replacing raw window.alert popups)
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "info" } | null>(null);
+
+  const notify = (msg: string, type: "success" | "error" | "info" = "info") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4500);
+  };
+
   // Steward Report Modal State
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportModalContent, setReportModalContent] = useState("");
@@ -870,9 +878,9 @@ export default function RefereeHub() {
         }
         // Trả lỗi nếu quá cân vượt giới hạn an toàn cho phép là +1.0kg
         if (diff > 1.0) {
-          alert(isVi 
+          notify(isVi 
             ? `Không thể xác nhận pre-check. Ngựa "${item.horse?.name}" bị quá cân (+${diff.toFixed(1)} kg, giới hạn tối đa cho phép là +1.0 kg). Vui lòng điều chỉnh lại cân nặng của nài ngựa hoặc loại ngựa khỏi cuộc đua (SCRATCH).`
-            : `Cannot confirm pre-check. Horse "${item.horse?.name}" is too overweight (+${diff.toFixed(1)} kg, limit is +1.0 kg). Jockey weight must be corrected, or horse must be scratched.`);
+            : `Cannot confirm pre-check. Horse "${item.horse?.name}" is too overweight (+${diff.toFixed(1)} kg, limit is +1.0 kg). Jockey weight must be corrected, or horse must be scratched.`, "error");
           setLoading(false);
           return;
         }
@@ -889,12 +897,12 @@ export default function RefereeHub() {
         raceId: selectedRace.id,
         entries: payloadEntries,
       });
-      alert(isVi ? "Kiểm tra trước cuộc đua hoàn tất. Trận đấu đã sẵn sàng bắt đầu!" : "Pre-race check completed. The race is now ready to start!");
+      notify(isVi ? "Kiểm tra trước cuộc đua hoàn tất. Trận đấu đã sẵn sàng bắt đầu!" : "Pre-race check completed. The race is now ready to start!", "success");
       setActiveView("list");
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      alert("Pre-check failed: " + err.message);
+      notify("Pre-check failed: " + err.message, "error");
       setLoading(false);
     }
   };
@@ -904,11 +912,11 @@ export default function RefereeHub() {
     setLoading(true);
     try {
       await api.post(`/referee/races/${race.id}/start`);
-      alert("Race started successfully. Now monitoring live!");
+      notify("Race started successfully. Now monitoring live!", "success");
       // Chuyển thẳng sang phân hệ Giám sát trực tiếp (Live Supervision)
       handleStartSupervise({ ...race, status: "RUNNING" });
     } catch (err: any) {
-      alert("Failed to start race: " + err.message);
+      notify("Failed to start race: " + err.message, "error");
       setLoading(false);
     }
   };
@@ -1011,7 +1019,7 @@ export default function RefereeHub() {
       // Tải lại dữ liệu giám sát trực tiếp
       handleStartSupervise(selectedRace);
     } catch (err: any) {
-      alert($t("Ghi nhận vi phạm thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + err.message);
+      notify($t("Ghi nhận vi phạm thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + err.message, "error");
     }
   };
 
@@ -1021,12 +1029,12 @@ export default function RefereeHub() {
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/stop`, { stewardReport });
-      alert($t("Đã thực hiện dừng khẩn cấp. Trạng thái cuộc đua chuyển thành CANCELLED.", (localStorage.getItem('app-lang') || 'vi')));
+      notify($t("Đã thực hiện dừng khẩn cấp. Trạng thái cuộc đua chuyển thành CANCELLED.", (localStorage.getItem('app-lang') || 'vi')), "success");
       setActiveView("list");
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      alert($t("Không thể dừng cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message);
+      notify($t("Không thể dừng cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message, "error");
       setLoading(false);
     }
   };
@@ -1037,7 +1045,7 @@ export default function RefereeHub() {
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/suspend`, { stewardReport });
-      alert($t("Đã tạm hoãn cuộc đua. Trạng thái chuyển thành STOPPED.", (localStorage.getItem('app-lang') || 'vi')));
+      notify($t("Đã tạm hoãn cuộc đua. Trạng thái chuyển thành STOPPED.", (localStorage.getItem('app-lang') || 'vi')), "info");
       const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
       setAssignedRaces(dashboardRes.assignedRaces || []);
       setCompletedCount(dashboardRes.completedCount || 0);
@@ -1050,7 +1058,7 @@ export default function RefereeHub() {
         fetchDashboard();
       }
     } catch (err: any) {
-      alert($t("Không thể tạm hoãn cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message);
+      notify($t("Không thể tạm hoãn cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message, "error");
       setLoading(false);
     }
   };
@@ -1061,7 +1069,7 @@ export default function RefereeHub() {
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/resume`);
-      alert($t("Đã khôi phục cuộc đua. Trạng thái chuyển thành RUNNING.", (localStorage.getItem('app-lang') || 'vi')));
+      notify($t("Đã khôi phục cuộc đua. Trạng thái chuyển thành RUNNING.", (localStorage.getItem('app-lang') || 'vi')), "success");
       const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
       setAssignedRaces(dashboardRes.assignedRaces || []);
       setCompletedCount(dashboardRes.completedCount || 0);
@@ -1073,7 +1081,7 @@ export default function RefereeHub() {
         fetchDashboard();
       }
     } catch (err: any) {
-      alert($t("Không thể khôi phục cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message);
+      notify($t("Không thể khôi phục cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message, "error");
       setLoading(false);
     }
   };
@@ -1128,33 +1136,33 @@ export default function RefereeHub() {
           const time = finishTimes[entryId];
           // Trả lỗi nếu để trống thời gian chạy của ngựa về đích
           if (!time || !time.trim()) {
-            alert(isVi 
+            notify(isVi 
               ? `Vui lòng nhập thời gian về đích cho ngựa "${item.horse?.name}" hoặc đánh dấu loại bỏ (DQ).`
-              : `Please enter finishing time for horse "${item.horse?.name}" or mark as DQ.`);
+              : `Please enter finishing time for horse "${item.horse?.name}" or mark as DQ.`, "error");
             setLoading(false);
             return;
           }
-          // Yêu cầu nhập đúng định dạng mm:ss hoặc mm:ss.ms
-          if (!/^\d+:\d+(\.\d+)?$/.test(time.trim())) {
-            alert(isVi 
-              ? `Thời gian của ngựa "${item.horse?.name}" phải nhập đúng định dạng phút:giây (ví dụ 1:48.35 hoặc 1:48), không được nhập số thường hay dấu phẩy.`
-              : `Finishing time for horse "${item.horse?.name}" must be in the format MM:SS or MM:SS.ms (e.g. 1:48.35 or 1:48).`);
+          // Yêu cầu nhập đúng định dạng mm:ss hoặc mm:ss.ms (số giây từ 00 đến 59)
+          if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(time.trim())) {
+            notify(isVi 
+              ? `Thời gian của ngựa "${item.horse?.name}" không hợp lệ (${time}). Số giây phải nằm trong khoảng 00-59 (ví dụ 1:48.35 hoặc 1:05).`
+              : `Finishing time for horse "${item.horse?.name}" is invalid (${time}). Seconds must be between 00 and 59 (e.g. 1:48.35 or 1:05).`, "error");
             setLoading(false);
             return;
           }
           const pos = finalPositions[entryId];
           if (!pos || isNaN(parseInt(pos))) {
-            alert(isVi
+            notify(isVi
               ? `Không thể xác định thứ hạng về đích cho ngựa "${item.horse?.name}". Vui lòng kiểm tra lại thời gian.`
-              : `Cannot determine final position for horse "${item.horse?.name}". Please check the finish time.`);
+              : `Cannot determine final position for horse "${item.horse?.name}". Please check the finish time.`, "error");
             setLoading(false);
             return;
           }
           const weight = parseFloat(weighInWeights[entryId]);
           if (isNaN(weight) || weight <= 0) {
-            alert(isVi
+            notify(isVi
               ? `Vui lòng nhập cân nặng sau đua hợp lệ cho ngựa "${item.horse?.name}".`
-              : `Please enter a valid weigh-in weight for horse "${item.horse?.name}".`);
+              : `Please enter a valid weigh-in weight for horse "${item.horse?.name}".`, "error");
             setLoading(false);
             return;
           }
@@ -1180,12 +1188,12 @@ export default function RefereeHub() {
         results: resultsPayload,
       });
 
-      alert($t("Kết quả đã được xác minh và công bố chính thức. Đóng trận đấu.", (localStorage.getItem('app-lang') || 'vi')));
+      notify(isVi ? "Kết quả đã được xác minh và công bố chính thức. Đóng trận đấu." : "Results verified and published. Closing race.", "success");
       setActiveView("list");
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      alert($t("Gửi kết quả thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + err.message);
+      notify($t("Gửi kết quả thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + err.message, "error");
     } finally {
       setLoading(false);
     }
@@ -2357,10 +2365,13 @@ export default function RefereeHub() {
               <button
                 type="button"
                 onClick={() => {
-                  if (!reasonInput.trim()) return;
-                  if (reasonModal.type === "suspend") handleSuspendRace(reasonInput);
-                  else if (reasonModal.type === "emergency") handleStopRace(reasonInput);
+                  const currentReason = reasonInput.trim();
+                  const currentType = reasonModal.type;
+                  if (!currentReason) return;
                   setReasonModal(null);
+                  setReasonInput("");
+                  if (currentType === "suspend") handleSuspendRace(currentReason);
+                  else if (currentType === "emergency") handleStopRace(currentReason);
                 }}
                 style={{ padding: "0.5rem 1.25rem", background: reasonModal.type === "emergency" ? "#f59e0b" : "#fbbf24", color: "#000", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer" }}
               >
@@ -2368,6 +2379,31 @@ export default function RefereeHub() {
               </button>
             </div>
           </div>
+        </div>,
+        document.body
+      )}
+
+      {toast && createPortal(
+        <div style={{
+          position: "fixed",
+          bottom: "1.5rem",
+          right: "1.5rem",
+          zIndex: 10000,
+          background: toast.type === "error" ? "#7f1d1d" : toast.type === "success" ? "#064e3b" : "#1e1b4b",
+          border: toast.type === "error" ? "1px solid #ef4444" : toast.type === "success" ? "1px solid #10b981" : "1px solid #6366f1",
+          color: "#fff",
+          padding: "0.875rem 1.25rem",
+          borderRadius: "0.5rem",
+          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+          fontSize: "0.85rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+          maxWidth: "24rem"
+        }}>
+          <span>{toast.type === "error" ? "⚠️" : toast.type === "success" ? "✅" : "ℹ️"}</span>
+          <span style={{ flex: 1 }}>{toast.msg}</span>
+          <button onClick={() => setToast(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
         </div>,
         document.body
       )}

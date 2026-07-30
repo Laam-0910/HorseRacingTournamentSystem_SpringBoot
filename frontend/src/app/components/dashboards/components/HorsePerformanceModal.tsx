@@ -47,8 +47,29 @@ function HorsePerformanceModal({
       setLoading(true);
       setError("");
       try {
-        const data = await api.get<HorsePerf>(`/public/horses/${horseId}/performance`);
-        setPerf(data);
+        const raw: any = await api.get<any>(`/public/horses/${horseId}/performance`);
+        const formatted: HorsePerf = {
+          name: raw.name || raw.horseName || horseName,
+          breed: raw.breed || "Thoroughbred",
+          sex: raw.sex,
+          avatar: raw.avatar,
+          currentRating: raw.currentRating ?? 52,
+          totalRaces: raw.totalRaces ?? 0,
+          totalWins: raw.totalWins ?? 0,
+          winRate: raw.winRate ?? 0,
+          history: (raw.history || raw.raceHistory || []).map((h: any) => ({
+            startTime: h.startTime || "",
+            meetingName: h.meetingName || "Event",
+            classLevel: h.classLevel || "Open",
+            gateNumber: h.gateNumber,
+            jockeyName: h.jockeyName || "—",
+            position: String(h.position || h.finalPosition || "—"),
+            finishTime: h.finishTime || "—",
+            ratingAdjustment: h.ratingAdjustment ?? 0,
+            prizeMoney: h.prizeMoney ?? 0,
+          })),
+        };
+        setPerf(formatted);
       } catch (err: any) {
         setError(err.message || "Failed to load horse performance data.");
       } finally {

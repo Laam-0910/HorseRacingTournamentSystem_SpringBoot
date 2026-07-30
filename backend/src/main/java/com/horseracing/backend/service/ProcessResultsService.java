@@ -45,6 +45,10 @@ public class ProcessResultsService {
                     if (finishTime == null || finishTime.trim().isEmpty()) {
                         throw new IllegalArgumentException("Vui lòng nhập thời gian hoàn thành cho tất cả ngựa thi đấu trước khi hoàn tất trận đua.");
                     }
+                    String tStr = finishTime.trim();
+                    if (!"DQ".equalsIgnoreCase(tStr) && !tStr.matches("^\\d+:[0-5]\\d(\\.\\d{1,3})?$")) {
+                        throw new IllegalArgumentException("Thời gian hoàn thành ('" + finishTime + "') không hợp lệ. Số giây phải nằm trong khoảng 00-59 (Định dạng MM:SS hoặc MM:SS.ms, ví dụ: 1:48.35).");
+                    }
                 }
             }
         }
