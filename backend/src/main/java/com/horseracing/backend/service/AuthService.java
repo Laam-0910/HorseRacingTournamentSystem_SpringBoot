@@ -41,83 +41,106 @@ public class AuthService {
 
     @Transactional
     public LoginResponseDTO login(LoginRequestDTO request) {
+        // Lấy tên đăng nhập hoặc email từ request body
         String username = request.getUsername();
+        // Lấy mật khẩu nhập vào từ request body
         String password = request.getPassword();
 
+        // 1. Tìm tài khoản người dùng theo Tên đăng nhập trong CSDL
         Optional<User> userOpt = userRepository.findByUsername(username);
         if (userOpt.isEmpty()) {
-            userOpt = userRepository.findByEmail(username); // Allow login by email
+            // Nếu không tìm thấy theo Username, thử tìm kiếm theo địa chỉ Email
+            userOpt = userRepository.findByEmail(username); // Hỗ trợ đăng nhập bằng Email
         }
 
+        // 2. Kiểm tra nếu tài khoản hoàn toàn không tồn tại trong hệ thống
         if (userOpt.isEmpty()) {
             return LoginResponseDTO.builder()
-                    .success(false)
-                    .error("User not found")
+                    .success(false) // Trả về cờ thất bại
+                    .error("User not found") // Thông báo không tìm thấy tài khoản
                     .build();
         }
 
+        // Trích xuất đối tượng User từ Optional
         User user = userOpt.get();
+        // 3. Kiểm tra nếu tài khoản đang bị vô hiệu hóa (INACTIVE)
         if ("INACTIVE".equals(user.getStatus())) {
             return LoginResponseDTO.builder()
-                    .success(false)
-                    .error("Account is inactive")
+                    .success(false) // Trả về cờ thất bại
+                    .error("Account is inactive") // Thông báo tài khoản bị khóa
                     .build();
         }
 
         boolean validPassword = false;
-        // Legacy plain-text password support
+        // 4. Kiểm tra tương thích với mật khẩu lưu dạng văn bản thô legacy cũ (nếu chưa mã hóa BCrypt)
         if (!user.getPasswordHash().startsWith("$2a$")) {
             if (user.getPasswordHash().equals(password)) {
                 validPassword = true;
+                // Mã hóa lại mật khẩu cũ sang chuẩn BCrypt và cập nhật tự động vào CSDL
                 user.setPasswordHash(passwordEncoder.encode(password));
                 userRepository.save(user);
             }
         } else {
+            // Kiểm tra khớp mật khẩu mã hóa BCrypt chuẩn
             validPassword = passwordEncoder.matches(password, user.getPasswordHash());
         }
 
+        // 5. Nếu mật khẩu không trùng khớp
         if (!validPassword) {
             return LoginResponseDTO.builder()
-                    .success(false)
-                    .error("Incorrect password")
+                    .success(false) // Trả về cờ thất bại
+                    .error("Incorrect password") // Thông báo sai mật khẩu
                     .build();
         }
 
+        // 6. Kiểm tra xem người dùng có kích hoạt tính năng xác thực 2 lớp OTP 2FA hay không
         boolean requireOtp = (user.getRequireOtp() != null && user.getRequireOtp());
 
         if (!requireOtp) {
-            // General OTP disabled bypasses verification
+            // Nếu tắt 2FA: Phát hành ngay chuỗi JWT Bearer Token không cần qua bước OTP
             String token = tokenProvider.generateToken(user.getUsername(), user.getRoleId());
             return LoginResponseDTO.builder()
-                    .success(true)
-                    .requireOtp(false)
-                    .token(token)
-                    .user(userMapper.toDTO(user))
+                    .success(true) // Trả về cờ thành công
+                    .requireOtp(false) // Không yêu cầu nhập OTP
+                    .token(token) // Chuỗi JWT Token phát hành
+                    .user(userMapper.toDTO(user)) // Dữ liệu hồ sơ người dùng
                     .build();
         } else {
-            // Generate OTP for 2FA
+            // Nếu bật 2FA: Tạo ngẫu nhiên mã OTP 6 chữ số
             String otp = String.format("%06d", new Random().nextInt(999999));
+            // Tạo mã định danh ngẫu nhiên cho phiên giao dịch OTP (UUID)
             String otpTxId = UUID.randomUUID().toString();
             
+            // Lưu thông tin phiên xác thực OTP vào bộ nhớ tạm thời
             otpStorage.put(otpTxId, OtpSession.builder()
-                    .otpCode(otp)
-                    .creationTime(System.currentTimeMillis())
-                    .pendingData(user)
+                    .otpCode(otp) // Mã OTP 6 chữ số
+                    .creationTime(System.currentTimeMillis()) // Thời điểm tạo ngẫu nhiên
+                    .pendingData(user) // Dữ liệu User tạm giữ
                     .build());
 
-            // Send Email
+            // Gửi Email chứa mã OTP 6 chữ số về địa chỉ Email đăng ký của tài khoản
             emailSender.sendVerificationCode(user.getEmail(), otp, "LOGIN");
 
+            // Trả về cờ yêu cầu chuyển sang màn hình nhập OTP kèm mã giao dịch otpTxId
             return LoginResponseDTO.builder()
-                    .success(true)
-                    .requireOtp(true)
-                    .otpTxId(otpTxId)
+                    .success(true) // Trả về cờ thành công khởi tạo OTP
+                    .requireOtp(true) // Yêu cầu nhập OTP
+                    .otpTxId(otpTxId) // Mã định danh phiên OTP
                     .build();
         }
     }
 
     public LoginResponseDTO verifyLogin(String otpTxId, String enteredOtp) {
+        // Kiểm tra xem mã giao dịch OTP có bị thiếu hoặc rỗng không
+        if (otpTxId == null || otpTxId.isBlank()) {
+            return LoginResponseDTO.builder()
+                    .success(false)
+                    .error("Invalid or missing OTP transaction ID")
+                    .build();
+        }
+        // Tra cứu phiên xác thực OTP trong bộ nhớ lưu trữ
         OtpSession session = otpStorage.get(otpTxId);
+        // Kiểm tra phiên OTP có tồn tại và mã OTP nhập vào có trùng khớp không
         if (session == null || !session.getOtpCode().equals(enteredOtp)) {
             return LoginResponseDTO.builder()
                     .success(false)
@@ -125,8 +148,9 @@ public class AuthService {
                     .build();
         }
 
-        // Expire in 1 minute (60,000 ms)
+        // Kiểm tra thời gian hết hạn của mã OTP (Quá 60 giây = 60,000 miligiây)
         if ((System.currentTimeMillis() - session.getCreationTime()) > 60000) {
+            // Hết hạn: Xóa phiên giao dịch khỏi bộ nhớ lưu trữ
             otpStorage.remove(otpTxId);
             return LoginResponseDTO.builder()
                     .success(false)
@@ -199,6 +223,9 @@ public class AuthService {
 
     @Transactional
     public Map<String, Object> verifyRegister(String otpTxId, String enteredOtp) {
+        if (otpTxId == null || otpTxId.isBlank()) {
+            return Map.of("success", false, "error", "Invalid or missing OTP transaction ID");
+        }
         OtpSession session = otpStorage.get(otpTxId);
         if (session == null || !session.getOtpCode().equals(enteredOtp)) {
             return Map.of("success", false, "error", "Invalid verification code");
@@ -261,6 +288,9 @@ public class AuthService {
     public Map<String, Object> verifyForgotPassword(String otpTxId, String enteredOtp, String newPassword) {
         if (newPassword == null || !newPassword.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$")) {
             return Map.of("success", false, "error", "New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)");
+        }
+        if (otpTxId == null || otpTxId.isBlank()) {
+            return Map.of("success", false, "error", "Invalid or missing OTP transaction ID");
         }
         OtpSession session = otpStorage.get(otpTxId);
         if (session == null || !session.getOtpCode().equals(enteredOtp)) {

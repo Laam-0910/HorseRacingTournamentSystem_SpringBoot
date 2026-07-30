@@ -1,10 +1,18 @@
+// Import các hook useState, useEffect, useRef từ React
 import { useState, useEffect, useRef } from "react";
+// Import createPortal từ react-dom để render modal portal
 import { createPortal } from "react-dom";
+// Import hook useAuth từ ngữ cảnh AuthContext
 import { useAuth } from "../../../context/AuthContext";
+// Import api client và hàm lấy thông báo lỗi getErrMsg
 import { api, getErrMsg } from "../../../lib/api";
+// Import hàm confirm để hiển thị thoại xác nhận
 import { confirm } from "../../../lib/confirm";
+// Import các hàm hỗ trợ định dạng ngày giờ và hạng đấu
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
+// Import hàm lấy URL nhúng YouTube từ thư viện utils
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
+// Import hàm đa ngôn ngữ $t
 import { $t } from '@/lib/i18n';
 
 const PURPLE = "#8b5cf6";

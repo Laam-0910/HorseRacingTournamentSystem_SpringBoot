@@ -1,11 +1,20 @@
+// Import các hook useState và useEffect từ React
 import { useState, useEffect } from "react";
+// Import các hàm hỗ trợ định dạng ngày tháng
 import { parseSafeDate, formatDateTime, formatDate } from "../../utils/dateTimeHelper";
+// Import hook useAuth từ ngữ cảnh AuthContext
 import { useAuth } from "../../../context/AuthContext";
+// Import api client và hàm lấy thông báo lỗi getErrMsg
 import { api, getErrMsg } from "../../../lib/api";
+// Import hàm đa ngôn ngữ $t
 import { $t } from "../../../lib/i18n";
+// Import khung bố cục DashboardLayout
 import DashboardLayout from "../layout/DashboardLayout";
+// Import ProfileTab hiển thị thông tin cá nhân
 import ProfileTab from "./components/ProfileTab";
+// Import ProfileModal hiển thị popup thông tin người dùng
 import ProfileModal from "./components/ProfileModal";
+// Import HorsePerformanceModal hiển thị thông số thành tích ngựa
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 
 // Định nghĩa các Tab giao diện khả dụng trong Dashboard của Jockey
