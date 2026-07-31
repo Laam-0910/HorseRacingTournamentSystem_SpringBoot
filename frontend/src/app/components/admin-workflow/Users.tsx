@@ -86,7 +86,7 @@ export default function Users() {
 
     // 1. Ràng buộc độ dài tài khoản >= 3 ký tự
     if (createUsername.trim().length < 3) {
-      setError($t("Username must be at least 3 characters long", lang));
+      setError($t("Username must be at least 3 characters long"));
       return;
     }
 
@@ -94,7 +94,7 @@ export default function Users() {
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(createPassword)) {
       setError(
-        $t("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)", lang)
+        $t("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)")
       );
       return;
     }

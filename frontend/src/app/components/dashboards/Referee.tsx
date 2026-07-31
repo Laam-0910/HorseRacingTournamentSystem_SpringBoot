@@ -13,27 +13,12 @@ type RefereeTab = "hub" | "incidents" | "duties" | "profile";
 // Mã màu tím đặc trưng làm giao diện chủ đạo cho trọng tài Referee
 const ROLE_COLOR = "#8b5cf6";
 
-// Từ điển đa ngôn ngữ hỗ trợ tiêu đề
+// Từ điển tiếng Anh hỗ trợ tiêu đề
 const TRANSLATIONS: Record<string, Record<string, string>> = {
-  vi: {
-    refereeHub: "Bảng trọng tài",
-    incidents: "Nhật ký sự cố",
-    duties: "Lịch phân công",
-  },
   en: {
     refereeHub: "Referee Hub",
     incidents: "Incidents",
     duties: "Duties",
-  },
-  ja: {
-    refereeHub: "審判ハブ",
-    incidents: "インシデント",
-    duties: "任務",
-  },
-  zh: {
-    refereeHub: "裁判中心",
-    incidents: "事件记录",
-    duties: "职责",
   }
 };
 
@@ -54,9 +39,7 @@ export default function Referee() {
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Đọc mã ngôn ngữ hiện tại của app
-  const lang = localStorage.getItem("app-lang") || "vi";
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+  const t = TRANSLATIONS.en;
 
   // Cấu hình các nút điều hướng sidebar dành riêng cho Referee
   const navItems = [

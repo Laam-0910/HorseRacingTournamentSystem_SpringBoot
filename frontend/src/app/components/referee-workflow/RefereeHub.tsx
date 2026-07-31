@@ -37,58 +37,47 @@ function Icon({ name, color }: { name: string; color?: string }) {
   return <span style={{ display: "inline-flex", color: color || "currentColor" }}>{icon}</span>;
 }
 
-const translateSex = (sex: string, lang: string) => {
-  if (!sex) return "N/A";
-  if (lang === "vi") {
-    const map: Record<string, string> = {
-      Gelding: "Ngựa thiến",
-      Colt: "Ngựa đực con",
-      Filly: "Ngựa cái con",
-      Horse: "Ngựa đực",
-      Mare: "Ngựa cái"
-    };
-    return map[sex] || sex;
-  }
-  return sex;
+const translateSex = (sex: string, lang?: string) => {
+  return sex || "N/A";
 };
 
 
-const statusLabels: Record<string, Record<string, string>> = {
-  SCHEDULED:          { vi: "Lịch trình", en: "Scheduled", zh: "已排程", ja: "予定" },
-  DECLARATION_OPEN:   { vi: "Mở đăng ký", en: "Declaration Open", zh: "开启报名", ja: "登録受付中" },
-  DECLARATION_CLOSED: { vi: "Đóng đăng ký", en: "Declaration Closed", zh: "截止报名", ja: "登録終了" },
-  RACE_ASSIGNED:      { vi: "Đã phân công", en: "Race Assigned", zh: "已分派", ja: "担当決定" },
-  RUNNING:            { vi: "Đang diễn ra", en: "Running", zh: "进行中", ja: "進行中" },
-  FINISHED:           { vi: "Đã kết thúc", en: "Finished", zh: "已结束", ja: "終了" },
-  OFFICIAL:           { vi: "Chính thức", en: "Official", zh: "官方确认", ja: "確定" },
-  STEWARDS_INQUIRY:   { vi: "Trọng tài xem xét", en: "Stewards Inquiry", zh: "裁判审查", ja: "審判調査中" },
-  CANCELLED:          { vi: "Đã hủy", en: "Cancelled", zh: "已取消", ja: "中止" },
-  PENDING_ADMIN:      { vi: "Chờ duyệt", en: "Pending Admin", zh: "等待审核", ja: "承認待ち" },
-  APPROVED:           { vi: "Đã duyệt", en: "Approved", zh: "已批准", ja: "承認済み" },
-  DISQUALIFIED:       { vi: "Bị loại", en: "Disqualified", zh: "取消资格", ja: "失格" },
-  REJECTED:           { vi: "Từ chối", en: "Rejected", zh: "已拒绝", ja: "拒否" },
-  STOPPED:            { vi: "Tạm dừng", en: "Stopped", zh: "已暂停", ja: "一時停止" }
+// Bản dịch Anh hóa nhãn hiển thị cho từng trạng thái trận đấu
+const statusLabels: Record<string, string> = {
+  SCHEDULED:          "Scheduled",
+  DECLARATION_OPEN:   "Declaration Open",
+  DECLARATION_CLOSED: "Declaration Closed",
+  RACE_ASSIGNED:      "Race Assigned",
+  RUNNING:            "Running",
+  FINISHED:           "Finished",
+  OFFICIAL:           "Official",
+  STEWARDS_INQUIRY:   "Stewards Inquiry",
+  CANCELLED:          "Cancelled",
+  PENDING_ADMIN:      "Pending Admin",
+  APPROVED:           "Approved",
+  DISQUALIFIED:       "Disqualified",
+  REJECTED:           "Rejected",
+  STOPPED:            "Stopped"
 };
 
 function statusBadge(status: string, preCheckCompleted?: boolean) {
   if (!status) return null;
   const s = status.toUpperCase();
-  const lang = localStorage.getItem("app-lang") || "vi";
   const cfg: Record<string, { bg: string; color: string; label: string }> = {
-    SCHEDULED:          { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.SCHEDULED[lang] || statusLabels.SCHEDULED.vi },
-    DECLARATION_OPEN:   { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.DECLARATION_OPEN[lang] || statusLabels.DECLARATION_OPEN.vi },
-    DECLARATION_CLOSED: { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.DECLARATION_CLOSED[lang] || statusLabels.DECLARATION_CLOSED.vi },
-    RACE_ASSIGNED:      { bg: "rgba(139,92,246,0.1)",  color: "#a08cf6", label: statusLabels.RACE_ASSIGNED[lang] || statusLabels.RACE_ASSIGNED.vi },
-    RUNNING:            { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: statusLabels.RUNNING[lang] || statusLabels.RUNNING.vi },
-    FINISHED:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.FINISHED[lang] || statusLabels.FINISHED.vi },
-    OFFICIAL:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.OFFICIAL[lang] || statusLabels.OFFICIAL.vi },
-    STEWARDS_INQUIRY:   { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.STEWARDS_INQUIRY[lang] || statusLabels.STEWARDS_INQUIRY.vi },
-    CANCELLED:          { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.CANCELLED[lang] || statusLabels.CANCELLED.vi },
-    PENDING_ADMIN:      { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: statusLabels.PENDING_ADMIN[lang] || statusLabels.PENDING_ADMIN.vi },
-    APPROVED:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.APPROVED[lang] || statusLabels.APPROVED.vi },
-    DISQUALIFIED:       { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.DISQUALIFIED[lang] || statusLabels.DISQUALIFIED.vi },
-    REJECTED:           { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.REJECTED[lang] || statusLabels.REJECTED.vi },
-    STOPPED:            { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: statusLabels.STOPPED[lang] || statusLabels.STOPPED.vi },
+    SCHEDULED:          { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.SCHEDULED },
+    DECLARATION_OPEN:   { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.DECLARATION_OPEN },
+    DECLARATION_CLOSED: { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.DECLARATION_CLOSED },
+    RACE_ASSIGNED:      { bg: "rgba(139,92,246,0.1)",  color: "#a08cf6", label: statusLabels.RACE_ASSIGNED },
+    RUNNING:            { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: statusLabels.RUNNING },
+    FINISHED:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.FINISHED },
+    OFFICIAL:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.OFFICIAL },
+    STEWARDS_INQUIRY:   { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.STEWARDS_INQUIRY },
+    CANCELLED:          { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.CANCELLED },
+    PENDING_ADMIN:      { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: statusLabels.PENDING_ADMIN },
+    APPROVED:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.APPROVED },
+    DISQUALIFIED:       { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.DISQUALIFIED },
+    REJECTED:           { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.REJECTED },
+    STOPPED:            { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: statusLabels.STOPPED },
   };
   const c = cfg[s] ?? { bg: "rgba(255,255,255,0.05)", color: "#a0a0a0", label: status };
   return (
@@ -100,97 +89,6 @@ function statusBadge(status: string, preCheckCompleted?: boolean) {
 }
 
 const TRANSLATIONS: Record<string, Record<string, string>> = {
-  vi: {
-    totalAssignments: "Tổng số phân công",
-    pendingCheck: "Chờ kiểm duyệt/Giám sát",
-    completedRaces: "Trận đấu đã hoàn thành",
-    assignedRaces: "Nhiệm vụ & Trận đấu phân công",
-    inspectMonitor: "Kiểm tra, giám sát và chốt kết quả cho các trận đấu được giao.",
-    loadingRaces: "Đang tải các trận đấu được giao...",
-    noRaces: "Hiện tại không có trận đấu nào được giao cho bạn.",
-    startRace: "🟢 Bắt đầu trận",
-    startPreCheck: "☑ Bắt đầu kiểm tra",
-    gatesNotSet: "Chưa thiết lập Cổng (Gate)",
-    monitorRecord: "👁 Giám sát & Ghi nhận",
-    confirmResults: "🔴 Xác nhận kết quả",
-    stewardReport: "📄 Báo cáo Trọng tài",
-    backToHub: "Quay lại Bảng trọng tài",
-    warningGatesNotSet: "Cảnh báo: Cổng xuất phát chưa được thiết lập đầy đủ cho tất cả nài/ngựa. Hãy yêu cầu Admin cấu hình cổng trước khi bắt đầu cuộc đua.",
-    infoGatesSet: "Thông tin: Trận đấu đã đầy đủ cổng xuất phát. Bạn có thể cho phép bắt đầu cuộc đua trước giờ bằng cách bấm Xác nhận kiểm tra phía dưới để đưa trạng thái trận đấu sang RUNNING ngay lập tức.",
-    preRaceInspection: "Kiểm tra tiền trận đấu cho",
-    classLevel: "Hạng đấu",
-    distance: "Cự ly",
-    trackType: "Loại đường chạy",
-    weightCheckTitle: "Kiểm tra cân nặng Ngựa & Nài",
-    weightCheckSub: "Xác minh trọng lượng tạ mang theo, giống ngựa và kiểm tra an toàn trang bị trước khi mở cổng.",
-    safetyCheck: "Hoàn thành danh sách kiểm tra an toàn?",
-    safetyCheckSub: "Đảm bảo bác sĩ thú y đã kiểm duyệt tất cả ngựa, nài ngựa đã được cân và hộp xuất phát an toàn.",
-    confirmPreCheck: "Xác nhận kiểm tra & Mở cổng xuất phát",
-    liveSupervision: "Giám sát trực tiếp cho",
-    raceInProgress: "Trận đấu đang diễn ra",
-    emergencyStop: "🛑 Dừng trận đấu khẩn cấp",
-    recordViolation: "⚠️ Ghi nhận vi phạm",
-    activeRunners: "Thí sinh đang chạy",
-    activeRunnersSub: "Các đối thủ đang chạy trên đường đua.",
-    incidentsRecorded: "Sự cố / Vi phạm đã ghi nhận",
-    incidentsRecordedSub: "Các vi phạm đã được trọng tài ghi nhận cho trận đấu này.",
-    noIncidents: "Không có sự cố nào được ghi nhận. Trận đấu sạch cho đến nay.",
-    raceCompleted: "Trận đấu đã kết thúc?",
-    raceCompletedSub: "Chuyển sang bảng nhập kết quả chung cuộc để điền thứ hạng, thời gian chạy và gửi báo cáo chính thức.",
-    finishRaceEnter: "Kết thúc trận & Nhập kết quả",
-    logRulesViolation: "Ghi nhận vi phạm luật đua",
-    runner: "Thí sinh (Ngựa / Nài)",
-    violationDesc: "Mô tả vi phạm",
-    assessedPenalty: "Hình phạt áp dụng",
-    severeDq: "Vi phạm cực kỳ nghiêm trọng (Loại trực tiếp khỏi trận đấu ngay lập tức)",
-    saveViolation: "Lưu vi phạm",
-    finalResultEntry: "Nhập kết quả chung cuộc cho",
-    finalResultEntrySub: "Gửi thứ hạng, thời gian chạy chính thức, các trường hợp loại trực tiếp và lập Báo cáo của Trọng tài để chia giải thưởng và cập nhật điểm rating.",
-    officialFinishingSheet: "Bảng thứ hạng chính thức",
-    officialFinishingSheetSub: "Xác minh thứ hạng và thời gian của từng con ngựa. Chọn cột DQ để loại thí sinh khỏi trận đấu.",
-    stewardOfficialReport: "Báo cáo chính thức của Trọng tài",
-    stewardOfficialReportSub: "Cung cấp bản tóm tắt bằng văn bản về cuộc đua, mô tả chi tiết bất kỳ cuộc điều tra sự cố, cảnh cáo hoặc ghi chú y tế.",
-    approveOfficial: "Phê duyệt & Công bố chính thức",
-    perfectWeight: "Cân nặng chuẩn",
-    verified: "Đã xác nhận",
-    scratched: "BỊ LOẠI (Y TẾ)",
-    criticalOverweight: "Quá cân nghiêm trọng (Tối đa +1.0kg)",
-    overweight: "Quá cân",
-    requiresLeadWeight: "Cần mang thêm chì",
-    gate: "Cổng",
-    jockeyDetails: "Thông tin Nài",
-    horseDetails: "Thông tin Ngựa",
-    jockeyWeight: "Cân nặng trước đua (Weigh-Out) (kg)",
-    requiredWeight: "Cân nặng yêu cầu",
-    vetCheck: "Khám y tế & An toàn",
-    status: "Trạng thái",
-    cancel: "Hủy",
-    close: "Đóng",
-    weighInPassed: "Cân sau đua đạt",
-    underweightDiscrepancy: "SAI LỆCH THIẾU CÂN",
-    finalPosition: "Thứ hạng chung cuộc",
-    weighInWeight: "Cân nặng sau đua (Weigh-In) (kg)",
-    finishTime: "Thời gian chạy",
-    dq: "Loại (DQ)",
-    stewardReportModalTitle: "Báo cáo chính thức của Trọng tài",
-    resultsVerifiedAlert: "Kết quả đã được xác minh và công bố chính thức. Đóng trận đấu.",
-    submissionFailedAlert: "Gửi kết quả thất bại: ",
-    noReportCompiled: "Không có báo cáo nào được ghi nhận cho trận đấu này.",
-    stopReasonPrompt: "Nhập lý do tạm dừng/hoãn cuộc đua khẩn cấp (Steward's Report):",
-    emergencyStopSuccess: "Đã thực hiện dừng khẩn cấp. Trạng thái cuộc đua chuyển thành CANCELLED.",
-    failedStopRace: "Không thể dừng cuộc đua: ",
-    selectRunner: "-- Chọn Thí sinh --",
-    violationLoggedSuccess: "Đã ghi nhận vi phạm thành công.",
-    disqualifiedImmediately: "Đã ghi nhận vi phạm và LOẠI TRỰC TIẾP thí sinh ngay lập tức!",
-    failedLogViolation: "Ghi nhận vi phạm thất bại: ",
-    suspendRace: "Tạm hoãn cuộc đua",
-    resumeRace: "Khôi phục cuộc đua",
-    suspendReasonPrompt: "Nhập lý do tạm hoãn cuộc đua (Steward's Report):",
-    suspendRaceSuccess: "Đã tạm hoãn cuộc đua. Trạng thái chuyển thành STOPPED.",
-    failedSuspendRace: "Không thể tạm hoãn cuộc đua: ",
-    resumeRaceSuccess: "Đã khôi phục cuộc đua. Trạng thái chuyển thành RUNNING.",
-    failedResumeRace: "Không thể khôi phục cuộc đua: "
-  },
   en: {
     totalAssignments: "Total Assignments",
     pendingCheck: "Pending Check/Supervision",
@@ -281,188 +179,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     failedSuspendRace: "Failed to suspend race: ",
     resumeRaceSuccess: "Race resumed. Status set to RUNNING.",
     failedResumeRace: "Failed to resume race: "
-  },
-  ja: {
-    totalAssignments: "総割り当て数",
-    pendingCheck: "確認/監視待ち",
-    completedRaces: "完了したレース",
-    assignedRaces: "担当レースと任務",
-    inspectMonitor: "割り当てられたレースの検査、監視、結果確定を行います。",
-    loadingRaces: "担当レースを読み込み中...",
-    noRaces: "現在、あなたに割り当てられたレースはありません。",
-    startRace: "🟢 レース開始",
-    startPreCheck: "☑ 事前確認開始",
-    gatesNotSet: "ゲート未設定",
-    monitorRecord: "👁 監視と記録",
-    confirmResults: "🔴 結果の確認",
-    stewardReport: "📄 審判レポート",
-    backToHub: "審判ハブに戻る",
-    warningGatesNotSet: "警告: 发走ゲートが完全に設定されていません。レースを開始する前に管理者に設定を依頼してください。",
-    infoGatesSet: "情報: すべての発走ゲートが設定されています。下の事前確認ボタンを押すことで、状態を即座にRUNNINGにし、早期にレースを開始できます。",
-    preRaceInspection: "事前検査対象:",
-    classLevel: "クラスレベル",
-    distance: "距離",
-    trackType: "コースタイプ",
-    weightCheckTitle: "競走馬と騎手の重量確認",
-    weightCheckSub: "ゲートを開ける前に、負担重量、品種、装備の安全性を確認します。",
-    safetyCheck: "安全チェックリストは完了しましたか？",
-    safetyCheckSub: "獣医師がすべての馬を承認し、騎手の計量が完了し、発走ゲートが安全であることを確認してください。",
-    confirmPreCheck: "事前確認の完了とゲート開放",
-    liveSupervision: "ライブ監視対象:",
-    raceInProgress: "レース進行中",
-    emergencyStop: "🛑 緊急停止",
-    recordViolation: "⚠️ 違反記録",
-    activeRunners: "出走中の競走馬",
-    activeRunnersSub: "現在コース上を走っている競走馬。",
-    incidentsRecorded: "記録されたインシデント",
-    incidentsRecordedSub: "このレースで審判によって記録された違反。",
-    noIncidents: "インシデントは記録されていません。今のところクリーンなレースです。",
-    raceCompleted: "レースは完了しましたか？",
-    raceCompletedSub: "着順、着差タイムを入力し、公式レポートを送信するための最終結果シートに移行します。",
-    finishRaceEnter: "レース終了と結果入力",
-    logRulesViolation: "ルール違反の記録",
-    runner: "出走馬 (馬 / 騎手)",
-    violationDesc: "違反内容の説明",
-    assessedPenalty: "適用されるペナルティ",
-    severeDq: "重大なルール違反 (直ちに失格処分)",
-    saveViolation: "違反を保存",
-    finalResultEntry: "最終結果入力対象:",
-    finalResultEntrySub: "公式の着順、タイム、失格を入力し、賞金分配とレーティング更新のために審判レポートを作成します。",
-    officialFinishingSheet: "公式着順表",
-    officialFinishingSheetSub: "各馬の着顺とタイムを確認します。失格にする場合はDQ列にチェックを入れます。",
-    stewardOfficialReport: "審判公式レポート",
-    stewardOfficialReportSub: "インシデント調査、警告、または獣医のメモを含む、レースの概要を書面で提供します。",
-    approveOfficial: "承認と公式宣言",
-    perfectWeight: "適正重量",
-    verified: "検証済み",
-    scratched: "出走取消 (医療)",
-    criticalOverweight: "重大な重量超過 (最大 +1.0kg)",
-    overweight: "重量超過",
-    requiresLeadWeight: "鉛重りが必要",
-    gate: "枠番",
-    jockeyDetails: "騎手詳細",
-    horseDetails: "馬詳細",
-    jockeyWeight: "騎手重量 (kg)",
-    requiredWeight: "必要重量",
-    vetCheck: "獣医・安全検査",
-    status: "状態",
-    cancel: "キャンセル",
-    close: "閉じる",
-    weighInPassed: "後検量合格",
-    underweightDiscrepancy: "重量不足の不一致",
-    finalPosition: "最終着順",
-    weighInWeight: "後検量重量 (kg)",
-    finishTime: "走破タイム",
-    dq: "失格 (DQ)",
-    stewardReportModalTitle: "審判公式レポート",
-    resultsVerifiedAlert: "結果が正常に検証され、公式に宣言されました。レースを閉じます。",
-    submissionFailedAlert: "送信に失敗しました: ",
-    noReportCompiled: "このレースのレポートは作成されていません。",
-    stopReasonPrompt: "緊急レース中断の理由を入力してください (審判レポート):",
-    emergencyStopSuccess: "緊急停止が実行されました。レース状態はCANCELLEDに設定されました。",
-    failedStopRace: "レースの停止に失敗しました: ",
-    selectRunner: "-- 出走馬を選択 --",
-    violationLoggedSuccess: "インシデント違反が正常に記録されました。",
-    disqualifiedImmediately: "インシデントが記録され、該当馬は直ちに失格となりました！",
-    failedLogViolation: "違反の記録に失敗しました: ",
-    suspendRace: "レース一時中断",
-    resumeRace: "レース再開",
-    suspendReasonPrompt: "レース一時中断 of 理由を入力してください (審判レポート):",
-    suspendRaceSuccess: "レースを一時中断しました。ステータスは STOPPED です。",
-    failedSuspendRace: "レースを一時中断できませんでした: ",
-    resumeRaceSuccess: "レースを再開しました。ステータスは RUNNING です。",
-    failedResumeRace: "レースを再開できませんでした: "
-  },
-  zh: {
-    totalAssignments: "总指派数",
-    pendingCheck: "等待确认/监察",
-    completedRaces: "已完成比赛",
-    assignedRaces: "指派的比赛与职责",
-    inspectMonitor: "检查、监察并确定您所负责比赛的最终结果。",
-    loadingRaces: "正在加载指派的比赛...",
-    noRaces: "目前没有指派给您的比赛。",
-    startRace: "🟢 开始比赛",
-    startPreCheck: "☑ 开始赛前检查",
-    gatesNotSet: "闸位未设置",
-    monitorRecord: "👁 监察与记录",
-    confirmResults: "🔴 确认结果",
-    stewardReport: "📄 裁判报告",
-    backToHub: "返回裁判中心",
-    warningGatesNotSet: "警告: 起步闸位未完全配置。请在比赛开始前要求管理员配置闸位。",
-    infoGatesSet: "信息: 所有起步闸位已配置完毕。您可以通过在下方确认赛前检查，立即将状态更改为RUNNING，从而提早开始比赛。",
-    preRaceInspection: "赛前检查对象:",
-    classLevel: "比赛级别",
-    distance: "途程",
-    trackType: "场地类型",
-    weightCheckTitle: "赛马与骑师负重检查",
-    weightCheckSub: "在开闸前，核实出赛负重、品种以及装备安全检查。",
-    safetyCheck: "安全检查清单是否完成？",
-    safetyCheckSub: "确保兽医已批准所有马谱参赛，骑师已完成出磅，且起步闸箱安全。",
-    confirmPreCheck: "确认赛前检查并开闸",
-    liveSupervision: "现场监察对象:",
-    raceInProgress: "比赛进行中",
-    emergencyStop: "🛑 紧急停止",
-    recordViolation: "⚠️ 记录违规",
-    activeRunners: "参赛马匹",
-    activeRunnersSub: "目前在跑道上竞逐的马匹。",
-    incidentsRecorded: "记录的事件",
-    incidentsRecordedSub: "裁判针对本场比赛记录的违规行为。",
-    noIncidents: "未记录任何事件。目前比赛过程干净。",
-    raceCompleted: "比赛是否已完成？",
-    raceCompletedSub: "转至最终成绩表，输入名次、完赛时间并提交您的官方报告。",
-    finishRaceEnter: "结束比赛并输入成绩",
-    logRulesViolation: "记录违反规则行为",
-    runner: "参赛者 (马匹 / 骑师)",
-    violationDesc: "违规行为描述",
-    assessedPenalty: "所处处罚",
-    severeDq: "严重违反规则 (立即取消比赛资格)",
-    saveViolation: "保存违规记录",
-    finalResultEntry: "最终成绩输入对象:",
-    finalResultEntrySub: "提交官方名次、时间、取消资格情况，并撰写裁判报告以分配奖金和更新评分。",
-    officialFinishingSheet: "官方名次表",
-    officialFinishingSheetSub: "核实每匹马的名次与时间。勾选DQ列以取消参赛者资格。",
-    stewardOfficialReport: "裁判官方报告",
-    stewardOfficialReportSub: "提供书面的比赛总结，详细列出任何事件调查、警告或兽医记录。",
-    approveOfficial: "批准并正式公布",
-    perfectWeight: "完美重量",
-    verified: "已核实",
-    scratched: "退出比赛 (医疗原因)",
-    criticalOverweight: "严重超重 (最大 +1.0kg)",
-    overweight: "超重",
-    requiresLeadWeight: "需要配鞍铅块",
-    gate: "闸位",
-    jockeyDetails: "骑师详情",
-    horseDetails: "马匹详情",
-    jockeyWeight: "骑师体重 (kg)",
-    requiredWeight: "要求负重",
-    vetCheck: "兽医与安全检查",
-    status: "状态",
-    cancel: "取消",
-    close: "关闭",
-    weighInPassed: "后检量合格",
-    underweightDiscrepancy: "负重不足偏差",
-    finalPosition: "最终名次",
-    weighInWeight: "后检量重量 (kg)",
-    finishTime: "完赛时间",
-    dq: "取消资格 (DQ)",
-    stewardReportModalTitle: "裁判官方报告",
-    resultsVerifiedAlert: "结果已核实并正式公布。比赛已关闭。",
-    submissionFailedAlert: "提交失败: ",
-    noReportCompiled: "本场比赛未撰写任何报告。",
-    stopReasonPrompt: "请输入紧急中止比赛的原因 (裁判报告):",
-    emergencyStopSuccess: "紧急停止已执行。比赛状态已设为CANCELLED。",
-    failedStopRace: "中止比赛失败: ",
-    selectRunner: "-- 选择参赛马匹 --",
-    violationLoggedSuccess: "事件违规行为已成功记录。",
-    disqualifiedImmediately: "事件已记录，且该马匹已被立即取消比赛资格！",
-    failedLogViolation: "记录违规行为失败: ",
-    suspendRace: "暂停比赛",
-    resumeRace: "恢复比赛",
-    suspendReasonPrompt: "请输入暂停比赛的原因 (裁判报告):",
-    suspendRaceSuccess: "比赛已暂停。状态已设为 STOPPED。",
-    failedSuspendRace: "无法暂停比赛: ",
-    resumeRaceSuccess: "比赛已恢复。状态已设为 RUNNING。",
-    failedResumeRace: "无法恢复比赛: "
   }
 };
 
@@ -481,8 +197,7 @@ export default function RefereeHub() {
   }, []);
 
   // Lấy ngôn ngữ cấu hình từ localStorage
-  const lang = localStorage.getItem("app-lang") || "vi";
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+  const t = TRANSLATIONS.en;
 
   const [assignedRaces, setAssignedRaces] = useState<any[]>([]); // Danh sách các trận được phân công
   const [completedCount, setCompletedCount] = useState(0); // Số lượng trận đã hoàn thành
@@ -853,9 +568,7 @@ export default function RefereeHub() {
       const minEntries = selectedRace.minEntries || 3;
       // Trả lỗi nếu không đủ số lượng ngựa chạy tối thiểu
       if (activeCount < minEntries) {
-        alert(isVi
-          ? `Không thể xác nhận pre-check. Số lượng ngựa tham gia hoạt động (${activeCount}) nhỏ hơn mức tối thiểu yêu cầu (${minEntries}) của trận đấu.`
-          : `Cannot confirm pre-check. Active entries count (${activeCount}) is below the minimum required (${minEntries}) for this race.`);
+        alert('Cannot confirm pre-check. Active entries count (' + activeCount + ') is below the minimum required (' + minEntries + ') for this race.');
         setLoading(false);
         return;
       }
@@ -1151,9 +864,7 @@ export default function RefereeHub() {
           const time = finishTimes[entryId];
           // Trả lỗi nếu để trống thời gian chạy của ngựa về đích
           if (!time || !time.trim()) {
-            notify(isVi 
-              ? `Vui lòng nhập thời gian về đích cho ngựa "${item.horse?.name}" hoặc đánh dấu loại bỏ (DQ).`
-              : `Please enter finishing time for horse "${item.horse?.name}" or mark as DQ.`, "error");
+            notify("Please enter finishing time for horse \"" + (item.horse ? item.horse.name : "") + "\" or mark as DQ.", "error");
             setLoading(false);
             return;
           }
@@ -1356,7 +1067,7 @@ export default function RefereeHub() {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)", padding: "1.25rem 1.5rem", flexWrap: "wrap", gap: "1rem" }}>
             <div>
               <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>{$t("Kiểm tra cân nặng Ngựa & Nài", (localStorage.getItem('app-lang') || 'vi'))}</h3>
-              <p style={{ fontSize: "11px", color: "#a0a0a0" }}>{$t("Xác minh trọng lượng tạ mang theo, giống ngựa và kiểm tra an toàn trang bị trước khi mở cổng.", lang)}</p>
+              <p style={{ fontSize: "11px", color: "#a0a0a0" }}>{$t("Xác minh trọng lượng tạ mang theo, giống ngựa và kiểm tra an toàn trang bị trước khi mở cổng.")}</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span style={{ fontSize: "11px", color: "#a0a0a0", fontFamily: "monospace" }}>Sort by:</span>
@@ -1411,7 +1122,7 @@ export default function RefereeHub() {
                       <div>
                         <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Horse Details</label>
                         <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px", marginTop: "2px" }}>{item.horse?.name}</div>
-                        <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex, lang)} · Rating: {item.horse?.currentRating}</div>
+                        <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex)} · Rating: {item.horse?.currentRating}</div>
                       </div>
                       <div>
                         <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Jockey Details</label>
@@ -1519,7 +1230,7 @@ export default function RefereeHub() {
                         </td>
                         <td style={{ padding: "1rem" }}>
                           <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{item.horse?.name}</div>
-                          <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex, lang)} · Rating: {item.horse?.currentRating}</div>
+                          <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex)} · Rating: {item.horse?.currentRating}</div>
                         </td>
                         <td style={{ padding: "1rem" }}>
                           <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "13px" }}>{item.jockey?.username}</div>
@@ -1554,7 +1265,7 @@ export default function RefereeHub() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem", borderRadius: "0.75rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <h4 style={{ fontWeight: "bold", color: "#f4f2ec" }}>{$t("Hoàn thành danh sách kiểm tra an toàn?", (localStorage.getItem('app-lang') || 'vi'))}</h4>
-            <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{$t("Đảm bảo bác sĩ thú y đã kiểm duyệt tất cả ngựa, nài ngựa đã được cân và hộp xuất phát an toàn.", lang)}</p>
+            <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{$t("Đảm bảo bác sĩ thú y đã kiểm duyệt tất cả ngựa, nài ngựa đã được cân và hộp xuất phát an toàn.")}</p>
           </div>
           <div style={{ display: "flex", gap: "1rem" }}>
             <button onClick={() => setActiveView("list")} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2d2d30", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Hủy", (localStorage.getItem('app-lang') || 'vi'))}</button>
@@ -1645,7 +1356,7 @@ export default function RefereeHub() {
                 gap: "0.375rem" 
               }}
             >
-              📺 {liveMonitorMode === "floating" ? $t("Màn hình nổi (Floating)", lang) : liveMonitorMode === "embedded" ? $t("Màn hình dưới bảng (Embedded)", lang) : $t("Bật Live Monitor", lang)}
+              📺 {liveMonitorMode === "floating" ? $t("Màn hình nổi (Floating)") : liveMonitorMode === "embedded" ? $t("Màn hình dưới bảng (Embedded)") : $t("Bật Live Monitor")}
             </button>
             <button onClick={() => setShowViolModal(true)} style={{ padding: "0.5rem 1.25rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}>
               {$t("⚠️ Ghi nhận vi phạm", (localStorage.getItem('app-lang') || 'vi'))}
@@ -1885,7 +1596,7 @@ export default function RefereeHub() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem", borderRadius: "0.75rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
             <h4 style={{ fontWeight: "bold", color: "#f4f2ec" }}>{$t("Trận đấu đã kết thúc?", (localStorage.getItem('app-lang') || 'vi'))}</h4>
-            <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{$t("Chuyển sang bảng nhập kết quả chung cuộc để điền thứ hạng, thời gian chạy và gửi báo cáo chính thức.", lang)}</p>
+            <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{$t("Chuyển sang bảng nhập kết quả chung cuộc để điền thứ hạng, thời gian chạy và gửi báo cáo chính thức.")}</p>
           </div>
           <button onClick={handleStartConfirmResults} style={{ padding: "0.625rem 1.25rem", background: "#fbbf24", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Icon name="check-square" /> {$t("Kết thúc trận & Nhập kết quả", (localStorage.getItem('app-lang') || 'vi'))}
@@ -1957,7 +1668,7 @@ export default function RefereeHub() {
         <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.4)", padding: "1.5rem" }}>
           <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em" }}>{$t("Nhập kết quả chung cuộc cho", (localStorage.getItem('app-lang') || 'vi'))}</span>
           <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f4f2ec", fontFamily: "'Roboto Slab', serif", marginTop: "0.25rem" }}>{selectedRace.meetingName} - Race #{selectedRace.id}</h2>
-          <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Gửi thứ hạng, thời gian chạy chính thức, các trường hợp loại trực tiếp và lập Báo cáo của Trọng tài để chia giải thưởng và cập nhật điểm rating.", lang)}</p>
+          <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Gửi thứ hạng, thời gian chạy chính thức, các trường hợp loại trực tiếp và lập Báo cáo của Trọng tài để chia giải thưởng và cập nhật điểm rating.")}</p>
         </div>
 
         <form onSubmit={handleConfirmResults} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -2020,7 +1731,7 @@ export default function RefereeHub() {
                         <div>
                           <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Horse Details</label>
                           <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px", marginTop: "2px" }}>{item.horse?.name}</div>
-                          <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex, lang)} · Rating: {item.horse?.currentRating}</div>
+                          <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "1px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex)} · Rating: {item.horse?.currentRating}</div>
                         </div>
                         <div>
                           <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>Jockey Details</label>
@@ -2156,7 +1867,7 @@ export default function RefereeHub() {
                           </td>
                           <td style={{ padding: "1rem" }}>
                             <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{item.horse?.name}</div>
-                            <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex, lang)} · Rating: {item.horse?.currentRating}</div>
+                            <div style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{item.horse?.breed} · {translateSex(item.horse?.sex)} · Rating: {item.horse?.currentRating}</div>
                           </td>
                           <td style={{ padding: "1rem" }}>
                             <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "13px" }}>{item.jockey?.username}</div>
@@ -2255,7 +1966,7 @@ export default function RefereeHub() {
 
           <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem" }}>
             <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>{$t("Báo cáo chính thức của Trọng tài", (localStorage.getItem('app-lang') || 'vi'))}</h3>
-            <p style={{ fontSize: "11px", color: "#a0a0a0", marginBottom: "0.75rem" }}>{$t("Cung cấp bản tóm tắt bằng văn bản về cuộc đua, mô tả chi tiết bất kỳ cuộc điều tra sự cố, cảnh cáo hoặc ghi chú y tế.", lang)}</p>
+            <p style={{ fontSize: "11px", color: "#a0a0a0", marginBottom: "0.75rem" }}>{$t("Cung cấp bản tóm tắt bằng văn bản về cuộc đua, mô tả chi tiết bất kỳ cuộc điều tra sự cố, cảnh cáo hoặc ghi chú y tế.")}</p>
             <textarea value={stewardReport} onChange={e => setStewardReport(e.target.value)} required rows={5} placeholder="Insert race description..." style={{ width: "100%", padding: "0.75rem", background: "rgba(0,0,0,0.2)", border: "1px solid rgba(201,162,39,0.2)", borderRadius: "0.5rem", color: "#fff", fontSize: "12px", resize: "none", outline: "none" }} />
           </div>
 
@@ -2300,7 +2011,7 @@ export default function RefereeHub() {
         <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{$t("Nhiệm vụ & Trận đấu phân công", (localStorage.getItem('app-lang') || 'vi'))}</h3>
-            <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Kiểm tra, giám sát và chốt kết quả cho các trận đấu được giao.", lang)}</p>
+            <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Kiểm tra, giám sát và chốt kết quả cho các trận đấu được giao.")}</p>
           </div>
         </div>
         {isMobile ? (

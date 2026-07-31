@@ -2,9 +2,6 @@ import dictData from './dictionary.json';
 
 interface Translations {
   en: string;
-  vi?: string;
-  zh?: string;
-  ja?: string;
 }
 
 const dict: Record<string, Translations> = dictData;

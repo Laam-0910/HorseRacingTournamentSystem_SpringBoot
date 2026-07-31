@@ -16,28 +16,6 @@ interface Race {
 }
 
 const TRANSLATIONS: Record<string, any> = {
-  vi: {
-    title: "Phòng xem trực tiếp",
-    selectRace: "Chọn trận đấu:",
-    loading: "Đang tải dữ liệu...",
-    noLive: "Hiện tại không có trận đấu nào livestream",
-    noLiveSub: "Admin chưa khởi chạy livestream hoặc không có trận đấu nào đang diễn ra. Vui lòng quay lại sau!",
-    distance: "Cự ly",
-    trackType: "Đường đua",
-    startTime: "Khởi tranh",
-    activeStreams: "Luồng Phát Trực Tiếp",
-    watching: "ĐANG XEM",
-    watch: "XEM",
-    chatHeader: "Trò chuyện",
-    chatPlaceholder: "Chat ở đây...",
-    send: "Gửi",
-    online: "Online",
-    chatMock1: "Ngựa số 3 tăng tốc kinh quá!",
-    chatMock2: "Jockey nài ngựa Ryan chạy rất thông minh.",
-    chatMock3: "Quá hay! Vòng cuối rồi anh em ơi!",
-    theaterMode: "Rạp phim",
-    defaultMode: "Mặc định",
-  },
   en: {
     title: "Live Arena Watch",
     selectRace: "Select Race:",
@@ -59,50 +37,6 @@ const TRANSLATIONS: Record<string, any> = {
     chatMock3: "Amazing! Final lap is here guys!",
     theaterMode: "Theater Mode",
     defaultMode: "Default Mode",
-  },
-  zh: {
-    title: "直播监控室",
-    selectRace: "选择比赛:",
-    loading: "正在加载直播画面...",
-    noLive: "暂无直播",
-    noLiveSub: "目前没有比赛在直播，请稍后再试！",
-    distance: "赛程距离",
-    trackType: "赛道类型",
-    startTime: "开赛时间",
-    activeStreams: "直播列表",
-    watching: "观看中",
-    watch: "观看",
-    chatHeader: "实时聊天",
-    chatPlaceholder: "在此聊聊...",
-    send: "发送",
-    online: "在线",
-    chatMock1: "3号马加速得太猛了！",
-    chatMock2: "骑师 Ryan 骑得很聪明。",
-    chatMock3: "精彩！各位，最后一圈了！",
-    theaterMode: "剧场模式",
-    defaultMode: "普通模式",
-  },
-  ja: {
-    title: "ライブアリーナ観戦",
-    selectRace: "レース選択:",
-    loading: "ライブ画面を読み込み中...",
-    noLive: "現在ライブ配信はありません",
-    noLiveSub: "ライブ配信が開始されていないか、レースがありません。後で再試行してください！",
-    distance: "距離",
-    trackType: "馬場状態",
-    startTime: "発走時刻",
-    activeStreams: "ライブ配信中",
-    watching: "視聴中",
-    watch: "観戦",
-    chatHeader: "チャット",
-    chatPlaceholder: "チャットを入力...",
-    send: "送信",
-    online: "オンライン",
-    chatMock1: "3番の馬の加速がヤバい！",
-    chatMock2: "ジョッキー of Ryanが素晴らしい騎乗をしています。", // Wait, let's keep it as is, or fix "ジョッキーのRyan"
-    chatMock3: "すごい！ラスト一周です！",
-    theaterMode: "シアターモード",
-    defaultMode: "デフォルト",
   }
 };
 
@@ -113,8 +47,7 @@ interface ViewLiveProps {
 
 // ── Component hiển thị phòng xem Live Stream và Chat ────────────────────────
 export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLiveProps) {
-  const lang = localStorage.getItem("app-lang") || "vi"; // Ngôn ngữ
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+  const t = TRANSLATIONS.en;
   const { user } = useAuth(); // Thông tin người dùng hiện tại
 
   // State quản lý danh sách live và lựa chọn

@@ -4,37 +4,36 @@ import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
 
-// Bản đồ đa ngôn ngữ ánh xạ nhãn hiển thị cho từng trạng thái trận đấu
-const statusLabels: Record<string, Record<string, string>> = {
-  SCHEDULED:          { vi: "Lịch trình", en: "Scheduled", zh: "已排程", ja: "予定" },
-  DECLARATION_OPEN:   { vi: "Mở đăng ký", en: "Declaration Open", zh: "开启报名", ja: "登録受付中" },
-  DECLARATION_CLOSED: { vi: "Đóng đăng ký", en: "Declaration Closed", zh: "截止报名", ja: "登録終了" },
-  RACE_ASSIGNED:      { vi: "Đã phân công", en: "Race Assigned", zh: "已分派", ja: "担当決定" },
-  RUNNING:            { vi: "Đang diễn ra", en: "Running", zh: "进行中", ja: "進行中" },
-  FINISHED:           { vi: "Đã kết thúc", en: "Finished", zh: "已结束", ja: "終了" },
-  OFFICIAL:           { vi: "Chính thức", en: "Official", zh: "官方确认", ja: "確定" },
-  STEWARDS_INQUIRY:   { vi: "Trọng tài xem xét", en: "Stewards Inquiry", zh: "裁判审查", ja: "審判調査中" },
-  CANCELLED:          { vi: "Đã hủy", en: "Cancelled", zh: "已取消", ja: "中止" }
+// Bản dịch Anh hóa nhãn hiển thị cho từng trạng thái trận đấu
+const statusLabels: Record<string, string> = {
+  SCHEDULED:          "Scheduled",
+  DECLARATION_OPEN:   "Declaration Open",
+  DECLARATION_CLOSED: "Declaration Closed",
+  RACE_ASSIGNED:      "Race Assigned",
+  RUNNING:            "Running",
+  FINISHED:           "Finished",
+  OFFICIAL:           "Official",
+  STEWARDS_INQUIRY:   "Stewards Inquiry",
+  CANCELLED:          "Cancelled"
 };
 
 /**
- * Hàm sinh nhãn trạng thái (Status Badge) được định kiểu CSS & phối màu tùy biến theo trạng thái cuộc đua
+ * Hàm sinh nhãn trạng thái (Status Badge) được định dạng kiểu CSS & phối màu tùy biến theo trạng thái cuộc đua
  */
 function statusBadge(status: string) {
   const s = (status ?? "").toUpperCase();
-  const lang = localStorage.getItem("app-lang") || "vi";
   
-  // Định nghĩa màu nền, màu chữ và nội dung nhãn đã dịch cho mỗi trạng thái
+  // Định nghĩa màu nền, màu chữ và nội dung nhãn dịch cho mỗi trạng thái
   const cfg: Record<string, { bg: string; color: string; label: string }> = {
-    SCHEDULED:          { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.SCHEDULED[lang] || statusLabels.SCHEDULED.vi },
-    DECLARATION_OPEN:   { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.DECLARATION_OPEN[lang] || statusLabels.DECLARATION_OPEN.vi },
-    DECLARATION_CLOSED: { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.DECLARATION_CLOSED[lang] || statusLabels.DECLARATION_CLOSED.vi },
-    RACE_ASSIGNED:      { bg: "rgba(139,92,246,0.1)",  color: "#a08cf6", label: statusLabels.RACE_ASSIGNED[lang] || statusLabels.RACE_ASSIGNED.vi },
-    RUNNING:            { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: statusLabels.RUNNING[lang] || statusLabels.RUNNING.vi },
-    FINISHED:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.FINISHED[lang] || statusLabels.FINISHED.vi },
-    OFFICIAL:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.OFFICIAL[lang] || statusLabels.OFFICIAL.vi },
-    STEWARDS_INQUIRY:   { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.STEWARDS_INQUIRY[lang] || statusLabels.STEWARDS_INQUIRY.vi },
-    CANCELLED:          { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.CANCELLED[lang] || statusLabels.CANCELLED.vi },
+    SCHEDULED:          { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.SCHEDULED },
+    DECLARATION_OPEN:   { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.DECLARATION_OPEN },
+    DECLARATION_CLOSED: { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.DECLARATION_CLOSED },
+    RACE_ASSIGNED:      { bg: "rgba(139,92,246,0.1)",  color: "#a08cf6", label: statusLabels.RACE_ASSIGNED },
+    RUNNING:            { bg: "rgba(234,179,8,0.1)",   color: "#eab308", label: statusLabels.RUNNING },
+    FINISHED:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.FINISHED },
+    OFFICIAL:           { bg: "rgba(74,222,128,0.1)",  color: "#4ade80", label: statusLabels.OFFICIAL },
+    STEWARDS_INQUIRY:   { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.STEWARDS_INQUIRY },
+    CANCELLED:          { bg: "rgba(239,68,68,0.15)",  color: "#ef4444", label: statusLabels.CANCELLED },
   };
   const c = cfg[s] ?? { bg: "rgba(255,255,255,0.05)", color: "#a0a0a0", label: status };
   return (
@@ -44,18 +43,8 @@ function statusBadge(status: string) {
   );
 }
 
-// Từ điển đa ngôn ngữ bổ trợ dịch giao diện
+// Từ điển tiếng Anh bổ trợ dịch giao diện
 const TRANSLATIONS: Record<string, Record<string, string>> = {
-  vi: {
-    refereeSchedule: "Lịch trình trọng tài",
-    scheduleSub: "Danh sách các cuộc đua sắp diễn ra và đã diễn ra mà bạn được phân công làm trọng tài.",
-    scheduleHeader: "Lịch trình",
-    meetingVenue: "Giải đua & Địa điểm",
-    raceDetails: "Trận đấu & Chi tiết",
-    status: "Trạng thái",
-    loadingSchedule: "Đang tải lịch trình...",
-    noDuties: "Không có nhiệm vụ nào được phân công cho lịch trình của bạn."
-  },
   en: {
     refereeSchedule: "Referee Schedule",
     scheduleSub: "List of upcoming and past races where you are assigned as a steward.",
@@ -65,26 +54,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     status: "Status",
     loadingSchedule: "Loading schedule...",
     noDuties: "No duties assigned to your schedule."
-  },
-  ja: {
-    refereeSchedule: "審判スケジュール",
-    scheduleSub: "あなたが審判員として割り当てられている、今後および過去 của レースの一覧。",
-    scheduleHeader: "スケジュール",
-    meetingVenue: "開催日と会場",
-    raceDetails: "レースと詳細",
-    status: "ステータス",
-    loadingSchedule: "スケジュールを読み込み中...",
-    noDuties: "スケジュールに割り当てられた任務はありません。"
-  },
-  zh: {
-    refereeSchedule: "裁判日程表",
-    scheduleSub: "指派您担任裁判的未来和历史赛事列表。",
-    scheduleHeader: "日程",
-    meetingVenue: "赛事与场地",
-    raceDetails: "比赛与详情",
-    status: "状态",
-    loadingSchedule: "正在加载日程表...",
-    noDuties: "您的日程表中没有指派职责。"
   }
 };
 
@@ -102,8 +71,7 @@ export default function RefereeDuties() {
   // Trạng thái Responsive Mobile
   const [isMobile, setIsMobile] = useState(false);
 
-  const lang = localStorage.getItem("app-lang") || "vi";
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+  const t = TRANSLATIONS.en;
 
   // Lắng nghe thay đổi kích thước màn hình để tự động điều chỉnh bố cục UI
   useEffect(() => {

@@ -24,7 +24,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.875rem 1.25rem", borderTop: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.25)", flexWrap: "wrap", gap: "0.75rem" }}>
       <span style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>
-        {$t("Hiển thị", lang)} {startItem} - {endItem} / {totalItems} {$t("hàng", lang)}
+        {$t("Hiển thị")} {startItem} - {endItem} / {totalItems} {$t("hàng")}
       </span>
       <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
         <button
@@ -43,7 +43,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
             cursor: currentPage === 1 ? "not-allowed" : "pointer",
           }}
         >
-          ◀ {$t("Trước", lang)}
+          ◀ {$t("Trước")}
         </button>
         <span style={{ padding: "0 0.6rem", fontSize: "11px", fontFamily: "monospace", color: "#f4f2ec", fontWeight: "bold" }}>
           {currentPage} / {totalPages}
@@ -64,7 +64,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
             cursor: currentPage === totalPages ? "not-allowed" : "pointer",
           }}
         >
-          {$t("Sau", lang)} ▶
+          {$t("Sau")} ▶
         </button>
       </div>
     </div>
