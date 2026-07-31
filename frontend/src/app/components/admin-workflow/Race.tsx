@@ -20,6 +20,7 @@ interface User {
   username: string;
   email: string;
   roleId: number;
+
   fullName?: string;
   avatar?: string;
 }
@@ -543,6 +544,18 @@ export default function Race() {
                     <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "10px", display: "block" }}>Referees Assigned ({assigned.length})</span>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                       {assigned.map(ref => (
+                        <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
+                          {ref.avatar ? (
+                            <img src={ref.avatar} alt={ref.username} style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover" }} />
+                          ) : (
+                            <span style={{ width: 18, height: 18, borderRadius: "50%", background: "#c9a227", color: "#000", fontSize: "9px", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                              {(ref.username || "R").charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                          <span>{ref.username}</span>
+                          {!isRefLocked && (
+                            <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "2px", fontSize: "10px" }}>×</button>
+
                         <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "11px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
                           <button
                             type="button"
@@ -571,7 +584,7 @@ export default function Race() {
                         <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none", flex: 1 }}>
                           <option value="">{$t("-- Assign Referee --", (localStorage.getItem('app-lang') || 'vi'))}</option>
                           {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
-                            <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
+                            <option key={rUser.id} value={rUser.id}>👤 {rUser.username}</option>
                           ))}
                         </select>
                         <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Assign", (localStorage.getItem('app-lang') || 'vi'))}</button>
@@ -712,6 +725,17 @@ export default function Race() {
                       <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
                           {assigned.map(ref => (
+                            <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
+                              {ref.avatar ? (
+                                <img src={ref.avatar} alt={ref.username} style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover" }} />
+                              ) : (
+                                <span style={{ width: 18, height: 18, borderRadius: "50%", background: "#c9a227", color: "#000", fontSize: "9px", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                  {(ref.username || "R").charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                              <span>{ref.username}</span>
+                              {!isRefLocked && (
+                                <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "2px", fontSize: "10px" }} title="Remove referee">×</button>
                             <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "11px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
                               <button
                                 type="button"
@@ -738,7 +762,7 @@ export default function Race() {
                               <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none" }}>
                                 <option value="">{$t("-- Assign Referee --", (localStorage.getItem('app-lang') || 'vi'))}</option>
                                 {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
-                                  <option key={rUser.id} value={rUser.id}>{rUser.username}</option>
+                                  <option key={rUser.id} value={rUser.id}>👤 {rUser.username}</option>
                                 ))}
                               </select>
                               <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Assign", (localStorage.getItem('app-lang') || 'vi'))}</button>

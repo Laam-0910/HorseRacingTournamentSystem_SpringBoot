@@ -2,6 +2,7 @@ import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { api, getErrMsg } from "../../../lib/api";
+import { PaginationControls } from "./PaginationControls";
 
 /**
  * Component Users - Phân hệ Quản lý Tài khoản người dùng (User Accounts Management) dành cho Admin.
@@ -209,6 +210,13 @@ export default function Users() {
     }
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterRole]);
+
   // Tiến hành lọc danh sách người dùng theo vai trò và thanh tìm kiếm
   const filteredUsers = users.filter((u) => {
     let matchesRole = true;
@@ -229,11 +237,8 @@ export default function Users() {
     return matchesRole && matchesSearch;
   });
 
-  // Tính toán Phân trang
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / itemsPerPage));
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, filteredUsers.length);
-  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   // Chuyển đổi ID vai trò thành nhãn hiển thị tương ứng
   const getRoleName = (roleId: number) => {
@@ -365,7 +370,7 @@ export default function Users() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
               <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</div>
-            ) : filteredUsers.length === 0 ? (
+            ) : paginatedUsers.length === 0 ? (
               <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No matching users found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
             ) : paginatedUsers.map((u) => (
               <div key={u.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", opacity: u.status === "INACTIVE" ? 0.6 : 1 }}>
@@ -411,7 +416,7 @@ export default function Users() {
               <tbody className="divide-y divide-white/5">
                 {loading ? (
                   <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
-                ) : filteredUsers.length === 0 ? (
+                ) : paginatedUsers.length === 0 ? (
                   <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No matching users found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : paginatedUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-white/[0.015] transition-colors" style={{ opacity: u.status === "INACTIVE" ? 0.6 : 1 }}>
@@ -447,46 +452,13 @@ export default function Users() {
           </div>
         )}
 
-        {/* THANH PHÂN TRANG (Pagination Bar) */}
-        <div style={{ padding: "0.875rem 1.5rem", background: "rgba(21,19,16,0.6)", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem", fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>
-          <div>
-            Showing <strong style={{ color: "#fbbf24" }}>{filteredUsers.length === 0 ? 0 : startIndex + 1}</strong> to <strong style={{ color: "#fbbf24" }}>{endIndex}</strong> of <strong style={{ color: "#fbbf24" }}>{filteredUsers.length}</strong> users
-          </div>
-          
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", marginRight: "0.5rem" }}>
-              <span>Rows per page:</span>
-              <select 
-                value={itemsPerPage} 
-                onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                style={{ padding: "0.2rem 0.4rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", fontSize: "11px", outline: "none", cursor: "pointer" }}
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-            </div>
-
-            <button
-              disabled={currentPage <= 1}
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              style={{ padding: "0.35rem 0.75rem", borderRadius: "0.375rem", background: currentPage <= 1 ? "rgba(255,255,255,0.05)" : "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", color: currentPage <= 1 ? "rgba(255,255,255,0.2)" : "#fbbf24", cursor: currentPage <= 1 ? "not-allowed" : "pointer", fontWeight: "bold" }}
-            >
-              &larr; Prev
-            </button>
-
-            <span>Page <strong style={{ color: "#f4f2ec" }}>{currentPage}</strong> of <strong style={{ color: "#f4f2ec" }}>{totalPages}</strong></span>
-
-            <button
-              disabled={currentPage >= totalPages}
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-              style={{ padding: "0.35rem 0.75rem", borderRadius: "0.375rem", background: currentPage >= totalPages ? "rgba(255,255,255,0.05)" : "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", color: currentPage >= totalPages ? "rgba(255,255,255,0.2)" : "#fbbf24", cursor: currentPage >= totalPages ? "not-allowed" : "pointer", fontWeight: "bold" }}
-            >
-              Next &rarr;
-            </button>
-          </div>
-        </div>
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredUsers.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+        />
       </div>
 
       {/* BIỂU MẪU CHỈNH SỬA TÀI KHOẢN (Edit User Modal) - Kết xuất ra ngoài thông qua react-dom Portal */}
