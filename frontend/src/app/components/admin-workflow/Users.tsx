@@ -210,7 +210,6 @@ export default function Users() {
     }
   };
 
-  const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 20;
 
   useEffect(() => {
