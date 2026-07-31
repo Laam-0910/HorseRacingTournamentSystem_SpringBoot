@@ -210,6 +210,18 @@ export default function Users() {
     }
   };
 
+  // Lọc danh sách người dùng theo vai trò và từ khóa tìm kiếm
+  const filteredUsers = users.filter((u: any) => {
+    if (filterRole !== "ALL" && String(u.roleId) !== filterRole) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchName = (u.username || "").toLowerCase().includes(q) || (u.fullName || "").toLowerCase().includes(q);
+      const matchEmail = (u.email || "").toLowerCase().includes(q);
+      if (!matchName && !matchEmail) return false;
+    }
+    return true;
+  });
+
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / itemsPerPage));
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
