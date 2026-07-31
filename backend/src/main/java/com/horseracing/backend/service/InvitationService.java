@@ -205,6 +205,17 @@ public class InvitationService {
             throw new IllegalArgumentException("Invitation is not pending");
         }
 
+        // Verify Owner has sufficient wallet balance for hire fee before accepting
+        BigDecimal hireFee = invite.getHireFee() != null ? invite.getHireFee() : new BigDecimal("500.00");
+        if (invite.getOwnerId() != null && hireFee.compareTo(BigDecimal.ZERO) > 0) {
+            User owner = userRepository.findById(invite.getOwnerId())
+                    .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
+            BigDecimal ownerBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+            if (ownerBal.compareTo(hireFee) < 0) {
+                throw new IllegalArgumentException(String.format("Owner has insufficient wallet balance ($%,.2f available, $%,.2f required for hire fee).", ownerBal, hireFee));
+            }
+        }
+
         // Kiểm tra xem nài ngựa đã có lượt đua hoạt động nào trong trận này chưa
         List<RaceEntry> activeEntries = raceEntryRepository.findByRaceId(invite.getRaceId());
         boolean isBooked = activeEntries.stream()
@@ -254,7 +265,6 @@ public class InvitationService {
         }
 
         // Chuyển phí thuê nài ngựa (Hire Fee) từ Chủ ngựa sang Ví tiền mặt của Kỵ sĩ (Jockey)
-        BigDecimal hireFee = invite.getHireFee() != null ? invite.getHireFee() : new BigDecimal("500.00");
         if (hireFee.compareTo(BigDecimal.ZERO) > 0 && invite.getJockeyId() != null) {
             Optional<User> jockeyUserOpt = userRepository.findById(invite.getJockeyId());
             if (jockeyUserOpt.isPresent()) {

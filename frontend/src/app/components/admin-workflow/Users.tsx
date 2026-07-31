@@ -56,6 +56,23 @@ export default function Users() {
     setCurrentPage(1);
   }, [filterRole, searchQuery]);
 
+  // --- State Nạp Tiền vào Ví (Deposit Wallet State) ---
+  const [depositModalUser, setDepositModalUser] = useState<any | null>(null);
+  const [depositAmount, setDepositAmount] = useState<string>("500");
+
+  const handleDepositWallet = async () => {
+    if (!depositModalUser || !depositAmount || parseFloat(depositAmount) <= 0) return;
+    try {
+      await api.post(`/admin/users/${depositModalUser.id}/deposit`, { amount: parseFloat(depositAmount) });
+      showSuccess(`Successfully deposited $${parseFloat(depositAmount).toLocaleString()} into ${depositModalUser.username}'s wallet.`);
+      setDepositModalUser(null);
+      setDepositAmount("500");
+      fetchData();
+    } catch (err: any) {
+      alert(getErrMsg(err, "Deposit failed: "));
+    }
+  };
+
   // --- Các State phục vụ Modal Xem Chi tiết Người dùng Phân chia ---
   const [viewingUser, setViewingUser] = useState<any | null>(null);
   const [userDetailsData, setUserDetailsData] = useState<any | null>(null);
@@ -212,7 +229,15 @@ export default function Users() {
 
   // Lọc danh sách người dùng theo vai trò và từ khóa tìm kiếm
   const filteredUsers = users.filter((u: any) => {
-    if (filterRole !== "ALL" && String(u.roleId) !== filterRole) return false;
+    if (filterRole !== "ALL") {
+      let rId = 0;
+      if (filterRole === "ADMIN") rId = 1;
+      else if (filterRole === "OWNER") rId = 2;
+      else if (filterRole === "JOCKEY") rId = 3;
+      else if (filterRole === "SPECTATOR") rId = 4;
+      else if (filterRole === "REFEREE") rId = 5;
+      if (u.roleId !== rId && String(u.roleId) !== filterRole) return false;
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       const matchName = (u.username || "").toLowerCase().includes(q) || (u.fullName || "").toLowerCase().includes(q);
@@ -422,6 +447,7 @@ export default function Users() {
                     <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
                       <div style={{ display: "inline-flex", gap: "0.5rem", alignItems: "center" }}>
                         <button onClick={() => handleViewFullDetails(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", color: "#fbbf24", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer", fontWeight: "bold" }}>View Details</button>
+                        <button onClick={() => setDepositModalUser(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(74,222,128,0.15)", border: "1px solid rgba(74,222,128,0.3)", color: "#4ade80", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer", fontWeight: "bold" }}>💰 Deposit</button>
                         <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>Edit</button>
                         {u.roleId !== 1 && (
                           <button onClick={() => handleToggleStatus(u.id)} style={{ padding: "0.375rem 0.75rem", background: u.status === "ACTIVE" ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", border: u.status === "ACTIVE" ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(16,185,129,0.2)", color: u.status === "ACTIVE" ? "#f87171" : "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
@@ -673,6 +699,56 @@ export default function Users() {
             {/* Footer Modal */}
             <div style={{ padding: "1rem 1.5rem", background: "rgba(0,0,0,0.3)", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "flex-end" }}>
               <button onClick={() => setViewingUser(null)} style={{ padding: "0.5rem 1.25rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Close</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Modal Nạp tiền vào Ví người dùng (Admin Wallet Deposit Modal) */}
+      {depositModalUser && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#12141a", border: "1px solid rgba(74,222,128,0.3)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "24rem", position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
+              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.95rem", color: "#4ade80" }}>
+                💰 Deposit Funds into Wallet
+              </h3>
+              <button onClick={() => setDepositModalUser(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.2rem" }}>&times;</button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <p style={{ fontSize: "11px", fontFamily: "monospace", color: "#a0a0a0" }}>Recipient: <strong style={{ color: "#f4f2ec" }}>{depositModalUser.fullName || depositModalUser.username}</strong></p>
+                <p style={{ fontSize: "11px", fontFamily: "monospace", color: "#a0a0a0", marginTop: "0.2rem" }}>Current Balance: <strong style={{ color: "#fbbf24" }}>${Number(depositModalUser.walletBalance || 0).toLocaleString('en-US')}</strong></p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Deposit Amount ($USD)</label>
+                <input
+                  type="number"
+                  min="1"
+                  step="10"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  style={inputStyle}
+                  placeholder="Enter amount (e.g. 500)"
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <button
+                  onClick={handleDepositWallet}
+                  style={{ flex: 1, padding: "0.6rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Confirm Deposit
+                </button>
+                <button
+                  onClick={() => setDepositModalUser(null)}
+                  style={{ padding: "0.6rem 1rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#a0a0a0", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>,

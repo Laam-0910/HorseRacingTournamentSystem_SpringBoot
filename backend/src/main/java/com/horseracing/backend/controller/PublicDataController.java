@@ -463,4 +463,25 @@ public class PublicDataController {
         response.put("raceHistory", history);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/wallet/deposit")
+    public ResponseEntity<?> selfDepositWallet(@RequestBody Map<String, Object> request) {
+        try {
+            Object userIdObj = request.get("userId");
+            Object amtObj = request.get("amount");
+            if (userIdObj == null || amtObj == null) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "userId and amount are required"));
+            }
+            Integer userId = Integer.parseInt(userIdObj.toString());
+            BigDecimal amount = new BigDecimal(amtObj.toString());
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+            BigDecimal current = user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO;
+            user.setWalletBalance(current.add(amount));
+            userRepository.save(user);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Deposit successful", "newBalance", user.getWalletBalance()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
 }

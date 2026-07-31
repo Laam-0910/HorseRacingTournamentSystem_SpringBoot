@@ -204,24 +204,24 @@ public class ProcessResultsService {
                     // Thiết lập thời gian hoàn thành lượt chạy
                     entry.setFinishTime(finishTime);
 
-                    // Phân chia tiền thưởng: Hạng 1 (50%), Hạng 2 (30%), Hạng 3 (20%)
+                    // Phân chia tiền thưởng theo Class: Hạng 1 (70%), Hạng 2 (20%), Hạng 3 (10%)
                     BigDecimal prize = BigDecimal.ZERO;
                     // Khởi tạo mức điều chỉnh điểm rating
                     int ratingAdj = 0;
                     // Nếu đạt Hạng 1
                     if (finalPosition != null && finalPosition == 1) {
-                        // Thưởng 50% tổng quỹ thưởng của trận đua
-                        prize = purse.multiply(new BigDecimal("0.50"));
+                        // Thưởng 70% tổng quỹ thưởng của trận đua
+                        prize = purse.multiply(new BigDecimal("0.70"));
                         // Cộng 6 điểm rating cho quán quân
                         ratingAdj = 6;
                     } else if (finalPosition != null && finalPosition == 2) { // Nếu đạt Hạng 2
-                        // Thưởng 30% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.30"));
+                        // Thưởng 20% tổng quỹ thưởng
+                        prize = purse.multiply(new BigDecimal("0.20"));
                         // Cộng 3 điểm rating cho á quân
                         ratingAdj = 3;
                     } else if (finalPosition != null && finalPosition == 3) { // Nếu đạt Hạng 3
-                        // Thưởng 20% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.20"));
+                        // Thưởng 10% tổng quỹ thưởng
+                        prize = purse.multiply(new BigDecimal("0.10"));
                         // Cộng 1 điểm rating cho hạng 3
                         ratingAdj = 1;
                     } else { // Các thứ hạng khác
@@ -234,17 +234,17 @@ public class ProcessResultsService {
                     // Gán điểm rating điều chỉnh vào lượt đua
                     entry.setRatingAdjustment(ratingAdj);
 
-                    // Phân bổ thưởng vào ví tiền (Wallet balance): 10% cho Nài ngựa, 90% cho Chủ ngựa
+                    // Phân bổ thưởng vào ví tiền (Wallet balance): 20% cho Nài ngựa (Jockey), 80% cho Chủ ngựa (Owner)
                     if (prize.compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal jockeyShare = prize.multiply(new BigDecimal("0.10"));
-                        BigDecimal ownerShare = prize.multiply(new BigDecimal("0.90"));
+                        BigDecimal jockeyShare = prize.multiply(new BigDecimal("0.20"));
+                        BigDecimal ownerShare = prize.multiply(new BigDecimal("0.80"));
 
                         // Nạp tiền vào ví của Nài ngựa
                         Optional<User> jOpt = userRepository.findById(entry.getJockeyId());
                         if (jOpt.isPresent()) {
                             User jUser = jOpt.get();
-                            BigDecimal currentBal = jUser.getBalance() != null ? jUser.getBalance() : BigDecimal.ZERO;
-                            jUser.setBalance(currentBal.add(jockeyShare));
+                            BigDecimal currentBal = jUser.getWalletBalance() != null ? jUser.getWalletBalance() : BigDecimal.ZERO;
+                            jUser.setWalletBalance(currentBal.add(jockeyShare));
                             userRepository.save(jUser);
                         }
 
@@ -254,8 +254,8 @@ public class ProcessResultsService {
                             Optional<User> oOpt = userRepository.findById(hOpt.get().getOwnerId());
                             if (oOpt.isPresent()) {
                                 User oUser = oOpt.get();
-                                BigDecimal currentBal = oUser.getBalance() != null ? oUser.getBalance() : BigDecimal.ZERO;
-                                oUser.setBalance(currentBal.add(ownerShare));
+                                BigDecimal currentBal = oUser.getWalletBalance() != null ? oUser.getWalletBalance() : BigDecimal.ZERO;
+                                oUser.setWalletBalance(currentBal.add(ownerShare));
                                 userRepository.save(oUser);
                             }
                         }

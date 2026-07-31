@@ -823,5 +823,19 @@ public class AdminUserService {
 
         return res;
     }
+
+    @Transactional
+    public UserDTO depositWalletBalance(Integer userId, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Deposit amount must be greater than zero");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+        BigDecimal current = user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO;
+        user.setWalletBalance(current.add(amount));
+        User saved = userRepository.save(user);
+        return userMapper.toDTO(saved);
+    }
 }
+
 

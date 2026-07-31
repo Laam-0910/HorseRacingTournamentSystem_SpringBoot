@@ -576,7 +576,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                   )}
 
                   <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.7rem" }}>
-                    <span style={{ color: "#a0a0a0" }}>Lời mời: <strong style={{ color: "#f4f2ec" }}>{$t(inv.status || '', lang)}</strong></span>
+                    <span style={{ color: "#a0a0a0" }}>Invitation: <strong style={{ color: "#f4f2ec" }}>{inv.status}</strong></span>
                     {inv.status === "ACCEPTED" && inv.entryStatus && (
                       <span style={{ color: "#a0a0a0" }}>{t.entryStatus} <StatusBadge status={inv.entryStatus} /></span>
                     )}
@@ -591,7 +591,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                   </div>
                 ) : (
                   <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>
-                    {inv.status === "ACCEPTED" ? (lang === "vi" ? "✓ Đã nhận suất cưỡi cho trận đua này" : "✓ Accepted mount offer for this race") : (lang === "vi" ? "✕ Đã từ chối lời mời" : "✕ Invitation declined")}
+                    {inv.status === "ACCEPTED" ? "✓ Accepted mount offer for this race" : "✕ Invitation declined"}
                   </div>
                 )}
                 {inv.venue && (

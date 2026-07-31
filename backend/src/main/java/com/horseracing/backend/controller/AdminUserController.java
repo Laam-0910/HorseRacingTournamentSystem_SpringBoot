@@ -352,4 +352,20 @@ public class AdminUserController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
+
+    // Nạp tiền vào ví của người dùng
+    @PostMapping("/users/{userId}/deposit")
+    public ResponseEntity<?> depositUserWallet(@PathVariable Integer userId, @RequestBody Map<String, Object> request) {
+        try {
+            Object amtObj = request.get("amount");
+            if (amtObj == null) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Amount is required"));
+            }
+            java.math.BigDecimal amount = new java.math.BigDecimal(amtObj.toString());
+            UserDTO updatedUser = adminUserService.depositWalletBalance(userId, amount);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Wallet deposit successful", "user", updatedUser));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
 }
