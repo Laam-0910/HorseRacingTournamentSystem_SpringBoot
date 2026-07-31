@@ -116,7 +116,25 @@ public class DatabaseInitializer implements InitializingBean {
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'total_prize_pool') " +
                 "BEGIN " +
-                "    ALTER TABLE Race ADD total_prize_pool DECIMAL(12,2) NULL, first_place_prize DECIMAL(12,2) NULL, second_place_prize DECIMAL(12,2) NULL, third_place_prize DECIMAL(12,2) NULL; " +
+                "    ALTER TABLE Race ADD total_prize_pool DECIMAL(12,2) NULL; " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'first_place_prize') " +
+                "BEGIN " +
+                "    ALTER TABLE Race ADD first_place_prize DECIMAL(12,2) NULL; " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'second_place_prize') " +
+                "BEGIN " +
+                "    ALTER TABLE Race ADD second_place_prize DECIMAL(12,2) NULL; " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'third_place_prize') " +
+                "BEGIN " +
+                "    ALTER TABLE Race ADD third_place_prize DECIMAL(12,2) NULL; " +
                 "END"
             );
 
@@ -124,7 +142,19 @@ public class DatabaseInitializer implements InitializingBean {
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'commission_amount') " +
                 "BEGIN " +
-                "    ALTER TABLE RaceInvitation ADD commission_amount DECIMAL(12,2) NULL, commission_rate DECIMAL(5,2) NULL, payout_status VARCHAR(30) NULL DEFAULT 'PENDING'; " +
+                "    ALTER TABLE RaceInvitation ADD commission_amount DECIMAL(12,2) NULL; " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'commission_rate') " +
+                "BEGIN " +
+                "    ALTER TABLE RaceInvitation ADD commission_rate DECIMAL(5,2) NULL; " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'payout_status') " +
+                "BEGIN " +
+                "    ALTER TABLE RaceInvitation ADD payout_status VARCHAR(30) NULL DEFAULT 'PENDING'; " +
                 "END"
             );
             jdbcTemplate.execute(
