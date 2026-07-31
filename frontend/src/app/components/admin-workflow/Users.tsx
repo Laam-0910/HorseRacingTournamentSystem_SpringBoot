@@ -111,7 +111,7 @@ export default function Users() {
 
     // 1. Ràng buộc độ dài tài khoản >= 3 ký tự
     if (createUsername.trim().length < 3) {
-      setError($t("Username must be at least 3 characters long", lang));
+      setError($t("Username must be at least 3 characters long"));
       return;
     }
 
@@ -119,7 +119,7 @@ export default function Users() {
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(createPassword)) {
       setError(
-        $t("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)", lang)
+        $t("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)")
       );
       return;
     }
@@ -210,34 +210,8 @@ export default function Users() {
     }
   };
 
-  const ITEMS_PER_PAGE = 20;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, filterRole]);
-
-  // Tiến hành lọc danh sách người dùng theo vai trò và thanh tìm kiếm
-  const filteredUsers = users.filter((u) => {
-    let matchesRole = true;
-    if (filterRole === "ADMIN") matchesRole = (u.roleId === 1);
-    else if (filterRole === "OWNER") matchesRole = (u.roleId === 2);
-    else if (filterRole === "JOCKEY") matchesRole = (u.roleId === 3);
-    else if (filterRole === "SPECTATOR") matchesRole = (u.roleId === 4);
-    else if (filterRole === "REFEREE") matchesRole = (u.roleId === 5);
-
-    let matchesSearch = true;
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const usernameMatch = (u.username || "").toLowerCase().includes(q);
-      const emailMatch = (u.email || "").toLowerCase().includes(q);
-      matchesSearch = usernameMatch || emailMatch;
-    }
-
-    return matchesRole && matchesSearch;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
-  const paginatedUsers = filteredUsers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / itemsPerPage));
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Chuyển đổi ID vai trò thành nhãn hiển thị tương ứng
   const getRoleName = (roleId: number) => {
@@ -456,7 +430,8 @@ export default function Users() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalItems={filteredUsers.length}
-          itemsPerPage={ITEMS_PER_PAGE}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={(val) => { setItemsPerPage(val); setCurrentPage(1); }}
         />
       </div>
 

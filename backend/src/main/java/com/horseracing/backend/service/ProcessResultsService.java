@@ -234,6 +234,33 @@ public class ProcessResultsService {
                     // Gán điểm rating điều chỉnh vào lượt đua
                     entry.setRatingAdjustment(ratingAdj);
 
+                    // Phân bổ thưởng vào ví tiền (Wallet balance): 10% cho Nài ngựa, 90% cho Chủ ngựa
+                    if (prize.compareTo(BigDecimal.ZERO) > 0) {
+                        BigDecimal jockeyShare = prize.multiply(new BigDecimal("0.10"));
+                        BigDecimal ownerShare = prize.multiply(new BigDecimal("0.90"));
+
+                        // Nạp tiền vào ví của Nài ngựa
+                        Optional<User> jOpt = userRepository.findById(entry.getJockeyId());
+                        if (jOpt.isPresent()) {
+                            User jUser = jOpt.get();
+                            BigDecimal currentBal = jUser.getBalance() != null ? jUser.getBalance() : BigDecimal.ZERO;
+                            jUser.setBalance(currentBal.add(jockeyShare));
+                            userRepository.save(jUser);
+                        }
+
+                        // Nạp tiền vào ví của Chủ ngựa
+                        Optional<Horse> hOpt = horseRepository.findById(entry.getHorseId());
+                        if (hOpt.isPresent() && hOpt.get().getOwnerId() != null) {
+                            Optional<User> oOpt = userRepository.findById(hOpt.get().getOwnerId());
+                            if (oOpt.isPresent()) {
+                                User oUser = oOpt.get();
+                                BigDecimal currentBal = oUser.getBalance() != null ? oUser.getBalance() : BigDecimal.ZERO;
+                                oUser.setBalance(currentBal.add(ownerShare));
+                                userRepository.save(oUser);
+                            }
+                        }
+                    }
+
                     // Cập nhật chỉ số thống kê của Nài ngựa (Jockey)
                     Optional<User> jockeyOpt = userRepository.findById(entry.getJockeyId());
                     // Nếu Nài ngựa tồn tại trong CSDL

@@ -17,36 +17,8 @@ interface Race {
   meetingName: string;     // Tên ngày hội đua chứa cuộc đua này
 }
 
-// Từ điển dịch thuật đa ngôn ngữ hỗ trợ giao diện livestream
+// Từ điển dịch thuật tiếng Anh hỗ trợ giao diện livestream
 const TRANSLATIONS: Record<string, any> = {
-  vi: {
-    home: "Trang chủ",
-    title: "Đấu Trường Livestream",
-    liveNow: "ĐANG PHÁT",
-    noLive: "Không có livestream trực tiếp nào",
-    noLiveSub: "Hiện tại không có trận đấu nào đang chạy hoặc Admin chưa thiết lập đường link phát trực tiếp. Vui lòng quay lại sau!",
-    trackDistance: "Cự ly đua",
-    trackType: "Loại đường đua",
-    startTime: "Thời gian bắt đầu",
-    backToHome: "Về Trang chủ",
-    otherLive: "Các luồng trực tiếp khác",
-    watching: "ĐANG XEM",
-    watch: "XEM NGAY",
-    chatHeader: "Trò chuyện trực tiếp",
-    chatInputPlaceholder: "Nhập tin nhắn...",
-    chatSend: "GỬI",
-    online: "Trực tuyến",
-    activeStreams: "Danh Sách Livestream",
-    activeStreamsDesc: "Chọn trận đấu để chuyển đổi luồng phát",
-    loadingStream: "Đang tải dữ liệu livestream...",
-    secondsAgo: "giây trước",
-    chatMock1: "Khởi đầu ấn tượng quá! Ngựa số 3 đang bứt tốc!",
-    chatMock2: "Đường đua Turf hôm nay rất đẹp, chim ưng quá.",
-    chatMock3: "Theo các bác ai sẽ về nhất vòng này?",
-    chatMock4: "Thunder King chạy khỏe quá, tạ gánh vừa khít.",
-    theaterMode: "Rạp phim",
-    defaultMode: "Mặc định",
-  },
   en: {
     home: "Home",
     title: "Livestream Arena",
@@ -74,62 +46,6 @@ const TRANSLATIONS: Record<string, any> = {
     chatMock4: "Thunder King is looking exceptionally strong.",
     theaterMode: "Theater Mode",
     defaultMode: "Default Mode",
-  },
-  zh: {
-    home: "首页",
-    title: "直播赛场",
-    liveNow: "正在直播",
-    noLive: "暂无直播",
-    noLiveSub: "目前没有正在进行的比赛，或者管理员尚未设置直播链接。请稍后再试！",
-    trackDistance: "赛程距离",
-    trackType: "赛道类型",
-    startTime: "开始时间",
-    backToHome: "返回首页",
-    otherLive: "其他直播",
-    watching: "正在观看",
-    watch: "立即观看",
-    chatHeader: "现场聊天",
-    chatInputPlaceholder: "输入消息...",
-    chatSend: "发送",
-    online: "在线",
-    activeStreams: "直播列表",
-    activeStreamsDesc: "选择比赛切换直播流",
-    loadingStream: "正在加载直播信息...",
-    secondsAgo: "秒前",
-    chatMock1: "起点太棒了！3号马正在加速！",
-    chatMock2: "今天的草地跑道状态真好。",
-    chatMock3: "大家觉得这局谁会拿第一？",
-    chatMock4: "Thunder King 看起来确实实力雄厚。",
-    theaterMode: "剧场模式",
-    defaultMode: "普通模式",
-  },
-  ja: {
-    home: "ホーム",
-    title: "ライブアリーナ",
-    liveNow: "ライブ中",
-    noLive: "現在ライブはありません",
-    noLiveSub: "現在実行中のレースがないか、管理者がストリームリンクを設定していません。後ほどご確認ください！",
-    trackDistance: "レース距離",
-    trackType: "コースタイプ",
-    startTime: "開始時間",
-    backToHome: "ホームに戻る",
-    otherLive: "他のライブストリーム",
-    watching: "視聴中",
-    watch: "見る",
-    chatHeader: "ライブチャット",
-    chatInputPlaceholder: "メッセージを入力...",
-    chatSend: "送信",
-    online: "オンライン",
-    activeStreams: "ライブ一覧",
-    activeStreamsDesc: "レースを選択して配信を切り替え",
-    loadingStream: "ライブ詳細を読み込み中...",
-    secondsAgo: "秒前",
-    chatMock1: "素晴らしいスタート！3番の馬が抜け出しました！",
-    chatMock2: "今日の芝生コースは最高ですね。",
-    chatMock3: "このラウンドは誰が勝つと思いますか？",
-    chatMock4: "Thunder King はやはり圧倒的な強さです。",
-    theaterMode: "シアターモード",
-    defaultMode: "デフォルト",
   }
 };
 
@@ -144,9 +60,7 @@ export default function Livestream() {
   // Lấy thông tin user hiện tại đang đăng nhập
   const { user } = useAuth();
 
-  // Đọc mã ngôn ngữ hiện tại của app (mặc định 'vi')
-  const lang = localStorage.getItem("app-lang") || "vi";
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+  const t = TRANSLATIONS.en;
   
   // State lưu danh sách các cuộc đua có luồng trực tiếp đang diễn ra
   const [liveRaces, setLiveRaces] = useState<Race[]>([]);
@@ -180,11 +94,11 @@ export default function Livestream() {
   useEffect(() => {
     setChatMessages([
       { user: "RaceFan_99", text: $t("Khởi đầu ấn tượng quá! Ngựa số 3 đang bứt tốc!", (localStorage.getItem('app-lang') || 'vi')), time: `1 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
-      { user: "GoldenJockey", text: $t("Đường đua Turf hôm nay rất đẹp, chim ưng quá.", lang), time: `45 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
+      { user: "GoldenJockey", text: $t("Đường đua Turf hôm nay rất đẹp, chim ưng quá."), time: `45 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
       { user: "TurfKing", text: $t("Theo các bác ai sẽ về nhất vòng này?", (localStorage.getItem('app-lang') || 'vi')), time: `2 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
-      { user: "BetMaster", text: $t("Thunder King chạy khỏe quá, tạ gánh vừa khít.", lang), time: `10 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
+      { user: "BetMaster", text: $t("Thunder King chạy khỏe quá, tạ gánh vừa khít."), time: `10 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
     ]);
-  }, [lang]);
+  }, []);
 
   // Effect tải danh sách các trận đấu đang phát trực tiếp và tự động chạy lại sau mỗi 15 giây
   useEffect(() => {

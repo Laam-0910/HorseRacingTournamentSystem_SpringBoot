@@ -46,7 +46,7 @@ export default function VerifyForgot() {
 
     // 1. Kiểm tra hai mật khẩu nhập vào có trùng khớp nhau không
     if (newPassword !== confirmPassword) {
-      setError($t("Passwords do not match.", lang));
+      setError($t("Passwords do not match."));
       return;
     }
 
@@ -54,7 +54,7 @@ export default function VerifyForgot() {
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(newPassword)) {
       setError(
-        $t("New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)", lang)
+        $t("New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)")
       );
       return;
     }

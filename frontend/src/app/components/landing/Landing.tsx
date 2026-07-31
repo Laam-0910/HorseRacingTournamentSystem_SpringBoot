@@ -40,95 +40,6 @@ interface RacecardEntry { position: number; horseName: string; jockeyName: strin
 interface Racecard { id: number; name: string; class: string; distance: string; going: string; prize: number; entries: RacecardEntry[]; }
 
 const TRANSLATIONS: Record<string, any> = {
-  vi: {
-    home: "Trang chủ",
-    live: "Trực tiếp",
-    racecard: "Bảng đua",
-    results: "Kết quả",
-    fixtures: "Lịch thi đấu",
-    statistics: "Thống kê",
-    horses: "Danh sách Ngựa",
-    jockeys_owners: "Nài & Chủ ngựa",
-    incident: "Báo cáo sự cố",
-    welcome: "Chào mừng đến với Hệ thống Quản lý Đua ngựa",
-    welcomeSub: "Chọn một chức năng bên dưới để bắt đầu.",
-    activeSeasons: "Mùa giải đang hoạt động",
-    noActiveSeasons: "Hiện chưa có mùa giải nào hoạt động.",
-    upcomingMeetings: "Các Ngày hội đua sắp tới",
-    noUpcomingMeetings: "Chưa lên lịch ngày hội đua nào.",
-    watchLive: "XEM TRỰC TIẾP",
-    viewRacecard: "Xem Bảng đua",
-    about: "Giới thiệu",
-    signin: "Đăng nhập",
-    register: "Đăng ký",
-    signout: "Đăng xuất",
-    dashboard: "Trang quản trị",
-    searchPlaceholder: "Tìm kiếm ngựa, nài, chủ ngựa, trận đua...",
-    notifications: "Thông báo",
-    clearAll: "Xóa tất cả",
-    noNotifications: "Không có thông báo mới",
-    startDate: "Ngày bắt đầu",
-    endDate: "Ngày kết thúc",
-    activeStatus: "Đang diễn ra",
-    countdownTo: "Đếm ngược đến: ",
-    days: "Ngày",
-    hours: "Giờ",
-    minutes: "Phút",
-    seconds: "Giây",
-    raceFixtures: "Lịch thi đấu",
-    noFixtures: "Không có lịch thi đấu nào.",
-    statsAndLeaderboards: "Thống kê & Bảng xếp hạng",
-    leadingHorses: "Ngựa dẫn đầu (Top Rating)",
-    leadingJockeys: "Nài ngựa dẫn đầu (Top 3)",
-    ratingTitle: "Đánh giá",
-    racesTitle: "Trận",
-    noHorseData: "Không có dữ liệu ngựa.",
-    noJockeyData: "Không có dữ liệu nài ngựa.",
-    horseRegistry: "Danh sách Đăng ký Ngựa",
-    directoriesOverview: "Tổng quan Danh bạ",
-    jockeysTitle: "Danh sách Nài ngựa",
-    horseOwnersTitle: "Danh sách Chủ ngựa",
-    incidentReports: "Báo cáo Sự cố & Vi phạm",
-    pendingDecision: "Đang chờ xử lý",
-    idTitle: "Mã (ID)",
-    horseNameTitle: "Tên Ngựa",
-    breedTitle: "Giống loài",
-    currentRatingTitle: "Đánh giá",
-    jockeyTitle: "Nài ngựa",
-    emailTitle: "Email",
-    weightTitle: "Cân nặng",
-    racesRunTitle: "Số trận tham gia",
-    top3FinishesTitle: "Số lần Top 3",
-    top3RateTitle: "Tỉ lệ Top 3",
-    ownerTitle: "Chủ ngựa",
-    reportIdTitle: "Mã Báo cáo",
-    raceIdTitle: "Mã Trận đua",
-    horseTitle: "Ngựa",
-    descriptionTitle: "Mô tả sự cố",
-    penaltyTitle: "Hình phạt",
-    statusTitle: "Trạng thái",
-    aboutTitle: "Giới thiệu Hệ thống",
-    aboutSubtitle: "Nền tảng Quản lý Đua ngựa Toàn diện",
-    ourMission: "Sứ mệnh của chúng tôi",
-    missionDesc: "Hệ thống Quản lý Đua ngựa là một nền tảng toàn diện được thiết kế để hợp lý hóa và hiện đại hóa công tác quản lý giải đua ngựa. Từ khâu khởi tạo mùa giải đến khâu vận hành ngày đua, hệ thống của chúng tôi cung cấp cho các quản trị viên, chủ ngựa, nài ngựa và trọng tài những công cụ cần thiết để tổ chức các sự kiện đua ngựa công bằng, hấp dẫn và chuyên nghiệp.",
-    feat1Title: "Quản lý Mùa giải",
-    feat1Desc: "Toàn bộ vòng đời giải đấu từ thiết lập đến kết quả",
-    feat2Title: "Hồ sơ Ngựa",
-    feat2Desc: "Theo dõi ngựa, đánh giá rating và thành tích",
-    feat3Title: "Quản lý Nài ngựa",
-    feat3Desc: "Quản lý hồ sơ nài ngựa và lịch đăng ký",
-    feat4Title: "Vận hành Ngày đua",
-    feat4Desc: "Bảng đua, lịch trình, giám sát trực tiếp",
-    feat5Title: "Thống kê",
-    feat5Desc: "Tỷ lệ thắng, tiền thưởng, phân tích thành tích",
-    feat6Title: "Báo cáo Sự cố",
-    feat6Desc: "Theo dõi vi phạm luật và hình phạt",
-    awardRecipients: "Danh sách nhận giải (Top 3)",
-    jockeyLabel: "Kỵ sĩ",
-    ownerLabel: "Chủ ngựa",
-    achievement: "Thành tích",
-    otherPositions: "Các thứ hạng khác",
-  },
   en: {
     home: "Home",
     live: "Live",
@@ -169,88 +80,6 @@ const TRANSLATIONS: Record<string, any> = {
     ownerLabel: "Owner",
     achievement: "Result",
     otherPositions: "Other Positions",
-  },
-  zh: {
-    home: "首页",
-    live: "直播",
-    racecard: "排位表",
-    results: "比赛结果",
-    fixtures: "赛程安排",
-    statistics: "统计数据",
-    horses: "马匹登记",
-    jockeys_owners: "骑师与马主",
-    incident: "事故报告",
-    welcome: "欢迎来到赛马管理系统",
-    welcomeSub: "从菜单中选择一个选项以开始。",
-    activeSeasons: "进行中的赛季",
-    noActiveSeasons: "当前没有进行中的赛季。",
-    upcomingMeetings: "即将进行的赛事",
-    noUpcomingMeetings: "没有安排即将进行的赛事。",
-    watchLive: "观看直播",
-    viewRacecard: "查看排位表",
-    about: "关于",
-    signin: "登录",
-    register: "注册",
-    signout: "退出登录",
-    dashboard: "管理面板",
-    searchPlaceholder: "搜索马匹、骑师、马主、比赛...",
-    notifications: "通知",
-    clearAll: "清除全部",
-    noNotifications: "没有更多通知",
-    startDate: "开始日期",
-    endDate: "结束日期",
-    activeStatus: "进行中",
-    countdownTo: "倒计时至：",
-    days: "天",
-    hours: "小时",
-    minutes: "分钟",
-    seconds: "秒",
-    awardRecipients: "领奖名单 (前 3 名)",
-    jockeyLabel: "骑师",
-    ownerLabel: "马主",
-    achievement: "成绩",
-    otherPositions: "其他排名",
-  },
-  ja: {
-    home: "ホーム",
-    live: "ライブ",
-    racecard: "レースカード",
-    results: "レース結果",
-    fixtures: "日程・スケジュール",
-    statistics: "統計データ",
-    horses: "競走馬一覧",
-    jockeys_owners: "騎手＆馬主",
-    incident: "インシデント報告",
-    welcome: "競馬管理システムへようこそ",
-    welcomeSub: "メニューからオプションを選択して開始します。",
-    activeSeasons: "アクティブなシーズン",
-    noActiveSeasons: "現在開催中のシーズンはありません。",
-    upcomingMeetings: "開催予定のレースミーティング",
-    noUpcomingMeetings: "開催予定のレースはありません。",
-    watchLive: "ライブを見る",
-    viewRacecard: "レースカードを見る",
-    about: "概要",
-    signin: "ログイン",
-    register: "会員登録",
-    signout: "ログアウト",
-    dashboard: "管理ダッシュボード",
-    searchPlaceholder: "馬、騎手、馬主、レースを検索...",
-    notifications: "通知",
-    clearAll: "すべてクリア",
-    noNotifications: "新しい通知はありません",
-    startDate: "開始日",
-    endDate: "終了日",
-    activeStatus: "開催中",
-    countdownTo: "カウントダウン: ",
-    days: "日",
-    hours: "時間",
-    minutes: "分",
-    seconds: "秒",
-    awardRecipients: "受賞者リスト (トップ 3)",
-    jockeyLabel: "騎手",
-    ownerLabel: "馬主",
-    achievement: "成績",
-    otherPositions: "その他の順位",
   }
 };
 
@@ -272,15 +101,15 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
   // Trạng thái đóng/mở khung chat
   const [open, setOpen] = useState(false);
   // Danh sách các tin nhắn trao đổi
-  const [messages, setMessages] = useState([{ id: "welcome", type: "bot", text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.vi.welcome }]);
+  const [messages, setMessages] = useState([{ id: "welcome", type: "bot", text: CHAT_LANG.en.welcome }]);
   const [input, setInput] = useState("");
   const [waiting, setWaiting] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [sessionId] = useState(() => "session-" + Math.random().toString(36).substr(2, 9));
 
   useEffect(() => {
-    setMessages(prev => prev.map(m => m.id === "welcome" ? { ...m, text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.vi.welcome } : m));
-  }, [lang]);
+    setMessages(prev => prev.map(m => m.id === "welcome" ? { ...m, text: CHAT_LANG.en.welcome } : m));
+  }, []);
 
   useEffect(() => { 
     if (chatContainerRef.current) {
@@ -291,21 +120,17 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
     }
   }, [messages]);
 
-  const changeLang = (l: string) => {
-    setLang(l);
-  };
-
   const sendMessage = async (text?: string) => {
     const msg = text || input.trim();
     if (!msg || waiting) return;
     setInput("");
     const userMsg = { id: `u-${Date.now()}`, type: "user", text: msg };
-    const typingMsg = { id: `t-${Date.now()}`, type: "typing", text: CHAT_LANG[lang].typing };
+    const typingMsg = { id: `t-${Date.now()}`, type: "typing", text: CHAT_LANG.en.typing };
     setMessages(prev => [...prev, userMsg, typingMsg]);
     setWaiting(true);
     try {
-      const data = await api.post<any>("/ai/chat", { message: msg, lang, sessionId });
-      const rawText = data.success ? data.reply : CHAT_LANG[lang].error + (data.error || "");
+      const data = await api.post<any>("/ai/chat", { message: msg, lang: "en", sessionId });
+      const rawText = data.success ? data.reply : CHAT_LANG.en.error + (data.error || "");
       
       const botMsgId = `b-${Date.now()}`;
       setMessages(prev => prev.filter(m => m.type !== "typing").concat({ id: botMsgId, type: "bot", text: "" }));
@@ -323,12 +148,12 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
         }
       }, 10); // Very fast and smooth typing (5 characters every 10ms)
     } catch {
-      setMessages(prev => prev.filter(m => m.type !== "typing").concat({ id: `b-${Date.now()}`, type: "bot", text: CHAT_LANG[lang].noconn }));
+      setMessages(prev => prev.filter(m => m.type !== "typing").concat({ id: `b-${Date.now()}`, type: "bot", text: CHAT_LANG.en.noconn }));
       setWaiting(false);
     }
   };
 
-  const L = CHAT_LANG[lang];
+  const L = CHAT_LANG.en;
 
   return (
     <>
@@ -403,32 +228,6 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
 // Sub-view components
 // ─────────────────────────────────────────────
 const SEARCH_TRANSLATIONS: Record<string, any> = {
-  vi: {
-    title: "Kết quả tìm kiếm",
-    foundResults: (count: number, query: string) => `Tìm thấy ${count} kết quả cho từ khóa "${query}"`,
-    closeSearch: "✕ Đóng tìm kiếm",
-    tabAll: "Tất cả",
-    tabHorses: "Ngựa đua",
-    tabPeople: "Nài & Chủ ngựa",
-    tabRaces: "Ngày hội & Trận đấu",
-    noHorses: "Không tìm thấy chiến mã nào.",
-    noPeople: "Không tìm thấy nài ngựa hay chủ ngựa nào.",
-    noRaces: "Không tìm thấy ngày hội hay cuộc đua nào.",
-    labelBreed: "Giống",
-    labelOwner: "Chủ ngựa",
-    labelRaces: "Số trận",
-    labelWins: "thắng",
-    labelEmail: "Email",
-    labelWeight: "Cân nặng",
-    labelVenue: "Địa điểm",
-    labelTime: "Thời gian",
-    labelTrack: "Đường chạy",
-    labelMaxEntries: "Số ngựa tối đa",
-    labelPurse: "Purse",
-    labelMeetingHeader: "📅 Ngày hội đua",
-    labelRaceHeader: "🏁 Trận đấu / Cuộc đua",
-    labelUnknown: "Không rõ"
-  },
   en: {
     title: "Search Results",
     foundResults: (count: number, query: string) => `Found ${count} results for keyword "${query}"`,
@@ -454,58 +253,6 @@ const SEARCH_TRANSLATIONS: Record<string, any> = {
     labelMeetingHeader: "📅 Race Meetings",
     labelRaceHeader: "🏁 Races / Matches",
     labelUnknown: "Unknown"
-  },
-  zh: {
-    title: "搜索结果",
-    foundResults: (count: number, query: string) => `找到关于 "${query}" 的 ${count} 条结果`,
-    closeSearch: "✕ 关闭搜索",
-    tabAll: "全部",
-    tabHorses: "马匹",
-    tabPeople: "骑师与马主",
-    tabRaces: "赛事与赛马日",
-    noHorses: "未找到马匹。",
-    noPeople: "未找到骑师或马主。",
-    noRaces: "未找到赛事或赛马日。",
-    labelBreed: "品种",
-    labelOwner: "马主",
-    labelRaces: "出赛次数",
-    labelWins: "胜出",
-    labelEmail: "电子邮箱",
-    labelWeight: "体重",
-    labelVenue: "场地",
-    labelTime: "时间",
-    labelTrack: "跑道",
-    labelMaxEntries: "最大参赛马匹数",
-    labelPurse: "奖金",
-    labelMeetingHeader: "赛马日",
-    labelRaceHeader: "赛事 / 比赛",
-    labelUnknown: "未知"
-  },
-  ja: {
-    title: "検索結果",
-    foundResults: (count: number, query: string) => `キーワード "${query}" に対して ${count} 件の結果が見つかりました`,
-    closeSearch: "✕ 検索を閉じる",
-    tabAll: "すべて",
-    tabHorses: "競走馬",
-    tabPeople: "騎手 & 馬主",
-    tabRaces: "開催日 & レース",
-    noHorses: "競走馬が見つかりませんでした。",
-    noPeople: "騎手または馬主が見つかりませんでした。",
-    noRaces: "開催日またはレースが見つかりませんでした。",
-    labelBreed: "品種",
-    labelOwner: "馬主",
-    labelRaces: "出走回数",
-    labelWins: "勝利",
-    labelEmail: "メール",
-    labelWeight: "体重",
-    labelVenue: "開催地",
-    labelTime: "時間",
-    labelTrack: "馬場",
-    labelMaxEntries: "最大出走頭数",
-    labelPurse: "賞金",
-    labelMeetingHeader: "レース開催日",
-    labelRaceHeader: "レース / 競走",
-    labelUnknown: "不明"
   }
 };
 
@@ -523,7 +270,7 @@ interface SearchViewProps {
 function SearchView({ query, horses, people, meetings, races, t, setView, lang }: SearchViewProps) {
   const [activeTab, setActiveTab] = useState<"all" | "horses" | "people" | "races">("all");
 
-  const st = SEARCH_TRANSLATIONS[lang] || SEARCH_TRANSLATIONS.vi;
+  const st = SEARCH_TRANSLATIONS.en;
   const totalMatches = horses.length + people.length + meetings.length + races.length;
 
   return (
@@ -1097,14 +844,14 @@ export default function Landing() {
   const [showDashboardMenu, setShowDashboardMenu] = useState(false);
   
   // State quản lý ngôn ngữ hiển thị và hàm đồng bộ reload trang khi đổi ngôn ngữ
-  const [lang, setLangRaw] = useState(() => localStorage.getItem('app-lang') || 'vi');
+  const [lang, setLangRaw] = useState(() => localStorage.getItem('app-lang') || 'en');
   const setLang = (code: string) => { 
     setLangRaw(code); 
     localStorage.setItem('app-lang', code); 
     window.location.reload(); 
   };
   
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+  const t = TRANSLATIONS.en;
   const langLabel = lang.toUpperCase();
 
   // Kiểm tra độ rộng màn hình để tối ưu hiển thị menu trên mobile (<768px)

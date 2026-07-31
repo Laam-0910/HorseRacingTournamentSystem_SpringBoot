@@ -8,36 +8,6 @@ interface ProfileModalProps {
 }
 
 const MODAL_TRANSLATIONS: Record<string, any> = {
-  vi: {
-    jockey: "Nài ngựa",
-    owner: "Chủ ngựa",
-    admin: "Quản trị viên",
-    referee: "Trọng tài",
-    spectator: "Khán giả",
-    noBio: "Chưa có tiểu sử.",
-    regStats: "Thống kê hồ sơ",
-    bodyWeight: "Cân nặng",
-    totalRides: "Số trận",
-    wins: "Hạng nhất",
-    top3Finish: "Top 3",
-    winTop3Rates: "Tỉ lệ Nhất / Top 3",
-    activeStable: "Ngựa đang hoạt động",
-    avgFinish: "Hạng trung bình",
-    totalEarnings: "Tổng tiền thưởng",
-    managedUsers: "Số lượng Users",
-    managedHorses: "Số lượng Ngựa",
-    totalSeasons: "Số mùa giải",
-    totalRacesRef: "Số trận đã bắt",
-    totalVio: "Số lỗi đã phạt",
-    memberSince: "Thành viên từ",
-    ownedHorses: "Danh sách ngựa sở hữu",
-    recentPerf: "Thành tích gần đây (10 trận)",
-    meeting: "Giải đấu",
-    class: "Hạng",
-    horse: "Ngựa",
-    pos: "Hạng",
-    noRecords: "Chưa có dữ liệu."
-  },
   en: {
     jockey: "Jockey",
     owner: "Horse Owner",
@@ -78,8 +48,7 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
   const [loading, setLoading] = useState(true); // Trạng thái đang tải dữ liệu
   const [error, setError] = useState(""); // Thông báo lỗi
 
-  const lang = localStorage.getItem("app-lang") || "vi";
-  const st = MODAL_TRANSLATIONS[lang] || MODAL_TRANSLATIONS.en;
+  const st = MODAL_TRANSLATIONS.en;
 
   // Gọi API lấy thông tin chi tiết hồ sơ khi userId thay đổi
   useEffect(() => {
@@ -208,9 +177,15 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                           <p className="text-lg font-bold font-mono text-amber-400 mt-1">{profile.top3}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Tỉ lệ Nhất / Top 3", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">Tỉ lệ Nhất / Top 3</p>
                           <p className="text-sm font-bold font-mono text-white mt-1">
                             {profile.winRate.toFixed(1)}% / {profile.top3Rate.toFixed(1)}%
+                          </p>
+                        </div>
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center col-span-2">
+                          <p className="text-[9px] font-mono text-amber-400/80 uppercase font-bold">💰 Ví tiền thưởng (Wallet Balance)</p>
+                          <p className="text-lg font-bold font-mono text-amber-400 mt-0.5">
+                            ${(profile.balance || 0).toLocaleString()}
                           </p>
                         </div>
                       </>
@@ -227,9 +202,15 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                           </p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Tổng tiền thưởng", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">Tổng tiền thưởng nhận</p>
                           <p className="text-base font-bold font-mono text-emerald-400 mt-1">
                             ${profile.totalEarnings.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center col-span-2">
+                          <p className="text-[9px] font-mono text-amber-400/80 uppercase font-bold">💰 Ví tiền thưởng (Wallet Balance)</p>
+                          <p className="text-lg font-bold font-mono text-amber-400 mt-0.5">
+                            ${(profile.balance || 0).toLocaleString()}
                           </p>
                         </div>
                       </>

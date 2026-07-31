@@ -76,7 +76,7 @@ export function confirm(message: string): Promise<boolean> {
               color: "#f4f2ec",
               margin: 0
             }}>
-              {$t("Xác nhận", lang)}
+              {$t("Xác nhận")}
             </h4>
           </div>
 
@@ -88,7 +88,7 @@ export function confirm(message: string): Promise<boolean> {
             margin: "0 0 1.5rem 0",
             fontFamily: "sans-serif"
           }}>
-            {$t(message, lang)}
+            {$t(message)}
           </p>
 
           {/* Các nút hành động (Hủy / Đồng ý) */}
@@ -120,7 +120,7 @@ export function confirm(message: string): Promise<boolean> {
                 e.currentTarget.style.background = "#1f1f22";
               }}
             >
-              {$t("Hủy", lang)}
+              {$t("Hủy")}
             </button>
             {/* Nút Đồng ý */}
             <button
@@ -144,7 +144,7 @@ export function confirm(message: string): Promise<boolean> {
                 e.currentTarget.style.filter = "none";
               }}
             >
-              {$t("Đồng ý", lang)}
+              {$t("Đồng ý")}
             </button>
           </div>
         </div>
@@ -222,7 +222,7 @@ export function showAlert(message: string): Promise<void> {
               color: "#f4f2ec",
               margin: 0
             }}>
-              {$t("Thông báo", lang)}
+              {$t("Thông báo")}
             </h4>
           </div>
 
@@ -233,7 +233,7 @@ export function showAlert(message: string): Promise<void> {
             lineHeight: "1.5",
             margin: "0 0 1.5rem 0"
           }}>
-            {$t(message, lang)}
+            {$t(message)}
           </p>
 
           {/* Nút OK */}

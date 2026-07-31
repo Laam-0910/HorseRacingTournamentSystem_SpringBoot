@@ -58,6 +58,28 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
+            // 4b. Kiểm tra và thêm cột balance (số dư ví) vào bảng User
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'balance') " +
+                "BEGIN " +
+                "    ALTER TABLE [User] ADD balance DECIMAL(15,2) NOT NULL DEFAULT 0.00; " +
+                "END"
+            );
+
+            // 4c. Kiểm tra và thêm cột min_prize, max_prize vào bảng SeasonClassRule nếu chưa có
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SeasonClassRule') AND name = 'min_prize') " +
+                "BEGIN " +
+                "    ALTER TABLE SeasonClassRule ADD min_prize DECIMAL(15,2) NULL; " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SeasonClassRule') AND name = 'max_prize') " +
+                "BEGIN " +
+                "    ALTER TABLE SeasonClassRule ADD max_prize DECIMAL(15,2) NULL; " +
+                "END"
+            );
+
             // 5. Kiểm tra và thêm cột min_entries (số lượng ngựa chạy tối thiểu, mặc định là 3) vào bảng Race
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'min_entries') " +

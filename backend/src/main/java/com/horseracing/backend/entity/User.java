@@ -46,6 +46,17 @@ public class User implements Serializable {
     @Column(name = "status")
     private String status;
 
+    @Column(name = "wallet_balance", precision = 18, scale = 2)
+    private BigDecimal balance = BigDecimal.ZERO;
+
+    public BigDecimal getWalletBalance() {
+        return balance != null ? balance : BigDecimal.ZERO;
+    }
+
+    public void setWalletBalance(BigDecimal walletBalance) {
+        this.balance = walletBalance;
+    }
+
     @Column(name = "require_otp")
     private Boolean requireOtp = false;
 

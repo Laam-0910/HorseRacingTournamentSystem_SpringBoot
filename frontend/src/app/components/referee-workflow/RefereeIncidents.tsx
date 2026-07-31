@@ -3,24 +3,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 
-// Bảng dịch nghĩa đa ngôn ngữ phục vụ nhãn trong component
+// Bảng dịch nghĩa tiếng Anh phục vụ nhãn trong component
 const TRANSLATIONS: Record<string, Record<string, string>> = {
-  vi: {
-    stewardIncidentLog: "Nhật ký sự cố cuộc đua",
-    incidentSub: "Danh sách lịch sử các vi phạm quy tắc và hình phạt đã được bạn ghi nhận.",
-    id: "ID",
-    raceMeeting: "Trận đấu & Ngày hội đua",
-    horse: "Chiến mã",
-    jockey: "Nài ngựa",
-    violationDetails: "Chi tiết vi phạm",
-    assessedPenalty: "Hình phạt áp dụng",
-    loadingIncidents: "Đang tải dữ liệu...",
-    noViolations: "Bạn chưa ghi nhận vi phạm nào.",
-    hReport: "Báo cáo cuộc đua",
-    viewReport: "Xem báo cáo",
-    close: "Đóng",
-    stewardReportTitle: "📄 Báo cáo giám sát chính thức",
-  },
   en: {
     stewardIncidentLog: "Steward Incident Log",
     incidentSub: "Historical list of rule violations and penalties issued by you.",
@@ -36,38 +20,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     viewReport: "View Report",
     close: "Close",
     stewardReportTitle: "📄 Steward's Official Report",
-  },
-  ja: {
-    stewardIncidentLog: "審判インシデントログ",
-    incidentSub: "あなたが発行したルール違反およびペナルティの履歴リスト。",
-    id: "ID",
-    raceMeeting: "レースと開催",
-    horse: "競走馬",
-    jockey: "騎手",
-    violationDetails: "違反詳細",
-    assessedPenalty: "適用されたペナルティ",
-    loadingIncidents: "インシデントを読み込み中...",
-    noViolations: "あなたが記録した違反はまだありません。",
-    hReport: "報告書",
-    viewReport: "報告書を表示",
-    close: "閉じる",
-    stewardReportTitle: "📄 審判公式報告書",
-  },
-  zh: {
-    stewardIncidentLog: "裁判事件日志",
-    incidentSub: "您所记录的违反规则行为及处罚的历史列表。",
-    id: "ID",
-    raceMeeting: "比赛与赛事",
-    horse: "马匹",
-    jockey: "骑师",
-    violationDetails: "违规详情",
-    assessedPenalty: "所处处罚",
-    loadingIncidents: "正在加载事件...",
-    noViolations: "您尚未记录 any 违规行为。",
-    hReport: "裁判报告",
-    viewReport: "查看报告",
-    close: "关闭",
-    stewardReportTitle: "📄 裁判官方报告",
   }
 };
 
@@ -87,8 +39,7 @@ export default function RefereeIncidents() {
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
 
-  const lang = localStorage.getItem("app-lang") || "vi";
-  const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
+  const t = TRANSLATIONS.en;
 
   // Lắng nghe kích thước màn hình để thực hiện Responsive di động
   useEffect(() => {
