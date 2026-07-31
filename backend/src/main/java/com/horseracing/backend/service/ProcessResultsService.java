@@ -274,31 +274,16 @@ public class ProcessResultsService {
                             // Tăng số lần lọt top 3 của nài ngựa lên 1
                             jockey.setTotalTop3Finishes((jockey.getTotalTop3Finishes() != null ? jockey.getTotalTop3Finishes() : 0) + 1);
                         }
-                        // Phân chia tiền thưởng đạt giải: Kỵ sĩ (Jockey) nhận 20%, Chủ ngựa (Owner) nhận 80%
-                        if (prize.compareTo(BigDecimal.ZERO) > 0) {
-                            BigDecimal jockeyPrizeShare = prize.multiply(new BigDecimal("0.20"));
-                            BigDecimal currentWallet = jockey.getWalletBalance() != null ? jockey.getWalletBalance() : BigDecimal.ZERO;
-                            jockey.setWalletBalance(currentWallet.add(jockeyPrizeShare));
-                        }
+                        // Phân chia tiền thưởng đạt giải: Kỵ sĩ (Jockey) nhận 20%, Chủ ngựa (Owner) nhận 80% (đã nạp ở trên)
                         // Lưu thông tin Nài ngựa vào CSDL
                         userRepository.save(jockey);
                     }
                 }
 
-                // Cập nhật chỉ số thống kê của Chiến mã (Horse) và cộng ví cho Chủ Ngựa (Owner nhận 80% tiền thưởng)
+                // Cập nhật chỉ số thống kê của Chiến mã (Horse)
                 Optional<Horse> horseOpt = horseRepository.findById(entry.getHorseId());
                 if (horseOpt.isPresent()) {
                     Horse horse = horseOpt.get();
-                    if (horse.getOwnerId() != null && entry.getPrizeMoney() != null && entry.getPrizeMoney().compareTo(BigDecimal.ZERO) > 0) {
-                        Optional<User> ownerOpt = userRepository.findById(horse.getOwnerId());
-                        if (ownerOpt.isPresent()) {
-                            User owner = ownerOpt.get();
-                            BigDecimal ownerPrizeShare = entry.getPrizeMoney().multiply(new BigDecimal("0.80"));
-                            BigDecimal currentOwnerWallet = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
-                            owner.setWalletBalance(currentOwnerWallet.add(ownerPrizeShare));
-                            userRepository.save(owner);
-                        }
-                    }
                     // Tăng tổng số trận đua của chiến mã lên 1
                     horse.setTotalRaces(horse.getTotalRaces() + 1);
                     // Nếu chiến mã đạt vị trí số 1 và không bị loại
