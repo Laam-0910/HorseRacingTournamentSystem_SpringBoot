@@ -17,31 +17,33 @@ public class EmailSender {
 
     private final JavaMailSenderImpl mailSender;
 
+    // Khởi tạo đối tượng EmailSender với cấu hình SMTP Gmail
     public EmailSender() {
-        mailSender = new JavaMailSenderImpl();
-        mailSender.setHost("smtp.gmail.com");
-        mailSender.setPort(587);
-        mailSender.setUsername(SENDER_EMAIL);
-        mailSender.setPassword(APP_PASSWORD);
+        mailSender = new JavaMailSenderImpl(); // Khởi tạo thực thể gửi mail JavaMailSenderImpl
+        mailSender.setHost("smtp.gmail.com"); // Cấu hình địa chỉ máy chủ SMTP của Gmail
+        mailSender.setPort(587); // Cấu hình cổng kết nối TLS (587)
+        mailSender.setUsername(SENDER_EMAIL); // Địa chỉ email gửi đi mặc định
+        mailSender.setPassword(APP_PASSWORD); // Mật khẩu ứng dụng (App Password) của Gmail
 
-        Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.debug", "false");
+        Properties props = mailSender.getJavaMailProperties(); // Lấy đối tượng thuộc tính cấu hình mail
+        props.put("mail.transport.protocol", "smtp"); // Giao thức truyền tải SMTP
+        props.put("mail.smtp.auth", "true"); // Bật yêu cầu xác thực tài khoản khi gửi
+        props.put("mail.smtp.starttls.enable", "true"); // Bật mã hóa kết nối STARTTLS
+        props.put("mail.debug", "false"); // Tắt log debug chi tiết của JavaMail
     }
 
+    // Hàm gửi mã xác thực OTP (Đăng nhập, Quên mật khẩu, Đăng ký) tới Email
     public boolean sendVerificationCode(String toEmail, String code, String type) {
-        log.info("Sending OTP code {} of type {} to {}", code, type, toEmail);
+        log.info("Sending OTP code {} of type {} to {}", code, type, toEmail); // Ghi log bắt đầu tiến trình gửi OTP
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            MimeMessage message = mailSender.createMimeMessage(); // Tạo thông điệp MIME mail mới
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8"); // Khởi tạo helper hỗ trợ định dạng UTF-8 và HTML
 
-            helper.setFrom(SENDER_EMAIL, "HorseRace System");
-            helper.setTo(toEmail);
+            helper.setFrom(SENDER_EMAIL, "HorseRace System"); // Thiết lập người gửi và tên hiển thị thương hiệu
+            helper.setTo(toEmail); // Thiết lập địa chỉ email người nhận
 
-            if ("LOGIN".equalsIgnoreCase(type)) {
-                helper.setSubject("Your Login Verification Code");
+            if ("LOGIN".equalsIgnoreCase(type)) { // Trường hợp gửi OTP xác thực đăng nhập 2FA
+                helper.setSubject("Your Login Verification Code"); // Tiêu đề thư đăng nhập
                 helper.setText(
                         "<div style='font-family: sans-serif; padding: 20px; background-color: #f4f2ec; color: #0b0a08;'>" +
                         "<h2 style='color: #c9a227;'>Login Verification</h2>" +
@@ -50,8 +52,8 @@ public class EmailSender {
                         "</div>",
                         true
                 );
-            } else if ("FORGOT_PASSWORD".equalsIgnoreCase(type)) {
-                helper.setSubject("Your Password Reset Code");
+            } else if ("FORGOT_PASSWORD".equalsIgnoreCase(type)) { // Trường hợp gửi OTP khôi phục mật khẩu
+                helper.setSubject("Your Password Reset Code"); // Tiêu đề thư khôi phục mật khẩu
                 helper.setText(
                         "<div style='font-family: sans-serif; padding: 20px; background-color: #f4f2ec; color: #0b0a08;'>" +
                         "<h2 style='color: #c9a227;'>Password Reset</h2>" +
@@ -60,8 +62,8 @@ public class EmailSender {
                         "</div>",
                         true
                 );
-            } else if ("REGISTER".equalsIgnoreCase(type)) {
-                helper.setSubject("Account Registration Verification Code");
+            } else if ("REGISTER".equalsIgnoreCase(type)) { // Trường hợp gửi OTP kích hoạt tài khoản mới đăng ký
+                helper.setSubject("Account Registration Verification Code"); // Tiêu đề thư đăng ký tài khoản
                 helper.setText(
                         "<div style='font-family: sans-serif; padding: 20px; background-color: #f4f2ec; color: #0b0a08;'>" +
                         "<h2 style='color: #c9a227;'>Account Registration</h2>" +
@@ -73,12 +75,12 @@ public class EmailSender {
                 );
             }
 
-            mailSender.send(message);
-            log.info("Successfully sent email to {}", toEmail);
-            return true;
+            mailSender.send(message); // Thực thi gửi thông điệp email qua JavaMailSender
+            log.info("Successfully sent email to {}", toEmail); // Ghi log gửi mail thành công
+            return true; // Trả về true báo hiệu thành công
         } catch (Exception e) {
-            log.error("Failed to send verification email to {}: {}", toEmail, e.getMessage(), e);
-            return false;
+            log.error("Failed to send verification email to {}: {}", toEmail, e.getMessage(), e); // Ghi log lỗi nếu gửi mail thất bại
+            return false; // Trả về false báo hiệu thất bại
         }
     }
 }

@@ -38,80 +38,87 @@ public class InvitationService {
     private final JockeyRaceMeetingRegistrationRepository jockeyRegRepository;
     private final HorseRaceMeetingRegistrationRepository horseRegRepository;
 
+    // Lấy danh sách lời mời thi đấu lọc theo Nài ngựa (Jockey) hoặc Chủ sở hữu (Owner)
     public List<RaceInvitationDTO> getInvitations(Integer jockeyId, Integer ownerId) {
-        List<RaceInvitation> invitations;
+        List<RaceInvitation> invitations; // Danh sách các bản ghi lời mời
         if (jockeyId != null) {
-            invitations = invitationRepository.findByJockeyId(jockeyId);
+            invitations = invitationRepository.findByJockeyId(jockeyId); // Lọc lời mời theo Nài ngựa
         } else if (ownerId != null) {
-            invitations = invitationRepository.findByOwnerId(ownerId);
+            invitations = invitationRepository.findByOwnerId(ownerId); // Lọc lời mời theo Chủ sở hữu
         } else {
-            invitations = invitationRepository.findAll();
+            invitations = invitationRepository.findAll(); // Lấy tất cả lời mời
         }
 
+        // Tải trước danh sách người dùng vào Map để tra cứu thông tin nài/chủ nhanh chóng
         Map<Integer, User> userEntityMap = userRepository.findAll().stream()
                 .collect(Collectors.toMap(User::getId, u -> u, (u1, u2) -> u1));
+        // Tải trước danh sách chiến mã vào Map
         Map<Integer, Horse> horseEntityMap = horseRepository.findAll().stream()
                 .collect(Collectors.toMap(Horse::getId, h -> h, (h1, h2) -> h1));
 
+        // Tải trước danh sách Trận đua và Ngày hội đua vào Map
         java.util.Map<Integer, com.horseracing.backend.entity.Race> raceMap = raceRepository.findAll().stream()
                 .collect(Collectors.toMap(com.horseracing.backend.entity.Race::getId, r -> r));
         java.util.Map<Integer, com.horseracing.backend.entity.RaceMeeting> meetingMap = raceMeetingRepository.findAll().stream()
                 .collect(Collectors.toMap(com.horseracing.backend.entity.RaceMeeting::getId, m -> m));
 
-        java.util.List<RaceEntry> allEntries = raceEntryRepository.findAll();
+        java.util.List<RaceEntry> allEntries = raceEntryRepository.findAll(); // Lấy danh sách lượt thi đấu
 
+        // Chuyển đổi từng bản ghi lời mời sang DTO kèm thông tin đính kèm
         return invitations.stream()
                 .map(i -> {
-                    Horse horse = horseEntityMap.get(i.getHorseId());
-                    User owner = userEntityMap.get(i.getOwnerId());
-                    User jockey = userEntityMap.get(i.getJockeyId());
+                    Horse horse = horseEntityMap.get(i.getHorseId()); // Lấy thông tin con ngựa
+                    User owner = userEntityMap.get(i.getOwnerId()); // Lấy thông tin chủ sở hữu
+                    User jockey = userEntityMap.get(i.getJockeyId()); // Lấy thông tin nài ngựa
 
-                    String horseName = horse != null ? horse.getName() : null;
-                    String horseAvatar = horse != null ? horse.getAvatar() : null;
-                    String ownerName = owner != null ? (owner.getFullName() != null && !owner.getFullName().isBlank() ? owner.getFullName() : owner.getUsername()) : null;
-                    String ownerAvatar = owner != null ? owner.getAvatar() : null;
-                    String jockeyName = jockey != null ? (jockey.getFullName() != null && !jockey.getFullName().isBlank() ? jockey.getFullName() : jockey.getUsername()) : null;
-                    String jockeyAvatar = jockey != null ? jockey.getAvatar() : null;
+                    String horseName = horse != null ? horse.getName() : null; // Tên ngựa
+                    String horseAvatar = horse != null ? horse.getAvatar() : null; // Ảnh ngựa
+                    String ownerName = owner != null ? (owner.getFullName() != null && !owner.getFullName().isBlank() ? owner.getFullName() : owner.getUsername()) : null; // Tên chủ
+                    String ownerAvatar = owner != null ? owner.getAvatar() : null; // Ảnh chủ
+                    String jockeyName = jockey != null ? (jockey.getFullName() != null && !jockey.getFullName().isBlank() ? jockey.getFullName() : jockey.getUsername()) : null; // Tên nài
+                    String jockeyAvatar = jockey != null ? jockey.getAvatar() : null; // Ảnh nài
 
+                    // Ánh xạ sang RaceInvitationDTO
                     RaceInvitationDTO dto = invitationMapper.toDTO(i, 
                             horseName, horseAvatar,
                             ownerName, ownerAvatar,
                             jockeyName, jockeyAvatar);
                     
-                    com.horseracing.backend.entity.Race race = raceMap.get(i.getRaceId());
+                    com.horseracing.backend.entity.Race race = raceMap.get(i.getRaceId()); // Trận đua tương ứng
                     if (race != null) {
-                        dto.setClassLevel(race.getClassLevel());
-                        dto.setStartTime(race.getStartTime() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(race.getStartTime()) : null);
+                        dto.setClassLevel(race.getClassLevel()); // Hạng đua
+                        dto.setStartTime(race.getStartTime() != null ? new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm").format(race.getStartTime()) : null); // Giờ đua
                         com.horseracing.backend.entity.RaceMeeting meeting = meetingMap.get(race.getRaceMeetingId());
                         if (meeting != null) {
-                            dto.setMeetingName(meeting.getName());
-                            dto.setVenue(meeting.getVenue());
+                            dto.setMeetingName(meeting.getName()); // Tên ngày hội đua
+                            dto.setVenue(meeting.getVenue()); // Địa điểm đua
                         }
                     }
 
-                    // Match with a RaceEntry
+                    // Khớp lời mời với bản ghi RaceEntry thi đấu chính thức nếu có
                     Optional<RaceEntry> matchingEntry = allEntries.stream()
                             .filter(e -> e.getRaceId().equals(i.getRaceId()) 
                                       && e.getHorseId().equals(i.getHorseId()) 
                                       && e.getJockeyId().equals(i.getJockeyId()))
                             .findFirst();
                     if (matchingEntry.isPresent()) {
-                        dto.setEntryId(matchingEntry.get().getId());
-                        dto.setEntryStatus(matchingEntry.get().getStatus());
+                        dto.setEntryId(matchingEntry.get().getId()); // Đính kèm ID lượt thi đấu
+                        dto.setEntryStatus(matchingEntry.get().getStatus()); // Đính kèm trạng thái lượt thi đấu
                     }
                     
-                    return dto;
+                    return dto; // Trả về DTO hoàn chỉnh
                 })
                 .collect(Collectors.toList());
     }
 
+    // Chủ sở hữu gửi lời mời Nài ngựa điều khiển chiến mã trong trận đua
     @Transactional
     public RaceInvitationDTO inviteJockey(RaceInvitationDTO dto) {
-        Integer jockeyId = dto.getJockeyId();
-        Integer raceId = dto.getRaceId();
-        Integer horseId = dto.getHorseId();
+        Integer jockeyId = dto.getJockeyId(); // ID Nài ngựa
+        Integer raceId = dto.getRaceId(); // ID Trận đua
+        Integer horseId = dto.getHorseId(); // ID Chiến mã
 
-        // 1. Kiểm tra xem jockey đã bận chưa (đã có lượt tham gia hoạt động trong trận đua này)
+        // 1. Kiểm tra xem nài ngựa đã bận (chấp nhận suất cưỡi khác) trong trận đua này chưa
         List<RaceEntry> activeEntries = raceEntryRepository.findByRaceId(raceId);
         boolean isBooked = activeEntries.stream()
                 .anyMatch(e -> e.getJockeyId().equals(jockeyId) && !"REJECTED".equals(e.getStatus()));
@@ -119,13 +126,13 @@ public class InvitationService {
             throw new IllegalArgumentException("This jockey has already accepted a mount for this race.");
         }
 
-        // 2. Kiểm tra xem jockey đã chấp nhận lời mời nào khác trong trận đua này chưa
+        // 2. Kiểm tra xem nài ngựa đã chấp nhận lời mời nào khác trong trận đua này chưa
         List<RaceInvitation> accepted = invitationRepository.findByJockeyIdAndRaceIdAndStatus(jockeyId, raceId, "ACCEPTED");
         if (!accepted.isEmpty()) {
             throw new IllegalArgumentException("This jockey has already accepted an invitation for this race.");
         }
 
-        // 3. Kiểm tra xem chủ ngựa đã gửi lời mời đang chờ hoặc đã chấp nhận nào cho jockey này đối với con ngựa này chưa
+        // 3. Kiểm tra xem chủ ngựa đã gửi lời mời đang chờ/chấp nhận nào cho nài ngựa này với con ngựa này chưa
         List<RaceInvitation> existingInvites = invitationRepository.findByJockeyIdAndRaceIdAndHorseId(jockeyId, raceId, horseId);
         boolean hasActive = existingInvites.stream()
                 .anyMatch(i -> "PENDING".equalsIgnoreCase(i.getStatus()) || "ACCEPTED".equalsIgnoreCase(i.getStatus()));
@@ -154,9 +161,9 @@ public class InvitationService {
                 .filter(reg -> "APPROVED".equalsIgnoreCase(reg.getStatus()))
                 .orElseThrow(() -> new IllegalArgumentException("HORSE_NOT_APPROVED"));
 
-        RaceInvitation invite = invitationMapper.toEntity(dto);
-        invite.setStatus("PENDING");
-        RaceInvitation savedInvite = invitationRepository.save(invite);
+        RaceInvitation invite = invitationMapper.toEntity(dto); // Ánh xạ DTO sang Entity
+        invite.setStatus("PENDING"); // Thiết lập trạng thái lời mời là PENDING
+        RaceInvitation savedInvite = invitationRepository.save(invite); // Lưu lời mời vào DB
 
         Map<Integer, User> userEntityMap = userRepository.findAll().stream()
                 .collect(Collectors.toMap(User::getId, u -> u, (u1, u2) -> u1));
@@ -170,14 +177,17 @@ public class InvitationService {
         String jockeyName = jockey != null ? (jockey.getFullName() != null && !jockey.getFullName().isBlank() ? jockey.getFullName() : jockey.getUsername()) : null;
         String jockeyAvatar = jockey != null ? jockey.getAvatar() : null;
 
+        // Trả về DTO của lời mời mới tạo
         return invitationMapper.toDTO(savedInvite, 
                 horseName, horseAvatar,
                 ownerName, ownerAvatar,
                 jockeyName, jockeyAvatar);
     }
 
+    // Nài ngựa chấp nhận lời mời thi đấu
     @Transactional
     public void acceptInvitation(Integer id) {
+        // Tìm lời mời thi đấu trong CSDL
         RaceInvitation invite = invitationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
 
@@ -185,7 +195,7 @@ public class InvitationService {
             throw new IllegalArgumentException("Invitation is not pending");
         }
 
-        // Kiểm tra xem jockey đã có mount nào hoạt động chưa
+        // Kiểm tra xem nài ngựa đã có lượt đua hoạt động nào trong trận này chưa
         List<RaceEntry> activeEntries = raceEntryRepository.findByRaceId(invite.getRaceId());
         boolean isBooked = activeEntries.stream()
                 .anyMatch(e -> e.getJockeyId().equals(invite.getJockeyId()) && !"REJECTED".equals(e.getStatus()));
@@ -193,14 +203,14 @@ public class InvitationService {
             throw new IllegalArgumentException("You already have an active mount in this race.");
         }
 
-        // Kiểm tra xem ngựa đã có lượt tham gia hoạt động chưa
+        // Kiểm tra xem con ngựa đã có lượt đua hoạt động nào trong trận này chưa
         boolean isHorseBooked = activeEntries.stream()
                 .anyMatch(e -> e.getHorseId().equals(invite.getHorseId()) && !"REJECTED".equals(e.getStatus()));
         if (isHorseBooked) {
             throw new IllegalArgumentException("This horse already has an active entry in this race.");
         }
 
-        // Tạo RaceEntry chính thức
+        // Khởi tạo lượt thi đấu chính thức RaceEntry
         Optional<User> jockeyOpt = userRepository.findById(invite.getJockeyId());
         BigDecimal weight = jockeyOpt.isPresent() && jockeyOpt.get().getWeight() != null ? jockeyOpt.get().getWeight() : BigDecimal.ZERO;
 
@@ -208,20 +218,20 @@ public class InvitationService {
         entry.setRaceId(invite.getRaceId());
         entry.setHorseId(invite.getHorseId());
         entry.setJockeyId(invite.getJockeyId());
-        entry.setGateNumber(0); // Admin sẽ gán sau
-        entry.setStatus("PENDING_ADMIN");
+        entry.setGateNumber(0); // Admin sẽ gán số cổng sau
+        entry.setStatus("PENDING_ADMIN"); // Đặt trạng thái chờ Admin duyệt
         entry.setCarriedWeight(weight);
         entry.setPrizeMoney(BigDecimal.ZERO);
         entry.setRatingAdjustment(0);
         entry.setHandicapWeight(BigDecimal.ZERO);
 
-        raceEntryRepository.save(entry);
+        raceEntryRepository.save(entry); // Lưu lượt thi đấu vào CSDL
 
-        // Cập nhật trạng thái lời mời
+        // Cập nhật trạng thái lời mời sang ACCEPTED
         invite.setStatus("ACCEPTED");
         invitationRepository.save(invite);
 
-        // Từ chối tất cả các lời mời đang chờ/đã chấp nhận khác cho ngựa hoặc jockey này trong trận đua này
+        // Từ chối tất cả các lời mời đang chờ/đã chấp nhận khác cho con ngựa hoặc nài ngựa này trong trận đua
         List<RaceInvitation> allInvites = invitationRepository.findByRaceId(invite.getRaceId());
         for (RaceInvitation other : allInvites) {
             if (!other.getId().equals(invite.getId())) {
@@ -235,6 +245,7 @@ public class InvitationService {
         }
     }
 
+    // Nộp lại đơn thi đấu đã bị từ chối
     @Transactional
     public void resubmitRaceEntry(Integer entryId) {
         RaceEntry entry = raceEntryRepository.findById(entryId)
@@ -273,7 +284,7 @@ public class InvitationService {
             throw new IllegalStateException("HORSE_ALREADY_BOOKED");
         }
 
-        entry.setStatus("PENDING_ADMIN");
+        entry.setStatus("PENDING_ADMIN"); // Đặt lại trạng thái chờ Admin duyệt
         raceEntryRepository.save(entry);
 
         // Đặt trạng thái lời mời tương ứng trở lại thành ACCEPTED để đồng bộ dữ liệu
@@ -299,14 +310,16 @@ public class InvitationService {
                 });
     }
 
+    // Nài ngựa từ chối lời mời thi đấu
     @Transactional
     public void rejectInvitation(Integer id) {
         RaceInvitation invite = invitationRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
-        invite.setStatus("REJECTED");
-        invitationRepository.save(invite);
+        invite.setStatus("REJECTED"); // Cập nhật trạng thái sang REJECTED
+        invitationRepository.save(invite); // Lưu vào CSDL
     }
 
+    // Chủ ngựa rút lại lời mời thi đấu đã gửi
     @Transactional
     public void withdrawInvitation(Integer id, Integer ownerId) {
         RaceInvitation invite = invitationRepository.findById(id)
@@ -327,18 +340,18 @@ public class InvitationService {
             throw new IllegalStateException("REGISTRATION_CLOSED");
         }
 
-        // If invitation has been accepted and has a corresponding entry, delete the entry
+        // Nếu lời mời đã được chấp nhận và đã tạo lượt thi đấu, thực hiện xóa lượt thi đấu tương ứng
         if ("ACCEPTED".equalsIgnoreCase(invite.getStatus())) {
             List<RaceEntry> entries = raceEntryRepository.findByRaceId(invite.getRaceId());
             Optional<RaceEntry> entryOpt = entries.stream()
                     .filter(e -> e.getHorseId().equals(invite.getHorseId()) && e.getJockeyId().equals(invite.getJockeyId()))
                     .findFirst();
             if (entryOpt.isPresent()) {
-                raceEntryRepository.delete(entryOpt.get());
+                raceEntryRepository.delete(entryOpt.get()); // Xóa lượt thi đấu
             }
         }
 
-        invite.setStatus("REJECTED");
-        invitationRepository.save(invite);
+        invite.setStatus("REJECTED"); // Cập nhật trạng thái lời mời rút lại sang REJECTED
+        invitationRepository.save(invite); // Lưu lời mời vào CSDL
     }
 }

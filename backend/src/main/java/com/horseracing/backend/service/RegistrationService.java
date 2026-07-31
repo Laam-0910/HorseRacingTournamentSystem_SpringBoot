@@ -32,25 +32,26 @@ public class RegistrationService {
     private final RegistrationMapper registrationMapper; // Bộ ánh xạ thực thể đăng ký sang DTO
 
     // Đăng ký Nài ngựa tham gia Ngày hội đua
+    // Đăng ký Nài ngựa tham gia Ngày hội đua
     @Transactional
     public JockeyRaceMeetingRegistrationDTO registerJockey(Integer meetingId, Integer jockeyId) {
         // Kiểm tra xem kỵ sĩ đã nộp đơn đăng ký cho ngày đua này trước đó chưa
         if (jockeyRegRepository.findByRaceMeetingIdAndJockeyId(meetingId, jockeyId).isPresent()) {
-            throw new IllegalArgumentException("Jockey is already registered for this meeting");
+            throw new IllegalArgumentException("Jockey is already registered for this meeting"); // Ném lỗi nếu đã đăng ký
         }
 
-        JockeyRaceMeetingRegistration reg = new JockeyRaceMeetingRegistration();
-        reg.setRaceMeetingId(meetingId);
-        reg.setJockeyId(jockeyId);
+        JockeyRaceMeetingRegistration reg = new JockeyRaceMeetingRegistration(); // Khởi tạo thực thể đăng ký nài
+        reg.setRaceMeetingId(meetingId); // Gán mã ngày hội đua
+        reg.setJockeyId(jockeyId); // Gán mã nài ngựa
         reg.setStatus("PENDING"); // Đặt trạng thái mặc định chờ duyệt
         reg.setRegisteredAt(new Timestamp(System.currentTimeMillis())); // Lưu thời điểm nộp đơn
         
-        JockeyRaceMeetingRegistration saved = jockeyRegRepository.save(reg);
+        JockeyRaceMeetingRegistration saved = jockeyRegRepository.save(reg); // Lưu đơn vào DB
         
-        String jockeyName = userRepository.findById(jockeyId).map(User::getUsername).orElse(null);
-        String meetingName = raceMeetingRepository.findById(meetingId).map(RaceMeeting::getName).orElse(null);
+        String jockeyName = userRepository.findById(jockeyId).map(User::getUsername).orElse(null); // Lấy tên nài ngựa
+        String meetingName = raceMeetingRepository.findById(meetingId).map(RaceMeeting::getName).orElse(null); // Lấy tên buổi đua
         
-        return registrationMapper.toDTO(saved, jockeyName, meetingName);
+        return registrationMapper.toDTO(saved, jockeyName, meetingName); // Trả về DTO đăng ký nài
     }
 
     // Đăng ký Chủ ngựa tham gia Ngày hội đua
@@ -58,21 +59,21 @@ public class RegistrationService {
     public OwnerRaceMeetingRegistrationDTO registerOwner(Integer meetingId, Integer ownerId) {
         // Kiểm tra xem chủ ngựa đã nộp đơn đăng ký cho ngày đua này trước đó chưa
         if (ownerRegRepository.findByRaceMeetingIdAndOwnerId(meetingId, ownerId).isPresent()) {
-            throw new IllegalArgumentException("Owner is already registered for this meeting");
+            throw new IllegalArgumentException("Owner is already registered for this meeting"); // Ném lỗi nếu đã đăng ký
         }
 
-        OwnerRaceMeetingRegistration reg = new OwnerRaceMeetingRegistration();
-        reg.setRaceMeetingId(meetingId);
-        reg.setOwnerId(ownerId);
-        reg.setStatus("PENDING");
-        reg.setRegisteredAt(new Timestamp(System.currentTimeMillis()));
+        OwnerRaceMeetingRegistration reg = new OwnerRaceMeetingRegistration(); // Khởi tạo thực thể đăng ký chủ
+        reg.setRaceMeetingId(meetingId); // Gán mã ngày hội đua
+        reg.setOwnerId(ownerId); // Gán mã chủ sở hữu
+        reg.setStatus("PENDING"); // Đặt trạng thái chờ duyệt
+        reg.setRegisteredAt(new Timestamp(System.currentTimeMillis())); // Lưu thời điểm nộp đơn
 
-        OwnerRaceMeetingRegistration saved = ownerRegRepository.save(reg);
+        OwnerRaceMeetingRegistration saved = ownerRegRepository.save(reg); // Lưu đơn vào DB
 
-        String ownerName = userRepository.findById(ownerId).map(User::getUsername).orElse(null);
-        String meetingName = raceMeetingRepository.findById(meetingId).map(RaceMeeting::getName).orElse(null);
+        String ownerName = userRepository.findById(ownerId).map(User::getUsername).orElse(null); // Lấy tên chủ sở hữu
+        String meetingName = raceMeetingRepository.findById(meetingId).map(RaceMeeting::getName).orElse(null); // Lấy tên buổi đua
 
-        return registrationMapper.toDTO(saved, ownerName, meetingName);
+        return registrationMapper.toDTO(saved, ownerName, meetingName); // Trả về DTO đăng ký chủ
     }
 
     // Đăng ký Ngựa đua tham gia Ngày hội đua
@@ -84,25 +85,25 @@ public class RegistrationService {
 
         // Chặn không cho phép ngựa đã giải nghệ (RETIRED) tham gia thi đấu
         if ("RETIRED".equalsIgnoreCase(horse.getStatus())) {
-            throw new IllegalArgumentException("Retired horses cannot be registered for race meetings");
+            throw new IllegalArgumentException("Retired horses cannot be registered for race meetings"); // Ném lỗi nếu ngựa đã giải nghệ
         }
 
         // Kiểm tra xem ngựa đua đã nộp đơn đăng ký cho ngày đua này trước đó chưa
         if (horseRegRepository.findByRaceMeetingIdAndHorseId(meetingId, horseId).isPresent()) {
-            throw new IllegalArgumentException("Horse is already registered for this meeting");
+            throw new IllegalArgumentException("Horse is already registered for this meeting"); // Ném lỗi nếu đã đăng ký
         }
 
-        HorseRaceMeetingRegistration reg = new HorseRaceMeetingRegistration();
-        reg.setRaceMeetingId(meetingId);
-        reg.setHorseId(horseId);
-        reg.setStatus("PENDING");
-        reg.setRegisteredAt(new Timestamp(System.currentTimeMillis()));
+        HorseRaceMeetingRegistration reg = new HorseRaceMeetingRegistration(); // Khởi tạo thực thể đăng ký ngựa
+        reg.setRaceMeetingId(meetingId); // Gán mã ngày hội đua
+        reg.setHorseId(horseId); // Gán mã chiến mã
+        reg.setStatus("PENDING"); // Đặt trạng thái chờ duyệt
+        reg.setRegisteredAt(new Timestamp(System.currentTimeMillis())); // Lưu thời điểm nộp đơn
 
-        HorseRaceMeetingRegistration saved = horseRegRepository.save(reg);
+        HorseRaceMeetingRegistration saved = horseRegRepository.save(reg); // Lưu đơn vào DB
 
-        String horseName = horseRepository.findById(horseId).map(Horse::getName).orElse(null);
-        String meetingName = raceMeetingRepository.findById(meetingId).map(RaceMeeting::getName).orElse(null);
+        String horseName = horseRepository.findById(horseId).map(Horse::getName).orElse(null); // Lấy tên chiến mã
+        String meetingName = raceMeetingRepository.findById(meetingId).map(RaceMeeting::getName).orElse(null); // Lấy tên buổi đua
 
-        return registrationMapper.toDTO(saved, horseName, meetingName);
+        return registrationMapper.toDTO(saved, horseName, meetingName); // Trả về DTO đăng ký ngựa
     }
 }
