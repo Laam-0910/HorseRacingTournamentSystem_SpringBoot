@@ -35,26 +35,23 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
       
       let mediaStream: MediaStream | null = null;
       
-      // Tầng 1: Thử mở camera theo facingMode chỉ định (audio: false tránh bị chặn bởi quyền Micro)
+      // Hỗ trợ lật camera trước (user) và camera sau (environment) trên điện thoại
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         try {
           mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: mode },
-            audio: false
+            video: { facingMode: { exact: mode } }
           });
         } catch (e1) {
-          // Tầng 2: Thử facingMode dạng ideal
           try {
             mediaStream = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode: { ideal: mode } },
-              audio: false
+              video: { facingMode: { ideal: mode } }
             });
           } catch (e2) {
-            // Tầng 3: Thử lấy camera đơn giản video: true
-            mediaStream = await navigator.mediaDevices.getUserMedia({
-              video: true,
-              audio: false
-            });
+            try {
+              mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            } catch (e3) {
+              console.warn("Camera fallback failed:", e3);
+            }
           }
         }
       }
@@ -144,10 +141,10 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
         if (videoRef.current && ctx && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
           const video = videoRef.current;
           if (video.videoWidth > 0 && video.videoHeight > 0) {
-            canvas.width = 800;
-            canvas.height = 450;
+            canvas.width = 1280;
+            canvas.height = 720;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.70); // Đồ họa HD siêu rõ nét (~18KB/frame)
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.82); // Đồ họa Ultra HD 720p nét như truyền hình (~35KB/frame)
             const uName = user?.fullName || user?.username || "Trọng tài";
             const broadcasterId = user?.id ? `user_${user.id}_${camInstanceId}` : `anon_${camInstanceId}`;
             const broadcasterName = `${uName} (${camInstanceId.replace("cam_", "Cam ")})`;
@@ -259,6 +256,18 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
             muted
             style={{ width: "100%", height: "100%", objectFit: "cover", transform: facingMode === "user" ? "scaleX(-1)" : "none" }}
           />
+
+          {!stream && (
+            <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", padding: "1rem", zIndex: 15 }}>
+              <span style={{ fontSize: "2rem" }}>📷</span>
+              <button
+                onClick={() => startCamera(facingMode)}
+                style={{ padding: "0.75rem 1.25rem", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", color: "#fff", border: "none", borderRadius: "0.5rem", fontWeight: "bold", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(16,185,129,0.4)" }}
+              >
+                {$t("👉 Bấm vào đây để Bật Camera (Allow)", localStorage.getItem("app-lang") || "vi")}
+              </button>
+            </div>
+          )}
 
           {/* Badge Trạng thái LIVE */}
           {isLive && (
