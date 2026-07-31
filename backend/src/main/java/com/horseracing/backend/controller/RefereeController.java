@@ -185,7 +185,7 @@ public class RefereeController {
                       "* **Repositories**: `RaceRepository.save()`, `RaceEntryRepository.findByRaceId()`, `RaceEntryRepository.save()`\n" +
                       "* **DTO Request**: `Map<String, String>` (`stewardReport`)\n" +
                       "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)  |  `{\"success\": false, \"error\": \"...\"}` khi thất bại\n" +
-                      "* **Frontend**: `RefereeHub.tsx` → `handleStopRace()`\n\n" +
+                      "* **Frontend**: `RefereeSupervision.tsx`, `RefereeHub.tsx`, `refereeService.ts`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Kiểm tra trận đua phải đang ở trạng thái `RUNNING`, `STOPPED` hoặc `STEWARDS_INQUIRY`. Nếu không, ném `IllegalStateException` → HTTP 400.\n" +
                       "2. Chuyển trạng thái `Race` sang `CANCELLED` và ghi nhận `stewardReport` + xóa URL livestream.\n" +
@@ -213,7 +213,7 @@ public class RefereeController {
                       "* **Repositories**: `RaceRepository.save()`, `RaceEntryRepository.findByRaceId()`, `RaceEntryRepository.save()`\n" +
                       "* **DTO Request**: `Map<String, String>` (`stewardReport`)\n" +
                       "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
-                      "* **Frontend**: `RefereeHub.tsx` → `handleSuspendRace()`\n\n" +
+                      "* **Frontend**: `RefereeSupervision.tsx`, `RefereeHub.tsx`, `refereeService.ts`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Kiểm tra trận đua đang ở trạng thái `RUNNING` hoặc `STEWARDS_INQUIRY`.\n" +
                       "2. Đổi trạng thái `Race` sang `STOPPED` và ghi nhận `stewardReport`.\n" +
@@ -239,7 +239,7 @@ public class RefereeController {
                       "* **Services**: `RefereeService.resumeRace()`\n" +
                       "* **Repositories**: `RaceRepository.save()`, `RaceEntryRepository.findByRaceId()`, `RaceEntryRepository.save()`\n" +
                       "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
-                      "* **Frontend**: `RefereeHub.tsx` → `handleResumeRace()`\n\n" +
+                      "* **Frontend**: `RefereeSupervision.tsx`, `RefereeHub.tsx`, `refereeService.ts`\n\n"
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Kiểm tra trận đua đang ở trạng thái `STOPPED`.\n" +
                       "2. Đổi trạng thái `Race` về `RUNNING`.\n" +
