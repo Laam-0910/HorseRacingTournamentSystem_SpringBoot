@@ -225,6 +225,7 @@ public class InvitationService {
         entry.setPrizeMoney(BigDecimal.ZERO);
         entry.setRatingAdjustment(0);
         entry.setHandicapWeight(BigDecimal.ZERO);
+        entry.setJockeySharePercentage(invite.getJockeySharePercentage() != null ? invite.getJockeySharePercentage() : new BigDecimal("10.00"));
 
         raceEntryRepository.save(entry); // Lưu lượt thi đấu vào CSDL
 

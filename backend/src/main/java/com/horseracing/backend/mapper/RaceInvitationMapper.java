@@ -24,6 +24,7 @@ public class RaceInvitationMapper {
                 .jockeyName(jockeyName)
                 .jockeyAvatar(jockeyAvatar)
                 .status(invite.getStatus())
+                .jockeySharePercentage(invite.getJockeySharePercentage() != null ? invite.getJockeySharePercentage() : new java.math.BigDecimal("10.00"))
                 .build();
     }
 
@@ -46,6 +47,7 @@ public class RaceInvitationMapper {
         invite.setOwnerId(dto.getOwnerId());
         invite.setJockeyId(dto.getJockeyId());
         invite.setStatus(dto.getStatus());
+        invite.setJockeySharePercentage(dto.getJockeySharePercentage() != null ? dto.getJockeySharePercentage() : new java.math.BigDecimal("10.00"));
         return invite;
     }
 }

@@ -234,10 +234,14 @@ public class ProcessResultsService {
                     // Gán điểm rating điều chỉnh vào lượt đua
                     entry.setRatingAdjustment(ratingAdj);
 
-                    // Phân bổ thưởng vào ví tiền (Wallet balance): 10% cho Nài ngựa, 90% cho Chủ ngựa
+                    // Phân bổ thưởng vào ví tiền (Wallet balance): theo tỷ lệ chia thưởng đã thỏa thuận giữa Chủ ngựa & Nài ngựa
                     if (prize.compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal jockeyShare = prize.multiply(new BigDecimal("0.10"));
-                        BigDecimal ownerShare = prize.multiply(new BigDecimal("0.90"));
+                        BigDecimal jockeyPct = entry.getJockeySharePercentage() != null ? entry.getJockeySharePercentage() : new BigDecimal("10.00");
+                        BigDecimal jockeyFraction = jockeyPct.divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_UP);
+                        BigDecimal ownerFraction = BigDecimal.ONE.subtract(jockeyFraction);
+
+                        BigDecimal jockeyShare = prize.multiply(jockeyFraction);
+                        BigDecimal ownerShare = prize.multiply(ownerFraction);
 
                         // Nạp tiền vào ví của Nài ngựa
                         Optional<User> jOpt = userRepository.findById(entry.getJockeyId());

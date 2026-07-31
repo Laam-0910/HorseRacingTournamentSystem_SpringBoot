@@ -28,4 +28,5 @@ public class RaceInvitationDTO {
     private String venue;           // Địa điểm thi đấu bổ trợ
     private Integer entryId;        // ID của đăng ký đua tương ứng
     private String entryStatus;     // Trạng thái của đăng ký đua tương ứng
+    private java.math.BigDecimal jockeySharePercentage; // Tỷ lệ chia thưởng cho nài ngựa (%)
 }

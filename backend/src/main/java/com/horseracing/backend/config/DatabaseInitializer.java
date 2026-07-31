@@ -108,6 +108,20 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
+            // 8b. Kiểm tra và thêm cột jockey_share_percentage vào bảng RaceInvitation và RaceEntry
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'jockey_share_percentage') " +
+                "BEGIN " +
+                "    ALTER TABLE RaceInvitation ADD jockey_share_percentage DECIMAL(5,2) NOT NULL DEFAULT 10.00; " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceEntry') AND name = 'jockey_share_percentage') " +
+                "BEGIN " +
+                "    ALTER TABLE RaceEntry ADD jockey_share_percentage DECIMAL(5,2) NOT NULL DEFAULT 10.00; " +
+                "END"
+            );
+
             // 9. Kiểm tra và tạo bảng HorseRetirementRequest (yêu cầu giải nghệ ngựa) nếu chưa tồn tại
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('HorseRetirementRequest') AND type = 'U') " +

@@ -516,6 +516,9 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                       📍 {inv.venue} {inv.startTime ? `· 📅 ${formatDate(inv.startTime)}` : ''}
                     </p>
                   )}
+                  <p style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", fontWeight: 700, marginTop: "0.25rem" }}>
+                    💰 {lang === "vi" ? "Tỷ lệ chia thưởng được hưởng:" : "Offered Prize Share:"} {inv.jockeySharePercentage ?? 10}%
+                  </p>
 
                   {/* Trọng tài phân công cho trận đua */}
                   {refereesMap && refereesMap[inv.raceId] && refereesMap[inv.raceId].length > 0 && (
