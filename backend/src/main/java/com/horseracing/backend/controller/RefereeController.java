@@ -204,9 +204,17 @@ public class RefereeController {
         summary = "POST: Tiếp tục trận đua sau khi tạm dừng",
         description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
+<<<<<<< Updated upstream
                       "* **Controller**: `RefereeController.resumeRace()`\n" +
                       "* **Service**: `RefereeService.resumeRace()`\n" +
                       "* **Repository**: `RaceRepository.save()`\n\n" +
+=======
+                      "* **Controllers**: `RefereeController.resumeRace()`\n" +
+                      "* **Services**: `RefereeService.resumeRace()`\n" +
+                      "* **Repositories**: `RaceRepository.save()`, `RaceEntryRepository.findByRaceId()`, `RaceEntryRepository.save()`\n" +
+                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
+                      "* **Frontend**: `RefereeSupervision.tsx`, `RefereeHub.tsx`, `refereeService.ts`\n\n" +
+>>>>>>> Stashed changes
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Kiểm tra trận đua đang ở trạng thái `STOPPED`.\n" +
                       "2. Đổi trạng thái `Race` về `RUNNING` để tiếp tục theo dõi."

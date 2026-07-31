@@ -34,6 +34,7 @@ public class AdminUserService {
     private final HorseMapper horseMapper;
     private final RegistrationMapper registrationMapper;
     private final UserMapper userMapper;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public Map<String, Object> getPendingRegistrations() {
@@ -281,6 +282,7 @@ public class AdminUserService {
 
     @Transactional
     public void approveRaceEntry(Integer id) {
+<<<<<<< Updated upstream
         RaceEntry entry = raceEntryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Race entry not found"));
         entry.setStatus("APPROVED");
@@ -288,6 +290,54 @@ public class AdminUserService {
 
         autoAssignGates(entry.getRaceId());
         autoCalculateWeights(entry.getRaceId());
+=======
+        RaceEntry target = raceEntryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Race entry not found"));
+
+        List<RaceEntry> raceEntries = raceEntryRepository.findByRaceId(target.getRaceId());
+
+        // 1. Check if jockey already has an APPROVED entry in this race
+        if (target.getJockeyId() != null) {
+            boolean jockeyAlreadyApproved = raceEntries.stream()
+                    .anyMatch(e -> !e.getId().equals(target.getId())
+                            && target.getJockeyId().equals(e.getJockeyId())
+                            && "APPROVED".equalsIgnoreCase(e.getStatus()));
+            if (jockeyAlreadyApproved) {
+                throw new IllegalArgumentException("This jockey has already been approved for another horse in this race.");
+            }
+        }
+
+        // 2. Check if horse already has an APPROVED entry in this race
+        boolean horseAlreadyApproved = raceEntries.stream()
+                .anyMatch(e -> !e.getId().equals(target.getId())
+                        && target.getHorseId().equals(e.getHorseId())
+                        && "APPROVED".equalsIgnoreCase(e.getStatus()));
+        if (horseAlreadyApproved) {
+            throw new IllegalArgumentException("This horse has already been approved to participate in this race.");
+        }
+
+        // 3. Approve target entry
+        target.setStatus("APPROVED");
+        raceEntryRepository.save(target);
+
+        // 4. Auto-reject other pending entries for the same jockey or horse in this race
+        for (RaceEntry other : raceEntries) {
+            if (!other.getId().equals(target.getId())) {
+                boolean sameJockey = target.getJockeyId() != null && target.getJockeyId().equals(other.getJockeyId());
+                boolean sameHorse = target.getHorseId().equals(other.getHorseId());
+                if ((sameJockey || sameHorse) && !"REJECTED".equalsIgnoreCase(other.getStatus()) && !"APPROVED".equalsIgnoreCase(other.getStatus())) {
+                    other.setStatus("REJECTED");
+                    raceEntryRepository.save(other);
+                }
+            }
+        }
+
+        // 5. Send notification to Owner and Jockey
+        notificationService.notifyPartiesOnRaceEntryDecision(target, true);
+
+        autoAssignGates(target.getRaceId());
+        autoCalculateWeights(target.getRaceId());
+>>>>>>> Stashed changes
     }
 
     @Transactional
@@ -297,7 +347,10 @@ public class AdminUserService {
         entry.setStatus("REJECTED");
         raceEntryRepository.save(entry);
 
+<<<<<<< Updated upstream
         // Reject the corresponding invitation so the jockey is freed up
+=======
+>>>>>>> Stashed changes
         invitationRepository.findByJockeyIdAndRaceIdAndHorseId(entry.getJockeyId(), entry.getRaceId(), entry.getHorseId())
                 .stream()
                 .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()))
@@ -306,6 +359,12 @@ public class AdminUserService {
                     invitationRepository.save(i);
                 });
 
+<<<<<<< Updated upstream
+=======
+        // Send notification to Owner and Jockey
+        notificationService.notifyPartiesOnRaceEntryDecision(entry, false);
+
+>>>>>>> Stashed changes
         autoCalculateWeights(entry.getRaceId());
     }
 
@@ -315,6 +374,11 @@ public class AdminUserService {
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
         reg.setStatus("APPROVED");
         jockeyRegRepository.save(reg);
+<<<<<<< Updated upstream
+=======
+
+        notificationService.notifyUserOnAdminDecision("Jockey Meeting Registration", reg.getJockeyId(), id, true);
+>>>>>>> Stashed changes
     }
 
     @Transactional
@@ -323,6 +387,11 @@ public class AdminUserService {
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
         reg.setStatus("REJECTED");
         jockeyRegRepository.save(reg);
+<<<<<<< Updated upstream
+=======
+
+        notificationService.notifyUserOnAdminDecision("Jockey Meeting Registration", reg.getJockeyId(), id, false);
+>>>>>>> Stashed changes
     }
 
     @Transactional
@@ -331,6 +400,11 @@ public class AdminUserService {
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
         reg.setStatus("APPROVED");
         ownerRegRepository.save(reg);
+<<<<<<< Updated upstream
+=======
+
+        notificationService.notifyUserOnAdminDecision("Owner Meeting Registration", reg.getOwnerId(), id, true);
+>>>>>>> Stashed changes
     }
 
     @Transactional
@@ -339,6 +413,11 @@ public class AdminUserService {
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
         reg.setStatus("REJECTED");
         ownerRegRepository.save(reg);
+<<<<<<< Updated upstream
+=======
+
+        notificationService.notifyUserOnAdminDecision("Owner Meeting Registration", reg.getOwnerId(), id, false);
+>>>>>>> Stashed changes
     }
 
     @Transactional
@@ -566,19 +645,34 @@ public class AdminUserService {
         Race targetRace = raceRepository.findById(raceId)
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
 
+<<<<<<< Updated upstream
+=======
+        if (targetRace.getStatus() != null && java.util.Arrays.asList("RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED").contains(targetRace.getStatus().toUpperCase())) {
+            throw new IllegalStateException("Cannot assign referee while race is running, suspended, or completed.");
+        }
+
+>>>>>>> Stashed changes
         if (targetRace.getStartTime() == null) {
             throw new IllegalArgumentException("Target race does not have a start time scheduled yet.");
         }
 
+<<<<<<< Updated upstream
         // 1. Check if already assigned to this race
+=======
+        // 1. Check if referee is already assigned to this exact race
+>>>>>>> Stashed changes
         List<RaceReferee> assignedToCurrentRace = raceRefereeRepository.findByRaceId(raceId);
         boolean isAlreadyAssigned = assignedToCurrentRace.stream()
                 .anyMatch(rr -> rr.getRefereeId().equals(refereeId));
         if (isAlreadyAssigned) {
-            throw new IllegalArgumentException("Referee is already assigned to this race.");
+            throw new IllegalArgumentException("This referee is already assigned to this race.");
         }
 
+<<<<<<< Updated upstream
         // 2. Check for time conflicts (overlapping races at the exact same start time, excluding cancelled races)
+=======
+        // 2. Check referee schedule conflict (within 30-minute window or exact same time)
+>>>>>>> Stashed changes
         List<RaceReferee> refereeAssignments = raceRefereeRepository.findByRefereeId(refereeId);
         for (RaceReferee assignment : refereeAssignments) {
             if (assignment.getRaceId().equals(raceId)) {
@@ -587,10 +681,13 @@ public class AdminUserService {
             Optional<Race> otherRaceOpt = raceRepository.findById(assignment.getRaceId());
             if (otherRaceOpt.isPresent()) {
                 Race otherRace = otherRaceOpt.get();
-                if (otherRace.getStartTime() != null && otherRace.getStartTime().equals(targetRace.getStartTime())) {
-                    if (!"CANCELLED".equalsIgnoreCase(otherRace.getStatus()) && !"CANCELLED".equalsIgnoreCase(targetRace.getStatus())) {
-                        throw new IllegalArgumentException("Referee is already assigned to another race starting at the exact same time (" 
-                                + new java.text.SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(targetRace.getStartTime()) + ").");
+                if (otherRace.getStartTime() != null) {
+                    long diffMs = Math.abs(otherRace.getStartTime().getTime() - targetRace.getStartTime().getTime());
+                    if (diffMs < 30 * 60 * 1000) {
+                        if (!"CANCELLED".equalsIgnoreCase(otherRace.getStatus()) && !"CANCELLED".equalsIgnoreCase(targetRace.getStatus())) {
+                            String formattedTime = new java.text.SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(otherRace.getStartTime());
+                            throw new IllegalArgumentException("This referee has a time conflict with another race scheduled at: " + formattedTime);
+                        }
                     }
                 }
             }
