@@ -479,7 +479,9 @@ public class JockeyOwnerDashboardService {
             }
 
             User ref = userMap.get(v.getRefereeId()); // Tra cứu thông tin trọng tài phạt
-            map.put("refereeName", ref != null ? ref.getUsername() : "Unknown Referee");
+            map.put("refereeName", ref != null ? (ref.getFullName() != null && !ref.getFullName().isBlank() ? ref.getFullName() : ref.getUsername()) : "System Referee");
+            map.put("refereeAvatar", ref != null ? ref.getAvatar() : null);
+            map.put("refereeId", v.getRefereeId());
 
             resolved.add(map);
         }

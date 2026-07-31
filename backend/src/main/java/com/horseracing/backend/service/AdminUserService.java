@@ -34,6 +34,7 @@ public class AdminUserService {
     private final HorseMapper horseMapper;
     private final RegistrationMapper registrationMapper;
     private final UserMapper userMapper;
+    private final NotificationService notificationService;
 
     @Transactional(readOnly = true)
     public Map<String, Object> getPendingRegistrations() {
@@ -317,6 +318,54 @@ public class AdminUserService {
         entry.setStatus("APPROVED"); // Cập nhật trạng thái sang APPROVED
         raceEntryRepository.save(entry); // Lưu đối tượng đã duyệt vào DB
 
+        autoAssignGates(entry.getRaceId());
+        autoCalculateWeights(entry.getRaceId());
+        RaceEntry target = raceEntryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Race entry not found"));
+
+        List<RaceEntry> raceEntries = raceEntryRepository.findByRaceId(target.getRaceId());
+
+        // 1. Check if jockey already has an APPROVED entry in this race
+        if (target.getJockeyId() != null) {
+            boolean jockeyAlreadyApproved = raceEntries.stream()
+                    .anyMatch(e -> !e.getId().equals(target.getId())
+                            && target.getJockeyId().equals(e.getJockeyId())
+                            && "APPROVED".equalsIgnoreCase(e.getStatus()));
+            if (jockeyAlreadyApproved) {
+                throw new IllegalArgumentException("This jockey has already been approved for another horse in this race.");
+            }
+        }
+
+        // 2. Check if horse already has an APPROVED entry in this race
+        boolean horseAlreadyApproved = raceEntries.stream()
+                .anyMatch(e -> !e.getId().equals(target.getId())
+                        && target.getHorseId().equals(e.getHorseId())
+                        && "APPROVED".equalsIgnoreCase(e.getStatus()));
+        if (horseAlreadyApproved) {
+            throw new IllegalArgumentException("This horse has already been approved to participate in this race.");
+        }
+
+        // 3. Approve target entry
+        target.setStatus("APPROVED");
+        raceEntryRepository.save(target);
+
+        // 4. Auto-reject other pending entries for the same jockey or horse in this race
+        for (RaceEntry other : raceEntries) {
+            if (!other.getId().equals(target.getId())) {
+                boolean sameJockey = target.getJockeyId() != null && target.getJockeyId().equals(other.getJockeyId());
+                boolean sameHorse = target.getHorseId().equals(other.getHorseId());
+                if ((sameJockey || sameHorse) && !"REJECTED".equalsIgnoreCase(other.getStatus()) && !"APPROVED".equalsIgnoreCase(other.getStatus())) {
+                    other.setStatus("REJECTED");
+                    raceEntryRepository.save(other);
+                }
+            }
+        }
+
+        // 5. Send notification to Owner and Jockey
+        notificationService.notifyPartiesOnRaceEntryDecision(target, true);
+
+        autoAssignGates(target.getRaceId());
+        autoCalculateWeights(target.getRaceId());
         autoAssignGates(entry.getRaceId()); // Tự động xáo trộn và gán cổng xuất phát cho các thí sinh đã duyệt
         autoCalculateWeights(entry.getRaceId()); // Tự động tính toán cân nặng handicap và cân mang thực tế
     }
@@ -330,6 +379,7 @@ public class AdminUserService {
         entry.setStatus("REJECTED"); // Cập nhật trạng thái sang REJECTED
         raceEntryRepository.save(entry); // Lưu đối tượng bị từ chối vào DB
 
+        // Reject the corresponding invitation so the jockey is freed up
         // Đặt trạng thái lời mời tương ứng sang REJECTED để giải phóng nài ngựa nhận lời mời khác
         invitationRepository.findByJockeyIdAndRaceIdAndHorseId(entry.getJockeyId(), entry.getRaceId(), entry.getHorseId())
                 .stream()
@@ -339,6 +389,10 @@ public class AdminUserService {
                     invitationRepository.save(i); // Lưu lời mời đã cập nhật vào DB
                 });
 
+        // Send notification to Owner and Jockey
+        notificationService.notifyPartiesOnRaceEntryDecision(entry, false);
+
+        autoCalculateWeights(entry.getRaceId());
         autoCalculateWeights(entry.getRaceId()); // Tính toán lại cân nặng của các lượt đua còn lại
     }
 
@@ -347,6 +401,10 @@ public class AdminUserService {
     public void approveJockeyReg(Integer id) {
         JockeyRaceMeetingRegistration reg = jockeyRegRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
+        reg.setStatus("APPROVED");
+        jockeyRegRepository.save(reg);
+
+        notificationService.notifyUserOnAdminDecision("Jockey Meeting Registration", reg.getJockeyId(), id, true);
         reg.setStatus("APPROVED"); // Cập nhật trạng thái sang APPROVED
         jockeyRegRepository.save(reg); // Lưu vào DB
     }
@@ -356,6 +414,10 @@ public class AdminUserService {
     public void rejectJockeyReg(Integer id) {
         JockeyRaceMeetingRegistration reg = jockeyRegRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
+        reg.setStatus("REJECTED");
+        jockeyRegRepository.save(reg);
+
+        notificationService.notifyUserOnAdminDecision("Jockey Meeting Registration", reg.getJockeyId(), id, false);
         reg.setStatus("REJECTED"); // Cập nhật trạng thái sang REJECTED
         jockeyRegRepository.save(reg); // Lưu vào DB
     }
@@ -365,6 +427,10 @@ public class AdminUserService {
     public void approveOwnerReg(Integer id) {
         OwnerRaceMeetingRegistration reg = ownerRegRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
+        reg.setStatus("APPROVED");
+        ownerRegRepository.save(reg);
+
+        notificationService.notifyUserOnAdminDecision("Owner Meeting Registration", reg.getOwnerId(), id, true);
         reg.setStatus("APPROVED"); // Cập nhật trạng thái sang APPROVED
         ownerRegRepository.save(reg); // Lưu vào DB
     }
@@ -374,6 +440,10 @@ public class AdminUserService {
     public void rejectOwnerReg(Integer id) {
         OwnerRaceMeetingRegistration reg = ownerRegRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
+        reg.setStatus("REJECTED");
+        ownerRegRepository.save(reg);
+
+        notificationService.notifyUserOnAdminDecision("Owner Meeting Registration", reg.getOwnerId(), id, false);
         reg.setStatus("REJECTED"); // Cập nhật trạng thái sang REJECTED
         ownerRegRepository.save(reg); // Lưu vào DB
     }
@@ -625,14 +695,18 @@ public class AdminUserService {
             throw new IllegalArgumentException("Target race does not have a start time scheduled yet.");
         }
 
+        // 1. Check if already assigned to this race
+        // 1. Check if referee is already assigned to this exact race
         // 1. Kiểm tra xem trọng tài đã được phân công cho trận đua này chưa
         List<RaceReferee> assignedToCurrentRace = raceRefereeRepository.findByRaceId(raceId);
         boolean isAlreadyAssigned = assignedToCurrentRace.stream()
                 .anyMatch(rr -> rr.getRefereeId().equals(refereeId));
         if (isAlreadyAssigned) {
-            throw new IllegalArgumentException("Referee is already assigned to this race.");
+            throw new IllegalArgumentException("This referee is already assigned to this race.");
         }
 
+        // 2. Check for time conflicts (overlapping races at the exact same start time, excluding cancelled races)
+        // 2. Check referee schedule conflict (within 30-minute window or exact same time)
         // 2. Kiểm tra trùng lịch làm việc của trọng tài (các trận đua bắt đầu cùng thời điểm)
         List<RaceReferee> refereeAssignments = raceRefereeRepository.findByRefereeId(refereeId);
         for (RaceReferee assignment : refereeAssignments) {
@@ -642,10 +716,13 @@ public class AdminUserService {
             Optional<Race> otherRaceOpt = raceRepository.findById(assignment.getRaceId());
             if (otherRaceOpt.isPresent()) {
                 Race otherRace = otherRaceOpt.get();
-                if (otherRace.getStartTime() != null && otherRace.getStartTime().equals(targetRace.getStartTime())) {
-                    if (!"CANCELLED".equalsIgnoreCase(otherRace.getStatus()) && !"CANCELLED".equalsIgnoreCase(targetRace.getStatus())) {
-                        throw new IllegalArgumentException("Referee is already assigned to another race starting at the exact same time (" 
-                                + new java.text.SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(targetRace.getStartTime()) + ").");
+                if (otherRace.getStartTime() != null) {
+                    long diffMs = Math.abs(otherRace.getStartTime().getTime() - targetRace.getStartTime().getTime());
+                    if (diffMs < 30 * 60 * 1000) {
+                        if (!"CANCELLED".equalsIgnoreCase(otherRace.getStatus()) && !"CANCELLED".equalsIgnoreCase(targetRace.getStatus())) {
+                            String formattedTime = new java.text.SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(otherRace.getStartTime());
+                            throw new IllegalArgumentException("This referee has a time conflict with another race scheduled at: " + formattedTime);
+                        }
                     }
                 }
             }
