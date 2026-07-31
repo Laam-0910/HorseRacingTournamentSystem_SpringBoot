@@ -68,26 +68,4 @@ public class User implements Serializable {
 
     @Column(name = "biography", columnDefinition = "NVARCHAR(MAX)")
     private String biography;
-
-    @Column(name = "wallet_balance")
-    private BigDecimal walletBalance = BigDecimal.ZERO;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
