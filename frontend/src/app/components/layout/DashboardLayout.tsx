@@ -133,14 +133,6 @@ export default function DashboardLayout({
     setToday(d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
   }, []);
 
-  // Effect cập nhật chuỗi hiển thị ngày hôm nay mỗi khi thay đổi ngôn ngữ (luôn sử dụng en-GB)
-  useEffect(() => {
-    const d = new Date();
-    const loc = 'en-GB'; 
-    setToday(d.toLocaleDateString(loc, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
-  }, [lang]);
->>>>>>> origin/Dat
-
   // Effect phát hiện thay đổi kích thước cửa sổ để chuyển sang chế độ Mobile
   useEffect(() => {
     const handleResize = () => {
