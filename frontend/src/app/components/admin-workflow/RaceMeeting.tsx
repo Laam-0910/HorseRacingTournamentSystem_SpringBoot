@@ -20,6 +20,7 @@ export default function RaceMeeting() {
   const [date, setDate] = useState(""); // Ngày tổ chức
   const [venue, setVenue] = useState(""); // Địa điểm (Trường đua)
   const [seasonId, setSeasonId] = useState(""); // ID mùa giải gắn kết
+  const [totalBudget, setTotalBudget] = useState(""); // Ngân sách tổng của Race Meeting
 
   // Trạng thái hệ thống
   const [loading, setLoading] = useState(false);
@@ -71,6 +72,7 @@ export default function RaceMeeting() {
     setVenue(m.venue || "");
     setSeasonId(m.seasonId ? m.seasonId.toString() : "");
     setDate(formatDate(m.startDate || m.date));
+    setTotalBudget(m.totalBudget ? m.totalBudget.toString() : "");
     setError("");
     setSuccess("");
   };
@@ -81,6 +83,7 @@ export default function RaceMeeting() {
     setName("");
     setVenue("");
     setDate("");
+    setTotalBudget("");
     if (seasons.length > 0) {
       setSeasonId(seasons[0].id.toString());
     }
@@ -138,6 +141,7 @@ export default function RaceMeeting() {
         startDate: formatDateTime(date), // Định dạng lại chuỗi thời gian phù hợp API
         venue,
         seasonId: parseInt(seasonId),
+        totalBudget: totalBudget ? parseFloat(totalBudget) : 0,
       };
 
       if (editingMeeting) {
@@ -155,6 +159,7 @@ export default function RaceMeeting() {
       setName("");
       setDate("");
       setVenue("");
+      setTotalBudget("");
       fetchData();
     } catch (err: any) {
       setError(getErrMsg(err, "Failed to save meeting."));
@@ -192,6 +197,9 @@ export default function RaceMeeting() {
                     <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
                       📍 {m.venue}
                     </div>
+                    <div style={{ fontSize: "0.75rem", color: "#fbbf24", marginTop: "4px", fontFamily: "monospace", fontWeight: "bold" }}>
+                      💰 Budget: ${Number(m.totalBudget || 0).toLocaleString('en-US')}
+                    </div>
                   </div>
                   {/* Nút sửa / xóa nhanh */}
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", flexShrink: 0 }}>
@@ -216,6 +224,7 @@ export default function RaceMeeting() {
                 <tr className="bg-[#151310] text-xs font-semibold text-white/60 uppercase tracking-wider border-b border-white/5">
                   <th className="px-6 py-4">{$t("ID", (localStorage.getItem('app-lang') || 'vi'))}</th>
                   <th className="px-6 py-4">{$t("Meeting Name", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-4">{$t("Total Budget ($)", (localStorage.getItem('app-lang') || 'vi'))}</th>
                   <th className="px-6 py-4">{$t("Date", (localStorage.getItem('app-lang') || 'vi'))}</th>
                   <th className="px-6 py-4">{$t("Venue", (localStorage.getItem('app-lang') || 'vi'))}</th>
                   <th className="px-6 py-4">{$t("Season ID", (localStorage.getItem('app-lang') || 'vi'))}</th>
@@ -227,6 +236,7 @@ export default function RaceMeeting() {
                   <tr key={m.id} className="hover:bg-[#151310]/15 transition">
                     <td className="px-6 py-4 font-mono text-white/40">#{m.id}</td>
                     <td className="px-6 py-4 font-semibold text-white">{m.name}</td>
+                    <td className="px-6 py-4 font-mono font-bold text-amber-400">${Number(m.totalBudget || 0).toLocaleString('en-US')}</td>
                     <td className="px-6 py-4 text-white/80">{formatDate(m.startDate || m.date)}</td>
                     <td className="px-6 py-4 text-white/60">📍 {m.venue}</td>
                     <td className="px-6 py-4 text-white/40">Season #{m.seasonId}</td>
@@ -280,6 +290,20 @@ export default function RaceMeeting() {
               onChange={(e) => setName(e.target.value)}
               className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs"
               placeholder={$t("E.g., Grand Prix Sunday", (localStorage.getItem('app-lang') || 'vi'))}
+            />
+          </div>
+
+          {/* Nhập Ngân sách tổng (Total Budget) */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Total Budget ($USD)", (localStorage.getItem('app-lang') || 'vi'))}</label>
+            <input
+              type="number"
+              min="0"
+              step="1000"
+              value={totalBudget}
+              onChange={(e) => setTotalBudget(e.target.value)}
+              className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs"
+              placeholder={$t("E.g., 500000", (localStorage.getItem('app-lang') || 'vi'))}
             />
           </div>
 
