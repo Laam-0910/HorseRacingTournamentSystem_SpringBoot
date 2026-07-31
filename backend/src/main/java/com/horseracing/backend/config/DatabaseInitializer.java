@@ -122,20 +122,31 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 11. Tự động kiểm tra và khởi tạo dữ liệu lượt thi đấu (RaceEntry) mẫu cho tất cả các trận đua chưa có thí sinh
             try {
+                // Truy vấn danh sách ID các trận đua chưa có bất kỳ lượt đăng ký thi đấu (RaceEntry) nào
                 List<Integer> raceIdsWithoutEntries = jdbcTemplate.queryForList(
                     "SELECT r.id FROM Race r WHERE NOT EXISTS (SELECT 1 FROM RaceEntry re WHERE re.race_id = r.id)",
                     Integer.class
                 );
+                // Truy vấn danh sách ID các chiến mã đang ở trạng thái hoạt động (ACTIVE)
                 List<Integer> horseIds = jdbcTemplate.queryForList("SELECT id FROM Horse WHERE status = 'ACTIVE' OR status IS NULL", Integer.class);
+                // Truy vấn danh sách ID các nài ngựa (User có role_id = 3)
                 List<Integer> jockeyIds = jdbcTemplate.queryForList("SELECT id FROM [User] WHERE role_id = 3", Integer.class);
 
+                // Kiểm tra xem có đủ dữ liệu trận đua, chiến mã và nài ngựa để khởi tạo dữ liệu mẫu hay không
                 if (!raceIdsWithoutEntries.isEmpty() && !horseIds.isEmpty() && !jockeyIds.isEmpty()) {
+                    // Duyệt qua từng ID trận đua chưa có thí sinh
                     for (Integer rId : raceIdsWithoutEntries) {
+                        // Tính toán số lượng thí sinh sẽ chèn mẫu (tối đa 3 hoặc theo số lượng ngựa/nài hiện có)
                         int countToInsert = Math.min(3, Math.min(horseIds.size(), jockeyIds.size()));
+                        // Lặp để tạo từng lượt đăng ký thi đấu
                         for (int i = 0; i < countToInsert; i++) {
+                            // Lấy ID chiến mã tương ứng theo vị trí vòng lặp
                             Integer hId = horseIds.get(i % horseIds.size());
+                            // Lấy ID nài ngựa tương ứng theo vị trí vòng lặp
                             Integer jId = jockeyIds.get(i % jockeyIds.size());
+                            // Tính toán số cổng xuất phát (Gate number bắt đầu từ 1)
                             int gate = i + 1;
+                            // Thực thi lệnh SQL INSERT thêm lượt thi đấu mẫu với trạng thái APPROVED và trọng lượng 55.0kg
                             jdbcTemplate.update(
                                 "INSERT INTO RaceEntry (race_id, horse_id, jockey_id, gate_number, status, carried_weight) VALUES (?, ?, ?, ?, 'APPROVED', 55.0)",
                                 rId, hId, jId, gate
@@ -144,6 +155,7 @@ public class DatabaseInitializer implements InitializingBean {
                     }
                 }
             } catch (Exception ex) {
+                // In thông báo lỗi ra stderr nếu quá trình khởi tạo dữ liệu mẫu RaceEntry thất bại
                 System.err.println("Failed to auto-seed RaceEntry: " + ex.getMessage());
             }
 
