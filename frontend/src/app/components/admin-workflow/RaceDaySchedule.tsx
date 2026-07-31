@@ -368,15 +368,15 @@ export default function RaceDaySchedule() {
                     <div style={{ borderRight: "1px solid rgba(255,255,255,0.05)", paddingRight: "1rem" }}>
                       <h5 style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>{$t("Assigned Referees", (localStorage.getItem('app-lang') || 'vi'))}</h5>
                       {item.referees && item.referees.length > 0 ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
                           {item.referees.map((ref: any) => (
                             <button
                               key={ref.id}
                               type="button"
                               onClick={() => setSelectedProfileId(ref.id)}
-                              style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                              style={{ textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}
                             >
-                              <div style={{ padding: "0.4rem 0.6rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.375rem", fontSize: "12px", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                              <div style={{ padding: "0.375rem 0.625rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.375rem", fontSize: "11px", color: "#f4f2ec", display: "inline-flex", alignItems: "center", gap: "6px", fontWeight: 600 }}>
                                 {ref.avatar ? (
                                   <img src={ref.avatar} alt={ref.fullName || ref.username} style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(201,162,39,0.3)" }} />
                                 ) : (
@@ -384,7 +384,7 @@ export default function RaceDaySchedule() {
                                     {ref.fullName ? ref.fullName.charAt(0).toUpperCase() : (ref.username ? ref.username.charAt(0).toUpperCase() : 'R')}
                                   </div>
                                 )}
-                                <span style={{ fontWeight: 600, color: "#fbbf24", textDecoration: "underline" }}>{ref.fullName || ref.username}</span>
+                                <span style={{ color: "#fbbf24", textDecoration: "underline" }}>{ref.fullName || ref.username}</span>
                               </div>
                             </button>
                           ))}

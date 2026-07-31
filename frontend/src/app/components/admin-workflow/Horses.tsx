@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { api, getErrMsg } from "../../../lib/api";
 import { parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
+import { PaginationControls } from "./PaginationControls";
 
 // Cấu trúc thuộc tính truyền vào component InlineDatePicker
 interface InlineDatePickerProps {
@@ -336,6 +337,13 @@ export default function Horses() {
   };
 
   // Lọc danh sách ngựa theo từ khóa tìm kiếm và trạng thái hoạt động
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterStatus]);
+
   const filteredHorses = horses.filter(h => {
     let matchesStatus = true;
     if (filterStatus !== "ALL") {
@@ -353,6 +361,9 @@ export default function Horses() {
 
     return matchesStatus && matchesSearch;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredHorses.length / ITEMS_PER_PAGE));
+  const paginatedHorses = filteredHorses.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -412,8 +423,8 @@ export default function Horses() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
               <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading horses data...", (localStorage.getItem('app-lang') || 'vi'))}</div>
-            ) : filteredHorses.length > 0 ? (
-              filteredHorses.map((h) => {
+            ) : paginatedHorses.length > 0 ? (
+              paginatedHorses.map((h) => {
                 let statusColor = "#a0a0a0";
                 if (h.status === "ACTIVE") statusColor = "#4ade80";
                 else if (h.status === "PENDING") statusColor = "#fbbf24";
@@ -474,8 +485,8 @@ export default function Horses() {
               <tbody className="divide-y divide-white/5 text-sm">
                 {loading ? (
                   <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading horses data...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
-                ) : filteredHorses.length > 0 ? (
-                  filteredHorses.map((h) => {
+                ) : paginatedHorses.length > 0 ? (
+                  paginatedHorses.map((h) => {
                     let statusColor = "#a0a0a0";
                     if (h.status === "ACTIVE") statusColor = "#4ade80";
                     else if (h.status === "PENDING") statusColor = "#fbbf24";
@@ -517,6 +528,14 @@ export default function Horses() {
             </table>
           </div>
         )}
+
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredHorses.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+        />
       </div>
 
       {/* Hộp thoại chỉnh sửa chi tiết ngựa (Modal Edit) - Render ra ngoài document.body thông qua React Portal */}

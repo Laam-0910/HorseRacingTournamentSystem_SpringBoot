@@ -2,8 +2,6 @@ package com.horseracing.backend.controller;
 
 import com.horseracing.backend.dto.SystemConfigDTO;
 import com.horseracing.backend.service.SystemConfigService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -21,43 +19,13 @@ import java.util.List;
 @RequestMapping("/api/configs") // Cấu hình URL cơ sở là /api/configs
 @RequiredArgsConstructor // Tự động tạo constructor injection cho systemConfigService
 @CrossOrigin(origins = "*") // Hỗ trợ CORS đa nguồn
-@Tag(
-    name = "02. System Config Service",
-    description = "⚙️ **BƯỚC 2: CẤU HÌNH THAM SỐ HỆ THỐNG (SYSTEM CONFIG ARCHITECTURE)**\n\n" +
-                  "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
-                  "* **Controllers**: `SystemConfigController.java`, `AdminUserController.java`\n" +
-                  "* **Services**: `SystemConfigService.java`\n" +
-                  "* **Repositories**: `SystemConfigRepository.java`\n" +
-                  "* **Entities**: `SystemConfig.java`\n" +
-                  "* **DTOs**: `SystemConfigDTO.java`\n" +
-                  "* **Frontend**: `SystemConfig.tsx` (admin-workflow), `systemConfigService.ts`\n\n" +
-                  "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
-                  "1. Admin tải các tham số cấu hình mặc định (Phần trăm chia tiền thưởng, Hạn mức đăng ký, Giới hạn thời gian...).\n" +
-                  "2. Cho phép xem danh sách cấu hình và cập nhật tham số vận hành cho toàn bộ giải đua."
-)
 public class SystemConfigController {
 
     private final SystemConfigService systemConfigService; // Khai báo dịch vụ cấu hình hệ thống
 
     // Lấy toàn bộ danh sách tham số cấu hình của hệ thống
     @GetMapping // Xử lý yêu cầu HTTP GET gửi tới /api/configs
-    @Operation(
-        summary = "GET: Lấy danh sách tham số cấu hình hệ thống",
-        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
-                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controllers**: `SystemConfigController.getConfigs()`\n" +
-                      "* **Services**: `SystemConfigService.getAllConfigs()`\n" +
-                      "* **Repositories**: `SystemConfigRepository.findAll()`\n" +
-                      "* **Entities**: `SystemConfig.java`\n" +
-                      "* **DTOs**: `SystemConfigDTO` (`configKey`, `configValue`, `description`)\n" +
-                      "* **DTO Response**: `List<SystemConfigDTO>` (`configKey`, `configValue`, `description`)\n" +
-                      "* **Frontend**: `SystemConfig.tsx` (admin-workflow), `systemConfigService.ts`\n\n" +
-                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
-                      "1. Tiếp nhận yêu cầu lấy tham số cấu hình từ Admin Dashboard.\n" +
-                      "2. Dịch vụ `SystemConfigService` truy xuất bảng `SystemConfig` trong CSDL.\n" +
-                      "3. Đóng gói danh sách tham số cấu hình (quỹ tiền thưởng, hệ số cân nặng, tuổi ngựa) sang `SystemConfigDTO` và trả về Client."
-    )
-    public ResponseEntity<List<SystemConfigDTO>> getConfigs() {
+        public ResponseEntity<List<SystemConfigDTO>> getConfigs() {
         // Trả về mã HTTP 200 OK kèm danh sách DTO cấu hình tham số hệ thống
         return ResponseEntity.ok(systemConfigService.getAllConfigs());
     }

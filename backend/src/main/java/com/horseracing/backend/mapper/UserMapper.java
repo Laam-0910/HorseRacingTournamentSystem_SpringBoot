@@ -26,6 +26,7 @@ public class UserMapper {
                 .avatar(user.getAvatar() != null ? user.getAvatar().trim() : null)
                 .fullName(user.getFullName() != null ? user.getFullName().trim() : null)
                 .biography(user.getBiography() != null ? user.getBiography().trim() : null)
+                .walletBalance(user.getWalletBalance() != null ? user.getWalletBalance() : java.math.BigDecimal.ZERO)
                 .build();
     }
 
@@ -50,6 +51,7 @@ public class UserMapper {
         user.setAvatar(dto.getAvatar() != null ? dto.getAvatar().trim() : null);
         user.setFullName(dto.getFullName() != null ? dto.getFullName().trim() : null);
         user.setBiography(dto.getBiography() != null ? dto.getBiography().trim() : null);
+        user.setWalletBalance(dto.getWalletBalance() != null ? dto.getWalletBalance() : java.math.BigDecimal.ZERO);
         return user;
     }
 

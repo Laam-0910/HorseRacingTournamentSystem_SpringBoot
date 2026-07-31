@@ -109,6 +109,7 @@ public class RaceService {
 
         race.setStatus("SCHEDULED"); // Đặt trạng thái khởi tạo trận đua là SCHEDULED
         validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries()); // Kiểm tra giới hạn số lượng ngựa tối thiểu và tối đa
+        race.updatePrizeDistribution(); // Tự động tính toán phân chia tiền thưởng (Top 1: 50%, Top 2: 30%, Top 3: 20%)
         Race savedRace = raceRepository.save(race); // Lưu đối tượng trận đua vào cơ sở dữ liệu
 
         String meetingName = raceMeetingRepository.findById(savedRace.getRaceMeetingId()) // Tìm Tên Ngày hội đua để map vào DTO trả về
@@ -160,6 +161,7 @@ public class RaceService {
         }
 
         validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries()); // Kiểm tra giới hạn số lượng ngựa đăng ký tham gia
+        race.updatePrizeDistribution(); // Tự động cập nhật phân chia tiền thưởng
         Race savedRace = raceRepository.save(race); // Lưu các thay đổi của trận đua vào DB
         String meetingName = raceMeetingRepository.findById(savedRace.getRaceMeetingId()) // Trích xuất tên Ngày hội đua tương ứng
                 .map(RaceMeeting::getName) // Lấy tên Ngày hội đua
