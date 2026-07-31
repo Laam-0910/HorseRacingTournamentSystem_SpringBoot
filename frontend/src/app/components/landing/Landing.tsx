@@ -344,12 +344,6 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
           <div style={{ background: "#111", color: "#C9A84C", padding: "11px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(201,168,76,0.2)", flexShrink: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>🤖 {L.label}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <select value={lang} onChange={e => changeLang(e.target.value)} style={{ background: "#1e1e1e", border: "1px solid rgba(201,168,76,0.33)", color: "#C9A84C", borderRadius: 5, fontSize: 11, padding: "3px 5px", cursor: "pointer", outline: "none" }}>
-                <option value="vi">🇻🇳 VI</option>
-                <option value="en">🇺🇸 EN</option>
-                <option value="ja">🇯🇵 JA</option>
-                <option value="zh">🇨🇳 ZH</option>
-              </select>
               <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: "#777", fontSize: 17, cursor: "pointer", padding: "2px 4px" }}>✕</button>
             </div>
           </div>
