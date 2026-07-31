@@ -58,6 +58,26 @@ public class PublicDataController {
     @Autowired
     private RaceRefereeRepository raceRefereeRepository;
 
+    // Lấy danh sách Trọng tài được phân công theo từng cuộc đua (Công khai)
+    @GetMapping("/races/referees")
+    public ResponseEntity<?> getPublicRaceReferees() {
+        List<RaceReferee> allReferees = raceRefereeRepository.findAll();
+        Map<Integer, User> userMap = userRepository.findAll().stream().collect(java.util.stream.Collectors.toMap(User::getId, u -> u, (a, b) -> a));
+        Map<Integer, List<Map<String, Object>>> map = new HashMap<>();
+        for (RaceReferee rr : allReferees) {
+            User u = userMap.get(rr.getRefereeId());
+            if (u != null) {
+                Map<String, Object> uMap = new HashMap<>();
+                uMap.put("id", u.getId());
+                uMap.put("username", u.getUsername());
+                uMap.put("fullName", u.getFullName() != null && !u.getFullName().isBlank() ? u.getFullName() : u.getUsername());
+                uMap.put("avatar", u.getAvatar());
+                map.computeIfAbsent(rr.getRaceId(), k -> new ArrayList<>()).add(uMap);
+            }
+        }
+        return ResponseEntity.ok(map);
+    }
+
     // Lấy thống kê tổng hợp toàn hệ thống
     @GetMapping("/stats")
     @Operation(

@@ -37,6 +37,7 @@ public class InvitationService {
     private final RaceInvitationMapper invitationMapper;
     private final JockeyRaceMeetingRegistrationRepository jockeyRegRepository;
     private final HorseRaceMeetingRegistrationRepository horseRegRepository;
+    private final NotificationService notificationService;
 
     // Lấy danh sách lời mời thi đấu lọc theo Nài ngựa (Jockey) hoặc Chủ sở hữu (Owner)
     public List<RaceInvitationDTO> getInvitations(Integer jockeyId, Integer ownerId) {
@@ -243,6 +244,9 @@ public class InvitationService {
                 }
             }
         }
+
+        // Notify Horse Owner
+        notificationService.notifyOwnerOnInvitationResponse(invite, true);
     }
 
     // Nộp lại đơn thi đấu đã bị từ chối
@@ -317,6 +321,9 @@ public class InvitationService {
                 .orElseThrow(() -> new IllegalArgumentException("Invitation not found"));
         invite.setStatus("REJECTED"); // Cập nhật trạng thái sang REJECTED
         invitationRepository.save(invite); // Lưu vào CSDL
+
+        // Notify Horse Owner
+        notificationService.notifyOwnerOnInvitationResponse(invite, false);
     }
 
     // Chủ ngựa rút lại lời mời thi đấu đã gửi

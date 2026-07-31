@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, formatForDateTimeLocal, formatForApi, formatClassLevel, parseSafeDate } from "../../utils/dateTimeHelper";
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
+import ProfileModal from "../dashboards/components/ProfileModal";
 
 // Cấu trúc đối tượng Ngày hội đua
 interface Meeting {
@@ -19,6 +20,8 @@ interface User {
   username: string;
   email: string;
   roleId: number;
+
+  fullName?: string;
   avatar?: string;
 }
 
@@ -60,6 +63,9 @@ export default function Race() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // State lưu ID người dùng cần xem Profile modal
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
 
   // Các state lưu trữ dữ liệu từ API
   const [meetings, setMeetings] = useState<Meeting[]>([]); // Danh sách ngày hội đua
@@ -549,6 +555,25 @@ export default function Race() {
                           <span>{ref.username}</span>
                           {!isRefLocked && (
                             <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "2px", fontSize: "10px" }}>×</button>
+
+                        <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "11px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
+                          <button
+                            type="button"
+                            onClick={() => setSelectedProfileId(ref.id)}
+                            style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", color: "#f4f2ec" }}
+                            title={`View profile of ${ref.fullName || ref.username}`}
+                          >
+                            {ref.avatar ? (
+                              <img src={ref.avatar} alt={ref.fullName || ref.username} style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.2)" }} />
+                            ) : (
+                              <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(201,162,39,0.25)", color: "#c9a227", fontSize: "10px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid rgba(201,162,39,0.4)" }}>
+                                {ref.fullName ? ref.fullName.charAt(0).toUpperCase() : (ref.username ? ref.username.charAt(0).toUpperCase() : 'R')}
+                              </div>
+                            )}
+                            <span style={{ fontWeight: 600, textDecoration: "underline", color: "#fbbf24" }}>{ref.fullName || ref.username}</span>
+                          </button>
+                          {!isRefLocked && (
+                            <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "2px", fontSize: "12px", lineHeight: 1 }} title="Remove referee">×</button>
                           )}
                         </div>
                       ))}
@@ -698,6 +723,24 @@ export default function Race() {
                               <span>{ref.username}</span>
                               {!isRefLocked && (
                                 <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "2px", fontSize: "10px" }} title="Remove referee">×</button>
+                            <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "11px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedProfileId(ref.id)}
+                                style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", color: "#f4f2ec" }}
+                                title={`View profile of ${ref.fullName || ref.username}`}
+                              >
+                                {ref.avatar ? (
+                                  <img src={ref.avatar} alt={ref.fullName || ref.username} style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.2)" }} />
+                                ) : (
+                                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(201,162,39,0.25)", color: "#c9a227", fontSize: "10px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid rgba(201,162,39,0.4)" }}>
+                                    {ref.fullName ? ref.fullName.charAt(0).toUpperCase() : (ref.username ? ref.username.charAt(0).toUpperCase() : 'R')}
+                                  </div>
+                                )}
+                                <span style={{ fontWeight: 600, textDecoration: "underline", color: "#fbbf24" }}>{ref.fullName || ref.username}</span>
+                              </button>
+                              {!isRefLocked && (
+                                <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "2px", fontSize: "12px", lineHeight: 1 }} title="Remove referee">×</button>
                               )}
                             </div>
                           ))}
@@ -781,6 +824,11 @@ export default function Race() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal xem thông tin Hồ sơ cá nhân của Trọng tài */}
+      {selectedProfileId !== null && (
+        <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
       )}
     </div>
   );
