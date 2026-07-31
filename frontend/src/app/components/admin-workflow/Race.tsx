@@ -89,7 +89,7 @@ export default function Race() {
   const [distance, setDistance] = useState("1200");
   const [maxEntries, setMaxEntries] = useState("12");
   const [minEntries, setMinEntries] = useState("3");
-  const [purse, setPurse] = useState("0");
+  const [purse, setPurse] = useState("");
 
   // --- Các State phục vụ Modal Chỉnh sửa cuộc đua ---
   const [editingRace, setEditingRace] = useState<Race | null>(null);
@@ -210,6 +210,7 @@ export default function Race() {
         setStartTime("");
         setRegStartTime("");
         setRegEndTime("");
+        setPurse("");
         fetchData();
       } else {
         throw new Error(res.error || "Failed to create race.");
@@ -440,15 +441,7 @@ export default function Race() {
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Class Level", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <select 
                   value={classLevel} 
-                  onChange={e => {
-                    const lvl = e.target.value;
-                    setClassLevel(lvl);
-                    if (lvl === "Class 1") setPurse("50000");
-                    else if (lvl === "Class 2") setPurse("30000");
-                    else if (lvl === "Class 3") setPurse("20000");
-                    else if (lvl === "Class 4") setPurse("10000");
-                    else if (lvl === "Class 5") setPurse("5000");
-                  }} 
+                  onChange={e => setClassLevel(e.target.value)} 
                   required 
                   style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }}
                 >
