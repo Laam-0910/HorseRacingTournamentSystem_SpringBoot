@@ -172,6 +172,7 @@ public class RaceService {
         }
 
         validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries()); // Kiểm tra giới hạn số lượng ngựa đăng ký tham gia
+        validateRacePurseAgainstMeetingBudget(race.getRaceMeetingId(), race.getPurse(), id); // Validate purse against parent RaceMeeting budget
         race.updatePrizeDistribution(); // Tự động cập nhật phân chia tiền thưởng
         Race savedRace = raceRepository.save(race); // Lưu các thay đổi của trận đua vào DB
         String meetingName = raceMeetingRepository.findById(savedRace.getRaceMeetingId()) // Trích xuất tên Ngày hội đua tương ứng
@@ -382,17 +383,18 @@ public class RaceService {
         if (meetingOpt.isPresent()) {
             RaceMeeting meeting = meetingOpt.get();
             BigDecimal totalBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
-            if (totalBudget.compareTo(BigDecimal.ZERO) > 0) {
-                List<Race> racesInMeeting = raceRepository.findByRaceMeetingId(meetingId);
-                BigDecimal allocatedPurses = racesInMeeting.stream()
-                        .filter(r -> excludeRaceId == null || !r.getId().equals(excludeRaceId))
-                        .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus()))
-                        .map(r -> r.getPurse() != null ? r.getPurse() : BigDecimal.ZERO)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
-                BigDecimal availableBudget = totalBudget.subtract(allocatedPurses);
-                if (newPurse.compareTo(availableBudget) > 0) {
-                    throw new IllegalArgumentException(String.format("Race purse ($%,.2f) exceeds remaining Race Meeting budget ($%,.2f).", newPurse, availableBudget));
-                }
+            List<Race> racesInMeeting = raceRepository.findByRaceMeetingId(meetingId);
+            BigDecimal allocatedPurses = racesInMeeting.stream()
+                    .filter(r -> excludeRaceId == null || !r.getId().equals(excludeRaceId))
+                    .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus()))
+                    .map(r -> r.getPurse() != null ? r.getPurse() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal availableBudget = totalBudget.subtract(allocatedPurses);
+            if (availableBudget.compareTo(BigDecimal.ZERO) < 0) {
+                availableBudget = BigDecimal.ZERO;
+            }
+            if (newPurse.compareTo(availableBudget) > 0) {
+                throw new IllegalArgumentException(String.format("Race purse ($%,.2f) exceeds remaining Race Meeting budget ($%,.2f).", newPurse, availableBudget));
             }
         }
     }
