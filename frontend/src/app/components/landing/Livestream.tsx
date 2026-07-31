@@ -4,6 +4,7 @@ import { api } from "../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
 import { useAuth } from "../../../context/AuthContext";
 import { $t } from '@/lib/i18n';
+import WebCamLiveViewer from "../livestream/WebCamLiveViewer";
 
 // Khai báo kiểu dữ liệu cấu trúc cho một Trận Đấu (Race) trong livestream
 interface Race {
@@ -14,6 +15,7 @@ interface Race {
   trackType: string;       // Loại đường đua (Turf/Dirt...)
   startTime: string;       // Giờ bắt đầu định dạng chuỗi
   youtubeLiveUrl: string;  // Đường dẫn phát trực tiếp (YouTube hoặc tệp tin video .mp4)
+  streamMode?: string;     // YOUTUBE hoặc WEBCAM
   meetingName: string;     // Tên ngày hội đua chứa cuộc đua này
 }
 
@@ -322,11 +324,14 @@ export default function Livestream() {
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500 mb-4"></div>
               <p className="text-white/60 font-mono text-sm">{$t("Đang tải dữ liệu livestream...", (localStorage.getItem('app-lang') || 'vi'))}</p>
             </div>
-          ) : selectedRace && embedUrl ? (
+          ) : selectedRace ? (
             <div className="space-y-4">
-              {/* Vùng chứa Iframe Iframe Player theo tỷ lệ chuẩn 16:9 */}
+              {/* Vùng chứa Iframe / Video Player / WebCam theo tỷ lệ chuẩn 16:9 */}
               <div className="relative w-full pb-[56.25%] h-0 rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black">
-                {selectedRace.youtubeLiveUrl && (
+                {selectedRace.streamMode === "WEBCAM" ? (
+                  /* Trình phát WebCam Stream truyền từ Điện thoại / Camera */
+                  <WebCamLiveViewer raceId={selectedRace.id} />
+                ) : selectedRace.youtubeLiveUrl && (
                   selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
                   selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
                   selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
@@ -341,7 +346,7 @@ export default function Livestream() {
                     controls
                     autoPlay
                   />
-                ) : (
+                ) : embedUrl ? (
                   <>
                     {/* Trình phát Iframe cho các nguồn YouTube embed */}
                     <iframe
@@ -354,6 +359,10 @@ export default function Livestream() {
                     {/* Lớp che mờ bảo vệ ở chân trình phát ngăn các click tương tác ngoài ý muốn của YouTube */}
                     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "14%", zIndex: 10, background: "transparent", cursor: "default" }} onClick={e => e.stopPropagation()} />
                   </>
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white/50 text-sm font-mono">
+                    <span>{$t("Không tìm thấy luồng phát", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                  </div>
                 )}
               </div>
 

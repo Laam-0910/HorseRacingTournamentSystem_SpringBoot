@@ -67,6 +67,9 @@ public class Race implements Serializable {
     @Column(name = "youtube_live_url")
     private String youtubeLiveUrl;
 
+    @Column(name = "stream_mode")
+    private String streamMode = "YOUTUBE";
+
     @Column(name = "total_prize_pool")
     private BigDecimal totalPrizePool;
 

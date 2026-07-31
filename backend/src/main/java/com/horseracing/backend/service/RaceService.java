@@ -167,6 +167,12 @@ public class RaceService {
             validateLiveUrl(liveUrl); // Xác thực tính hợp lệ của link Livestream
             race.setYoutubeLiveUrl(liveUrl); // Cập nhật link Livestream YouTube
         }
+        if (body.containsKey("streamMode")) { // Kiểm tra nếu có cập nhật chế độ stream
+            String mode = (String) body.get("streamMode");
+            if ("YOUTUBE".equals(mode) || "WEBCAM".equals(mode)) {
+                race.setStreamMode(mode);
+            }
+        }
         if (body.containsKey("stewardReport")) { // Kiểm tra nếu có cập nhật báo cáo trọng tài
             race.setStewardReport((String) body.get("stewardReport")); // Cập nhật nội dung báo cáo giám sát
         }

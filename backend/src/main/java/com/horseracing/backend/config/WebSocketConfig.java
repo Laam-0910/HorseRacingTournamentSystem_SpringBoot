@@ -18,10 +18,17 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Autowired
     private ChatWebSocketHandler chatWebSocketHandler; // Bộ xử lý nhận/gửi thông điệp chat WebSocket
 
+    @Autowired
+    private LivestreamWebSocketHandler livestreamWebSocketHandler; // Bộ xử lý tín hiệu livestream WebRTC
+
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         // Đăng ký đường dẫn endpoint `/ws/chat/{raceId}` cùng với bộ xử lý tương ứng
         registry.addHandler(chatWebSocketHandler, "/ws/chat/{raceId}")
                 .setAllowedOrigins("*"); // Cho phép kết nối từ mọi nguồn gốc (CORS policy)
+
+        // Đăng ký đường dẫn endpoint `/ws/livestream/{raceId}` cho truyền luồng phát trực tiếp
+        registry.addHandler(livestreamWebSocketHandler, "/ws/livestream/{raceId}")
+                .setAllowedOrigins("*");
     }
 }

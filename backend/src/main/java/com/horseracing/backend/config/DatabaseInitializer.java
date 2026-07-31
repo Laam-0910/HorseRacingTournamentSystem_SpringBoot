@@ -112,6 +112,14 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
+            // 8.01 Kiểm tra và thêm cột stream_mode (YOUTUBE hoặc WEBCAM) vào bảng Race
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'stream_mode') " +
+                "BEGIN " +
+                "    ALTER TABLE Race ADD stream_mode VARCHAR(20) NOT NULL DEFAULT 'YOUTUBE'; " +
+                "END"
+            );
+
             // 8.1 Thêm các cột phân chia tiền thưởng vào bảng Race
             jdbcTemplate.execute(
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'total_prize_pool') " +

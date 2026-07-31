@@ -3,6 +3,7 @@ import { api, getErrMsg } from "../../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../../lib/utils";
 import { useAuth } from "../../../../context/AuthContext";
 import { $t } from '@/lib/i18n';
+import WebCamLiveViewer from "../../livestream/WebCamLiveViewer";
 
 interface Race {
   id: number;
@@ -12,6 +13,7 @@ interface Race {
   trackType: string;
   startTime: string;
   youtubeLiveUrl: string;
+  streamMode?: string;
   meetingName: string;
 }
 
@@ -266,7 +268,9 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
           <div className={`${isTheaterMode ? "w-full" : "lg:col-span-2"} space-y-4`}>
             {/* Embedded Stream */}
             <div className="relative w-full pb-[56.25%] h-0 rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black">
-              {selectedRace.youtubeLiveUrl && (
+              {selectedRace.streamMode === "WEBCAM" ? (
+                <WebCamLiveViewer raceId={selectedRace.id} />
+              ) : selectedRace.youtubeLiveUrl && (
                 selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
                 selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
                 selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||

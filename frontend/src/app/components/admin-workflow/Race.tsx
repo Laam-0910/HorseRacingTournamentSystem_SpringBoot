@@ -4,6 +4,7 @@ import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, formatForDateTimeLocal, formatForApi, formatClassLevel, parseSafeDate } from "../../utils/dateTimeHelper";
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 import ProfileModal from "../dashboards/components/ProfileModal";
+import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
 
 // Cấu trúc đối tượng Ngày hội đua
 interface Meeting {
@@ -66,6 +67,7 @@ export default function Race() {
 
   // State lưu ID người dùng cần xem Profile modal
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+  const [broadcasterRace, setBroadcasterRace] = useState<any | null>(null);
 
   // Các state lưu trữ dữ liệu từ API
   const [meetings, setMeetings] = useState<Meeting[]>([]); // Danh sách ngày hội đua
@@ -607,18 +609,25 @@ export default function Race() {
 
                   {/* Điều khiển Livestream trên Mobile */}
                   {!isCompleted && (
-                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", flexDirection: "column", gap: "4px" }}>
-                      {race.youtubeLiveUrl ? (
+                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", flexDirection: "column", gap: "6px" }}>
+                      {race.youtubeLiveUrl || race.streamMode === "WEBCAM" ? (
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                           <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>{$t("LIVE", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>
+                            {race.streamMode === "WEBCAM" ? $t("LIVE WEBCAM", (localStorage.getItem('app-lang') || 'vi')) : $t("LIVE YOUTUBE", (localStorage.getItem('app-lang') || 'vi'))}
+                          </span>
                           <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>{$t("End Live", (localStorage.getItem('app-lang') || 'vi'))}</button>
                         </div>
                       ) : (
                         race.status === "RUNNING" && (
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            <input type="text" placeholder={$t("YouTube URL", (localStorage.getItem('app-lang') || 'vi'))} value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", flex: 1 }} />
-                            <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Go Live", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                              <input type="text" placeholder={$t("YouTube URL", (localStorage.getItem('app-lang') || 'vi'))} value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", flex: 1 }} />
+                              <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Go Live", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                            </div>
+                            <button type="button" onClick={() => setBroadcasterRace(race)} style={{ width: "100%", fontSize: "10px", padding: "0.35rem", borderRadius: "0.375rem", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                              <span>📱</span> {$t("Phát từ Camera Điện thoại / WebCam", (localStorage.getItem('app-lang') || 'vi'))}
+                            </button>
                           </div>
                         )
                       )}
@@ -848,6 +857,18 @@ export default function Race() {
       {/* Modal xem thông tin Hồ sơ cá nhân của Trọng tài */}
       {selectedProfileId !== null && (
         <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
+      )}
+
+      {/* Modal Phát Livestream bằng Camera Điện thoại / WebCam */}
+      {broadcasterRace && (
+        <CameraBroadcasterModal
+          raceId={broadcasterRace.id}
+          raceTitle={broadcasterRace.classLevel}
+          onClose={() => {
+            setBroadcasterRace(null);
+            fetchData();
+          }}
+        />
       )}
     </div>
   );
