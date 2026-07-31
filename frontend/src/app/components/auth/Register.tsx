@@ -37,31 +37,31 @@ export default function Register() {
     // 1. Kiểm tra họ và tên hợp lệ (không trống và dài ít nhất 3 ký tự)
     if (!form.fullName.trim()) {
       // Đặt thông báo lỗi nếu họ tên trống
-      setError($t("Vui lòng nhập họ và tên đầy đủ", lang));
+      setError($t("Vui lòng nhập họ và tên đầy đủ"));
       return;
     }
     if (form.fullName.trim().length < 3) {
       // Đặt thông báo lỗi nếu họ tên dưới 3 ký tự
-      setError($t("Họ và tên phải có ít nhất 3 ký tự", lang));
+      setError($t("Họ và tên phải có ít nhất 3 ký tự"));
       return;
     }
     
     // 2. Kiểm tra tên đăng nhập (username) hợp lệ
     if (!form.username.trim()) {
       // Đặt thông báo lỗi nếu username trống
-      setError($t("Vui lòng nhập username đăng nhập", lang));
+      setError($t("Vui lòng nhập username đăng nhập"));
       return;
     }
     if (form.username.trim().length < 3) {
       // Đặt thông báo lỗi nếu username dưới 3 ký tự
-      setError($t("Username must be at least 3 characters long", lang));
+      setError($t("Username must be at least 3 characters long"));
       return;
     }
     
     // 3. So sánh mật khẩu và mật khẩu nhập lại có trùng khớp không
     if (form.password !== form.confirmPassword) {
       // Đặt thông báo lỗi nếu mật khẩu nhập lại không khớp
-      setError($t("Passwords do not match.", lang));
+      setError($t("Passwords do not match."));
       return;
     }
     
@@ -71,7 +71,7 @@ export default function Register() {
     if (!pwdRegex.test(form.password)) {
       // Đặt thông báo lỗi nếu mật khẩu không đạt chuẩn an toàn
       setError(
-        $t("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)", lang)
+        $t("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)")
       );
       return;
     }

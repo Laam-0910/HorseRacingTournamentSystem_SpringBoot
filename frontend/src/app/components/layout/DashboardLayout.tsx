@@ -77,43 +77,10 @@ function Icon({ name, size = 14, color }: { name: string; size?: number; color?:
  * @param label Nhãn gốc bằng tiếng Anh cần dịch
  * @param lang Mã ngôn ngữ hiện tại của app ('vi', 'en', 'zh', 'ja')
  */
-const translateLabel = (label: string, lang: string): string => {
+const translateLabel = (label: string, lang: string = 'en'): string => {
   const dict: Record<string, Record<string, string>> = {
-    "Owner Hub": { vi: "Trang của tôi", en: "Owner Hub", zh: "业主中心", ja: "オーナーハブ" },
-    "My Stable": { vi: "Chuồng ngựa của tôi", en: "My Stable", zh: "我的马房", ja: "マイ厩舎" },
-    "Race Calendar": { vi: "Lịch đua", en: "Race Calendar", zh: "赛事日历", ja: "レースカレンダー" },
-    "Invitations": { vi: "Lời mời", en: "Invitations", zh: "赛事邀请", ja: "招待状" },
-    "Results & Earnings": { vi: "Kết quả & Thu nhập", en: "Results & Earnings", zh: "比赛结果与收益", ja: "結果と収益" },
-    "Jockey Hub": { vi: "Trang của Jockey", en: "Jockey Hub", zh: "骑师中心", ja: "ジョッキーハブ" },
-    "My Mounts": { vi: "Ngựa của tôi", en: "My Mounts", zh: "我的赛马", ja: "私の馬" },
-    "Steward Board": { vi: "Bảng trọng tài", en: "Steward Board", zh: "裁判面板", ja: "審判ボード" },
-    "Violation Reports": { vi: "Báo cáo vi phạm", en: "Violation Reports", zh: "违规报告", ja: "違反レポート" },
-    "Rule Violations": { vi: "Vi phạm luật", en: "Rule Violations", zh: "违规记录", ja: "ルール違反" },
-    "Spectator Hub": { vi: "Trang người xem", en: "Spectator Hub", zh: "观众主页", ja: "観客ハブ" },
-    "Horse Registry": { vi: "Danh mục ngựa", en: "Horse Registry", zh: "马匹注册", ja: "馬 of 登録" },
-    "System Dashboard": { vi: "Bảng điều khiển", en: "Dashboard", zh: "系统控制面板", ja: "ダッシュボード" },
-    "Seasons": { vi: "Mùa giải", en: "Seasons", zh: "赛季管理", ja: "シーズン管理" },
-    "Race Meetings": { vi: "Ngày hội đua", en: "Meetings", zh: "赛事日", ja: "レース開催日" },
-    "Races": { vi: "Trận đấu", en: "Races", zh: "比赛管理", ja: "レース管理" },
-    "Registrations": { vi: "Duyệt đăng ký", en: "Registrations", zh: "报名审核", ja: "登録管理" },
-    "Users": { vi: "Người dùng", en: "Users", zh: "用户与角色", ja: "ユーザー管理" },
-    "Rules": { vi: "Luật thi đấu", en: "Rules", zh: "规则设置", ja: "ルール設定" },
-    "profile": { vi: "Thông tin cá nhân", en: "Profile", zh: "个人资料", ja: "プロフィール" },
-    "Overview": { vi: "Tổng quan", en: "Overview", zh: "总览", ja: "概要" },
-    "Live Watch": { vi: "Xem trực tiếp", en: "Live Watch", zh: "实况直播", ja: "ライブ視聴" },
-    "Racecard": { vi: "Thẻ đua (Racecard)", en: "Racecard", zh: "排位表", ja: "出馬表" },
-    "Results": { vi: "Kết quả", en: "Results", zh: "比赛赛果", ja: "レース結果" },
-    "Horses": { vi: "Danh sách ngựa", en: "Horses", zh: "参赛马匹", ja: "競走馬リスト" },
-    "Statistics": { vi: "Bảng thống kê", en: "Statistics", zh: "统计数据", ja: "統計データ" },
-    "AI Assistant": { vi: "Trợ lý ảo AI", en: "AI Assistant", zh: "AI 助手", ja: "AIアシスタント" },
-    "Horse Owner": { vi: "Chủ ngựa", en: "Horse Owner", zh: "马主", ja: "馬主" },
-    "Jockey": { vi: "Nài ngựa", en: "Jockey", zh: "骑师", ja: "ジョッキー" },
-    "Referee": { vi: "Trọng tài", en: "Referee", zh: "裁判", ja: "審判" },
-    "Spectator": { vi: "Người xem", en: "Spectator", zh: "观众", ja: "観客" },
-    "Admin": { vi: "Quản trị viên", en: "Admin", zh: "管理员", ja: "管理者" },
-    "Referee Hub": { vi: "Bảng trọng tài", en: "Referee Hub", zh: "裁判面板", ja: "審判ボード" },
-    "Incidents": { vi: "Lịch sử sự cố", en: "Incidents", zh: "违规记录", ja: "インシデント" },
-    "Duties": { vi: "Lịch trình trọng tài", en: "Duties", zh: "值勤日程", ja: "任務" }
+    "Incidents": { en: "Incidents" },
+    "Duties": { en: "Duties" }
   };
   // Tìm khóa trong từ điển không phân biệt chữ hoa/chữ thường
   const key = Object.keys(dict).find(k => k.toLowerCase() === label.toLowerCase());
@@ -153,7 +120,6 @@ export default function DashboardLayout({
   const [hovering, setHovering] = useState(false);
   // State lưu trữ ngày hiện tại định dạng chuỗi theo ngôn ngữ
   const [today, setToday] = useState('');
-  // State lưu trữ ngôn ngữ hiện tại của app (mặc định lấy từ localStorage hoặc tiếng Việt 'vi')
   const [lang] = useState('en');
   
   // Trạng thái phát hiện giao diện đang hiển thị trên Mobile (<1024px)
@@ -161,13 +127,19 @@ export default function DashboardLayout({
   // Trạng thái hiển thị Drawer menu trên Mobile
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-
-
   // Effect cập nhật chuỗi hiển thị ngày hôm nay
   useEffect(() => {
     const d = new Date();
     setToday(d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
   }, []);
+
+  // Effect cập nhật chuỗi hiển thị ngày hôm nay mỗi khi thay đổi ngôn ngữ (luôn sử dụng en-GB)
+  useEffect(() => {
+    const d = new Date();
+    const loc = 'en-GB'; 
+    setToday(d.toLocaleDateString(loc, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
+  }, [lang]);
+>>>>>>> origin/Dat
 
   // Effect phát hiện thay đổi kích thước cửa sổ để chuyển sang chế độ Mobile
   useEffect(() => {
@@ -331,7 +303,7 @@ export default function DashboardLayout({
             {(isMobile || sidebarExpanded) && (
               <div style={{ overflow: 'hidden', flex: 1 }} className="sidebar-text">
                 <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.fullName || user?.username}</p>
-                <p style={{ fontSize: '0.6rem', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', color: roleColor }}>{translateLabel(roleLabel, lang)}</p>
+                <p style={{ fontSize: '0.6rem', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', color: roleColor }}>{translateLabel(roleLabel)}</p>
               </div>
             )}
           </div>
@@ -382,7 +354,7 @@ export default function DashboardLayout({
                       </span>
                       {/* Nhãn chữ được dịch thuật */}
                       <span style={{ flex: 1, fontSize: '0.75rem', color: isActive ? roleColor : 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="sidebar-text">
-                        {translateLabel(item.label, lang)}
+                        {translateLabel(item.label)}
                       </span>
                     </>
                   )}
@@ -444,10 +416,10 @@ export default function DashboardLayout({
               </button>
             )}
             {/* Tiêu đề của View đang active */}
-            <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: '0.9rem', color: 'var(--foreground)' }}>{translateLabel(activeLabel, lang)}</h2>
+            <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: '0.9rem', color: 'var(--foreground)' }}>{translateLabel(activeLabel)}</h2>
             {/* Badge hiển thị Vai trò hiện tại của tài khoản */}
             <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0.125rem 0.5rem', borderRadius: '0.25rem', background: `${roleColor}22`, color: roleColor }}>
-              {translateLabel(roleLabel, lang)}
+              {translateLabel(roleLabel)}
             </span>
           </div>
           

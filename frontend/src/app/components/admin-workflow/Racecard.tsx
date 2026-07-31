@@ -179,16 +179,16 @@ export default function Racecard() {
       }));
       const res = await api.post<any>(`/admin/races/${selectedRaceId}/racecard`, payload);
       if (res.success) {
-        setSuccess($t("Lưu thông tin Racecard thành công.", lang));
+        setSuccess($t("Lưu thông tin Racecard thành công."));
         fetchEntries(selectedRaceId);
       }
     } catch (err: any) {
       const errMsg = err.response?.data?.error || getErrMsg(err, "");
       // Xử lý thông báo lỗi cổng bị trùng lắp (DUPLICATE_GATE_NUMBER) thân thiện hơn bằng tiếng Việt
       if (errMsg.includes("DUPLICATE_GATE_NUMBER")) {
-        setError($t("Cổng xuất phát không được trùng nhau giữa các ngựa hoạt động trong cùng một trận đấu.", lang));
+        setError($t("Cổng xuất phát không được trùng nhau giữa các ngựa hoạt động trong cùng một trận đấu."));
       } else {
-        setError(getErrMsg(err, ($t("Không thể lưu thông tin Racecard.", lang))));
+        setError(getErrMsg(err, ($t("Không thể lưu thông tin Racecard."))));
       }
     }
   };

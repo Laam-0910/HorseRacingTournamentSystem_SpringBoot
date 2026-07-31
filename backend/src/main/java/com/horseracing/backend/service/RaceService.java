@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.List;
@@ -85,6 +86,15 @@ public class RaceService {
                         if (ruleLevel.equals(normalizedLevel)) { // Tìm thấy quy định trùng khớp hạng đua
                             race.setMinRating(rule.getMinRating()); // Gán điểm Rating tối thiểu
                             race.setMaxRating(rule.getMaxRating()); // Gán điểm Rating tối đa
+                            
+                            // Tự động điền tiền thưởng Purse nếu chưa nhập hoặc bằng 0
+                            if (race.getPurse() == null || race.getPurse().compareTo(BigDecimal.ZERO) <= 0) {
+                                if (rule.getMinPrize() != null && rule.getMinPrize().compareTo(BigDecimal.ZERO) > 0) {
+                                    race.setPurse(rule.getMinPrize());
+                                } else if (rule.getMaxPrize() != null && rule.getMaxPrize().compareTo(BigDecimal.ZERO) > 0) {
+                                    race.setPurse(rule.getMaxPrize());
+                                }
+                            }
                             break; // Thoát vòng lặp tìm kiếm quy định
                         }
                     }

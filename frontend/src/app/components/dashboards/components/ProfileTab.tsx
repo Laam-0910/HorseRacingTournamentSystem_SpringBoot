@@ -9,37 +9,6 @@ interface Props {
 }
 
 const PROFILE_TRANSLATIONS: Record<string, any> = {
-  vi: {
-    personalProfile: "Cập nhật hồ sơ",
-    emailAddress: "Địa chỉ Email",
-    saveChanges: "Lưu thay đổi",
-    savingChanges: "Đang lưu...",
-    passwordSettings: "Đổi mật khẩu",
-    passwordSettingsDesc: "Yêu cầu mã xác minh qua Gmail để thiết lập mật khẩu mới.",
-    changePassBtn: "Yêu cầu đổi mật khẩu",
-    sendingCode: "Đang gửi mã...",
-    twoFactor: "Bảo mật 2 Lớp (2FA)",
-    twoFactorDesc: "Bảo vệ tài khoản bằng mã OTP gửi qua email mỗi lần đăng nhập.",
-    noteAdmin: "Lưu ý: Quản trị viên & Trọng tài không bắt buộc dùng 2FA.",
-    upload: "Đổi ảnh",
-    fullName: "Họ và tên",
-    weight: "Cân nặng (kg)",
-    verCode: "Mã OTP",
-    enterOtp: "Nhập OTP 6 số",
-    newPass: "Mật khẩu mới",
-    confirmPass: "Xác nhận",
-    atLeast4: "Tối thiểu 8 ký tự (chữ hoa, số, ký tự đặc biệt)",
-    reEnter: "Nhập lại mật khẩu",
-    updatePass: "Cập nhật",
-    updating: "Đang xử lý...",
-    cancel: "Hủy",
-    avatarSizeErr: "Ảnh đại diện phải nhỏ hơn 1.5MB",
-    enabled: "Đang Bật",
-    disabled: "Đã Tắt",
-    successMsg: "✅ Đã lưu thành công!",
-    biography: "Giới thiệu cá nhân",
-    biographyPlace: "Chia sẻ kinh nghiệm làm nài ngựa của bạn..."
-  },
   en: {
     personalProfile: "Edit Profile",
     emailAddress: "Email Address",
@@ -70,68 +39,6 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
     successMsg: "✅ Saved successfully!",
     biography: "Biography",
     biographyPlace: "Share your jockey experience..."
-  },
-  zh: {
-    personalProfile: "编辑资料",
-    emailAddress: "电子邮箱",
-    saveChanges: "保存更改",
-    savingChanges: "保存中...",
-    passwordSettings: "密码",
-    passwordSettingsDesc: "请求安全码以更改密码。",
-    changePassBtn: "更改密码",
-    sendingCode: "发送中...",
-    twoFactor: "双重验证",
-    twoFactorDesc: "使用电子邮件 OTP 保护您的帐户。",
-    noteAdmin: "注意：管理员和裁判无需2FA。",
-    upload: "上传",
-    fullName: "姓名",
-    weight: "体重 (kg)",
-    verCode: "OTP 验证码",
-    enterOtp: "6位数OTP",
-    newPass: "新密码",
-    confirmPass: "确认",
-    atLeast4: "至少8个字符（含大写字母、数字、特殊字符）",
-    reEnter: "重新输入密码",
-    updatePass: "更新",
-    updating: "处理中...",
-    cancel: "取消",
-    avatarSizeErr: "图片必须 < 1.5MB",
-    enabled: "已启用",
-    disabled: "已禁用",
-    successMsg: "✅ 已保存！",
-    biography: "个人简介",
-    biographyPlace: "分享您的骑师经验..."
-  },
-  ja: {
-    personalProfile: "プロフィールの編集",
-    emailAddress: "メールアドレス",
-    saveChanges: "変更を保存",
-    savingChanges: "保存中...",
-    passwordSettings: "パスワード",
-    passwordSettingsDesc: "パスワードを変更するためのセキュリティコードをリクエストします。",
-    changePassBtn: "パスワードを変更",
-    sendingCode: "送信中...",
-    twoFactor: "2要素認証",
-    twoFactorDesc: "メールOTPでアカウントを保護します。",
-    noteAdmin: "注意：管理者と審判は2FAをバイパスします。",
-    upload: "アップロード",
-    fullName: "氏名",
-    weight: "体重 (kg)",
-    verCode: "OTPコード",
-    enterOtp: "6桁のOTP",
-    newPass: "新しいパスワード",
-    confirmPass: "確認",
-    atLeast4: "8文字以上（大文字、数字、特殊文字）",
-    reEnter: "パスワード再入力",
-    updatePass: "更新",
-    updating: "処理中...",
-    cancel: "キャンセル",
-    avatarSizeErr: "画像は1.5MB未満である必要があります",
-    enabled: "有効",
-    disabled: "無効",
-    successMsg: "✅ 保存しました！",
-    biography: "自己紹介",
-    biographyPlace: "騎手としての経験を共有..."
   }
 };
 
@@ -154,8 +61,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const lang = localStorage.getItem("app-lang") || "vi"; // Ngôn ngữ đang chọn
-  const st = PROFILE_TRANSLATIONS[lang] || PROFILE_TRANSLATIONS.vi;
+  const st = PROFILE_TRANSLATIONS.en;
   
   // Khởi tạo các state thông tin cá nhân
   const [fullName, setFullName] = useState(user?.fullName || user?.username || ""); // Họ và tên
@@ -256,14 +162,14 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     const lang = localStorage.getItem('app-lang') || 'vi';
 
     if (newPassword !== confirmPassword) { 
-      setPassErr($t("Passwords do not match.", lang)); 
+      setPassErr($t("Passwords do not match.")); 
       return; 
     }
 
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(newPassword)) {
       setPassErr(
-        $t("New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)", lang)
+        $t("New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)")
       );
       return;
     }
@@ -272,10 +178,10 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     try {
       const res = await api.post<any>("/auth/verify-forgot-password", { otpTxId, otp: otpCode.trim(), newPassword });
       if (res.success) {
-        setPassMsg("✅ " + $t("Saved successfully!", lang));
+        setPassMsg("✅ " + $t("Saved successfully!"));
         setTimeout(() => { setPassMode(false); setOtpCode(""); setNewPassword(""); setConfirmPassword(""); setPassMsg(""); }, 2000);
       } else {
-        setPassErr(res.error || $t("Verification failed", lang));
+        setPassErr(res.error || $t("Verification failed"));
       }
     } catch (err: any) {
       setPassErr(getErrMsg(err, "Error."));
@@ -414,7 +320,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
              <div style={{ zIndex: 2, textAlign: isMobile ? "center" : "left" }}>
                <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#fff", margin: "0 0 0.5rem 0", letterSpacing: "-1px" }}>{user?.fullName || user?.username}</h2>
                <span style={{ color: roleColor, padding: "0.4rem 1.25rem", borderRadius: "100px", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", background: `${roleColor}15`, border: `1px solid ${roleColor}33` }}>
-                 {$t(roleLabel === "Horse Owner" ? "OWNER" : roleLabel.toUpperCase(), lang)}
+                 {$t(roleLabel === "Horse Owner" ? "OWNER" : roleLabel.toUpperCase())}
                </span>
              </div>
           </div>

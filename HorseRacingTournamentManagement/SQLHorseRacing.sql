@@ -54,6 +54,7 @@ CREATE TABLE [User] (
     avatar                      VARCHAR(MAX) NULL,              -- Profile avatar stored in Base64
     full_name                   NVARCHAR(100) NULL,             -- Display Name (CAN be changed)
     biography                   NVARCHAR(MAX) NULL,             -- Personal biography / profile introduction
+    balance                     DECIMAL(15,2) NOT NULL DEFAULT 0.00, -- Wallet balance for prize payouts
     CONSTRAINT CK_User_Status CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 GO
