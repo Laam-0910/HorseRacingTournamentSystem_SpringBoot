@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -154,47 +154,20 @@ export default function DashboardLayout({
   // State lưu trữ ngày hiện tại định dạng chuỗi theo ngôn ngữ
   const [today, setToday] = useState('');
   // State lưu trữ ngôn ngữ hiện tại của app (mặc định lấy từ localStorage hoặc tiếng Việt 'vi')
-  const [lang, setLang] = useState(() => localStorage.getItem('app-lang') || 'vi');
-  // Trạng thái hiển thị menu chọn ngôn ngữ dropdown
-  const [showLangMenu, setShowLangMenu] = useState(false);
-  // Ref tham chiếu đến thẻ div ngôn ngữ để phát hiện click bên ngoài (đóng menu)
-  const langRef = useRef<HTMLDivElement>(null);
+  const [lang] = useState('en');
   
   // Trạng thái phát hiện giao diện đang hiển thị trên Mobile (<1024px)
   const [isMobile, setIsMobile] = useState(false);
   // Trạng thái hiển thị Drawer menu trên Mobile
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Mảng các tùy chọn ngôn ngữ khả dụng trong hệ thống
-  const LANG_OPTIONS: [string, string][] = [['vi', 'Tiếng Việt'], ['en', 'English'], ['zh', '简体中文'], ['ja', '日本語']];
-  // Lấy nhãn ngôn ngữ hiện tại để hiển thị lên nút (ví dụ: "Tiếng Việt")
-  const langLabel = LANG_OPTIONS.find(([c]) => c === lang)?.[1] || lang.toUpperCase();
 
-  // Hàm chuyển đổi ngôn ngữ hiện tại, lưu vào localStorage và reload lại trang để áp dụng đồng bộ
-  const changeLang = (code: string) => {
-    setLang(code);
-    localStorage.setItem('app-lang', code);
-    setShowLangMenu(false);
-    window.location.reload();
-  };
 
-  // Effect phát hiện cú click ngoài menu ngôn ngữ để tự động đóng dropdown
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (langRef.current && !langRef.current.contains(e.target as Node)) {
-        setShowLangMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  // Effect cập nhật chuỗi hiển thị ngày hôm nay mỗi khi thay đổi ngôn ngữ
+  // Effect cập nhật chuỗi hiển thị ngày hôm nay
   useEffect(() => {
     const d = new Date();
-    const loc = lang === 'vi' ? 'vi-VN' : lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja-JP' : 'en-GB'; 
-    setToday(d.toLocaleDateString(loc, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
-  }, [lang]);
+    setToday(d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
+  }, []);
 
   // Effect phát hiện thay đổi kích thước cửa sổ để chuyển sang chế độ Mobile
   useEffect(() => {
@@ -481,47 +454,6 @@ export default function DashboardLayout({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {/* Hiển thị ngày hôm nay trên Desktop */}
             {!isMobile && <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>{today}</span>}
-            
-            {/* Dropdown Menu chuyển đổi ngôn ngữ */}
-            <div ref={langRef} style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowLangMenu(v => !v)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.35rem',
-                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,162,39,0.2)',
-                  borderRadius: '0.375rem', padding: '0.3rem 0.65rem',
-                  color: '#c9a227', cursor: 'pointer', fontFamily: 'monospace', fontSize: '0.68rem',
-                  transition: 'all 0.2s',
-                }}
-              >
-                🌐 {langLabel} ▾
-              </button>
-              {/* Menu xổ xuống khi showLangMenu = true */}
-              {showLangMenu && (
-                <div style={{
-                  position: 'absolute', right: 0, top: 'calc(100% + 4px)',
-                  width: '9rem', background: '#151310', border: '1px solid #2a2825',
-                  borderRadius: '0.375rem', zIndex: 999, overflow: 'hidden',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                }}>
-                  {LANG_OPTIONS.map(([code, name]) => (
-                    <button
-                      key={code}
-                      onClick={() => changeLang(code)}
-                      style={{
-                        display: 'block', width: '100%', textAlign: 'left',
-                        padding: '0.45rem 0.75rem', background: lang === code ? 'rgba(201,162,39,0.12)' : 'none',
-                        border: 'none', color: lang === code ? '#c9a227' : '#a0a0a0',
-                        cursor: 'pointer', fontSize: '0.68rem', fontFamily: 'monospace',
-                        transition: 'background 0.15s',
-                      }}
-                    >
-                      {name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         </header>
 

@@ -18,24 +18,10 @@ const dict: Record<string, Translations> = dictData;
  * - Nếu tìm thấy, trả về chuỗi dịch tương ứng của ngôn ngữ được chọn.
  * - Nếu không tìm thấy, trả về chính từ khóa gốc (key) như một giá trị mặc định dự phòng (fallback).
  */
-export const $t = (key: string, lang: string): string => {
+export const $t = (key: string, lang?: string): string => {
   const entry = dict[key];
-  
-  if (entry) {
-    if (lang === 'vi' && entry.vi) return entry.vi;
-    if (lang === 'en' && entry.en) return entry.en;
-    if (lang === 'zh' && entry.zh) return entry.zh;
-    if (lang === 'ja' && entry.ja) return entry.ja;
+  if (entry && entry.en) {
+    return entry.en;
   }
-
-  // Dự phòng khi không tìm thấy khóa trong từ điển (Mặc định hiểu khóa truyền vào là Tiếng Việt)
-  if (!lang || lang === 'vi') return key;
-  
-  if (entry) {
-    if (lang === 'en') return entry.en || key;
-    if (lang === 'zh') return entry.zh || entry.en || key;
-    if (lang === 'ja') return entry.ja || entry.en || key;
-  }
-  
   return key;
 };

@@ -4,6 +4,7 @@
 --          Added notifications table for persistent system notifications
 --          Default password for all sample accounts: 123456
 --          Added 'FINISHED' status to CK_Race_Status in Race table
+--          Added wallet_balance, hire_fee, WalletTransaction for financial tracking
 -- ==========================================
 
 USE master;
@@ -44,7 +45,7 @@ CREATE TABLE [User] (
     id                          INT IDENTITY(1,1) PRIMARY KEY,
     role_id                     INT NOT NULL,
     username                    VARCHAR(100) NOT NULL UNIQUE,    -- Login Account (CANNOT be changed)
-    password_hash               VARCHAR(255) NOT NULL,           -- Default password: 123456
+    password_hash               VARCHAR(255) NOT NULL,           -- Default password: 123456 (auto-hashed on backend startup)
     email                       VARCHAR(150) NOT NULL UNIQUE,
     status                      VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',  -- ACTIVE, INACTIVE
     weight                      DECIMAL(5,2) NULL,              -- Jockey weight in kg (for handicap calculations)
@@ -54,6 +55,7 @@ CREATE TABLE [User] (
     avatar                      VARCHAR(MAX) NULL,              -- Profile avatar stored in Base64
     full_name                   NVARCHAR(100) NULL,             -- Display Name (CAN be changed)
     biography                   NVARCHAR(MAX) NULL,             -- Personal biography / profile introduction
+    wallet_balance              DECIMAL(18,2) NULL DEFAULT 0.00,-- Wallet balance for prizes & commissions
     CONSTRAINT CK_User_Status CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 GO
@@ -169,6 +171,7 @@ CREATE TABLE RaceInvitation (
     horse_id    INT NOT NULL,
     owner_id    INT NOT NULL,
     jockey_id   INT NOT NULL,
+    hire_fee    DECIMAL(12,2) NULL DEFAULT 500.00, -- Jockey hire fee paid upon acceptance
     status      VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, ACCEPTED, REJECTED, EXPIRED
     CONSTRAINT CK_Invite_Status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'))
 );
@@ -244,6 +247,17 @@ CREATE TABLE HorseRetirementRequest (
 );
 GO
 
+-- Table for Wallet Transactions
+CREATE TABLE WalletTransaction (
+    id              INT IDENTITY(1,1) PRIMARY KEY,
+    user_id         INT NOT NULL,
+    amount          DECIMAL(18,2) NOT NULL,
+    type            VARCHAR(50) NOT NULL, -- PRIZE_MONEY, JOCKEY_HIRE_FEE, INVITATION_COMMISSION, SYSTEM_ADJUSTMENT
+    description     NVARCHAR(MAX) NULL,
+    created_at      DATETIME DEFAULT GETDATE()
+);
+GO
+
 -- ==========================================
 -- FOREIGN KEY CONSTRAINTS
 -- ==========================================
@@ -286,6 +300,7 @@ ALTER TABLE ChatMessage ADD CONSTRAINT FK_Chat_Race   FOREIGN KEY (race_id)    R
 ALTER TABLE notifications ADD CONSTRAINT FK_Notification_User FOREIGN KEY (user_id) REFERENCES [User](id) ON DELETE CASCADE;
 ALTER TABLE HorseRetirementRequest ADD CONSTRAINT FK_Retire_Horse FOREIGN KEY (horse_id) REFERENCES Horse(id);
 ALTER TABLE HorseRetirementRequest ADD CONSTRAINT FK_Retire_Owner FOREIGN KEY (owner_id) REFERENCES [User](id);
+ALTER TABLE WalletTransaction ADD CONSTRAINT FK_WalletTx_User FOREIGN KEY (user_id) REFERENCES [User](id) ON DELETE CASCADE;
 GO
 
 -- ==========================================
@@ -304,18 +319,18 @@ INSERT INTO Role (role_name) VALUES ('Admin'), ('Owner'), ('Jockey'), ('Spectato
 GO
 
 -- All accounts have default password: 123456
-INSERT INTO [User] (role_id, username, password_hash, email, status, weight, total_races_participated, total_top3_finishes, full_name) VALUES
-(1, 'admin_root',      '123456', 'admin@horserace.com',  'ACTIVE', NULL, NULL, NULL, N'Administrator'),
-(2, 'owner_jackson',   '123456', 'jackson@owners.com',   'ACTIVE', NULL, NULL, NULL, N'James Jackson'),
-(2, 'owner_miller',    '123456', 'miller@owners.com',    'ACTIVE', NULL, NULL, NULL, N'Robert Miller'),
-(2, 'owner_chen',      '123456', 'chen@owners.com',      'ACTIVE', NULL, NULL, NULL, N'Chen Wei'),
-(3, 'jockey_ryan',     '123456', 'ryan@jockeys.com',     'ACTIVE', 58.5, 45, 20,    N'Ryan Thompson'),
-(3, 'jockey_emma',     '123456', 'emma@jockeys.com',     'ACTIVE', 52.0, 20, 8,     N'Emma Clarke'),
-(3, 'jockey_carlos',   '123456', 'carlos@jockeys.com',   'ACTIVE', 55.3, 80, 35,    N'Carlos Rivera'),
-(3, 'jockey_naomi',    '123456', 'naomi@jockeys.com',    'ACTIVE', 53.7, 4,  1,     N'Naomi Watanabe'),
-(4, 'fan_oliver',      '123456', 'oliver@fans.com',      'ACTIVE', NULL, NULL, NULL, N'Oliver Bennett'),
-(5, 'referee_harris',  '123456', 'harris@referees.com',  'ACTIVE', NULL, NULL, NULL, N'Michael Harris'),
-(5, 'referee_scott',   '123456', 'scott@referees.com',   'ACTIVE', NULL, NULL, NULL, N'David Scott');
+INSERT INTO [User] (role_id, username, password_hash, email, status, weight, total_races_participated, total_top3_finishes, full_name, wallet_balance) VALUES
+(1, 'admin_root',      '123456', 'admin@horserace.com',  'ACTIVE', NULL, NULL, NULL, N'Administrator', 10000.00),
+(2, 'owner_jackson',   '123456', 'jackson@owners.com',   'ACTIVE', NULL, NULL, NULL, N'James Jackson', 5000.00),
+(2, 'owner_miller',    '123456', 'miller@owners.com',    'ACTIVE', NULL, NULL, NULL, N'Robert Miller', 5000.00),
+(2, 'owner_chen',      '123456', 'chen@owners.com',      'ACTIVE', NULL, NULL, NULL, N'Chen Wei', 5000.00),
+(3, 'jockey_ryan',     '123456', 'ryan@jockeys.com',     'ACTIVE', 58.5, 45, 20,    N'Ryan Thompson', 1200.00),
+(3, 'jockey_emma',     '123456', 'emma@jockeys.com',     'ACTIVE', 52.0, 20, 8,     N'Emma Clarke', 800.00),
+(3, 'jockey_carlos',   '123456', 'carlos@jockeys.com',   'ACTIVE', 55.3, 80, 35,    N'Carlos Rivera', 1500.00),
+(3, 'jockey_naomi',    '123456', 'naomi@jockeys.com',    'ACTIVE', 53.7, 4,  1,     N'Naomi Watanabe', 500.00),
+(4, 'fan_oliver',      '123456', 'oliver@fans.com',      'ACTIVE', NULL, NULL, NULL, N'Oliver Bennett', 100.00),
+(5, 'referee_harris',  '123456', 'harris@referees.com',  'ACTIVE', NULL, NULL, NULL, N'Michael Harris', 0.00),
+(5, 'referee_scott',   '123456', 'scott@referees.com',   'ACTIVE', NULL, NULL, NULL, N'David Scott', 0.00);
 GO
 
 INSERT INTO Season (name, start_date, end_date, status) VALUES
@@ -391,5 +406,5 @@ INSERT INTO Violation (race_id, horse_id, jockey_id, referee_id, description, pe
 (1, 3, 7, 10, 'Jockey cut off lane at turn 2', 'Fine $500');
 GO
 
-PRINT 'HorseRacingDB created successfully: notifications table added, all descriptions in English, all passwords set to 123456.';
+PRINT 'HorseRacingDB created successfully: notifications, wallet, and retirement tables added, all descriptions in English, all default passwords set to 123456.';
 GO

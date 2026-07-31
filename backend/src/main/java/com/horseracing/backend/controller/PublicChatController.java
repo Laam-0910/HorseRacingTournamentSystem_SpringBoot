@@ -3,8 +3,6 @@ package com.horseracing.backend.controller;
 import com.horseracing.backend.dto.PublicChatRequestDTO;
 import com.horseracing.backend.entity.ChatMessage;
 import com.horseracing.backend.repository.ChatMessageRepository;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,22 +17,6 @@ import java.util.*;
 @RestController // Khai báo đây là Spring Controller phản hồi dữ liệu JSON
 @RequestMapping("/api/public") // Cấu hình đường dẫn chung cho toàn bộ các route trong controller này
 @CrossOrigin(origins = "*") // Cho phép gọi API từ mọi domain frontend (CORS)
-@Tag(
-    name = "16. Public Chat & Livestream WebSocket",
-    description = "💬 **CHAT TRONG CỘNG ĐỒNG & LIVESTREAM WEBSOCKET (CHAT ARCHITECTURE)**\n\n" +
-                  "📌 **CÁC CLASS MÃ NGUỒN LIÊN QUAN:**\n" +
-                  "* **REST Controllers**: `PublicChatController.java` (HTTP REST - lịch sử chat)\n" +
-                  "* **WebSocket Handler**: `ChatWebSocketHandler.java` (Full-Duplex `/ws/chat/{raceId}`)\n" +
-                  "* **WebSocket Config**: `WebSocketConfig.java`\n" +
-                  "* **Repositories**: `ChatMessageRepository.java`\n" +
-                  "* **Entities**: `ChatMessage.java`\n" +
-                  "* **DTOs**: `PublicChatRequestDTO.java`\n" +
-                  "* **Frontend**: `Chatbot.tsx` (landing - AI chatbot), `Livestream.tsx` (landing - WebSocket phòng đua), `ViewLive.tsx` (dashboards - xem video + chat)\n\n" +
-                  "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ CHÍNH (BUSINESS FLOW):**\n" +
-                  "1. **REST Chat (HTTP)**: Khán giả gửi tin nhắn, câu hỏi và lấy lịch sử chat qua REST API.\n" +
-                  "2. **Livestream WebSocket**: Khán giả kết nối Full-Duplex `/ws/chat/{raceId}` - tin nhắn được phát tức thì tới tất cả người dùng trong phòng.\n" +
-                  "3. Tin nhắn được lưu lịch sử kèm mốc thời gian `sent_at` vào bảng `ChatMessage`."
-)
 public class PublicChatController {
 
     @Autowired // Tự động tiêm (inject) ChatMessageRepository từ Spring Context
@@ -42,25 +24,7 @@ public class PublicChatController {
 
     // Gửi tin nhắn hỏi đáp trợ lý AI nhanh dạng REST API (Không dùng WebSocket)
     @PostMapping("/chat") // Xử lý request POST tới đường dẫn /api/public/chat
-    @Operation(
-        summary = "POST: Gửi tin nhắn hỏi đáp trợ lý AI công khai",
-        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
-                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controllers**: `PublicChatController.chat()`\n" +
-                      "* **Services**: `PublicChatService`\n" +
-                      "* **Repositories**: `ChatMessageRepository.save()`\n" +
-                      "* **Entities**: `ChatMessage.java`\n" +
-                      "* **DTOs**: `PublicChatRequestDTO` (`message`, `lang`), `Map<String, Object>` (`{\"success\": true}`)\n" +
-                      "* **DTO Request**: `PublicChatRequestDTO` (`message`, `lang`)\n" +
-                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"reply\": \"...\"}`)\n" +
-                      "* **Frontend**: `Chatbot.tsx` (landing - AI chatbot), `publicDataService.ts`\n\n" +
-                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
-                      "1. Tiếp nhận tin nhắn người dùng và ngôn ngữ phản hồi (`vi` hoặc `en`).\n" +
-                      "2. Phân tích từ khóa trong câu hỏi (rating, dự đoán, nài ngựa, mùa giải...).\n" +
-                      "3. Tạo câu trả lời phù hợp bằng ngôn ngữ yêu cầu.\n" +
-                      "4. Trả về câu trả lời dạng text cho người dùng."
-    )
-    public ResponseEntity<?> chat(@RequestBody PublicChatRequestDTO request) {
+        public ResponseEntity<?> chat(@RequestBody PublicChatRequestDTO request) {
         // Lấy nội dung tin nhắn gửi từ người dùng
         String message = request.getMessage();
         // Lấy thông tin ngôn ngữ gửi lên (ví dụ: "en" hoặc "vi")
@@ -118,23 +82,7 @@ public class PublicChatController {
 
     // Lấy lịch sử chat đã lưu trong cơ sở dữ liệu cho phòng chat của cuộc đua (raceId)
     @GetMapping("/chat/history") // Xử lý request GET tới đường dẫn /api/public/chat/history
-    @Operation(
-        summary = "GET: Lấy lịch sử chat của phòng đua",
-        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
-                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controllers**: `PublicChatController.getChatHistory()`\n" +
-                      "* **Services**: `PublicChatService`\n" +
-                      "* **Repositories**: `ChatMessageRepository.findByRaceIdOrderBySentAtAsc()`\n" +
-                      "* **Entities**: `ChatMessage.java`\n" +
-                      "* **DTOs**: `List<Map<String, String>>` (`user`, `text`, `time`)\n" +
-                      "* **DTO Response**: `List<Map<String, String>>` (`user`, `text`, `time`)\n" +
-                      "* **Frontend**: `Livestream.tsx` (landing - WebSocket phòng đua), `ViewLive.tsx` (dashboards - xem video + chat), `chatService.ts`\n\n" +
-                      "🔄 **LUỒNG TRA CỨU NGHIỆP VỤ:**\n" +
-                      "1. Truy vấn danh sách tin nhắn trong phòng chat theo `raceId`.\n" +
-                      "2. Sắp xếp tin nhắn theo thứ tự thời gian từ cũ đến mới.\n" +
-                      "3. Định dạng thời gian tin nhắn (`HH:mm`) và trả về danh sách."
-    )
-    public ResponseEntity<List<Map<String, String>>> getChatHistory(@RequestParam Integer raceId) {
+        public ResponseEntity<List<Map<String, String>>> getChatHistory(@RequestParam Integer raceId) {
         // Lấy danh sách tin nhắn cũ xếp tăng dần theo mốc thời gian gửi từ cơ sở dữ liệu
         List<ChatMessage> list = chatMessageRepository.findByRaceIdOrderBySentAtAsc(raceId);
         // Khởi tạo danh sách các Map để định dạng dữ liệu tin nhắn trả về cho frontend

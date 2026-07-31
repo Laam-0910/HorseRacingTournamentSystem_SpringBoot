@@ -28,4 +28,8 @@ public class RaceInvitationDTO {
     private String venue;           // Địa điểm thi đấu bổ trợ
     private Integer entryId;        // ID của đăng ký đua tương ứng
     private String entryStatus;     // Trạng thái của đăng ký đua tương ứng
+    private java.math.BigDecimal commissionAmount; // Tiền hoa hồng mời thi đấu
+    private java.math.BigDecimal commissionRate;   // Tỷ lệ hoa hồng (%)
+    private String payoutStatus;    // PENDING, PAID, REJECTED
+    private java.math.BigDecimal hireFee; // Phí thuê nài ngựa
 }

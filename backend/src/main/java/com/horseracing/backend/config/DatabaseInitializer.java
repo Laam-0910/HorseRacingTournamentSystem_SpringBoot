@@ -3,6 +3,7 @@ package com.horseracing.backend.config;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import java.util.List;
 
@@ -18,6 +19,9 @@ public class DatabaseInitializer implements InitializingBean {
 
     @Autowired
     private JdbcTemplate jdbcTemplate; // Đối tượng tương tác trực tiếp với database qua JDBC
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; // BCrypt encoder để hash mật khẩu chuẩn
 
     @Override
     public void afterPropertiesSet() throws Exception {
@@ -83,6 +87,52 @@ public class DatabaseInitializer implements InitializingBean {
                 "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'youtube_live_url') " +
                 "BEGIN " +
                 "    ALTER TABLE Race ADD youtube_live_url VARCHAR(500) NULL; " +
+                "END"
+            );
+
+            // 8.1 Thêm các cột phân chia tiền thưởng vào bảng Race
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'total_prize_pool') " +
+                "BEGIN " +
+                "    ALTER TABLE Race ADD total_prize_pool DECIMAL(12,2) NULL, first_place_prize DECIMAL(12,2) NULL, second_place_prize DECIMAL(12,2) NULL, third_place_prize DECIMAL(12,2) NULL; " +
+                "END"
+            );
+
+            // 8.2 Thêm các cột hoa hồng tiền mời và phí thuê nài ngựa vào bảng RaceInvitation
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'commission_amount') " +
+                "BEGIN " +
+                "    ALTER TABLE RaceInvitation ADD commission_amount DECIMAL(12,2) NULL, commission_rate DECIMAL(5,2) NULL, payout_status VARCHAR(30) NULL DEFAULT 'PENDING'; " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'hire_fee') " +
+                "BEGIN " +
+                "    ALTER TABLE RaceInvitation ADD hire_fee DECIMAL(12,2) NULL DEFAULT 500.00; " +
+                "END"
+            );
+
+            // 8.3 Thêm cột wallet_balance vào bảng [User]
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'wallet_balance') " +
+                "BEGIN " +
+                "    ALTER TABLE [User] ADD wallet_balance DECIMAL(18,2) NOT NULL DEFAULT 0.00; " +
+                "END"
+            );
+
+            // 8.4 Tạo bảng WalletTransaction nếu chưa tồn tại
+            jdbcTemplate.execute(
+                "IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('WalletTransaction') AND type = 'U') " +
+                "BEGIN " +
+                "    CREATE TABLE WalletTransaction ( " +
+                "        id INT IDENTITY(1,1) PRIMARY KEY, " +
+                "        user_id INT NOT NULL, " +
+                "        amount DECIMAL(18,2) NOT NULL, " +
+                "        transaction_type VARCHAR(50) NOT NULL, " +
+                "        description NVARCHAR(MAX) NULL, " +
+                "        created_at DATETIME DEFAULT GETDATE(), " +
+                "        CONSTRAINT FK_WalletTx_User FOREIGN KEY (user_id) REFERENCES [User](id) " +
+                "    ); " +
                 "END"
             );
 
@@ -158,6 +208,40 @@ public class DatabaseInitializer implements InitializingBean {
                 // In thông báo lỗi ra stderr nếu quá trình khởi tạo dữ liệu mẫu RaceEntry thất bại
                 System.err.println("Failed to auto-seed RaceEntry: " + ex.getMessage());
             }
+
+            // Synchronize passwords: dynamically read plaintext password (e.g. '123456') from DB and BCrypt hash each user individually
+            // Each call to passwordEncoder.encode() generates a NEW random salt → unique hash per user even with same password.
+            // Only re-hash users whose password_hash is NOT already a valid 60-character BCrypt hash (starts with $2a$, $2b$, or $2y$)
+            try {
+                List<java.util.Map<String, Object>> unhashedUsers = jdbcTemplate.queryForList(
+                    "SELECT id, password_hash FROM [User] WHERE " +
+                    "password_hash IS NULL OR " +
+                    "LEN(password_hash) <> 60 OR " +
+                    "(" +
+                    "  password_hash NOT LIKE '$2a$%' AND " +
+                    "  password_hash NOT LIKE '$2b$%' AND " +
+                    "  password_hash NOT LIKE '$2y$%'" +
+                    ")"
+                );
+                for (java.util.Map<String, Object> row : unhashedUsers) {
+                    Integer uid = (Integer) row.get("id");
+                    String rawPassword = (String) row.get("password_hash");
+                    if (rawPassword == null || rawPassword.trim().isEmpty()) {
+                        rawPassword = "123456";
+                    }
+                    // Each call generates a unique BCrypt salt
+                    String uniqueHash = passwordEncoder.encode(rawPassword.trim());
+                    jdbcTemplate.update("UPDATE [User] SET password_hash = ? WHERE id = ?", uniqueHash, uid);
+                }
+                if (!unhashedUsers.isEmpty()) {
+                    System.out.println("Re-hashed " + unhashedUsers.size() + " user(s) with unique BCrypt salts.");
+                } else {
+                    System.out.println("All users already have valid BCrypt hashes — no re-hashing needed.");
+                }
+            } catch (Exception ex) {
+                System.err.println("Failed to synchronize password hashes: " + ex.getMessage());
+            }
+
 
             System.out.println("Database columns, ChatMessage table, HorseRetirementRequest table, and RaceEntry auto-seeding verified successfully.");
         } catch (Exception e) {
