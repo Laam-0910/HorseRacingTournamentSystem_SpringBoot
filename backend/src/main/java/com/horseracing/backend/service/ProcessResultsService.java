@@ -204,24 +204,24 @@ public class ProcessResultsService {
                     // Thiết lập thời gian hoàn thành lượt chạy
                     entry.setFinishTime(finishTime);
 
-                    // Phân chia tiền thưởng theo Class: Hạng 1 (70%), Hạng 2 (20%), Hạng 3 (10%)
+                    // Phân chia tiền thưởng theo Class: Hạng 1 (50%), Hạng 2 (30%), Hạng 3 (20%)
                     BigDecimal prize = BigDecimal.ZERO;
                     // Khởi tạo mức điều chỉnh điểm rating
                     int ratingAdj = 0;
                     // Nếu đạt Hạng 1
                     if (finalPosition != null && finalPosition == 1) {
-                        // Thưởng 70% tổng quỹ thưởng của trận đua
-                        prize = purse.multiply(new BigDecimal("0.70"));
+                        // Thưởng 50% tổng quỹ thưởng của trận đua
+                        prize = purse.multiply(new BigDecimal("0.50"));
                         // Cộng 6 điểm rating cho quán quân
                         ratingAdj = 6;
                     } else if (finalPosition != null && finalPosition == 2) { // Nếu đạt Hạng 2
-                        // Thưởng 20% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.20"));
+                        // Thưởng 30% tổng quỹ thưởng
+                        prize = purse.multiply(new BigDecimal("0.30"));
                         // Cộng 3 điểm rating cho á quân
                         ratingAdj = 3;
                     } else if (finalPosition != null && finalPosition == 3) { // Nếu đạt Hạng 3
-                        // Thưởng 10% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.10"));
+                        // Thưởng 20% tổng quỹ thưởng
+                        prize = purse.multiply(new BigDecimal("0.20"));
                         // Cộng 1 điểm rating cho hạng 3
                         ratingAdj = 1;
                     } else { // Các thứ hạng khác

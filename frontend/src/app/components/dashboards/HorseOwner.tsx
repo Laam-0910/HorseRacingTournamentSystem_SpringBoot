@@ -327,7 +327,7 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                     <div style={{ fontSize: "0.75rem", color: "#fbbf24", fontFamily: "monospace", marginTop: "0.25rem", background: "rgba(251,191,36,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(251,191,36,0.2)" }}>
                       💰 <strong>Total Meeting Budget:</strong> ${Number(m.totalBudget || m.total_budget || 500000).toLocaleString('en-US')}
                       <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>
-                        Place Prizes: 1st (70%), 2nd (20%), 3rd (10%) · 80% Owner / 20% Jockey split
+                        Place Prizes: 1st (50%), 2nd (30%), 3rd (20%) · 80% Owner / 20% Jockey split
                       </div>
                     </div>
 
