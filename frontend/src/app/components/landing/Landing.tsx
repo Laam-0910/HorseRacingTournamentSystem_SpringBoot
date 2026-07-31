@@ -1104,9 +1104,64 @@ export default function Landing() {
     }
   });
 
+  const [dashboardNotifs, setDashboardNotifs] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.roleId === 2) {
+      api.get<any>("/owner/dashboard")
+        .then(data => {
+          if (data?.notifications && Array.isArray(data.notifications)) {
+            setDashboardNotifs(data.notifications);
+          }
+        })
+        .catch(() => {});
+    } else if (user?.roleId === 3) {
+      api.get<any>("/jockey/dashboard")
+        .then(data => {
+          if (data?.notifications && Array.isArray(data.notifications)) {
+            setDashboardNotifs(data.notifications);
+          }
+        })
+        .catch(() => {});
+    } else {
+      setDashboardNotifs([]);
+    }
+  }, [user]);
+
   const getDynamicNotifications = () => {
     const list: any[] = [];
     const lang = localStorage.getItem("app-lang") || "vi";
+
+    // Tải danh sách thông báo động từ Dashboard (Chủ ngựa & Nài ngựa)
+    if (dashboardNotifs.length > 0) {
+      dashboardNotifs.forEach((n: any) => {
+        let icon = "🔔";
+        let color = "#3b82f6";
+        let bg = "rgba(59,130,246,0.1)";
+        if (n.type === "approved") {
+          icon = "✅";
+          color = "#10b981";
+          bg = "rgba(16,185,129,0.1)";
+        } else if (n.type === "rejected") {
+          icon = "❌";
+          color = "#ef4444";
+          bg = "rgba(239,68,68,0.1)";
+        } else if (n.type === "pending") {
+          icon = "⏳";
+          color = "#f59e0b";
+          bg = "rgba(245,158,11,0.1)";
+        }
+        list.push({
+          id: n.id,
+          icon,
+          color,
+          bg,
+          title: n.title,
+          desc: n.message,
+          time: $t("Thông báo", (localStorage.getItem('app-lang') || 'vi'))
+        });
+      });
+    }
 
     // Common/Fallback Notification: Active Season
     const activeSeason = seasons.find(s => s.status === "ACTIVE");

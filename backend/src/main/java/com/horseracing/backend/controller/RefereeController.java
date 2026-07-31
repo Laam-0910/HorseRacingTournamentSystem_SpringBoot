@@ -239,7 +239,7 @@ public class RefereeController {
                       "* **Services**: `RefereeService.resumeRace()`\n" +
                       "* **Repositories**: `RaceRepository.save()`, `RaceEntryRepository.findByRaceId()`, `RaceEntryRepository.save()`\n" +
                       "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
-                      "* **Frontend**: `RefereeSupervision.tsx`, `RefereeHub.tsx`, `refereeService.ts`\n\n"
+                      "* **Frontend**: `RefereeSupervision.tsx`, `RefereeHub.tsx`, `refereeService.ts`\n\n" +
                       "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
                       "1. Kiểm tra trận đua đang ở trạng thái `STOPPED`.\n" +
                       "2. Đổi trạng thái `Race` về `RUNNING`.\n" +
