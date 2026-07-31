@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../../lib/api";
+import { api, getErrMsg } from "../../../../lib/api";
 import { parseSafeDate } from "../../../utils/dateTimeHelper";
 
 interface RaceRecord {
@@ -26,6 +26,7 @@ interface HorsePerf {
   history: RaceRecord[];
 }
 
+// ── Component hiển thị Modal Lịch sử hiệu suất của ngựa ────────────────
 function HorsePerformanceModal({
   horseId,
   horseName,
@@ -35,19 +36,42 @@ function HorsePerformanceModal({
   horseName: string;
   onClose: () => void;
 }) {
+  // State lưu dữ liệu hiệu suất của ngựa
   const [perf, setPerf] = useState<HorsePerf | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true); // Trạng thái đang tải
+  const [error, setError] = useState(""); // Thông báo lỗi
 
+  // Gọi API lấy thông tin lịch sử hiệu suất khi ID ngựa thay đổi
   useEffect(() => {
     const fetchPerf = async () => {
       setLoading(true);
       setError("");
       try {
-        const data = await api.get<HorsePerf>(`/public/horses/${horseId}/performance`);
-        setPerf(data);
+        const raw: any = await api.get<any>(`/public/horses/${horseId}/performance`);
+        const formatted: HorsePerf = {
+          name: raw.name || raw.horseName || horseName,
+          breed: raw.breed || "Thoroughbred",
+          sex: raw.sex,
+          avatar: raw.avatar,
+          currentRating: raw.currentRating ?? 52,
+          totalRaces: raw.totalRaces ?? 0,
+          totalWins: raw.totalWins ?? 0,
+          winRate: raw.winRate ?? 0,
+          history: (raw.history || raw.raceHistory || []).map((h: any) => ({
+            startTime: h.startTime || "",
+            meetingName: h.meetingName || "Event",
+            classLevel: h.classLevel || "Open",
+            gateNumber: h.gateNumber,
+            jockeyName: h.jockeyName || "—",
+            position: String(h.position || h.finalPosition || "—"),
+            finishTime: h.finishTime || "—",
+            ratingAdjustment: h.ratingAdjustment ?? 0,
+            prizeMoney: h.prizeMoney ?? 0,
+          })),
+        };
+        setPerf(formatted);
       } catch (err: any) {
-        setError(err.message || "Failed to load horse performance data.");
+        setError(getErrMsg(err, "Failed to load horse performance data."));
       } finally {
         setLoading(false);
       }

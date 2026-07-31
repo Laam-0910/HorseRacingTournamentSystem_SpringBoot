@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../../context/AuthContext";
-import { api } from "../../../../lib/api";
+import { api, getErrMsg } from "../../../../lib/api";
 import { $t } from '@/lib/i18n';
 
 interface Props {
@@ -135,11 +135,15 @@ const PROFILE_TRANSLATIONS: Record<string, any> = {
   }
 };
 
+// ── Component hiển thị Tab Hồ sơ cá nhân ──────────────────────────────
 export default function ProfileTab({ roleColor, roleLabel }: Props) {
-  const { user, setUser } = useAuth();
+  const { user, setUser } = useAuth(); // Quản lý thông tin đăng nhập
   
+  // State phục vụ việc responsive
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
+  
+  // Lắng nghe kích thước màn hình
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -150,18 +154,20 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const lang = localStorage.getItem("app-lang") || "vi";
+  const lang = localStorage.getItem("app-lang") || "vi"; // Ngôn ngữ đang chọn
   const st = PROFILE_TRANSLATIONS[lang] || PROFILE_TRANSLATIONS.vi;
   
-  const [fullName, setFullName] = useState(user?.fullName || user?.username || "");
-  const [email, setEmail] = useState(user?.email || "");
-  const [weight, setWeight] = useState(user?.weight?.toString() || "");
-  const [biography, setBiography] = useState(user?.biography || "");
-  const [avatar, setAvatar] = useState(user?.avatar || "");
-  const [profileLoading, setProfileLoading] = useState(false);
-  const [profileMsg, setProfileMsg] = useState("");
-  const [profileErr, setProfileErr] = useState("");
+  // Khởi tạo các state thông tin cá nhân
+  const [fullName, setFullName] = useState(user?.fullName || user?.username || ""); // Họ và tên
+  const [email, setEmail] = useState(user?.email || ""); // Địa chỉ Email
+  const [weight, setWeight] = useState(user?.weight?.toString() || ""); // Cân nặng
+  const [biography, setBiography] = useState(user?.biography || ""); // Tiểu sử
+  const [avatar, setAvatar] = useState(user?.avatar || ""); // Ảnh đại diện
+  const [profileLoading, setProfileLoading] = useState(false); // Trạng thái đang tải
+  const [profileMsg, setProfileMsg] = useState(""); // Thông báo cập nhật thành công
+  const [profileErr, setProfileErr] = useState(""); // Thông báo cập nhật lỗi
 
+  // State cho tính năng OTP/2FA
   const [otpEnabled, setOtpEnabled] = useState<boolean>(user?.requireOtp ?? false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMsg, setOtpMsg] = useState("");
@@ -198,7 +204,16 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setProfileMsg(""); setProfileErr(""); setProfileLoading(true);
+    setProfileMsg(""); setProfileErr("");
+    if (user?.roleId === 3 && weight) {
+      const wVal = parseFloat(weight);
+      if (isNaN(wVal) || wVal < 45 || wVal > 100) {
+        setProfileErr($t("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.", (localStorage.getItem('app-lang') || 'vi')));
+        return;
+      }
+    }
+
+    setProfileLoading(true);
     try {
       const parsedWeight = user?.roleId === 3 ? parseFloat(weight) || null : null;
       const res = await api.post<any>("/auth/update-profile", {
@@ -212,7 +227,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
         setProfileErr(res.error || "Failed to update profile.");
       }
     } catch (err: any) {
-      setProfileErr(err.message || "Error.");
+      setProfileErr(getErrMsg(err, "Error."));
     } finally {
       setProfileLoading(false);
     }
@@ -263,7 +278,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
         setPassErr(res.error || $t("Verification failed", lang));
       }
     } catch (err: any) {
-      setPassErr(err.message || "Error.");
+      setPassErr(getErrMsg(err, "Error."));
     } finally {
       setPassLoading(false);
     }
@@ -523,7 +538,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
 
                 <div>
                   <label style={labelStyle}>{$t("Địa chỉ Email", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                  <input type="email" className="bento-input" required value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
+                  <input type="email" className="bento-input" disabled readOnly value={email} style={{ ...inputStyle, opacity: 0.6, cursor: "not-allowed" }} />
                 </div>
 
                 <div style={{ marginTop: "auto", paddingTop: "1.5rem" }}>

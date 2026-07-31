@@ -1,9 +1,18 @@
+// Import các hook useState, useEffect, useRef từ React
 import { useState, useEffect, useRef } from "react";
+// Import createPortal từ react-dom để render modal portal
+import { createPortal } from "react-dom";
+// Import hook useAuth từ ngữ cảnh AuthContext
 import { useAuth } from "../../../context/AuthContext";
-import { api } from "../../../lib/api";
+// Import api client và hàm lấy thông báo lỗi getErrMsg
+import { api, getErrMsg } from "../../../lib/api";
+// Import hàm confirm để hiển thị thoại xác nhận
 import { confirm } from "../../../lib/confirm";
+// Import các hàm hỗ trợ định dạng ngày giờ và hạng đấu
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
+// Import hàm lấy URL nhúng YouTube từ thư viện utils
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
+// Import hàm đa ngôn ngữ $t
 import { $t } from '@/lib/i18n';
 
 const PURPLE = "#8b5cf6";
@@ -457,8 +466,9 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
   }
 };
 
+// ── Component Trung tâm quản lý nghiệp vụ trọng tài (RefereeHub) ────────────────
 export default function RefereeHub() {
-  const { user } = useAuth();
+  const { user } = useAuth(); // Lấy dữ liệu người dùng (Trọng tài)
   
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -470,12 +480,13 @@ export default function RefereeHub() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Lấy ngôn ngữ cấu hình từ localStorage
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
 
-  const [assignedRaces, setAssignedRaces] = useState<any[]>([]);
-  const [completedCount, setCompletedCount] = useState(0);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [assignedRaces, setAssignedRaces] = useState<any[]>([]); // Danh sách các trận được phân công
+  const [completedCount, setCompletedCount] = useState(0); // Số lượng trận đã hoàn thành
+  const [pendingCount, setPendingCount] = useState(0); // Số lượng trận đang chờ xử lý
   const [loading, setLoading] = useState(true);
 
   // Sub-view state
@@ -491,6 +502,7 @@ export default function RefereeHub() {
   // Confirm Results State
   const [finalPositions, setFinalPositions] = useState<Record<number, string>>({});
   const [finishTimes, setFinishTimes] = useState<Record<number, string>>({});
+  const [finishTimeErrors, setFinishTimeErrors] = useState<Record<number, string>>({});
   const [weighInWeights, setWeighInWeights] = useState<Record<number, string>>({});
   const [disqualifiedList, setDisqualifiedList] = useState<Record<number, boolean>>({});
   const [stewardReport, setStewardReport] = useState("");
@@ -501,6 +513,8 @@ export default function RefereeHub() {
   const [liveMonitorSize, setLiveMonitorSize] = useState<"small" | "medium" | "large">("small");
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [reasonModal, setReasonModal] = useState<{ type: "suspend" | "emergency"; title: string } | null>(null);
+  const [reasonInput, setReasonInput] = useState("");
   const dragStartRef = useRef<{ startX: number; startY: number; initialX: number; initialY: number }>({ startX: 0, startY: 0, initialX: 0, initialY: 0 });
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -609,7 +623,7 @@ export default function RefereeHub() {
               style={{ padding: "2px 6px", fontSize: "10px", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", color: "#c9a227", borderRadius: "0.25rem", cursor: "pointer", fontWeight: "bold", fontFamily: "monospace" }}
               title={isEmbeddedMode ? "Switch to Floating Movable Window" : "Switch to Embedded Mode Below Table"}
             >
-              {isEmbeddedMode ? "📌 Floating (Góc)" : "📌 Below Table (Dưới bảng)"}
+              {isEmbeddedMode ? "📌 Floating" : "📌 Below Table"}
             </button>
 
             {/* Close Button */}
@@ -765,12 +779,21 @@ export default function RefereeHub() {
   const [violPenalty, setViolPenalty] = useState("");
   const [isSevereDq, setIsSevereDq] = useState(false);
 
+  // Notification Toast State (replacing raw window.alert popups)
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" | "info" } | null>(null);
+
+  const notify = (msg: string, type: "success" | "error" | "info" = "info") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4500);
+  };
+
   // Steward Report Modal State
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportModalContent, setReportModalContent] = useState("");
   const [reportModalRaceId, setReportModalRaceId] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
+  // Tải dữ liệu bảng điều khiển (Dashboard) của trọng tài: gồm danh sách trận đấu được giao, số lượng đã hoàn thành, số lượng đang chờ.
   const fetchDashboard = () => {
     if (!user) return;
     setLoading(true);
@@ -784,25 +807,32 @@ export default function RefereeHub() {
       .finally(() => setLoading(false));
   };
 
+  // Tải lại bảng điều khiển mỗi khi người dùng đăng nhập/thay đổi tài khoản trọng tài
   useEffect(() => {
     fetchDashboard();
   }, [user]);
 
+  // Kích hoạt giao diện Kiểm duyệt tiền trận đấu (Pre-Race Check) cho cuộc đua được chọn
   const handleStartCheck = async (race: any) => {
     setSelectedRace(race);
     setLoading(true);
     try {
+      // Lấy danh sách lượt chạy đã đăng ký cho cuộc đua
       const data = await api.get<any[]>(`/public/results?raceId=${race.id}`);
       setRaceEntries(data || []);
-      // Initialize states
+      
+      // Khởi tạo trạng thái cân nặng đo được và trạng thái kiểm duyệt y tế
       const wMap: Record<number, string> = {};
       const vMap: Record<number, string> = {};
       data.forEach((item: any) => {
+        // Mặc định gán cân nặng mang theo quy định của ban tổ chức (carriedWeight)
         wMap[item.entry.id] = (item.entry.carriedWeight || item.jockey?.weight || 52.0).toString();
+        // Mặc định trạng thái y tế là Đạt kiểm duyệt (CLEARED)
         vMap[item.entry.id] = "CLEARED";
       });
       setWeighedWeights(wMap);
       setVetChecks(vMap);
+      // Chuyển chế độ xem sang biểu mẫu kiểm duyệt tiền trận
       setActiveView("check");
     } catch (err) {
       alert("Failed to load race entries.");
@@ -811,15 +841,17 @@ export default function RefereeHub() {
     }
   };
 
+  // Xác nhận hoàn thành Pre-Check (Kiểm duyệt an toàn & Cân nặng Weigh-out trước trận đấu)
   const handleConfirmCheck = async () => {
     if (!selectedRace) return;
     setLoading(true);
     try {
       const isVi = lang === "vi";
 
-      // Count active entries (not scratched)
+      // 1. Kiểm tra số lượng chiến mã thực tế tham gia (loại bỏ các ngựa bị SCRATCH)
       const activeCount = raceEntries.filter(item => vetChecks[item.entry.id] !== "SCRATCH").length;
       const minEntries = selectedRace.minEntries || 3;
+      // Trả lỗi nếu không đủ số lượng ngựa chạy tối thiểu
       if (activeCount < minEntries) {
         alert(isVi
           ? `Không thể xác nhận pre-check. Số lượng ngựa tham gia hoạt động (${activeCount}) nhỏ hơn mức tối thiểu yêu cầu (${minEntries}) của trận đấu.`
@@ -828,14 +860,14 @@ export default function RefereeHub() {
         return;
       }
       
-      // Validate weights before confirming
+      // 2. Kiểm duyệt cân nặng Weigh-out của từng nài ngựa
       for (const item of raceEntries) {
         const entryId = item.entry.id;
         const isScratched = vetChecks[entryId] === "SCRATCH";
-        if (isScratched) continue;
+        if (isScratched) continue; // Bỏ qua ngựa bị loại vì lý do y tế
 
-        const reqWeight = item.entry.carriedWeight || 52.0;
-        const weighed = parseFloat(weighedWeights[entryId]);
+        const reqWeight = item.entry.carriedWeight || 52.0; // Cân nặng yêu cầu của ban tổ chức
+        const weighed = parseFloat(weighedWeights[entryId]); // Cân nặng đo thực tế
         if (isNaN(weighed)) {
           alert(isVi 
             ? `Vui lòng nhập cân nặng hợp lệ cho ngựa "${item.horse?.name}".`
@@ -845,6 +877,7 @@ export default function RefereeHub() {
         }
 
         const diff = weighed - reqWeight;
+        // Trả lỗi nếu thiếu cân so với yêu cầu
         if (diff < 0) {
           alert(isVi 
             ? `Không thể xác nhận pre-check. Ngựa "${item.horse?.name}" bị thiếu cân (cân nặng đo được ${weighed} kg, yêu cầu tối thiểu ${reqWeight} kg). Nài ngựa phải mang thêm quả cân chì để đạt cân nặng yêu cầu, hoặc phải loại ngựa khỏi cuộc đua (SCRATCH).`
@@ -852,50 +885,56 @@ export default function RefereeHub() {
           setLoading(false);
           return;
         }
+        // Trả lỗi nếu quá cân vượt giới hạn an toàn cho phép là +1.0kg
         if (diff > 1.0) {
-          alert(isVi 
+          notify(isVi 
             ? `Không thể xác nhận pre-check. Ngựa "${item.horse?.name}" bị quá cân (+${diff.toFixed(1)} kg, giới hạn tối đa cho phép là +1.0 kg). Vui lòng điều chỉnh lại cân nặng của nài ngựa hoặc loại ngựa khỏi cuộc đua (SCRATCH).`
-            : `Cannot confirm pre-check. Horse "${item.horse?.name}" is too overweight (+${diff.toFixed(1)} kg, limit is +1.0 kg). Jockey weight must be corrected, or horse must be scratched.`);
+            : `Cannot confirm pre-check. Horse "${item.horse?.name}" is too overweight (+${diff.toFixed(1)} kg, limit is +1.0 kg). Jockey weight must be corrected, or horse must be scratched.`, "error");
           setLoading(false);
           return;
         }
       }
 
+      // Xây dựng danh sách kỵ sĩ - chiến mã sẵn sàng gửi lên máy chủ
       const payloadEntries = raceEntries.map((item: any) => ({
         entryId: item.entry.id,
         weighOutWeight: parseFloat(weighedWeights[item.entry.id]),
         status: vetChecks[item.entry.id] === "SCRATCH" ? "REJECTED" : "APPROVED",
       }));
+      // Gửi yêu cầu hoàn thành pre-check lên API
       await api.post("/referee/pre-check", {
         raceId: selectedRace.id,
         entries: payloadEntries,
       });
-      alert(isVi ? "Kiểm tra trước cuộc đua hoàn tất. Trận đấu đã sẵn sàng bắt đầu!" : "Pre-race check completed. The race is now ready to start!");
+      notify(isVi ? "Kiểm tra trước cuộc đua hoàn tất. Trận đấu đã sẵn sàng bắt đầu!" : "Pre-race check completed. The race is now ready to start!", "success");
       setActiveView("list");
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      alert("Pre-check failed: " + err.message);
+      notify(getErrMsg(err, "Pre-check failed: "), "error");
       setLoading(false);
     }
   };
 
+  // Trọng tài ra lệnh Bắt đầu trận đấu (Mở cổng xuất phát)
   const handleStartRace = async (race: any) => {
     setLoading(true);
     try {
       await api.post(`/referee/races/${race.id}/start`);
-      alert("Race started successfully. Now monitoring live!");
-      // Directly go to live supervision
+      notify("Race started successfully. Now monitoring live!", "success");
+      // Chuyển thẳng sang phân hệ Giám sát trực tiếp (Live Supervision)
       handleStartSupervise({ ...race, status: "RUNNING" });
     } catch (err: any) {
-      alert("Failed to start race: " + err.message);
+      notify(getErrMsg(err, "Failed to start race: "), "error");
       setLoading(false);
     }
   };
 
+  // Kích hoạt giao diện Giám sát trực tiếp (Live Supervision)
   const handleStartSupervise = async (race: any) => {
     setLoading(true);
     try {
+      // Gọi đồng thời thông tin kết quả thi đấu, danh sách vi phạm và thông tin trận đua để làm giàu giao diện
       const [entriesData, violationsData, allRacesData] = await Promise.all([
         api.get<any[]>(`/public/results?raceId=${race.id}`),
         api.get<any[]>(`/public/violations?raceId=${race.id}`).catch(() => []),
@@ -933,7 +972,7 @@ export default function RefereeHub() {
       await api.post(`/referee/entry/${entryId}/stop`);
       refreshSupervisionData();
     } catch (err: any) {
-      alert(err.response?.data?.error || err.message || "Failed to stop horse.");
+      alert(err.response?.data?.error || getErrMsg(err, "Failed to stop horse."));
     } finally {
       setActionLoadingId(null);
     }
@@ -945,7 +984,7 @@ export default function RefereeHub() {
       await api.post(`/referee/entry/${entryId}/resume`);
       refreshSupervisionData();
     } catch (err: any) {
-      alert(err.response?.data?.error || err.message || "Failed to resume horse.");
+      alert(err.response?.data?.error || getErrMsg(err, "Failed to resume horse."));
     } finally {
       setActionLoadingId(null);
     }
@@ -958,16 +997,18 @@ export default function RefereeHub() {
       await api.post(`/referee/entry/${entryId}/disqualify`);
       refreshSupervisionData();
     } catch (err: any) {
-      alert(err.response?.data?.error || err.message || "Failed to disqualify horse.");
+      alert(err.response?.data?.error || getErrMsg(err, "Failed to disqualify horse."));
     } finally {
       setActionLoadingId(null);
     }
   };
 
+  // Gửi sự cố / vi phạm luật đua (Rules Violation) của nài/ngựa lên API
   const handleSaveViolation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRace || !violRunner) return;
     const [horseId, jockeyId] = violRunner.split("-").map(Number);
+    // Nếu chọn loại trực tiếp ngay lập tức, gán hình phạt là DISQUALIFIED
     const finalPenalty = isSevereDq ? `DISQUALIFIED` : violPenalty;
     try {
       await api.post("/referee/violations", {
@@ -984,56 +1025,66 @@ export default function RefereeHub() {
       setViolDesc("");
       setViolPenalty("");
       setIsSevereDq(false);
-      // Refresh supervision details
+      // Tải lại dữ liệu giám sát trực tiếp
       handleStartSupervise(selectedRace);
     } catch (err: any) {
-      alert($t("Ghi nhận vi phạm thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + err.message);
+      notify($t("Ghi nhận vi phạm thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
     }
   };
 
+  // Trọng tài ra lệnh dừng khẩn cấp trận đấu (Dừng hẳn và hủy cuộc đua, chuyển trạng thái sang CANCELLED)
   const handleStopRace = async (stewardReport: string) => {
     if (!selectedRace) return;
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/stop`, { stewardReport });
-      alert($t("Đã thực hiện dừng khẩn cấp. Trạng thái cuộc đua chuyển thành CANCELLED.", (localStorage.getItem('app-lang') || 'vi')));
+      notify($t("Đã thực hiện dừng khẩn cấp. Trạng thái cuộc đua chuyển thành CANCELLED.", (localStorage.getItem('app-lang') || 'vi')), "success");
       setActiveView("list");
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      alert($t("Không thể dừng cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message);
+      notify($t("Không thể dừng cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
       setLoading(false);
     }
   };
 
+  // Trọng tài ra lệnh tạm hoãn cuộc đua (Tạm hoãn và chuyển trạng thái sang STOPPED)
   const handleSuspendRace = async (stewardReport: string) => {
-    if (!selectedRace || !user) return;
+    if (!selectedRace) return;
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/suspend`, { stewardReport });
-      alert($t("Đã tạm hoãn cuộc đua. Trạng thái chuyển thành STOPPED.", (localStorage.getItem('app-lang') || 'vi')));
-      const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
-      setAssignedRaces(dashboardRes.assignedRaces || []);
-      setCompletedCount(dashboardRes.completedCount || 0);
-      setPendingCount(dashboardRes.pendingCount || 0);
-      const updatedRace = (dashboardRes.assignedRaces || []).find((r: any) => r.id === selectedRace.id);
-      if (updatedRace) {
-        handleStartSupervise(updatedRace);
+      notify($t("Đã tạm hoãn cuộc đua. Trạng thái chuyển thành STOPPED.", (localStorage.getItem('app-lang') || 'vi')), "info");
+      if (user?.id) {
+        const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
+        setAssignedRaces(dashboardRes.assignedRaces || []);
+        setCompletedCount(dashboardRes.completedCount || 0);
+        setPendingCount(dashboardRes.pendingCount || 0);
+        const updatedRace = (dashboardRes.assignedRaces || []).find((r: any) => r.id === selectedRace.id);
+        // Tải lại view giám sát với trạng thái STOPPED mới
+        if (updatedRace) {
+          handleStartSupervise(updatedRace);
+        } else {
+          fetchDashboard();
+        }
       } else {
-        fetchDashboard();
+        // Nếu không có user.id, chỉ cập nhật lại selectedRace status cục bộ rồi reload
+        setSelectedRace((prev: any) => prev ? { ...prev, status: "STOPPED" } : prev);
+        setLoading(false);
       }
     } catch (err: any) {
-      alert($t("Không thể tạm hoãn cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message);
+      notify($t("Không thể tạm hoãn cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
       setLoading(false);
     }
   };
 
+  // Trọng tài ra lệnh khôi phục cuộc đua (Tiếp tục chạy lại và chuyển trạng thái sang RUNNING)
   const handleResumeRace = async () => {
     if (!selectedRace || !user) return;
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/resume`);
-      alert($t("Đã khôi phục cuộc đua. Trạng thái chuyển thành RUNNING.", (localStorage.getItem('app-lang') || 'vi')));
+      notify($t("Đã khôi phục cuộc đua. Trạng thái chuyển thành RUNNING.", (localStorage.getItem('app-lang') || 'vi')), "success");
       const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
       setAssignedRaces(dashboardRes.assignedRaces || []);
       setCompletedCount(dashboardRes.completedCount || 0);
@@ -1045,11 +1096,12 @@ export default function RefereeHub() {
         fetchDashboard();
       }
     } catch (err: any) {
-      alert($t("Không thể khôi phục cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + err.message);
+      notify($t("Không thể khôi phục cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
       setLoading(false);
     }
   };
 
+  // Kích hoạt giao diện Nhập kết quả chung cuộc (Confirm Results View)
   const handleStartConfirmResults = () => {
     if (!selectedRace) return;
     const posMap: Record<number, string> = {};
@@ -1057,13 +1109,14 @@ export default function RefereeHub() {
     const wMap: Record<number, string> = {};
     const dqMap: Record<number, boolean> = {};
 
-    // Build set of horseIds that have a DISQUALIFIED violation
+    // 1. Quét danh sách vi phạm để tìm ra những chiến mã bị phạt truất quyền thi đấu (DISQUALIFIED)
     const dqHorseIds = new Set<number>(
       violations
         .filter((v: any) => v.violation?.penalty === "DISQUALIFIED")
         .map((v: any) => v.horseId)
     );
 
+    // 2. Khởi tạo giá trị ban đầu cho các ô nhập thứ hạng, thời gian và cân nặng sau đua (Weigh-In)
     raceEntries.forEach((item: any) => {
       const isAlreadyDq =
         item.entry.status === "DISQUALIFIED" ||
@@ -1078,9 +1131,11 @@ export default function RefereeHub() {
     setWeighInWeights(wMap);
     setDisqualifiedList(dqMap);
     setStewardReport("");
+    // Chuyển sang biểu mẫu Nhập kết quả chung cuộc
     setActiveView("confirm");
   };
 
+  // Xác nhận và phê duyệt công bố Kết quả chính thức cho cuộc đua
   const handleConfirmResults = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRace) return;
@@ -1088,45 +1143,48 @@ export default function RefereeHub() {
     try {
       const isVi = lang === "vi";
       
-      // Validate times and positions before submitting
+      // 1. Ràng buộc biểu thức thời gian và thứ hạng của các chiến mã đạt chuẩn (không bị DQ)
       for (const item of raceEntries) {
         const entryId = item.entry.id;
         const isDq = disqualifiedList[entryId] || item.entry.status === "DISQUALIFIED";
         if (!isDq) {
           const time = finishTimes[entryId];
+          // Trả lỗi nếu để trống thời gian chạy của ngựa về đích
           if (!time || !time.trim()) {
-            alert(isVi 
+            notify(isVi 
               ? `Vui lòng nhập thời gian về đích cho ngựa "${item.horse?.name}" hoặc đánh dấu loại bỏ (DQ).`
-              : `Please enter finishing time for horse "${item.horse?.name}" or mark as DQ.`);
+              : `Please enter finishing time for horse "${item.horse?.name}" or mark as DQ.`, "error");
             setLoading(false);
             return;
           }
-          if (!/^\d+:\d+(\.\d+)?$/.test(time.trim())) {
-            alert(isVi 
-              ? `Thời gian của ngựa "${item.horse?.name}" phải nhập đúng định dạng phút:giây (ví dụ 1:48.35 hoặc 1:48), không được nhập số thường hay dấu phẩy.`
-              : `Finishing time for horse "${item.horse?.name}" must be in the format MM:SS or MM:SS.ms (e.g. 1:48.35 or 1:48).`);
+          // Yêu cầu nhập đúng định dạng mm:ss hoặc mm:ss.ms (số giây từ 00 đến 59)
+          if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(time.trim())) {
+            notify(isVi 
+              ? `Thời gian của ngựa "${item.horse?.name}" không hợp lệ (${time}). Số giây phải nằm trong khoảng 00-59 (ví dụ 1:48.35 hoặc 1:05).`
+              : `Finishing time for horse "${item.horse?.name}" is invalid (${time}). Seconds must be between 00 and 59 (e.g. 1:48.35 or 1:05).`, "error");
             setLoading(false);
             return;
           }
           const pos = finalPositions[entryId];
           if (!pos || isNaN(parseInt(pos))) {
-            alert(isVi
+            notify(isVi
               ? `Không thể xác định thứ hạng về đích cho ngựa "${item.horse?.name}". Vui lòng kiểm tra lại thời gian.`
-              : `Cannot determine final position for horse "${item.horse?.name}". Please check the finish time.`);
+              : `Cannot determine final position for horse "${item.horse?.name}". Please check the finish time.`, "error");
             setLoading(false);
             return;
           }
           const weight = parseFloat(weighInWeights[entryId]);
           if (isNaN(weight) || weight <= 0) {
-            alert(isVi
+            notify(isVi
               ? `Vui lòng nhập cân nặng sau đua hợp lệ cho ngựa "${item.horse?.name}".`
-              : `Please enter a valid weigh-in weight for horse "${item.horse?.name}".`);
+              : `Please enter a valid weigh-in weight for horse "${item.horse?.name}".`, "error");
             setLoading(false);
             return;
           }
         }
       }
 
+      // Xây dựng payload để đẩy lên máy chủ
       const resultsPayload = raceEntries.map((item: any) => {
         const entryId = item.entry.id;
         const isDq = disqualifiedList[entryId];
@@ -1138,18 +1196,19 @@ export default function RefereeHub() {
         };
       });
 
+      // POST kết quả chung cuộc và báo cáo của Trọng tài (Steward Report)
       await api.post("/referee/results", {
         raceId: selectedRace.id,
         stewardReport,
         results: resultsPayload,
       });
 
-      alert($t("Kết quả đã được xác minh và công bố chính thức. Đóng trận đấu.", (localStorage.getItem('app-lang') || 'vi')));
+      notify(isVi ? "Kết quả đã được xác minh và công bố chính thức. Đóng trận đấu." : "Results verified and published. Closing race.", "success");
       setActiveView("list");
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      alert($t("Gửi kết quả thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + err.message);
+      notify($t("Gửi kết quả thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
     } finally {
       setLoading(false);
     }
@@ -1172,6 +1231,78 @@ export default function RefereeHub() {
       return ratingB - ratingA;
     }
   });
+
+  const renderGlobalModals = () => (
+    <>
+      {/* Modal nhập lý do Steward's Report khi Tạm hoãn hoặc Dừng khẩn cấp */}
+      {reasonModal && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "28rem" }}>
+            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "1rem", marginBottom: "1rem" }}>{reasonModal.title}</h4>
+            <textarea
+              value={reasonInput}
+              onChange={e => setReasonInput(e.target.value)}
+              placeholder={$t("Nhập chi tiết lý do (Steward's Report)...", (localStorage.getItem('app-lang') || 'vi'))}
+              style={{ width: "100%", height: "90px", padding: "0.75rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.5rem", color: "#fff", fontSize: "0.85rem", outline: "none", resize: "none", marginBottom: "1rem" }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+              <button
+                type="button"
+                onClick={() => setReasonModal(null)}
+                style={{ padding: "0.5rem 1rem", background: "rgba(255,255,255,0.1)", color: "#aaa", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", cursor: "pointer" }}
+              >
+                {$t("Hủy", (localStorage.getItem('app-lang') || 'vi'))}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentReason = reasonInput.trim();
+                  const currentType = reasonModal.type;
+                  if (!currentReason) {
+                    notify($t("Vui lòng nhập lý do trước khi xác nhận.", (localStorage.getItem('app-lang') || 'vi')), "error");
+                    return;
+                  }
+                  setReasonModal(null);
+                  setReasonInput("");
+                  if (currentType === "suspend") handleSuspendRace(currentReason);
+                  else if (currentType === "emergency") handleStopRace(currentReason);
+                }}
+                style={{ padding: "0.5rem 1.25rem", background: reasonModal.type === "emergency" ? "#f59e0b" : "#fbbf24", color: "#000", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer" }}
+              >
+                {$t("Xác nhận", (localStorage.getItem('app-lang') || 'vi'))}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {toast && createPortal(
+        <div style={{
+          position: "fixed",
+          bottom: "1.5rem",
+          right: "1.5rem",
+          zIndex: 200000,
+          background: toast.type === "error" ? "#7f1d1d" : toast.type === "success" ? "#064e3b" : "#1e1b4b",
+          border: toast.type === "error" ? "1px solid #ef4444" : toast.type === "success" ? "1px solid #10b981" : "1px solid #6366f1",
+          color: "#fff",
+          padding: "0.875rem 1.25rem",
+          borderRadius: "0.5rem",
+          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+          fontSize: "0.85rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+          maxWidth: "24rem"
+        }}>
+          <span>{toast.type === "error" ? "⚠️" : toast.type === "success" ? "✅" : "ℹ️"}</span>
+          <span style={{ flex: 1 }}>{toast.msg}</span>
+          <button onClick={() => setToast(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
+        </div>,
+        document.body
+      )}
+    </>
+  );
 
   if (activeView === "check" && selectedRace) {
     const isGatesFullySet = selectedRace.gatesFullySet;
@@ -1432,6 +1563,7 @@ export default function RefereeHub() {
             </button>
           </div>
         </div>
+        {renderGlobalModals()}
       </div>
     );
   }
@@ -1472,10 +1604,8 @@ export default function RefereeHub() {
             {(selectedRace.status === "RUNNING" || selectedRace.status === "STEWARDS_INQUIRY") && (
               <button
                 onClick={() => {
-                  const reason = prompt($t("Nhập lý do tạm hoãn cuộc đua (Steward's Report):", (localStorage.getItem('app-lang') || 'vi')));
-                  if (reason && reason.trim()) {
-                    handleSuspendRace(reason);
-                  }
+                  setReasonInput("");
+                  setReasonModal({ type: "suspend", title: $t("Nhập lý do tạm hoãn cuộc đua (Steward's Report):", (localStorage.getItem('app-lang') || 'vi')) });
                 }}
                 style={{ padding: "0.5rem 1.25rem", background: "#fbbf24", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
               >
@@ -1492,10 +1622,8 @@ export default function RefereeHub() {
             )}
             <button
               onClick={() => {
-                const reason = prompt($t("Nhập lý do tạm dừng/hoãn cuộc đua khẩn cấp (Steward's Report):", (localStorage.getItem('app-lang') || 'vi')));
-                if (reason && reason.trim()) {
-                  handleStopRace(reason);
-                }
+                setReasonInput("");
+                setReasonModal({ type: "emergency", title: $t("Nhập lý do tạm dừng/hoãn cuộc đua khẩn cấp (Steward's Report):", (localStorage.getItem('app-lang') || 'vi')) });
               }}
               style={{ padding: "0.5rem 1.25rem", background: "#f59e0b", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
             >
@@ -1769,7 +1897,7 @@ export default function RefereeHub() {
 
         {/* Log Violation Modal */}
         {showViolModal && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }}>
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50000, padding: "1rem" }}>
             <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "28rem", overflow: "hidden" }}>
               <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -1811,6 +1939,7 @@ export default function RefereeHub() {
             </div>
           </div>
         )}
+        {renderGlobalModals()}
       </div>
     );
   }
@@ -1944,7 +2073,46 @@ export default function RefereeHub() {
                               DQ
                             </span>
                           ) : (
-                            <input type="text" required={!isDq} placeholder="e.g. 1:48.35" value={isDq ? "DQ" : finishTimes[entryId] || ""} disabled={isDq} onChange={e => setFinishTimes(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: "100%", padding: "0.375rem 0.5rem", fontSize: "12px", outline: "none", background: "rgba(0,0,0,0.6)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.375rem", color: "#fff" }} />
+                            <div>
+                              <input
+                                type="text"
+                                required={!isDq}
+                                placeholder="e.g. 1:48.35"
+                                value={isDq ? "DQ" : finishTimes[entryId] || ""}
+                                disabled={isDq}
+                                onChange={e => {
+                                  const val = e.target.value;
+                                  setFinishTimes(prev => ({ ...prev, [entryId]: val }));
+                                  if (!val.trim()) {
+                                    setFinishTimeErrors(prev => ({ ...prev, [entryId]: "" }));
+                                  } else if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(val.trim())) {
+                                    setFinishTimeErrors(prev => ({
+                                      ...prev,
+                                      [entryId]: lang === "vi" 
+                                        ? "Sai định dạng! Số giây phải từ 00 đến 59 (ví dụ: 1:48.35)" 
+                                        : "Invalid format! Seconds must be between 00 and 59 (e.g. 1:48.35)"
+                                    }));
+                                  } else {
+                                    setFinishTimeErrors(prev => ({ ...prev, [entryId]: "" }));
+                                  }
+                                }}
+                                style={{
+                                  width: "100%",
+                                  padding: "0.375rem 0.5rem",
+                                  fontSize: "12px",
+                                  outline: "none",
+                                  background: finishTimeErrors[entryId] ? "rgba(239,68,68,0.15)" : "rgba(0,0,0,0.6)",
+                                  border: finishTimeErrors[entryId] ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.08)",
+                                  borderRadius: "0.375rem",
+                                  color: finishTimeErrors[entryId] ? "#fca5a5" : "#fff"
+                                }}
+                              />
+                              {finishTimeErrors[entryId] && (
+                                <div style={{ fontSize: "10px", color: "#f87171", marginTop: "3px", fontFamily: "monospace", fontWeight: "bold" }}>
+                                  ⚠ {finishTimeErrors[entryId]}
+                                </div>
+                              )}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -2026,7 +2194,46 @@ export default function RefereeHub() {
                                 DQ
                               </span>
                             ) : (
-                              <input type="text" required={!isDq} placeholder="e.g. 1:48.35" value={isDq ? "DQ" : finishTimes[entryId] || ""} disabled={isDq} onChange={e => setFinishTimes(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ width: 120, padding: "0.25rem 0.5rem", fontSize: "12px", outline: "none" }} />
+                              <div>
+                                <input
+                                  type="text"
+                                  required={!isDq}
+                                  placeholder="e.g. 1:48.35"
+                                  value={isDq ? "DQ" : finishTimes[entryId] || ""}
+                                  disabled={isDq}
+                                  onChange={e => {
+                                    const val = e.target.value;
+                                    setFinishTimes(prev => ({ ...prev, [entryId]: val }));
+                                    if (!val.trim()) {
+                                      setFinishTimeErrors(prev => ({ ...prev, [entryId]: "" }));
+                                    } else if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(val.trim())) {
+                                      setFinishTimeErrors(prev => ({
+                                        ...prev,
+                                        [entryId]: lang === "vi" 
+                                          ? "Sai định dạng! Số giây phải từ 00 đến 59 (ví dụ: 1:48.35)" 
+                                          : "Invalid format! Seconds must be between 00 and 59 (e.g. 1:48.35)"
+                                      }));
+                                    } else {
+                                      setFinishTimeErrors(prev => ({ ...prev, [entryId]: "" }));
+                                    }
+                                  }}
+                                  style={{
+                                    width: 140,
+                                    padding: "0.375rem 0.5rem",
+                                    fontSize: "12px",
+                                    outline: "none",
+                                    background: finishTimeErrors[entryId] ? "rgba(239,68,68,0.15)" : "rgba(0,0,0,0.6)",
+                                    border: finishTimeErrors[entryId] ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.08)",
+                                    borderRadius: "0.375rem",
+                                    color: finishTimeErrors[entryId] ? "#fca5a5" : "#fff"
+                                  }}
+                                />
+                                {finishTimeErrors[entryId] && (
+                                  <div style={{ fontSize: "10px", color: "#f87171", marginTop: "3px", fontFamily: "monospace", fontWeight: "bold" }}>
+                                    ⚠ {finishTimeErrors[entryId]}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </td>
                           <td style={{ padding: "1rem", textAlign: "center" }}>
@@ -2059,6 +2266,8 @@ export default function RefereeHub() {
             </button>
           </div>
         </form>
+
+        {renderGlobalModals()}
       </div>
     );
   }
@@ -2282,7 +2491,7 @@ export default function RefereeHub() {
 
       {/* Steward Report Modal */}
       {showReportModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50000, padding: "1rem" }}>
           <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "32rem", overflow: "hidden" }}>
             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -2302,6 +2511,8 @@ export default function RefereeHub() {
           </div>
         </div>
       )}
+
+      {renderGlobalModals()}
     </div>
   );
 }

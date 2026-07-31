@@ -13,10 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-@RestController
-@RequestMapping("/api/configs")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+/**
+ * Controller SystemConfigController - Lớp kiểm soát các endpoint cấu hình tham số hệ thống.
+ * - Cho phép truy xuất danh sách các tham số cấu hình mặc định (phần trăm phân bổ tiền thưởng, giới hạn tuổi, hệ số handicap...).
+ */
+@RestController // Đánh dấu lớp là REST Controller xử lý các HTTP request
+@RequestMapping("/api/configs") // Cấu hình URL cơ sở là /api/configs
+@RequiredArgsConstructor // Tự động tạo constructor injection cho systemConfigService
+@CrossOrigin(origins = "*") // Hỗ trợ CORS đa nguồn
 @Tag(
     name = "02. System Config Service",
     description = "⚙️ **BƯỚC 2: CẤU HÌNH THAM SỐ HỆ THỐNG (SYSTEM CONFIG ARCHITECTURE)**\n\n" +
@@ -33,19 +37,28 @@ import java.util.List;
 )
 public class SystemConfigController {
 
-    private final SystemConfigService systemConfigService;
+    private final SystemConfigService systemConfigService; // Khai báo dịch vụ cấu hình hệ thống
 
-    @GetMapping
+    // Lấy toàn bộ danh sách tham số cấu hình của hệ thống
+    @GetMapping // Xử lý yêu cầu HTTP GET gửi tới /api/configs
     @Operation(
         summary = "GET: Lấy danh sách tham số cấu hình hệ thống",
-        description = "🔍 **Chạy thử Try It Out**: Bấm 'Try it out' -> 'Execute' để xem danh sách tham số cấu hình hệ thống.\n\n" +
+        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ GET API:**\n\n" +
                       "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controller**: `SystemConfigController.getConfigs()`\n" +
-                      "* **Service**: `SystemConfigService.getAllConfigs()`\n" +
-                      "* **Repository**: `SystemConfigRepository.findAll()`\n" +
-                      "* **DTO Response**: `List<SystemConfigDTO>`"
+                      "* **Controllers**: `SystemConfigController.getConfigs()`\n" +
+                      "* **Services**: `SystemConfigService.getAllConfigs()`\n" +
+                      "* **Repositories**: `SystemConfigRepository.findAll()`\n" +
+                      "* **Entities**: `SystemConfig.java`\n" +
+                      "* **DTOs**: `SystemConfigDTO` (`configKey`, `configValue`, `description`)\n" +
+                      "* **DTO Response**: `List<SystemConfigDTO>` (`configKey`, `configValue`, `description`)\n" +
+                      "* **Frontend**: `SystemConfig.tsx` (admin-workflow), `systemConfigService.ts`\n\n" +
+                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
+                      "1. Tiếp nhận yêu cầu lấy tham số cấu hình từ Admin Dashboard.\n" +
+                      "2. Dịch vụ `SystemConfigService` truy xuất bảng `SystemConfig` trong CSDL.\n" +
+                      "3. Đóng gói danh sách tham số cấu hình (quỹ tiền thưởng, hệ số cân nặng, tuổi ngựa) sang `SystemConfigDTO` và trả về Client."
     )
     public ResponseEntity<List<SystemConfigDTO>> getConfigs() {
+        // Trả về mã HTTP 200 OK kèm danh sách DTO cấu hình tham số hệ thống
         return ResponseEntity.ok(systemConfigService.getAllConfigs());
     }
 }

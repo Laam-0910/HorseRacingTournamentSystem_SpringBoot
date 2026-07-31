@@ -256,7 +256,7 @@ ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Race    FOREIGN KEY (race_id)    RE
 ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Horse   FOREIGN KEY (horse_id)   REFERENCES Horse(id);
 ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Jockey  FOREIGN KEY (jockey_id)  REFERENCES [User](id);
 ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Referee FOREIGN KEY (referee_id) REFERENCES [User](id);
-ALTER TABLE ChatMessage ADD CONSTRAINT FK_Chat_Race   FOREIGN KEY (race_id)    REFERENCES Race(id);
+ALTER TABLE ChatMessage ADD CONSTRAINT FK_Chat_Race   FOREIGN KEY (race_id)    REFERENCES Race(id) ON DELETE CASCADE;
 GO
 
 -- ==========================================
@@ -347,7 +347,12 @@ INSERT INTO RaceEntry (race_id, horse_id, jockey_id, gate_number, status, final_
 (1, 3, 7, 2, 'FINISHED', 2, '1:49.10', 31500.00, 57.50,  3), 
 (1, 5, 6, 3, 'FINISHED', 3, '1:49.55', 17250.00, 55.00,  1), 
 (2, 2, 5, 1, 'FINISHED', 1, '1:50.22', 44800.00, 60.00,  6), 
-(2, 6, 8, 2, 'FINISHED', 2, '1:51.00', 16800.00, 56.20,  3);  
+(2, 6, 8, 2, 'FINISHED', 2, '1:51.00', 16800.00, 56.20,  3),
+(3, 1, 5, 1, 'APPROVED', NULL, NULL, 0.00, 58.00, 0),
+(3, 3, 7, 2, 'APPROVED', NULL, NULL, 0.00, 56.00, 0),
+(3, 5, 6, 3, 'APPROVED', NULL, NULL, 0.00, 55.00, 0),
+(4, 2, 5, 1, 'APPROVED', NULL, NULL, 0.00, 58.50, 0),
+(4, 6, 8, 2, 'APPROVED', NULL, NULL, 0.00, 55.50, 0);  
 GO
 
 INSERT INTO RaceReferee (race_id, referee_id) VALUES

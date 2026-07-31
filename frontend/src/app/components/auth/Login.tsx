@@ -1,47 +1,80 @@
+// Import hàm xử lý lỗi từ API
+import { getErrMsg } from "../../../lib/api";
+// Import hook useState từ React
 import { useState } from "react";
+// Import hook điều hướng useNavigate và thành phần Link từ React Router
 import { useNavigate, Link } from "react-router-dom";
+// Import hook useAuth để truy cập ngữ cảnh xác thực toàn cục
 import { useAuth } from "../../../context/AuthContext";
+// Import authService cung cấp các hàm gọi API liên quan đến đăng nhập
 import { authService } from "../../../services/authService";
 
+/**
+ * Component Login - Trang đăng nhập của hệ thống trường đua ngựa.
+ * Quản lý form đăng nhập tài khoản bằng email/username và mật khẩu,
+ * hỗ trợ phân quyền chuyển hướng người dùng sau khi đăng nhập thành công
+ * hoặc chuyển tiếp sang màn hình xác thực mã OTP (nếu bật 2FA).
+ */
 export default function Login() {
+  // Hook dùng để chuyển đổi trang
   const navigate = useNavigate();
+  // Lấy hàm setUser từ AuthContext để lưu thông tin user đăng nhập vào bộ nhớ app
   const { setUser } = useAuth();
+  
+  // State lưu trữ dữ liệu nhập vào ô Email hoặc Username
   const [email, setEmail] = useState("");
+  // State lưu trữ mật khẩu
   const [password, setPassword] = useState("");
+  // Trạng thái ẩn/hiện mật khẩu (dạng text hoặc password)
   const [showPassword, setShowPassword] = useState(false);
+  // State lưu trữ thông điệp lỗi nếu đăng nhập thất bại
   const [error, setError] = useState("");
+  // Trạng thái chờ gọi API
   const [loading, setLoading] = useState(false);
 
+  // Xử lý gửi form đăng nhập khi người dùng submit
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+    e.preventDefault(); // Ngăn hành vi reset trang mặc định của form
+    setError(""); // Reset thông báo lỗi cũ
+    setLoading(true); // Bật trạng thái loading
+    
     try {
+      // Gọi service API đăng nhập bằng tên người dùng và mật khẩu
       const res = await authService.login({ username: email, password });
+      
       if (res.requireOtp) {
+        // Trường hợp tài khoản bật bảo mật 2FA:
+        // Chuyển hướng người dùng sang trang verify-login kèm theo mã giao dịch OTP (otpTxId)
         navigate("/verify-login", { state: { otpTxId: res.otpTxId } });
       } else if (res.user && res.token) {
+        // Trường hợp đăng nhập thẳng thành công (không yêu cầu OTP):
+        // 1. Lưu JWT token vào sessionStorage để đính kèm vào các API header sau này
         sessionStorage.setItem("token", res.token);
+        // 2. Cập nhật thông tin user vào AuthContext toàn cục
         setUser(res.user);
+        // 3. Phân luồng chuyển hướng (Routing) dựa trên roleId của người dùng
         const roleId = res.user.roleId;
-        if (roleId === 1) navigate("/dashboard/admin");
-        else if (roleId === 2) navigate("/dashboard/owner");
-        else if (roleId === 3) navigate("/dashboard/jockey");
-        else if (roleId === 5) navigate("/dashboard/referee");
-        else navigate("/dashboard/spectator");
+        if (roleId === 1) navigate("/dashboard/admin");       // Admin (ID=1) -> Bảng quản trị
+        else if (roleId === 2) navigate("/dashboard/owner");   // Owner (ID=2) -> Trang chủ chuồng ngựa
+        else if (roleId === 3) navigate("/dashboard/jockey");  // Jockey (ID=3) -> Trang nài ngựa
+        else if (roleId === 5) navigate("/dashboard/referee"); // Referee (ID=5) -> Bảng trọng tài
+        else navigate("/dashboard/spectator");                 // Spectator (Khán giả) và các vai trò khác
       } else {
+        // Ném lỗi nếu phản hồi từ server không chứa OTP hoặc User hợp lệ
         throw new Error(res.error || "Login failed");
       }
     } catch (err: any) {
-      setError(err.message || "Invalid credentials");
+      // Bắt lỗi hệ thống hoặc thông tin đăng nhập sai từ backend
+      setError(getErrMsg(err, "Invalid credentials"));
     } finally {
-      setLoading(false);
+      setLoading(false); // Tắt trạng thái chờ gọi API
     }
   };
 
   return (
+    // Container bao bọc toàn bộ trang đăng nhập tràn màn hình
     <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
-      {/* Background – same horse image as JSP */}
+      {/* Phông nền - Hình ảnh chiến mã thiết kế tối tinh tế khớp với UI hệ thống */}
       <div
         style={{
           position: "absolute", inset: 0,
@@ -50,55 +83,69 @@ export default function Login() {
           backgroundPosition: "center",
         }}
       >
+        {/* Phủ lớp màu đen mờ chuyển sắc (Gradient Overlay) giúp form nổi bật dễ đọc */}
         <div style={{
           position: "absolute", inset: 0,
           background: "linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.75) 100%)"
         }} />
       </div>
 
-      {/* Centered Form */}
+      {/* Vùng chứa form căn giữa chính giữa màn hình */}
       <div style={{
         position: "relative", zIndex: 10,
         display: "flex", alignItems: "center", justifyContent: "center",
         width: "100%", height: "100%", padding: "0 1rem"
       }}>
+        {/* Khung nội dung có giới hạn chiều rộng tối đa 28rem */}
         <div style={{ width: "100%", maxWidth: "28rem" }}>
-          {/* Logo */}
+          {/* Khu vực Logo thương hiệu */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", marginBottom: "2rem" }}>
+            {/* Khung chứa biểu tượng icon logo màu vàng */}
             <div style={{ width: 48, height: 48, borderRadius: "0.5rem", background: "#c9a227", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {/* Biểu tượng chiếc cúp danh vọng */}
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0e0c09" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
             </div>
+            {/* Tên thương hiệu ứng dụng */}
             <div>
+              {/* Tiêu đề ứng dụng HorseRace */}
               <h1 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0", lineHeight: 1.2 }}>HorseRace</h1>
+              {/* Phụ đề hệ thống quản lý */}
               <p style={{ color: "#a0a0a0", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.15em" }}>Management System</p>
             </div>
           </div>
 
-          {/* Card */}
+          {/* Hộp Form Đăng nhập chính */}
           <div style={{
             background: "rgba(21,19,16,0.95)", backdropFilter: "blur(8px)",
             border: "1px solid #2a2825", borderRadius: "0.5rem",
             padding: "2rem", boxShadow: "0 25px 50px rgba(0,0,0,0.5)"
           }}>
+            {/* Tiêu đề chào mừng người dùng */}
             <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f0f0f0", marginBottom: "0.25rem" }}>Welcome Back</h2>
+            {/* Hướng dẫn đăng nhập */}
             <p style={{ color: "#a0a0a0", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
               Sign in to access your dashboard. New accounts await role assignment by an Admin before a dashboard unlocks.
             </p>
 
-            {/* Success flash */}
+            {/* Banner hiển thị lỗi đăng nhập nếu có */}
             {error && (
               <div style={{ marginBottom: "1rem", padding: "0.75rem", borderRadius: "0.25rem", background: "#c0392b", color: "#fff", fontSize: "0.875rem", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                {/* Icon cảnh báo lỗi */}
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                {/* Nội dung tin nhắn lỗi */}
                 {error}
               </div>
             )}
 
+            {/* Thẻ Form đăng nhập */}
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-              {/* Email */}
+              {/* Trường Email hoặc Username */}
               <div>
+                {/* Nhãn của trường nhập Email hoặc Username */}
                 <label style={{ display: "block", fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>
                   Email or Username
                 </label>
+                {/* Ô nhập Email hoặc Username */}
                 <input
                   type="text"
                   value={email}
@@ -109,12 +156,15 @@ export default function Login() {
                 />
               </div>
 
-              {/* Password */}
+              {/* Trường Mật khẩu */}
               <div>
+                {/* Nhãn của trường Mật khẩu */}
                 <label style={{ display: "block", fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem" }}>
                   Password
                 </label>
+                {/* Vùng chứa ô nhập mật khẩu và nút đóng/mở mắt */}
                 <div style={{ position: "relative" }}>
+                  {/* Ô nhập Mật khẩu */}
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
@@ -123,11 +173,13 @@ export default function Login() {
                     required
                     style={{ width: "100%", padding: "0.75rem 3rem 0.75rem 1rem", borderRadius: "0.25rem", fontSize: "0.875rem" }}
                   />
+                  {/* Nút mắt để ẩn/hiện mật khẩu */}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", display: "flex", padding: "0.25rem" }}
                   >
+                    {/* Hiển thị icon mắt đóng hoặc mở tùy vào trạng thái showPassword */}
                     {showPassword
                       ? <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>
                       : <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -136,14 +188,15 @@ export default function Login() {
                 </div>
               </div>
 
-              {/* Forgot link */}
+              {/* Đường dẫn Quên mật khẩu */}
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                {/* Link chuyển sang trang khôi phục mật khẩu */}
                 <Link to="/forgot-password" style={{ fontSize: "0.75rem", color: "#c9a227", textDecoration: "none" }}>
                   Forgot password?
                 </Link>
               </div>
 
-              {/* Submit */}
+              {/* Nút gửi Đăng nhập */}
               <button
                 type="submit"
                 disabled={loading}
@@ -156,20 +209,25 @@ export default function Login() {
                   opacity: loading ? 0.7 : 1,
                 }}
               >
+                {/* Thay đổi văn bản hiển thị dựa trên trạng thái loading */}
                 {loading ? "Signing in..." : "Sign In"}
+                {/* Icon mũi tên chỉ sang phải */}
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
               </button>
             </form>
 
-            {/* Footer link */}
+            {/* Liên kết dẫn đến trang đăng ký tài khoản mới */}
             <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid #2a2825", textAlign: "center" }}>
+              {/* Dòng chữ gợi ý đăng ký tài khoản */}
               <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>
                 Don't have an account?{" "}
+                {/* Link điều hướng đến trang Đăng ký */}
                 <Link to="/register" style={{ color: "#c9a227", textDecoration: "none", fontWeight: 500 }}>Register here</Link>
               </p>
             </div>
           </div>
 
+          {/* Dòng bản quyền hệ thống phía dưới cùng */}
           <p style={{ textAlign: "center", fontSize: "0.75rem", color: "#a0a0a0", marginTop: "1.5rem" }}>
             HorseRace Management System
           </p>

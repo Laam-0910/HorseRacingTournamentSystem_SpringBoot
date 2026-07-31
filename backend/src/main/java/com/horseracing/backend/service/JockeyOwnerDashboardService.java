@@ -34,50 +34,51 @@ public class JockeyOwnerDashboardService {
     private final RaceInvitationMapper invitationMapper;
     private final RaceEntryMapper raceEntryMapper;
 
+    // Tra cứu dữ liệu bảng điều khiển (Dashboard) của Nài ngựa
     @Transactional(readOnly = true)
     public Map<String, Object> getJockeyDashboard(Integer jockeyId) {
-        List<RaceMeeting> meetings = raceMeetingRepository.findAll();
-        List<JockeyRaceMeetingRegistration> myRegs = jockeyRegRepository.findByJockeyId(jockeyId);
+        List<RaceMeeting> meetings = raceMeetingRepository.findAll(); // Lấy tất cả Ngày hội đua
+        List<JockeyRaceMeetingRegistration> myRegs = jockeyRegRepository.findByJockeyId(jockeyId); // Lấy danh sách đăng ký của nài
 
-        Set<Integer> registeredMeetingIds = new HashSet<>();
-        Map<Integer, String> regStatuses = new HashMap<>();
+        Set<Integer> registeredMeetingIds = new HashSet<>(); // Set lưu danh sách ID các Ngày hội đua nài đã đăng ký
+        Map<Integer, String> regStatuses = new HashMap<>(); // Map lưu trạng thái đăng ký tương ứng
         for (JockeyRaceMeetingRegistration reg : myRegs) {
             registeredMeetingIds.add(reg.getRaceMeetingId());
             regStatuses.put(reg.getRaceMeetingId(), reg.getStatus());
         }
 
-        // Calculate stats
-        List<RaceEntry> entries = raceEntryRepository.findByJockeyId(jockeyId);
-        int totalRaces = 0;
-        int totalWins = 0;
-        int top3 = 0;
-        double earnings = 0.0;
+        // Tính toán các chỉ số thống kê (Stats)
+        List<RaceEntry> entries = raceEntryRepository.findByJockeyId(jockeyId); // Lấy danh sách các lượt thi đấu của nài
+        int totalRaces = 0; // Biến đếm tổng số trận đã chạy
+        int totalWins = 0; // Biến đếm số lần về nhất (Top 1)
+        int top3 = 0; // Biến đếm số lần vào Top 3
+        double earnings = 0.0; // Biến tổng tiền thưởng kiếm được (10% tổng tiền thưởng trận)
 
         for (RaceEntry e : entries) {
-            if ("FINISHED".equalsIgnoreCase(e.getStatus())) {
+            if ("FINISHED".equalsIgnoreCase(e.getStatus())) { // Chỉ tính các lượt thi đấu đã kết thúc
                 totalRaces++;
                 if (e.getFinalPosition() != null) {
                     if (e.getFinalPosition() == 1) {
-                        totalWins++;
+                        totalWins++; // Tăng biến thắng
                     }
                     if (e.getFinalPosition() <= 3) {
-                        top3++;
+                        top3++; // Tăng biến top 3
                     }
                 }
                 if (e.getPrizeMoney() != null) {
-                    earnings += e.getPrizeMoney().doubleValue() * 0.10;
+                    earnings += e.getPrizeMoney().doubleValue() * 0.10; // Trích 10% tiền thưởng trận đua cho Nài ngựa
                 }
             }
         }
 
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalRaces", totalRaces);
-        stats.put("totalWins", totalWins);
-        stats.put("top3", top3);
-        stats.put("winRate", totalRaces > 0 ? ((double) totalWins / totalRaces) * 100 : 0.0);
-        stats.put("earnings", earnings);
+        stats.put("totalRaces", totalRaces); // Tổng số trận
+        stats.put("totalWins", totalWins); // Số trận thắng
+        stats.put("top3", top3); // Số trận Top 3
+        stats.put("winRate", totalRaces > 0 ? ((double) totalWins / totalRaces) * 100 : 0.0); // Tỷ lệ thắng %
+        stats.put("earnings", earnings); // Tổng tiền thưởng nhận được
 
-        // Notifications
+        // Danh sách thông báo (Notifications)
         List<Map<String, Object>> notificationList = new ArrayList<>();
         Map<Integer, String> meetingNameMap = meetings.stream().collect(Collectors.toMap(RaceMeeting::getId, RaceMeeting::getName));
 
@@ -122,12 +123,13 @@ public class JockeyOwnerDashboardService {
         response.put("jockeyStats", stats);
         response.put("notifications", notificationList);
 
-        return response;
+        return response; // Trả về thông số Dashboard Nài ngựa
     }
 
+    // Tra cứu danh sách các suất cưỡi (Mounts) thi đấu của Nài ngựa
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getJockeyMounts(Integer jockeyId) {
-        List<RaceEntry> entries = raceEntryRepository.findByJockeyId(jockeyId);
+        List<RaceEntry> entries = raceEntryRepository.findByJockeyId(jockeyId); // Lấy các lượt đua của Nài
         List<Map<String, Object>> resolved = new ArrayList<>();
 
         Map<Integer, User> userMap = userRepository.findAll().stream().collect(Collectors.toMap(User::getId, u -> u));
@@ -157,7 +159,7 @@ public class JockeyOwnerDashboardService {
                 RaceMeeting meeting = meetingMap.get(race.getRaceMeetingId());
                 map.put("meetingName", meeting != null ? meeting.getName() : "Unknown Event");
 
-                // Load competitors
+                // Tải danh sách đối thủ cạnh tranh cùng trận đua
                 List<RaceEntry> allRaceEntries = raceEntryRepository.findByRaceId(race.getId());
                 List<Map<String, Object>> competitors = new ArrayList<>();
                 for (RaceEntry compEntry : allRaceEntries) {
@@ -184,27 +186,29 @@ public class JockeyOwnerDashboardService {
             resolved.add(map);
         }
 
-        return resolved;
+        return resolved; // Trả về danh sách suất cưỡi
     }
 
+    // Tra cứu dữ liệu bảng điều khiển (Dashboard) của Chủ sở hữu Ngựa (Owner)
     @Transactional(readOnly = true)
     public Map<String, Object> getOwnerDashboard(Integer ownerId) {
-        List<RaceMeeting> meetings = raceMeetingRepository.findAll();
-        List<OwnerRaceMeetingRegistration> myRegs = ownerRegRepository.findByOwnerId(ownerId);
+        List<RaceMeeting> meetings = raceMeetingRepository.findAll(); // Lấy tất cả Ngày hội đua
+        List<OwnerRaceMeetingRegistration> myRegs = ownerRegRepository.findByOwnerId(ownerId); // Lấy các đăng ký của chủ
 
-        Set<Integer> registeredMeetingIds = new HashSet<>();
-        Map<Integer, String> regStatuses = new HashMap<>();
+        Set<Integer> registeredMeetingIds = new HashSet<>(); // Set lưu danh sách ID các Ngày hội đua chủ đã đăng ký
+        Map<Integer, String> regStatuses = new HashMap<>(); // Map lưu trạng thái đăng ký tương ứng
         for (OwnerRaceMeetingRegistration reg : myRegs) {
             registeredMeetingIds.add(reg.getRaceMeetingId());
             regStatuses.put(reg.getRaceMeetingId(), reg.getStatus());
         }
 
-        List<Horse> myHorses = horseRepository.findByOwnerId(ownerId);
-        List<Horse> activeHorses = myHorses.stream().filter(h -> h.getStatus() != null && "ACTIVE".equalsIgnoreCase(h.getStatus().trim())).toList();
+        List<Horse> myHorses = horseRepository.findByOwnerId(ownerId); // Lấy toàn bộ danh sách ngựa của chủ
+        List<Horse> activeHorses = myHorses.stream().filter(h -> h.getStatus() != null && "ACTIVE".equalsIgnoreCase(h.getStatus().trim())).toList(); // Lọc danh sách chiến mã đang ACTIVE
 
         Map<Integer, List<Map<String, Object>>> meetingRegisteredHorses = new HashMap<>();
         Map<Integer, List<HorseDTO>> meetingUnregisteredHorses = new HashMap<>();
 
+        // Phân loại ngựa đã đăng ký và chưa đăng ký cho từng Ngày hội đua
         for (RaceMeeting meeting : meetings) {
             List<Map<String, Object>> regHorsesList = new ArrayList<>();
             List<HorseDTO> unregHorsesList = new ArrayList<>();
@@ -216,9 +220,9 @@ public class JockeyOwnerDashboardService {
                     hRegMap.put("horse", horseMapper.toDTO(horse, null));
                     hRegMap.put("status", hRegOpt.get().getStatus() != null ? hRegOpt.get().getStatus().trim() : null);
                     hRegMap.put("regId", hRegOpt.get().getId());
-                    regHorsesList.add(hRegMap);
+                    regHorsesList.add(hRegMap); // Thêm vào danh sách ngựa đã đăng ký
                 } else {
-                    unregHorsesList.add(horseMapper.toDTO(horse, null));
+                    unregHorsesList.add(horseMapper.toDTO(horse, null)); // Thêm vào danh sách ngựa chưa đăng ký
                 }
             }
             meetingRegisteredHorses.put(meeting.getId(), regHorsesList);
@@ -229,7 +233,7 @@ public class JockeyOwnerDashboardService {
         Map<Integer, List<UserDTO>> meetingJockeys = new HashMap<>();
 
         for (RaceMeeting meeting : meetings) {
-            // Find approved horses for this meeting belonging to this owner
+            // Lấy danh sách ngựa đã được duyệt cho Ngày hội đua này thuộc sở hữu của chủ
             List<HorseRaceMeetingRegistration> approvedHorseRegs = horseRegRepository.findAll().stream()
                     .filter(r -> r.getRaceMeetingId().equals(meeting.getId()) && "APPROVED".equalsIgnoreCase(r.getStatus()))
                     .toList();
@@ -241,7 +245,7 @@ public class JockeyOwnerDashboardService {
             }
             meetingHorses.put(meeting.getId(), hList);
 
-            // Find approved jockeys for this meeting
+            // Lấy danh sách nài ngựa đã được duyệt cho Ngày hội đua này
             List<JockeyRaceMeetingRegistration> approvedJockeyRegs = jockeyRegRepository.findAll().stream()
                     .filter(r -> r.getRaceMeetingId().equals(meeting.getId()) && "APPROVED".equalsIgnoreCase(r.getStatus()))
                     .toList();
@@ -252,7 +256,7 @@ public class JockeyOwnerDashboardService {
             meetingJockeys.put(meeting.getId(), jList);
         }
 
-        // Compute bookedJockeysMap and bookedHorsesMap for each race to filter out busy entities
+        // Tính toán danh sách nài ngựa bận (bookedJockeysMap) và ngựa bận (bookedHorsesMap) theo từng trận đua
         List<RaceEntry> allEntries = raceEntryRepository.findAll();
         List<Race> allRaces = raceRepository.findAll();
         Map<Integer, Race> allRacesMap = allRaces.stream().collect(Collectors.toMap(Race::getId, r -> r));
@@ -280,13 +284,13 @@ public class JockeyOwnerDashboardService {
             Set<Integer> bookedJockeyIds = new HashSet<>();
             Set<Integer> bookedHorseIds = new HashSet<>();
 
-            // 1. Jockeys with active entries in this race (e.g. accepted invite waiting for admin approval)
+            // 1. Nài ngựa đã có lượt tham gia hoạt động trong trận đua này
             List<RaceEntry> raceEntries = activeEntriesByRace.getOrDefault(race.getId(), Collections.emptyList());
             for (RaceEntry entry : raceEntries) {
                 bookedJockeyIds.add(entry.getJockeyId());
             }
 
-            // 2. Jockeys with approved entries in other races at the same time
+            // 2. Nài ngựa đã được phê duyệt thi đấu ở trận đua khác trùng giờ
             if (race.getStartTime() != null) {
                 for (Map.Entry<Integer, List<RaceEntry>> entry : approvedEntriesByJockey.entrySet()) {
                     Integer jockeyId = entry.getKey();
@@ -303,13 +307,13 @@ public class JockeyOwnerDashboardService {
                 }
             }
 
-            // 3. Horses with active entries in this race
+            // 3. Ngựa đã có lượt tham gia hoạt động trong trận đua này
             List<RaceEntry> horseRaceEntries = activeEntriesByRaceForHorse.getOrDefault(race.getId(), Collections.emptyList());
             for (RaceEntry entry : horseRaceEntries) {
                 bookedHorseIds.add(entry.getHorseId());
             }
 
-            // 4. Horses with approved entries in other races at the same time
+            // 4. Ngựa đã được phê duyệt thi đấu ở trận đua khác trùng giờ
             if (race.getStartTime() != null) {
                 for (Map.Entry<Integer, List<RaceEntry>> entry : approvedEntriesByHorse.entrySet()) {
                     Integer horseId = entry.getKey();
@@ -330,6 +334,7 @@ public class JockeyOwnerDashboardService {
             bookedHorsesMap.put(race.getId(), new ArrayList<>(bookedHorseIds));
         }
 
+        // Tính thứ hạng trung bình đạt được của các con ngựa thuộc chủ
         double sumPositions = 0.0;
         int finishedEntriesCount = 0;
         for (Horse h : activeHorses) {
@@ -345,6 +350,7 @@ public class JockeyOwnerDashboardService {
         }
         double averagePlace = finishedEntriesCount > 0 ? (sumPositions / finishedEntriesCount) : 0.0;
 
+        // Đếm số đơn đăng ký đang chờ duyệt của chủ
         long pendingRegsCount = horseRegRepository.findAll().stream()
                 .filter(r -> "PENDING".equalsIgnoreCase(r.getStatus()))
                 .filter(r -> {
@@ -369,12 +375,13 @@ public class JockeyOwnerDashboardService {
         response.put("bookedJockeysMap", bookedJockeysMap);
         response.put("bookedHorsesMap", bookedHorsesMap);
 
-        return response;
+        return response; // Trả về kết quả tổng hợp cho Owner Dashboard
     }
 
+    // Tra cứu danh sách trang trại ngựa (Stable) của Chủ sở hữu
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getOwnerStable(Integer ownerId) {
-        List<Horse> horses = horseRepository.findByOwnerId(ownerId);
+        List<Horse> horses = horseRepository.findByOwnerId(ownerId); // Lấy danh sách ngựa của chủ
         List<Map<String, Object>> resolved = new ArrayList<>();
 
         Map<Integer, Race> raceMap = raceRepository.findAll().stream().collect(Collectors.toMap(Race::getId, r -> r));
@@ -382,15 +389,15 @@ public class JockeyOwnerDashboardService {
 
         for (Horse h : horses) {
             Map<String, Object> map = new HashMap<>();
-            map.put("horse", horseMapper.toDTO(h, null));
+            map.put("horse", horseMapper.toDTO(h, null)); // Ánh xạ DTO chiến mã
 
-            List<RaceEntry> entries = raceEntryRepository.findByHorseId(h.getId());
-            int totalRaces = 0;
-            int totalWins = 0;
-            double totalPrize = 0.0;
-            double sumPos = 0.0;
-            int finishedRaces = 0;
-            List<Map<String, Object>> history = new ArrayList<>();
+            List<RaceEntry> entries = raceEntryRepository.findByHorseId(h.getId()); // Lấy các trận đã tham gia của ngựa
+            int totalRaces = 0; // Biến đếm tổng số trận đua
+            int totalWins = 0; // Biến đếm tổng số chiến thắng
+            double totalPrize = 0.0; // Biến đếm tổng tiền thưởng tích lũy
+            double sumPos = 0.0; // Biến tính tổng thứ hạng
+            int finishedRaces = 0; // Số trận đã hoàn thành
+            List<Map<String, Object>> history = new ArrayList<>(); // Lịch sử thi đấu
 
             for (RaceEntry e : entries) {
                 if ("FINISHED".equalsIgnoreCase(e.getStatus())) {
@@ -399,11 +406,11 @@ public class JockeyOwnerDashboardService {
                     if (e.getFinalPosition() != null) {
                         sumPos += e.getFinalPosition();
                         if (e.getFinalPosition() == 1) {
-                            totalWins++;
+                            totalWins++; // Tăng biến thắng
                         }
                     }
                     if (e.getPrizeMoney() != null) {
-                        totalPrize += e.getPrizeMoney().doubleValue();
+                        totalPrize += e.getPrizeMoney().doubleValue(); // Cộng dồn tiền thưởng
                     }
 
                     Map<String, Object> histMap = new HashMap<>();
@@ -419,25 +426,26 @@ public class JockeyOwnerDashboardService {
                         RaceMeeting mt = meetingMap.get(race.getRaceMeetingId());
                         histMap.put("meetingName", mt != null ? mt.getName() : "Unknown");
                     }
-                    history.add(histMap);
+                    history.add(histMap); // Đưa thông tin trận đua vào lịch sử
                 }
             }
 
             map.put("totalRaces", totalRaces);
             map.put("totalWins", totalWins);
             map.put("totalPrize", totalPrize);
-            map.put("avgPosition", finishedRaces > 0 ? (sumPos / finishedRaces) : 0.0);
+            map.put("avgPosition", finishedRaces > 0 ? (sumPos / finishedRaces) : 0.0); // Thứ hạng trung bình
             map.put("history", history);
 
             resolved.add(map);
         }
 
-        return resolved;
+        return resolved; // Trả về trang trại ngựa kèm thống kê
     }
 
+    // Tra cứu danh sách vi phạm (Violations) của Nài ngựa
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getJockeyViolations(Integer jockeyId) {
-        List<Violation> viols = violationRepository.findByJockeyId(jockeyId);
+        List<Violation> viols = violationRepository.findByJockeyId(jockeyId); // Lấy danh sách vi phạm của nài
         List<Map<String, Object>> resolved = new ArrayList<>();
 
         Map<Integer, User> userMap = userRepository.findAll().stream().collect(Collectors.toMap(User::getId, u -> u));
@@ -448,8 +456,8 @@ public class JockeyOwnerDashboardService {
         for (Violation v : viols) {
             Map<String, Object> map = new HashMap<>();
             map.put("id", v.getId());
-            map.put("description", v.getDescription());
-            map.put("penalty", v.getPenalty());
+            map.put("description", v.getDescription()); // Mô tả vi phạm
+            map.put("penalty", v.getPenalty()); // Hình phạt áp dụng
             map.put("status", v.getStatus() != null ? v.getStatus().trim() : null);
             map.put("type", "Rules Violation");
 
@@ -470,18 +478,19 @@ public class JockeyOwnerDashboardService {
                 map.put("date", "N/A");
             }
 
-            User ref = userMap.get(v.getRefereeId());
+            User ref = userMap.get(v.getRefereeId()); // Tra cứu thông tin trọng tài phạt
             map.put("refereeName", ref != null ? ref.getUsername() : "Unknown Referee");
 
             resolved.add(map);
         }
 
-        return resolved;
+        return resolved; // Trả về danh sách vi phạm của nài
     }
 
+    // Tra cứu danh sách kết quả thi đấu của toàn bộ ngựa thuộc sở hữu của Chủ
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getOwnerResults(Integer ownerId) {
-        List<Horse> horses = horseRepository.findByOwnerId(ownerId);
+        List<Horse> horses = horseRepository.findByOwnerId(ownerId); // Lấy danh sách ngựa của chủ
         List<Map<String, Object>> resultsList = new ArrayList<>();
 
         Map<Integer, Race> raceMap = raceRepository.findAll().stream().collect(Collectors.toMap(Race::getId, r -> r));
@@ -490,7 +499,7 @@ public class JockeyOwnerDashboardService {
         for (Horse h : horses) {
             List<RaceEntry> entries = raceEntryRepository.findByHorseId(h.getId());
             for (RaceEntry e : entries) {
-                if ("FINISHED".equalsIgnoreCase(e.getStatus())) {
+                if ("FINISHED".equalsIgnoreCase(e.getStatus())) { // Chỉ lấy các lượt thi đấu đã kết thúc
                     Map<String, Object> map = new HashMap<>();
                     map.put("startTime", null);
                     map.put("meetingName", "—");
@@ -516,6 +525,7 @@ public class JockeyOwnerDashboardService {
             }
         }
 
+        // Sắp xếp kết quả theo thời gian bắt đầu trận đua giảm dần (Mới nhất lên đầu)
         resultsList.sort((r1, r2) -> {
             Object t1 = r1.get("startTime");
             Object t2 = r2.get("startTime");
@@ -525,6 +535,6 @@ public class JockeyOwnerDashboardService {
             return t2.toString().compareTo(t1.toString());
         });
 
-        return resultsList;
+        return resultsList; // Trả về danh sách kết quả sắp xếp
     }
 }

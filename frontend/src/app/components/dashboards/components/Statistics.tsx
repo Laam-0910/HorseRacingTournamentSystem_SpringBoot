@@ -1,7 +1,8 @@
+// ── Component hiển thị Thống kê (Statistics) ────────────────
 export default function Statistics() {
   return (
     <div>
-      {/* TODO: chuyen noi dung tu component mau (HR.zip) hoac JSP tuong ung vao day */}
+      {/* TODO: chuyển nội dung từ component mẫu (HR.zip) hoặc JSP tương ứng vào đây */}
       <h1>Statistics</h1>
     </div>
   );

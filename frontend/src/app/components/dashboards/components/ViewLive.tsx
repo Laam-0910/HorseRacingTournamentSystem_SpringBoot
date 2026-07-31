@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../../lib/api";
+import { api, getErrMsg } from "../../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../../lib/utils";
 import { useAuth } from "../../../../context/AuthContext";
 import { $t } from '@/lib/i18n';
@@ -111,21 +111,24 @@ interface ViewLiveProps {
   onClearPreselect?: () => void;
 }
 
+// ── Component hiển thị phòng xem Live Stream và Chat ────────────────────────
 export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLiveProps) {
-  const lang = localStorage.getItem("app-lang") || "vi";
+  const lang = localStorage.getItem("app-lang") || "vi"; // Ngôn ngữ
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
-  const { user } = useAuth();
+  const { user } = useAuth(); // Thông tin người dùng hiện tại
 
+  // State quản lý danh sách live và lựa chọn
   const [liveRaces, setLiveRaces] = useState<Race[]>([]);
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
+  // State quản lý Chat
   const [chatMessages, setChatMessages] = useState<{ user: string; text: string; time: string }[]>([]);
   const [newMsg, setNewMsg] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connectionState, setConnectionState] = useState<"connecting" | "connected" | "disconnected">("connecting");
-  const [isTheaterMode, setIsTheaterMode] = useState(false);
+  const [isTheaterMode, setIsTheaterMode] = useState(false); // Chế độ rạp phim
 
   // Generate or retrieve persistent guest username
   const [username] = useState<string>(() => {
@@ -162,7 +165,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
         setSelectedRace(null);
       }
     } catch (err: any) {
-      setError(err.message || "Failed to load live broadcasts.");
+      setError(getErrMsg(err, "Failed to load live broadcasts."));
     } finally {
       setLoading(false);
     }

@@ -1,11 +1,20 @@
+// Import hàm đa ngôn ngữ $t
 import { $t } from "@/lib/i18n";
+// Import hook useState và useEffect từ React
 import { useState, useEffect } from "react";
+// Import hook useAuth từ ngữ cảnh AuthContext
 import { useAuth } from "../../../context/AuthContext";
-import { api } from "../../../lib/api";
+// Import api client và hàm lấy thông báo lỗi getErrMsg
+import { api, getErrMsg } from "../../../lib/api";
+// Import các hàm hỗ trợ định dạng ngày giờ và hạng đấu
 import { parseSafeDate, formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
+// Import khung bố cục DashboardLayout
 import DashboardLayout from "../layout/DashboardLayout";
+// Import ProfileTab hiển thị thông tin cá nhân
 import ProfileTab from "./components/ProfileTab";
+// Import ProfileModal hiển thị popup thông tin người dùng
 import ProfileModal from "./components/ProfileModal";
+// Import HorsePerformanceModal hiển thị thông số thành tích ngựa
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 
 interface InlineDatePickerProps {
@@ -454,6 +463,12 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
       age--;
     }
     
+    if (age < 2 || age > 10) {
+      const isVi = (localStorage.getItem('app-lang') || 'vi') === 'vi';
+      alert(isVi ? "Tuổi của ngựa đăng ký phải nằm trong khoảng từ 2 đến 10 tuổi." : "Horse age must be between 2 and 10 years old.");
+      return false;
+    }
+
     if (age >= 4) {
       if (sexVal === "Colt") {
         alert("A Colt must be under 4 years old. For uncastrated male horses 4 years or older, please select 'Horse'.");
@@ -484,7 +499,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
       setMsg("✅ Horse declaration submitted for approval.");
       setHorseName(""); setBreed(""); setSex("Gelding"); setDateOfBirth(""); setAvatar(""); setDescription("");
       onRefresh();
-    } catch (err: any) { setMsg("❌ " + (err.message || "Failed to submit horse registration.")); }
+    } catch (err: any) { setMsg("❌ " + (getErrMsg(err, "Failed to submit horse registration."))); }
   };
 
   const startEdit = (item: any) => {
@@ -504,7 +519,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
     try {
       await api.put(`/horses/${editingHorse.id}`, { name: editName, breed: editBreed, sex: editSex, dateOfBirth: formatDobForApi(editDob), currentRating: editRating, avatar: editAvatar, description: editDescription });
       setEditingHorse(null); onRefresh();
-    } catch (err: any) { setMsg("❌ " + (err.message || "Failed to update horse.")); }
+    } catch (err: any) { setMsg("❌ " + (getErrMsg(err, "Failed to update horse."))); }
   };
 
   const handleRequestRetirement = async (e: React.FormEvent) => {
@@ -519,7 +534,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
       fetchRetireRequests();
       onRefresh();
     } catch (err: any) {
-      setMsg("❌ " + (err.message || "Failed to submit retirement request."));
+      setMsg("❌ " + (getErrMsg(err, "Failed to submit retirement request.")));
     }
   };
 
@@ -546,7 +561,9 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
             {h.status !== "RETIRED" && h.status !== "REJECTED" && (
               <>
                 <button type="button" onClick={() => startEdit(item)} style={{ width: "100%", padding: "0.45rem", background: "transparent", border: "1px solid #2a2825", borderRadius: "0.375rem", color: "#f4f2ec", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer" }}>{$t("Edit Details", (localStorage.getItem('app-lang') || 'vi'))}</button>
-                <button type="button" onClick={() => setRetiringHorse(h)} style={{ width: "100%", padding: "0.45rem", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "0.375rem", color: "#f87171", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer" }}>{$t("Request Retirement", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                {h.status !== "PENDING" && h.status !== "PENDING_APPROVAL" && (
+                  <button type="button" onClick={() => setRetiringHorse(h)} style={{ width: "100%", padding: "0.45rem", background: "rgba(239, 68, 68, 0.1)", border: "1px solid rgba(239, 68, 68, 0.2)", borderRadius: "0.375rem", color: "#f87171", fontSize: "0.65rem", fontFamily: "monospace", cursor: "pointer" }}>{$t("Request Retirement", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                )}
               </>
             )}
           </div>
@@ -1280,23 +1297,36 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
 }
 
 // ── Main Component ─────────────────────────────────────────────────────────
+/**
+ * Component HorseOwner - Bảng điều khiển chính của Chủ ngựa (Horse Owner).
+ * Quản lý danh sách ngựa đua thuộc chuồng (stable), đăng ký tham gia các sự kiện ngày hội đua,
+ * gửi lời mời nài ngựa (jockey invitations), xem kết quả thi đấu và quản lý thông tin cá nhân.
+ */
 export default function HorseOwner() {
   const { user } = useAuth();
+  // State lưu ID của kỵ sĩ/chủ ngựa khác cần xem hồ sơ chi tiết (ProfileModal)
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+  
+  // State quản lý Tab đang hoạt động, mặc định là "hub"
   const [activeTab, setActiveTab] = useState<OwnerTab>(() => {
     const p = new URLSearchParams(window.location.search).get("tab");
     return (p as OwnerTab) || "hub";
   });
-  const [dashboard, setDashboard] = useState<any>(null);
-  const [stable, setStable] = useState<any[]>([]);
-  const [invitations, setInvitations] = useState<any[]>([]);
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [allRaces, setAllRaces] = useState<any[]>([]);
-  const [seasons, setSeasons] = useState<any[]>([]);
-  const [results, setResults] = useState<any[]>([]);
+  
+  // Các state lưu trữ dữ liệu nghiệp vụ
+  const [dashboard, setDashboard] = useState<any>(null);      // Tổng quan thống kê chuồng ngựa
+  const [stable, setStable] = useState<any[]>([]);            // Danh sách ngựa trong chuồng
+  const [invitations, setInvitations] = useState<any[]>([]);  // Lời mời và kết quả đăng ký thi đấu
+  const [meetings, setMeetings] = useState<any[]>([]);        // Các ngày hội đua ngựa
+  const [allRaces, setAllRaces] = useState<any[]>([]);        // Tất cả các cuộc đua
+  const [seasons, setSeasons] = useState<any[]>([]);          // Thông tin các mùa giải
+  const [results, setResults] = useState<any[]>([]);          // Lịch sử về đích của chuồng ngựa
+  
+  // Banner thông báo lỗi / thành công
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Hàm tải đồng bộ dữ liệu liên quan đến Chủ ngựa từ backend Spring Boot
   const fetchData = async () => {
     if (!user) return;
     try {
@@ -1316,10 +1346,15 @@ export default function HorseOwner() {
       setResults(Array.isArray(ownerResults) ? ownerResults : []);
       setSeasons(Array.isArray(allSeasonsData) ? allSeasonsData : []);
       setAllRaces(Array.isArray(racesData) ? racesData : []);
-    } catch (err: any) { setErrorMsg(err.message || "Failed to load owner data."); }
+    } catch (err: any) { 
+      setErrorMsg(getErrMsg(err, "Failed to load owner data.")); 
+    }
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  // Tải lại dữ liệu mỗi khi user đăng nhập thay đổi
+  useEffect(() => { 
+    fetchData(); 
+  }, [user]);
 
   const handleRegisterOwner = async (meetingId: number) => {
     if (!user) return;
@@ -1327,7 +1362,7 @@ export default function HorseOwner() {
       await api.post("/registrations/owner", { meetingId, ownerId: user.id });
       setSuccessMsg("Successfully registered as Owner for meeting.");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to register for meeting."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to register for meeting.")); }
   };
 
   const handleRegisterHorses = async (meetingId: number, horseIds: number[]) => {
@@ -1341,7 +1376,7 @@ export default function HorseOwner() {
       await Promise.all(horseIds.map(horseId => api.post("/registrations/horse", { meetingId, horseId })));
       setSuccessMsg(`Successfully registered ${horseIds.length} horse(s) for meeting.`);
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to register horse(s)."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to register horse(s).")); }
   };
 
   const handleSendInvitation = async (form: { horseId: number; raceId: number; jockeyId: number }) => {
@@ -1353,7 +1388,7 @@ export default function HorseOwner() {
       setSuccessMsg(lang === "vi" ? "Đã gửi lời mời tới nài ngựa." : "Invitation sent to jockey.");
       fetchData();
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || err.message || "";
+      const errMsg = err.response?.data?.error || getErrMsg(err, "");
       if (errMsg.includes("JOCKEY_NOT_APPROVED")) {
         setErrorMsg(lang === "vi"
           ? "Nài ngựa này chưa được phê duyệt đăng ký tham gia buổi đua này."
@@ -1367,7 +1402,7 @@ export default function HorseOwner() {
           ? "Chiến mã được chọn chưa được duyệt tham gia buổi đua này."
           : "The selected horse has not been approved for this race meeting yet.");
       } else {
-        setErrorMsg(err.message || (lang === "vi" ? "Gửi lời mời thất bại." : "Failed to send invitation."));
+        setErrorMsg(getErrMsg(err) || (lang === "vi" ? "Gửi lời mời thất bại." : "Failed to send invitation."));
       }
     }
   };
@@ -1380,7 +1415,7 @@ export default function HorseOwner() {
       setSuccessMsg(lang === "vi" ? "Gửi lại đăng ký chạy thành công." : "Successfully resubmitted race entry.");
       fetchData();
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || err.message || "";
+      const errMsg = err.response?.data?.error || getErrMsg(err, "");
       if (errMsg.includes("REGISTRATION_CLOSED")) {
         setErrorMsg(lang === "vi" 
           ? "Hạn đăng ký cho trận đấu này đã kết thúc, không thể nộp lại đăng ký." 
@@ -1398,7 +1433,7 @@ export default function HorseOwner() {
           ? "Chiến mã này đã bận lịch thi đấu hoặc có lượt đăng ký hoạt động khác trong trận đấu này." 
           : "This horse is already booked or has another active entry in this race.");
       } else {
-        setErrorMsg(err.message || (lang === "vi" ? "Không thể gửi lại đăng ký chạy." : "Failed to resubmit race entry."));
+        setErrorMsg(getErrMsg(err) || (lang === "vi" ? "Không thể gửi lại đăng ký chạy." : "Failed to resubmit race entry."));
       }
     }
   };
@@ -1412,13 +1447,13 @@ export default function HorseOwner() {
       setSuccessMsg(lang === "vi" ? "Đã rút lời mời/đăng ký thành công." : "Successfully withdrew invitation/entry.");
       fetchData();
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || err.message || "";
+      const errMsg = err.response?.data?.error || getErrMsg(err, "");
       if (errMsg.includes("REGISTRATION_CLOSED")) {
         setErrorMsg(lang === "vi"
           ? "Hạn đăng ký cho trận đấu này đã kết thúc, không thể rút đăng ký."
           : "Registration period for this race has closed.");
       } else {
-        setErrorMsg(err.message || (lang === "vi" ? "Không thể rút đăng ký." : "Failed to withdraw registration."));
+        setErrorMsg(getErrMsg(err) || (lang === "vi" ? "Không thể rút đăng ký." : "Failed to withdraw registration."));
       }
     }
   };

@@ -1,7 +1,8 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
 
+// Cấu trúc dữ liệu của Ngày hội đua
 interface Meeting {
   id: number;
   name: string;
@@ -10,6 +11,7 @@ interface Meeting {
   totalBudget: number;
 }
 
+// Cấu trúc dữ liệu của Cuộc đua
 interface Race {
   id: number;
   raceMeetingId: number;
@@ -20,6 +22,7 @@ interface Race {
   distanceMeters: number;
 }
 
+// Cấu trúc dữ liệu Quy chế phân hạng và tiền thưởng
 interface ClassRule {
   id: number;
   classLevel: string;
@@ -30,6 +33,7 @@ interface ClassRule {
   maxPrize: number;
 }
 
+// Cấu trúc dữ liệu lượt đăng ký thi đấu của ngựa đua
 interface RaceEntry {
   entryId: number;
   gateNumber: number;
@@ -41,7 +45,15 @@ interface RaceEntry {
   jockeyWeight: number;
 }
 
+/**
+ * Component Results - Phân hệ Xử lý và công bố kết quả trận đua dành cho Admin.
+ * - Hiển thị danh sách các trận đua đã chạy xong (FINISHED, STEWARDS_INQUIRY...) cần được đóng biên bản.
+ * - Cho phép nhập cân đo sau trận (Weigh-In), thứ tự về đích (Final Position), thời gian hoàn thành (Finish Time),
+ *   và biên bản ghi nhận của trọng tài.
+ * - Gửi xác nhận đóng kết quả chính thức và phân phối tiền thưởng (Prize money) thông qua API /results/confirm.
+ */
 export default function Results() {
+  // Trạng thái Responsive Mobile
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -50,52 +62,59 @@ export default function Results() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const [meetings, setMeetings] = useState<Meeting[]>([]);
-  const [races, setRaces] = useState<Race[]>([]);
-  const [classRules, setClassRules] = useState<ClassRule[]>([]);
+  // Các state lưu dữ liệu tổng quát kéo về khi mount
+  const [meetings, setMeetings] = useState<Meeting[]>([]); // Các ngày hội đua
+  const [races, setRaces] = useState<Race[]>([]); // Danh sách cuộc đua cần xử lý đóng biên bản
+  const [classRules, setClassRules] = useState<ClassRule[]>([]); // Quy tắc phân hạng mùa giải
   const [loading, setLoading] = useState(true);
+  // Banner thông báo lỗi / thành công
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Processing mode
-  const [processingRace, setProcessingRace] = useState<Race | null>(null);
-  const [entries, setEntries] = useState<RaceEntry[]>([]);
-  const [positions, setPositions] = useState<Record<number, string>>({});
-  const [times, setTimes] = useState<Record<number, string>>({});
-  const [weighInWeights, setWeighInWeights] = useState<Record<number, string>>({});
-  const [stewardReport, setStewardReport] = useState("");
-  const [procLoading, setProcLoading] = useState(false);
+  // --- Chế độ Xử lý kết quả (Processing Mode) ---
+  const [processingRace, setProcessingRace] = useState<Race | null>(null); // Trận đua đang được xử lý nhập kết quả
+  const [entries, setEntries] = useState<RaceEntry[]>([]); // Danh sách ngựa tham gia trận đua đang xử lý
+  const [positions, setPositions] = useState<Record<number, string>>({}); // Thứ hạng về đích tương ứng của từng ngựa
+  const [times, setTimes] = useState<Record<number, string>>({}); // Thời gian về đích tương ứng
+  const [weighInWeights, setWeighInWeights] = useState<Record<number, string>>({}); // Cân nặng đo lại sau trận tương ứng
+  const [stewardReport, setStewardReport] = useState(""); // Ghi chú sự cố của Trọng tài
+  const [procLoading, setProcLoading] = useState(false); // Đợi xử lý API results/confirm
 
+  // Tải đồng bộ danh sách ngày hội đua, tất cả các cuộc đua, và luật phân hạng của mùa giải
   const fetchData = async () => {
     setLoading(true);
     try {
       const [meetingsData, racesData, rulesData] = await Promise.all([
         api.get<Meeting[]>("/public/meetings").catch(() => []),
         api.get<Race[]>("/races").catch(() => []),
-        // Fetch rules for season 1 or active season, let's fallback to get first season rules or default empty
+        // Tạm thời lấy luật phân hạng của mùa giải số 1 làm tham chiếu mặc định
         api.get<ClassRule[]>("/races/seasons/1/rules").catch(() => []),
       ]);
       setMeetings(meetingsData);
-      // Filter races to process (only show races that have run/finished/inquiry; filter out pre-race and official/cancelled statuses)
+      
+      // Chỉ giữ lại các cuộc đua có trạng thái đã kết thúc hoặc đang thẩm vấn (không hiển thị các trận chưa chạy hoặc đã khóa kết quả chính thức)
       const ineligibleStatuses = ["SCHEDULED", "DECLARATION_OPEN", "DECLARATION_CLOSED", "RACE_ASSIGNED", "OFFICIAL", "CANCELLED"];
       setRaces((racesData || []).filter(r => !ineligibleStatuses.includes(r.status)));
       setClassRules(rulesData);
     } catch (err: any) {
-      setError(err.message || "Failed to load data.");
+      setError(getErrMsg(err, "Failed to load data."));
     } finally {
       setLoading(false);
     }
   };
 
+  // effect gọi API tải dữ liệu thô ban đầu
   useEffect(() => {
     fetchData();
   }, []);
 
+  // Xử lý khi Admin nhấn nút "Process" để bắt đầu nhập bảng kết quả về đích của một trận đấu
   const handleStartProcess = async (race: Race) => {
     setError("");
     setSuccess("");
     setProcLoading(true);
     try {
+      // Tải danh sách ngựa tham gia và thông tin cân đo ban đầu của trận đua
       const data = await api.get<any[]>(`/public/results?raceId=${race.id}`);
       const mapped = (data || []).map(d => ({
         entryId: d.entry?.id,
@@ -109,53 +128,61 @@ export default function Results() {
       }));
       setEntries(mapped);
       setProcessingRace(race);
-      setStewardReport("");
+      setStewardReport(""); // Reset báo cáo sự cố
 
-      // Initialize values
+      // Khởi tạo các ô nhập liệu (mặc định cân nặng sau trận bằng cân nặng trước trận)
       const initialPos: Record<number, string> = {};
       const initialTimes: Record<number, string> = {};
       const initialWeights: Record<number, string> = {};
       mapped.forEach(e => {
         initialPos[e.entryId] = "";
         initialTimes[e.entryId] = "";
-        // Default weighIn weight matches carried weight
         initialWeights[e.entryId] = e.carriedWeight.toString();
       });
       setPositions(initialPos);
       setTimes(initialTimes);
       setWeighInWeights(initialWeights);
     } catch (err: any) {
-      setError("Failed to load race entries: " + err.message);
+      setError(getErrMsg(err, "Failed to load race entries: "));
     } finally {
       setProcLoading(false);
     }
   };
 
+  // Xử lý gửi biểu mẫu xác nhận và chốt kết quả cuộc đua lên máy chủ
   const handleConfirmResults = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Ngăn trình duyệt reload trang
     if (!processingRace) return;
     setError("");
     setSuccess("");
     setProcLoading(true);
 
     try {
+      // Chuẩn bị payload danh sách kết quả sau khi kiểm tra ràng buộc đầu vào
       const resultsPayload = entries.map(e => {
         const pos = parseInt(positions[e.entryId]);
         const time = times[e.entryId];
         const wIn = parseFloat(weighInWeights[e.entryId]);
 
+        // Kiểm tra vị trí về đích hợp lệ
         if (isNaN(pos) || pos <= 0) {
           throw new Error(`Invalid position for horse ${e.horseName}`);
         }
         const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
+        
+        // Kiểm tra thời gian về đích bắt buộc phải nhập
         if (!time) {
           throw new Error(`Finish time is required for horse ${e.horseName}`);
         }
+        
+        // Ràng buộc định dạng thời gian về đích phải ở dạng MM:SS hoặc MM:SS.ms (phút:giây.mili)
         if (e.status !== "DISQUALIFIED" && !/^\d+:\d+(\.\d+)?$/.test(time.trim())) {
           throw new Error(isVi 
             ? `Thời gian của ngựa "${e.horseName}" phải nhập đúng định dạng phút:giây (ví dụ 1:48.35 hoặc 1:48), không được nhập số thường hay có dấu phẩy.`
             : `Finishing time for horse "${e.horseName}" must be in the format MM:SS or MM:SS.ms (e.g. 1:48.35 or 1:48).`);
         }
+        
+        // Kiểm tra cân nặng đo lại sau trận
         if (isNaN(wIn) || wIn <= 0) {
           throw new Error(`Invalid weigh-in weight for horse ${e.horseName}`);
         }
@@ -168,6 +195,7 @@ export default function Results() {
         };
       });
 
+      // Gửi POST xác nhận kết quả cuối cùng lên endpoint /results/confirm
       const res = await api.post<any>("/results/confirm", {
         raceId: processingRace.id,
         stewardReport,
@@ -176,21 +204,23 @@ export default function Results() {
 
       if (res.success) {
         setSuccess("Results successfully processed and race is closed.");
-        setProcessingRace(null);
-        fetchData();
+        setProcessingRace(null); // Thoát chế độ nhập kết quả
+        fetchData(); // Tải lại danh sách
       } else {
         throw new Error(res.error || "Failed to process results.");
       }
     } catch (err: any) {
-      setError(err.message || "Failed to submit results.");
+      setError(getErrMsg(err, "Failed to submit results."));
     } finally {
       setProcLoading(false);
     }
   };
 
+  // --- GIAO DIỆN 1: ĐANG NHẬP BẢNG KẾT QUẢ CHO TRẬN ĐUA (Processing Mode) ---
   if (processingRace) {
     return (
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
+        {/* Header nhập liệu */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.1)" }}>
           <div>
             <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec" }}>Process Results: Race #{processingRace.id} ({processingRace.classLevel})</h3>
@@ -200,9 +230,11 @@ export default function Results() {
         </div>
 
         <form onSubmit={handleConfirmResults} style={{ padding: "1.5rem" }}>
+          {/* Banner lỗi nếu xảy ra sự cố */}
           {error && <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px", marginBottom: "1rem" }}>{error}</div>}
 
           {isMobile ? (
+            // Layout dạng thẻ cho thiết bị di động
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.5rem" }}>
               {entries.map(e => (
                 <div key={e.entryId} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(201,162,39,0.14)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -215,14 +247,17 @@ export default function Results() {
                     <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>Jockey: {e.jockeyName}</div>
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1.2fr", gap: "0.5rem" }}>
+                    {/* Ô nhập cân nặng đo lại */}
                     <div>
                       <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>{$t("Weigh-In (kg)", (localStorage.getItem('app-lang') || 'vi'))}</label>
                       <input type="number" step="0.1" value={weighInWeights[e.entryId] || ""} onChange={val => setWeighInWeights(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
                     </div>
+                    {/* Ô nhập thứ hạng */}
                     <div>
                       <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>{$t("Pos", (localStorage.getItem('app-lang') || 'vi'))}</label>
                       <input type="number" min="1" value={positions[e.entryId] || ""} onChange={val => setPositions(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
                     </div>
+                    {/* Ô nhập thời gian chạy */}
                     <div>
                       <label style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", display: "block", marginBottom: "4px" }}>{$t("Finish Time", (localStorage.getItem('app-lang') || 'vi'))}</label>
                       <input type="text" placeholder={$t("1:12.45", (localStorage.getItem('app-lang') || 'vi'))} value={times[e.entryId] || ""} onChange={val => setTimes(prev => ({ ...prev, [e.entryId]: val.target.value }))} required style={inputStyle} />
@@ -232,6 +267,7 @@ export default function Results() {
               ))}
             </div>
           ) : (
+            // Bố cục Bảng biểu chi tiết cho màn hình lớn Desktop
             <div style={{ overflowX: "auto", marginBottom: "1.5rem" }}>
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
@@ -264,11 +300,13 @@ export default function Results() {
             </div>
           )}
 
+          {/* Vùng viết Báo cáo sự cố của trọng tài */}
           <div style={{ marginBottom: "1.5rem" }}>
             <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Steward Report / Notes", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <textarea value={stewardReport} onChange={e => setStewardReport(e.target.value)} placeholder={$t("Enter details of any race incidents, track conditions, or steward decisions...", (localStorage.getItem('app-lang') || 'vi'))} style={{ width: "100%", padding: "0.75rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "12px", height: "5rem", resize: "none", outline: "none" }} />
           </div>
 
+          {/* Cặp nút lưu và thoát */}
           <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end" }}>
             <button type="button" onClick={() => setProcessingRace(null)} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Cancel", (localStorage.getItem('app-lang') || 'vi'))}</button>
             <button type="submit" disabled={procLoading} style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: procLoading ? "not-allowed" : "pointer" }}>
@@ -280,19 +318,21 @@ export default function Results() {
     );
   }
 
+  // --- GIAO DIỆN 2: DANH SÁCH CÁC TRẬN ĐUA ĐANG CHỜ CHỐT KẾT QUẢ ---
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Process Results */}
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
+        {/* Header danh sách */}
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)" }}>
           <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec" }}>{$t("Process Results & Close Races", (localStorage.getItem('app-lang') || 'vi'))}</h3>
           <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>{$t("Select a Race Meeting and process the outcomes of scheduled races.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
 
+        {/* Thông báo thành công / lỗi nếu có */}
         {error && <div style={{ margin: "1rem 1.5rem 0", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px" }}>{error}</div>}
         {success && <div style={{ margin: "1rem 1.5rem 0", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px" }}>{success}</div>}
 
-        {/* Meetings */}
+        {/* Bảng 1: Lịch Ngày hội đua (Meetings List) */}
         <div style={{ padding: "1.5rem" }}>
           <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>{$t("Race Meetings List", (localStorage.getItem('app-lang') || 'vi'))}</h4>
           {isMobile ? (
@@ -333,7 +373,7 @@ export default function Results() {
           )}
         </div>
 
-        {/* Races to Process */}
+        {/* Bảng 2: Danh sách các trận đua đang chờ xác nhận kết quả (Races to Process) */}
         <div style={{ padding: "1.5rem", borderTop: "1px solid rgba(201,162,39,0.10)" }}>
           <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>{$t("Races To Process", (localStorage.getItem('app-lang') || 'vi'))}</h4>
           {isMobile ? (
@@ -392,7 +432,7 @@ export default function Results() {
           )}
         </div>
 
-        {/* Class Rules */}
+        {/* Khối tham khảo Quy chế phân hạng mùa giải (Season Class Rules) */}
         {classRules.length > 0 && (
           <div style={{ padding: "1.5rem", borderTop: "1px solid rgba(201,162,39,0.10)" }}>
             <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>{$t("Season Class Rules Reference", (localStorage.getItem('app-lang') || 'vi'))}</h4>
@@ -414,6 +454,7 @@ export default function Results() {
   );
 }
 
+// Bảng định kiểu cho các ô input số lượng
 const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "0.375rem 0.5rem",

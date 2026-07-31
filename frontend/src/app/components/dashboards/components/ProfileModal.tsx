@@ -1,6 +1,6 @@
 import { $t } from '@/lib/i18n';
 import { useState, useEffect } from "react";
-import { api } from "../../../../lib/api";
+import { api, getErrMsg } from "../../../../lib/api";
 
 interface ProfileModalProps {
   userId: number;
@@ -71,14 +71,17 @@ const MODAL_TRANSLATIONS: Record<string, any> = {
 };
 
 
+// ── Component hiển thị Modal Thông tin người dùng ──────────────────────────
 export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
+  // State lưu thông tin hồ sơ
   const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true); // Trạng thái đang tải dữ liệu
+  const [error, setError] = useState(""); // Thông báo lỗi
 
   const lang = localStorage.getItem("app-lang") || "vi";
   const st = MODAL_TRANSLATIONS[lang] || MODAL_TRANSLATIONS.en;
 
+  // Gọi API lấy thông tin chi tiết hồ sơ khi userId thay đổi
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
@@ -87,7 +90,7 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
         const data = await api.get<any>(`/public/users/${userId}/profile`);
         setProfile(data);
       } catch (err: any) {
-        setError(err.message || "Failed to load profile.");
+        setError(getErrMsg(err, "Failed to load profile."));
       } finally {
         setLoading(false);
       }

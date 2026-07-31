@@ -1,17 +1,29 @@
+// Import các hook useState và useEffect từ React
 import { useState, useEffect } from "react";
+// Import các hàm hỗ trợ định dạng ngày tháng
 import { parseSafeDate, formatDateTime, formatDate } from "../../utils/dateTimeHelper";
+// Import hook useAuth từ ngữ cảnh AuthContext
 import { useAuth } from "../../../context/AuthContext";
-import { api } from "../../../lib/api";
+// Import api client và hàm lấy thông báo lỗi getErrMsg
+import { api, getErrMsg } from "../../../lib/api";
+// Import hàm đa ngôn ngữ $t
 import { $t } from "../../../lib/i18n";
+// Import khung bố cục DashboardLayout
 import DashboardLayout from "../layout/DashboardLayout";
+// Import ProfileTab hiển thị thông tin cá nhân
 import ProfileTab from "./components/ProfileTab";
+// Import ProfileModal hiển thị popup thông tin người dùng
 import ProfileModal from "./components/ProfileModal";
+// Import HorsePerformanceModal hiển thị thông số thành tích ngựa
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 
+// Định nghĩa các Tab giao diện khả dụng trong Dashboard của Jockey
 type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "profile";
 
+// Mã màu xanh đặc trưng làm giao diện chủ đạo cho kỵ sĩ Jockey
 const ROLE_COLOR = "#3b82c4";
 
+// Cấu hình các nút điều hướng sidebar dành cho Jockey
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: "Jockey Hub",    view: "hub"         },
   { index: "02", icon: "flag",             label: "My Mounts",     view: "mounts"      },
@@ -20,8 +32,11 @@ const NAV_ITEMS = [
   { index: "05", icon: "alert-triangle",   label: "Rule Violations", view: "violations" },
 ];
 
-// ── Sub-views ────────────────────────────────────────────────────────────────
+// ── Sub-views (Các Component hiển thị giao diện con) ──────────────────────────
 
+/**
+ * Component StatsCard - Thẻ thống kê số lượng đơn giản
+ */
 function StatsCard({ label, value, color }: { label: string; value: any; color?: string }) {
   return (
     <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.6)", borderColor: "rgba(255,255,255,0.08)", padding: "1rem", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
@@ -31,6 +46,9 @@ function StatsCard({ label, value, color }: { label: string; value: any; color?:
   );
 }
 
+/**
+ * Component StatusBadge - Huy hiệu hiển thị trạng thái phê duyệt (Đã duyệt, Từ chối, Đang chờ...)
+ */
 function StatusBadge({ status }: { status: string }) {
   const s = status?.toUpperCase() ?? "PENDING";
   let bg = "rgba(195,162,39,0.12)";
@@ -69,9 +87,15 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
+/**
+ * Component HubView - Tab Tổng quan chính của Jockey.
+ * Hiển thị số liệu hiệu suất thi đấu cá nhân (số lượt cưỡi, số trận thắng, top 3, tỉ lệ thắng)
+ * và danh sách đăng ký tham gia các Ngày hội đua sắp tới.
+ */
 function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {/* Khối Thẻ Thống kê hiệu suất */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "1rem" }}>
         <StatsCard label={$t("Total Rides", (localStorage.getItem('app-lang') || 'vi'))}     value={dashboard?.jockeyStats?.totalRaces} />
         <StatsCard label={$t("Wins (1st)", (localStorage.getItem('app-lang') || 'vi'))}      value={dashboard?.jockeyStats?.totalWins}   color="#4ade80" />
@@ -79,7 +103,7 @@ function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings
         <StatsCard label={$t("Win Rate", (localStorage.getItem('app-lang') || 'vi'))}        value={dashboard?.jockeyStats?.winRate ? `${Number(dashboard.jockeyStats.winRate).toFixed(1)}%` : "0.0%"} color="#c9a227" />
       </div>
 
-      {/* Available Race Meetings */}
+      {/* Danh sách ngày hội đua đang mở đăng ký */}
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Available Race Meetings", (localStorage.getItem('app-lang') || 'vi'))}</h3>
         <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>{$t("Register for race meetings to make yourself available for stable hire invitations.", (localStorage.getItem('app-lang') || 'vi'))}</p>
@@ -100,6 +124,7 @@ function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings
                   <span>📍 {m.venue}</span>
                   <span>📅 {formatDate(m.startDate || m.date)}</span>
                 </div>
+                {/* Hiển thị nút đăng ký hoặc dòng trạng thái đã đăng ký */}
                 {isReg ? (
                   <button
                     disabled
@@ -122,6 +147,10 @@ function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings
   );
 }
 
+/**
+ * Component MountsView - Quản lý hiển thị lịch trình các lượt cưỡi ngựa của Jockey.
+ * Hiển thị mã lượt đua, chiến mã sẽ điều khiển, số cổng xuất phát và cân nặng mang theo.
+ */
 function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: boolean; onViewHorse: (horse: { id: number; name: string }) => void }) {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -136,6 +165,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
   const loadingText = $t("Loading...", (localStorage.getItem('app-lang') || 'vi'));
   const emptyText = $t("No scheduled mounts at the moment.", (localStorage.getItem('app-lang') || 'vi'));
 
+  // Hiển thị bố cục dạng thẻ (card) trên Mobile
   if (isMobile) {
     return (
       <div>
@@ -165,15 +195,24 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
                     {m.status}
                   </span>
                 </div>
-                <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.8rem", color: "#f4f2ec", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", fontFamily: "monospace" }}>
-                  <div>
-                    <span style={{ color: "rgba(255,255,255,0.4)" }}>Gate: </span>
-                    <span style={{ color: "#c9a227", fontWeight: "bold" }}>{m.gateNumber ?? "TBD"}</span>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                  <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.8rem", color: "#f4f2ec", fontFamily: "monospace" }}>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Gate: </span>
+                      <span style={{ color: "#c9a227", fontWeight: "bold" }}>{m.gateNumber ?? "TBD"}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Weight: </span>
+                      <span>{m.carriedWeight ?? "TBD"} kg</span>
+                    </div>
                   </div>
-                  <div>
-                    <span style={{ color: "rgba(255,255,255,0.4)" }}>Weight: </span>
-                    <span>{m.carriedWeight ?? "TBD"} kg</span>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onViewHorse({ id: m.horseId, name: m.horseName || `Horse #${m.horseId}` })}
+                    style={{ padding: "0.3rem 0.6rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.375rem", color: "#c9a227", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}
+                  >
+                    📈 {$t("Lịch sử đua", (localStorage.getItem('app-lang') || 'vi'))}
+                  </button>
                 </div>
               </div>
             ))}
@@ -183,6 +222,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
     );
   }
 
+  // Hiển thị bố cục dạng Bảng (table) trên màn hình lớn Desktop
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{title}</h3>
@@ -190,20 +230,21 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr style={{ background: `rgba(59,130,196,0.08)`, borderBottom: "1px solid #2a2825" }}>
-              {["Race ID", "Horse", "Gate", "Weight (kg)", "Status"].map(h => (
+              {["Race ID", "Horse", "Gate", "Weight (kg)", "Status", "Race History"].map(h => (
                 <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{loadingText}</td></tr>
+              <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{loadingText}</td></tr>
             ) : mounts.length === 0 ? (
-              <tr><td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>{emptyText}</td></tr>
+              <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>{emptyText}</td></tr>
             ) : mounts.map((m, i) => (
               <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
                 <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", color: "#a0a0a0" }}>#{m.raceId}</td>
                 <td style={{ padding: "0.75rem 1rem", fontWeight: 700, color: "#f4f2ec" }}>
+                  {/* Click mở modal thông tin chi tiết của Horse */}
                   <button
                     type="button"
                     onClick={() => onViewHorse({ id: m.horseId, name: m.horseName || `Horse #${m.horseId}` })}
@@ -217,6 +258,15 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
                 <td style={{ padding: "0.75rem 1rem" }}>
                   <span style={{ padding: "0.125rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.6rem", fontFamily: "monospace", fontWeight: 700, textTransform: "uppercase", background: m.status === "APPROVED" ? "rgba(74,222,128,0.1)" : "rgba(42,40,37,0.5)", color: m.status === "APPROVED" ? "#4ade80" : "#a0a0a0" }}>{$t(m.status || '', (localStorage.getItem('app-lang') || 'vi'))}</span>
                 </td>
+                <td style={{ padding: "0.75rem 1rem" }}>
+                  <button
+                    type="button"
+                    onClick={() => onViewHorse({ id: m.horseId, name: m.horseName || `Horse #${m.horseId}` })}
+                    style={{ padding: "0.35rem 0.75rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.375rem", color: "#c9a227", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}
+                  >
+                    📈 {$t("Lịch sử đua", (localStorage.getItem('app-lang') || 'vi'))}
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -226,6 +276,10 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
   );
 }
 
+/**
+ * Component InvitationsView - Danh sách các Lời mời thuê nài ngựa từ phía các Chủ chuồng.
+ * Hỗ trợ Jockey chấp nhận (Accept) hoặc từ chối (Reject) các lời mời này.
+ */
 function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onViewHorse }: { invitations: any[]; onAccept: (id: number) => void; onReject: (id: number) => void; onViewProfile: (id: number) => void; onViewHorse: (horse: { id: number; name: string }) => void }) {
   const lang = localStorage.getItem("app-lang") || "vi";
   const t = {
@@ -261,6 +315,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                     )}
                   </div>
                   <div>
+                    {/* Tên chủ chuồng click để xem Profile */}
                     <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", margin: 0, fontSize: "0.95rem" }}>
                       {t.offerFrom}{" "}
                       <button 
@@ -271,6 +326,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                         {inv.ownerFullName || inv.ownerName || `#${inv.ownerId}`}
                       </button>
                     </h4>
+                    {/* Ngựa được mời điều khiển click để xem chi tiết thông số */}
                     <p style={{ fontSize: "0.8rem", color: "#f4f2ec", margin: "2px 0 0 0" }}>
                       <strong>{t.horse}:</strong>{" "}
                       <button 
@@ -297,6 +353,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                   <strong>{t.status}:</strong> {inv.status}
                 </p>
               </div>
+              {/* Nút chấp nhận hoặc từ chối lời mời */}
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 <button onClick={() => onAccept(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.accept}</button>
                 <button onClick={() => onReject(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "rgba(192,57,43,0.1)", color: "#ef4444", border: "1px solid rgba(192,57,43,0.2)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.reject}</button>
@@ -309,6 +366,9 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
   );
 }
 
+/**
+ * Component hiển thị thông tin từng dòng cuộc đua (RaceRow) để hiển thị danh sách ngựa đã duyệt
+ */
 function RaceRow({ race }: { race: any }) {
   const [expanded, setExpanded] = useState(false);
   const [entries, setEntries] = useState<any[]>([]);
@@ -319,8 +379,8 @@ function RaceRow({ race }: { race: any }) {
       setLoading(true);
       api.get<any[]>(`/public/results?raceId=${race.id}`)
         .then(data => {
-          // Filter to show only APPROVED entries
-          const approved = data.filter((e: any) => e.entry?.status === "APPROVED");
+          // Hiển thị các lượt đăng ký hợp lệ (APPROVED, RUNNING, FINISHED, STOPPED, OFFICIAL)
+          const approved = data.filter((e: any) => e.entry?.status && e.entry?.status !== "REJECTED" && e.entry?.status !== "PENDING_ADMIN");
           setEntries(approved);
         })
         .catch(() => {})
@@ -382,6 +442,9 @@ function RaceRow({ race }: { race: any }) {
   );
 }
 
+/**
+ * Component CalendarView - Biểu diễn lịch thi đấu công khai cho Jockey theo dõi
+ */
 function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[] }) {
   return (
     <div>
@@ -395,7 +458,7 @@ function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[]
 
             return (
               <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.01)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-                {/* Meeting Header */}
+                {/* Tiêu đề Ngày hội đua */}
                 <div style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "1rem 1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
                   <div>
                     <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
@@ -404,7 +467,7 @@ function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[]
                   <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: `rgba(59,130,196,0.1)`, color: ROLE_COLOR }}>{ $t(m.status ?? "UPCOMING", (localStorage.getItem('app-lang') || 'vi')) }</span>
                 </div>
 
-                {/* Races List */}
+                {/* Danh sách các cuộc đua thuộc Ngày hội đua đó */}
                 <div style={{ padding: "0.75rem 1.25rem" }}>
                   {meetingRaces.length === 0 ? (
                     <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", padding: "0.5rem 0" }}>{$t("No races scheduled for this meeting.", (localStorage.getItem('app-lang') || 'vi'))}</p>
@@ -423,6 +486,10 @@ function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[]
   );
 }
 
+/**
+ * Component ViolationsView - Khung quản lý hồ sơ vi phạm luật thi đấu của kỵ sĩ do trọng tài báo cáo.
+ * Yêu cầu Jockey bấm "Acknowledge" (Xác nhận lỗi) để hoàn tất quy trình vi phạm.
+ */
 function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAcknowledge: (id: number) => void }) {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -519,24 +586,35 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
+/**
+ * Component Jockey - Bảng điều khiển chính của Nài Ngựa (Jockey).
+ * Quản lý lịch trình cưỡi ngựa, chấp nhận/từ chối lời mời từ các chủ ngựa,
+ * xác nhận vi phạm luật thi đấu và cập nhật thông tin kỵ sĩ cá nhân.
+ */
 export default function Jockey() {
   const { user } = useAuth();
+  // State quản lý Modal xem hồ sơ cá nhân và Modal xem chỉ số ngựa
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
   const [selectedHorse, setSelectedHorse] = useState<{ id: number; name: string } | null>(null);
+  
+  // Tab đang hoạt động, mặc định là "hub"
   const [activeTab, setActiveTab] = useState<JockeyTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as JockeyTab) || "hub";
   });
-  const [dashboard, setDashboard] = useState<any>(null);
-  const [mounts, setMounts] = useState<any[]>([]);
-  const [invitations, setInvitations] = useState<any[]>([]);
-  const [meetings, setMeetings] = useState<any[]>([]);
-  const [violations, setViolations] = useState<any[]>([]);
-  const [allRaces, setAllRaces] = useState<any[]>([]);
+  
+  // Các state lưu trữ dữ liệu API
+  const [dashboard, setDashboard] = useState<any>(null);      // Chỉ số hiệu suất tổng hợp
+  const [mounts, setMounts] = useState<any[]>([]);            // Lịch trình các lượt cưỡi ngựa
+  const [invitations, setInvitations] = useState<any[]>([]);  // Lời mời đang chờ từ chủ ngựa
+  const [meetings, setMeetings] = useState<any[]>([]);        // Thông tin các ngày hội đua
+  const [violations, setViolations] = useState<any[]>([]);    // Sự cố vi phạm luật bị ghi nhận
+  const [allRaces, setAllRaces] = useState<any[]>([]);        // Lịch đua chung hệ thống
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Tải đồng bộ dữ liệu của Jockey từ API backend
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
@@ -556,49 +634,56 @@ export default function Jockey() {
       setViolations(Array.isArray(viols) ? viols : []);
       setAllRaces(Array.isArray(racesData) ? racesData : []);
     } catch (err: any) {
-      setErrorMsg(err.message || "Failed to load jockey data.");
+      setErrorMsg(getErrMsg(err, "Failed to load jockey data."));
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchData(); }, [user]);
+  useEffect(() => { 
+    fetchData(); 
+  }, [user]);
 
+  // Hàm xử lý chấp thuận lời mời thuê cưỡi ngựa từ Chủ ngựa
   const handleAcceptInvite = async (id: number) => {
     try {
       await api.post(`/invitations/${id}/accept`);
       setSuccessMsg("Invitation accepted and race entry created!");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to accept invitation."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to accept invitation.")); }
   };
 
+  // Hàm xử lý từ chối lời mời thuê cưỡi ngựa
   const handleRejectInvite = async (id: number) => {
     try {
       await api.post(`/invitations/${id}/reject`);
       setSuccessMsg("Invitation rejected.");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to reject invitation."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to reject invitation.")); }
   };
 
+  // Đăng ký tham gia Ngày hội đua đua ngựa
   const handleRegisterMeeting = async (meetingId: number) => {
     if (!user) return;
     try {
       await api.post("/registrations/jockey", { meetingId, jockeyId: user.id });
       setSuccessMsg("Successfully registered for meeting!");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to register for meeting."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to register for meeting.")); }
   };
 
+  // Xác nhận lỗi vi phạm quy chế thi đấu do Trọng tài ghi nhận
   const handleAcknowledgeViolation = async (violationId: number) => {
     try {
       await api.post(`/jockey/violations/${violationId}/confirm`);
       setSuccessMsg("Violation acknowledged successfully!");
       fetchData();
-    } catch (err: any) { setErrorMsg(err.message || "Failed to acknowledge violation."); }
+    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to acknowledge violation.")); }
   };
 
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Jockey Hub";
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
   const pendingViolations = violations.filter(v => v.status === "PENDING").length;
 
+  // Lồng ghép thêm badge đếm số lượng thông báo đang chờ ở các mục sidebar tương ứng
   const navItemsWithBadge = NAV_ITEMS.map(n => {
     if (n.view === "invitations") return { ...n, badge: pendingInvitations };
     if (n.view === "violations") return { ...n, badge: pendingViolations };
@@ -631,6 +716,8 @@ export default function Jockey() {
       >
         {renderContent()}
       </DashboardLayout>
+      
+      {/* Các Modal phụ trợ xem thông tin Profile hoặc Ngựa */}
       {selectedProfileId !== null && (
         <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
       )}

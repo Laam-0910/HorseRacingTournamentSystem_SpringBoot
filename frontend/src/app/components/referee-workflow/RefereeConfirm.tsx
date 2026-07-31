@@ -1,20 +1,36 @@
 import { useState, useEffect } from "react";
-import { api } from "../../../lib/api";
+import { api, getErrMsg } from "../../../lib/api";
+import { $t } from "../../../lib/i18n";
 
+// Cấu trúc thuộc tính truyền vào component RefereeConfirm
 interface RefereeConfirmProps {
-  raceId: number;
-  onBack: () => void;
+  raceId: number; // Mã cuộc đua cần nhập kết quả về đích và hậu cân
+  onBack: () => void; // Hàm callback quay lại giao diện điều khiển
 }
 
+/**
+ * Component RefereeConfirm - Phân hệ xác nhận kết quả và hậu cân của Trọng tài.
+ * Thực hiện công tác cân đo kỵ sĩ sau trận đấu (Weigh-In Weight) để đối chiếu cân nặng ban đầu (Weigh-Out Weight).
+ * - Nếu kỵ sĩ nhẹ hơn mức cân trước đua > 0.5 kg, hệ thống sẽ tự động truất quyền thi đấu (UNDERWEIGHT DQ).
+ * - Nhập thứ hạng về đích thực tế (Final Position), thời gian hoàn thành (Finish Time) và ghi nhật ký sự cố của trọng tài.
+ */
 export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) {
+  // State lưu danh sách ngựa chạy đăng ký trong cuộc đua
   const [entries, setEntries] = useState<any[]>([]);
+  // Lưu thứ hạng về đích của từng ngựa đua theo mã lượt đăng ký
   const [positions, setPositions] = useState<Record<number, string>>({});
+  // Lưu thời gian về đích của từng ngựa đua (ví dụ: 1:12.35)
   const [times, setTimes] = useState<Record<number, string>>({});
+  // Lưu cân nặng đo được của kỵ sĩ sau trận đấu (Weigh-In Weight)
   const [weighInWeights, setWeighInWeights] = useState<Record<number, string>>({});
+  // Nhật ký ghi nhận sự cố xảy ra trong trận đấu của Trọng tài
   const [stewardReport, setStewardReport] = useState("");
+  // Trạng thái chờ gọi API
   const [loading, setLoading] = useState(false);
+  // State lưu thông báo lỗi
   const [error, setError] = useState("");
 
+  // Tải danh sách lượt đăng ký của trận đua kèm thông tin cân nặng đo trước trận
   useEffect(() => {
     const fetchEntries = async () => {
       setLoading(true);
@@ -22,6 +38,8 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
       try {
         const data = await api.get<any[]>(`/public/results?raceId=${raceId}`);
         setEntries(data);
+        
+        // Khởi tạo các ô nhập liệu từ dữ liệu sẵn có của máy chủ (nếu có)
         const initialPos: Record<number, string> = {};
         const initialTimes: Record<number, string> = {};
         const initialWeights: Record<number, string> = {};
@@ -34,7 +52,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
         setTimes(initialTimes);
         setWeighInWeights(initialWeights);
       } catch (err: any) {
-        setError(err.message || "Failed to load race entries.");
+        setError(getErrMsg(err, "Failed to load race entries."));
       } finally {
         setLoading(false);
       }
@@ -43,6 +61,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
     fetchEntries();
   }, [raceId]);
 
+  // Đồng bộ giá trị thay đổi thứ hạng về đích
   const handlePositionChange = (entryId: number, val: string) => {
     setPositions((prev) => ({
       ...prev,
@@ -50,6 +69,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
     }));
   };
 
+  // Đồng bộ giá trị thay đổi thời gian hoàn thành lượt đua
   const handleTimeChange = (entryId: number, val: string) => {
     setTimes((prev) => ({
       ...prev,
@@ -57,6 +77,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
     }));
   };
 
+  // Đồng bộ giá trị thay đổi cân nặng đo được sau trận đấu
   const handleWeightChange = (entryId: number, val: string) => {
     setWeighInWeights((prev) => ({
       ...prev,
@@ -64,12 +85,33 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
     }));
   };
 
+  // Gửi toàn bộ kết quả thứ hạng, thời gian và hậu cân lên máy chủ để công bố kết quả chính thức (Official Results)
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault(); // Ngăn trình duyệt reload trang mặc định
     setError("");
     setLoading(true);
 
     try {
+      // Ràng buộc: Tất cả ngựa thi đấu (chưa bị DQ) phải có thời gian về đích hợp lệ (MM:SS hoặc MM:SS.ms, giây 00-59)
+      for (const e of entries) {
+        const isDq = e.entry.status === "DISQUALIFIED" || times[e.entry.id] === "DQ";
+        if (!isDq) {
+          const tVal = times[e.entry.id] ? times[e.entry.id].trim() : "";
+          const lang = localStorage.getItem('app-lang') || 'vi';
+          if (!tVal) {
+            setError($t("Vui lòng nhập thời gian về đích cho tất cả ngựa thi đấu trước khi hoàn tất trận đua.", lang));
+            setLoading(false);
+            return;
+          }
+          if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(tVal)) {
+            setError($t("Thời gian hoàn thành không hợp lệ. Số giây phải từ 00 đến 59 (Định dạng MM:SS hoặc MM:SS.ms, ví dụ: 1:48.35).", lang));
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      // Chuẩn bị payload danh sách kết quả về đích của từng ngựa đua
       const resultsPayload = entries.map((e) => ({
         entryId: e.entry.id,
         finalPosition: positions[e.entry.id] ? parseInt(positions[e.entry.id]) : null,
@@ -77,6 +119,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
         weighInWeight: weighInWeights[e.entry.id] ? parseFloat(weighInWeights[e.entry.id]) : 52.0,
       }));
 
+      // Gọi API POST gửi kết quả xác nhận của trọng tài
       const res = await api.post<any>("/referee/results", {
         raceId,
         stewardReport,
@@ -85,10 +128,10 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
 
       if (res.success) {
         alert("Results successfully verified and released!");
-        onBack();
+        onBack(); // Trở về màn hình danh sách điều khiển trọng tài
       }
     } catch (err: any) {
-      setError(err.message || "Failed to verify results.");
+      setError(getErrMsg(err, "Failed to verify results."));
     } finally {
       setLoading(false);
     }
@@ -96,6 +139,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
 
   return (
     <div className="space-y-6">
+      {/* Banner thông báo lỗi */}
       {error && (
         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
           {error}
@@ -103,6 +147,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Bảng nhập thông số hậu cân và thành tích */}
         <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -124,10 +169,10 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
                 </tr>
               ) : entries.length > 0 ? (
                 entries.map((e, idx) => {
-                  const weighOut = e.entry.carriedWeight || 52.0;
+                  const weighOut = e.entry.carriedWeight || 52.0; // Trọng lượng lúc cân trước trận
                   const currentWeighIn = parseFloat(weighInWeights[e.entry.id] || "0");
-                  const diff = currentWeighIn - weighOut;
-                  const isUnderweight = diff < -0.5;
+                  const diff = currentWeighIn - weighOut; // Độ chênh lệch cân nặng
+                  const isUnderweight = diff < -0.5; // Cảnh báo sụt cân quá mức quy định (>0.5kg)
 
                   return (
                     <tr key={idx} className="hover:bg-[#151310]/10 transition">
@@ -137,6 +182,8 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
                         <div className="text-[10px] text-white/40 mt-0.5">Weighed Out: {weighOut} kg</div>
                       </td>
                       <td className="px-6 py-4 font-mono font-bold text-amber-500">{e.entry.gateNumber || "N/A"}</td>
+                      
+                      {/* Cột đo cân nặng sau trận đấu (Weigh-In) */}
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-1.5">
                           <input
@@ -150,6 +197,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
                           />
                           <span className="text-xs text-white/40">kg</span>
                         </div>
+                        {/* Nhãn cảnh báo sụt cân quá mức (UNDERWEIGHT) dẫn tới bị truất quyền thi đấu */}
                         {currentWeighIn > 0 && (
                           <div className={`text-[10px] mt-1 font-semibold ${isUnderweight ? "text-red-500 animate-pulse" : "text-emerald-400"}`}>
                             {isUnderweight 
@@ -158,6 +206,8 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
                           </div>
                         )}
                       </td>
+                      
+                      {/* Cột nhập thứ hạng về đích (Tự động khóa và hiển thị DQ nếu kỵ sĩ phạm luật cân nặng) */}
                       <td className="px-6 py-4">
                         <input
                           type="number"
@@ -170,6 +220,8 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
                           placeholder={isUnderweight ? "DQ" : "E.g., 1"}
                         />
                       </td>
+
+                      {/* Cột nhập thời gian hoàn thành trận đua */}
                       <td className="px-6 py-4">
                         <input
                           type="text"
@@ -195,6 +247,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
           </table>
         </div>
 
+        {/* Khối nhập biên bản báo cáo sự cố của trọng tài */}
         <div className="space-y-2">
           <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">Steward Incident Report</label>
           <textarea
@@ -205,6 +258,7 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
           />
         </div>
 
+        {/* Khối nút bấm dưới chân trang */}
         <div className="flex justify-between items-center">
           <button
             type="button"

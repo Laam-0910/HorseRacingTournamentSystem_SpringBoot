@@ -1,7 +1,8 @@
+// ── Component hiển thị Báo cáo sự cố (Incident Report) ────────────────
 export default function IncidentReport() {
   return (
     <div>
-      {/* TODO: chuyen noi dung tu component mau (HR.zip) hoac JSP tuong ung vao day */}
+      {/* TODO: chuyển nội dung từ component mẫu (HR.zip) hoặc JSP tương ứng vào đây */}
       <h1>IncidentReport</h1>
     </div>
   );
