@@ -59,7 +59,15 @@ function StatusBadge({ status }: { status: string }) {
     bg = "rgba(74,222,128,0.12)";
     fg = "#4ade80";
     bc = "rgba(74,222,128,0.3)";
-  } else if (s === "REJECTED") {
+  } else if (s === "ACCEPTED") {
+    bg = "rgba(45,212,191,0.12)";
+    fg = "#2dd4bf";
+    bc = "rgba(45,212,191,0.3)";
+  } else if (s === "PENDING_ADMIN") {
+    bg = "rgba(245,158,11,0.12)";
+    fg = "#f59e0b";
+    bc = "rgba(245,158,11,0.3)";
+  } else if (s === "REJECTED" || s === "DECLINED" || s === "CANCELLED") {
     bg = "rgba(239,91,91,0.12)";
     fg = "#ef5b5b";
     bc = "rgba(239,91,91,0.3)";
@@ -280,86 +288,337 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
  * Component InvitationsView - Danh sách các Lời mời thuê nài ngựa từ phía các Chủ chuồng.
  * Hỗ trợ Jockey chấp nhận (Accept) hoặc từ chối (Reject) các lời mời này.
  */
-function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onViewHorse }: { invitations: any[]; onAccept: (id: number) => void; onReject: (id: number) => void; onViewProfile: (id: number) => void; onViewHorse: (horse: { id: number; name: string }) => void }) {
+function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onViewHorse, refereesMap }: { 
+  invitations: any[]; 
+  onAccept: (id: number) => void; 
+  onReject: (id: number) => void; 
+  onViewProfile: (id: number) => void; 
+  onViewHorse: (horse: { id: number; name: string }) => void;
+  refereesMap?: Record<number, any[]>;
+}) {
   const lang = localStorage.getItem("app-lang") || "vi";
+  const [filter, setFilter] = useState<string>("ALL");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const pageSize = 8;
+
+  // Helper xác định trạng thái thực tế của bản ghi
+  const getItemStatus = (inv: any) => {
+    if (inv.status === "PENDING") return "PENDING";
+    if (inv.status === "REJECTED") return "REJECTED";
+    if (inv.status === "ACCEPTED") {
+      if (inv.entryStatus) return inv.entryStatus.toUpperCase();
+      return "ACCEPTED";
+    }
+    return inv.status ? inv.status.toUpperCase() : "OTHER";
+  };
+
+  // Tính số lượng từng trạng thái
+  const counts = {
+    ALL: invitations.length,
+    PENDING: invitations.filter(i => getItemStatus(i) === "PENDING").length,
+    PENDING_ADMIN: invitations.filter(i => getItemStatus(i) === "PENDING_ADMIN").length,
+    APPROVED: invitations.filter(i => getItemStatus(i) === "APPROVED" || getItemStatus(i) === "ACCEPTED").length,
+    REJECTED: invitations.filter(i => getItemStatus(i) === "REJECTED").length,
+    FINISHED: invitations.filter(i => getItemStatus(i) === "FINISHED" || getItemStatus(i) === "OFFICIAL").length,
+  };
+
+  // Filter dữ liệu theo trạng thái và từ khóa tìm kiếm (tên giải đấu, chủ ngựa, tên ngựa, venue...)
+  const filteredList = invitations.filter((inv: any) => {
+    // 1. Kiểm tra bộ lọc trạng thái
+    const st = getItemStatus(inv);
+    let matchesStatus = true;
+    if (filter === "PENDING") matchesStatus = st === "PENDING";
+    else if (filter === "PENDING_ADMIN") matchesStatus = st === "PENDING_ADMIN";
+    else if (filter === "APPROVED") matchesStatus = st === "APPROVED" || st === "ACCEPTED";
+    else if (filter === "REJECTED") matchesStatus = st === "REJECTED";
+    else if (filter === "FINISHED") matchesStatus = st === "FINISHED" || st === "OFFICIAL";
+
+    if (!matchesStatus) return false;
+
+    // 2. Kiểm tra tìm kiếm theo từ khóa
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const meetingMatch = (inv.meetingName || "").toLowerCase().includes(q);
+    const ownerMatch = (inv.ownerFullName || inv.ownerName || "").toLowerCase().includes(q);
+    const horseMatch = (inv.horseName || "").toLowerCase().includes(q);
+    const venueMatch = (inv.venue || "").toLowerCase().includes(q);
+    const classMatch = (inv.classLevel || "").toLowerCase().includes(q);
+    const idMatch = String(inv.raceId || "").includes(q) || String(inv.id || "").includes(q);
+
+    return meetingMatch || ownerMatch || horseMatch || venueMatch || classMatch || idMatch;
+  });
+
+  // Phân trang
+  const totalPages = Math.max(1, Math.ceil(filteredList.length / pageSize));
+  const pageIndex = Math.min(currentPage, totalPages);
+  const startIndex = (pageIndex - 1) * pageSize;
+  const paginatedList = filteredList.slice(startIndex, startIndex + pageSize);
+
+  const handleFilterChange = (newFilter: string) => {
+    setFilter(newFilter);
+    setCurrentPage(1);
+  };
+
   const t = {
-    offersTitle: $t("Pending Ride Offers", (localStorage.getItem('app-lang') || 'vi')),
-    noOffers: $t("No pending ride offers currently.", (localStorage.getItem('app-lang') || 'vi')),
+    title: $t("Jockey Ride Invitations & Applications", (localStorage.getItem('app-lang') || 'vi')),
+    subTitle: $t("Manage incoming ride offers from stable owners and track your accepted race registration status.", (localStorage.getItem('app-lang') || 'vi')),
+    noOffers: lang === "vi" ? "Không tìm thấy lời mời hoặc đơn đăng ký phù hợp với bộ lọc." : "No invitations found matching the selected filter.",
     offerFrom: $t("Offer from Stable Owner ", (localStorage.getItem('app-lang') || 'vi')),
     horse: $t("Horse", (localStorage.getItem('app-lang') || 'vi')),
-    race: $t("Race ID", (localStorage.getItem('app-lang') || 'vi')),
-    meeting: $t("Meeting", (localStorage.getItem('app-lang') || 'vi')),
-    venue: $t("Venue", (localStorage.getItem('app-lang') || 'vi')),
-    startTime: $t("Start Time", (localStorage.getItem('app-lang') || 'vi')),
     status: $t("Status", (localStorage.getItem('app-lang') || 'vi')),
+    entryStatus: lang === "vi" ? "Trạng thái đơn:" : "Entry Status:",
     accept: $t("Accept Offer", (localStorage.getItem('app-lang') || 'vi')),
     reject: $t("Reject", (localStorage.getItem('app-lang') || 'vi')),
   };
 
+  const filterTabs = [
+    { key: "ALL", label: lang === "vi" ? `Tất cả (${counts.ALL})` : `All (${counts.ALL})` },
+    { key: "PENDING", label: lang === "vi" ? `Lời mời đang chờ (${counts.PENDING})` : `Pending (${counts.PENDING})` },
+    { key: "PENDING_ADMIN", label: lang === "vi" ? `Chờ Admin duyệt (${counts.PENDING_ADMIN})` : `Pending Admin (${counts.PENDING_ADMIN})` },
+    { key: "APPROVED", label: lang === "vi" ? `Đã duyệt (${counts.APPROVED})` : `Approved (${counts.APPROVED})` },
+    { key: "REJECTED", label: lang === "vi" ? `Từ chối (${counts.REJECTED})` : `Rejected (${counts.REJECTED})` },
+    { key: "FINISHED", label: lang === "vi" ? `Đã đua xong (${counts.FINISHED})` : `Finished (${counts.FINISHED})` },
+  ];
+
   return (
-    <div>
-      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{t.offersTitle}</h3>
-      {invitations.length === 0 ? (
-        <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{t.noOffers}</p>
+    <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div>
+        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{t.title}</h3>
+        <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>{t.subTitle}</p>
+      </div>
+
+      {/* Thanh tìm kiếm và Bộ lọc trạng thái (Search & Filter Bar) */}
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "0.75rem" }}>
+        {/* Nút lọc trạng thái */}
+        <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap" }}>
+          {filterTabs.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => handleFilterChange(tab.key)}
+              style={{
+                padding: "0.375rem 0.75rem",
+                borderRadius: "0.375rem",
+                background: filter === tab.key ? ROLE_COLOR : "rgba(255,255,255,0.04)",
+                color: filter === tab.key ? "#fff" : "#a0a0a0",
+                border: filter === tab.key ? `1px solid ${ROLE_COLOR}` : "1px solid rgba(255,255,255,0.08)",
+                fontSize: "0.75rem",
+                fontFamily: "monospace",
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Ô tìm kiếm tên giải đấu (Spring Grand Prix 2026...), tên chủ ngựa, tên ngựa */}
+        <div style={{ position: "relative", minWidth: "260px", flex: "1", maxWidth: "340px" }}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            placeholder={$t("Search meeting, owner, horse name...", (localStorage.getItem('app-lang') || 'vi'))}
+            style={{
+              width: "100%",
+              padding: "0.45rem 0.75rem 0.45rem 2.2rem",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: "0.375rem",
+              color: "#f4f2ec",
+              fontSize: "0.75rem",
+              fontFamily: "monospace",
+              outline: "none",
+              boxSizing: "border-box"
+            }}
+          />
+          <span style={{ position: "absolute", left: "0.7rem", top: "50%", transform: "translateY(-50%)", color: "#fbbf24", fontSize: "0.85rem", pointerEvents: "none" }}>
+            🔍
+          </span>
+          {searchQuery && (
+            <button
+              onClick={() => { setSearchQuery(""); setCurrentPage(1); }}
+              style={{ position: "absolute", right: "0.6rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem" }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
+      {paginatedList.length === 0 ? (
+        <div className="rounded-xl border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.01)", padding: "3rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>
+          {t.noOffers}
+        </div>
       ) : (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
-          {invitations.map((inv: any) => (
-            <div key={inv.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "1rem" }}>
-              <div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
-                  <div style={{ width: 44, height: 44, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    {inv.horseAvatar ? (
-                      <img src={inv.horseAvatar} alt={inv.horseName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : (
-                      <span style={{ fontSize: "1.25rem" }}>🐴</span>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1rem" }}>
+          {paginatedList.map((inv: any) => {
+            const isPending = inv.status === "PENDING";
+            const displayStatus = getItemStatus(inv);
+
+            return (
+              <div key={inv.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "1rem" }}>
+                <div>
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                      <div style={{ width: 44, height: 44, borderRadius: "50%", overflow: "hidden", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        {inv.horseAvatar ? (
+                          <img src={inv.horseAvatar} alt={inv.horseName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        ) : (
+                          <span style={{ fontSize: "1.25rem" }}>🐴</span>
+                        )}
+                      </div>
+                      <div>
+                        {/* Tên chủ chuồng click để xem Profile */}
+                        <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", margin: 0, fontSize: "0.95rem" }}>
+                          {t.offerFrom}{" "}
+                          <button 
+                            type="button" 
+                            onClick={() => onViewProfile(inv.ownerId)} 
+                            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontWeight: "bold" }}
+                          >
+                            {inv.ownerFullName || inv.ownerName || `#${inv.ownerId}`}
+                          </button>
+                        </h4>
+                        {/* Ngựa được mời điều khiển click để xem chi tiết thông số */}
+                        <p style={{ fontSize: "0.8rem", color: "#f4f2ec", margin: "2px 0 0 0" }}>
+                          <strong>{t.horse}:</strong>{" "}
+                          <button 
+                            type="button" 
+                            onClick={() => onViewHorse({ id: inv.horseId, name: inv.horseName || `Horse #${inv.horseId}` })} 
+                            style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontWeight: "bold" }}
+                          >
+                            {inv.horseName || `#${inv.horseId}`}
+                          </button>
+                        </p>
+                      </div>
+                    </div>
+                    <StatusBadge status={displayStatus} />
+                  </div>
+
+                  {inv.meetingName && (
+                    <p style={{ fontSize: "0.75rem", color: "#fbbf24", marginTop: "0.25rem" }}>
+                      🏆 <strong>{inv.meetingName}</strong> {inv.classLevel ? `(${inv.classLevel})` : ''}
+                    </p>
+                  )}
+                  {inv.venue && (
+                    <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
+                      📍 {inv.venue} {inv.startTime ? `· 📅 ${formatDate(inv.startTime)}` : ''}
+                    </p>
+                  )}
+
+                  {/* Trọng tài phân công cho trận đua */}
+                  {refereesMap && refereesMap[inv.raceId] && refereesMap[inv.raceId].length > 0 && (
+                    <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: "0.4rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+                      <span style={{ color: "#c9a227", fontWeight: 700 }}>⚖️ {$t("Assigned Referee:", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
+                        {refereesMap[inv.raceId].map((ref: any) => (
+                          <span key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(255,255,255,0.04)", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", border: "1px solid rgba(255,255,255,0.08)", color: "#f4f2ec" }}>
+                            {ref.avatar ? <img src={ref.avatar} alt={ref.fullName || ref.username} style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }} /> : "👤"}
+                            <span style={{ fontWeight: 600, color: "#fbbf24" }}>{ref.fullName || ref.username}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.7rem" }}>
+                    <span style={{ color: "#a0a0a0" }}>Lời mời: <strong style={{ color: "#f4f2ec" }}>{$t(inv.status || '', lang)}</strong></span>
+                    {inv.entryStatus && (
+                      <span style={{ color: "#a0a0a0" }}>{t.entryStatus} <StatusBadge status={inv.entryStatus} /></span>
                     )}
                   </div>
-                  <div>
-                    {/* Tên chủ chuồng click để xem Profile */}
-                    <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", margin: 0, fontSize: "0.95rem" }}>
-                      {t.offerFrom}{" "}
-                      <button 
-                        type="button" 
-                        onClick={() => onViewProfile(inv.ownerId)} 
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontWeight: "bold" }}
-                      >
-                        {inv.ownerFullName || inv.ownerName || `#${inv.ownerId}`}
-                      </button>
-                    </h4>
-                    {/* Ngựa được mời điều khiển click để xem chi tiết thông số */}
-                    <p style={{ fontSize: "0.8rem", color: "#f4f2ec", margin: "2px 0 0 0" }}>
-                      <strong>{t.horse}:</strong>{" "}
-                      <button 
-                        type="button" 
-                        onClick={() => onViewHorse({ id: inv.horseId, name: inv.horseName || `Horse #${inv.horseId}` })} 
-                        style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#fbbf24", textDecoration: "underline", fontWeight: "bold" }}
-                      >
-                        {inv.horseName || `#${inv.horseId}`}
-                      </button>
-                    </p>
-                  </div>
                 </div>
-                {inv.meetingName && (
-                  <p style={{ fontSize: "0.75rem", color: "#fbbf24", marginTop: "0.25rem" }}>
-                    🏆 <strong>{inv.meetingName}</strong> ({inv.classLevel})
-                  </p>
+
+                {/* Nút chấp nhận hoặc từ chối lời mời nếu đang ở trạng thái PENDING */}
+                {isPending ? (
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    <button onClick={() => onAccept(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.accept}</button>
+                    <button onClick={() => onReject(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "rgba(192,57,43,0.1)", color: "#ef4444", border: "1px solid rgba(192,57,43,0.2)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.reject}</button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>
+                    {inv.status === "ACCEPTED" ? (lang === "vi" ? "✓ Đã nhận suất cưỡi cho trận đua này" : "✓ Accepted mount offer for this race") : (lang === "vi" ? "✕ Đã từ chối lời mời" : "✕ Invitation declined")}
+                  </div>
                 )}
-                {inv.venue && (
-                  <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
-                    📍 {inv.venue} · 📅 {formatDate(inv.startTime)}
-                  </p>
-                )}
-                <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.25rem" }}>
-                  <strong>{t.status}:</strong> {inv.status}
-                </p>
               </div>
-              {/* Nút chấp nhận hoặc từ chối lời mời */}
-              <div style={{ display: "flex", gap: "0.5rem" }}>
-                <button onClick={() => onAccept(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.accept}</button>
-                <button onClick={() => onReject(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "rgba(192,57,43,0.1)", color: "#ef4444", border: "1px solid rgba(192,57,43,0.2)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.reject}</button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
+        </div>
+      )}
+
+      {/* Thanh phân trang (Pagination controls) */}
+      {filteredList.length > 0 && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.08)", marginTop: "0.5rem", flexWrap: "wrap", gap: "0.75rem" }}>
+          <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+            {lang === "vi" 
+              ? `Hiển thị ${startIndex + 1} - ${Math.min(startIndex + pageSize, filteredList.length)} trong tổng số ${filteredList.length} kết quả`
+              : `Showing ${startIndex + 1} - ${Math.min(startIndex + pageSize, filteredList.length)} of ${filteredList.length} items`}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+            <button
+              disabled={pageIndex <= 1}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              style={{
+                padding: "0.35rem 0.65rem",
+                borderRadius: "0.375rem",
+                background: pageIndex <= 1 ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.06)",
+                color: pageIndex <= 1 ? "rgba(255,255,255,0.2)" : "#f4f2ec",
+                border: "1px solid rgba(255,255,255,0.08)",
+                fontSize: "0.75rem",
+                fontFamily: "monospace",
+                cursor: pageIndex <= 1 ? "not-allowed" : "pointer",
+                fontWeight: 700
+              }}
+            >
+              ‹ {lang === "vi" ? "Trước" : "Prev"}
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button
+                key={p}
+                onClick={() => setCurrentPage(p)}
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "0.375rem",
+                  background: p === pageIndex ? ROLE_COLOR : "rgba(255,255,255,0.04)",
+                  color: p === pageIndex ? "#fff" : "#a0a0a0",
+                  border: p === pageIndex ? `1px solid ${ROLE_COLOR}` : "1px solid rgba(255,255,255,0.08)",
+                  fontSize: "0.75rem",
+                  fontFamily: "monospace",
+                  fontWeight: 700,
+                  cursor: "pointer"
+                }}
+              >
+                {p}
+              </button>
+            ))}
+
+            <button
+              disabled={pageIndex >= totalPages}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              style={{
+                padding: "0.35rem 0.65rem",
+                borderRadius: "0.375rem",
+                background: pageIndex >= totalPages ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.06)",
+                color: pageIndex >= totalPages ? "rgba(255,255,255,0.2)" : "#f4f2ec",
+                border: "1px solid rgba(255,255,255,0.08)",
+                fontSize: "0.75rem",
+                fontFamily: "monospace",
+                cursor: pageIndex >= totalPages ? "not-allowed" : "pointer",
+                fontWeight: 700
+              }}
+            >
+              {lang === "vi" ? "Sau" : "Next"} ›
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -369,7 +628,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
 /**
  * Component hiển thị thông tin từng dòng cuộc đua (RaceRow) để hiển thị danh sách ngựa đã duyệt
  */
-function RaceRow({ race }: { race: any }) {
+function RaceRow({ race, refereesMap }: { race: any; refereesMap?: Record<number, any[]> }) {
   const [expanded, setExpanded] = useState(false);
   const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -388,6 +647,8 @@ function RaceRow({ race }: { race: any }) {
     }
   }, [expanded, race.id]);
 
+  const assignedReferees = refereesMap?.[race.id] || [];
+
   return (
     <div style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", padding: "1rem 0" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => setExpanded(!expanded)}>
@@ -399,6 +660,19 @@ function RaceRow({ race }: { race: any }) {
           <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
             {$t("Time:", (localStorage.getItem('app-lang') || 'vi'))} {formatDateTime(race.startTime)} | {$t("Distance:", (localStorage.getItem('app-lang') || 'vi'))} {race.distanceMeters}m | {$t("Track:", (localStorage.getItem('app-lang') || 'vi'))} {race.trackType}
           </p>
+          {assignedReferees.length > 0 && (
+            <div style={{ fontSize: "10px", color: "#a0a0a0", fontFamily: "monospace", marginTop: "4px", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
+              <span style={{ color: "#c9a227", fontWeight: 700 }}>⚖️ {$t("Referee:", (localStorage.getItem('app-lang') || 'vi'))}</span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
+                {assignedReferees.map((ref: any) => (
+                  <span key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#fbbf24", fontWeight: 600 }}>
+                    {ref.avatar ? <img src={ref.avatar} alt={ref.fullName || ref.username} style={{ width: 14, height: 14, borderRadius: "50%", objectFit: "cover" }} /> : "👤"}
+                    {ref.fullName || ref.username}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <button style={{ background: "none", border: "none", color: "#3b82c4", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
           {expanded ? "▲ " + $t("Collapse", (localStorage.getItem('app-lang') || 'vi')) : "▼ " + $t("View Entries", (localStorage.getItem('app-lang') || 'vi'))}
@@ -445,7 +719,7 @@ function RaceRow({ race }: { race: any }) {
 /**
  * Component CalendarView - Biểu diễn lịch thi đấu công khai cho Jockey theo dõi
  */
-function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[] }) {
+function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; allRaces: any[]; refereesMap?: Record<number, any[]> }) {
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Race Calendar", (localStorage.getItem('app-lang') || 'vi'))}</h3>
@@ -473,7 +747,7 @@ function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[]
                     <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", padding: "0.5rem 0" }}>{$t("No races scheduled for this meeting.", (localStorage.getItem('app-lang') || 'vi'))}</p>
                   ) : (
                     meetingRaces.map((race: any) => (
-                      <RaceRow key={race.id} race={race} />
+                      <RaceRow key={race.id} race={race} refereesMap={refereesMap} />
                     ))
                   )}
                 </div>
@@ -490,7 +764,7 @@ function CalendarView({ meetings, allRaces }: { meetings: any[]; allRaces: any[]
  * Component ViolationsView - Khung quản lý hồ sơ vi phạm luật thi đấu của kỵ sĩ do trọng tài báo cáo.
  * Yêu cầu Jockey bấm "Acknowledge" (Xác nhận lỗi) để hoàn tất quy trình vi phạm.
  */
-function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAcknowledge: (id: number) => void }) {
+function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violations: any[]; onAcknowledge: (id: number) => void; onViewProfile?: (id: number) => void }) {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -529,15 +803,32 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "11px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem" }}>
                 <div>
+                  <span style={{ color: "rgba(255,255,255,0.4)", display: "block", fontSize: "10px", fontFamily: "monospace" }}>{$t("Referee:", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                    <button
+                      type="button"
+                      onClick={() => v.refereeId && onViewProfile && onViewProfile(v.refereeId)}
+                      style={{ background: "none", border: "none", padding: 0, cursor: v.refereeId ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    >
+                      {v.refereeAvatar ? (
+                        <img src={v.refereeAvatar} alt={v.refereeName} style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }} />
+                      ) : (
+                        <span style={{ fontSize: "11px" }}>⚖️</span>
+                      )}
+                      <span style={{ color: "#fbbf24", fontWeight: "bold", textDecoration: v.refereeId ? "underline" : "none" }}>{v.refereeName || "System Referee"}</span>
+                    </button>
+                  </div>
+                </div>
+                <div>
                   <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Penalty:", (localStorage.getItem('app-lang') || 'vi'))}</span>
                   <div style={{ color: "#c9a227", fontWeight: "bold", marginTop: "2px" }}>{v.penalty}</div>
                 </div>
-                <div>
-                  <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Status:", (localStorage.getItem('app-lang') || 'vi'))}</span>
-                  <div style={{ color: v.status === "CONFIRMED" ? "#4ade80" : "#f87171", fontWeight: "bold", marginTop: "2px" }}>
-                    {v.status === "CONFIRMED" ? $t("Acknowledged", (localStorage.getItem('app-lang') || 'vi')) : $t("Pending Acknowledgment", (localStorage.getItem('app-lang') || 'vi'))}
-                  </div>
-                </div>
+              </div>
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px" }}>
+                <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Status:", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                <span style={{ color: v.status === "CONFIRMED" ? "#4ade80" : "#f87171", fontWeight: "bold" }}>
+                  {v.status === "CONFIRMED" ? $t("Acknowledged", (localStorage.getItem('app-lang') || 'vi')) : $t("Pending Acknowledgment", (localStorage.getItem('app-lang') || 'vi'))}
+                </span>
               </div>
               {v.status !== "CONFIRMED" && (
                 <button onClick={() => onAcknowledge(v.id)} style={{ width: "100%", marginTop: "0.5rem", padding: "0.5rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontWeight: "bold", cursor: "pointer" }}>
@@ -552,8 +843,8 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ background: "rgba(192,57,43,0.08)", borderBottom: "1px solid #2a2825" }}>
-                {["Race", "Date", "Type", "Description", "Penalty", "Status", "Action"].map(h => (
-                  <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#ef4444" }}>{h}</th>
+                {["Race", "Date", "Type", "Description", "Referee", "Penalty", "Status", "Action"].map(h => (
+                  <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#ef4444" }}>{$t(h, lang)}</th>
                 ))}
               </tr>
             </thead>
@@ -564,6 +855,22 @@ function ViolationsView({ violations, onAcknowledge }: { violations: any[]; onAc
                   <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.75rem" }}>{v.date}</td>
                   <td style={{ padding: "0.75rem 1rem", color: "#ef4444", fontFamily: "monospace", fontSize: "0.75rem" }}>{v.type}</td>
                   <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem" }}>{v.description}</td>
+                  <td style={{ padding: "0.75rem 1rem" }}>
+                    <button
+                      type="button"
+                      onClick={() => v.refereeId && onViewProfile && onViewProfile(v.refereeId)}
+                      style={{ background: "none", border: "none", padding: 0, cursor: v.refereeId ? "pointer" : "default", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                    >
+                      {v.refereeAvatar ? (
+                        <img src={v.refereeAvatar} alt={v.refereeName} style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", border: "1px solid rgba(201,162,39,0.3)" }} />
+                      ) : (
+                        <div style={{ width: 22, height: 22, borderRadius: "50%", background: "rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "11px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          {v.refereeName ? v.refereeName.charAt(0).toUpperCase() : '⚖️'}
+                        </div>
+                      )}
+                      <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "#fbbf24", textDecoration: v.refereeId ? "underline" : "none" }}>{v.refereeName || "System Referee"}</span>
+                    </button>
+                  </td>
                   <td style={{ padding: "0.75rem 1rem", color: "#c9a227", fontSize: "0.8rem" }}>{v.penalty}</td>
                   <td style={{ padding: "0.75rem 1rem", color: v.status === "CONFIRMED" ? "#4ade80" : "#f87171", fontFamily: "monospace", fontSize: "0.75rem" }}>
                     {v.status === "CONFIRMED" ? $t("Acknowledged", (localStorage.getItem('app-lang') || 'vi')) : $t("Pending Acknowledgment", (localStorage.getItem('app-lang') || 'vi'))}
@@ -610,6 +917,7 @@ export default function Jockey() {
   const [meetings, setMeetings] = useState<any[]>([]);        // Thông tin các ngày hội đua
   const [violations, setViolations] = useState<any[]>([]);    // Sự cố vi phạm luật bị ghi nhận
   const [allRaces, setAllRaces] = useState<any[]>([]);        // Lịch đua chung hệ thống
+  const [refereesMap, setRefereesMap] = useState<Record<number, any[]>>({}); // Trọng tài được phân công
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -619,20 +927,22 @@ export default function Jockey() {
     if (!user) return;
     setLoading(true);
     try {
-      const [stats, mountData, invites, allMeetings, viols, racesData] = await Promise.all([
+      const [stats, mountData, invites, allMeetings, viols, racesData, refsData] = await Promise.all([
         api.get<any>(`/jockey/${user.id}/dashboard`).catch(() => null),
         api.get<any[]>(`/jockey/${user.id}/mounts`).catch(() => []),
         api.get<any[]>(`/invitations?jockeyId=${user.id}`).catch(() => []),
         api.get<any[]>("/public/meetings").catch(() => []),
         api.get<any[]>(`/jockey/${user.id}/violations`).catch(() => []),
         api.get<any[]>("/public/races").catch(() => []),
+        api.get<Record<number, any[]>>("/public/races/referees").catch(() => ({})),
       ]);
       setDashboard(stats);
       setMounts(mountData);
-      setInvitations(Array.isArray(invites) ? invites.filter(i => i.status === "PENDING") : []);
+      setInvitations(Array.isArray(invites) ? invites : []);
       setMeetings(Array.isArray(allMeetings) ? allMeetings : []);
       setViolations(Array.isArray(viols) ? viols : []);
       setAllRaces(Array.isArray(racesData) ? racesData : []);
+      setRefereesMap(refsData || {});
     } catch (err: any) {
       setErrorMsg(getErrMsg(err, "Failed to load jockey data."));
     } finally { setLoading(false); }
@@ -694,9 +1004,9 @@ export default function Jockey() {
     switch (activeTab) {
       case "hub":         return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
       case "mounts":      return <MountsView mounts={mounts} loading={loading} onViewHorse={setSelectedHorse} />;
-      case "calendar":    return <CalendarView meetings={meetings} allRaces={allRaces} />;
-      case "invitations": return <InvitationsView invitations={invitations.filter((i: any) => i.status === "PENDING")} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} />;
-      case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} />;
+      case "calendar":    return <CalendarView meetings={meetings} allRaces={allRaces} refereesMap={refereesMap} />;
+      case "invitations": return <InvitationsView invitations={invitations} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} refereesMap={refereesMap} />;
+      case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} onViewProfile={setSelectedProfileId} />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;
       default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
     }

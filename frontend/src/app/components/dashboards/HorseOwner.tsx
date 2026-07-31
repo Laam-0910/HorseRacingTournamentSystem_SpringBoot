@@ -203,12 +203,14 @@ const StatusBadge = ({ status }: { status: string }) => {
   const map: Record<string, string> = {
     APPROVED: "rgba(74,157,111,0.15)", ACTIVE: "rgba(74,157,111,0.15)",
     PENDING: "rgba(201,162,39,0.15)", ACCEPTED: "rgba(74,157,111,0.15)",
+    PENDING_ADMIN: "rgba(245,158,11,0.15)",
     REJECTED: "rgba(239,91,91,0.15)", DECLINED: "rgba(239,91,91,0.15)",
     CLOSED: "rgba(255,255,255,0.08)", DECLARATION_OPEN: "rgba(201,162,39,0.15)",
   };
   const tc: Record<string, string> = {
     APPROVED: "#4a9d6f", ACTIVE: "#4a9d6f",
     PENDING: "#c9a227", ACCEPTED: "#4a9d6f",
+    PENDING_ADMIN: "#f59e0b",
     REJECTED: "#ef5b5b", DECLINED: "#ef5b5b",
     CLOSED: "rgba(255,255,255,0.4)", DECLARATION_OPEN: "#c9a227",
   };
@@ -799,10 +801,11 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
 }
 
 // ── CalendarView ───────────────────────────────────────────────────────────
-function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onSendInvitation, onViewProfile }: {
+function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onSendInvitation, onViewProfile, refereesMap }: {
   meetings: any[]; allRaces: any[]; seasons: any[]; dashboard: any; invitations: any[];
   onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
   onViewProfile: (id: number) => void;
+  refereesMap?: Record<number, any[]>;
 }) {
   const [seasonFilter, setSeasonFilter] = useState("");
 
@@ -878,6 +881,7 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
                           invitations={invitations}
                           onSendInvitation={onSendInvitation}
                           onViewProfile={onViewProfile}
+                          refereesMap={refereesMap}
                         />
                       );
                     })}
@@ -888,10 +892,11 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
   );
 }
 
-function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invitations, onSendInvitation, onViewProfile }: {
+function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invitations, onSendInvitation, onViewProfile, refereesMap }: {
   race: any; isReg: boolean; eligibleHorses: any[]; jockeys: any[]; bookedJockeysMap?: Record<number, number[]>; invitations: any[];
   onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
   onViewProfile: (id: number) => void;
+  refereesMap?: Record<number, any[]>;
 }) {
   const [horseId, setHorseId] = useState("");
   const [jockeyId, setJockeyId] = useState("");
@@ -930,6 +935,8 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
     setHorseId(""); setJockeyId("");
   };
 
+  const assignedReferees = refereesMap?.[race.id] || [];
+
   return (
     <div style={{ padding: "1.25rem", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", flexWrap: "wrap", gap: "1.5rem", justifyContent: "space-between" }}>
       {/* Race info */}
@@ -954,6 +961,27 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
           <span><strong style={{ color: "rgba(201,162,39,0.8)" }}>{$t("Entries Open:", (localStorage.getItem('app-lang') || 'vi'))}</strong> {formatDate(race.registrationStartTime)}</span>
           <span><strong style={{ color: "rgba(201,162,39,0.8)" }}>{$t("Close:", (localStorage.getItem('app-lang') || 'vi'))}</strong> {formatDate(race.registrationEndTime)}</span>
         </div>
+
+        {/* Trọng tài phân công cho trận đua */}
+        {assignedReferees.length > 0 && (
+          <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: "0.4rem" }}>
+            <span style={{ color: "#c9a227", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              ⚖️ {$t("Assigned Referee:", (localStorage.getItem('app-lang') || 'vi'))}
+            </span>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
+              {assignedReferees.map((ref: any) => (
+                <span key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(255,255,255,0.04)", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", border: "1px solid rgba(255,255,255,0.08)", color: "#f4f2ec" }}>
+                  {ref.avatar ? (
+                    <img src={ref.avatar} alt={ref.fullName || ref.username} style={{ width: 16, height: 16, borderRadius: "50%", objectFit: "cover" }} />
+                  ) : (
+                    <span style={{ fontSize: "10px" }}>👤</span>
+                  )}
+                  <span style={{ fontWeight: 600, color: "#fbbf24" }}>{ref.fullName || ref.username}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Invitation form */}
@@ -1001,8 +1029,9 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
 }
 
 // ── InvitationsView ────────────────────────────────────────────────────────
-function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }: { invitations: any[]; onViewProfile: (id: number) => void; onResubmit: (entryId: number) => void; onWithdraw: (invitationId: number) => void }) {
+function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, refereesMap }: { invitations: any[]; onViewProfile: (id: number) => void; onResubmit: (entryId: number) => void; onWithdraw: (invitationId: number) => void; refereesMap?: Record<number, any[]> }) {
   const lang = localStorage.getItem("app-lang") || "vi";
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -1010,21 +1039,69 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }:
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const filteredInvitations = invitations.filter((inv: any) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    const meetingMatch = (inv.meetingName || "").toLowerCase().includes(q);
+    const horseMatch = (inv.horseName || "").toLowerCase().includes(q);
+    const jockeyMatch = (inv.jockeyName || "").toLowerCase().includes(q);
+    const classMatch = (inv.classLevel || "").toLowerCase().includes(q);
+    const idMatch = String(inv.raceId || "").includes(q) || String(inv.id || "").includes(q);
+    return meetingMatch || horseMatch || jockeyMatch || classMatch || idMatch;
+  });
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <div>
-        <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Sent Invitations", (localStorage.getItem('app-lang') || 'vi'))}</h3>
-        <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>{$t("Manage and track invitations sent to jockeys for various races.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: "1rem" }}>
+        <div>
+          <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Sent Invitations", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>{$t("Manage and track invitations sent to jockeys for various races.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+        </div>
+
+        {/* Ô tìm kiếm theo tên giải đấu (Spring Grand Prix 2026...), tên ngựa, tên nài */}
+        <div style={{ position: "relative", minWidth: "260px", flex: "1", maxWidth: "340px" }}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={$t("Search meeting, owner, horse name...", (localStorage.getItem('app-lang') || 'vi'))}
+            style={{
+              width: "100%",
+              padding: "0.45rem 0.75rem 0.45rem 2.2rem",
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              borderRadius: "0.375rem",
+              color: "#f4f2ec",
+              fontSize: "0.75rem",
+              fontFamily: "monospace",
+              outline: "none",
+              boxSizing: "border-box"
+            }}
+          />
+          <span style={{ position: "absolute", left: "0.7rem", top: "50%", transform: "translateY(-50%)", color: "#c9a227", fontSize: "0.85rem", pointerEvents: "none" }}>
+            🔍
+          </span>
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              style={{ position: "absolute", right: "0.6rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem" }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
       {isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {invitations.length === 0 ? (
+          {filteredInvitations.length === 0 ? (
             <div className="rounded-xl border" style={{ borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.01)", padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>
-              {lang === "vi" ? "Chưa gửi lời mời nào." : "No invitations have been sent yet."}
+              {lang === "vi" ? "Chưa gửi lời mời nào phù hợp." : "No matching invitations found."}
             </div>
           ) : (
-            invitations.map((inv: any) => {
+            filteredInvitations.map((inv: any) => {
               const displayStatus = (inv.status === "ACCEPTED" && inv.entryStatus) ? inv.entryStatus : inv.status;
+              const assignedRefs = refereesMap?.[inv.raceId] || [];
               return (
                 <div key={inv.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
@@ -1094,6 +1171,17 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }:
                         {inv.jockeyName ?? `Jockey #${inv.jockeyId}`}
                       </button>
                     </div>
+                    {assignedRefs.length > 0 && (
+                      <div style={{ width: "100%", display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.75rem" }}>⚖️ {$t("Referee:", (localStorage.getItem('app-lang') || 'vi'))} </span>
+                        {assignedRefs.map((ref: any) => (
+                          <span key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(255,255,255,0.04)", padding: "0.1rem 0.4rem", borderRadius: "0.25rem", color: "#fbbf24", fontSize: "0.75rem", fontWeight: "bold" }}>
+                            {ref.avatar ? <img src={ref.avatar} alt={ref.fullName} style={{ width: 14, height: 14, borderRadius: "50%" }} /> : "👤"}
+                            {ref.fullName || ref.username}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               );
@@ -1106,16 +1194,17 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }:
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "700px" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.02)" }}>
-                  {["ID", "Meeting", "Race", "Horse", "Jockey", "Status"].map(h => (
+                  {["ID", "Meeting", "Race", "Horse", "Jockey", "Referee", "Status"].map(h => (
                     <th key={h} style={{ padding: "0.75rem 1.25rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {invitations.length === 0
-                  ? <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>{lang === "vi" ? "Chưa gửi lời mời nào." : "No invitations have been sent yet."}</td></tr>
-                  : invitations.map((inv: any) => {
+                {filteredInvitations.length === 0
+                  ? <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>{lang === "vi" ? "Chưa gửi lời mời nào phù hợp." : "No matching invitations found."}</td></tr>
+                  : filteredInvitations.map((inv: any) => {
                     const displayStatus = (inv.status === "ACCEPTED" && inv.entryStatus) ? inv.entryStatus : inv.status;
+                    const assignedRefs = refereesMap?.[inv.raceId] || [];
                     return (
                       <tr key={inv.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                         <td style={{ padding: "0.875rem 1.25rem", fontFamily: "monospace", fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>#{inv.id}</td>
@@ -1143,6 +1232,20 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw }:
                           >
                             {inv.jockeyName ?? `Jockey #${inv.jockeyId}`}
                           </button>
+                        </td>
+                        <td style={{ padding: "0.875rem 1.25rem" }}>
+                          {assignedRefs.length === 0 ? (
+                            <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.3)", fontStyle: "italic" }}>-</span>
+                          ) : (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                              {assignedRefs.map((ref: any) => (
+                                <span key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", fontSize: "0.75rem", color: "#fbbf24", fontWeight: 600 }}>
+                                  {ref.avatar ? <img src={ref.avatar} alt={ref.fullName} style={{ width: 16, height: 16, borderRadius: "50%" }} /> : "⚖️"}
+                                  {ref.fullName || ref.username}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </td>
                         <td style={{ padding: "0.875rem 1.25rem" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -1321,6 +1424,7 @@ export default function HorseOwner() {
   const [allRaces, setAllRaces] = useState<any[]>([]);        // Tất cả các cuộc đua
   const [seasons, setSeasons] = useState<any[]>([]);          // Thông tin các mùa giải
   const [results, setResults] = useState<any[]>([]);          // Lịch sử về đích của chuồng ngựa
+  const [refereesMap, setRefereesMap] = useState<Record<number, any[]>>({}); // Ánh xạ trọng tài trận đua
   
   // Banner thông báo lỗi / thành công
   const [successMsg, setSuccessMsg] = useState("");
@@ -1330,7 +1434,7 @@ export default function HorseOwner() {
   const fetchData = async () => {
     if (!user) return;
     try {
-      const [stats, stableData, invites, allMeetings, ownerResults, allSeasonsData, racesData] = await Promise.all([
+      const [stats, stableData, invites, allMeetings, ownerResults, allSeasonsData, racesData, refsData] = await Promise.all([
         api.get<any>(`/owner/${user.id}/dashboard`).catch(() => null),
         api.get<any[]>(`/owner/${user.id}/stable`).catch(() => []),
         api.get<any[]>(`/owner/${user.id}/invitations`).catch(() => []),
@@ -1338,6 +1442,7 @@ export default function HorseOwner() {
         api.get<any[]>(`/owner/${user.id}/results`).catch(() => []),
         api.get<any[]>("/races/seasons").catch(() => []),
         api.get<any[]>("/races").catch(() => []),
+        api.get<Record<number, any[]>>("/public/races/referees").catch(() => ({})),
       ]);
       setDashboard(stats);
       setStable(Array.isArray(stableData) ? stableData : []);
@@ -1346,6 +1451,7 @@ export default function HorseOwner() {
       setResults(Array.isArray(ownerResults) ? ownerResults : []);
       setSeasons(Array.isArray(allSeasonsData) ? allSeasonsData : []);
       setAllRaces(Array.isArray(racesData) ? racesData : []);
+      setRefereesMap(refsData || {});
     } catch (err: any) { 
       setErrorMsg(getErrMsg(err, "Failed to load owner data.")); 
     }
@@ -1469,9 +1575,9 @@ export default function HorseOwner() {
       case "stable":
         return <StableView stable={stable} onRefresh={fetchData} />;
       case "calendar":
-        return <CalendarView meetings={meetings} allRaces={allRaces} seasons={seasons} dashboard={dashboard} invitations={invitations} onSendInvitation={handleSendInvitation} onViewProfile={setSelectedProfileId} />;
+        return <CalendarView meetings={meetings} allRaces={allRaces} seasons={seasons} dashboard={dashboard} invitations={invitations} onSendInvitation={handleSendInvitation} onViewProfile={setSelectedProfileId} refereesMap={refereesMap} />;
       case "invitations":
-        return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} onWithdraw={handleWithdrawInvitation} />;
+        return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} onWithdraw={handleWithdrawInvitation} refereesMap={refereesMap} />;
       case "results":
         return <ResultsView results={results} />;
       case "profile":

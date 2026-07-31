@@ -5,6 +5,7 @@ import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, formatDate, formatForApi, parseSafeDate } from "../../utils/dateTimeHelper";
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 import { confirm } from "../../../lib/confirm";
+import ProfileModal from "../dashboards/components/ProfileModal";
 
 /**
  * Component RaceDaySchedule - Phân hệ hiển thị và lập Lịch trình Ngày hội đua (Race Day Schedule) dành cho Admin.
@@ -23,6 +24,9 @@ export default function RaceDaySchedule() {
   const [loading, setLoading] = useState(false);
   const [loadingRaces, setLoadingRaces] = useState(false);
   const [error, setError] = useState("");
+
+  // State xem Profile Modal
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
 
   // --- Các State phục vụ Modal Thêm nhanh cuộc đua ---
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -366,9 +370,23 @@ export default function RaceDaySchedule() {
                       {item.referees && item.referees.length > 0 ? (
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
                           {item.referees.map((ref: any) => (
-                            <div key={ref.id} style={{ padding: "0.5rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.25rem", fontSize: "12px", color: "rgba(255,255,255,0.8)" }}>
-                              {ref.username}
-                            </div>
+                            <button
+                              key={ref.id}
+                              type="button"
+                              onClick={() => setSelectedProfileId(ref.id)}
+                              style={{ width: "100%", textAlign: "left", background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                            >
+                              <div style={{ padding: "0.4rem 0.6rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.375rem", fontSize: "12px", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                                {ref.avatar ? (
+                                  <img src={ref.avatar} alt={ref.fullName || ref.username} style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(201,162,39,0.3)" }} />
+                                ) : (
+                                  <div style={{ width: 20, height: 20, borderRadius: "50%", background: "rgba(201,162,39,0.2)", color: "#c9a227", fontSize: "10px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                                    {ref.fullName ? ref.fullName.charAt(0).toUpperCase() : (ref.username ? ref.username.charAt(0).toUpperCase() : 'R')}
+                                  </div>
+                                )}
+                                <span style={{ fontWeight: 600, color: "#fbbf24", textDecoration: "underline" }}>{ref.fullName || ref.username}</span>
+                              </div>
+                            </button>
                           ))}
                         </div>
                       ) : (
@@ -500,6 +518,10 @@ export default function RaceDaySchedule() {
         document.body
       )}
 
+      {/* Modal Profile Trọng tài */}
+      {selectedProfileId !== null && (
+        <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
+      )}
     </div>
   );
 }
