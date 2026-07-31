@@ -577,7 +577,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
 
                   <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.7rem" }}>
                     <span style={{ color: "#a0a0a0" }}>Lời mời: <strong style={{ color: "#f4f2ec" }}>{$t(inv.status || '', lang)}</strong></span>
-                    {inv.entryStatus && (
+                    {inv.status === "ACCEPTED" && inv.entryStatus && (
                       <span style={{ color: "#a0a0a0" }}>{t.entryStatus} <StatusBadge status={inv.entryStatus} /></span>
                     )}
                   </div>
