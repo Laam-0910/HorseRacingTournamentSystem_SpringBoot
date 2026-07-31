@@ -77,7 +77,7 @@ function Icon({ name, size = 14, color }: { name: string; size?: number; color?:
  * @param label Nhãn gốc bằng tiếng Anh cần dịch
  * @param lang Mã ngôn ngữ hiện tại của app ('vi', 'en', 'zh', 'ja')
  */
-const translateLabel = (label: string, lang: string): string => {
+const translateLabel = (label: string, lang: string = 'en'): string => {
   const dict: Record<string, Record<string, string>> = {
     "Incidents": { en: "Incidents" },
     "Duties": { en: "Duties" }

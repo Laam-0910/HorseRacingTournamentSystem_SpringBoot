@@ -371,16 +371,7 @@ export default function RaceDaySchedule() {
                         <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
                           {item.referees.map((ref: any) => (
 
-                            <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "0.375rem 0.625rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.375rem", fontSize: "11px", color: "#f4f2ec", fontWeight: 600 }}>
-                              {ref.avatar ? (
-                                <img src={ref.avatar} alt={ref.username} style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />
-                              ) : (
-                                <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#c9a227", color: "#000", fontSize: "10px", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                                  {(ref.username || "R").charAt(0).toUpperCase()}
-                                </span>
-                              )}
-                              <span>{ref.username}</span>
-                            </div>
+
 
                             <button
                               key={ref.id}

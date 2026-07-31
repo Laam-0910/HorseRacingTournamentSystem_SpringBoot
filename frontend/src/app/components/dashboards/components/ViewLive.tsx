@@ -110,7 +110,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
       { user: "SpectatorX", text: $t("Jockey nài ngựa Ryan chạy rất thông minh.", (localStorage.getItem('app-lang') || 'vi')), time: "14:16" },
       { user: "RaceAnalyst", text: $t("Quá hay! Vòng cuối rồi anh em ơi!", (localStorage.getItem('app-lang') || 'vi')), time: "14:17" }
     ]);
-  }, [lang]);
+  }, []);
 
   useEffect(() => {
     fetchLiveRaces();

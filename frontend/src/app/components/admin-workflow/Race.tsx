@@ -544,18 +544,6 @@ export default function Race() {
                     <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "10px", display: "block" }}>Referees Assigned ({assigned.length})</span>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
                       {assigned.map(ref => (
-                        <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
-                          {ref.avatar ? (
-                            <img src={ref.avatar} alt={ref.username} style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover" }} />
-                          ) : (
-                            <span style={{ width: 18, height: 18, borderRadius: "50%", background: "#c9a227", color: "#000", fontSize: "9px", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                              {(ref.username || "R").charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                          <span>{ref.username}</span>
-                          {!isRefLocked && (
-                            <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "2px", fontSize: "10px" }}>×</button>
-
                         <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "11px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
                           <button
                             type="button"
@@ -712,17 +700,6 @@ export default function Race() {
                       <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
                         <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
                           {assigned.map(ref => (
-                            <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "10px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
-                              {ref.avatar ? (
-                                <img src={ref.avatar} alt={ref.username} style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover" }} />
-                              ) : (
-                                <span style={{ width: 18, height: 18, borderRadius: "50%", background: "#c9a227", color: "#000", fontSize: "9px", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
-                                  {(ref.username || "R").charAt(0).toUpperCase()}
-                                </span>
-                              )}
-                              <span>{ref.username}</span>
-                              {!isRefLocked && (
-                                <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "2px", fontSize: "10px" }} title="Remove referee">×</button>
                             <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "11px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
                               <button
                                 type="button"

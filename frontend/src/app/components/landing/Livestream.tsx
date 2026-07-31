@@ -98,7 +98,7 @@ export default function Livestream() {
       { user: "TurfKing", text: $t("Theo các bác ai sẽ về nhất vòng này?", (localStorage.getItem('app-lang') || 'vi')), time: `2 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
       { user: "BetMaster", text: $t("Thunder King chạy khỏe quá, tạ gánh vừa khít."), time: `10 ${$t("giây trước", (localStorage.getItem('app-lang') || 'vi'))}` },
     ]);
-  }, [lang]);
+  }, []);
 
   // Effect tải danh sách các trận đấu đang phát trực tiếp và tự động chạy lại sau mỗi 15 giây
   useEffect(() => {

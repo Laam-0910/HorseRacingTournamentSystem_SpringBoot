@@ -561,7 +561,7 @@ export default function RefereeHub() {
     if (!selectedRace) return;
     setLoading(true);
     try {
-      const isVi = lang === "vi";
+      const isVi = (localStorage.getItem('app-lang') || 'vi') === "vi";
 
       // 1. Kiểm tra số lượng chiến mã thực tế tham gia (loại bỏ các ngựa bị SCRATCH)
       const activeCount = raceEntries.filter(item => vetChecks[item.entry.id] !== "SCRATCH").length;
@@ -854,7 +854,7 @@ export default function RefereeHub() {
     if (!selectedRace) return;
     setLoading(true);
     try {
-      const isVi = lang === "vi";
+      const isVi = (localStorage.getItem('app-lang') || 'vi') === "vi";
       
       // 1. Ràng buộc biểu thức thời gian và thứ hạng của các chiến mã đạt chuẩn (không bị DQ)
       for (const item of raceEntries) {

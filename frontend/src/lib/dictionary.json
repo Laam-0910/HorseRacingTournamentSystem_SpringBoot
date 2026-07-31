@@ -2673,9 +2673,6 @@
     "en": "Are you sure you want to disqualify this horse?"
   },
   "CRITICAL: Are you sure you want to stop this race?": {
-<<<<<<< HEAD
-    "en": "CRITICAL: Are you sure you want to stop this race?"
-=======
     "en": "CRITICAL: Are you sure you want to stop this race?",
     "vi": "CẢNH BÁO: Bạn có chắc chắn muốn dừng trận đấu này ngay lập tức không?",
     "ja": "緊急：このレースを停止してもよろしいですか？",
@@ -2728,6 +2725,5 @@
     "vi": "Tìm kiếm tên giải đấu, chủ ngựa, tên ngựa...",
     "ja": "大会名、馬主名、馬名で検索...",
     "zh": "按赛事名称、马主、马名搜索..."
->>>>>>> 24531ad6fd98fbe8cec219ca145aebf80773ebbb
   }
 }
