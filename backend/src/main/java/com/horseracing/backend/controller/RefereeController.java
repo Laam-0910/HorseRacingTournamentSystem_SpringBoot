@@ -109,20 +109,6 @@ public class RefereeController {
 
     // Cho phép trận đua đang bị tạm dừng (STOPPED) được chạy tiếp tục (RUNNING)
     @PostMapping("/races/{raceId}/resume")
-    @Operation(
-        summary = "POST: Tiếp tục trận đua sau khi tạm dừng",
-        description = "📝 **CẤU TRÚC CODE & LUỒNG XỬ LÝ POST API:**\n\n" +
-                      "📌 **CÁC CLASS MÃ NGUỒN XỬ LÝ:**\n" +
-                      "* **Controllers**: `RefereeController.resumeRace()`\n" +
-                      "* **Services**: `RefereeService.resumeRace()`\n" +
-                      "* **Repositories**: `RaceRepository.save()`, `RaceEntryRepository.findByRaceId()`, `RaceEntryRepository.save()`\n" +
-                      "* **DTO Response**: `Map<String, Object>` (`{\"success\": true, \"message\": \"...\"}`)\n" +
-                      "* **Frontend**: `RefereeSupervision.tsx`, `RefereeHub.tsx`, `refereeService.ts`\n\n" +
-                      "🔄 **LUỒNG XỬ LÝ NGHIỆP VỤ DETAILED:**\n" +
-                      "1. Kiểm tra trận đua đang ở trạng thái `STOPPED`.\n" +
-                      "2. Đổi trạng thái `Race` về `RUNNING`.\n" +
-                      "3. Duyệt danh sách `RaceEntry`: khôi phục trạng thái từ `STOPPED` trở lại `RUNNING` cho tất cả thí sinh tham gia."
-    )
     public ResponseEntity<?> resumeRace(@PathVariable Integer raceId) {
         try { // Khối xử lý ngoại lệ khi cho trận đua chạy tiếp tục
             refereeService.resumeRace(raceId); // Gọi service tiếp tục trận đua sau tạm dừng

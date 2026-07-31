@@ -1209,7 +1209,7 @@ export default function Landing() {
           bg,
           title: n.title,
           desc: n.message,
-          time: $t("Thông báo", (localStorage.getItem('app-lang') || 'vi'))
+          time: lang === "vi" ? "Thông báo" : "Notification"
         });
       });
     }

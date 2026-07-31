@@ -1066,7 +1066,7 @@ export default function Jockey() {
       case "invitations": return <InvitationsView invitations={invitations} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} refereesMap={refereesMap} />;
       case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} onViewProfile={setSelectedProfileId} />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;
-      default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
+      default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} />;
     }
   };
 
