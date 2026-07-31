@@ -355,6 +355,7 @@ public class PublicDataController {
         response.put("roleId", user.getRoleId());
         response.put("avatar", user.getAvatar());
         response.put("biography", user.getBiography() != null ? user.getBiography() : "");
+        response.put("balance", user.getBalance() != null ? user.getBalance() : BigDecimal.ZERO);
 
         if (user.getRoleId() == 1) {
             // Thống kê dành riêng cho Admin

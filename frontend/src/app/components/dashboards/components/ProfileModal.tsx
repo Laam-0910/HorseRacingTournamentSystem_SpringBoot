@@ -177,9 +177,15 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                           <p className="text-lg font-bold font-mono text-amber-400 mt-1">{profile.top3}</p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Tỉ lệ Nhất / Top 3", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">Tỉ lệ Nhất / Top 3</p>
                           <p className="text-sm font-bold font-mono text-white mt-1">
                             {profile.winRate.toFixed(1)}% / {profile.top3Rate.toFixed(1)}%
+                          </p>
+                        </div>
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center col-span-2">
+                          <p className="text-[9px] font-mono text-amber-400/80 uppercase font-bold">💰 Ví tiền thưởng (Wallet Balance)</p>
+                          <p className="text-lg font-bold font-mono text-amber-400 mt-0.5">
+                            ${(profile.balance || 0).toLocaleString()}
                           </p>
                         </div>
                       </>
@@ -196,9 +202,15 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                           </p>
                         </div>
                         <div className="p-3 bg-white/[0.015] border border-white/5 rounded-xl text-center col-span-2">
-                          <p className="text-[9px] font-mono text-white/40 uppercase">{$t("Tổng tiền thưởng", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                          <p className="text-[9px] font-mono text-white/40 uppercase">Tổng tiền thưởng nhận</p>
                           <p className="text-base font-bold font-mono text-emerald-400 mt-1">
                             ${profile.totalEarnings.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center col-span-2">
+                          <p className="text-[9px] font-mono text-amber-400/80 uppercase font-bold">💰 Ví tiền thưởng (Wallet Balance)</p>
+                          <p className="text-lg font-bold font-mono text-amber-400 mt-0.5">
+                            ${(profile.balance || 0).toLocaleString()}
                           </p>
                         </div>
                       </>

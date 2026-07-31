@@ -46,6 +46,9 @@ public class User implements Serializable {
     @Column(name = "status")
     private String status;
 
+    @Column(name = "balance", precision = 15, scale = 2)
+    private BigDecimal balance = BigDecimal.ZERO;
+
     @Column(name = "require_otp")
     private Boolean requireOtp = false;
 
