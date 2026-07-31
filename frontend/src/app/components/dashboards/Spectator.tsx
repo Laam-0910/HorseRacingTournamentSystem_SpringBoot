@@ -628,9 +628,40 @@ export default function Spectator() {
                                             <tr key={idx} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)", background: pos === 1 ? "rgba(201,162,39,0.03)" : "transparent" }}>
                                               <td style={{ padding: "0.5rem", fontWeight: "bold", color: pos <= 3 ? "#f4f2ec" : "#a0a0a0" }}>{posText}</td>
                                               <td style={{ padding: "0.5rem", fontFamily: "monospace" }}>#{e.entry?.gateNumber || "-"}</td>
-                                              <td style={{ padding: "0.5rem", fontWeight: "bold", color: "#fff" }}>{e.horse?.name}</td>
-                                              <td style={{ padding: "0.5rem" }}>{e.jockey?.fullName || e.jockey?.username}</td>
-                                              <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{e.owner?.fullName || e.owner?.username}</td>
+                                              <td 
+                                                style={{ padding: "0.5rem", fontWeight: "bold", color: "#c9a227", cursor: e.horse?.id ? "pointer" : "default" }}
+                                                onClick={(ev) => {
+                                                  if (e.horse?.id) {
+                                                    ev.stopPropagation();
+                                                    setSelectedHorseId(e.horse.id);
+                                                    setSelectedHorseName(e.horse.name);
+                                                  }
+                                                }}
+                                              >
+                                                {e.horse?.name || "—"}
+                                              </td>
+                                              <td 
+                                                style={{ padding: "0.5rem", color: "#60a5fa", cursor: e.jockey?.id ? "pointer" : "default" }}
+                                                onClick={(ev) => {
+                                                  if (e.jockey?.id) {
+                                                    ev.stopPropagation();
+                                                    setSelectedProfileId(e.jockey.id);
+                                                  }
+                                                }}
+                                              >
+                                                {e.jockey?.fullName || e.jockey?.username || "—"}
+                                              </td>
+                                              <td 
+                                                style={{ padding: "0.5rem", color: "#4ade80", cursor: e.owner?.id ? "pointer" : "default" }}
+                                                onClick={(ev) => {
+                                                  if (e.owner?.id) {
+                                                    ev.stopPropagation();
+                                                    setSelectedProfileId(e.owner.id);
+                                                  }
+                                                }}
+                                              >
+                                                {e.owner?.fullName || e.owner?.username || "—"}
+                                              </td>
                                               <td style={{ padding: "0.5rem", fontFamily: "monospace", color: "#a0a0a0" }}>
                                                 {e.entry?.carriedWeight ? `${e.entry.carriedWeight}kg` : "-"} / {e.entry?.weighInWeight ? `${e.entry.weighInWeight}kg` : "-"}
                                               </td>

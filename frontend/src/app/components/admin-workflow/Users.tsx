@@ -2,6 +2,7 @@ import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { api, getErrMsg } from "../../../lib/api";
+import { PaginationControls } from "./PaginationControls";
 
 /**
  * Component Users - Phân hệ Quản lý Tài khoản người dùng (User Accounts Management) dành cho Admin.
@@ -184,6 +185,13 @@ export default function Users() {
     }
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterRole]);
+
   // Tiến hành lọc danh sách người dùng theo vai trò và thanh tìm kiếm
   const filteredUsers = users.filter((u) => {
     let matchesRole = true;
@@ -203,6 +211,9 @@ export default function Users() {
 
     return matchesRole && matchesSearch;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   // Chuyển đổi ID vai trò thành nhãn hiển thị tương ứng
   const getRoleName = (roleId: number) => {
@@ -334,9 +345,9 @@ export default function Users() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
               <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</div>
-            ) : filteredUsers.length === 0 ? (
+            ) : paginatedUsers.length === 0 ? (
               <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No matching users found.", (localStorage.getItem('app-lang') || 'vi'))}</div>
-            ) : filteredUsers.map((u) => (
+            ) : paginatedUsers.map((u) => (
               <div key={u.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", opacity: u.status === "INACTIVE" ? 0.6 : 1 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                   <div>
@@ -379,9 +390,9 @@ export default function Users() {
               <tbody className="divide-y divide-white/5">
                 {loading ? (
                   <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
-                ) : filteredUsers.length === 0 ? (
+                ) : paginatedUsers.length === 0 ? (
                   <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No matching users found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
-                ) : filteredUsers.map((u) => (
+                ) : paginatedUsers.map((u) => (
                   <tr key={u.id} className="hover:bg-white/[0.015] transition-colors" style={{ opacity: u.status === "INACTIVE" ? 0.6 : 1 }}>
                     <td style={{ padding: "0.75rem 1.5rem" }}>
                       <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{u.username}</div>
@@ -413,6 +424,14 @@ export default function Users() {
             </table>
           </div>
         )}
+
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          totalItems={filteredUsers.length}
+          itemsPerPage={ITEMS_PER_PAGE}
+        />
       </div>
 
       {/* BIỂU MẪU CHỈNH SỬA TÀI KHOẢN (Edit User Modal) - Kết xuất ra ngoài thông qua react-dom Portal */}

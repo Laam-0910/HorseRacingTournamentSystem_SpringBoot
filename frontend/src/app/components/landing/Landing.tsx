@@ -5,7 +5,9 @@ import { api } from "../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
 import { parseSafeDate, formatDate } from "../../utils/dateTimeHelper";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
-import { $t } from '@/lib/i18n';
+import ProfileModal from "../dashboards/components/ProfileModal";
+import HorsePerformanceModal from "../dashboards/components/HorsePerformanceModal";
+import { PaginationControls } from "../admin-workflow/PaginationControls";
 
 
 // ─────────────────────────────────────────────
@@ -535,7 +537,7 @@ function SearchView({ query, horses, people, meetings, races, t, setView, lang }
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1.5rem" }}>
         <div>
           <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f0f0f0" }}>
-            {$t("Kết quả tìm kiếm", (localStorage.getItem('app-lang') || 'vi'))}
+            {"Search Results"}
           </h2>
           <p style={{ color: "#a0a0a0", fontSize: "0.875rem", fontFamily: "monospace", marginTop: "0.25rem" }}>
             {st.foundResults(totalMatches, query)}
@@ -725,22 +727,22 @@ function Countdown({ targetDate, t }: { targetDate: string; t: any }) {
     <div className="flex items-center gap-2 md:gap-4 justify-center mt-6 mb-8 animate-fade-in">
       <div className="flex flex-col items-center">
         <div className="text-2xl md:text-3xl font-mono font-bold text-white bg-black/60 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227]/40 backdrop-blur-md min-w-[3rem] md:min-w-[4rem]">{String(timeLeft.d).padStart(2, '0')}</div>
-        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{$t("Ngày", (localStorage.getItem('app-lang') || 'vi'))}</div>
+        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{"Days"}</div>
       </div>
       <div className="text-xl md:text-2xl text-[#c9a227] pb-4 font-bold">:</div>
       <div className="flex flex-col items-center">
         <div className="text-2xl md:text-3xl font-mono font-bold text-white bg-black/60 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227]/40 backdrop-blur-md min-w-[3rem] md:min-w-[4rem]">{String(timeLeft.h).padStart(2, '0')}</div>
-        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{$t("Giờ", (localStorage.getItem('app-lang') || 'vi'))}</div>
+        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{"Hours"}</div>
       </div>
       <div className="text-xl md:text-2xl text-[#c9a227] pb-4 font-bold">:</div>
       <div className="flex flex-col items-center">
         <div className="text-2xl md:text-3xl font-mono font-bold text-white bg-black/60 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227]/40 backdrop-blur-md min-w-[3rem] md:min-w-[4rem]">{String(timeLeft.m).padStart(2, '0')}</div>
-        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{$t("Phút", (localStorage.getItem('app-lang') || 'vi'))}</div>
+        <div className="text-[10px] md:text-xs text-gray-400 mt-2 uppercase tracking-widest font-bold">{"Minutes"}</div>
       </div>
       <div className="text-xl md:text-2xl text-[#c9a227] pb-4 font-bold">:</div>
       <div className="flex flex-col items-center">
         <div className="text-2xl md:text-3xl font-mono font-bold text-[#c9a227] bg-[#c9a227]/10 px-3 py-2 md:px-4 md:py-2 rounded-lg border border-[#c9a227] backdrop-blur-md min-w-[3rem] md:min-w-[4rem] shadow-[0_0_15px_rgba(201,162,39,0.3)]">{String(timeLeft.s).padStart(2, '0')}</div>
-        <div className="text-[10px] md:text-xs text-[#c9a227] mt-2 uppercase tracking-widest font-bold">{$t("Giây", (localStorage.getItem('app-lang') || 'vi'))}</div>
+        <div className="text-[10px] md:text-xs text-[#c9a227] mt-2 uppercase tracking-widest font-bold">{"Seconds"}</div>
       </div>
     </div>
   );
@@ -795,12 +797,12 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
       {/* Active Seasons */}
       <div className="mb-14 animate-fade-in-up delay-300">
         <div className="flex items-center gap-4 mb-8">
-          <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Mùa giải đang hoạt động", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>Active Seasons</h3>
           <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
         </div>
         
         {seasons.length === 0 ? (
-          <p className="text-gray-500 text-sm font-mono italic p-8 glass-panel rounded-2xl text-center border-dashed border-[#2a2825]">{$t("Hiện chưa có mùa giải nào hoạt động.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+          <p className="text-gray-500 text-sm font-mono italic p-8 glass-panel rounded-2xl text-center border-dashed border-[#2a2825]">No active seasons currently.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {seasons.map(s => {
@@ -817,16 +819,16 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
                   <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150"></div>
                   <div className="flex justify-between items-start mb-5 relative z-10">
                     <h4 className="font-bold text-2xl text-white group-hover:text-[#c9a227] transition-colors drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{s.name}</h4>
-                    <span className="text-[0.65rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">{$t("Đang diễn ra", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                    <span className="text-[0.65rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">{"Active"}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm text-gray-300 font-mono relative z-10 bg-[#0e0c09]/50 p-3 rounded-xl border border-white/5">
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 mb-1">{$t("Ngày bắt đầu", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                      <span className="text-xs text-gray-500 mb-1">Start Date</span>
                       <span className="opacity-90 font-semibold">{formatSeasonDate(s.startDate)}</span>
                     </div>
                     <span className="text-[#c9a227]/50 font-sans px-2 text-xl">→</span>
                     <div className="flex flex-col text-right">
-                      <span className="text-xs text-gray-500 mb-1">{$t("Ngày kết thúc", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                      <span className="text-xs text-gray-500 mb-1">{"End Date"}</span>
                       <span className="opacity-90 font-semibold">{formatSeasonDate(s.endDate)}</span>
                     </div>
                   </div>
@@ -840,12 +842,12 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
       {/* Upcoming Meetings */}
       <div className="mb-14 animate-fade-in-up delay-400">
         <div className="flex items-center gap-4 mb-8">
-          <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Các Ngày hội đua sắp tới", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+          <h3 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Upcoming Race Meetings"}</h3>
           <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
         </div>
         
         {meetings.length === 0 ? (
-          <p className="text-gray-500 text-sm font-mono italic p-8 glass-panel rounded-2xl text-center border-dashed border-[#2a2825]">{$t("Chưa lên lịch ngày hội đua nào.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+          <p className="text-gray-500 text-sm font-mono italic p-8 glass-panel rounded-2xl text-center border-dashed border-[#2a2825]">{"No upcoming race meetings."}</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {meetings.map(m => {
@@ -890,14 +892,24 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
   );
 }
 
-function GenericTableView({ title, data, columns }: { title: string; data: any[]; columns: { key: string; label: string }[] }) {
+function GenericTableView({ title, data, columns, onRowClick }: { title: string; data: any[]; columns: { key: string; label: string }[]; onRowClick?: (row: any) => void }) {
+  const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data]);
+
+  const ITEMS_PER_PAGE = 20;
+  const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE) || 1;
+  const paginatedData = data.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const formatValue = (cKey: string, val: any) => {
     if (val === null || val === undefined) return "-";
@@ -927,32 +939,49 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
             <p className="text-gray-500 font-mono text-sm">No data available.</p>
           </div>
         ) : (
-          <div className="flex flex-col gap-4">
-            {data.map((row, i) => (
-              <div key={i} className="glass-panel rounded-xl p-4 border border-[#2a2825] hover:border-[#c9a227]/30 transition-colors">
-                {columns.map((c, colIdx) => {
-                  const val = row[c.key];
-                  if (colIdx === 0) {
+          <>
+            <div className="flex flex-col gap-4">
+              {paginatedData.map((row, i) => (
+                <div 
+                  key={i} 
+                  className={`glass-panel rounded-xl p-4 border border-[#2a2825] hover:border-[#c9a227]/40 transition-all ${onRowClick ? 'cursor-pointer hover:bg-white/[0.02]' : ''}`}
+                  onClick={() => onRowClick?.(row)}
+                >
+                  {columns.map((c, colIdx) => {
+                    const val = row[c.key];
+                    if (colIdx === 0) {
+                      return (
+                        <div key={c.key} className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
+                          <span className="text-sm font-bold text-[#c9a227]">
+                            {c.label}: <span className="text-white">{formatValue(c.key, val)}</span>
+                          </span>
+                        </div>
+                      );
+                    }
                     return (
-                      <div key={c.key} className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
-                        <span className="text-sm font-bold text-[#c9a227]">
-                          {c.label}: <span className="text-white">{formatValue(c.key, val)}</span>
+                      <div key={c.key} className="flex justify-between text-sm py-1.5 border-b border-white/5 last:border-0">
+                        <span className="text-gray-400 font-mono text-xs">{c.label}</span>
+                        <span className={`font-semibold text-right max-w-[60%] truncate ${colIdx === 1 ? 'text-[#c9a227]' : 'text-gray-200'}`}>
+                          {formatValue(c.key, val)}
                         </span>
                       </div>
                     );
-                  }
-                  return (
-                    <div key={c.key} className="flex justify-between text-sm py-1.5 border-b border-white/5 last:border-0">
-                      <span className="text-gray-400 font-mono text-xs">{c.label}</span>
-                      <span className="font-semibold text-gray-200 text-right max-w-[60%] truncate">
-                        {formatValue(c.key, val)}
-                      </span>
-                    </div>
-                  );
-                })}
+                  })}
+                </div>
+              ))}
+            </div>
+            {totalPages > 1 && (
+              <div className="mt-4">
+                <PaginationControls
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                  totalItems={data.length}
+                  itemsPerPage={ITEMS_PER_PAGE}
+                />
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     );
@@ -966,32 +995,49 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
           <p className="text-gray-500 font-mono text-sm">No data available.</p>
         </div>
       ) : (
-        <div className="glass-panel rounded-2xl overflow-hidden border border-[#2a2825]">
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-left">
-              <thead>
-                <tr className="bg-[#1a1815]/80 border-b border-[#2a2825]">
-                  {columns.map(c => (
-                    <th key={c.key} className="py-4 px-6 text-xs font-mono text-[#c9a227] tracking-widest uppercase font-bold whitespace-nowrap">
-                      {c.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#2a2825]/50">
-                {data.map((row, i) => (
-                  <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
-                    {columns.map((c, colIdx) => (
-                      <td key={c.key} className={`py-4 px-6 text-sm text-gray-300 ${colIdx === 0 ? 'font-bold text-white' : ''}`}>
-                        {formatValue(c.key, row[c.key])}
-                      </td>
+        <>
+          <div className="glass-panel rounded-2xl overflow-hidden border border-[#2a2825]">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-left">
+                <thead>
+                  <tr className="bg-[#1a1815]/80 border-b border-[#2a2825]">
+                    {columns.map(c => (
+                      <th key={c.key} className="py-4 px-6 text-xs font-mono text-[#c9a227] tracking-widest uppercase font-bold whitespace-nowrap">
+                        {c.label}
+                      </th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-[#2a2825]/50">
+                  {paginatedData.map((row, i) => (
+                    <tr 
+                      key={i} 
+                      className={`hover:bg-white/[0.02] transition-colors group ${onRowClick ? 'cursor-pointer' : ''}`}
+                      onClick={() => onRowClick?.(row)}
+                    >
+                      {columns.map((c, colIdx) => (
+                        <td key={c.key} className={`py-4 px-6 text-sm ${colIdx === 1 ? 'font-bold text-[#c9a227] group-hover:underline' : colIdx === 0 ? 'font-bold text-white' : 'text-gray-300'}`}>
+                          {formatValue(c.key, row[c.key])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+          {totalPages > 1 && (
+            <div className="mt-4">
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                totalItems={data.length}
+                itemsPerPage={ITEMS_PER_PAGE}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -1000,27 +1046,27 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
 function AboutView({ t }: { t: any }) {
   return (
     <div className="max-w-4xl mx-auto text-center animate-fade-in-up">
-      <h2 className="text-3xl md:text-4xl font-bold text-white tracking-wide uppercase drop-shadow-lg mb-2" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Giới thiệu Hệ thống", (localStorage.getItem('app-lang') || 'vi')) || "About Horse Race System"}</h2>
-      <p className="text-[#c9a227] font-mono text-xs uppercase tracking-widest mb-12">{$t("Nền tảng Quản lý Đua ngựa Toàn diện", (localStorage.getItem('app-lang') || 'vi')) || "The Complete Racing Management Platform"}</p>
+      <h2 className="text-3xl md:text-4xl font-bold text-white tracking-wide uppercase drop-shadow-lg mb-2" style={{ fontFamily: "'Roboto Slab', serif" }}>{"About the System"}</h2>
+      <p className="text-[#c9a227] font-mono text-xs uppercase tracking-widest mb-12">{"Comprehensive Horse Racing Management Platform"}</p>
       
       <div className="glass-panel rounded-3xl p-8 md:p-12 mb-12 relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#c9a227]/20 blur-[100px] rounded-full pointer-events-none"></div>
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-500/20 blur-[100px] rounded-full pointer-events-none"></div>
         
-        <h3 className="text-2xl font-bold text-gold-gradient mb-6 relative z-10" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Sứ mệnh của chúng tôi", (localStorage.getItem('app-lang') || 'vi')) || "Our Mission"}</h3>
+        <h3 className="text-2xl font-bold text-gold-gradient mb-6 relative z-10" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Our Mission"}</h3>
         <p className="text-gray-300 text-base md:text-lg leading-relaxed relative z-10 font-light max-w-2xl mx-auto">
-          {$t("Hệ thống Quản lý Đua ngựa là một nền tảng toàn diện được thiết kế để hợp lý hóa và hiện đại hóa công tác quản lý giải đua ngựa. Từ khâu khởi tạo mùa giải đến khâu vận hành ngày đua, hệ thống của chúng tôi cung cấp cho các quản trị viên, chủ ngựa, nài ngựa và trọng tài những công cụ cần thiết để tổ chức các sự kiện đua ngựa công bằng, hấp dẫn và chuyên nghiệp.", (localStorage.getItem('app-lang') || 'vi')) || "The Horse Race Management System is a comprehensive platform designed to streamline and modernize horse racing tournament management. From season initialization to race-day operations, our system provides administrators, horse owners, jockeys, and referees with the tools they need to conduct fair, exciting, and well-organized race events."}
+          The Horse Race Management System is a comprehensive platform designed to streamline and modernize horse racing tournament management. From season initialization to race-day operations, our system provides administrators, horse owners, jockeys, and referees with the tools they need to conduct fair, exciting, and well-organized race events.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[
-          { icon: "🏆", title: $t("Quản lý Mùa giải", (localStorage.getItem('app-lang') || 'vi')) || "Season Management", desc: $t("Toàn bộ vòng đời giải đấu từ thiết lập đến kết quả", (localStorage.getItem('app-lang') || 'vi')) || "Full tournament lifecycle from setup to results" },
-          { icon: "🐎", title: $t("Hồ sơ Ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Horse Registry", desc: $t("Theo dõi ngựa, đánh giá rating và thành tích", (localStorage.getItem('app-lang') || 'vi')) || "Track horses, ratings, and performance" },
-          { icon: "🏇", title: $t("Quản lý Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Jockey Management", desc: $t("Quản lý hồ sơ nài ngựa và lịch đăng ký", (localStorage.getItem('app-lang') || 'vi')) || "Manage jockey profiles and invitations" },
-          { icon: "📋", title: $t("Vận hành Ngày đua", (localStorage.getItem('app-lang') || 'vi')) || "Race Operations", desc: $t("Bảng đua, lịch trình, giám sát trực tiếp", (localStorage.getItem('app-lang') || 'vi')) || "Racecard, schedule, live supervision" },
-          { icon: "📊", title: $t("Thống kê", (localStorage.getItem('app-lang') || 'vi')) || "Statistics", desc: $t("Tỷ lệ thắng, tiền thưởng, phân tích thành tích", (localStorage.getItem('app-lang') || 'vi')) || "Win rates, earnings, performance analytics" },
-          { icon: "⚠️", title: $t("Báo cáo Sự cố", (localStorage.getItem('app-lang') || 'vi')) || "Incident Reports", desc: $t("Theo dõi vi phạm luật và hình phạt", (localStorage.getItem('app-lang') || 'vi')) || "Rule violation tracking and penalties" },
+          { icon: "🏆", title: "Season Management", desc: "Full tournament lifecycle from setup to results" },
+          { icon: "🐎", title: "Horse Profiles", desc: "Track horses, ratings and performance records" },
+          { icon: "🏇", title: "Jockey Management", desc: "Manage jockey profiles and schedules" },
+          { icon: "📋", title: "Race Day Operations", desc: "Race cards, schedules, live monitoring" },
+          { icon: "📊", title: "Statistics", desc: "Win rates, prize money, performance analysis" },
+          { icon: "⚠️", title: "Incident Reports", desc: "Track rule violations and penalties" },
         ].map((item, i) => (
           <div key={i} className="glass-panel rounded-2xl p-6 hover-lift hover-glow transition-all group border border-[#2a2825]" style={{ animationDelay: `${i * 100}ms` }}>
             <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{item.icon}</div>
@@ -1096,6 +1142,11 @@ export default function Landing() {
   const [selectedRaceEntries, setSelectedRaceEntries] = useState<any[]>([]);
   const [meetingRaces, setMeetingRaces] = useState<any[]>([]);
 
+  // Selected states for Profile & Horse modals
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+  const [selectedHorseId, setSelectedHorseId] = useState<number | null>(null);
+  const [selectedHorseName, setSelectedHorseName] = useState<string>("");
+
   const [clearedNotifications, setClearedNotifications] = useState<string[]>(() => {
     try {
       return JSON.parse(localStorage.getItem("cleared-notifications") || "[]");
@@ -1116,11 +1167,11 @@ export default function Landing() {
         icon: "🏆",
         color: "#c9a227",
         bg: "rgba(201,162,39,0.1)",
-        title: $t("Mùa Giải Hoạt Động", (localStorage.getItem('app-lang') || 'vi')),
+        title: "Active Seasons",
         desc: lang === "vi" 
           ? `Mùa giải ${activeSeason.name} đang diễn ra! Đăng ký tham gia ngay.`
           : `Season ${activeSeason.name} is currently active! Register now.`,
-        time: $t("Đang diễn ra", (localStorage.getItem('app-lang') || 'vi'))
+        time: "Active"
       });
     }
 
@@ -1144,7 +1195,7 @@ export default function Landing() {
           icon: "📅",
           color: "#60a5fa",
           bg: "rgba(96,165,250,0.1)",
-          title: $t("Sự kiện sắp khởi tranh", (localStorage.getItem('app-lang') || 'vi')),
+          title: "Upcoming Event",
           desc: lang === "vi"
             ? `${upcomingMeeting.name} sẽ bắt đầu tại ${upcomingMeeting.venue}.`
             : `${upcomingMeeting.name} starts soon at ${upcomingMeeting.venue}.`,
@@ -1160,7 +1211,7 @@ export default function Landing() {
           icon: "🛡",
           color: "#ef4444",
           bg: "rgba(239,68,68,0.1)",
-          title: $t("Sự cố chờ quyết định", (localStorage.getItem('app-lang') || 'vi')),
+          title: "Incidents Pending Decision",
           desc: lang === "vi"
             ? `Có ${pendingViolations.length} sự cố vi phạm đang chờ xử lý quyết định phạt.`
             : `There are ${pendingViolations.length} violation reports awaiting penalty decision.`,
@@ -1175,7 +1226,7 @@ export default function Landing() {
           icon: "⚙️",
           color: "#fbbf24",
           bg: "rgba(251,191,36,0.1)",
-          title: $t("Trận đua cần xử lý kết quả", (localStorage.getItem('app-lang') || 'vi')),
+          title: "Races Pending Results",
           desc: lang === "vi"
             ? `Có ${unprocessRaces.length} trận đua đã kết thúc cần được duyệt kết quả chính thức.`
             : `There are ${unprocessRaces.length} finished races awaiting official results processing.`,
@@ -1194,7 +1245,7 @@ export default function Landing() {
           icon: "⚠️",
           color: "#ef4444",
           bg: "rgba(239,68,68,0.1)",
-          title: $t("Cảnh báo vi phạm của Ngựa", (localStorage.getItem('app-lang') || 'vi')),
+          title: "Horse Violation Warning",
           desc: lang === "vi"
             ? `Ngựa ${latestOwnerViol.horseName || "của bạn"} bị báo cáo lỗi: ${latestOwnerViol.violation?.description || "Vi phạm luật chạy"}`
             : `Your horse ${latestOwnerViol.horseName || ""} was reported for: ${latestOwnerViol.violation?.description || "Rule violation"}`,
@@ -1220,7 +1271,7 @@ export default function Landing() {
           icon: "📅",
           color: "#60a5fa",
           bg: "rgba(96,165,250,0.1)",
-          title: $t("Sự kiện sắp khởi tranh", (localStorage.getItem('app-lang') || 'vi')),
+          title: "Upcoming Event",
           desc: lang === "vi"
             ? `Đăng ký ngựa của bạn cho sự kiện ${upcomingMeeting.name} tại ${upcomingMeeting.venue}.`
             : `Register your horses for ${upcomingMeeting.name} at ${upcomingMeeting.venue}.`,
@@ -1239,7 +1290,7 @@ export default function Landing() {
           icon: "⚠️",
           color: "#ef4444",
           bg: "rgba(239,68,68,0.1)",
-          title: $t("Bạn có báo cáo vi phạm", (localStorage.getItem('app-lang') || 'vi')),
+          title: "You have a violation report",
           desc: lang === "vi"
             ? `Bạn bị báo cáo vi phạm: ${latestJockeyViol.violation?.description || "Vi phạm luật thi đấu"}`
             : `You have been reported for: ${latestJockeyViol.violation?.description || "Rule violation"}`,
@@ -1265,7 +1316,7 @@ export default function Landing() {
           icon: "🏃‍♂️",
           color: "#60a5fa",
           bg: "rgba(96,165,250,0.1)",
-          title: $t("Sự kiện sắp khởi tranh", (localStorage.getItem('app-lang') || 'vi')),
+          title: "Upcoming Event",
           desc: lang === "vi"
             ? `Buổi đua ${upcomingMeeting.name} sắp diễn ra. Hãy kiểm tra các lượt đăng ký cưỡi ngựa.`
             : `Meeting ${upcomingMeeting.name} starts soon. Check available rides.`,
@@ -1284,7 +1335,7 @@ export default function Landing() {
           icon: "🏁",
           color: "#38bdf8",
           bg: "rgba(56,189,248,0.1)",
-          title: $t("Lượt đua được phân công", (localStorage.getItem('app-lang') || 'vi')),
+          title: "Race Assignment",
           desc: lang === "vi"
             ? `Bạn được phân công làm trọng tài cho ${assignedRaces.length} lượt đua sắp tới.`
             : `You are assigned as referee for ${assignedRaces.length} upcoming races.`,
@@ -1362,7 +1413,7 @@ export default function Landing() {
 
   const getRoleLabel = (roleId: number) => {
     const map: Record<number, string> = { 1: "ADMIN", 2: "OWNER", 3: "JOCKEY", 4: "SPECTATOR", 5: "REFEREE" };
-    return $t(map[roleId] || "MEMBER", (localStorage.getItem('app-lang') || 'vi'));
+    return map[roleId] || "MEMBER";
   };
 
   const getRoleColor = (roleId?: number) => {
@@ -1384,16 +1435,16 @@ export default function Landing() {
   };
 
   const SUB_NAV: { key: SubView; label: string; icon: string }[] = [
-    { key: "live", label: $t("Trực tiếp", (localStorage.getItem('app-lang') || 'vi')), icon: "📺" },
-    { key: "home", label: $t("Đua ngựa", (localStorage.getItem('app-lang') || 'vi')), icon: "🏇" },
-    { key: "racecard", label: $t("Bảng đua", (localStorage.getItem('app-lang') || 'vi')), icon: "ℹ️" },
-    { key: "results", label: $t("Kết quả", (localStorage.getItem('app-lang') || 'vi')), icon: "🏆" },
-    { key: "fixtures", label: $t("Lịch thi đấu", (localStorage.getItem('app-lang') || 'vi')), icon: "📅" },
-    { key: "statistics", label: $t("Thống kê", (localStorage.getItem('app-lang') || 'vi')), icon: "📊" },
-    { key: "horses", label: $t("Danh sách Ngựa", (localStorage.getItem('app-lang') || 'vi')), icon: "🐎" },
-    { key: "jockeys_owners", label: $t("Nài & Chủ ngựa", (localStorage.getItem('app-lang') || 'vi')), icon: "👤" },
-    { key: "incident", label: $t("Báo cáo sự cố", (localStorage.getItem('app-lang') || 'vi')), icon: "⚠️" },
-    { key: "about", label: $t("Giới thiệu", (localStorage.getItem('app-lang') || 'vi')), icon: "ℹ️" },
+    { key: "live", label: "Live", icon: "📺" },
+    { key: "home", label: "Racing", icon: "🏇" },
+    { key: "racecard", label: "Racecard", icon: "ℹ️" },
+    { key: "results", label: "Results", icon: "🏆" },
+    { key: "fixtures", label: "Fixtures", icon: "📅" },
+    { key: "statistics", label: "Statistics", icon: "📊" },
+    { key: "horses", label: "Horses Directory", icon: "🐎" },
+    { key: "jockeys_owners", label: "Jockeys & Owners", icon: "👤" },
+    { key: "incident", label: "Incident Reports", icon: "⚠️" },
+    { key: "about", label: "About", icon: "ℹ️" },
   ];
 
   // Helper date formatter for Landing views
@@ -1422,14 +1473,14 @@ export default function Landing() {
         return (
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Trực tiếp", (localStorage.getItem('app-lang') || 'vi'))}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Live"}</h2>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-red-500/60 to-transparent"></div>
             </div>
             
             {liveRaces.length === 0 ? (
               <div className="glass-panel rounded-2xl flex flex-col items-center justify-center min-h-[40vh] border-dashed border-[#2a2825]">
                 <span className="text-5xl block mb-4 opacity-50 grayscale">📺</span>
-                <p className="text-gray-400 font-mono text-sm max-w-sm text-center">{$t("No live broadcast currently. There are no races running right now.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                <p className="text-gray-400 font-mono text-sm max-w-sm text-center">{"No live broadcast currently. There are no races running right now."}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
@@ -1471,7 +1522,7 @@ export default function Landing() {
                       ) : (
                         <div className="h-[300px] bg-[#1a1815]/80 rounded-xl flex flex-col items-center justify-center border border-[#2a2825] relative overflow-hidden">
                           <span className="text-4xl mb-4 opacity-30 animate-pulse">📡</span>
-                          <p className="text-gray-500 text-xs font-mono uppercase tracking-widest">{$t("Video stream not linked", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                          <p className="text-gray-500 text-xs font-mono uppercase tracking-widest">{"Video stream not linked"}</p>
                         </div>
                       )}
                     </div>
@@ -1485,14 +1536,14 @@ export default function Landing() {
         return (
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Bảng đua", (localStorage.getItem('app-lang') || 'vi'))}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Racecard"}</h2>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Sidebar: Meetings Selection */}
               <div className="flex flex-col gap-4">
-                <h5 className="font-mono text-xs text-[#c9a227] uppercase tracking-widest pl-2 border-l-2 border-[#c9a227]">{$t("Select Meeting", (localStorage.getItem('app-lang') || 'vi'))}</h5>
+                <h5 className="font-mono text-xs text-[#c9a227] uppercase tracking-widest pl-2 border-l-2 border-[#c9a227]">{"Select Meeting"}</h5>
                 
                 {isMobile ? (
                   <select
@@ -1551,7 +1602,7 @@ export default function Landing() {
                         
                         <div className="flex items-center gap-3 mb-6 relative z-10">
                           <span className="text-2xl">🐎</span>
-                          <h4 className="font-bold text-xl text-white tracking-wide" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Runners & Riders", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+                          <h4 className="font-bold text-xl text-white tracking-wide" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Runners & Riders"}</h4>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
@@ -1565,14 +1616,14 @@ export default function Landing() {
                                   {e.horse?.name}
                                 </div>
                                 <div className="text-[11px] text-gray-400 mt-1 truncate">
-                                  <span className="text-gray-500">{$t("J:", (localStorage.getItem('app-lang') || 'vi'))}</span> <span className="text-gray-300">{e.jockey?.fullName || e.jockey?.username}</span>
+                                  <span className="text-gray-500">{"J:"}</span> <span className="text-gray-300">{e.jockey?.fullName || e.jockey?.username}</span>
                                   <span className="mx-2 opacity-30">|</span>
-                                  <span className="text-gray-500">{$t("O:", (localStorage.getItem('app-lang') || 'vi'))}</span> <span className="text-gray-300">{e.owner?.fullName || e.owner?.username}</span>
+                                  <span className="text-gray-500">{"O:"}</span> <span className="text-gray-300">{e.owner?.fullName || e.owner?.username}</span>
                                 </div>
                               </div>
                               <div className="text-right flex-shrink-0">
                                 <div className="text-xs font-mono">
-                                  <span className="text-gray-500">{$t("RTG", (localStorage.getItem('app-lang') || 'vi'))} </span>
+                                  <span className="text-gray-500">{"RTG"} </span>
                                   <span className="text-blue-400 font-bold">{e.horse?.currentRating}</span>
                                 </div>
                                 <div className="text-xs font-mono mt-1 text-[#c9a227]">
@@ -1608,14 +1659,14 @@ export default function Landing() {
         return (
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Kết quả", (localStorage.getItem('app-lang') || 'vi'))}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Results"}</h2>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
               {/* Sidebar: Meetings Selection */}
               <div className="flex flex-col gap-4">
-                <h5 className="font-mono text-xs text-[#c9a227] uppercase tracking-widest pl-2 border-l-2 border-[#c9a227]">{$t("Select Meeting", (localStorage.getItem('app-lang') || 'vi'))}</h5>
+                <h5 className="font-mono text-xs text-[#c9a227] uppercase tracking-widest pl-2 border-l-2 border-[#c9a227]">{"Select Meeting"}</h5>
                 {isMobile ? (
                   <select
                     value={selectedMeetingId || ""}
@@ -1670,7 +1721,7 @@ export default function Landing() {
                       <div className="glass-panel rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
                         <div className="flex items-center gap-3 mb-8 relative z-10">
                           <span className="text-3xl drop-shadow-md">🏆</span>
-                          <h4 className="font-bold text-2xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Final Standings", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+                          <h4 className="font-bold text-2xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Final Standings"}</h4>
                         </div>
                         
                         <div className="flex flex-col gap-4 relative z-10">
@@ -1775,12 +1826,26 @@ export default function Landing() {
                                               {(e.entry?.status === "DISQUALIFIED" || e.entry?.finishTime === "DQ" || !pos) ? "DQ" : pos}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                              <div className="truncate text-gray-300 font-bold" style={{ fontFamily: "'Roboto Slab', serif" }}>
+                                              <div 
+                                                className="truncate text-[#c9a227] font-bold cursor-pointer hover:underline" 
+                                                style={{ fontFamily: "'Roboto Slab', serif" }}
+                                                onClick={() => { if (e.horse?.id) { setSelectedHorseId(e.horse.id); setSelectedHorseName(e.horse.name); } }}
+                                              >
                                                 {e.horse?.name}
                                               </div>
                                               <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-3">
-                                                <span>J: {e.jockey?.fullName || e.jockey?.username}</span>
-                                                <span>O: {e.owner?.fullName || e.owner?.username}</span>
+                                                <span 
+                                                  className="cursor-pointer hover:text-blue-400"
+                                                  onClick={() => { if (e.jockey?.id) setSelectedProfileId(e.jockey.id); }}
+                                                >
+                                                  J: {e.jockey?.fullName || e.jockey?.username || "—"}
+                                                </span>
+                                                <span 
+                                                  className="cursor-pointer hover:text-green-400"
+                                                  onClick={() => { if (e.owner?.id) setSelectedProfileId(e.owner.id); }}
+                                                >
+                                                  O: {e.owner?.fullName || e.owner?.username || "—"}
+                                                </span>
                                               </div>
                                             </div>
                                             <div className="text-right flex-shrink-0">
@@ -1824,7 +1889,7 @@ export default function Landing() {
         return (
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Lịch thi đấu", (localStorage.getItem('app-lang') || 'vi')) || "Race Fixtures"}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Fixtures"}</h2>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
             </div>
             
@@ -1851,7 +1916,7 @@ export default function Landing() {
               ))}
               {meetings.length === 0 && (
                 <div className="col-span-full py-12 text-center glass-panel rounded-2xl border-dashed border-[#2a2825]">
-                  <p className="text-gray-500 font-mono text-sm">{$t("Không có lịch thi đấu nào.", (localStorage.getItem('app-lang') || 'vi')) || "No fixtures scheduled."}</p>
+                  <p className="text-gray-500 font-mono text-sm">{"No fixtures scheduled."}</p>
                 </div>
               )}
             </div>
@@ -1878,7 +1943,7 @@ export default function Landing() {
         return (
           <div className="animate-fade-in-up">
             <div className="flex items-center gap-4 mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Thống kê & Bảng xếp hạng", (localStorage.getItem('app-lang') || 'vi')) || "Statistics & Leaderboards"}</h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Statistics & Leaderboards"}</h2>
               <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
             </div>
 
@@ -1888,25 +1953,29 @@ export default function Landing() {
                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <span className="text-2xl">🐎</span>
-                  <h4 className="font-bold text-xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Ngựa dẫn đầu (Top Rating)", (localStorage.getItem('app-lang') || 'vi')) || "Leading Horses (Top Rating)"}</h4>
+                  <h4 className="font-bold text-xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Leading Horses (Top Rating)"}</h4>
                 </div>
                 <div className="space-y-3 relative z-10">
                   {topHorses.map((h, idx) => (
-                    <div key={h.id} className="flex items-center gap-4 p-3 rounded-xl bg-[#1a1815]/50 border border-white/5 hover:border-[#c9a227]/30 transition-colors">
+                    <div 
+                      key={h.id} 
+                      className="flex items-center gap-4 p-3 rounded-xl bg-[#1a1815]/50 border border-white/5 hover:border-[#c9a227]/40 transition-colors cursor-pointer hover:bg-white/[0.02]"
+                      onClick={() => { setSelectedHorseId(h.id); setSelectedHorseName(h.name); }}
+                    >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx < 3 ? 'bg-[#c9a227]/20 text-[#c9a227] border border-[#c9a227]/50' : 'bg-[#2a2825] text-gray-400'}`}>
                         {idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-gray-200 truncate">{h.name}</div>
+                        <div className="font-bold text-gray-200 truncate hover:text-[#c9a227]">{h.name}</div>
                         <div className="text-[11px] text-gray-500 font-mono truncate">{h.breed}</div>
                       </div>
                       <div className="text-right">
-                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">{$t("Đánh giá", (localStorage.getItem('app-lang') || 'vi')) || "Rating"}</div>
+                        <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">{"Rating"}</div>
                         <div className="font-mono font-bold text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded border border-blue-500/20 inline-block">{h.currentRating}</div>
                       </div>
                     </div>
                   ))}
-                  {topHorses.length === 0 && <p className="text-gray-500 text-sm text-center py-4 italic">{$t("Không có dữ liệu ngựa.", (localStorage.getItem('app-lang') || 'vi')) || "No horse data available."}</p>}
+                  {topHorses.length === 0 && <p className="text-gray-500 text-sm text-center py-4 italic">{"No horse data available."}</p>}
                 </div>
               </div>
 
@@ -1915,18 +1984,22 @@ export default function Landing() {
                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-500 to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <span className="text-2xl">👤</span>
-                  <h4 className="font-bold text-xl text-white tracking-wide text-blue-400" style={{ fontFamily: "'Roboto Slab', serif" }}>{$t("Nài ngựa dẫn đầu (Top 3)", (localStorage.getItem('app-lang') || 'vi')) || "Leading Jockeys (Top-3)"}</h4>
+                  <h4 className="font-bold text-xl text-white tracking-wide text-blue-400" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Leading Jockeys (Top-3)"}</h4>
                 </div>
                 <div className="space-y-3 relative z-10">
                   {topJockeys.map((j, idx) => (
-                    <div key={j.id} className="flex items-center gap-4 p-3 rounded-xl bg-[#1a1815]/50 border border-white/5 hover:border-blue-500/30 transition-colors">
+                    <div 
+                      key={j.id} 
+                      className="flex items-center gap-4 p-3 rounded-xl bg-[#1a1815]/50 border border-white/5 hover:border-blue-500/40 transition-colors cursor-pointer hover:bg-white/[0.02]"
+                      onClick={() => setSelectedProfileId(j.id)}
+                    >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx < 3 ? 'bg-blue-500/20 text-blue-400 border border-blue-500/50' : 'bg-[#2a2825] text-gray-400'}`}>
                         {idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold text-gray-200 truncate">{j.fullName || j.username}</div>
+                        <div className="font-bold text-gray-200 truncate hover:text-blue-400">{j.fullName || j.username}</div>
                         <div className="text-[11px] text-gray-500 font-mono">
-                          {j.racesRun} {$t("Trận", (localStorage.getItem('app-lang') || 'vi')) || "Races"}
+                          {j.racesRun} {"Races"}
                         </div>
                       </div>
                       <div className="text-right flex items-center gap-4">
@@ -1948,15 +2021,30 @@ export default function Landing() {
           </div>
         );
       case "horses":
-        return <GenericTableView title={$t("Danh sách Đăng ký Ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Registered Horse Registry"} data={horses} columns={[{ key: "id", label: $t("Mã (ID)", (localStorage.getItem('app-lang') || 'vi')) || "ID" }, { key: "name", label: $t("Tên Ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Horse Name" }, { key: "breed", label: $t("Giống loài", (localStorage.getItem('app-lang') || 'vi')) || "Breed" }, { key: "currentRating", label: $t("Đánh giá", (localStorage.getItem('app-lang') || 'vi')) || "Current Rating" }]} />;
-      case "jockeys_owners":
         return (
-          <div>
+          <GenericTableView 
+            title={"Registered Horse Registry"} 
+            data={horses} 
+            columns={[
+              { key: "id", label: "ID" }, 
+              { key: "name", label: "Horse Name" }, 
+              { key: "breed", label: "Breed" }, 
+              { key: "currentRating", label: "Rating" }
+            ]} 
+            onRowClick={(h) => { setSelectedHorseId(h.id); setSelectedHorseName(h.name); }}
+          />
+        );
+      case "jockeys_owners":
+        const jockeyList = users.filter(u => u.roleId === 3);
+        const ownerList = users.filter(u => u.roleId === 2);
+
+        return (
+          <div className="animate-fade-in-up space-y-6">
+            {/* Directory Tables */}
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "1.5rem" }}>
               <GenericTableView 
-                title={$t("Danh sách Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Jockeys"} 
-                data={users
-                  .filter(u => u.roleId === 3)
+                title={"Jockey Directory"} 
+                data={jockeyList
                   .map(u => {
                     const races = u.totalRacesParticipated || 0;
                     const top3 = u.totalTop3Finishes || 0;
@@ -1971,40 +2059,61 @@ export default function Landing() {
                   })
                   .sort((a, b) => b.top3Finishes - a.top3Finishes || b.racesRun - a.racesRun)} 
                 columns={[
-                  { key: "id", label: $t("Mã (ID)", (localStorage.getItem('app-lang') || 'vi')) || "ID" },
-                  { key: "fullName", label: $t("Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Jockey" },
-                  { key: "email", label: $t("Email", (localStorage.getItem('app-lang') || 'vi')) || "Email" },
-                  { key: "jockeyWeight", label: $t("Cân nặng", (localStorage.getItem('app-lang') || 'vi')) || "Weight" },
-                  { key: "racesRun", label: $t("Số trận tham gia", (localStorage.getItem('app-lang') || 'vi')) || "Races Run" },
-                  { key: "top3Finishes", label: $t("Số lần Top 3", (localStorage.getItem('app-lang') || 'vi')) || "Top-3 Finishes" },
-                  { key: "top3Rate", label: $t("Tỉ lệ Top 3", (localStorage.getItem('app-lang') || 'vi')) || "Top-3 Rate" }
+                  { key: "id", label: "ID" },
+                  { key: "fullName", label: "Jockey" },
+                  { key: "jockeyWeight", label: "Weight" },
+                  { key: "racesRun", label: "Races" },
+                  { key: "top3Finishes", label: "Top 3" },
+                  { key: "top3Rate", label: "Top 3 %" }
                 ]} 
+                onRowClick={(u) => setSelectedProfileId(u.id)}
               />
-              <GenericTableView title={$t("Danh sách Chủ ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Horse Owners"} data={users.filter(u => u.roleId === 2)} columns={[{ key: "id", label: $t("Mã (ID)", (localStorage.getItem('app-lang') || 'vi')) || "ID" }, { key: "fullName", label: $t("Chủ ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Owner" }, { key: "email", label: $t("Email", (localStorage.getItem('app-lang') || 'vi')) || "Email" }]} />
+              <GenericTableView 
+                title={"Owner Directory"} 
+                data={ownerList.map(u => {
+                  const owned = horses.filter(h => h.ownerId === u.id);
+                  const totalWins = owned.reduce((sum, h) => sum + (h.totalWins || 0), 0);
+                  const maxRating = owned.reduce((max, h) => Math.max(max, h.currentRating || 0), 0);
+                  return {
+                    ...u,
+                    stableSize: owned.length > 0 ? `${owned.length} Horses` : "0 Horses",
+                    totalWins: totalWins,
+                    maxRating: maxRating > 0 ? maxRating : "—"
+                  };
+                })} 
+                columns={[
+                  { key: "id", label: "ID" }, 
+                  { key: "fullName", label: "Horse Owner" },
+                  { key: "stableSize", label: "Active Stable" },
+                  { key: "totalWins", label: "Total Wins" },
+                  { key: "maxRating", label: "Max Rating" }
+                ]} 
+                onRowClick={(u) => setSelectedProfileId(u.id)}
+              />
             </div>
           </div>
         );
       case "incident":
         return (
           <GenericTableView 
-            title={$t("Báo cáo Sự cố & Vi phạm", (localStorage.getItem('app-lang') || 'vi')) || "Violation Incident Reports"} 
+            title={"Violation Incident Reports"} 
             data={violations.map((v: any) => ({
               id: v.violation?.id,
               raceId: v.violation?.raceId,
               horseName: v.horseName || `Horse #${v.violation?.horseId}`,
               jockeyName: v.jockeyName || `Jockey #${v.violation?.jockeyId}`,
               description: v.violation?.description || "—",
-              penalty: v.violation?.penalty || $t("Đang chờ xử lý", (localStorage.getItem('app-lang') || 'vi')) || "Pending Decision",
+              penalty: v.violation?.penalty || "Pending Decision",
               status: v.violation?.status || "PENDING"
             }))} 
             columns={[
-              { key: "id", label: $t("Mã Báo cáo", (localStorage.getItem('app-lang') || 'vi')) || "Report ID" },
-              { key: "raceId", label: $t("Mã Trận đua", (localStorage.getItem('app-lang') || 'vi')) || "Race ID" },
-              { key: "horseName", label: $t("Ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Horse" },
-              { key: "jockeyName", label: $t("Nài ngựa", (localStorage.getItem('app-lang') || 'vi')) || "Jockey" },
-              { key: "description", label: $t("Mô tả sự cố", (localStorage.getItem('app-lang') || 'vi')) || "Description" },
-              { key: "penalty", label: $t("Hình phạt", (localStorage.getItem('app-lang') || 'vi')) || "Penalty" },
-              { key: "status", label: $t("Trạng thái", (localStorage.getItem('app-lang') || 'vi')) || "Status" }
+              { key: "id", label: "Report ID" },
+              { key: "raceId", label: "Race ID" },
+              { key: "horseName", label: "Horse" },
+              { key: "jockeyName", label: "Jockey" },
+              { key: "description", label: "Description" },
+              { key: "penalty", label: "Penalty" },
+              { key: "status", label: "Status" }
             ]} 
           />
         );
@@ -2078,26 +2187,6 @@ export default function Landing() {
                 {!isMobile && <p style={{ fontSize: "0.55rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.2em", marginTop: "2px" }}>Management System</p>}
               </div>
             </a>
-
-            {/* If mobile, we put right controls next to logo to save space */}
-            {isMobile && (
-              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                {/* Language Switcher */}
-                <div style={{ position: "relative" }}>
-                  <button onClick={() => setShowLangMenu(v => !v)} style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontFamily: "monospace", fontSize: "0.7rem" }}>
-                    🌐 {langLabel} ▾
-                  </button>
-                  {showLangMenu && (
-                    <div style={{ position: "absolute", right: 0, top: "100%", marginTop: "0.25rem", width: "7rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.375rem", zIndex: 9999 }}>
-                      {[["en","EN","English"],["vi","VI","Tiếng Việt"],["zh","ZH","简体中文"],["ja","JA","日本語"]].map(([code, label, name]) => (
-                        <button key={code} onClick={() => { setLang(code); setShowLangMenu(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "0.375rem 0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", fontFamily: "monospace" }}>{name}</button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-              </div>
-            )}
           </div>
 
           {/* Search Bar */}
@@ -2135,19 +2224,7 @@ export default function Landing() {
           {/* Right Controls (Desktop Only) */}
           {!isMobile && (
             <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0" }}>
-              {/* Language */}
-              <div style={{ position: "relative" }}>
-                <button onClick={() => setShowLangMenu(v => !v)} style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: 700 }}>
-                  🌐 {langLabel} ▾
-                </button>
-                {showLangMenu && (
-                  <div style={{ position: "absolute", right: 0, top: "100%", marginTop: "0.5rem", width: "8rem", background: "#111111", border: "1px solid #1f1f1f", borderRadius: "0.5rem", zIndex: 50 }}>
-                    {[["en","EN","English"],["vi","VI","Tiếng Việt"],["zh","ZH","简体中文"],["ja","JA","日本語"]].map(([code, label, name]) => (
-                      <button key={code} onClick={() => { setLang(code); setShowLangMenu(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "0.5rem 0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem", fontFamily: "monospace" }}>{name}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              {/* Auth Controls */}
 
 
 
@@ -2172,15 +2249,15 @@ export default function Landing() {
                     <p style={{ fontSize: "0.85rem", color: "#f0f0f0", fontWeight: 600, fontFamily: "sans-serif" }}>{user.fullName || user.username}</p>
                     <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c9a227", marginTop: "2px" }}>{getRoleLabel(user.roleId)}</p>
                   </div>
-                  <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem", paddingLeft: "1rem", borderLeft: "1px solid #2a2825", marginLeft: "0.25rem", fontFamily: "sans-serif" }}>{$t("Đăng xuất", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                  <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem", paddingLeft: "1rem", borderLeft: "1px solid #2a2825", marginLeft: "0.25rem", fontFamily: "sans-serif" }}>{"Sign Out"}</button>
                 </div>
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
                   <Link to="/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.375rem 0.75rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0e0c09", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    👤 {$t("Đăng nhập", (localStorage.getItem('app-lang') || 'vi'))}
+                    👤 {"Sign In"}
                   </Link>
                   <Link to="/register" style={{ padding: "0.375rem 0.75rem", borderRadius: "0.25rem", border: "1px solid rgba(201,162,39,0.5)", color: "#c9a227", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                    {$t("Đăng ký", (localStorage.getItem('app-lang') || 'vi'))}
+                    {"Register"}
                   </Link>
                 </div>
               )}
@@ -2299,7 +2376,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(201,162,39,0.1)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          💼 {$t("Trang quản trị", (localStorage.getItem('app-lang') || 'vi'))}
+                          💼 {"Dashboard"}
                         </button>
                         <button
                           onClick={() => {
@@ -2326,7 +2403,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(201,162,39,0.1)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          👤 {$t("Hồ sơ", (localStorage.getItem('app-lang') || 'vi'))}
+                          👤 {"Profile"}
                         </button>
                         <button
                           onClick={() => {
@@ -2349,7 +2426,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(239,68,68,0.1)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          🚪 {$t("Đăng xuất", (localStorage.getItem('app-lang') || 'vi'))}
+                          🚪 {"Sign Out"}
                         </button>
                       </>
                     ) : (
@@ -2371,7 +2448,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(201,162,39,0.1)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          👤 {$t("Đăng nhập", (localStorage.getItem('app-lang') || 'vi'))}
+                          👤 {"Sign In"}
                         </Link>
                         <Link
                           to="/register"
@@ -2390,7 +2467,7 @@ export default function Landing() {
                           onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
                           onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}
                         >
-                          📝 {$t("Đăng ký", (localStorage.getItem('app-lang') || 'vi'))}
+                          📝 {"Register"}
                         </Link>
                       </>
                     ))}
@@ -2421,7 +2498,7 @@ export default function Landing() {
                         flexShrink: 0
                       }}
                     >
-                      💼 {$t("Trang quản trị", (localStorage.getItem('app-lang') || 'vi'))}
+                      💼 {"Dashboard"}
                     </button>
                     <button
                       onClick={() => {
@@ -2448,7 +2525,7 @@ export default function Landing() {
                         flexShrink: 0
                       }}
                     >
-                      👤 {$t("Hồ sơ", (localStorage.getItem('app-lang') || 'vi'))}
+                      👤 {"Profile"}
                     </button>
                     <button
                       onClick={logout}
@@ -2468,7 +2545,7 @@ export default function Landing() {
                         flexShrink: 0
                       }}
                     >
-                      🚪 {$t("Đăng xuất", (localStorage.getItem('app-lang') || 'vi'))}
+                      🚪 {"Sign Out"}
                     </button>
                   </>
                 ) : (
@@ -2491,7 +2568,7 @@ export default function Landing() {
                         flexShrink: 0
                       }}
                     >
-                      👤 {$t("Đăng nhập", (localStorage.getItem('app-lang') || 'vi'))}
+                      👤 {"Sign In"}
                     </Link>
                     <Link
                       to="/register"
@@ -2511,7 +2588,7 @@ export default function Landing() {
                         flexShrink: 0
                       }}
                     >
-                      📝 {$t("Đăng ký", (localStorage.getItem('app-lang') || 'vi'))}
+                      📝 {"Register"}
                     </Link>
                   </>
                 )}
@@ -2589,6 +2666,18 @@ export default function Landing() {
         </div>
       )}
 
+
+      {/* Profile & Horse performance detail modals */}
+      {selectedProfileId !== null && (
+        <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
+      )}
+      {selectedHorseId !== null && (
+        <HorsePerformanceModal
+          horseId={selectedHorseId}
+          horseName={selectedHorseName}
+          onClose={() => { setSelectedHorseId(null); setSelectedHorseName(""); }}
+        />
+      )}
 
       {/* ── CHATBOT ─────────────────────────────── */}
       <ChatBot lang={lang} setLang={setLang} />
