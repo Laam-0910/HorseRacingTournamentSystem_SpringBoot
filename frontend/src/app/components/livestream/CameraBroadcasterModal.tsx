@@ -144,10 +144,10 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
         if (videoRef.current && ctx && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
           const video = videoRef.current;
           if (video.videoWidth > 0 && video.videoHeight > 0) {
-            canvas.width = 480;
-            canvas.height = 270;
+            canvas.width = 400;
+            canvas.height = 225;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.4); // Nén nhẹ 40% (siêu mượt ~15KB)
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.3); // Nén tối ưu sắc nét (~4KB/frame)
             const uName = user?.fullName || user?.username || "Trọng tài";
             const broadcasterId = user?.id ? `user_${user.id}_${camInstanceId}` : `anon_${camInstanceId}`;
             const broadcasterName = `${uName} (${camInstanceId.replace("cam_", "Cam ")})`;
@@ -161,7 +161,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
             }));
           }
         }
-      }, 66); // ~15 FPS
+      }, 80); // ~12 FPS chuẩn mượt siêu nhẹ
     } catch (err: any) {
       setError("Failed to start livestream.");
     }
