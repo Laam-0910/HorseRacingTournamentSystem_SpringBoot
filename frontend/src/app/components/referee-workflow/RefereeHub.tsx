@@ -623,7 +623,7 @@ export default function RefereeHub() {
               style={{ padding: "2px 6px", fontSize: "10px", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", color: "#c9a227", borderRadius: "0.25rem", cursor: "pointer", fontWeight: "bold", fontFamily: "monospace" }}
               title={isEmbeddedMode ? "Switch to Floating Movable Window" : "Switch to Embedded Mode Below Table"}
             >
-              {isEmbeddedMode ? "📌 Floating (Góc)" : "📌 Below Table (Dưới bảng)"}
+              {isEmbeddedMode ? "📌 Floating" : "📌 Below Table"}
             </button>
 
             {/* Close Button */}
@@ -1050,21 +1050,27 @@ export default function RefereeHub() {
 
   // Trọng tài ra lệnh tạm hoãn cuộc đua (Tạm hoãn và chuyển trạng thái sang STOPPED)
   const handleSuspendRace = async (stewardReport: string) => {
-    if (!selectedRace || !user) return;
+    if (!selectedRace) return;
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/suspend`, { stewardReport });
       notify($t("Đã tạm hoãn cuộc đua. Trạng thái chuyển thành STOPPED.", (localStorage.getItem('app-lang') || 'vi')), "info");
-      const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
-      setAssignedRaces(dashboardRes.assignedRaces || []);
-      setCompletedCount(dashboardRes.completedCount || 0);
-      setPendingCount(dashboardRes.pendingCount || 0);
-      const updatedRace = (dashboardRes.assignedRaces || []).find((r: any) => r.id === selectedRace.id);
-      // Tải lại view giám sát với trạng thái STOPPED mới
-      if (updatedRace) {
-        handleStartSupervise(updatedRace);
+      if (user?.id) {
+        const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
+        setAssignedRaces(dashboardRes.assignedRaces || []);
+        setCompletedCount(dashboardRes.completedCount || 0);
+        setPendingCount(dashboardRes.pendingCount || 0);
+        const updatedRace = (dashboardRes.assignedRaces || []).find((r: any) => r.id === selectedRace.id);
+        // Tải lại view giám sát với trạng thái STOPPED mới
+        if (updatedRace) {
+          handleStartSupervise(updatedRace);
+        } else {
+          fetchDashboard();
+        }
       } else {
-        fetchDashboard();
+        // Nếu không có user.id, chỉ cập nhật lại selectedRace status cục bộ rồi reload
+        setSelectedRace((prev: any) => prev ? { ...prev, status: "STOPPED" } : prev);
+        setLoading(false);
       }
     } catch (err: any) {
       notify($t("Không thể tạm hoãn cuộc đua: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
@@ -1225,6 +1231,78 @@ export default function RefereeHub() {
       return ratingB - ratingA;
     }
   });
+
+  const renderGlobalModals = () => (
+    <>
+      {/* Modal nhập lý do Steward's Report khi Tạm hoãn hoặc Dừng khẩn cấp */}
+      {reasonModal && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "28rem" }}>
+            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "1rem", marginBottom: "1rem" }}>{reasonModal.title}</h4>
+            <textarea
+              value={reasonInput}
+              onChange={e => setReasonInput(e.target.value)}
+              placeholder={$t("Nhập chi tiết lý do (Steward's Report)...", (localStorage.getItem('app-lang') || 'vi'))}
+              style={{ width: "100%", height: "90px", padding: "0.75rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.5rem", color: "#fff", fontSize: "0.85rem", outline: "none", resize: "none", marginBottom: "1rem" }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+              <button
+                type="button"
+                onClick={() => setReasonModal(null)}
+                style={{ padding: "0.5rem 1rem", background: "rgba(255,255,255,0.1)", color: "#aaa", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", cursor: "pointer" }}
+              >
+                {$t("Hủy", (localStorage.getItem('app-lang') || 'vi'))}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const currentReason = reasonInput.trim();
+                  const currentType = reasonModal.type;
+                  if (!currentReason) {
+                    notify($t("Vui lòng nhập lý do trước khi xác nhận.", (localStorage.getItem('app-lang') || 'vi')), "error");
+                    return;
+                  }
+                  setReasonModal(null);
+                  setReasonInput("");
+                  if (currentType === "suspend") handleSuspendRace(currentReason);
+                  else if (currentType === "emergency") handleStopRace(currentReason);
+                }}
+                style={{ padding: "0.5rem 1.25rem", background: reasonModal.type === "emergency" ? "#f59e0b" : "#fbbf24", color: "#000", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer" }}
+              >
+                {$t("Xác nhận", (localStorage.getItem('app-lang') || 'vi'))}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {toast && createPortal(
+        <div style={{
+          position: "fixed",
+          bottom: "1.5rem",
+          right: "1.5rem",
+          zIndex: 200000,
+          background: toast.type === "error" ? "#7f1d1d" : toast.type === "success" ? "#064e3b" : "#1e1b4b",
+          border: toast.type === "error" ? "1px solid #ef4444" : toast.type === "success" ? "1px solid #10b981" : "1px solid #6366f1",
+          color: "#fff",
+          padding: "0.875rem 1.25rem",
+          borderRadius: "0.5rem",
+          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
+          fontSize: "0.85rem",
+          display: "flex",
+          alignItems: "center",
+          gap: "0.75rem",
+          maxWidth: "24rem"
+        }}>
+          <span>{toast.type === "error" ? "⚠️" : toast.type === "success" ? "✅" : "ℹ️"}</span>
+          <span style={{ flex: 1 }}>{toast.msg}</span>
+          <button onClick={() => setToast(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
+        </div>,
+        document.body
+      )}
+    </>
+  );
 
   if (activeView === "check" && selectedRace) {
     const isGatesFullySet = selectedRace.gatesFullySet;
@@ -1485,6 +1563,7 @@ export default function RefereeHub() {
             </button>
           </div>
         </div>
+        {renderGlobalModals()}
       </div>
     );
   }
@@ -1818,7 +1897,7 @@ export default function RefereeHub() {
 
         {/* Log Violation Modal */}
         {showViolModal && (
-          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }}>
+          <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50000, padding: "1rem" }}>
             <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "28rem", overflow: "hidden" }}>
               <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -1860,6 +1939,7 @@ export default function RefereeHub() {
             </div>
           </div>
         )}
+        {renderGlobalModals()}
       </div>
     );
   }
@@ -2187,14 +2267,7 @@ export default function RefereeHub() {
           </div>
         </form>
 
-        {/* Toast notification */}
-        {toast && (
-          <div style={{ position: "fixed", bottom: "1.5rem", right: "1.5rem", zIndex: 10001, background: toast.type === "error" ? "#7f1d1d" : toast.type === "success" ? "#064e3b" : "#1e1b4b", border: toast.type === "error" ? "1px solid #ef4444" : toast.type === "success" ? "1px solid #10b981" : "1px solid #6366f1", color: "#fff", padding: "0.875rem 1.25rem", borderRadius: "0.5rem", boxShadow: "0 10px 25px -5px rgba(0,0,0,0.5)", fontSize: "0.85rem", display: "flex", alignItems: "center", gap: "0.75rem", maxWidth: "24rem" }}>
-            <span>{toast.type === "error" ? "⚠️" : toast.type === "success" ? "✅" : "ℹ️"}</span>
-            <span style={{ flex: 1 }}>{toast.msg}</span>
-            <button onClick={() => setToast(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
-          </div>
-        )}
+        {renderGlobalModals()}
       </div>
     );
   }
@@ -2418,7 +2491,7 @@ export default function RefereeHub() {
 
       {/* Steward Report Modal */}
       {showReportModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50000, padding: "1rem" }}>
           <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "32rem", overflow: "hidden" }}>
             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -2439,70 +2512,7 @@ export default function RefereeHub() {
         </div>
       )}
 
-      {/* Modal nhập lý do Steward's Report khi Tạm hoãn hoặc Dừng khẩn cấp */}
-      {reasonModal && createPortal(
-        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
-          <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "28rem" }}>
-            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "1rem", marginBottom: "1rem" }}>{reasonModal.title}</h4>
-            <textarea
-              value={reasonInput}
-              onChange={e => setReasonInput(e.target.value)}
-              placeholder={$t("Nhập chi tiết lý do (Steward's Report)...", (localStorage.getItem('app-lang') || 'vi'))}
-              style={{ width: "100%", height: "90px", padding: "0.75rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.5rem", color: "#fff", fontSize: "0.85rem", outline: "none", resize: "none", marginBottom: "1rem" }}
-            />
-            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
-              <button
-                type="button"
-                onClick={() => setReasonModal(null)}
-                style={{ padding: "0.5rem 1rem", background: "rgba(255,255,255,0.1)", color: "#aaa", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", cursor: "pointer" }}
-              >
-                {$t("Hủy", (localStorage.getItem('app-lang') || 'vi'))}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const currentReason = reasonInput.trim();
-                  const currentType = reasonModal.type;
-                  if (!currentReason) return;
-                  setReasonModal(null);
-                  setReasonInput("");
-                  if (currentType === "suspend") handleSuspendRace(currentReason);
-                  else if (currentType === "emergency") handleStopRace(currentReason);
-                }}
-                style={{ padding: "0.5rem 1.25rem", background: reasonModal.type === "emergency" ? "#f59e0b" : "#fbbf24", color: "#000", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer" }}
-              >
-                {$t("Xác nhận", (localStorage.getItem('app-lang') || 'vi'))}
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {toast && createPortal(
-        <div style={{
-          position: "fixed",
-          bottom: "1.5rem",
-          right: "1.5rem",
-          zIndex: 10000,
-          background: toast.type === "error" ? "#7f1d1d" : toast.type === "success" ? "#064e3b" : "#1e1b4b",
-          border: toast.type === "error" ? "1px solid #ef4444" : toast.type === "success" ? "1px solid #10b981" : "1px solid #6366f1",
-          color: "#fff",
-          padding: "0.875rem 1.25rem",
-          borderRadius: "0.5rem",
-          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.5)",
-          fontSize: "0.85rem",
-          display: "flex",
-          alignItems: "center",
-          gap: "0.75rem",
-          maxWidth: "24rem"
-        }}>
-          <span>{toast.type === "error" ? "⚠️" : toast.type === "success" ? "✅" : "ℹ️"}</span>
-          <span style={{ flex: 1 }}>{toast.msg}</span>
-          <button onClick={() => setToast(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", cursor: "pointer", fontSize: "1rem" }}>✕</button>
-        </div>,
-        document.body
-      )}
+      {renderGlobalModals()}
     </div>
   );
 }

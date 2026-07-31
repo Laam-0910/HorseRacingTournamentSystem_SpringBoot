@@ -272,6 +272,11 @@ public class RaceService {
             "DELETE FROM RaceReferee WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
         ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
 
+        // 4.5. Delete ChatMessages
+        entityManager.createNativeQuery( // Xóa lịch sử tin nhắn trò chuyện thuộc các trận đua trong Ngày hội đua này
+            "DELETE FROM ChatMessage WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
+        ).setParameter("meetingId", id).executeUpdate();
+
         // 5. Delete Races
         entityManager.createNativeQuery( // Xóa toàn bộ các trận đua trực thuộc Ngày hội đua này
             "DELETE FROM Race WHERE race_meeting_id = :meetingId"
