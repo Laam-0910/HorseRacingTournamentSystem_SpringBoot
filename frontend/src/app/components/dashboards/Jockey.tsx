@@ -390,28 +390,33 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
 
       {/* Thanh tìm kiếm và Bộ lọc trạng thái (Search & Filter Bar) */}
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "0.75rem" }}>
-        {/* Nút lọc trạng thái */}
-        <div style={{ display: "flex", gap: "0.375rem", flexWrap: "wrap" }}>
-          {filterTabs.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => handleFilterChange(tab.key)}
-              style={{
-                padding: "0.375rem 0.75rem",
-                borderRadius: "0.375rem",
-                background: filter === tab.key ? ROLE_COLOR : "rgba(255,255,255,0.04)",
-                color: filter === tab.key ? "#fff" : "#a0a0a0",
-                border: filter === tab.key ? `1px solid ${ROLE_COLOR}` : "1px solid rgba(255,255,255,0.08)",
-                fontSize: "0.75rem",
-                fontFamily: "monospace",
-                fontWeight: 700,
-                cursor: "pointer",
-                transition: "all 0.2s"
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+        {/* Bộ lọc trạng thái trỏ xuống (Dropdown Filter) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          <span style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", fontWeight: 700 }}>
+            {lang === "vi" ? "Bộ lọc:" : "Filter:"}
+          </span>
+          <select
+            value={filter}
+            onChange={(e) => handleFilterChange(e.target.value)}
+            style={{
+              padding: "0.375rem 0.75rem",
+              borderRadius: "0.375rem",
+              background: "#161513",
+              color: "#f4f2ec",
+              border: `1px solid ${ROLE_COLOR}`,
+              fontSize: "0.75rem",
+              fontFamily: "monospace",
+              fontWeight: 700,
+              cursor: "pointer",
+              outline: "none"
+            }}
+          >
+            {filterTabs.map(tab => (
+              <option key={tab.key} value={tab.key} style={{ background: "#1a1917", color: "#f4f2ec" }}>
+                {tab.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Ô tìm kiếm tên giải đấu (Spring Grand Prix 2026...), tên chủ ngựa, tên ngựa */}
