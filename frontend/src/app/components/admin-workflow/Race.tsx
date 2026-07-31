@@ -438,13 +438,45 @@ export default function Race() {
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Class Level", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                <select value={classLevel} onChange={e => setClassLevel(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }}>
+                <select 
+                  value={classLevel} 
+                  onChange={e => {
+                    const lvl = e.target.value;
+                    setClassLevel(lvl);
+                    if (lvl === "Class 1") setPurse("50000");
+                    else if (lvl === "Class 2") setPurse("30000");
+                    else if (lvl === "Class 3") setPurse("20000");
+                    else if (lvl === "Class 4") setPurse("10000");
+                    else if (lvl === "Class 5") setPurse("5000");
+                  }} 
+                  required 
+                  style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }}
+                >
                   <option value="Class 1" style={{ background: "#12141a", color: "#fff" }}>Class 1 (Rating 95+)</option>
                   <option value="Class 2" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 2 (Rating 80-94)", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   <option value="Class 3" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 3 (Rating 60-79)", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   <option value="Class 4" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 4 (Rating 40-59)", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   <option value="Class 5" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 5 (Rating 0-39)", (localStorage.getItem('app-lang') || 'vi'))}</option>
                 </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#fbbf24" }}>
+                  {$t("Total Prize Money / Purse ($)", (localStorage.getItem('app-lang') || 'vi'))}
+                </label>
+                <input 
+                  type="number" 
+                  min="0" 
+                  step="1000" 
+                  value={purse} 
+                  onChange={e => setPurse(e.target.value)} 
+                  required 
+                  placeholder="50000" 
+                  style={{ width: "100%", padding: "0.625rem", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.3)", color: "#fbbf24", borderRadius: "0.5rem", fontSize: "0.75rem", fontWeight: "bold", fontFamily: "monospace", outline: "none" }} 
+                />
+                <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginTop: "3px" }}>
+                  🥇 50%: ${(Number(purse || 0) * 0.5).toLocaleString()} | 🥈 30%: ${(Number(purse || 0) * 0.3).toLocaleString()} | 🥉 20%: ${(Number(purse || 0) * 0.2).toLocaleString()}
+                </div>
               </div>
 
               <div>
@@ -789,6 +821,10 @@ export default function Race() {
                 <div>
                   <label style={labelStyle}>{$t("Distance (m)", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <input type="number" value={editDistance} onChange={e => setEditDistance(e.target.value)} required style={inputStyle} />
+                </div>
+                <div>
+                  <label style={{ ...labelStyle, color: "#fbbf24" }}>{$t("Total Purse / Prize Money ($)", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                  <input type="number" min="0" step="1000" value={editPurse} onChange={e => setEditPurse(e.target.value)} required style={{ ...inputStyle, borderColor: "rgba(251,191,36,0.3)", color: "#fbbf24", fontWeight: "bold" }} />
                 </div>
                 <div>
                   <label style={labelStyle}>{$t("Track Type", (localStorage.getItem('app-lang') || 'vi'))}</label>
