@@ -1,21 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
 import { $t } from "../../../lib/i18n";
 
-interface Props {
-  raceId: number;
+export interface BroadcasterInfo {
+  id: string;
+  name: string;
 }
 
-export default function WebCamLiveViewer({ raceId }: Props) {
-  const [frame, setFrame] = useState<string | null>(null);
+interface Props {
+  raceId: number;
+  selectedBroadcasterId?: string | null;
+  onBroadcastersFound?: (list: BroadcasterInfo[]) => void;
+}
+
+export default function WebCamLiveViewer({ raceId, selectedBroadcasterId, onBroadcastersFound }: Props) {
+  const [broadcasterFrames, setBroadcasterFrames] = useState<Record<string, { image: string; name: string; lastSeen: number }>>({});
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [isReceiving, setIsReceiving] = useState<boolean>(false);
-  const lastFrameTimeRef = useRef<number>(0);
+  const [activeBroadcasterList, setActiveBroadcasterList] = useState<BroadcasterInfo[]>([]);
   const timeoutRef = useRef<any>(null);
 
   useEffect(() => {
+    const hostname = window.location.hostname || "localhost";
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws/livestream/${raceId}`;
+    const wsUrl = `${protocol}//${hostname}:8080/ws/livestream/${raceId}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
@@ -28,20 +34,27 @@ export default function WebCamLiveViewer({ raceId }: Props) {
       try {
         const data = JSON.parse(event.data);
         if (data.type === "FRAME" && data.image) {
-          setFrame(data.image);
-          setIsReceiving(true);
-          lastFrameTimeRef.current = Date.now();
+          const bId = data.broadcasterId || "default_broadcaster";
+          const bName = data.broadcasterName || "Trọng tài phát sóng";
 
-          // Reset timeout kiểm tra mất tín hiệu
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
-          timeoutRef.current = setTimeout(() => {
-            if (Date.now() - lastFrameTimeRef.current > 3000) {
-              setIsReceiving(false);
-            }
-          }, 3000);
+          setBroadcasterFrames(prev => {
+            const next = {
+              ...prev,
+              [bId]: {
+                image: data.image,
+                name: bName,
+                lastSeen: Date.now()
+              }
+            };
+            return next;
+          });
         } else if (data.type === "STREAM_STOPPED") {
-          setIsReceiving(false);
-          setFrame(null);
+          const bId = data.broadcasterId || "default_broadcaster";
+          setBroadcasterFrames(prev => {
+            const next = { ...prev };
+            delete next[bId];
+            return next;
+          });
         }
       } catch (e) {
         // Ignore
@@ -50,11 +63,10 @@ export default function WebCamLiveViewer({ raceId }: Props) {
 
     ws.onclose = () => {
       setIsConnected(false);
-      setIsReceiving(false);
     };
 
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) clearInterval(timeoutRef.current);
       if (ws.readyState === WebSocket.OPEN) {
         ws.send(JSON.stringify({ type: "LEAVE_VIEWER", raceId }));
         ws.close();
@@ -62,12 +74,51 @@ export default function WebCamLiveViewer({ raceId }: Props) {
     };
   }, [raceId]);
 
+  // Tự động kiểm tra và dọn dẹp các máy quay ngắt kết nối (> 15 giây không gửi frame)
+  useEffect(() => {
+    const checkInterval = setInterval(() => {
+      const now = Date.now();
+      setBroadcasterFrames(prev => {
+        let changed = false;
+        const next = { ...prev };
+        Object.keys(next).forEach(key => {
+          if (now - next[key].lastSeen > 15000) {
+            delete next[key];
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
+      });
+    }, 3000);
+    return () => clearInterval(checkInterval);
+  }, []);
+
+  // Cập nhật danh sách các Trọng tài / Máy quay đang hoạt động báo về component cha
+  useEffect(() => {
+    const list: BroadcasterInfo[] = Object.keys(broadcasterFrames).map(id => ({
+      id,
+      name: broadcasterFrames[id].name
+    }));
+    setActiveBroadcasterList(list);
+    if (onBroadcastersFound) {
+      onBroadcastersFound(list);
+    }
+  }, [Object.keys(broadcasterFrames).join(",")]);
+
+  // Xác định khung hình cần hiển thị
+  const activeKeys = Object.keys(broadcasterFrames);
+  const currentKey = (selectedBroadcasterId && broadcasterFrames[selectedBroadcasterId]) 
+    ? selectedBroadcasterId 
+    : activeKeys[activeKeys.length - 1];
+
+  const currentBroadcaster = currentKey ? broadcasterFrames[currentKey] : null;
+
   return (
     <div className="absolute top-0 left-0 w-full h-full bg-black flex flex-col items-center justify-center overflow-hidden">
-      {frame && isReceiving ? (
+      {currentBroadcaster ? (
         <img
-          src={frame}
-          alt="Live WebCam Stream"
+          src={currentBroadcaster.image}
+          alt={`Live Stream - ${currentBroadcaster.name}`}
           className="w-full h-full object-cover"
         />
       ) : (
@@ -82,11 +133,11 @@ export default function WebCamLiveViewer({ raceId }: Props) {
         </div>
       )}
 
-      {/* Live Badge Overlay */}
-      {isReceiving && (
+      {/* Badge Trạng thái phát trực tiếp */}
+      {currentBroadcaster && (
         <div className="absolute top-4 left-4 bg-rose-600/90 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center space-x-2 backdrop-blur-md shadow-lg animate-pulse">
           <span className="w-2 h-2 rounded-full bg-white"></span>
-          <span>WEBCAM LIVE</span>
+          <span>WEBCAM LIVE: {currentBroadcaster.name}</span>
         </div>
       )}
     </div>

@@ -16,6 +16,7 @@ import ProfileTab from "./components/ProfileTab";
 import ProfileModal from "./components/ProfileModal";
 // Import HorsePerformanceModal hiển thị thông số thành tích ngựa
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
+import ViewLive from "./components/ViewLive";
 
 interface InlineDatePickerProps {
   label: string;
@@ -157,7 +158,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
 }
 
 
-type OwnerTab = "hub" | "stable" | "calendar" | "invitations" | "results" | "profile";
+type OwnerTab = "hub" | "stable" | "calendar" | "invitations" | "results" | "live" | "profile";
 
 const ROLE_COLOR = "#4a9d6f";
 
@@ -167,6 +168,7 @@ const NAV_ITEMS = [
   { index: "03", icon: "calendar",          label: $t("Race Calendar", (localStorage.getItem('app-lang') || 'vi')),      view: "calendar"    },
   { index: "04", icon: "mail",              label: $t("Invitations", (localStorage.getItem('app-lang') || 'vi')),        view: "invitations" },
   { index: "05", icon: "award",             label: $t("Stable Race History", (localStorage.getItem('app-lang') || 'vi')), view: "results"     },
+  { index: "06", icon: "tv",                label: $t("Live Stream Arena", (localStorage.getItem('app-lang') || 'vi')),  view: "live"        },
 ];
 
 const inputStyle: React.CSSProperties = {
@@ -225,11 +227,12 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 // ── HubView ────────────────────────────────────────────────────────────────
-function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorses, user }: {
+function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorses, user, onSwitchTab }: {
   dashboard: any; meetings: any[]; stable: any[];
   onRegisterOwner: (id: number) => void;
   onRegisterHorses: (meetingId: number, horseIds: number[]) => Promise<void>;
   user: any;
+  onSwitchTab?: (tab: OwnerTab) => void;
 }) {
   const [selectedHorses, setSelectedHorses] = useState<Record<number, number[]>>({});
   const walletBal = user?.walletBalance !== undefined && user?.walletBalance !== null ? Number(user.walletBalance) : 0;
@@ -250,6 +253,28 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {/* Live Stream Arena Banner Card */}
+      <div className="rounded-xl border p-4 flex items-center justify-between flex-wrap gap-3" style={{ background: "rgba(239, 68, 68, 0.08)", borderColor: "rgba(239, 68, 68, 0.25)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div className="animate-pulse" style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }}></div>
+          <div>
+            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f87171" }}>
+              📺 {$t("Đấu Trường Livestream Trực Tiếp", (localStorage.getItem('app-lang') || 'vi'))}
+            </h4>
+            <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)" }}>
+              {$t("Xem các trận đua đang phát sóng trực tiếp (Youtube & Camera Trực Tiếp) & Trò chuyện thời gian thực", (localStorage.getItem('app-lang') || 'vi'))}
+            </p>
+          </div>
+        </div>
+        {onSwitchTab && (
+          <button
+            onClick={() => onSwitchTab("live")}
+            style={{ padding: "0.5rem 1rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontWeight: "bold", fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <span>🔴</span> {$t("XEM LIVE NGAY", (localStorage.getItem('app-lang') || 'vi'))}
+          </button>
+        )}
+      </div>
       {dashboard && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: "1rem" }}>
           {[
@@ -1614,7 +1639,7 @@ export default function HorseOwner() {
   const renderContent = () => {
     switch (activeTab) {
       case "hub":
-        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} user={user} />;
+        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} user={user} onSwitchTab={setActiveTab} />;
       case "stable":
         return <StableView stable={stable} onRefresh={fetchData} />;
       case "calendar":
@@ -1623,10 +1648,12 @@ export default function HorseOwner() {
         return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} onWithdraw={handleWithdrawInvitation} refereesMap={refereesMap} />;
       case "results":
         return <ResultsView results={results} />;
+      case "live":
+        return <ViewLive />;
       case "profile":
         return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Horse Owner" />;
       default:
-        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} user={user} />;
+        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} user={user} onSwitchTab={setActiveTab} />;
     }
   };
 

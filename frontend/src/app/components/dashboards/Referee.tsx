@@ -6,9 +6,10 @@ import RefereeHub from "../referee-workflow/RefereeHub";
 import RefereeIncidents from "../referee-workflow/RefereeIncidents";
 import RefereeDuties from "../referee-workflow/RefereeDuties";
 import ProfileTab from "./components/ProfileTab";
+import LiveSettings from "../admin-workflow/LiveSettings";
 
 // Định nghĩa tập hợp các Tab giao diện khả dụng trong Dashboard của Trọng tài
-type RefereeTab = "hub" | "incidents" | "duties" | "profile";
+type RefereeTab = "hub" | "incidents" | "duties" | "live" | "profile";
 
 // Mã màu tím đặc trưng làm giao diện chủ đạo cho trọng tài Referee
 const ROLE_COLOR = "#8b5cf6";
@@ -46,6 +47,7 @@ export default function Referee() {
     { index: "01", icon: "layout-dashboard", label: $t("Bảng trọng tài", (localStorage.getItem('app-lang') || 'vi')),   view: "hub"       },
     { index: "02", icon: "alert-triangle",   label: $t("Nhật ký sự cố", (localStorage.getItem('app-lang') || 'vi')),     view: "incidents" },
     { index: "03", icon: "clipboard-check",  label: $t("Lịch phân công", (localStorage.getItem('app-lang') || 'vi')),        view: "duties"    },
+    { index: "04", icon: "tv",               label: $t("Phát sóng Livestream", (localStorage.getItem('app-lang') || 'vi')), view: "live"     },
   ];
 
   // Tìm tiêu đề nhãn tương ứng cho view đang kích hoạt
@@ -64,6 +66,7 @@ export default function Referee() {
       case "hub":       return <RefereeHub />;
       case "incidents": return <RefereeIncidents />;
       case "duties":    return <RefereeDuties />;
+      case "live":      return <LiveSettings />;
       case "profile":   return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Referee" />;
       default:          return <RefereeHub />;
     }

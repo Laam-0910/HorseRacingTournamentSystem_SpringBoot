@@ -96,6 +96,8 @@ const translateLabel = (label: string, lang: string = 'en'): string => {
  * Quản lý Sidebar đóng/mở, chuyển ngôn ngữ toàn hệ thống, trạng thái tài khoản,
  * phản hồi kích thước mobile và hiển thị các banner thông báo chung.
  */
+import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
+
 export default function DashboardLayout({
   roleLabel,
   roleColor,
@@ -121,6 +123,19 @@ export default function DashboardLayout({
   // State lưu trữ ngày hiện tại định dạng chuỗi theo ngôn ngữ
   const [today, setToday] = useState('');
   const [lang] = useState('en');
+
+  // Quản lý luồng phát máy quay toàn cục (Không bị ngắt khi đổi tab/trang)
+  const [globalBroadcasterRace, setGlobalBroadcasterRace] = useState<any | null>(null);
+
+  useEffect(() => {
+    const handleOpenGlobalBroadcaster = (e: any) => {
+      if (e.detail) {
+        setGlobalBroadcasterRace(e.detail);
+      }
+    };
+    window.addEventListener("OPEN_BROADCASTER", handleOpenGlobalBroadcaster);
+    return () => window.removeEventListener("OPEN_BROADCASTER", handleOpenGlobalBroadcaster);
+  }, []);
   
   // Trạng thái phát hiện giao diện đang hiển thị trên Mobile (<1024px)
   const [isMobile, setIsMobile] = useState(false);
@@ -439,6 +454,15 @@ export default function DashboardLayout({
           {/* Render các component con (view được hiển thị) kèm hiệu ứng CSS animate-in */}
           <div className="animate-in">{children}</div>
         </div>
+
+        {/* Modal/Widget Máy quay phát sóng toàn cục - Luôn giữ nguyên khi chuyển tab/trang */}
+        {globalBroadcasterRace && (
+          <CameraBroadcasterModal
+            raceId={globalBroadcasterRace.id}
+            raceTitle={globalBroadcasterRace.classLevel || `Race #${globalBroadcasterRace.id}`}
+            onClose={() => setGlobalBroadcasterRace(null)}
+          />
+        )}
       </main>
     </div>
   );

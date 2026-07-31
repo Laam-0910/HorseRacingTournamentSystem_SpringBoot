@@ -4,7 +4,7 @@ import { api } from "../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
 import { useAuth } from "../../../context/AuthContext";
 import { $t } from '@/lib/i18n';
-import WebCamLiveViewer from "../livestream/WebCamLiveViewer";
+import WebCamLiveViewer, { BroadcasterInfo } from "../livestream/WebCamLiveViewer";
 
 // Khai báo kiểu dữ liệu cấu trúc cho một Trận Đấu (Race) trong livestream
 interface Race {
@@ -70,6 +70,10 @@ export default function Livestream() {
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   // State lưu trạng thái đang tải dữ liệu ban đầu
   const [loading, setLoading] = useState(true);
+
+  // State quản lý danh sách Trọng tài phát máy quay và camera chọn xem
+  const [broadcasterList, setBroadcasterList] = useState<BroadcasterInfo[]>([]);
+  const [selectedBroadcasterId, setSelectedBroadcasterId] = useState<string | null>(null);
   
   // State lưu danh sách các tin nhắn trong box chat trực tiếp
   const [chatMessages, setChatMessages] = useState<{ user: string; text: string; time: string }[]>([]);
@@ -326,11 +330,89 @@ export default function Livestream() {
             </div>
           ) : selectedRace ? (
             <div className="space-y-4">
+              {/* Thanh chuyển đổi máy quay các Trọng tài - Ưu tiên WebCam trước, YouTube CUỐI CÙNG */}
+              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+                {broadcasterList.length > 0 ? (
+                  broadcasterList.map(b => {
+                    const isSelected = selectedRace.streamMode !== "YOUTUBE" && (selectedBroadcasterId === b.id || (!selectedBroadcasterId && broadcasterList[broadcasterList.length - 1]?.id === b.id));
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={() => {
+                          setSelectedBroadcasterId(b.id);
+                          setSelectedRace(prev => prev ? { ...prev, streamMode: "WEBCAM" } : prev);
+                        }}
+                        style={{
+                          padding: "0.4rem 0.85rem",
+                          fontSize: "11px",
+                          borderRadius: "0.5rem",
+                          fontWeight: "bold",
+                          background: isSelected ? "#ef4444" : "rgba(255,255,255,0.05)",
+                          color: "#fff",
+                          border: isSelected ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px"
+                        }}
+                      >
+                        <span>📱</span> {$t(`Cam ${b.name}`, (localStorage.getItem('app-lang') || 'vi'))}
+                      </button>
+                    );
+                  })
+                ) : (
+                  <button
+                    onClick={() => setSelectedRace(prev => prev ? { ...prev, streamMode: "WEBCAM" } : prev)}
+                    style={{
+                      padding: "0.4rem 0.85rem",
+                      fontSize: "11px",
+                      borderRadius: "0.5rem",
+                      fontWeight: "bold",
+                      background: selectedRace.streamMode !== "YOUTUBE" ? "#ef4444" : "rgba(255,255,255,0.05)",
+                      color: "#fff",
+                      border: selectedRace.streamMode !== "YOUTUBE" ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <span>📱</span> {$t("Góc Cam Trọng tài", (localStorage.getItem('app-lang') || 'vi'))}
+                  </button>
+                )}
+
+                {/* Nút Kênh YouTube Chính - LUÔN LUÔN XẾP CỦA CÙNG */}
+                {selectedRace.youtubeLiveUrl && (
+                  <button
+                    onClick={() => setSelectedRace(prev => prev ? { ...prev, streamMode: "YOUTUBE" } : prev)}
+                    style={{
+                      padding: "0.4rem 0.85rem",
+                      fontSize: "11px",
+                      borderRadius: "0.5rem",
+                      fontWeight: "bold",
+                      background: selectedRace.streamMode === "YOUTUBE" ? "#ef4444" : "rgba(255,255,255,0.05)",
+                      color: "#fff",
+                      border: selectedRace.streamMode === "YOUTUBE" ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <span>📺</span> {$t("Kênh YouTube Chính", (localStorage.getItem('app-lang') || 'vi'))}
+                  </button>
+                )}
+              </div>
+
               {/* Vùng chứa Iframe / Video Player / WebCam theo tỷ lệ chuẩn 16:9 */}
               <div className="relative w-full pb-[56.25%] h-0 rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black">
-                {selectedRace.streamMode === "WEBCAM" ? (
-                  /* Trình phát WebCam Stream truyền từ Điện thoại / Camera */
-                  <WebCamLiveViewer raceId={selectedRace.id} />
+                {selectedRace.streamMode !== "YOUTUBE" ? (
+                  /* Trình phát WebCam Stream truyền từ Điện thoại / Camera các Trọng tài */
+                  <WebCamLiveViewer
+                    raceId={selectedRace.id}
+                    selectedBroadcasterId={selectedBroadcasterId}
+                    onBroadcastersFound={list => setBroadcasterList(list)}
+                  />
                 ) : selectedRace.youtubeLiveUrl && (
                   selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
                   selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||

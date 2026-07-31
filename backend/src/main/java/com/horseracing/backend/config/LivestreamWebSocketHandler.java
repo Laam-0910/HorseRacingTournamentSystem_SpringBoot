@@ -38,12 +38,16 @@ public class LivestreamWebSocketHandler extends TextWebSocketHandler {
         if (raceId != null) {
             List<WebSocketSession> sessions = raceLivestreamSessions.get(raceId);
             if (sessions != null) {
-                // Broadcast tin nhắn tới tất cả các session khác trong cùng raceId
+                // Broadcast tin nhắn tới tất cả các session khác trong cùng raceId (Đồng bộ hóa để tránh IllegalStateException khi nhiều camera gửi song song)
                 for (WebSocketSession s : sessions) {
                     if (s.isOpen() && !s.getId().equals(session.getId())) {
                         try {
-                            s.sendMessage(message);
-                        } catch (IOException e) {
+                            synchronized (s) {
+                                if (s.isOpen()) {
+                                    s.sendMessage(message);
+                                }
+                            }
+                        } catch (Exception e) {
                             System.err.println("Error relaying livestream message: " + e.getMessage());
                         }
                     }

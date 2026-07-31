@@ -60,8 +60,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Cho phép các máy khách phát triển React gọi API
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000"));
+        // Cho phép tất cả các nguồn gốc (localhost và IP mạng 192.168.x.x của máy tính khi kết nối từ điện thoại)
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         // Cho phép các phương thức HTTP cơ bản
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         // Cho phép các header cần thiết

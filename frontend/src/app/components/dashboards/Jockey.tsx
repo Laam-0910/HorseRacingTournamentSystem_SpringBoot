@@ -16,9 +16,10 @@ import ProfileTab from "./components/ProfileTab";
 import ProfileModal from "./components/ProfileModal";
 // Import HorsePerformanceModal hiển thị thông số thành tích ngựa
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
+import ViewLive from "./components/ViewLive";
 
 // Định nghĩa các Tab giao diện khả dụng trong Dashboard của Jockey
-type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "profile";
+type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "live" | "profile";
 
 // Mã màu xanh đặc trưng làm giao diện chủ đạo cho kỵ sĩ Jockey
 const ROLE_COLOR = "#3b82c4";
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { index: "03", icon: "calendar",         label: "Race Calendar", view: "calendar"    },
   { index: "04", icon: "mail",             label: "Invitations",   view: "invitations" },
   { index: "05", icon: "alert-triangle",   label: "Rule Violations", view: "violations" },
+  { index: "06", icon: "tv",               label: "Live Stream Arena", view: "live" },
 ];
 
 // ── Sub-views (Các Component hiển thị giao diện con) ──────────────────────────
@@ -1073,6 +1075,7 @@ export default function Jockey() {
       case "calendar":    return <CalendarView meetings={meetings} allRaces={allRaces} refereesMap={refereesMap} />;
       case "invitations": return <InvitationsView invitations={invitations} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} refereesMap={refereesMap} />;
       case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} onViewProfile={setSelectedProfileId} />;
+      case "live":        return <ViewLive />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;
       default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} />;
     }

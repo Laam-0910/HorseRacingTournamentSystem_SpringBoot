@@ -326,9 +326,12 @@ public class RaceService {
         Map<Integer, String> meetingMap = raceMeetingRepository.findAll().stream() // Lấy toàn bộ các Ngày hội đua
                 .collect(Collectors.toMap(RaceMeeting::getId, RaceMeeting::getName)); // Gom nhóm thành Map key: id, value: name
 
-        // Lọc danh sách các trận đua đang ở trạng thái RUNNING và có link YouTube trực tiếp
-        return raceRepository.findByStatus("RUNNING").stream() // Tra cứu các trận đua đang chạy
-                .filter(r -> r.getYoutubeLiveUrl() != null && !r.getYoutubeLiveUrl().trim().isEmpty()) // Lọc những trận đua có đường dẫn livestream không rỗng
+        // Lọc danh sách các trận đua đang ở trạng thái RUNNING, STEWARDS_INQUIRY hoặc có chế độ phát WEBCAM/YouTube
+        return raceRepository.findAll().stream() // Tra cứu tất cả các trận đua
+                .filter(r -> "RUNNING".equalsIgnoreCase(r.getStatus()) 
+                          || "STEWARDS_INQUIRY".equalsIgnoreCase(r.getStatus()) 
+                          || "WEBCAM".equalsIgnoreCase(r.getStreamMode()) 
+                          || (r.getYoutubeLiveUrl() != null && !r.getYoutubeLiveUrl().trim().isEmpty())) // Lọc trận đua đang chạy hoặc có luồng phát
                 .map(r -> raceMapper.toDTO(r, meetingMap.get(r.getRaceMeetingId()))) // Chuyển đổi sang RaceDTO kèm tên Ngày hội đua
                 .collect(Collectors.toList()); // Trả về danh sách List<RaceDTO>
     }
