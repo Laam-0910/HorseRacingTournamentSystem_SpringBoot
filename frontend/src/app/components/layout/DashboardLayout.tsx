@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 
@@ -96,6 +96,8 @@ const translateLabel = (label: string, lang: string = 'en'): string => {
  * Quản lý Sidebar đóng/mở, chuyển ngôn ngữ toàn hệ thống, trạng thái tài khoản,
  * phản hồi kích thước mobile và hiển thị các banner thông báo chung.
  */
+import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
+
 export default function DashboardLayout({
   roleLabel,
   roleColor,
@@ -120,48 +122,31 @@ export default function DashboardLayout({
   const [hovering, setHovering] = useState(false);
   // State lưu trữ ngày hiện tại định dạng chuỗi theo ngôn ngữ
   const [today, setToday] = useState('');
-  // State lưu trữ ngôn ngữ hiện tại của app (mặc định lấy từ localStorage hoặc tiếng Anh 'en')
-  const [lang, setLang] = useState(() => localStorage.getItem('app-lang') || 'en');
-  // Trạng thái hiển thị menu chọn ngôn ngữ dropdown
-  const [showLangMenu, setShowLangMenu] = useState(false);
-  // Ref tham chiếu đến thẻ div ngôn ngữ để phát hiện click bên ngoài (đóng menu)
-  const langRef = useRef<HTMLDivElement>(null);
+  const [lang] = useState('en');
+
+  // Quản lý luồng phát máy quay toàn cục (Không bị ngắt khi đổi tab/trang)
+  const [globalBroadcasterRace, setGlobalBroadcasterRace] = useState<any | null>(null);
+
+  useEffect(() => {
+    const handleOpenGlobalBroadcaster = (e: any) => {
+      if (e.detail) {
+        setGlobalBroadcasterRace(e.detail);
+      }
+    };
+    window.addEventListener("OPEN_BROADCASTER", handleOpenGlobalBroadcaster);
+    return () => window.removeEventListener("OPEN_BROADCASTER", handleOpenGlobalBroadcaster);
+  }, []);
   
   // Trạng thái phát hiện giao diện đang hiển thị trên Mobile (<1024px)
   const [isMobile, setIsMobile] = useState(false);
   // Trạng thái hiển thị Drawer menu trên Mobile
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Mảng các tùy chọn ngôn ngữ khả dụng trong hệ thống (chỉ giữ lại English)
-  const LANG_OPTIONS: [string, string][] = [['en', 'English']];
-  // Lấy nhãn ngôn ngữ hiện tại để hiển thị lên nút
-  const langLabel = LANG_OPTIONS.find(([c]) => c === lang)?.[1] || lang.toUpperCase();
-
-  // Hàm chuyển đổi ngôn ngữ hiện tại, lưu vào localStorage và reload lại trang để áp dụng đồng bộ
-  const changeLang = (code: string) => {
-    setLang(code);
-    localStorage.setItem('app-lang', code);
-    setShowLangMenu(false);
-    window.location.reload();
-  };
-
-  // Effect phát hiện cú click ngoài menu ngôn ngữ để tự động đóng dropdown
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (langRef.current && !langRef.current.contains(e.target as Node)) {
-        setShowLangMenu(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
-  // Effect cập nhật chuỗi hiển thị ngày hôm nay mỗi khi thay đổi ngôn ngữ (luôn sử dụng en-GB)
+  // Effect cập nhật chuỗi hiển thị ngày hôm nay
   useEffect(() => {
     const d = new Date();
-    const loc = 'en-GB'; 
-    setToday(d.toLocaleDateString(loc, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
-  }, [lang]);
+    setToday(d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
+  }, []);
 
   // Effect phát hiện thay đổi kích thước cửa sổ để chuyển sang chế độ Mobile
   useEffect(() => {
@@ -469,6 +454,15 @@ export default function DashboardLayout({
           {/* Render các component con (view được hiển thị) kèm hiệu ứng CSS animate-in */}
           <div className="animate-in">{children}</div>
         </div>
+
+        {/* Modal/Widget Máy quay phát sóng toàn cục - Luôn giữ nguyên khi chuyển tab/trang */}
+        {globalBroadcasterRace && (
+          <CameraBroadcasterModal
+            raceId={globalBroadcasterRace.id}
+            raceTitle={globalBroadcasterRace.classLevel || `Race #${globalBroadcasterRace.id}`}
+            onClose={() => setGlobalBroadcasterRace(null)}
+          />
+        )}
       </main>
     </div>
   );

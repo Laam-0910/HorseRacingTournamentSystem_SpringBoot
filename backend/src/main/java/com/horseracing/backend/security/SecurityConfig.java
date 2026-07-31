@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 /**
  * Cấu hình bảo mật SecurityConfig - Spring Security.
- * - Cho phép truy cập không qua kiểm tra token đối với một số endpoint công khai (auth, public data, swagger UI, websocket chat).
+ * - Cho phép truy cập không qua kiểm tra token đối với một số endpoint công khai (auth, public data, websocket chat).
  * - Cấu hình bộ lọc JWT Authentication Filter để xử lý kiểm tra mã Token Bearer trước UsernamePasswordAuthenticationFilter.
  * - Thiết lập cấu hình CORS (Cross-Origin Resource Sharing) cho các cổng phát triển frontend (ví dụ: localhost:5173).
  * - Cấu hình bộ mã hóa mật khẩu PasswordEncoder hỗ trợ mã hóa BCrypt và tương thích ngược với mật khẩu dạng thuần túy.
@@ -45,9 +45,9 @@ public class SecurityConfig {
                 .requestMatchers("/api/public/**").permitAll() // Cho phép xem thống kê, lịch thi đấu công khai
                 .requestMatchers("/api/ai/**").permitAll() // Cho phép gửi chat/predict không cần token
                 .requestMatchers("/ai/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll() // Cho phép truy cập tài liệu Swagger
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/races/**").permitAll() // Cho phép xem các trận đua công khai
                 .requestMatchers("/ws/chat/**").permitAll() // Cho phép kết nối WebSocket phòng chat công khai
+                .requestMatchers("/ws/livestream/**").permitAll() // Cho phép kết nối WebSocket livestream công khai
                 .anyRequest().authenticated() // Mọi yêu cầu API khác đều phải xác thực qua Token
             )
             // 5. Đăng ký bộ lọc JWT trước bộ lọc UsernamePasswordAuthenticationFilter
@@ -60,8 +60,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // Cho phép các máy khách phát triển React gọi API
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173", "http://localhost:3000"));
+        // Cho phép tất cả các nguồn gốc (localhost và IP mạng 192.168.x.x của máy tính khi kết nối từ điện thoại)
+        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
         // Cho phép các phương thức HTTP cơ bản
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         // Cho phép các header cần thiết

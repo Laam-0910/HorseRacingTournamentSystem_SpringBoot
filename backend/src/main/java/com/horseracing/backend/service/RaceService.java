@@ -119,6 +119,8 @@ public class RaceService {
 
         race.setStatus("SCHEDULED"); // Đặt trạng thái khởi tạo trận đua là SCHEDULED
         validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries()); // Kiểm tra giới hạn số lượng ngựa tối thiểu và tối đa
+        validateRacePurseAgainstMeetingBudget(race.getRaceMeetingId(), race.getPurse(), null);
+        race.updatePrizeDistribution(); // Tự động tính toán phân chia tiền thưởng (Top 1: 50%, Top 2: 30%, Top 3: 20%)
         Race savedRace = raceRepository.save(race); // Lưu đối tượng trận đua vào cơ sở dữ liệu
 
         String meetingName = raceMeetingRepository.findById(savedRace.getRaceMeetingId()) // Tìm Tên Ngày hội đua để map vào DTO trả về
@@ -165,11 +167,19 @@ public class RaceService {
             validateLiveUrl(liveUrl); // Xác thực tính hợp lệ của link Livestream
             race.setYoutubeLiveUrl(liveUrl); // Cập nhật link Livestream YouTube
         }
+        if (body.containsKey("streamMode")) { // Kiểm tra nếu có cập nhật chế độ stream
+            String mode = (String) body.get("streamMode");
+            if ("YOUTUBE".equals(mode) || "WEBCAM".equals(mode)) {
+                race.setStreamMode(mode);
+            }
+        }
         if (body.containsKey("stewardReport")) { // Kiểm tra nếu có cập nhật báo cáo trọng tài
             race.setStewardReport((String) body.get("stewardReport")); // Cập nhật nội dung báo cáo giám sát
         }
 
         validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries()); // Kiểm tra giới hạn số lượng ngựa đăng ký tham gia
+        validateRacePurseAgainstMeetingBudget(race.getRaceMeetingId(), race.getPurse(), id); // Validate purse against parent RaceMeeting budget
+        race.updatePrizeDistribution(); // Tự động cập nhật phân chia tiền thưởng
         Race savedRace = raceRepository.save(race); // Lưu các thay đổi của trận đua vào DB
         String meetingName = raceMeetingRepository.findById(savedRace.getRaceMeetingId()) // Trích xuất tên Ngày hội đua tương ứng
                 .map(RaceMeeting::getName) // Lấy tên Ngày hội đua
@@ -316,9 +326,12 @@ public class RaceService {
         Map<Integer, String> meetingMap = raceMeetingRepository.findAll().stream() // Lấy toàn bộ các Ngày hội đua
                 .collect(Collectors.toMap(RaceMeeting::getId, RaceMeeting::getName)); // Gom nhóm thành Map key: id, value: name
 
-        // Lọc danh sách các trận đua đang ở trạng thái RUNNING và có link YouTube trực tiếp
-        return raceRepository.findByStatus("RUNNING").stream() // Tra cứu các trận đua đang chạy
-                .filter(r -> r.getYoutubeLiveUrl() != null && !r.getYoutubeLiveUrl().trim().isEmpty()) // Lọc những trận đua có đường dẫn livestream không rỗng
+        // Lọc danh sách các trận đua đang ở trạng thái RUNNING, STEWARDS_INQUIRY hoặc có chế độ phát WEBCAM/YouTube
+        return raceRepository.findAll().stream() // Tra cứu tất cả các trận đua
+                .filter(r -> "RUNNING".equalsIgnoreCase(r.getStatus()) 
+                          || "STEWARDS_INQUIRY".equalsIgnoreCase(r.getStatus()) 
+                          || "WEBCAM".equalsIgnoreCase(r.getStreamMode()) 
+                          || (r.getYoutubeLiveUrl() != null && !r.getYoutubeLiveUrl().trim().isEmpty())) // Lọc trận đua đang chạy hoặc có luồng phát
                 .map(r -> raceMapper.toDTO(r, meetingMap.get(r.getRaceMeetingId()))) // Chuyển đổi sang RaceDTO kèm tên Ngày hội đua
                 .collect(Collectors.toList()); // Trả về danh sách List<RaceDTO>
     }
@@ -367,6 +380,30 @@ public class RaceService {
             }
             if (r.getStartTime() != null && r.getStartTime().equals(raceTime)) { // Nếu trùng khớp mốc thời gian xuất phát
                 throw new IllegalArgumentException("DUPLICATE_RACE_TIME"); // Ném ngoại lệ báo lỗi trùng giờ xuất phát
+            }
+        }
+    }
+
+    private void validateRacePurseAgainstMeetingBudget(Integer meetingId, BigDecimal newPurse, Integer excludeRaceId) {
+        if (meetingId == null || newPurse == null || newPurse.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        Optional<RaceMeeting> meetingOpt = raceMeetingRepository.findById(meetingId);
+        if (meetingOpt.isPresent()) {
+            RaceMeeting meeting = meetingOpt.get();
+            BigDecimal totalBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+            List<Race> racesInMeeting = raceRepository.findByRaceMeetingId(meetingId);
+            BigDecimal allocatedPurses = racesInMeeting.stream()
+                    .filter(r -> excludeRaceId == null || !r.getId().equals(excludeRaceId))
+                    .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus()))
+                    .map(r -> r.getPurse() != null ? r.getPurse() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal availableBudget = totalBudget.subtract(allocatedPurses);
+            if (availableBudget.compareTo(BigDecimal.ZERO) < 0) {
+                availableBudget = BigDecimal.ZERO;
+            }
+            if (newPurse.compareTo(availableBudget) > 0) {
+                throw new IllegalArgumentException(String.format("Race purse ($%,.2f) exceeds remaining Race Meeting budget ($%,.2f).", newPurse, availableBudget));
             }
         }
     }

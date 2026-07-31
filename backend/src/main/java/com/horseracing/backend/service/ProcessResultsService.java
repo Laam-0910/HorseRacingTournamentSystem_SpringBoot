@@ -204,24 +204,24 @@ public class ProcessResultsService {
                     // Thiết lập thời gian hoàn thành lượt chạy
                     entry.setFinishTime(finishTime);
 
-                    // Phân chia tiền thưởng: Hạng 1 (60%), Hạng 2 (25%), Hạng 3 (15%)
+                    // Phân chia tiền thưởng theo Class: Hạng 1 (50%), Hạng 2 (30%), Hạng 3 (20%)
                     BigDecimal prize = BigDecimal.ZERO;
                     // Khởi tạo mức điều chỉnh điểm rating
                     int ratingAdj = 0;
                     // Nếu đạt Hạng 1
                     if (finalPosition != null && finalPosition == 1) {
-                        // Thưởng 60% tổng quỹ thưởng của trận đua
-                        prize = purse.multiply(new BigDecimal("0.60"));
+                        // Thưởng 50% tổng quỹ thưởng của trận đua
+                        prize = purse.multiply(new BigDecimal("0.50"));
                         // Cộng 6 điểm rating cho quán quân
                         ratingAdj = 6;
                     } else if (finalPosition != null && finalPosition == 2) { // Nếu đạt Hạng 2
-                        // Thưởng 25% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.25"));
+                        // Thưởng 30% tổng quỹ thưởng
+                        prize = purse.multiply(new BigDecimal("0.30"));
                         // Cộng 3 điểm rating cho á quân
                         ratingAdj = 3;
                     } else if (finalPosition != null && finalPosition == 3) { // Nếu đạt Hạng 3
-                        // Thưởng 15% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.15"));
+                        // Thưởng 20% tổng quỹ thưởng
+                        prize = purse.multiply(new BigDecimal("0.20"));
                         // Cộng 1 điểm rating cho hạng 3
                         ratingAdj = 1;
                     } else { // Các thứ hạng khác
@@ -247,8 +247,8 @@ public class ProcessResultsService {
                         Optional<User> jOpt = userRepository.findById(entry.getJockeyId());
                         if (jOpt.isPresent()) {
                             User jUser = jOpt.get();
-                            BigDecimal currentBal = jUser.getBalance() != null ? jUser.getBalance() : BigDecimal.ZERO;
-                            jUser.setBalance(currentBal.add(jockeyShare));
+                            BigDecimal currentBal = jUser.getWalletBalance() != null ? jUser.getWalletBalance() : BigDecimal.ZERO;
+                            jUser.setWalletBalance(currentBal.add(jockeyShare));
                             userRepository.save(jUser);
                         }
 
@@ -258,8 +258,8 @@ public class ProcessResultsService {
                             Optional<User> oOpt = userRepository.findById(hOpt.get().getOwnerId());
                             if (oOpt.isPresent()) {
                                 User oUser = oOpt.get();
-                                BigDecimal currentBal = oUser.getBalance() != null ? oUser.getBalance() : BigDecimal.ZERO;
-                                oUser.setBalance(currentBal.add(ownerShare));
+                                BigDecimal currentBal = oUser.getWalletBalance() != null ? oUser.getWalletBalance() : BigDecimal.ZERO;
+                                oUser.setWalletBalance(currentBal.add(ownerShare));
                                 userRepository.save(oUser);
                             }
                         }
@@ -278,6 +278,7 @@ public class ProcessResultsService {
                             // Tăng số lần lọt top 3 của nài ngựa lên 1
                             jockey.setTotalTop3Finishes((jockey.getTotalTop3Finishes() != null ? jockey.getTotalTop3Finishes() : 0) + 1);
                         }
+                        // Phân chia tiền thưởng đạt giải: Kỵ sĩ (Jockey) nhận 20%, Chủ ngựa (Owner) nhận 80% (đã nạp ở trên)
                         // Lưu thông tin Nài ngựa vào CSDL
                         userRepository.save(jockey);
                     }
@@ -285,9 +286,7 @@ public class ProcessResultsService {
 
                 // Cập nhật chỉ số thống kê của Chiến mã (Horse)
                 Optional<Horse> horseOpt = horseRepository.findById(entry.getHorseId());
-                // Nếu chiến mã tồn tại
                 if (horseOpt.isPresent()) {
-                    // Lấy đối tượng Horse
                     Horse horse = horseOpt.get();
                     // Tăng tổng số trận đua của chiến mã lên 1
                     horse.setTotalRaces(horse.getTotalRaces() + 1);

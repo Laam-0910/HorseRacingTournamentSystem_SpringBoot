@@ -12,6 +12,7 @@ interface Race {
   trackType: string;
   startTime: string;
   youtubeLiveUrl: string;
+  streamMode?: string;
   meetingName: string;
 }
 
@@ -45,7 +46,8 @@ interface ViewLiveProps {
   onClearPreselect?: () => void;
 }
 
-// ── Component hiển thị phòng xem Live Stream và Chat ────────────────────────
+import WebCamLiveViewer, { BroadcasterInfo } from "../../livestream/WebCamLiveViewer";
+
 export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLiveProps) {
   const t = TRANSLATIONS.en;
   const { user } = useAuth(); // Thông tin người dùng hiện tại
@@ -56,6 +58,10 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
+  // State quản lý danh sách Trọng tài / Camera đang phát và camera được chọn
+  const [broadcasterList, setBroadcasterList] = useState<BroadcasterInfo[]>([]);
+  const [selectedBroadcasterId, setSelectedBroadcasterId] = useState<string | null>(null);
+
   // State quản lý Chat
   const [chatMessages, setChatMessages] = useState<{ user: string; text: string; time: string }[]>([]);
   const [newMsg, setNewMsg] = useState("");
@@ -259,14 +265,94 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
         <div className="flex items-center justify-center h-96 bg-white/[0.01] border border-white/5 rounded-2xl">
           <p className="text-sm text-white/40 font-mono">{$t("Đang tải dữ liệu...", (localStorage.getItem('app-lang') || 'vi'))}</p>
         </div>
-      ) : selectedRace && embedUrl ? (
+      ) : selectedRace ? (
         <div className={`gap-6 ${isTheaterMode ? "flex flex-col" : "grid grid-cols-1 lg:grid-cols-3"}`}>
           
           {/* Player & Stats */}
           <div className={`${isTheaterMode ? "w-full" : "lg:col-span-2"} space-y-4`}>
+            {/* Multi-Camera Angle Selector Tabs - Ưu tiên WebCam Trọng tài trước, YouTube cuối cùng */}
+            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
+              {broadcasterList.length > 0 ? (
+                broadcasterList.map((b) => {
+                  const isSelected = selectedRace?.streamMode !== "YOUTUBE" && (selectedBroadcasterId === b.id || (!selectedBroadcasterId && broadcasterList[broadcasterList.length - 1]?.id === b.id));
+                  return (
+                    <button
+                      key={b.id}
+                      onClick={() => {
+                        setSelectedBroadcasterId(b.id);
+                        setSelectedRace(prev => prev ? { ...prev, streamMode: "WEBCAM" } : prev);
+                      }}
+                      style={{
+                        padding: "0.4rem 0.85rem",
+                        fontSize: "11px",
+                        borderRadius: "0.5rem",
+                        fontWeight: "bold",
+                        background: isSelected ? "#ef4444" : "rgba(255,255,255,0.05)",
+                        color: "#fff",
+                        border: isSelected ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px"
+                      }}
+                    >
+                      <span>📱</span> {$t(`Cam ${b.name}`, (localStorage.getItem('app-lang') || 'vi'))}
+                    </button>
+                  );
+                })
+              ) : (
+                <button
+                  onClick={() => setSelectedRace(prev => prev ? { ...prev, streamMode: "WEBCAM" } : prev)}
+                  style={{
+                    padding: "0.4rem 0.85rem",
+                    fontSize: "11px",
+                    borderRadius: "0.5rem",
+                    fontWeight: "bold",
+                    background: selectedRace?.streamMode === "WEBCAM" ? "#ef4444" : "rgba(255,255,255,0.05)",
+                    color: "#fff",
+                    border: selectedRace?.streamMode === "WEBCAM" ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                >
+                  <span>📱</span> {$t("Góc Cam Trọng tài (Đang chờ kết nối)", (localStorage.getItem('app-lang') || 'vi'))}
+                </button>
+              )}
+
+              {/* Nút YouTube LUÔN LUÔN xếp ở Cuối Cùng */}
+              {selectedRace?.youtubeLiveUrl && (
+                <button
+                  onClick={() => setSelectedRace(prev => prev ? { ...prev, streamMode: "YOUTUBE" } : prev)}
+                  style={{
+                    padding: "0.4rem 0.85rem",
+                    fontSize: "11px",
+                    borderRadius: "0.5rem",
+                    fontWeight: "bold",
+                    background: selectedRace?.streamMode === "YOUTUBE" ? "#ef4444" : "rgba(255,255,255,0.05)",
+                    color: "#fff",
+                    border: selectedRace?.streamMode === "YOUTUBE" ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                >
+                  <span>📺</span> {$t("Kênh YouTube Chính", (localStorage.getItem('app-lang') || 'vi'))}
+                </button>
+              )}
+            </div>
+
             {/* Embedded Stream */}
             <div className="relative w-full pb-[56.25%] h-0 rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black">
-              {selectedRace.youtubeLiveUrl && (
+              {selectedRace.streamMode !== "YOUTUBE" ? (
+                <WebCamLiveViewer
+                  raceId={selectedRace.id}
+                  selectedBroadcasterId={selectedBroadcasterId}
+                  onBroadcastersFound={list => setBroadcasterList(list)}
+                />
+              ) : selectedRace.youtubeLiveUrl && (
                 selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
                 selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
                 selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
@@ -397,6 +483,24 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                       {m.text}
                     </p>
                   </div>
+                ))}
+              </div>
+
+              {/* Quick Reactions Bar */}
+              <div style={{ display: "flex", gap: "0.25rem", padding: "0.35rem 0.5rem", background: "rgba(0,0,0,0.3)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                {["🔥", "🏇", "👏", "🏆", "❤️", "😮"].map(emoji => (
+                  <button
+                    key={emoji}
+                    type="button"
+                    onClick={() => {
+                      if (!socket || socket.readyState !== WebSocket.OPEN) return;
+                      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                      socket.send(JSON.stringify({ user: username, text: emoji, time }));
+                    }}
+                    style={{ background: "rgba(255,255,255,0.05)", border: "none", borderRadius: "0.25rem", padding: "2px 6px", cursor: "pointer", fontSize: "0.85rem" }}
+                  >
+                    {emoji}
+                  </button>
                 ))}
               </div>
 

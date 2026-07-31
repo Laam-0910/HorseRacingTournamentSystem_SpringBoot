@@ -1,6 +1,14 @@
 /// <reference types="vite/client" />
-// Xác định URL cơ sở (Base URL) của API Spring Boot từ cấu hình biến môi trường Vite hoặc mặc định là http://localhost:8080/api
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+// Tự động tính toán API Base URL theo hostname hiện tại (localhost hoặc IP 192.168.x.x của máy tính khi mở trên Điện thoại)
+const getApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  const hostname = window.location.hostname || "localhost";
+  return `http://${hostname}:8080/api`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Trích xuất thông báo lỗi sạch từ một Error object bất kỳ.

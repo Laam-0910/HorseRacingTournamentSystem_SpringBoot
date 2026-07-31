@@ -25,6 +25,10 @@ public class RaceInvitationMapper {
                 .jockeyAvatar(jockeyAvatar)
                 .status(invite.getStatus())
                 .jockeySharePercentage(invite.getJockeySharePercentage() != null ? invite.getJockeySharePercentage() : new java.math.BigDecimal("10.00"))
+                .commissionAmount(invite.getCommissionAmount())
+                .commissionRate(invite.getCommissionRate())
+                .payoutStatus(invite.getPayoutStatus())
+                .hireFee(invite.getHireFee())
                 .build();
     }
 

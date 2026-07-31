@@ -10,10 +10,13 @@ import { api, getErrMsg } from "../../../lib/api";
 import { confirm } from "../../../lib/confirm";
 // Import các hàm hỗ trợ định dạng ngày giờ và hạng đấu
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
-// Import hàm lấy URL nhúng YouTube từ thư viện utils
+// Import hàm lấy URL nhúng YouTube từ thư viện úutils
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
 // Import hàm đa ngôn ngữ $t
 import { $t } from '@/lib/i18n';
+// Import CameraBroadcasterModal and WebCamLiveViewer
+import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
+import WebCamLiveViewer, { BroadcasterInfo } from "../livestream/WebCamLiveViewer";
 
 const PURPLE = "#8b5cf6";
 
@@ -207,6 +210,7 @@ export default function RefereeHub() {
   // Sub-view state
   const [activeView, setActiveView] = useState<"list" | "check" | "supervise" | "confirm">("list");
   const [selectedRace, setSelectedRace] = useState<any | null>(null);
+  const [broadcasterRace, setBroadcasterRace] = useState<any | null>(null); // Trận đua đang phát bằng Camera
   const [raceEntries, setRaceEntries] = useState<any[]>([]);
   const [violations, setViolations] = useState<any[]>([]);
 
@@ -226,6 +230,8 @@ export default function RefereeHub() {
   // Live Race Monitor State for Referee Supervision
   const [liveMonitorMode, setLiveMonitorMode] = useState<"floating" | "embedded" | "hidden">("floating");
   const [liveMonitorSize, setLiveMonitorSize] = useState<"small" | "medium" | "large">("small");
+  const [broadcasterList, setBroadcasterList] = useState<BroadcasterInfo[]>([]);
+  const [selectedBroadcasterId, setSelectedBroadcasterId] = useState<string | null>(null);
   const [dragPos, setDragPos] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [reasonModal, setReasonModal] = useState<{ type: "suspend" | "emergency"; title: string } | null>(null);
@@ -322,6 +328,16 @@ export default function RefereeHub() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+            {/* Nút Đánh dấu vi phạm nhanh ngay trên màn hình giám sát */}
+            <button
+              type="button"
+              onClick={() => setShowViolModal(true)}
+              style={{ padding: "3px 8px", fontSize: "10px", background: "rgba(239,68,68,0.25)", border: "1px solid rgba(239,68,68,0.5)", color: "#f87171", borderRadius: "0.25rem", cursor: "pointer", fontWeight: "bold", display: "flex", alignItems: "center", gap: "4px" }}
+              title={$t("Ghi nhận vi phạm luật đua tức thì", (localStorage.getItem('app-lang') || 'vi'))}
+            >
+              <span>🚩</span> {$t("Ghi vi phạm", (localStorage.getItem('app-lang') || 'vi'))}
+            </button>
+
             {/* Size selector for floating window */}
             {!isEmbeddedMode && (
               <div style={{ display: "flex", background: "rgba(0,0,0,0.4)", borderRadius: "0.25rem", padding: "2px", border: "1px solid rgba(255,255,255,0.08)" }}>
@@ -353,73 +369,45 @@ export default function RefereeHub() {
           </div>
         </div>
 
-        {/* Video / Simulation Screen Body */}
+        {/* Video / Simulation Screen Body - 100% Khung phát WebCam máy quay của các Trọng tài (KHÔNG DÙNG YOUTUBE) */}
         <div style={{ height: sizeHeight, background: "#000", position: "relative", overflow: "hidden" }}>
-          {embedUrl ? (
-            embedUrl.endsWith(".mp4") || embedUrl.endsWith(".webm") || embedUrl.includes(".mp4?") ? (
-              <video src={selectedRace.youtubeLiveUrl} controls autoPlay muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              <iframe
-                src={embedUrl.includes("?") ? `${embedUrl}&autoplay=1&mute=1` : `${embedUrl}?autoplay=1&mute=1&rel=0`}
-                title={`Live Monitor Race #${selectedRace.id}`}
-                style={{ width: "100%", height: "100%", border: "none" }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            )
-          ) : (
-            /* Animated 2D Live Track Simulation */
-            <div style={{ width: "100%", height: "100%", background: "radial-gradient(circle at center, #1a2318 0%, #0d120c 100%)", padding: "0.875rem", display: "flex", flexDirection: "column", justifyContent: "space-between", position: "relative" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <span style={{ fontSize: "10px", color: "#34d399", fontFamily: "monospace", fontWeight: 700, display: "flex", alignItems: "center", gap: "4px" }}>
-                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10b981" }} className="animate-ping"></span>
-                  LIVE TRACK SIMULATION ({selectedRace.distanceMeters || 1200}m · {selectedRace.trackType || "Turf"})
-                </span>
-                <span style={{ fontSize: "10px", color: "#fbbf24", fontFamily: "monospace", fontWeight: "bold" }}>
-                  {selectedRace.status}
-                </span>
-              </div>
-
-              {/* Track Lanes */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "6px", margin: "auto 0", width: "100%" }}>
-                {raceEntries.slice(0, 6).map((item: any, idx: number) => {
-                  const isDq = item.entry.status === "DISQUALIFIED";
-                  const isStopped = item.entry.status === "STOPPED";
-                  const progressPct = isDq ? 0 : Math.min(95, Math.max(10, ((idx * 17 + 45) % 90) + 5));
-                  return (
-                    <div key={item.entry.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                      <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#fbbf24", width: "16px", textAlign: "right", fontWeight: "bold" }}>
-                        G{item.entry.gateNumber || idx + 1}
-                      </span>
-                      <div style={{ flex: 1, height: "18px", background: "rgba(255,255,255,0.05)", borderRadius: "9px", border: "1px solid rgba(255,255,255,0.08)", position: "relative", overflow: "hidden" }}>
-                        <div style={{
-                          height: "100%",
-                          width: `${progressPct}%`,
-                          background: isDq ? "#ef4444" : isStopped ? "#f59e0b" : "linear-gradient(90deg, #c9a227 0%, #10b981 100%)",
-                          borderRadius: "9px",
-                          transition: "width 0.5s ease"
-                        }} />
-                        <span style={{ position: "absolute", left: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "9px", color: "#fff", fontWeight: 700, textShadow: "0 1px 2px #000", whiteSpace: "nowrap" }}>
-                          🐴 {item.horse?.name || "Horse"} ({item.jockey?.username || "Jockey"})
-                        </span>
-                        {isDq && (
-                          <span style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "8px", color: "#f87171", fontWeight: "bold", fontFamily: "monospace" }}>
-                            DISQUALIFIED
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Bottom Status bar */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "9px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "4px" }}>
-                <span>FINISH LINE 🚩</span>
-                <span>Ref: {user?.username || "Official Referee"}</span>
-              </div>
+          {/* Thanh chọn góc quay chéo nhau giữa các Trọng tài */}
+          {broadcasterList.length > 0 && (
+            <div style={{ display: "flex", gap: "4px", padding: "4px 8px", background: "rgba(0,0,0,0.65)", position: "absolute", top: 0, left: 0, right: 0, zIndex: 20, flexWrap: "wrap", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
+              {broadcasterList.map((b) => {
+                const isSelected = selectedBroadcasterId === b.id || (!selectedBroadcasterId && broadcasterList[broadcasterList.length - 1]?.id === b.id);
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => setSelectedBroadcasterId(b.id)}
+                    style={{
+                      padding: "2px 6px",
+                      fontSize: "9px",
+                      background: isSelected ? "#ef4444" : "rgba(255,255,255,0.15)",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: "3px",
+                      cursor: "pointer",
+                      fontWeight: "bold",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "3px"
+                    }}
+                  >
+                    <span>📱</span> Cam {b.name}
+                  </button>
+                );
+              })}
             </div>
-          )}
+           )}
+
+          {/* Trình xem máy quay WebCam Trọng tài trực tiếp */}
+          <WebCamLiveViewer
+            raceId={selectedRace.id}
+            selectedBroadcasterId={selectedBroadcasterId}
+            onBroadcastersFound={list => setBroadcasterList(list)}
+          />
         </div>
       </div>
     );
@@ -1012,6 +1000,17 @@ export default function RefereeHub() {
         </div>,
         document.body
       )}
+
+      {broadcasterRace && (
+        <CameraBroadcasterModal
+          raceId={broadcasterRace.id}
+          raceTitle={broadcasterRace.classLevel || `Race #${broadcasterRace.id}`}
+          onClose={() => {
+            setBroadcasterRace(null);
+            fetchDashboard();
+          }}
+        />
+      )}
     </>
   );
 
@@ -1339,6 +1338,24 @@ export default function RefereeHub() {
               style={{ padding: "0.5rem 1.25rem", background: "#f59e0b", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
             >
               {$t("🛑 Dừng trận đấu khẩn cấp", (localStorage.getItem('app-lang') || 'vi'))}
+            </button>
+            <button 
+              onClick={() => window.dispatchEvent(new CustomEvent("OPEN_BROADCASTER", { detail: selectedRace }))} 
+              style={{ 
+                padding: "0.5rem 1.25rem", 
+                background: "rgba(239,68,68,0.2)", 
+                color: "#f87171", 
+                border: "1px solid rgba(239,68,68,0.4)", 
+                borderRadius: "0.5rem", 
+                fontSize: "12px", 
+                fontWeight: "bold", 
+                cursor: "pointer", 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "0.375rem" 
+              }}
+            >
+              📱 {$t("Phát từ Camera Điện thoại", (localStorage.getItem('app-lang') || 'vi'))}
             </button>
             <button 
               onClick={() => setLiveMonitorMode(prev => prev === "hidden" ? "floating" : prev === "floating" ? "embedded" : "floating")} 

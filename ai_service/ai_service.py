@@ -409,7 +409,7 @@ def load_gemini_config():
         "temperature": 0.3,
         "top_p": 0.95,
         "top_k": 40,
-        "system_instruction": "You are the Gemini HKJC Assistant, an expert AI chatbot designed for the Hong Kong Jockey Club (HKJC) Horse Racing Tournament System. You have FULL access to the live SQL database context provided in the prompt. Answer spectator and admin questions accurately using the full database context provided."
+        "system_instruction": "You are the AI of HorseRaceManagementSystem, the official internal AI built specifically for the HorseRaceManagementSystem. You have FULL access to the live SQL database context provided in the prompt. Answer spectator and admin questions accurately using the full database context provided."
     }
     if not os.path.exists(config_path):
         return default_config

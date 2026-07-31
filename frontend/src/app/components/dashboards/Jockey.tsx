@@ -16,9 +16,10 @@ import ProfileTab from "./components/ProfileTab";
 import ProfileModal from "./components/ProfileModal";
 // Import HorsePerformanceModal hiển thị thông số thành tích ngựa
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
+import ViewLive from "./components/ViewLive";
 
 // Định nghĩa các Tab giao diện khả dụng trong Dashboard của Jockey
-type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "profile";
+type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "live" | "profile";
 
 // Mã màu xanh đặc trưng làm giao diện chủ đạo cho kỵ sĩ Jockey
 const ROLE_COLOR = "#3b82c4";
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { index: "03", icon: "calendar",         label: "Race Calendar", view: "calendar"    },
   { index: "04", icon: "mail",             label: "Invitations",   view: "invitations" },
   { index: "05", icon: "alert-triangle",   label: "Rule Violations", view: "violations" },
+  { index: "06", icon: "tv",               label: "Live Stream Arena", view: "live" },
 ];
 
 // ── Sub-views (Các Component hiển thị giao diện con) ──────────────────────────
@@ -71,6 +73,10 @@ function StatusBadge({ status }: { status: string }) {
     bg = "rgba(239,91,91,0.12)";
     fg = "#ef5b5b";
     bc = "rgba(239,91,91,0.3)";
+  } else if (s === "ENTRY_REJECTED") {
+    bg = "rgba(249,115,22,0.12)";
+    fg = "#f97316";
+    bc = "rgba(249,115,22,0.3)";
   } else if (s === "UNREGISTERED") {
     bg = "rgba(255,255,255,0.05)";
     fg = "#a0a0a0";
@@ -100,15 +106,50 @@ function StatusBadge({ status }: { status: string }) {
  * Hiển thị số liệu hiệu suất thi đấu cá nhân (số lượt cưỡi, số trận thắng, top 3, tỉ lệ thắng)
  * và danh sách đăng ký tham gia các Ngày hội đua sắp tới.
  */
-function HubView({ dashboard, meetings, onRegister }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void }) {
+function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void; user: any }) {
+  const walletBal = user?.walletBalance !== undefined && user?.walletBalance !== null ? Number(user.walletBalance) : 0;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Khối Thẻ Thống kê hiệu suất */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: "1rem" }}>
+      {/* Khối Thẻ Thống kê hiệu suất & Ví Tiền */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "1rem" }}>
+        <StatsCard label="💰 Wallet Balance" value={`$${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} color="#fbbf24" />
         <StatsCard label={$t("Total Rides", (localStorage.getItem('app-lang') || 'vi'))}     value={dashboard?.jockeyStats?.totalRaces} />
         <StatsCard label={$t("Wins (1st)", (localStorage.getItem('app-lang') || 'vi'))}      value={dashboard?.jockeyStats?.totalWins}   color="#4ade80" />
         <StatsCard label={$t("Top 3 Finishes", (localStorage.getItem('app-lang') || 'vi'))}  value={dashboard?.jockeyStats?.top3}   color={ROLE_COLOR} />
         <StatsCard label={$t("Win Rate", (localStorage.getItem('app-lang') || 'vi'))}        value={dashboard?.jockeyStats?.winRate ? `${Number(dashboard.jockeyStats.winRate).toFixed(1)}%` : "0.0%"} color="#c9a227" />
+      </div>
+
+      {/* Dedicated Wallet & Financial Rules Card */}
+      <div className="rounded-xl border p-4" style={{ background: "rgba(251, 191, 36, 0.05)", borderColor: "rgba(251, 191, 36, 0.2)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "1.5rem" }}>💰</span>
+            <div>
+              <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#fbbf24" }}>Jockey Wallet & Earnings Breakdown</h4>
+              <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.6)" }}>Current available balance & automatic financial earnings rules</p>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>Available Wallet</span>
+            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fbbf24", fontFamily: "monospace" }}>
+              ${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", borderTop: "1px solid rgba(251, 191, 36, 0.15)", paddingTop: "0.75rem" }}>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏆 Prize Money Share:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Jockey receives <strong>20%</strong> of place prize money (1st: 50%, 2nd: 30%, 3rd: 20%).</p>
+          </div>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏇 Jockey Hire Fee:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}><strong>+$500.00</strong> credited directly to your wallet upon accepting race invitation.</p>
+          </div>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🤝 Referral Bonus:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}><strong>5% commission</strong> credited for accepted invitation referrals.</p>
+          </div>
+        </div>
       </div>
 
       {/* Danh sách ngày hội đua đang mở đăng ký */}
@@ -307,7 +348,11 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
     if (inv.status === "PENDING") return "PENDING";
     if (inv.status === "REJECTED") return "REJECTED";
     if (inv.status === "ACCEPTED") {
-      if (inv.entryStatus) return inv.entryStatus.toUpperCase();
+      if (inv.entryStatus) {
+        const es = inv.entryStatus.toUpperCase();
+        if (es === "REJECTED") return "ENTRY_REJECTED";
+        return es;
+      }
       return "ACCEPTED";
     }
     return inv.status ? inv.status.toUpperCase() : "OTHER";
@@ -319,7 +364,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
     PENDING: invitations.filter(i => getItemStatus(i) === "PENDING").length,
     PENDING_ADMIN: invitations.filter(i => getItemStatus(i) === "PENDING_ADMIN").length,
     APPROVED: invitations.filter(i => getItemStatus(i) === "APPROVED" || getItemStatus(i) === "ACCEPTED").length,
-    REJECTED: invitations.filter(i => getItemStatus(i) === "REJECTED").length,
+    REJECTED: invitations.filter(i => getItemStatus(i) === "REJECTED" || getItemStatus(i) === "ENTRY_REJECTED").length,
     FINISHED: invitations.filter(i => getItemStatus(i) === "FINISHED" || getItemStatus(i) === "OFFICIAL").length,
   };
 
@@ -331,7 +376,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
     if (filter === "PENDING") matchesStatus = st === "PENDING";
     else if (filter === "PENDING_ADMIN") matchesStatus = st === "PENDING_ADMIN";
     else if (filter === "APPROVED") matchesStatus = st === "APPROVED" || st === "ACCEPTED";
-    else if (filter === "REJECTED") matchesStatus = st === "REJECTED";
+    else if (filter === "REJECTED") matchesStatus = st === "REJECTED" || st === "ENTRY_REJECTED";
     else if (filter === "FINISHED") matchesStatus = st === "FINISHED" || st === "OFFICIAL";
 
     if (!matchesStatus) return false;
@@ -536,8 +581,8 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                   )}
 
                   <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.7rem" }}>
-                    <span style={{ color: "#a0a0a0" }}>Lời mời: <strong style={{ color: "#f4f2ec" }}>{$t(inv.status || '', lang)}</strong></span>
-                    {inv.entryStatus && (
+                    <span style={{ color: "#a0a0a0" }}>Invitation: <strong style={{ color: "#f4f2ec" }}>{inv.status}</strong></span>
+                    {inv.status === "ACCEPTED" && inv.entryStatus && (
                       <span style={{ color: "#a0a0a0" }}>{t.entryStatus} <StatusBadge status={inv.entryStatus} /></span>
                     )}
                   </div>
@@ -551,9 +596,27 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                   </div>
                 ) : (
                   <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>
-                    {inv.status === "ACCEPTED" ? (lang === "vi" ? "✓ Đã nhận suất cưỡi cho trận đua này" : "✓ Accepted mount offer for this race") : (lang === "vi" ? "✕ Đã từ chối lời mời" : "✕ Invitation declined")}
+                    {inv.status === "ACCEPTED" ? "✓ Accepted mount offer for this race" : "✕ Invitation declined"}
                   </div>
                 )}
+                {inv.venue && (
+                  <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
+                    📍 {inv.venue} · 📅 {formatDate(inv.startTime)}
+                  </p>
+                )}
+                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.375rem" }}>
+                  <div style={{ fontSize: "0.75rem", color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", border: "1px solid rgba(251,191,36,0.2)" }}>
+                    🤝 <strong>Jockey Hire Fee:</strong> ${Number(inv.hireFee || 500).toLocaleString('en-US')}
+                  </div>
+                  {inv.commissionAmount && (
+                    <div style={{ fontSize: "0.75rem", color: "#4ade80", fontFamily: "monospace", background: "rgba(16,185,129,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", border: "1px solid rgba(16,185,129,0.2)" }}>
+                      💰 <strong>Invitation Commission:</strong> ${Number(inv.commissionAmount).toLocaleString('en-US')} ({inv.commissionRate || 5}%)
+                    </div>
+                  )}
+                </div>
+                <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.25rem" }}>
+                  <strong>{t.status}:</strong> {inv.status}
+                </p>
               </div>
             );
           })}
@@ -1010,13 +1073,14 @@ export default function Jockey() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "hub":         return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
+      case "hub":         return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} />;
       case "mounts":      return <MountsView mounts={mounts} loading={loading} onViewHorse={setSelectedHorse} />;
       case "calendar":    return <CalendarView meetings={meetings} allRaces={allRaces} refereesMap={refereesMap} />;
       case "invitations": return <InvitationsView invitations={invitations} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} refereesMap={refereesMap} />;
       case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} onViewProfile={setSelectedProfileId} />;
+      case "live":        return <ViewLive />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;
-      default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} />;
+      default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} />;
     }
   };
 

@@ -80,12 +80,13 @@ public class JockeyOwnerDashboardService {
 
         // Danh sách thông báo (Notifications)
         List<Map<String, Object>> notificationList = new ArrayList<>();
-        Map<Integer, String> meetingNameMap = meetings.stream().collect(Collectors.toMap(RaceMeeting::getId, RaceMeeting::getName));
+        Map<Integer, String> meetingNameMap = meetings.stream().collect(Collectors.toMap(RaceMeeting::getId, RaceMeeting::getName, (m1, m2) -> m1));
 
+        // 1. Thông báo từ các đơn đăng ký ngày hội đua (JockeyRaceMeetingRegistration)
         for (JockeyRaceMeetingRegistration reg : myRegs) {
             String meetingName = meetingNameMap.getOrDefault(reg.getRaceMeetingId(), "Buổi đua");
             Map<String, Object> notif = new HashMap<>();
-            notif.put("id", "jockey-" + reg.getId());
+            notif.put("id", "jockey-reg-" + reg.getId());
             notif.put("meetingId", reg.getRaceMeetingId());
             if ("PENDING".equals(reg.getStatus())) {
                 notif.put("title", "Đăng ký buổi đua");
@@ -103,6 +104,64 @@ public class JockeyOwnerDashboardService {
             notificationList.add(notif);
         }
 
+        // 2. Thông báo từ các Lời mời thi đấu từ Chủ ngựa (RaceInvitation)
+        List<RaceInvitation> myInvitations = invitationRepository.findByJockeyId(jockeyId);
+        Map<Integer, Horse> horseMap = horseRepository.findAll().stream().collect(Collectors.toMap(Horse::getId, h -> h, (h1, h2) -> h1));
+        Map<Integer, User> userMap = userRepository.findAll().stream().collect(Collectors.toMap(User::getId, u -> u, (u1, u2) -> u1));
+        Map<Integer, Race> raceMap = raceRepository.findAll().stream().collect(Collectors.toMap(Race::getId, r -> r, (r1, r2) -> r1));
+
+        for (RaceInvitation inv : myInvitations) {
+            Horse horse = horseMap.get(inv.getHorseId());
+            User owner = userMap.get(inv.getOwnerId());
+            Race race = raceMap.get(inv.getRaceId());
+            String horseName = horse != null ? horse.getName() : "Chiến mã";
+            String ownerName = owner != null ? (owner.getFullName() != null && !owner.getFullName().isBlank() ? owner.getFullName() : owner.getUsername()) : "Chủ ngựa";
+            String raceClass = race != null ? race.getClassLevel() : "Trận đua";
+
+            Map<String, Object> notif = new HashMap<>();
+            notif.put("id", "jockey-invite-" + inv.getId());
+            notif.put("raceId", inv.getRaceId());
+            if ("PENDING".equals(inv.getStatus())) {
+                notif.put("title", "Lời mời thi đấu mới 📩");
+                notif.put("message", "Chủ ngựa " + ownerName + " đã gửi lời mời bạn điều khiển ngựa " + horseName + " trong trận " + raceClass + ".");
+                notif.put("type", "pending");
+                notificationList.add(notif);
+            } else if ("ACCEPTED".equals(inv.getStatus())) {
+                notif.put("title", "Đã chấp nhận lời mời ✅");
+                notif.put("message", "Bạn đã chấp nhận lời mời điều khiển ngựa " + horseName + " trong trận " + raceClass + ". Đơn đang chờ Admin duyệt.");
+                notif.put("type", "approved");
+                notificationList.add(notif);
+            } else if ("REJECTED".equals(inv.getStatus())) {
+                notif.put("title", "Lời mời bị từ chối ❌");
+                notif.put("message", "Lời mời điều khiển ngựa " + horseName + " trong trận " + raceClass + " đã bị từ chối.");
+                notif.put("type", "rejected");
+                notificationList.add(notif);
+            }
+        }
+
+        // 3. Thông báo phê duyệt Lượt thi đấu (RaceEntry) từ Admin
+        for (RaceEntry entry : entries) {
+            Horse horse = horseMap.get(entry.getHorseId());
+            Race race = raceMap.get(entry.getRaceId());
+            String horseName = horse != null ? horse.getName() : "Chiến mã";
+            String raceClass = race != null ? race.getClassLevel() : "Trận đua";
+
+            Map<String, Object> notif = new HashMap<>();
+            notif.put("id", "jockey-entry-" + entry.getId());
+            if ("APPROVED".equalsIgnoreCase(entry.getStatus()) || "CONFIRMED".equalsIgnoreCase(entry.getStatus())) {
+                notif.put("title", "Lượt thi đấu được phê duyệt 🏆");
+                notif.put("message", "Lượt tham gia thi đấu của bạn với ngựa " + horseName + " trong trận " + raceClass + " đã được Admin phê duyệt chính thức!");
+                notif.put("type", "approved");
+                notificationList.add(notif);
+            } else if ("REJECTED".equalsIgnoreCase(entry.getStatus())) {
+                notif.put("title", "Lượt thi đấu bị từ chối ⛔");
+                notif.put("message", "Lượt tham gia thi đấu của bạn với ngựa " + horseName + " trong trận " + raceClass + " đã bị Admin từ chối.");
+                notif.put("type", "rejected");
+                notificationList.add(notif);
+            }
+        }
+
+        // 4. Đường đua mới được thiết lập
         List<Race> upcomingRaces = raceRepository.findAll();
         for (Race race : upcomingRaces) {
             if ("SCHEDULED".equalsIgnoreCase(race.getStatus()) || "DECLARATION_OPEN".equalsIgnoreCase(race.getStatus())) {
@@ -359,6 +418,88 @@ public class JockeyOwnerDashboardService {
                 })
                 .count();
 
+        // Tổng hợp danh sách thông báo dành cho Chủ sở hữu (Notifications)
+        List<Map<String, Object>> notificationList = new ArrayList<>();
+        Map<Integer, User> userMap = userRepository.findAll().stream().collect(Collectors.toMap(User::getId, u -> u, (u1, u2) -> u1));
+        Map<Integer, Horse> horseMap = horseRepository.findAll().stream().collect(Collectors.toMap(Horse::getId, h -> h, (h1, h2) -> h1));
+        Map<Integer, Race> raceMap = raceRepository.findAll().stream().collect(Collectors.toMap(Race::getId, r -> r, (r1, r2) -> r1));
+        Map<Integer, String> meetingNameMap = meetings.stream().collect(Collectors.toMap(RaceMeeting::getId, RaceMeeting::getName, (m1, m2) -> m1));
+
+        // 1. Phản hồi lời mời từ Nài ngựa (RaceInvitations)
+        List<RaceInvitation> ownerInvites = invitationRepository.findByOwnerId(ownerId);
+        for (RaceInvitation inv : ownerInvites) {
+            User jockey = userMap.get(inv.getJockeyId());
+            Horse horse = horseMap.get(inv.getHorseId());
+            Race race = raceMap.get(inv.getRaceId());
+            String jockeyName = jockey != null ? (jockey.getFullName() != null && !jockey.getFullName().isBlank() ? jockey.getFullName() : jockey.getUsername()) : "Nài ngựa";
+            String horseName = horse != null ? horse.getName() : "Chiến mã";
+            String raceClass = race != null ? race.getClassLevel() : "Trận đua";
+
+            Map<String, Object> notif = new HashMap<>();
+            notif.put("id", "owner-invite-" + inv.getId());
+            if ("ACCEPTED".equalsIgnoreCase(inv.getStatus())) {
+                notif.put("title", "Nài ngựa đồng ý lời mời ✅");
+                notif.put("message", "Nài ngựa " + jockeyName + " đã ĐỒNG Ý điều khiển chiến mã " + horseName + " trong trận " + raceClass + "!");
+                notif.put("type", "approved");
+                notificationList.add(notif);
+            } else if ("REJECTED".equalsIgnoreCase(inv.getStatus())) {
+                notif.put("title", "Nài ngựa từ chối lời mời ❌");
+                notif.put("message", "Nài ngựa " + jockeyName + " đã TỪ CHỐI lời mời điều khiển chiến mã " + horseName + " trong trận " + raceClass + ".");
+                notif.put("type", "rejected");
+                notificationList.add(notif);
+            } else if ("PENDING".equalsIgnoreCase(inv.getStatus())) {
+                notif.put("title", "Lời mời đang chờ phản hồi ⏳");
+                notif.put("message", "Lời mời gửi đến nài ngựa " + jockeyName + " cho chiến mã " + horseName + " đang chờ phản hồi.");
+                notif.put("type", "pending");
+                notificationList.add(notif);
+            }
+        }
+
+        // 2. Trạng thái phê duyệt Hồ sơ chiến mã từ Admin
+        for (Horse horse : myHorses) {
+            Map<String, Object> notif = new HashMap<>();
+            notif.put("id", "owner-horse-" + horse.getId());
+            if ("ACTIVE".equalsIgnoreCase(horse.getStatus())) {
+                notif.put("title", "Hồ sơ ngựa được duyệt 🐎");
+                notif.put("message", "Hồ sơ chiến mã " + horse.getName() + " đã được Admin duyệt và kích hoạt hoạt động!");
+                notif.put("type", "approved");
+                notificationList.add(notif);
+            } else if ("REJECTED".equalsIgnoreCase(horse.getStatus())) {
+                notif.put("title", "Hồ sơ ngựa bị từ chối ⛔");
+                notif.put("message", "Hồ sơ chiến mã " + horse.getName() + " đã bị Admin từ chối phê duyệt.");
+                notif.put("type", "rejected");
+                notificationList.add(notif);
+            } else if ("PENDING".equalsIgnoreCase(horse.getStatus())) {
+                notif.put("title", "Hồ sơ ngựa chờ duyệt ⏳");
+                notif.put("message", "Hồ sơ chiến mã " + horse.getName() + " đang chờ Admin phê duyệt.");
+                notif.put("type", "pending");
+                notificationList.add(notif);
+            }
+        }
+
+        // 3. Trạng thái Đăng ký tham gia Buổi đua (OwnerRaceMeetingRegistration)
+        for (OwnerRaceMeetingRegistration reg : myRegs) {
+            String meetingName = meetingNameMap.getOrDefault(reg.getRaceMeetingId(), "Buổi đua");
+            Map<String, Object> notif = new HashMap<>();
+            notif.put("id", "owner-reg-" + reg.getId());
+            if ("APPROVED".equalsIgnoreCase(reg.getStatus())) {
+                notif.put("title", "Đăng ký buổi đua được duyệt 📅");
+                notif.put("message", "Đơn đăng ký tham gia sự kiện " + meetingName + " của bạn đã được CHẤP NHẬN!");
+                notif.put("type", "approved");
+                notificationList.add(notif);
+            } else if ("REJECTED".equalsIgnoreCase(reg.getStatus())) {
+                notif.put("title", "Đăng ký buổi đua bị từ chối ⛔");
+                notif.put("message", "Đơn đăng ký tham gia sự kiện " + meetingName + " của bạn đã bị TỪ CHỐI.");
+                notif.put("type", "rejected");
+                notificationList.add(notif);
+            } else if ("PENDING".equalsIgnoreCase(reg.getStatus())) {
+                notif.put("title", "Đăng ký buổi đua chờ duyệt ⏳");
+                notif.put("message", "Đơn đăng ký tham gia sự kiện " + meetingName + " của bạn đang chờ Admin phê duyệt.");
+                notif.put("type", "pending");
+                notificationList.add(notif);
+            }
+        }
+
         Map<String, Object> response = new HashMap<>();
         response.put("meetings", meetings.stream().map(m -> raceMeetingMapper.toDTO(m, null)).toList());
         response.put("registeredMeetingIds", registeredMeetingIds);
@@ -374,6 +515,7 @@ public class JockeyOwnerDashboardService {
         response.put("racesCompleted", finishedEntriesCount);
         response.put("bookedJockeysMap", bookedJockeysMap);
         response.put("bookedHorsesMap", bookedHorsesMap);
+        response.put("notifications", notificationList);
 
         return response; // Trả về kết quả tổng hợp cho Owner Dashboard
     }

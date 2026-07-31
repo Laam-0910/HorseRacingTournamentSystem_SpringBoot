@@ -44,6 +44,15 @@ public class UserService {
                 .collect(Collectors.collectingAndThen(Collectors.toList(), List::copyOf));
     }
 
+    // Lấy danh sách người dùng phân trang (Server-side Pagination)
+    public org.springframework.data.domain.Page<UserDTO> getUsersPaginated(int page, int size) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(page, size);
+        Map<Integer, String> roleMap = roleRepository.findAll().stream()
+                .collect(Collectors.toMap(Role::getId, Role::getRoleName));
+        return userRepository.findAll(pageable)
+                .map(u -> userMapper.toDTO(u, roleMap.get(u.getRoleId())));
+    }
+
     // Lấy chi tiết tài khoản theo ID
     public UserDTO getUserById(Integer id) {
         User user = userRepository.findById(id)

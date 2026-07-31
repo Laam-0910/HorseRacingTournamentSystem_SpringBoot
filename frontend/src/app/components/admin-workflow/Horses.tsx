@@ -338,7 +338,7 @@ export default function Horses() {
 
   // Lọc danh sách ngựa theo từ khóa tìm kiếm và trạng thái hoạt động
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -362,8 +362,8 @@ export default function Horses() {
     return matchesStatus && matchesSearch;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredHorses.length / ITEMS_PER_PAGE));
-  const paginatedHorses = filteredHorses.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredHorses.length / itemsPerPage));
+  const paginatedHorses = filteredHorses.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -534,7 +534,8 @@ export default function Horses() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalItems={filteredHorses.length}
-          itemsPerPage={ITEMS_PER_PAGE}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={(val) => { setItemsPerPage(val); setCurrentPage(1); }}
         />
       </div>
 

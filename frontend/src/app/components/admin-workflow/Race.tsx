@@ -4,6 +4,7 @@ import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, formatForDateTimeLocal, formatForApi, formatClassLevel, parseSafeDate } from "../../utils/dateTimeHelper";
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 import ProfileModal from "../dashboards/components/ProfileModal";
+import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
 
 // Cấu trúc đối tượng Ngày hội đua
 interface Meeting {
@@ -66,6 +67,7 @@ export default function Race() {
 
   // State lưu ID người dùng cần xem Profile modal
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
+  const [broadcasterRace, setBroadcasterRace] = useState<any | null>(null);
 
   // Các state lưu trữ dữ liệu từ API
   const [meetings, setMeetings] = useState<Meeting[]>([]); // Danh sách ngày hội đua
@@ -89,7 +91,7 @@ export default function Race() {
   const [distance, setDistance] = useState("1200");
   const [maxEntries, setMaxEntries] = useState("12");
   const [minEntries, setMinEntries] = useState("3");
-  const [purse, setPurse] = useState("0");
+  const [purse, setPurse] = useState("");
 
   // --- Các State phục vụ Modal Chỉnh sửa cuộc đua ---
   const [editingRace, setEditingRace] = useState<Race | null>(null);
@@ -210,6 +212,7 @@ export default function Race() {
         setStartTime("");
         setRegStartTime("");
         setRegEndTime("");
+        setPurse("");
         fetchData();
       } else {
         throw new Error(res.error || "Failed to create race.");
@@ -438,13 +441,37 @@ export default function Race() {
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>{$t("Class Level", (localStorage.getItem('app-lang') || 'vi'))}</label>
-                <select value={classLevel} onChange={e => setClassLevel(e.target.value)} required style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }}>
+                <select 
+                  value={classLevel} 
+                  onChange={e => setClassLevel(e.target.value)} 
+                  required 
+                  style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }}
+                >
                   <option value="Class 1" style={{ background: "#12141a", color: "#fff" }}>Class 1 (Rating 95+)</option>
                   <option value="Class 2" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 2 (Rating 80-94)", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   <option value="Class 3" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 3 (Rating 60-79)", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   <option value="Class 4" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 4 (Rating 40-59)", (localStorage.getItem('app-lang') || 'vi'))}</option>
                   <option value="Class 5" style={{ background: "#12141a", color: "#fff" }}>{$t("Class 5 (Rating 0-39)", (localStorage.getItem('app-lang') || 'vi'))}</option>
                 </select>
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#fbbf24" }}>
+                  {$t("Total Prize Money / Purse ($)", (localStorage.getItem('app-lang') || 'vi'))}
+                </label>
+                <input 
+                  type="number" 
+                  min="0" 
+                  step="1000" 
+                  value={purse} 
+                  onChange={e => setPurse(e.target.value)} 
+                  required 
+                  placeholder="50000" 
+                  style={{ width: "100%", padding: "0.625rem", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.3)", color: "#fbbf24", borderRadius: "0.5rem", fontSize: "0.75rem", fontWeight: "bold", fontFamily: "monospace", outline: "none" }} 
+                />
+                <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginTop: "3px" }}>
+                  🥇 50%: ${(Number(purse || 0) * 0.5).toLocaleString()} | 🥈 30%: ${(Number(purse || 0) * 0.3).toLocaleString()} | 🥉 20%: ${(Number(purse || 0) * 0.2).toLocaleString()}
+                </div>
               </div>
 
               <div>
@@ -580,25 +607,7 @@ export default function Race() {
                     )}
                   </div>
 
-                  {/* Điều khiển Livestream trên Mobile */}
-                  {!isCompleted && (
-                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", flexDirection: "column", gap: "4px" }}>
-                      {race.youtubeLiveUrl ? (
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                            <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>{$t("LIVE", (localStorage.getItem('app-lang') || 'vi'))}</span>
-                          <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>{$t("End Live", (localStorage.getItem('app-lang') || 'vi'))}</button>
-                        </div>
-                      ) : (
-                        race.status === "RUNNING" && (
-                          <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                            <input type="text" placeholder={$t("YouTube URL", (localStorage.getItem('app-lang') || 'vi'))} value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", flex: 1 }} />
-                            <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Go Live", (localStorage.getItem('app-lang') || 'vi'))}</button>
-                          </div>
-                        )
-                      )}
-                    </div>
-                  )}
+
 
                   <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.75rem", display: "flex", justifyContent: "flex-end" }}>
                     <button
@@ -627,20 +636,25 @@ export default function Race() {
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
-                  {["Race ID", "Actions", "Race Meeting", "Class", "Track", "Distance", "Start Time", "Min-Max Rating", "Status", "Livestream", "Assigned Referee"].map(h => (
+                  {["Race ID", "Actions", "Race Meeting", "Class", "Purse & Distribution", "Track", "Distance", "Start Time", "Min-Max Rating", "Status", "Livestream", "Assigned Referee"].map(h => (
                     <th key={h} style={{ padding: "0.75rem 0.75rem", textAlign: h === "Status" ? "right" : h === "Livestream" || h === "Assigned Referee" || h === "Actions" ? "center" : "left", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.35)", whiteSpace: "nowrap" }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={12} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>{$t("Loading races database...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
+                  <tr><td colSpan={13} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>{$t("Loading races database...", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : races.length === 0 ? (
-                  <tr><td colSpan={12} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>{$t("No races found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
+                  <tr><td colSpan={13} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>{$t("No races found.", (localStorage.getItem('app-lang') || 'vi'))}</td></tr>
                 ) : races.map(race => {
                   const assigned = refereesMap[race.id] || [];
                   const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
                   const isRefLocked = ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+
+                  const totalPurse = Number(race.purse || 0);
+                  const p1 = totalPurse * 0.50;
+                  const p2 = totalPurse * 0.30;
+                  const p3 = totalPurse * 0.20;
 
                   return (
                     <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
@@ -667,6 +681,14 @@ export default function Race() {
 
                       <td style={{ padding: "0.75rem 0.75rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>
                       <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
+                      
+                      {/* Cột Purse & Prize Distribution Breakdown */}
+                      <td style={{ padding: "0.75rem 0.75rem" }}>
+                        <div style={{ fontSize: "11px", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace" }}>${totalPurse.toLocaleString('en-US')}</div>
+                        <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", fontFamily: "monospace", marginTop: "2px" }}>
+                          🥇 50%: ${p1.toLocaleString('en-US')} | 🥈 30%: ${p2.toLocaleString('en-US')} | 🥉 20%: ${p3.toLocaleString('en-US')}
+                        </div>
+                      </td>
                       <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>
                       <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.distanceMeters}m</td>
                       <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{formatDateTime(race.startTime)}</td>
@@ -778,6 +800,10 @@ export default function Race() {
                   <input type="number" value={editDistance} onChange={e => setEditDistance(e.target.value)} required style={inputStyle} />
                 </div>
                 <div>
+                  <label style={{ ...labelStyle, color: "#fbbf24" }}>{$t("Total Purse / Prize Money ($)", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                  <input type="number" min="0" step="1000" value={editPurse} onChange={e => setEditPurse(e.target.value)} required style={{ ...inputStyle, borderColor: "rgba(251,191,36,0.3)", color: "#fbbf24", fontWeight: "bold" }} />
+                </div>
+                <div>
                   <label style={labelStyle}>{$t("Track Type", (localStorage.getItem('app-lang') || 'vi'))}</label>
                   <select value={editTrackType} onChange={e => setEditTrackType(e.target.value)} required style={inputStyle}>
                     <option value="Turf">{$t("Turf", (localStorage.getItem('app-lang') || 'vi'))}</option>
@@ -806,6 +832,18 @@ export default function Race() {
       {/* Modal xem thông tin Hồ sơ cá nhân của Trọng tài */}
       {selectedProfileId !== null && (
         <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
+      )}
+
+      {/* Modal Phát Livestream bằng Camera Điện thoại / WebCam */}
+      {broadcasterRace && (
+        <CameraBroadcasterModal
+          raceId={broadcasterRace.id}
+          raceTitle={broadcasterRace.classLevel}
+          onClose={() => {
+            setBroadcasterRace(null);
+            fetchData();
+          }}
+        />
       )}
     </div>
   );

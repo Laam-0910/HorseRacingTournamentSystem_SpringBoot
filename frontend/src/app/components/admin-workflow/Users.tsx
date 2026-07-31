@@ -30,12 +30,8 @@ export default function Users() {
   const [filterRole, setFilterRole] = useState<string>("ALL"); // Bộ lọc vai trò
   const [searchQuery, setSearchQuery] = useState(""); // Ô tìm kiếm
 
-  const lang = localStorage.getItem("app-lang") || "vi";
-  const placeholderText = 
-    lang === "en" ? "Search username, email, or horse..." :
-    lang === "zh" ? "搜索用户名、邮箱或马匹..." :
-    lang === "ja" ? "ユーザー名、メール、または馬を検索..." :
-    "Tìm kiếm tên người dùng, email, hoặc ngựa...";
+  const lang = localStorage.getItem("app-lang") || "en";
+  const placeholderText = "Search username, email, or horse...";
 
   // --- Các State phục vụ Biểu mẫu Tạo tài khoản mới ---
   const [createUsername, setCreateUsername] = useState("");
@@ -51,6 +47,52 @@ export default function Users() {
   const [editRoleId, setEditRoleId] = useState("4");
   const [editWeight, setEditWeight] = useState("");
   const [editRequireOtp, setEditRequireOtp] = useState(false); // Cấu hình bảo mật OTP
+
+  // --- State Phân Trang (Pagination State) ---
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterRole, searchQuery]);
+
+  // --- State Nạp Tiền vào Ví (Deposit Wallet State) ---
+  const [depositModalUser, setDepositModalUser] = useState<any | null>(null);
+  const [depositAmount, setDepositAmount] = useState<string>("500");
+
+  const handleDepositWallet = async () => {
+    if (!depositModalUser || !depositAmount || parseFloat(depositAmount) <= 0) return;
+    try {
+      await api.post(`/admin/users/${depositModalUser.id}/deposit`, { amount: parseFloat(depositAmount) });
+      showSuccess(`Successfully deposited $${parseFloat(depositAmount).toLocaleString()} into ${depositModalUser.username}'s wallet.`);
+      setDepositModalUser(null);
+      setDepositAmount("500");
+      fetchData();
+    } catch (err: any) {
+      alert(getErrMsg(err, "Deposit failed: "));
+    }
+  };
+
+  // --- Các State phục vụ Modal Xem Chi tiết Người dùng Phân chia ---
+  const [viewingUser, setViewingUser] = useState<any | null>(null);
+  const [userDetailsData, setUserDetailsData] = useState<any | null>(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
+  const [activeDetailsTab, setActiveDetailsTab] = useState<"general" | "role" | "invitations" | "commissions">("general");
+
+  const handleViewFullDetails = async (u: any) => {
+    setViewingUser(u);
+    setActiveDetailsTab("general");
+    setUserDetailsData(null);
+    setDetailsLoading(true);
+    try {
+      const data = await api.get<any>(`/admin/users/${u.id}/details`);
+      setUserDetailsData(data);
+    } catch (err: any) {
+      setError(getErrMsg(err, "Failed to load user profile details."));
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
 
   // Tải danh sách toàn bộ người dùng từ API admin
   const fetchData = async () => {
@@ -185,35 +227,28 @@ export default function Users() {
     }
   };
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 20;
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, filterRole]);
-
-  // Tiến hành lọc danh sách người dùng theo vai trò và thanh tìm kiếm
-  const filteredUsers = users.filter((u) => {
-    let matchesRole = true;
-    if (filterRole === "ADMIN") matchesRole = (u.roleId === 1);
-    else if (filterRole === "OWNER") matchesRole = (u.roleId === 2);
-    else if (filterRole === "JOCKEY") matchesRole = (u.roleId === 3);
-    else if (filterRole === "SPECTATOR") matchesRole = (u.roleId === 4);
-    else if (filterRole === "REFEREE") matchesRole = (u.roleId === 5);
-
-    let matchesSearch = true;
+  // Lọc danh sách người dùng theo vai trò và từ khóa tìm kiếm
+  const filteredUsers = users.filter((u: any) => {
+    if (filterRole !== "ALL") {
+      let rId = 0;
+      if (filterRole === "ADMIN") rId = 1;
+      else if (filterRole === "OWNER") rId = 2;
+      else if (filterRole === "JOCKEY") rId = 3;
+      else if (filterRole === "SPECTATOR") rId = 4;
+      else if (filterRole === "REFEREE") rId = 5;
+      if (u.roleId !== rId && String(u.roleId) !== filterRole) return false;
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
-      const usernameMatch = (u.username || "").toLowerCase().includes(q);
-      const emailMatch = (u.email || "").toLowerCase().includes(q);
-      matchesSearch = usernameMatch || emailMatch;
+      const matchName = (u.username || "").toLowerCase().includes(q) || (u.fullName || "").toLowerCase().includes(q);
+      const matchEmail = (u.email || "").toLowerCase().includes(q);
+      if (!matchName && !matchEmail) return false;
     }
-
-    return matchesRole && matchesSearch;
+    return true;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
-  const paginatedUsers = filteredUsers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / itemsPerPage));
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Chuyển đổi ID vai trò thành nhãn hiển thị tương ứng
   const getRoleName = (roleId: number) => {
@@ -365,6 +400,7 @@ export default function Users() {
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem", justifyContent: "flex-end" }}>
+                  <button onClick={() => handleViewFullDetails(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", color: "#fbbf24", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer", fontWeight: "bold" }}>View Details</button>
                   <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "11px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>{$t("Edit", (localStorage.getItem('app-lang') || 'vi'))}</button>
                   {/* Không cho phép toggle trạng thái của các Admin khác để bảo mật */}
                   {u.roleId !== 1 && (
@@ -410,10 +446,12 @@ export default function Users() {
                     </td>
                     <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
                       <div style={{ display: "inline-flex", gap: "0.5rem", alignItems: "center" }}>
-                        <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>{$t("Edit", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                        <button onClick={() => handleViewFullDetails(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", color: "#fbbf24", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer", fontWeight: "bold" }}>View Details</button>
+                        <button onClick={() => setDepositModalUser(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(74,222,128,0.15)", border: "1px solid rgba(74,222,128,0.3)", color: "#4ade80", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer", fontWeight: "bold" }}>💰 Deposit</button>
+                        <button onClick={() => handleOpenEdit(u)} style={{ padding: "0.375rem 0.75rem", background: "rgba(59,130,196,0.1)", border: "1px solid rgba(59,130,196,0.2)", color: "#60a5fa", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>Edit</button>
                         {u.roleId !== 1 && (
                           <button onClick={() => handleToggleStatus(u.id)} style={{ padding: "0.375rem 0.75rem", background: u.status === "ACTIVE" ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)", border: u.status === "ACTIVE" ? "1px solid rgba(239,68,68,0.2)" : "1px solid rgba(16,185,129,0.2)", color: u.status === "ACTIVE" ? "#f87171" : "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>
-                            {u.status === "ACTIVE" ? $t("Deactivate", (localStorage.getItem('app-lang') || 'vi')) : $t("Activate", (localStorage.getItem('app-lang') || 'vi'))}
+                            {u.status === "ACTIVE" ? "Deactivate" : "Activate"}
                           </button>
                         )}
                       </div>
@@ -430,7 +468,8 @@ export default function Users() {
           totalPages={totalPages}
           onPageChange={setCurrentPage}
           totalItems={filteredUsers.length}
-          itemsPerPage={ITEMS_PER_PAGE}
+          itemsPerPage={itemsPerPage}
+          onItemsPerPageChange={(val) => { setItemsPerPage(val); setCurrentPage(1); }}
         />
       </div>
 
@@ -487,6 +526,230 @@ export default function Users() {
                 <button type="submit" style={{ padding: "0.5rem 1rem", background: "#c9a227", color: "#0c0a09", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>{$t("Save Changes", (localStorage.getItem('app-lang') || 'vi'))}</button>
               </div>
             </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL XEM CHI TIẾT NGƯỜI DÙNG PHÂN CHIA HẠNG MỤC (Categorized User Details Modal) */}
+      {viewingUser && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 99999, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1.5rem" }}>
+          <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "1rem", width: "100%", maxWidth: "48rem", maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden", boxShadow: "0 20px 50px rgba(0,0,0,0.7)" }}>
+            
+            {/* Header Modal */}
+            <div style={{ padding: "1.25rem 1.5rem", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(201,162,39,0.15)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "rgba(201,162,39,0.2)", border: "1px solid #c9a227", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.2rem" }}>
+                  👤
+                </div>
+                <div>
+                  <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{viewingUser.username}</h3>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>User ID: #{viewingUser.id} | Email: {viewingUser.email}</div>
+                </div>
+              </div>
+              <button onClick={() => setViewingUser(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: "1.5rem" }}>&times;</button>
+            </div>
+
+            {/* Categorized Tabs Bar */}
+            <div style={{ display: "flex", background: "rgba(0,0,0,0.3)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "0 1rem" }}>
+              {[
+                { id: "general", label: "General Profile" },
+                { id: "role", label: "Role Details & Assets" },
+                { id: "invitations", label: "Invitations History" },
+                { id: "commissions", label: "Invitation Revenue" },
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveDetailsTab(tab.id as any)}
+                  style={{
+                    padding: "0.875rem 1.25rem",
+                    background: "none",
+                    border: "none",
+                    borderBottom: activeDetailsTab === tab.id ? "2px solid #c9a227" : "2px solid transparent",
+                    color: activeDetailsTab === tab.id ? "#fbbf24" : "rgba(255,255,255,0.5)",
+                    fontWeight: activeDetailsTab === tab.id ? "bold" : "normal",
+                    fontSize: "0.8rem",
+                    fontFamily: "monospace",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab Content Body */}
+            <div style={{ padding: "1.5rem", overflowY: "auto", flex: 1, fontSize: "0.85rem", color: "#e2e8f0" }}>
+              {detailsLoading ? (
+                <div style={{ textAlign: "center", padding: "3rem", color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>Loading user details...</div>
+              ) : userDetailsData ? (
+                <>
+                  {activeDetailsTab === "general" && (
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+                      <div style={{ background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={labelStyle}>Full Name</div>
+                        <div style={{ fontWeight: "bold", fontSize: "1rem" }}>{userDetailsData.user?.fullName || "Not provided"}</div>
+                      </div>
+                      <div style={{ background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={labelStyle}>Account Status</div>
+                        <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: userDetailsData.user?.status === "ACTIVE" ? "rgba(16,185,129,0.1)" : "rgba(239,68,68,0.1)", color: userDetailsData.user?.status === "ACTIVE" ? "#34d399" : "#f87171" }}>
+                          {userDetailsData.user?.status}
+                        </span>
+                      </div>
+                      <div style={{ background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={labelStyle}>Weight (Jockey)</div>
+                        <div>{userDetailsData.user?.weight ? `${userDetailsData.user.weight} kg` : "N/A"}</div>
+                      </div>
+                      <div style={{ background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <div style={labelStyle}>Total Races / Top 3</div>
+                        <div>{userDetailsData.user?.totalRacesParticipated || 0} Races | {userDetailsData.user?.totalTop3Finishes || 0} Top-3</div>
+                      </div>
+                      <div style={{ background: "rgba(251,191,36,0.05)", padding: "1rem", borderRadius: "0.5rem", border: "1px solid rgba(251,191,36,0.2)" }}>
+                        <div style={{ ...labelStyle, color: "#fbbf24" }}>💰 Wallet Balance</div>
+                        <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace" }}>
+                          ${(userDetailsData.user?.walletBalance !== undefined && userDetailsData.user?.walletBalance !== null ? Number(userDetailsData.user.walletBalance) : 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeDetailsTab === "role" && (
+                    <div>
+                      {viewingUser.roleId === 2 && (
+                        <div>
+                          <h4 style={{ color: "#fbbf24", marginBottom: "0.75rem", fontFamily: "monospace" }}>Owned Horses ({userDetailsData.ownedHorses?.length || 0})</h4>
+                          {userDetailsData.ownedHorses?.length === 0 ? (
+                            <div style={{ color: "rgba(255,255,255,0.4)" }}>No owned horses registered.</div>
+                          ) : (
+                            <div style={{ display: "grid", gap: "0.5rem" }}>
+                              {userDetailsData.ownedHorses.map((h: any) => (
+                                <div key={h.id} style={{ background: "rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between" }}>
+                                  <span>🐎 <strong>{h.name}</strong> ({h.breed || "Standard"})</span>
+                                  <span style={{ fontFamily: "monospace", color: "#c9a227" }}>Rating: {h.currentRating}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {viewingUser.roleId === 3 && (
+                        <div>
+                          <h4 style={{ color: "#fbbf24", marginBottom: "0.75rem", fontFamily: "monospace" }}>Jockey Mounts History ({userDetailsData.jockeyMounts?.length || 0})</h4>
+                          {userDetailsData.jockeyMounts?.length === 0 ? (
+                            <div style={{ color: "rgba(255,255,255,0.4)" }}>No race mounts recorded.</div>
+                          ) : (
+                            <div style={{ display: "grid", gap: "0.5rem" }}>
+                              {userDetailsData.jockeyMounts.map((m: any) => (
+                                <div key={m.id} style={{ background: "rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between" }}>
+                                  <span>Race #{m.raceId} - Gate #{m.gateNumber || "TBD"}</span>
+                                  <span style={{ fontFamily: "monospace" }}>Status: {m.status} | Weight: {m.carriedWeight || 55}kg</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {viewingUser.roleId !== 2 && viewingUser.roleId !== 3 && (
+                        <div style={{ color: "rgba(255,255,255,0.4)" }}>No specific role asset records for this account role.</div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeDetailsTab === "invitations" && (
+                    <div>
+                      <h4 style={{ color: "#fbbf24", marginBottom: "0.75rem", fontFamily: "monospace" }}>Race Invitations ({userDetailsData.invitations?.length || 0})</h4>
+                      {userDetailsData.invitations?.length === 0 ? (
+                        <div style={{ color: "rgba(255,255,255,0.4)" }}>No invitation records found.</div>
+                      ) : (
+                        <div style={{ display: "grid", gap: "0.5rem" }}>
+                          {userDetailsData.invitations.map((inv: any) => (
+                            <div key={inv.id} style={{ background: "rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <div>
+                                <div>Invitation #{inv.id} for Race #{inv.raceId}</div>
+                                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>Horse ID: #{inv.horseId} | Jockey ID: #{inv.jockeyId}</div>
+                              </div>
+                              <span style={{ padding: "0.2rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", background: inv.status === "ACCEPTED" ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)", color: inv.status === "ACCEPTED" ? "#34d399" : "#f87171" }}>
+                                {inv.status}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {activeDetailsTab === "commissions" && (
+                    <div>
+                      <div style={{ background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.5rem", padding: "1.25rem", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <div>
+                          <div style={{ fontSize: "11px", color: "#c9a227", fontFamily: "monospace", textTransform: "uppercase" }}>Total Invitation Referral Earnings</div>
+                          <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#fbbf24" }}>${userDetailsData.totalCommission ? Number(userDetailsData.totalCommission).toLocaleString('en-US') : "0.00"}</div>
+                        </div>
+                        <div style={{ fontSize: "2rem" }}>💰</div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : null}
+            </div>
+
+            {/* Footer Modal */}
+            <div style={{ padding: "1rem 1.5rem", background: "rgba(0,0,0,0.3)", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "flex-end" }}>
+              <button onClick={() => setViewingUser(null)} style={{ padding: "0.5rem 1.25rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Close</button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Modal Nạp tiền vào Ví người dùng (Admin Wallet Deposit Modal) */}
+      {depositModalUser && createPortal(
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
+          <div style={{ background: "#12141a", border: "1px solid rgba(74,222,128,0.3)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "24rem", position: "relative" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "0.75rem", marginBottom: "1rem" }}>
+              <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.95rem", color: "#4ade80" }}>
+                💰 Deposit Funds into Wallet
+              </h3>
+              <button onClick={() => setDepositModalUser(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "1.2rem" }}>&times;</button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <div style={{ background: "rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.05)" }}>
+                <p style={{ fontSize: "11px", fontFamily: "monospace", color: "#a0a0a0" }}>Recipient: <strong style={{ color: "#f4f2ec" }}>{depositModalUser.fullName || depositModalUser.username}</strong></p>
+                <p style={{ fontSize: "11px", fontFamily: "monospace", color: "#a0a0a0", marginTop: "0.2rem" }}>Current Balance: <strong style={{ color: "#fbbf24" }}>${Number(depositModalUser.walletBalance || 0).toLocaleString('en-US')}</strong></p>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Deposit Amount ($USD)</label>
+                <input
+                  type="number"
+                  min="1"
+                  step="10"
+                  value={depositAmount}
+                  onChange={(e) => setDepositAmount(e.target.value)}
+                  style={inputStyle}
+                  placeholder="Enter amount (e.g. 500)"
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+                <button
+                  onClick={handleDepositWallet}
+                  style={{ flex: 1, padding: "0.6rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
+                >
+                  Confirm Deposit
+                </button>
+                <button
+                  onClick={() => setDepositModalUser(null)}
+                  style={{ padding: "0.6rem 1rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", color: "#a0a0a0", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", cursor: "pointer" }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>,
         document.body

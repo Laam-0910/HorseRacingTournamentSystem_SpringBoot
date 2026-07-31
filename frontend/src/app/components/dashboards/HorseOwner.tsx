@@ -16,6 +16,7 @@ import ProfileTab from "./components/ProfileTab";
 import ProfileModal from "./components/ProfileModal";
 // Import HorsePerformanceModal hiển thị thông số thành tích ngựa
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
+import ViewLive from "./components/ViewLive";
 
 interface InlineDatePickerProps {
   label: string;
@@ -157,7 +158,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
 }
 
 
-type OwnerTab = "hub" | "stable" | "calendar" | "invitations" | "results" | "profile";
+type OwnerTab = "hub" | "stable" | "calendar" | "invitations" | "results" | "live" | "profile";
 
 const ROLE_COLOR = "#4a9d6f";
 
@@ -167,6 +168,7 @@ const NAV_ITEMS = [
   { index: "03", icon: "calendar",          label: $t("Race Calendar", (localStorage.getItem('app-lang') || 'vi')),      view: "calendar"    },
   { index: "04", icon: "mail",              label: $t("Invitations", (localStorage.getItem('app-lang') || 'vi')),        view: "invitations" },
   { index: "05", icon: "award",             label: $t("Stable Race History", (localStorage.getItem('app-lang') || 'vi')), view: "results"     },
+  { index: "06", icon: "tv",                label: $t("Live Stream Arena", (localStorage.getItem('app-lang') || 'vi')),  view: "live"        },
 ];
 
 const inputStyle: React.CSSProperties = {
@@ -225,12 +227,15 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 // ── HubView ────────────────────────────────────────────────────────────────
-function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorses }: {
+function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorses, user, onSwitchTab }: {
   dashboard: any; meetings: any[]; stable: any[];
   onRegisterOwner: (id: number) => void;
   onRegisterHorses: (meetingId: number, horseIds: number[]) => Promise<void>;
+  user: any;
+  onSwitchTab?: (tab: OwnerTab) => void;
 }) {
   const [selectedHorses, setSelectedHorses] = useState<Record<number, number[]>>({});
+  const walletBal = user?.walletBalance !== undefined && user?.walletBalance !== null ? Number(user.walletBalance) : 0;
 
   const handleCheckbox = (meetingId: number, horseId: number) => {
     setSelectedHorses(prev => {
@@ -248,9 +253,32 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {/* Live Stream Arena Banner Card */}
+      <div className="rounded-xl border p-4 flex items-center justify-between flex-wrap gap-3" style={{ background: "rgba(239, 68, 68, 0.08)", borderColor: "rgba(239, 68, 68, 0.25)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div className="animate-pulse" style={{ width: 10, height: 10, borderRadius: "50%", background: "#ef4444" }}></div>
+          <div>
+            <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f87171" }}>
+              📺 {$t("Đấu Trường Livestream Trực Tiếp", (localStorage.getItem('app-lang') || 'vi'))}
+            </h4>
+            <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)" }}>
+              {$t("Xem các trận đua đang phát sóng trực tiếp (Youtube & Camera Trực Tiếp) & Trò chuyện thời gian thực", (localStorage.getItem('app-lang') || 'vi'))}
+            </p>
+          </div>
+        </div>
+        {onSwitchTab && (
+          <button
+            onClick={() => onSwitchTab("live")}
+            style={{ padding: "0.5rem 1rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontWeight: "bold", fontSize: "0.8rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+          >
+            <span>🔴</span> {$t("XEM LIVE NGAY", (localStorage.getItem('app-lang') || 'vi'))}
+          </button>
+        )}
+      </div>
       {dashboard && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: "1rem" }}>
           {[
+            { label: "💰 Wallet Balance", value: `$${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, color: "#fbbf24" },
             { label: $t("Total Horses", (localStorage.getItem('app-lang') || 'vi')),          value: dashboard.totalHorses ?? 0,           color: ROLE_COLOR },
             { label: $t("Stable Avg Rank", (localStorage.getItem('app-lang') || 'vi')),       value: dashboard.averagePlace ? Number(dashboard.averagePlace).toFixed(1) : "N/A" },
             { label: $t("Races Completed", (localStorage.getItem('app-lang') || 'vi')),       value: dashboard.racesCompleted ?? 0,         color: "#c9a227" },
@@ -263,6 +291,39 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
           ))}
         </div>
       )}
+
+      {/* Dedicated Wallet & Financial Rules Card */}
+      <div className="rounded-xl border p-4" style={{ background: "rgba(251, 191, 36, 0.05)", borderColor: "rgba(251, 191, 36, 0.2)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "1.5rem" }}>💰</span>
+            <div>
+              <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#fbbf24" }}>Owner Wallet & Revenue Breakdown</h4>
+              <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.6)" }}>Current available balance & automatic financial distribution rules</p>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>Available Wallet</span>
+            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fbbf24", fontFamily: "monospace" }}>
+              ${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", borderTop: "1px solid rgba(251, 191, 36, 0.15)", paddingTop: "0.75rem" }}>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏆 Prize Money Split:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Owner receives <strong>80%</strong> of place prize (1st: 50%, 2nd: 30%, 3rd: 20% of purse).</p>
+          </div>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏇 Jockey Hire Fee:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}><strong>-$500.00</strong> deducted upon jockey accepting race invitation.</p>
+          </div>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🤝 Referral Bonus:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}><strong>5% commission</strong> credited for accepted invitation referrals.</p>
+          </div>
+        </div>
+      </div>
 
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Available Race Meetings", (localStorage.getItem('app-lang') || 'vi'))}</h3>
@@ -286,6 +347,13 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                     <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                       <span>📅 {formatDate(m.startDate || m.date)}</span>
                       <span>📍 {m.venue}</span>
+                    </div>
+
+                    <div style={{ fontSize: "0.75rem", color: "#fbbf24", fontFamily: "monospace", marginTop: "0.25rem", background: "rgba(251,191,36,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(251,191,36,0.2)" }}>
+                      💰 <strong>Total Meeting Budget:</strong> ${Number(m.totalBudget || m.total_budget || 500000).toLocaleString('en-US')}
+                      <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>
+                        Place Prizes: 1st (50%), 2nd (30%), 3rd (20%) · 80% Owner / 20% Jockey split
+                      </div>
                     </div>
 
                     {!isReg && (
@@ -1594,7 +1662,7 @@ export default function HorseOwner() {
   const renderContent = () => {
     switch (activeTab) {
       case "hub":
-        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} />;
+        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} user={user} onSwitchTab={setActiveTab} />;
       case "stable":
         return <StableView stable={stable} onRefresh={fetchData} />;
       case "calendar":
@@ -1603,10 +1671,12 @@ export default function HorseOwner() {
         return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} onWithdraw={handleWithdrawInvitation} refereesMap={refereesMap} />;
       case "results":
         return <ResultsView results={results} />;
+      case "live":
+        return <ViewLive />;
       case "profile":
         return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Horse Owner" />;
       default:
-        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} />;
+        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} user={user} onSwitchTab={setActiveTab} />;
     }
   };
 

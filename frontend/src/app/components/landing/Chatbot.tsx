@@ -62,7 +62,7 @@ export default function Chatbot() {
 
     try {
       // Gửi yêu cầu HTTP POST đến proxy backend (/ai/chat) để giao tiếp với chatbot Python
-      const res = await api.post<any>("/ai/chat", { message: userMessage, lang: "vi", sessionId });
+      const res = await api.post<any>("/ai/chat", { message: userMessage, lang: "en", sessionId });
       if (res.success && res.reply) {
         // Nếu thành công và nhận được câu trả lời từ AI, thêm tin nhắn bot với định dạng render HTML
         setMessages((prev) => [...prev, { sender: "bot", text: res.reply, isHtml: true }]);

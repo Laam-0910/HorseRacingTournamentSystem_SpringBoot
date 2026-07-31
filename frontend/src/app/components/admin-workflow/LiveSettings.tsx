@@ -1,11 +1,12 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
+import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
 
 /**
  * Component LiveSettings - Phân hệ cấu hình Livestream buổi đua dành cho Admin.
- * Cho phép Admin chèn đường dẫn phát trực tiếp YouTube (youtubeLiveUrl) cho các trận đấu
- * đang diễn ra (RUNNING), giúp khán giả có thể xem trực tuyến tại trang ngoài.
+ * Cho phép Admin phát livestream trực tiếp từ Camera điện thoại / WebCam hoặc chèn đường dẫn YouTube
+ * cho các trận đấu đang diễn ra (RUNNING).
  */
 export default function LiveSettings() {
   // Trạng thái Responsive Mobile
@@ -22,6 +23,7 @@ export default function LiveSettings() {
   const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null); // Ngày hội đua đang được lựa chọn
   const [races, setRaces] = useState<any[]>([]); // Danh sách cuộc đua thuộc ngày hội đua
   const [youtubeUrls, setYoutubeUrls] = useState<Record<number, string>>({}); // Lưu trữ tạm các url youtube theo mã raceId
+  const [broadcasterRace, setBroadcasterRace] = useState<any | null>(null); // Trận đua đang phát bằng Camera
   const [loading, setLoading] = useState(false);
   // Banner thông báo lỗi / thành công
   const [error, setError] = useState("");
@@ -182,7 +184,14 @@ export default function LiveSettings() {
                       placeholder={r.status === "RUNNING" ? "Enter YouTube link" : "Only running races can broadcast"}
                     />
                   </div>
-                  <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+                  <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", flexWrap: "wrap" }}>
+                    <button
+                      disabled={r.status !== "RUNNING"}
+                      onClick={() => window.dispatchEvent(new CustomEvent("OPEN_BROADCASTER", { detail: r }))}
+                      className={`px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 text-xs font-bold rounded-lg transition flex items-center gap-1 ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
+                    >
+                      <span>📱</span> {$t("Phát từ Camera Điện thoại", (localStorage.getItem('app-lang') || 'vi'))}
+                    </button>
                     <button
                       disabled={r.status !== "RUNNING"}
                       onClick={() => handleSave(r.id)}
@@ -232,6 +241,13 @@ export default function LiveSettings() {
                     <td className="px-6 py-4 text-right space-x-2">
                       <button
                         disabled={r.status !== "RUNNING"}
+                        onClick={() => window.dispatchEvent(new CustomEvent("OPEN_BROADCASTER", { detail: r }))}
+                        className={`px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 text-xs font-bold rounded-lg transition inline-flex items-center gap-1 ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
+                      >
+                        <span>📱</span> {$t("Phát từ Camera Điện thoại", (localStorage.getItem('app-lang') || 'vi'))}
+                      </button>
+                      <button
+                        disabled={r.status !== "RUNNING"}
                         onClick={() => handleSave(r.id)}
                         className={`px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
                       >{$t("Save", (localStorage.getItem('app-lang') || 'vi'))}</button>
@@ -252,6 +268,18 @@ export default function LiveSettings() {
           <p className="p-6 text-sm text-white/40 text-center">{$t("No races scheduled for this meeting.", (localStorage.getItem('app-lang') || 'vi'))}</p>
         )}
       </div>
+
+      {/* Modal Phát Livestream bằng Camera Điện thoại / WebCam */}
+      {broadcasterRace && (
+        <CameraBroadcasterModal
+          raceId={broadcasterRace.id}
+          raceTitle={broadcasterRace.classLevel}
+          onClose={() => {
+            setBroadcasterRace(null);
+            if (selectedMeetingId !== null) fetchRaces(selectedMeetingId);
+          }}
+        />
+      )}
     </div>
   );
 }

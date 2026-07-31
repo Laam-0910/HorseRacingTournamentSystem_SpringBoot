@@ -67,35 +67,28 @@ public class Race implements Serializable {
     @Column(name = "youtube_live_url")
     private String youtubeLiveUrl;
 
+    @Column(name = "stream_mode")
+    private String streamMode = "YOUTUBE";
 
+    @Column(name = "total_prize_pool")
+    private BigDecimal totalPrizePool;
 
+    @Column(name = "first_place_prize")
+    private BigDecimal firstPlacePrize;
 
+    @Column(name = "second_place_prize")
+    private BigDecimal secondPlacePrize;
 
+    @Column(name = "third_place_prize")
+    private BigDecimal thirdPlacePrize;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    public void updatePrizeDistribution() {
+        BigDecimal pool = (this.totalPrizePool != null) ? this.totalPrizePool : this.purse;
+        if (pool != null) {
+            this.totalPrizePool = pool;
+            this.firstPlacePrize = pool.multiply(new BigDecimal("0.50"));
+            this.secondPlacePrize = pool.multiply(new BigDecimal("0.30"));
+            this.thirdPlacePrize = pool.multiply(new BigDecimal("0.20"));
+        }
+    }
 }
-

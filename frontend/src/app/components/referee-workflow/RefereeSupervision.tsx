@@ -36,9 +36,55 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
     try {
       const data = await api.get<any[]>(`/public/results?raceId=${raceId}`);
       setEntries(data);
+      const initProg: Record<number, number> = {};
+      data.forEach(en => { initProg[en.id] = 0; });
+      setSimProgress(initProg);
     } catch (err: any) {
       setError(getErrMsg(err, "Failed to load entries."));
     }
+  };
+
+  // --- Race Simulation State ---
+  const [simRunning, setSimRunning] = useState(false);
+  const [simProgress, setSimProgress] = useState<Record<number, number>>({});
+  const [simTime, setSimTime] = useState(0);
+
+  useEffect(() => {
+    let interval: any = null;
+    if (simRunning) {
+      interval = setInterval(() => {
+        setSimTime(t => t + 1);
+        setSimProgress(prev => {
+          const next = { ...prev };
+          let allFinished = true;
+          entries.forEach((en) => {
+            const current = next[en.id] || 0;
+            if (current < 100) {
+              allFinished = false;
+              const delta = 1.2 + Math.random() * 2.8;
+              next[en.id] = Math.min(100, current + delta);
+            }
+          });
+          if (allFinished) {
+            setSimRunning(false);
+          }
+          return next;
+        });
+      }, 500);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [simRunning, entries]);
+
+  const handleStartSim = () => { setSimRunning(true); };
+  const handlePauseSim = () => { setSimRunning(false); };
+  const handleResetSim = () => {
+    setSimRunning(false);
+    setSimTime(0);
+    const reset: Record<number, number> = {};
+    entries.forEach(en => { reset[en.id] = 0; });
+    setSimProgress(reset);
   };
 
   // Tải dữ liệu ban đầu khi mount component
@@ -117,7 +163,94 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div className="space-y-8">
+      {/* 🏇 Live Race Track Simulator Visualizer for Referees */}
+      <div className="bg-black/40 border border-amber-500/20 rounded-2xl p-5 space-y-4">
+        <div className="flex justify-between items-center flex-wrap gap-4 border-b border-white/10 pb-4">
+          <div className="flex items-center space-x-3">
+            <span className="text-2xl">🏇</span>
+            <div>
+              <h3 className="text-base font-bold text-amber-400 font-serif">Live Race Track Simulator</h3>
+              <p className="text-xs font-mono text-white/50">Simulate track movement, monitor gate progress, and log incidents live</p>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 font-mono text-xs">
+            <span className="bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg text-amber-400 font-bold">
+              ⏱️ Elapsed: {simTime}s
+            </span>
+            {!simRunning ? (
+              <button
+                type="button"
+                onClick={handleStartSim}
+                className="bg-emerald-500 hover:bg-emerald-400 text-black px-4 py-1.5 rounded-lg font-bold transition"
+              >
+                ▶ Start Simulation
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handlePauseSim}
+                className="bg-amber-500 hover:bg-amber-400 text-black px-4 py-1.5 rounded-lg font-bold transition"
+              >
+                ⏸ Pause
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={handleResetSim}
+              className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg font-bold transition"
+            >
+              🔄 Reset
+            </button>
+          </div>
+        </div>
+
+        {/* Dynamic Track Lanes */}
+        <div className="space-y-3 pt-2">
+          {entries.length === 0 ? (
+            <p className="text-xs font-mono text-white/40 italic py-4 text-center">No race entries loaded yet.</p>
+          ) : (
+            entries.map((en, idx) => {
+              const prog = simProgress[en.id] || 0;
+              const isFinished = prog >= 100;
+
+              return (
+                <div key={en.id} className="space-y-1 bg-white/[0.02] border border-white/5 p-2.5 rounded-xl">
+                  <div className="flex justify-between items-center text-xs font-mono">
+                    <span className="font-bold text-amber-400">
+                      Gate #{en.gateNumber || (idx + 1)} · {en.horse?.name || `Horse #${en.horseId}`} <span className="text-white/40">({en.jockey?.username})</span>
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-bold text-white">{prog.toFixed(1)}%</span>
+                      {isFinished && <span className="bg-amber-500/20 border border-amber-500/40 text-amber-400 px-2 py-0.5 rounded text-[10px] font-bold">🏁 FINISHED</span>}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedJockeyId(String(en.jockey?.id || ''))}
+                        className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded text-[10px] font-bold transition"
+                      >
+                        ⚠️ Log Incident
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Visual Lane Track Bar */}
+                  <div className="w-full bg-black/60 rounded-full h-5 relative overflow-hidden border border-white/10">
+                    <div
+                      className="bg-gradient-to-r from-amber-600 via-amber-400 to-emerald-400 h-full rounded-full transition-all duration-300 flex items-center justify-end pr-1"
+                      style={{ width: `${Math.max(4, prog)}%` }}
+                    >
+                      <span className="text-xs transform translate-x-1">🏇</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Khối bên trái: Ghi nhận vi phạm luật (Log Race Violation) */}
       <div className="space-y-4">
         <h3 className="text-base font-bold text-white flex items-center space-x-2">
@@ -232,6 +365,7 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
           </button>
         </div>
       </div>
+    </div>
     </div>
   );
 }

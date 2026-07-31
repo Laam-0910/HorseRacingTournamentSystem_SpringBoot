@@ -1,6 +1,7 @@
 -- ==========================================
 -- HORSE RACING DATABASE - Microsoft SQL Server
 -- Updated: Added full_name (NVARCHAR(100)), avatar (VARCHAR(MAX)) to [User] table
+--          Added wallet_balance DECIMAL(18,2) DEFAULT 0.00 to [User] table
 --          Added notifications table for persistent system notifications
 --          Default password for all sample accounts: 123456
 --          Added 'FINISHED' status to CK_Race_Status in Race table
@@ -54,7 +55,7 @@ CREATE TABLE [User] (
     avatar                      VARCHAR(MAX) NULL,              -- Profile avatar stored in Base64
     full_name                   NVARCHAR(100) NULL,             -- Display Name (CAN be changed)
     biography                   NVARCHAR(MAX) NULL,             -- Personal biography / profile introduction
-    balance                     DECIMAL(15,2) NOT NULL DEFAULT 0.00, -- Wallet balance for prize payouts
+    wallet_balance              DECIMAL(18,2) NOT NULL DEFAULT 0.00, -- User wallet balance for prize money & payouts
     CONSTRAINT CK_User_Status CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 GO
@@ -144,6 +145,9 @@ CREATE TABLE Race (
     max_entries             INT NOT NULL DEFAULT 14,
     steward_report          NVARCHAR(MAX) NULL,        -- Steward Official Report after race
     youtube_live_url        VARCHAR(500) NULL,          -- YouTube Livestream URL
+    first_place_prize       DECIMAL(18,2) NULL DEFAULT 0.00,
+    second_place_prize      DECIMAL(18,2) NULL DEFAULT 0.00,
+    third_place_prize       DECIMAL(18,2) NULL DEFAULT 0.00,
     CONSTRAINT CK_Race_Status CHECK (status IN ('SCHEDULED', 'DECLARATION_OPEN', 'DECLARATION_CLOSED', 'RACE_ASSIGNED', 'RUNNING', 'STEWARDS_INQUIRY', 'FINISHED', 'OFFICIAL', 'CANCELLED', 'RACE_EVENT_ENDED', 'STOPPED'))
 );
 GO
@@ -305,18 +309,18 @@ INSERT INTO Role (role_name) VALUES ('Admin'), ('Owner'), ('Jockey'), ('Spectato
 GO
 
 -- All accounts have default password: 123456
-INSERT INTO [User] (role_id, username, password_hash, email, status, weight, total_races_participated, total_top3_finishes, full_name) VALUES
-(1, 'admin_root',      '123456', 'admin@horserace.com',  'ACTIVE', NULL, NULL, NULL, N'Administrator'),
-(2, 'owner_jackson',   '123456', 'jackson@owners.com',   'ACTIVE', NULL, NULL, NULL, N'James Jackson'),
-(2, 'owner_miller',    '123456', 'miller@owners.com',    'ACTIVE', NULL, NULL, NULL, N'Robert Miller'),
-(2, 'owner_chen',      '123456', 'chen@owners.com',      'ACTIVE', NULL, NULL, NULL, N'Chen Wei'),
-(3, 'jockey_ryan',     '123456', 'ryan@jockeys.com',     'ACTIVE', 58.5, 45, 20,    N'Ryan Thompson'),
-(3, 'jockey_emma',     '123456', 'emma@jockeys.com',     'ACTIVE', 52.0, 20, 8,     N'Emma Clarke'),
-(3, 'jockey_carlos',   '123456', 'carlos@jockeys.com',   'ACTIVE', 55.3, 80, 35,    N'Carlos Rivera'),
-(3, 'jockey_naomi',    '123456', 'naomi@jockeys.com',    'ACTIVE', 53.7, 4,  1,     N'Naomi Watanabe'),
-(4, 'fan_oliver',      '123456', 'oliver@fans.com',      'ACTIVE', NULL, NULL, NULL, N'Oliver Bennett'),
-(5, 'referee_harris',  '123456', 'harris@referees.com',  'ACTIVE', NULL, NULL, NULL, N'Michael Harris'),
-(5, 'referee_scott',   '123456', 'scott@referees.com',   'ACTIVE', NULL, NULL, NULL, N'David Scott');
+INSERT INTO [User] (role_id, username, password_hash, email, status, weight, total_races_participated, total_top3_finishes, full_name, wallet_balance) VALUES
+(1, 'admin_root',      '123456', 'admin@horserace.com',  'ACTIVE', NULL, NULL, NULL, N'Administrator', 1000000.00),
+(2, 'owner_jackson',   '123456', 'jackson@owners.com',   'ACTIVE', NULL, NULL, NULL, N'James Jackson',   50000.00),
+(2, 'owner_miller',    '123456', 'miller@owners.com',    'ACTIVE', NULL, NULL, NULL, N'Robert Miller',    30000.00),
+(2, 'owner_chen',      '123456', 'chen@owners.com',      'ACTIVE', NULL, NULL, NULL, N'Chen Wei',         25000.00),
+(3, 'jockey_ryan',     '123456', 'ryan@jockeys.com',     'ACTIVE', 58.5, 45, 20,    N'Ryan Thompson',   15000.00),
+(3, 'jockey_emma',     '123456', 'emma@jockeys.com',     'ACTIVE', 52.0, 20, 8,     N'Emma Clarke',      10000.00),
+(3, 'jockey_carlos',   '123456', 'carlos@jockeys.com',   'ACTIVE', 55.3, 80, 35,    N'Carlos Rivera',    20000.00),
+(3, 'jockey_naomi',    '123456', 'naomi@jockeys.com',    'ACTIVE', 53.7, 4,  1,     N'Naomi Watanabe',    5000.00),
+(4, 'fan_oliver',      '123456', 'oliver@fans.com',      'ACTIVE', NULL, NULL, NULL, N'Oliver Bennett',    1000.00),
+(5, 'referee_harris',  '123456', 'harris@referees.com',  'ACTIVE', NULL, NULL, NULL, N'Michael Harris',   10000.00),
+(5, 'referee_scott',   '123456', 'scott@referees.com',   'ACTIVE', NULL, NULL, NULL, N'David Scott',      10000.00);
 GO
 
 INSERT INTO Season (name, start_date, end_date, status) VALUES
@@ -345,11 +349,11 @@ INSERT INTO OwnerRaceMeetingRegistration (race_meeting_id, owner_id, status) VAL
 (2, 2, 'APPROVED'), (2, 3, 'APPROVED'), (2, 4, 'APPROVED');
 GO
 
-INSERT INTO Race (race_meeting_id, start_time, registration_start_time, registration_end_time, status, class_level, min_rating, max_rating, distance_meters, track_type, purse, max_entries) VALUES
-(1, '2026-03-15 10:00:00', '2026-03-01 08:00:00', '2026-03-10 18:00:00', 'OFFICIAL',          'Class 3', 60,  79,   1200, 'Turf', 150000.00, 14),
-(1, '2026-03-15 14:00:00', '2026-03-01 08:00:00', '2026-03-10 18:00:00', 'OFFICIAL',          'Class 4', 40,  59,   1000, 'Dirt', 80000.00,  14),
-(2, '2026-08-15 14:30:00', '2026-08-01 08:00:00', '2026-08-12 18:00:00', 'DECLARATION_OPEN',  'Class 2', 80,  94,   1200, 'Turf', 250000.00, 12),
-(2, '2026-08-15 15:30:00', '2026-08-01 08:00:00', '2026-08-12 18:00:00', 'SCHEDULED',         'Class 1', 95,  NULL, 2000, 'Turf', 800000.00, 14);
+INSERT INTO Race (race_meeting_id, start_time, registration_start_time, registration_end_time, status, class_level, min_rating, max_rating, distance_meters, track_type, purse, max_entries, first_place_prize, second_place_prize, third_place_prize) VALUES
+(1, '2026-03-15 10:00:00', '2026-03-01 08:00:00', '2026-03-10 18:00:00', 'OFFICIAL',          'Class 3', 60,  79,   1200, 'Turf', 150000.00, 14, 75000.00, 45000.00, 30000.00),
+(1, '2026-03-15 14:00:00', '2026-03-01 08:00:00', '2026-03-10 18:00:00', 'OFFICIAL',          'Class 4', 40,  59,   1000, 'Dirt', 80000.00,  14, 40000.00, 24000.00, 16000.00),
+(2, '2026-08-15 14:30:00', '2026-08-01 08:00:00', '2026-08-12 18:00:00', 'DECLARATION_OPEN',  'Class 2', 80,  94,   1200, 'Turf', 250000.00, 12, 125000.00, 75000.00, 50000.00),
+(2, '2026-08-15 15:30:00', '2026-08-01 08:00:00', '2026-08-12 18:00:00', 'SCHEDULED',         'Class 1', 95,  NULL, 2000, 'Turf', 800000.00, 14, 400000.00, 240000.00, 160000.00);
 GO
 
 INSERT INTO Horse (owner_id, name, breed, sex, date_of_birth, status, current_rating, total_races, total_wins) VALUES
@@ -392,5 +396,5 @@ INSERT INTO Violation (race_id, horse_id, jockey_id, referee_id, description, pe
 (1, 3, 7, 10, 'Jockey cut off lane at turn 2', 'Fine $500');
 GO
 
-PRINT 'HorseRacingDB created successfully: notifications table added, all descriptions in English, all passwords set to 123456.';
+PRINT 'HorseRacingDB created successfully: notifications & wallet_balance columns added, all passwords set to 123456.';
 GO

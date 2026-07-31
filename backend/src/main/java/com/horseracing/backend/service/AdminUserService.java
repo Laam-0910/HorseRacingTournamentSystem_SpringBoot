@@ -357,6 +357,13 @@ public class AdminUserService {
                 if ((sameJockey || sameHorse) && !"REJECTED".equalsIgnoreCase(other.getStatus()) && !"APPROVED".equalsIgnoreCase(other.getStatus())) {
                     other.setStatus("REJECTED");
                     raceEntryRepository.save(other);
+                    invitationRepository.findByJockeyIdAndRaceIdAndHorseId(other.getJockeyId(), other.getRaceId(), other.getHorseId())
+                            .stream()
+                            .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()))
+                            .forEach(i -> {
+                                i.setStatus("REJECTED");
+                                invitationRepository.save(i);
+                            });
                 }
             }
         }
@@ -781,4 +788,54 @@ public class AdminUserService {
             raceEntryRepository.save(entry); // Lưu lượt thi đấu
         }
     }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getUserDetailsCategorized(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("user", userMapper.toDTO(user));
+
+        // Owned Horses (for Owner role_id = 2 or all users)
+        List<Horse> ownedHorses = horseRepository.findByOwnerId(userId);
+        res.put("ownedHorses", ownedHorses.stream().map(horseMapper::toDTO).collect(Collectors.toList()));
+
+        // Jockey Mounts (for Jockey role_id = 3)
+        List<RaceEntry> mounts = raceEntryRepository.findByJockeyId(userId);
+        res.put("jockeyMounts", mounts.stream().map(raceEntryMapper::toDTO).collect(Collectors.toList()));
+
+        // Referee Assignments (for Referee role_id = 5)
+        List<RaceReferee> refereeAssignments = raceRefereeRepository.findByRefereeId(userId);
+        res.put("refereeAssignments", refereeAssignments);
+
+        // Race Invitations & Commission Share
+        List<RaceInvitation> invitations = invitationRepository.findAll().stream()
+                .filter(i -> userId.equals(i.getOwnerId()) || userId.equals(i.getJockeyId()))
+                .collect(Collectors.toList());
+        res.put("invitations", invitations);
+
+        BigDecimal totalCommission = invitations.stream()
+                .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()) || "PAID".equalsIgnoreCase(i.getPayoutStatus()))
+                .map(i -> i.getCommissionAmount() != null ? i.getCommissionAmount() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        res.put("totalCommission", totalCommission);
+
+        return res;
+    }
+
+    @Transactional
+    public UserDTO depositWalletBalance(Integer userId, BigDecimal amount) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Deposit amount must be greater than zero");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with ID: " + userId));
+        BigDecimal current = user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO;
+        user.setWalletBalance(current.add(amount));
+        User saved = userRepository.save(user);
+        return userMapper.toDTO(saved);
+    }
 }
+
+

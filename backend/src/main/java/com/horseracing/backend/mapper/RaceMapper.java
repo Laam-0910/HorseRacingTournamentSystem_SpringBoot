@@ -29,6 +29,11 @@ public class RaceMapper {
                 .maxEntries(race.getMaxEntries())
                 .stewardReport(race.getStewardReport())
                 .youtubeLiveUrl(race.getYoutubeLiveUrl())
+                .streamMode(race.getStreamMode())
+                .totalPrizePool(race.getTotalPrizePool() != null ? race.getTotalPrizePool() : race.getPurse())
+                .firstPlacePrize(race.getFirstPlacePrize() != null ? race.getFirstPlacePrize() : (race.getPurse() != null ? race.getPurse().multiply(new java.math.BigDecimal("0.50")) : null))
+                .secondPlacePrize(race.getSecondPlacePrize() != null ? race.getSecondPlacePrize() : (race.getPurse() != null ? race.getPurse().multiply(new java.math.BigDecimal("0.30")) : null))
+                .thirdPlacePrize(race.getThirdPlacePrize() != null ? race.getThirdPlacePrize() : (race.getPurse() != null ? race.getPurse().multiply(new java.math.BigDecimal("0.20")) : null))
                 .build();
     }
 
@@ -57,6 +62,7 @@ public class RaceMapper {
         race.setMaxEntries(dto.getMaxEntries() != null ? dto.getMaxEntries() : 14);
         race.setStewardReport(dto.getStewardReport());
         race.setYoutubeLiveUrl(dto.getYoutubeLiveUrl());
+        race.setStreamMode(dto.getStreamMode() != null ? dto.getStreamMode() : "YOUTUBE");
         return race;
     }
 }
