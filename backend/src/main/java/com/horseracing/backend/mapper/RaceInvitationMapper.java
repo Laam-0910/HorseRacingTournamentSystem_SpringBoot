@@ -24,6 +24,10 @@ public class RaceInvitationMapper {
                 .jockeyName(jockeyName)
                 .jockeyAvatar(jockeyAvatar)
                 .status(invite.getStatus())
+                .commissionAmount(invite.getCommissionAmount())
+                .commissionRate(invite.getCommissionRate())
+                .payoutStatus(invite.getPayoutStatus())
+                .hireFee(invite.getHireFee())
                 .build();
     }
 

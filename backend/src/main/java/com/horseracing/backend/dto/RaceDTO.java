@@ -37,4 +37,8 @@ public class RaceDTO {
     private Integer maxEntries;
     private String stewardReport;   // Báo cáo của Trọng tài sau trận (cột mới thêm)
     private String youtubeLiveUrl;  // Đường dẫn Youtube livestream
+    private BigDecimal totalPrizePool;
+    private BigDecimal firstPlacePrize;
+    private BigDecimal secondPlacePrize;
+    private BigDecimal thirdPlacePrize;
 }

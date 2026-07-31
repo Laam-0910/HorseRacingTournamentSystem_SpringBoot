@@ -1471,9 +1471,9 @@ def chat(user_message: str, lang: str = None) -> str:
     msg_lower = msg.lower()
     if any(w in msg_lower for w in ["người yêu", "ny", "tình yêu", "bạn gái", "bạn trai", "crush"]):
         if lang == 'en':
-            return "🐎 In my world, the greatest love is for championship horses and the race track! If you want a partner as loyal and strong as a racehorse, you have to train hard! 😉"
+            return "🐎 In my world, the greatest love is for championship horses and the race track! If you want a partner as steadfast and strong as a racehorse, you have to train hard! 😉"
         else:
-            return "🐎 Trong thế giới của tôi, tình yêu lớn nhất là dành cho những chú ngựa chiến và tiếng còi khai cuộc! Muốn tìm một người yêu bền bỉ, trung thành như chiến mã thì bạn phải kiên nhẫn tập luyện đấy nhé! 😉"
+            return "🐎 Trong thế giới của tôi, tình yêu lớn nhất là dành cho những chú ngựa chiến và tiếng còi khai cuộc! Muốn tìm một người đồng hành bền bỉ, kiên cường như chiến mã thì bạn phải kiên nhẫn tập luyện đấy nhé! 😉"
             
     if any(w in msg_lower for w in ["thông minh", "smart", "học giỏi"]):
         if lang == 'en':

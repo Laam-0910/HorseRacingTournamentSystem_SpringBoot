@@ -223,12 +223,14 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 // ── HubView ────────────────────────────────────────────────────────────────
-function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorses }: {
+function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorses, user }: {
   dashboard: any; meetings: any[]; stable: any[];
   onRegisterOwner: (id: number) => void;
   onRegisterHorses: (meetingId: number, horseIds: number[]) => Promise<void>;
+  user: any;
 }) {
   const [selectedHorses, setSelectedHorses] = useState<Record<number, number[]>>({});
+  const walletBal = user?.walletBalance !== undefined && user?.walletBalance !== null ? Number(user.walletBalance) : 0;
 
   const handleCheckbox = (meetingId: number, horseId: number) => {
     setSelectedHorses(prev => {
@@ -249,6 +251,7 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
       {dashboard && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: "1rem" }}>
           {[
+            { label: "💰 Wallet Balance", value: `$${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, color: "#fbbf24" },
             { label: $t("Total Horses", (localStorage.getItem('app-lang') || 'vi')),          value: dashboard.totalHorses ?? 0,           color: ROLE_COLOR },
             { label: $t("Stable Avg Rank", (localStorage.getItem('app-lang') || 'vi')),       value: dashboard.averagePlace ? Number(dashboard.averagePlace).toFixed(1) : "N/A" },
             { label: $t("Races Completed", (localStorage.getItem('app-lang') || 'vi')),       value: dashboard.racesCompleted ?? 0,         color: "#c9a227" },
@@ -261,6 +264,39 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
           ))}
         </div>
       )}
+
+      {/* Dedicated Wallet & Financial Rules Card */}
+      <div className="rounded-xl border p-4" style={{ background: "rgba(251, 191, 36, 0.05)", borderColor: "rgba(251, 191, 36, 0.2)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "1.5rem" }}>💰</span>
+            <div>
+              <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#fbbf24" }}>Owner Wallet & Revenue Breakdown</h4>
+              <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.6)" }}>Current available balance & automatic financial distribution rules</p>
+            </div>
+          </div>
+          <div style={{ textAlign: "right" }}>
+            <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>Available Wallet</span>
+            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fbbf24", fontFamily: "monospace" }}>
+              ${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", borderTop: "1px solid rgba(251, 191, 36, 0.15)", paddingTop: "0.75rem" }}>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏆 Prize Money Split:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Owner receives <strong>80%</strong> of place prize (1st: 50%, 2nd: 30%, 3rd: 20% of purse).</p>
+          </div>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏇 Jockey Hire Fee:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}><strong>-$500.00</strong> deducted upon jockey accepting race invitation.</p>
+          </div>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🤝 Referral Bonus:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}><strong>5% commission</strong> credited for accepted invitation referrals.</p>
+          </div>
+        </div>
+      </div>
 
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Available Race Meetings", (localStorage.getItem('app-lang') || 'vi'))}</h3>
@@ -1465,7 +1501,7 @@ export default function HorseOwner() {
   const renderContent = () => {
     switch (activeTab) {
       case "hub":
-        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} />;
+        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} user={user} />;
       case "stable":
         return <StableView stable={stable} onRefresh={fetchData} />;
       case "calendar":
@@ -1477,7 +1513,7 @@ export default function HorseOwner() {
       case "profile":
         return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Horse Owner" />;
       default:
-        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} />;
+        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} user={user} />;
     }
   };
 

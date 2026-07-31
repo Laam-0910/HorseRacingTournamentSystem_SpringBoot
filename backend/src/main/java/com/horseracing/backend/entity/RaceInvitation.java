@@ -35,16 +35,15 @@ public class RaceInvitation implements Serializable {
     @Column(name = "status")
     private String status;
 
+    @Column(name = "commission_amount")
+    private java.math.BigDecimal commissionAmount;
 
+    @Column(name = "commission_rate")
+    private java.math.BigDecimal commissionRate;
 
+    @Column(name = "payout_status")
+    private String payoutStatus = "PENDING";
 
-
-
-
-
-
-
-
-
-
+    @Column(name = "hire_fee")
+    private java.math.BigDecimal hireFee = new java.math.BigDecimal("500.00");
 }

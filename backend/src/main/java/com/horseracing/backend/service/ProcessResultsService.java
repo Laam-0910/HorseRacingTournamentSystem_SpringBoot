@@ -204,24 +204,24 @@ public class ProcessResultsService {
                     // Thiết lập thời gian hoàn thành lượt chạy
                     entry.setFinishTime(finishTime);
 
-                    // Phân chia tiền thưởng: Hạng 1 (60%), Hạng 2 (25%), Hạng 3 (15%)
+                    // Phân chia tiền thưởng: Hạng 1 (50%), Hạng 2 (30%), Hạng 3 (20%)
                     BigDecimal prize = BigDecimal.ZERO;
                     // Khởi tạo mức điều chỉnh điểm rating
                     int ratingAdj = 0;
                     // Nếu đạt Hạng 1
                     if (finalPosition != null && finalPosition == 1) {
-                        // Thưởng 60% tổng quỹ thưởng của trận đua
-                        prize = purse.multiply(new BigDecimal("0.60"));
+                        // Thưởng 50% tổng quỹ thưởng của trận đua
+                        prize = purse.multiply(new BigDecimal("0.50"));
                         // Cộng 6 điểm rating cho quán quân
                         ratingAdj = 6;
                     } else if (finalPosition != null && finalPosition == 2) { // Nếu đạt Hạng 2
-                        // Thưởng 25% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.25"));
+                        // Thưởng 30% tổng quỹ thưởng
+                        prize = purse.multiply(new BigDecimal("0.30"));
                         // Cộng 3 điểm rating cho á quân
                         ratingAdj = 3;
                     } else if (finalPosition != null && finalPosition == 3) { // Nếu đạt Hạng 3
-                        // Thưởng 15% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.15"));
+                        // Thưởng 20% tổng quỹ thưởng
+                        prize = purse.multiply(new BigDecimal("0.20"));
                         // Cộng 1 điểm rating cho hạng 3
                         ratingAdj = 1;
                     } else { // Các thứ hạng khác
@@ -247,17 +247,31 @@ public class ProcessResultsService {
                             // Tăng số lần lọt top 3 của nài ngựa lên 1
                             jockey.setTotalTop3Finishes((jockey.getTotalTop3Finishes() != null ? jockey.getTotalTop3Finishes() : 0) + 1);
                         }
+                        // Phân chia tiền thưởng đạt giải: Kỵ sĩ (Jockey) nhận 20%, Chủ ngựa (Owner) nhận 80%
+                        if (prize.compareTo(BigDecimal.ZERO) > 0) {
+                            BigDecimal jockeyPrizeShare = prize.multiply(new BigDecimal("0.20"));
+                            BigDecimal currentWallet = jockey.getWalletBalance() != null ? jockey.getWalletBalance() : BigDecimal.ZERO;
+                            jockey.setWalletBalance(currentWallet.add(jockeyPrizeShare));
+                        }
                         // Lưu thông tin Nài ngựa vào CSDL
                         userRepository.save(jockey);
                     }
                 }
 
-                // Cập nhật chỉ số thống kê của Chiến mã (Horse)
+                // Cập nhật chỉ số thống kê của Chiến mã (Horse) và cộng ví cho Chủ Ngựa (Owner nhận 80% tiền thưởng)
                 Optional<Horse> horseOpt = horseRepository.findById(entry.getHorseId());
-                // Nếu chiến mã tồn tại
                 if (horseOpt.isPresent()) {
-                    // Lấy đối tượng Horse
                     Horse horse = horseOpt.get();
+                    if (horse.getOwnerId() != null && entry.getPrizeMoney() != null && entry.getPrizeMoney().compareTo(BigDecimal.ZERO) > 0) {
+                        Optional<User> ownerOpt = userRepository.findById(horse.getOwnerId());
+                        if (ownerOpt.isPresent()) {
+                            User owner = ownerOpt.get();
+                            BigDecimal ownerPrizeShare = entry.getPrizeMoney().multiply(new BigDecimal("0.80"));
+                            BigDecimal currentOwnerWallet = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                            owner.setWalletBalance(currentOwnerWallet.add(ownerPrizeShare));
+                            userRepository.save(owner);
+                        }
+                    }
                     // Tăng tổng số trận đua của chiến mã lên 1
                     horse.setTotalRaces(horse.getTotalRaces() + 1);
                     // Nếu chiến mã đạt vị trí số 1 và không bị loại

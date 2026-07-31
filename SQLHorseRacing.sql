@@ -1,8 +1,10 @@
 -- ==========================================
 -- HORSE RACING DATABASE - Microsoft SQL Server
--- Updated: Thêm cột full_name (NVARCHAR(100)) và avatar (VARCHAR(MAX)) vào bảng [User]
---          Đăng nhập bằng username (hoặc email), full_name là tên hiển thị có thể thay đổi
---          Cập nhật: Thêm trạng thái 'FINISHED' vào CK_Race_Status của bảng Race
+-- Updated: Added full_name (NVARCHAR(100)), avatar (VARCHAR(MAX)) to [User] table
+--          Added notifications table for persistent system notifications
+--          Default password for all sample accounts: 123456
+--          Added 'FINISHED' status to CK_Race_Status in Race table
+--          Added wallet_balance, hire_fee, WalletTransaction for financial tracking
 -- ==========================================
 
 USE master;
@@ -42,24 +44,25 @@ GO
 CREATE TABLE [User] (
     id                          INT IDENTITY(1,1) PRIMARY KEY,
     role_id                     INT NOT NULL,
-    username                    VARCHAR(100) NOT NULL UNIQUE,    -- Tài khoản đăng nhập (KHÔNG thay đổi)
-    password_hash               VARCHAR(255) NOT NULL,
+    username                    VARCHAR(100) NOT NULL UNIQUE,    -- Login Account (CANNOT be changed)
+    password_hash               VARCHAR(255) NOT NULL,           -- Default password: 123456 (auto-hashed on backend startup)
     email                       VARCHAR(150) NOT NULL UNIQUE,
     status                      VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',  -- ACTIVE, INACTIVE
-    weight                      DECIMAL(5,2) NULL,              -- kg, phục vụ tính tạ gánh cho Jockey
-    total_races_participated    INT NULL DEFAULT 0,             -- Lịch sử thi đấu: Tổng số trận tham gia
-    total_top3_finishes         INT NULL DEFAULT 0,             -- Lịch sử thi đấu: Tổng số lần lọt top 3
+    weight                      DECIMAL(5,2) NULL,              -- Jockey weight in kg (for handicap calculations)
+    total_races_participated    INT NULL DEFAULT 0,             -- Career Stats: Total races entered
+    total_top3_finishes         INT NULL DEFAULT 0,             -- Career Stats: Total top-3 finishes
     require_otp                 BIT NOT NULL DEFAULT 0,
-    avatar                      VARCHAR(MAX) NULL,              -- Lưu ảnh đại diện dạng Base64
-    full_name                   NVARCHAR(100) NULL,             -- Tên hiển thị người dùng (CÓ THỂ thay đổi)
-    biography                   NVARCHAR(MAX) NULL,             -- Tiểu sử giới thiệu cá nhân
+    avatar                      VARCHAR(MAX) NULL,              -- Profile avatar stored in Base64
+    full_name                   NVARCHAR(100) NULL,             -- Display Name (CAN be changed)
+    biography                   NVARCHAR(MAX) NULL,             -- Personal biography / profile introduction
+    wallet_balance              DECIMAL(18,2) NULL DEFAULT 0.00,-- Wallet balance for prizes & commissions
     CONSTRAINT CK_User_Status CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 GO
 
 CREATE TABLE Season (
     id          INT IDENTITY(1,1) PRIMARY KEY,
-    name        VARCHAR(200) NOT NULL,              -- Ví dụ: '2026-2027 Grand Prix Season'
+    name        VARCHAR(200) NOT NULL,              -- e.g.: '2026-2027 Grand Prix Season'
     start_date  DATE NOT NULL,
     end_date    DATE NOT NULL,
     status      VARCHAR(20) NOT NULL DEFAULT 'ACTIVE', -- ACTIVE, CLOSED
@@ -82,14 +85,14 @@ GO
 CREATE TABLE RaceMeeting (
     id              INT IDENTITY(1,1) PRIMARY KEY,
     season_id       INT NOT NULL,                   
-    name            VARCHAR(200) NOT NULL,          -- Ví dụ: Spring Gold Cup Day
+    name            VARCHAR(200) NOT NULL,          -- e.g.: Spring Gold Cup Day
     start_date      DATETIME NOT NULL,
-    venue           VARCHAR(150) NOT NULL,          -- Sân đua tổ chức (Vd: Royal Ascot Arena)
+    venue           VARCHAR(150) NOT NULL,          -- Racecourse Venue (e.g.: Royal Ascot Arena)
     total_budget    DECIMAL(18,2) NOT NULL DEFAULT 0.00
 );
 GO
 
--- Nài ngựa (Jockey) đăng ký tham gia Ngày đua
+-- Jockey Race Meeting Registration
 CREATE TABLE JockeyRaceMeetingRegistration (
     id              INT IDENTITY(1,1) PRIMARY KEY,
     race_meeting_id INT NOT NULL,
@@ -101,7 +104,7 @@ CREATE TABLE JockeyRaceMeetingRegistration (
 );
 GO
 
--- Chủ ngựa (Horse Owner) đăng ký tham gia Ngày đua
+-- Horse Owner Race Meeting Registration
 CREATE TABLE OwnerRaceMeetingRegistration (
     id              INT IDENTITY(1,1) PRIMARY KEY,
     race_meeting_id INT NOT NULL,
@@ -113,7 +116,7 @@ CREATE TABLE OwnerRaceMeetingRegistration (
 );
 GO
 
--- Chiến mã đăng ký tham gia Ngày đua (Xác thực ngựa đủ điều kiện đến sân đấu)
+-- Horse Race Meeting Registration (Validates horse eligibility for venue)
 CREATE TABLE HorseRaceMeetingRegistration (
     id              INT IDENTITY(1,1) PRIMARY KEY,
     race_meeting_id INT NOT NULL,
@@ -129,8 +132,8 @@ CREATE TABLE Race (
     id                      INT IDENTITY(1,1) PRIMARY KEY,
     race_meeting_id         INT NOT NULL,
     start_time              DATETIME NOT NULL,
-    registration_start_time DATETIME NOT NULL,         -- Mốc mở cổng đăng ký
-    registration_end_time   DATETIME NOT NULL,         -- Hạn chốt đăng ký (Deadline)
+    registration_start_time DATETIME NOT NULL,         -- Registration Opening Time
+    registration_end_time   DATETIME NOT NULL,         -- Registration Deadline
     status                  VARCHAR(50) NOT NULL DEFAULT 'SCHEDULED', 
     class_level             VARCHAR(50) NULL,               
     min_rating              INT NULL,
@@ -140,9 +143,8 @@ CREATE TABLE Race (
     purse                   DECIMAL(18,2) NOT NULL DEFAULT 0.00,
     min_entries             INT NOT NULL DEFAULT 3,
     max_entries             INT NOT NULL DEFAULT 14,
-    steward_report          NVARCHAR(MAX) NULL,        -- Báo cáo/biên bản giám sát của Trọng tài sau trận
-    youtube_live_url        VARCHAR(500) NULL,          -- Đường dẫn YouTube Livestream
-    -- Đã bổ sung trạng thái 'FINISHED' vào danh sách check dưới đây
+    steward_report          NVARCHAR(MAX) NULL,        -- Steward Official Report after race
+    youtube_live_url        VARCHAR(500) NULL,          -- YouTube Livestream URL
     CONSTRAINT CK_Race_Status CHECK (status IN ('SCHEDULED', 'DECLARATION_OPEN', 'DECLARATION_CLOSED', 'RACE_ASSIGNED', 'RUNNING', 'STEWARDS_INQUIRY', 'FINISHED', 'OFFICIAL', 'CANCELLED', 'RACE_EVENT_ENDED', 'STOPPED'))
 );
 GO
@@ -158,8 +160,8 @@ CREATE TABLE Horse (
     current_rating  INT NOT NULL DEFAULT 52,
     total_races     INT NOT NULL DEFAULT 0,
     total_wins      INT NOT NULL DEFAULT 0,
-    avatar          VARCHAR(MAX) NULL,          -- Lưu ảnh của ngựa dạng Base64
-    description     NVARCHAR(MAX) NULL          -- Lưu mô tả của ngựa
+    avatar          VARCHAR(MAX) NULL,          -- Horse avatar stored in Base64
+    description     NVARCHAR(MAX) NULL          -- Horse description
 );
 GO
 
@@ -169,6 +171,7 @@ CREATE TABLE RaceInvitation (
     horse_id    INT NOT NULL,
     owner_id    INT NOT NULL,
     jockey_id   INT NOT NULL,
+    hire_fee    DECIMAL(12,2) NULL DEFAULT 500.00, -- Jockey hire fee paid upon acceptance
     status      VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, ACCEPTED, REJECTED, EXPIRED
     CONSTRAINT CK_Invite_Status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'))
 );
@@ -181,8 +184,8 @@ CREATE TABLE RaceEntry (
     jockey_id           INT NOT NULL,
     gate_number         INT NOT NULL,
     status              VARCHAR(30) NOT NULL DEFAULT 'PENDING_ADMIN', -- PENDING_ADMIN, APPROVED, RUNNING, FINISHED, DISQUALIFIED, REJECTED
-    final_position      INT NULL,                           -- Kết quả thi đấu cá nhân
-    finish_time         VARCHAR(20) NULL,                   -- Kết quả thi đấu cá nhân
+    final_position      INT NULL,                           -- Individual finish position
+    finish_time         VARCHAR(20) NULL,                   -- Individual race finish time
     prize_money         DECIMAL(18,2) NULL DEFAULT 0,
     carried_weight      DECIMAL(5,2) NULL,
     rating_adjustment   INT NULL,
@@ -216,6 +219,42 @@ CREATE TABLE ChatMessage (
     username      VARCHAR(100) NOT NULL,
     message_text  NVARCHAR(MAX) NOT NULL,
     sent_at       DATETIME DEFAULT GETDATE()
+);
+GO
+
+-- System Notifications Table
+CREATE TABLE notifications (
+    id          INT IDENTITY(1,1) PRIMARY KEY,
+    user_id     INT NOT NULL,
+    title       NVARCHAR(255) NULL,
+    message     NVARCHAR(MAX) NOT NULL,
+    is_read     BIT NOT NULL DEFAULT 0,
+    created_at  DATETIME DEFAULT GETDATE(),
+    read_at     DATETIME NULL
+);
+GO
+
+-- Table for Horse Retirement Requests
+CREATE TABLE HorseRetirementRequest (
+    id            INT IDENTITY(1,1) PRIMARY KEY,
+    horse_id      INT NOT NULL,
+    owner_id      INT NOT NULL,
+    reason        NVARCHAR(MAX) NOT NULL,
+    status        VARCHAR(30) NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
+    admin_remarks NVARCHAR(MAX) NULL,
+    created_at    DATETIME DEFAULT GETDATE(),
+    processed_at  DATETIME NULL
+);
+GO
+
+-- Table for Wallet Transactions
+CREATE TABLE WalletTransaction (
+    id              INT IDENTITY(1,1) PRIMARY KEY,
+    user_id         INT NOT NULL,
+    amount          DECIMAL(18,2) NOT NULL,
+    type            VARCHAR(50) NOT NULL, -- PRIZE_MONEY, JOCKEY_HIRE_FEE, INVITATION_COMMISSION, SYSTEM_ADJUSTMENT
+    description     NVARCHAR(MAX) NULL,
+    created_at      DATETIME DEFAULT GETDATE()
 );
 GO
 
@@ -257,6 +296,11 @@ ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Horse   FOREIGN KEY (horse_id)   RE
 ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Jockey  FOREIGN KEY (jockey_id)  REFERENCES [User](id);
 ALTER TABLE Violation ADD CONSTRAINT FK_Viol_Referee FOREIGN KEY (referee_id) REFERENCES [User](id);
 ALTER TABLE ChatMessage ADD CONSTRAINT FK_Chat_Race   FOREIGN KEY (race_id)    REFERENCES Race(id) ON DELETE CASCADE;
+
+ALTER TABLE notifications ADD CONSTRAINT FK_Notification_User FOREIGN KEY (user_id) REFERENCES [User](id) ON DELETE CASCADE;
+ALTER TABLE HorseRetirementRequest ADD CONSTRAINT FK_Retire_Horse FOREIGN KEY (horse_id) REFERENCES Horse(id);
+ALTER TABLE HorseRetirementRequest ADD CONSTRAINT FK_Retire_Owner FOREIGN KEY (owner_id) REFERENCES [User](id);
+ALTER TABLE WalletTransaction ADD CONSTRAINT FK_WalletTx_User FOREIGN KEY (user_id) REFERENCES [User](id) ON DELETE CASCADE;
 GO
 
 -- ==========================================
@@ -264,30 +308,29 @@ GO
 -- ==========================================
 
 INSERT INTO SystemConfig (config_key, config_value, description) VALUES
-('MAX_TOP_WEIGHT',         '60.0', N'Mức tạ gánh tối đa (kg)'),
-('MIN_BOTTOM_WEIGHT',      '52.0', N'Mức tạ gánh tối thiểu (kg)'),
-('WEIGHT_PER_POINT',       '0.5',  N'Số kg biến động cho mỗi 1 điểm chênh lệch Rating'),
-('MAX_OVERWEIGHT_ALLOWED', '1.0',  N'Số kg vượt mức tối đa cho phép đối với Nài ngựa (kg)'),
-('SEX_ALLOWANCE',          '1.5',  N'Mức trợ tạ gánh cho ngựa cái (Fillies/Mares) (kg)');
+('MAX_TOP_WEIGHT',         '60.0', N'Maximum carried weight allowance (kg)'),
+('MIN_BOTTOM_WEIGHT',      '52.0', N'Minimum carried weight allowance (kg)'),
+('WEIGHT_PER_POINT',       '0.5',  N'Weight adjustment in kg per 1 point rating difference'),
+('MAX_OVERWEIGHT_ALLOWED', '1.0',  N'Maximum allowed overweight allowance for Jockey (kg)'),
+('SEX_ALLOWANCE',          '1.5',  N'Sex allowance for female horses (Fillies/Mares) (kg)');
 GO
 
 INSERT INTO Role (role_name) VALUES ('Admin'), ('Owner'), ('Jockey'), ('Spectator'), ('Referee');
 GO
 
--- Cột full_name = tên hiển thị trên trang (có thể đổi)
--- Cột username  = tài khoản đăng nhập       (KHÔNG thay đổi)
-INSERT INTO [User] (role_id, username, password_hash, email, status, weight, total_races_participated, total_top3_finishes, full_name) VALUES
-(1, 'admin_root',      'hash_admin_001', 'admin@horserace.com',  'ACTIVE', NULL, NULL, NULL, N'Administrator'),
-(2, 'owner_jackson',   'hash_own_001',   'jackson@owners.com',   'ACTIVE', NULL, NULL, NULL, N'James Jackson'),
-(2, 'owner_miller',    'hash_own_002',   'miller@owners.com',    'ACTIVE', NULL, NULL, NULL, N'Robert Miller'),
-(2, 'owner_chen',      'hash_own_003',   'chen@owners.com',      'ACTIVE', NULL, NULL, NULL, N'Chen Wei'),
-(3, 'jockey_ryan',     'hash_joc_001',   'ryan@jockeys.com',     'ACTIVE', 58.5, 45, 20,    N'Ryan Thompson'),
-(3, 'jockey_emma',     'hash_joc_002',   'emma@jockeys.com',     'ACTIVE', 52.0, 20, 8,     N'Emma Clarke'),
-(3, 'jockey_carlos',   'hash_joc_003',   'carlos@jockeys.com',   'ACTIVE', 55.3, 80, 35,    N'Carlos Rivera'),
-(3, 'jockey_naomi',    'hash_joc_004',   'naomi@jockeys.com',    'ACTIVE', 53.7, 4,  1,     N'Naomi Watanabe'),
-(4, 'fan_oliver',      'hash_fan_001',   'oliver@fans.com',      'ACTIVE', NULL, NULL, NULL, N'Oliver Bennett'),
-(5, 'referee_harris',  'hash_ref_001',   'harris@referees.com',  'ACTIVE', NULL, NULL, NULL, N'Michael Harris'),
-(5, 'referee_scott',   'hash_ref_002',   'scott@referees.com',   'ACTIVE', NULL, NULL, NULL, N'David Scott');
+-- All accounts have default password: 123456
+INSERT INTO [User] (role_id, username, password_hash, email, status, weight, total_races_participated, total_top3_finishes, full_name, wallet_balance) VALUES
+(1, 'admin_root',      '123456', 'admin@horserace.com',  'ACTIVE', NULL, NULL, NULL, N'Administrator', 10000.00),
+(2, 'owner_jackson',   '123456', 'jackson@owners.com',   'ACTIVE', NULL, NULL, NULL, N'James Jackson', 5000.00),
+(2, 'owner_miller',    '123456', 'miller@owners.com',    'ACTIVE', NULL, NULL, NULL, N'Robert Miller', 5000.00),
+(2, 'owner_chen',      '123456', 'chen@owners.com',      'ACTIVE', NULL, NULL, NULL, N'Chen Wei', 5000.00),
+(3, 'jockey_ryan',     '123456', 'ryan@jockeys.com',     'ACTIVE', 58.5, 45, 20,    N'Ryan Thompson', 1200.00),
+(3, 'jockey_emma',     '123456', 'emma@jockeys.com',     'ACTIVE', 52.0, 20, 8,     N'Emma Clarke', 800.00),
+(3, 'jockey_carlos',   '123456', 'carlos@jockeys.com',   'ACTIVE', 55.3, 80, 35,    N'Carlos Rivera', 1500.00),
+(3, 'jockey_naomi',    '123456', 'naomi@jockeys.com',    'ACTIVE', 53.7, 4,  1,     N'Naomi Watanabe', 500.00),
+(4, 'fan_oliver',      '123456', 'oliver@fans.com',      'ACTIVE', NULL, NULL, NULL, N'Oliver Bennett', 100.00),
+(5, 'referee_harris',  '123456', 'harris@referees.com',  'ACTIVE', NULL, NULL, NULL, N'Michael Harris', 0.00),
+(5, 'referee_scott',   '123456', 'scott@referees.com',   'ACTIVE', NULL, NULL, NULL, N'David Scott', 0.00);
 GO
 
 INSERT INTO Season (name, start_date, end_date, status) VALUES
@@ -363,20 +406,5 @@ INSERT INTO Violation (race_id, horse_id, jockey_id, referee_id, description, pe
 (1, 3, 7, 10, 'Jockey cut off lane at turn 2', 'Fine $500');
 GO
 
--- Table for Horse Retirement Requests
-CREATE TABLE HorseRetirementRequest (
-    id            INT IDENTITY(1,1) PRIMARY KEY,
-    horse_id      INT NOT NULL,
-    owner_id      INT NOT NULL,
-    reason        NVARCHAR(MAX) NOT NULL,
-    status        VARCHAR(30) NOT NULL DEFAULT 'PENDING', -- PENDING, APPROVED, REJECTED
-    admin_remarks NVARCHAR(MAX) NULL,
-    created_at    DATETIME DEFAULT GETDATE(),
-    processed_at  DATETIME NULL,
-    CONSTRAINT FK_Retire_Horse FOREIGN KEY (horse_id) REFERENCES Horse(id),
-    CONSTRAINT FK_Retire_Owner FOREIGN KEY (owner_id) REFERENCES [User](id)
-);
-GO
-
-PRINT 'HorseRacingDB created successfully: full_name column added, all sample users have display names.';
+PRINT 'HorseRacingDB created successfully: notifications, wallet, and retirement tables added, all descriptions in English, all default passwords set to 123456.';
 GO

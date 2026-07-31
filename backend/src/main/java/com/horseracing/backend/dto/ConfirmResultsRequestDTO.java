@@ -1,6 +1,5 @@
 package com.horseracing.backend.dto;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,12 +13,9 @@ import java.util.Map;
 @AllArgsConstructor
 @Builder
 public class ConfirmResultsRequestDTO {
-    @Schema(description = "ID Trận đua", example = "1")
-    private Integer raceId;
+        private Integer raceId;
 
-    @Schema(description = "Báo cáo giám sát của Trọng tài", example = "Trận đua diễn ra công bằng, không sự cố.")
-    private String stewardReport;
+        private String stewardReport;
 
-    @Schema(description = "Danh sách kết quả thứ hạng các ngựa")
-    private List<Map<String, Object>> results;
+        private List<Map<String, Object>> results;
 }

@@ -257,28 +257,24 @@ const TRANSLATIONS: Record<string, any> = {
 // ─────────────────────────────────────────────
 // Bản dịch đa ngôn ngữ cho giao diện Chatbot AI bóng nổi
 const CHAT_LANG: Record<string, any> = {
-  vi: { label: "AI Horse Racing", placeholder: "Nhập câu hỏi...", typing: "Đang phân tích...", welcome: "Xin chào! Hỏi tôi về ngựa, nài, race, dự đoán kết quả nhé.", error: "Lỗi: ", noconn: "Không kết nối được server AI.", quick: ["Rating cao nhất","Dự đoán race","Nài xuất sắc","Mùa giải"], quickQ: ["Ngựa nào rating cao nhất?","Dự đoán kết quả race mới nhất","Nài ngựa xuất sắc nhất?","Mùa giải hiện tại"] },
-  en: { label: "AI Horse Racing", placeholder: "Ask a question...", typing: "Analyzing...", welcome: "Hello! Ask me about horses, jockeys, races, or predictions.", error: "Error: ", noconn: "Cannot connect to AI server.", quick: ["Top Rating","Predict Race","Best Jockey","Season"], quickQ: ["Which horse has the highest rating?","Predict the latest race result","Which jockey has the best top-3 rate?","Current season summary"] },
-  ja: { label: "AI競馬アシスタント", placeholder: "質問を入力...", typing: "分析中...", welcome: "こんにちは！馬・騎手・レース・予測について聞いてください。", error: "エラー：", noconn: "AIサーバーに接続できません。", quick: ["最高レーティング","レース予測","優秀騎手","シーズン"], quickQ: ["最もレーティングが高い馬は？","最新レースを予測","トップ3率が最も高い騎手は？","今シーズンのまとめ"] },
-  zh: { label: "AI赛马助手", placeholder: "输入问题...", typing: "分析中...", welcome: "你好！请问关于马匹、骑师、比赛或预测的问题。", error: "错误：", noconn: "无法连接AI服务器。", quick: ["最高评分","预测赛事","优秀骑师","赛季"], quickQ: ["哪匹马评分最高？","预测最新比赛结果","哪位骑师前三率最高？","本赛季总结"] },
+  vi: { label: "HorseRaceManagementSystem AI", placeholder: "Ask a question...", typing: "Analyzing...", welcome: "Hello! Ask me about horses, jockeys, races, or predictions.", error: "Error: ", noconn: "Cannot connect to AI server.", quick: ["Top Rating","Predict Race","Best Jockey","Season"], quickQ: ["Which horse has the highest rating?","Predict the latest race result","Which jockey has the best top-3 rate?","Current season summary"] },
+  en: { label: "HorseRaceManagementSystem AI", placeholder: "Ask a question...", typing: "Analyzing...", welcome: "Hello! Ask me about horses, jockeys, races, or predictions.", error: "Error: ", noconn: "Cannot connect to AI server.", quick: ["Top Rating","Predict Race","Best Jockey","Season"], quickQ: ["Which horse has the highest rating?","Predict the latest race result","Which jockey has the best top-3 rate?","Current season summary"] },
+  ja: { label: "HorseRaceManagementSystem AI", placeholder: "Ask a question...", typing: "Analyzing...", welcome: "Hello! Ask me about horses, jockeys, races, or predictions.", error: "Error: ", noconn: "Cannot connect to AI server.", quick: ["Top Rating","Predict Race","Best Jockey","Season"], quickQ: ["Which horse has the highest rating?","Predict the latest race result","Which jockey has the best top-3 rate?","Current season summary"] },
+  zh: { label: "HorseRaceManagementSystem AI", placeholder: "Ask a question...", typing: "Analyzing...", welcome: "Hello! Ask me about horses, jockeys, races, or predictions.", error: "Error: ", noconn: "Cannot connect to AI server.", quick: ["Top Rating","Predict Race","Best Jockey","Season"], quickQ: ["Which horse has the highest rating?","Predict the latest race result","Which jockey has the best top-3 rate?","Current season summary"] },
 };
 
 /**
  * Component ChatBot - Bong bóng chat nhỏ nổi ở góc phải màn hình của Trang chủ Landing
  */
-function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void }) {
+function ChatBot({ lang }: { lang: string }) {
   // Trạng thái đóng/mở khung chat
   const [open, setOpen] = useState(false);
   // Danh sách các tin nhắn trao đổi
-  const [messages, setMessages] = useState([{ id: "welcome", type: "bot", text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.vi.welcome }]);
+  const [messages, setMessages] = useState([{ id: "welcome", type: "bot", text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.en.welcome }]);
   const [input, setInput] = useState("");
   const [waiting, setWaiting] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const [sessionId] = useState(() => "session-" + Math.random().toString(36).substr(2, 9));
-
-  useEffect(() => {
-    setMessages(prev => prev.map(m => m.id === "welcome" ? { ...m, text: CHAT_LANG[lang] ? CHAT_LANG[lang].welcome : CHAT_LANG.vi.welcome } : m));
-  }, [lang]);
 
   useEffect(() => { 
     if (chatContainerRef.current) {
@@ -288,10 +284,6 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
       });
     }
   }, [messages]);
-
-  const changeLang = (l: string) => {
-    setLang(l);
-  };
 
   const sendMessage = async (text?: string) => {
     const msg = text || input.trim();
@@ -342,12 +334,6 @@ function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void
           <div style={{ background: "#111", color: "#C9A84C", padding: "11px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "1px solid rgba(201,168,76,0.2)", flexShrink: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6 }}>🤖 {L.label}</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <select value={lang} onChange={e => changeLang(e.target.value)} style={{ background: "#1e1e1e", border: "1px solid rgba(201,168,76,0.33)", color: "#C9A84C", borderRadius: 5, fontSize: 11, padding: "3px 5px", cursor: "pointer", outline: "none" }}>
-                <option value="vi">🇻🇳 VI</option>
-                <option value="en">🇺🇸 EN</option>
-                <option value="ja">🇯🇵 JA</option>
-                <option value="zh">🇨🇳 ZH</option>
-              </select>
               <button onClick={() => setOpen(false)} style={{ background: "none", border: "none", color: "#777", fontSize: 17, cursor: "pointer", padding: "2px 4px" }}>✕</button>
             </div>
           </div>
@@ -892,12 +878,24 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
 
 function GenericTableView({ title, data, columns }: { title: string; data: any[]; columns: { key: string; label: string }[] }) {
   const [isMobile, setIsMobile] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(8);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [data]);
+
+  const totalPages = Math.max(1, Math.ceil(data.length / itemsPerPage));
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, data.length);
+  const paginatedData = data.slice(startIndex, endIndex);
 
   const formatValue = (cKey: string, val: any) => {
     if (val === null || val === undefined) return "-";
@@ -918,6 +916,61 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
     return String(val);
   };
 
+  const renderPaginationControls = () => {
+    if (data.length <= itemsPerPage) return null;
+    return (
+      <div className="py-3 px-6 bg-[#1a1815]/80 border-t border-[#2a2825] flex flex-wrap justify-between items-center text-xs font-mono text-gray-400 gap-3">
+        <div>
+          Showing <span className="text-[#fbbf24] font-bold">{data.length === 0 ? 0 : startIndex + 1}</span> to <span className="text-[#fbbf24] font-bold">{endIndex}</span> of <span className="text-[#fbbf24] font-bold">{data.length}</span> entries
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5">
+            <span>Per page:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+              className="bg-black/40 border border-[#2a2825] rounded px-2 py-1 text-gray-200 focus:outline-none cursor-pointer"
+            >
+              <option value={8}>8</option>
+              <option value={15}>15</option>
+              <option value={30}>30</option>
+              <option value={50}>50</option>
+            </select>
+          </div>
+
+          <button
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            className={`px-3 py-1.5 rounded-md font-bold transition-colors ${
+              currentPage <= 1
+                ? "bg-white/5 text-gray-600 cursor-not-allowed border border-transparent"
+                : "bg-[#c9a227]/15 text-[#fbbf24] border border-[#c9a227]/30 hover:bg-[#c9a227]/25"
+            }`}
+          >
+            &larr; Prev
+          </button>
+
+          <span className="text-gray-300">
+            Page <strong className="text-white">{currentPage}</strong> of <strong className="text-white">{totalPages}</strong>
+          </span>
+
+          <button
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            className={`px-3 py-1.5 rounded-md font-bold transition-colors ${
+              currentPage >= totalPages
+                ? "bg-white/5 text-gray-600 cursor-not-allowed border border-transparent"
+                : "bg-[#c9a227]/15 text-[#fbbf24] border border-[#c9a227]/30 hover:bg-[#c9a227]/25"
+            }`}
+          >
+            Next &rarr;
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   if (isMobile) {
     return (
       <div className="animate-fade-in-up">
@@ -928,30 +981,33 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
           </div>
         ) : (
           <div className="flex flex-col gap-4">
-            {data.map((row, i) => (
-              <div key={i} className="glass-panel rounded-xl p-4 border border-[#2a2825] hover:border-[#c9a227]/30 transition-colors">
-                {columns.map((c, colIdx) => {
-                  const val = row[c.key];
-                  if (colIdx === 0) {
+            <div className="flex flex-col gap-4">
+              {paginatedData.map((row, i) => (
+                <div key={i} className="glass-panel rounded-xl p-4 border border-[#2a2825] hover:border-[#c9a227]/30 transition-colors">
+                  {columns.map((c, colIdx) => {
+                    const val = row[c.key];
+                    if (colIdx === 0) {
+                      return (
+                        <div key={c.key} className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
+                          <span className="text-sm font-bold text-[#c9a227]">
+                            {c.label}: <span className="text-white">{formatValue(c.key, val)}</span>
+                          </span>
+                        </div>
+                      );
+                    }
                     return (
-                      <div key={c.key} className="flex justify-between items-center mb-3 pb-2 border-b border-white/5">
-                        <span className="text-sm font-bold text-[#c9a227]">
-                          {c.label}: <span className="text-white">{formatValue(c.key, val)}</span>
+                      <div key={c.key} className="flex justify-between text-sm py-1.5 border-b border-white/5 last:border-0">
+                        <span className="text-gray-400 font-mono text-xs">{c.label}</span>
+                        <span className="font-semibold text-gray-200 text-right max-w-[60%] truncate">
+                          {formatValue(c.key, val)}
                         </span>
                       </div>
                     );
-                  }
-                  return (
-                    <div key={c.key} className="flex justify-between text-sm py-1.5 border-b border-white/5 last:border-0">
-                      <span className="text-gray-400 font-mono text-xs">{c.label}</span>
-                      <span className="font-semibold text-gray-200 text-right max-w-[60%] truncate">
-                        {formatValue(c.key, val)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+                  })}
+                </div>
+              ))}
+            </div>
+            {renderPaginationControls()}
           </div>
         )}
       </div>
@@ -979,7 +1035,7 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2a2825]/50">
-                {data.map((row, i) => (
+                {paginatedData.map((row, i) => (
                   <tr key={i} className="hover:bg-white/[0.02] transition-colors group">
                     {columns.map((c, colIdx) => (
                       <td key={c.key} className={`py-4 px-6 text-sm text-gray-300 ${colIdx === 0 ? 'font-bold text-white' : ''}`}>
@@ -991,6 +1047,7 @@ function GenericTableView({ title, data, columns }: { title: string; data: any[]
               </tbody>
             </table>
           </div>
+          {renderPaginationControls()}
         </div>
       )}
     </div>
@@ -1053,19 +1110,12 @@ export default function Landing() {
   
   // Các state quản lý ẩn/hiện dropdown UI
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showLangMenu, setShowLangMenu] = useState(false);
   const [showDashboardMenu, setShowDashboardMenu] = useState(false);
   
-  // State quản lý ngôn ngữ hiển thị và hàm đồng bộ reload trang khi đổi ngôn ngữ
-  const [lang, setLangRaw] = useState(() => localStorage.getItem('app-lang') || 'vi');
-  const setLang = (code: string) => { 
-    setLangRaw(code); 
-    localStorage.setItem('app-lang', code); 
-    window.location.reload(); 
-  };
+  const [lang] = useState('en');
   
   const t = TRANSLATIONS[lang] || TRANSLATIONS.vi;
-  const langLabel = lang.toUpperCase();
+
 
   // Kiểm tra độ rộng màn hình để tối ưu hiển thị menu trên mobile (<768px)
   const [isMobile, setIsMobile] = useState(false);
@@ -2082,20 +2132,6 @@ export default function Landing() {
             {/* If mobile, we put right controls next to logo to save space */}
             {isMobile && (
               <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                {/* Language Switcher */}
-                <div style={{ position: "relative" }}>
-                  <button onClick={() => setShowLangMenu(v => !v)} style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontFamily: "monospace", fontSize: "0.7rem" }}>
-                    🌐 {langLabel} ▾
-                  </button>
-                  {showLangMenu && (
-                    <div style={{ position: "absolute", right: 0, top: "100%", marginTop: "0.25rem", width: "7rem", background: "#151310", border: "1px solid #2a2825", borderRadius: "0.375rem", zIndex: 9999 }}>
-                      {[["en","EN","English"],["vi","VI","Tiếng Việt"],["zh","ZH","简体中文"],["ja","JA","日本語"]].map(([code, label, name]) => (
-                        <button key={code} onClick={() => { setLang(code); setShowLangMenu(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "0.375rem 0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.65rem", fontFamily: "monospace" }}>{name}</button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
               </div>
             )}
           </div>
@@ -2135,22 +2171,6 @@ export default function Landing() {
           {/* Right Controls (Desktop Only) */}
           {!isMobile && (
             <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0" }}>
-              {/* Language */}
-              <div style={{ position: "relative" }}>
-                <button onClick={() => setShowLangMenu(v => !v)} style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontFamily: "monospace", fontSize: "0.85rem", fontWeight: 700 }}>
-                  🌐 {langLabel} ▾
-                </button>
-                {showLangMenu && (
-                  <div style={{ position: "absolute", right: 0, top: "100%", marginTop: "0.5rem", width: "8rem", background: "#111111", border: "1px solid #1f1f1f", borderRadius: "0.5rem", zIndex: 50 }}>
-                    {[["en","EN","English"],["vi","VI","Tiếng Việt"],["zh","ZH","简体中文"],["ja","JA","日本語"]].map(([code, label, name]) => (
-                      <button key={code} onClick={() => { setLang(code); setShowLangMenu(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "0.5rem 0.75rem", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem", fontFamily: "monospace" }}>{name}</button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-
-
               {/* Auth Controls */}
               {user ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "1rem" }}>
@@ -2591,7 +2611,7 @@ export default function Landing() {
 
 
       {/* ── CHATBOT ─────────────────────────────── */}
-      <ChatBot lang={lang} setLang={setLang} />
+      <ChatBot lang={lang} />
 
     </div>
 
