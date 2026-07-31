@@ -294,26 +294,26 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
               {/* Recent History Table column */}
               {(profile.roleId === 2 || profile.roleId === 3) && (
               <div className="lg:col-span-2 flex flex-col">
-                <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{$t("Thành tích gần đây (10 trận)", (localStorage.getItem('app-lang') || 'vi'))}</h4>
+                <h4 className="text-[10px] font-mono uppercase tracking-widest text-amber-500 mb-3">{$t("Full Race History", (localStorage.getItem('app-lang') || 'vi'))}</h4>
                 <div className="flex-1 overflow-x-auto rounded-xl border border-white/5">
                   <table className="w-full border-collapse text-left min-w-[500px]">
                     <thead>
                       <tr className="border-b border-white/10 bg-white/[0.01] text-[9px] font-mono uppercase text-white/40">
-                        <th className="px-4 py-3">{$t("Giải đấu", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                        <th className="px-4 py-3">{$t("Hạng", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                        <th className="px-4 py-3">{$t("Ngựa", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                        <th className="px-4 py-3 text-center">{$t("Hạng", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                        <th className="px-4 py-3">{$t("Meeting", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                        <th className="px-4 py-3">{$t("Class", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                        <th className="px-4 py-3">{$t("Horse", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                        <th className="px-4 py-3 text-center">{$t("Pos", (localStorage.getItem('app-lang') || 'vi'))}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5 text-xs font-mono">
-                      {profile.history?.length === 0 ? (
+                      {!profile.history || profile.history.length === 0 ? (
                         <tr>
                           <td colSpan={4} className="px-4 py-8 text-center text-white/40 italic">
-                            {$t("Chưa có dữ liệu.", (localStorage.getItem('app-lang') || 'vi'))}
+                            {$t("No race records found.", (localStorage.getItem('app-lang') || 'vi'))}
                           </td>
                         </tr>
                       ) : (
-                        profile.history?.map((r: any, idx: number) => (
+                        profile.history.map((r: any, idx: number) => (
                           <tr key={idx} className="hover:bg-white/[0.01] transition-colors">
                             <td className="px-4 py-3">
                               <p className="font-semibold text-white/90">{r.meetingName}</p>

@@ -481,47 +481,6 @@ export default function DashboardLayout({
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             {/* Hiển thị ngày hôm nay trên Desktop */}
             {!isMobile && <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>{today}</span>}
-            
-            {/* Dropdown Menu chuyển đổi ngôn ngữ */}
-            <div ref={langRef} style={{ position: 'relative' }}>
-              <button
-                onClick={() => setShowLangMenu(v => !v)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '0.35rem',
-                  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,162,39,0.2)',
-                  borderRadius: '0.375rem', padding: '0.3rem 0.65rem',
-                  color: '#c9a227', cursor: 'pointer', fontFamily: 'monospace', fontSize: '0.68rem',
-                  transition: 'all 0.2s',
-                }}
-              >
-                🌐 {langLabel} ▾
-              </button>
-              {/* Menu xổ xuống khi showLangMenu = true */}
-              {showLangMenu && (
-                <div style={{
-                  position: 'absolute', right: 0, top: 'calc(100% + 4px)',
-                  width: '9rem', background: '#151310', border: '1px solid #2a2825',
-                  borderRadius: '0.375rem', zIndex: 999, overflow: 'hidden',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-                }}>
-                  {LANG_OPTIONS.map(([code, name]) => (
-                    <button
-                      key={code}
-                      onClick={() => changeLang(code)}
-                      style={{
-                        display: 'block', width: '100%', textAlign: 'left',
-                        padding: '0.45rem 0.75rem', background: lang === code ? 'rgba(201,162,39,0.12)' : 'none',
-                        border: 'none', color: lang === code ? '#c9a227' : '#a0a0a0',
-                        cursor: 'pointer', fontSize: '0.68rem', fontFamily: 'monospace',
-                        transition: 'background 0.15s',
-                      }}
-                    >
-                      {name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
         </header>
 

@@ -380,7 +380,7 @@ public class PublicDataController {
             response.put("winRate", winRate);
             response.put("top3Rate", top3Rate);
 
-            // Thu thập lịch sử 10 trận đấu gần đây nhất của kỵ sĩ này
+            // Thu thập toàn bộ lịch sử trận đấu của kỵ sĩ này từ cơ sở dữ liệu
             List<Map<String, Object>> history = new ArrayList<>();
             List<RaceEntry> sortedEntries = new ArrayList<>(entries);
             sortedEntries.sort((e1, e2) -> {
@@ -392,9 +392,7 @@ public class PublicDataController {
                 return e2.getId().compareTo(e1.getId());
             });
 
-            int limit = Math.min(10, sortedEntries.size());
-            for (int i = 0; i < limit; i++) {
-                RaceEntry entry = sortedEntries.get(i);
+            for (RaceEntry entry : sortedEntries) {
                 Map<String, Object> hMap = new HashMap<>();
                 hMap.put("position", entry.getFinalPosition() != null ? String.valueOf(entry.getFinalPosition()) : (entry.getFinishTime() != null ? entry.getFinishTime() : "—"));
                 hMap.put("finishTime", entry.getFinishTime());
@@ -460,7 +458,7 @@ public class PublicDataController {
             }
             response.put("activeHorses", activeHorsesList);
 
-            // Lịch sử 10 trận đấu gần nhất của toàn bộ chuồng ngựa
+            // Lịch sử toàn bộ các trận đấu của toàn bộ chuồng ngựa từ cơ sở dữ liệu
             List<Map<String, Object>> history = new ArrayList<>();
             ownerEntries.sort((e1, e2) -> {
                 Optional<Race> r1 = raceRepository.findById(e1.getRaceId());
@@ -471,9 +469,7 @@ public class PublicDataController {
                 return e2.getId().compareTo(e1.getId());
             });
 
-            int limit = Math.min(10, ownerEntries.size());
-            for (int i = 0; i < limit; i++) {
-                RaceEntry entry = ownerEntries.get(i);
+            for (RaceEntry entry : ownerEntries) {
                 Map<String, Object> hMap = new HashMap<>();
                 hMap.put("position", entry.getFinalPosition() != null ? String.valueOf(entry.getFinalPosition()) : (entry.getFinishTime() != null ? entry.getFinishTime() : "—"));
                 hMap.put("finishTime", entry.getFinishTime());

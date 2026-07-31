@@ -364,10 +364,17 @@ export default function RaceDaySchedule() {
                     <div style={{ borderRight: "1px solid rgba(255,255,255,0.05)", paddingRight: "1rem" }}>
                       <h5 style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>{$t("Assigned Referees", (localStorage.getItem('app-lang') || 'vi'))}</h5>
                       {item.referees && item.referees.length > 0 ? (
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
                           {item.referees.map((ref: any) => (
-                            <div key={ref.id} style={{ padding: "0.5rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.25rem", fontSize: "12px", color: "rgba(255,255,255,0.8)" }}>
-                              {ref.username}
+                            <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "0.375rem 0.625rem", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.375rem", fontSize: "11px", color: "#f4f2ec", fontWeight: 600 }}>
+                              {ref.avatar ? (
+                                <img src={ref.avatar} alt={ref.username} style={{ width: 20, height: 20, borderRadius: "50%", objectFit: "cover" }} />
+                              ) : (
+                                <span style={{ width: 20, height: 20, borderRadius: "50%", background: "#c9a227", color: "#000", fontSize: "10px", fontWeight: "bold", display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+                                  {(ref.username || "R").charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                              <span>{ref.username}</span>
                             </div>
                           ))}
                         </div>
