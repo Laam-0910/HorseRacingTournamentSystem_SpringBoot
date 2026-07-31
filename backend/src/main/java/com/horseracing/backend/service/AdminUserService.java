@@ -357,6 +357,13 @@ public class AdminUserService {
                 if ((sameJockey || sameHorse) && !"REJECTED".equalsIgnoreCase(other.getStatus()) && !"APPROVED".equalsIgnoreCase(other.getStatus())) {
                     other.setStatus("REJECTED");
                     raceEntryRepository.save(other);
+                    invitationRepository.findByJockeyIdAndRaceIdAndHorseId(other.getJockeyId(), other.getRaceId(), other.getHorseId())
+                            .stream()
+                            .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()))
+                            .forEach(i -> {
+                                i.setStatus("REJECTED");
+                                invitationRepository.save(i);
+                            });
                 }
             }
         }

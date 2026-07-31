@@ -71,6 +71,10 @@ function StatusBadge({ status }: { status: string }) {
     bg = "rgba(239,91,91,0.12)";
     fg = "#ef5b5b";
     bc = "rgba(239,91,91,0.3)";
+  } else if (s === "ENTRY_REJECTED") {
+    bg = "rgba(249,115,22,0.12)";
+    fg = "#f97316";
+    bc = "rgba(249,115,22,0.3)";
   } else if (s === "UNREGISTERED") {
     bg = "rgba(255,255,255,0.05)";
     fg = "#a0a0a0";
@@ -342,7 +346,11 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
     if (inv.status === "PENDING") return "PENDING";
     if (inv.status === "REJECTED") return "REJECTED";
     if (inv.status === "ACCEPTED") {
-      if (inv.entryStatus) return inv.entryStatus.toUpperCase();
+      if (inv.entryStatus) {
+        const es = inv.entryStatus.toUpperCase();
+        if (es === "REJECTED") return "ENTRY_REJECTED";
+        return es;
+      }
       return "ACCEPTED";
     }
     return inv.status ? inv.status.toUpperCase() : "OTHER";
@@ -354,7 +362,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
     PENDING: invitations.filter(i => getItemStatus(i) === "PENDING").length,
     PENDING_ADMIN: invitations.filter(i => getItemStatus(i) === "PENDING_ADMIN").length,
     APPROVED: invitations.filter(i => getItemStatus(i) === "APPROVED" || getItemStatus(i) === "ACCEPTED").length,
-    REJECTED: invitations.filter(i => getItemStatus(i) === "REJECTED").length,
+    REJECTED: invitations.filter(i => getItemStatus(i) === "REJECTED" || getItemStatus(i) === "ENTRY_REJECTED").length,
     FINISHED: invitations.filter(i => getItemStatus(i) === "FINISHED" || getItemStatus(i) === "OFFICIAL").length,
   };
 
@@ -366,7 +374,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
     if (filter === "PENDING") matchesStatus = st === "PENDING";
     else if (filter === "PENDING_ADMIN") matchesStatus = st === "PENDING_ADMIN";
     else if (filter === "APPROVED") matchesStatus = st === "APPROVED" || st === "ACCEPTED";
-    else if (filter === "REJECTED") matchesStatus = st === "REJECTED";
+    else if (filter === "REJECTED") matchesStatus = st === "REJECTED" || st === "ENTRY_REJECTED";
     else if (filter === "FINISHED") matchesStatus = st === "FINISHED" || st === "OFFICIAL";
 
     if (!matchesStatus) return false;
