@@ -2390,9 +2390,27 @@
   },
   "PENDING": {
     "en": "PENDING",
-    "vi": "CHƯA GIẢI QUYẾT",
-    "zh": "待办的",
+    "vi": "ĐANG CHỜ",
+    "zh": "待处理",
     "ja": "保留中"
+  },
+  "PENDING_ADMIN": {
+    "en": "PENDING ADMIN APPROVAL",
+    "vi": "CHỜ ADMIN DUYỆT",
+    "zh": "等待管理员批准",
+    "ja": "管理者承認待ち"
+  },
+  "ACCEPTED": {
+    "en": "ACCEPTED",
+    "vi": "ĐÃ CHẤP NHẬN",
+    "zh": "已接受",
+    "ja": "受諾済み"
+  },
+  "REJECTED": {
+    "en": "REJECTED",
+    "vi": "TỪ CHỐI",
+    "zh": "已拒绝",
+    "ja": "拒否"
   },
   "dd-mm-yyyy": {
     "en": "dd-mm-yyyy",
@@ -4961,5 +4979,53 @@
     "vi": "CẢNH BÁO: Bạn có chắc chắn muốn dừng trận đấu này ngay lập tức không?",
     "ja": "緊急：このレースを停止してもよろしいですか？",
     "zh": "紧急：您确定要停止这场比赛吗？"
+  },
+  "Assigned Referee:": {
+    "en": "Assigned Referee:",
+    "vi": "Trọng tài giám sát:",
+    "ja": "担当審判員:",
+    "zh": "指定裁判员:"
+  },
+  "Assigned Referees:": {
+    "en": "Assigned Referees:",
+    "vi": "Trọng tài giám sát:",
+    "ja": "担当審判員:",
+    "zh": "指定裁判员:"
+  },
+  "Trọng tài giám sát:": {
+    "en": "Assigned Referee:",
+    "vi": "Trọng tài giám sát:",
+    "ja": "担当審判員:",
+    "zh": "指定裁判员:"
+  },
+  "Referee:": {
+    "en": "Referee:",
+    "vi": "Trọng tài:",
+    "ja": "審判:",
+    "zh": "裁判:"
+  },
+  "Trọng tài:": {
+    "en": "Referee:",
+    "vi": "Trọng tài:",
+    "ja": "審判:",
+    "zh": "裁判:"
+  },
+  "Invitation:": {
+    "en": "Invitation:",
+    "vi": "Lời mời:",
+    "ja": "招待:",
+    "zh": "邀请:"
+  },
+  "System Referee": {
+    "en": "System Referee",
+    "vi": "Trọng tài hệ thống",
+    "ja": "システム審判員",
+    "zh": "系统裁判"
+  },
+  "Search meeting, owner, horse name...": {
+    "en": "Search meeting, owner, horse name...",
+    "vi": "Tìm kiếm tên giải đấu, chủ ngựa, tên ngựa...",
+    "ja": "大会名、馬主名、馬名で検索...",
+    "zh": "按赛事名称、马主、马名搜索..."
   }
 }

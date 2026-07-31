@@ -9,8 +9,13 @@ echo   Starting all services...
 echo  ================================================
 echo.
 
+:: ── Dọn dẹp các tiến trình cũ chạy ẩn trên port 8080 và 5000 ────────────────────
+echo [0/3] Clearing processes occupying ports 8080 and 5000...
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8080 ^| findstr LISTENING 2^>nul') do taskkill /F /PID %%a >nul 2>&1
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :5000 ^| findstr LISTENING 2^>nul') do taskkill /F /PID %%a >nul 2>&1
+
 :: ── Cài Python dependencies nếu chưa có ──────────────────────────────────────
-echo [1/2] Checking Python AI dependencies...
+echo [1/3] Checking Python AI dependencies...
 pip show fastapi >nul 2>&1
 IF %ERRORLEVEL% NEQ 0 (
     echo     Installing Python packages...
@@ -22,7 +27,7 @@ IF %ERRORLEVEL% NEQ 0 (
 
 :: ── Start Backend (Spring Boot + Python AI) ──────────────────────────────────
 echo.
-echo [2/2] Starting Backend (Spring Boot)...
+echo [2/3] Starting Backend (Spring Boot)...
 start "Backend - Spring Boot" cmd /k "cd backend && mvnw.cmd spring-boot:run"
 
 :: ── Doi backend khoi dong mot chut roi moi start frontend ────────────────────
@@ -31,7 +36,7 @@ timeout /t 5 /nobreak >nul
 
 :: ── Start Frontend ────────────────────────────────────────────────────────────
 echo.
-echo [3/2] Starting Frontend (Vite)...
+echo [3/3] Starting Frontend (Vite)...
 start "Frontend - Vite" cmd /k "cd frontend && npm run dev"
 
 echo.
