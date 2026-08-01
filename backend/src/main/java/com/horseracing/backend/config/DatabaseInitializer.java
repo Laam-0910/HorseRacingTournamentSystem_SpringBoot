@@ -171,6 +171,18 @@ public class DatabaseInitializer implements InitializingBean {
                 "    ALTER TABLE RaceInvitation ADD hire_fee DECIMAL(12,2) NULL DEFAULT 500.00; " +
                 "END"
             );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('RaceInvitation', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'jockey_prize_percentage') " +
+                "BEGIN " +
+                "    ALTER TABLE RaceInvitation ADD jockey_prize_percentage DECIMAL(5,2) NULL DEFAULT 20.00; " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('RaceEntry', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceEntry') AND name = 'jockey_prize_percentage') " +
+                "BEGIN " +
+                "    ALTER TABLE RaceEntry ADD jockey_prize_percentage DECIMAL(5,2) NULL DEFAULT 20.00; " +
+                "END"
+            );
 
             // 8.3 Thêm cột wallet_balance vào bảng [User]
             jdbcTemplate.execute(
@@ -191,8 +203,13 @@ public class DatabaseInitializer implements InitializingBean {
                 "        transaction_type VARCHAR(50) NOT NULL, " +
                 "        description NVARCHAR(MAX) NULL, " +
                 "        created_at DATETIME DEFAULT GETDATE(), " +
-                "        CONSTRAINT FK_WalletTx_User FOREIGN KEY (user_id) REFERENCES [User](id) " +
-                "    ); " +
+                "    ); "
+            );
+            // 8.5 Khởi tạo cấu hình mặc định cho Phí thuê Nài ngựa trong SystemConfig
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'DEFAULT_JOCKEY_HIRE_FEE') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('DEFAULT_JOCKEY_HIRE_FEE', '500.00', 'Default hire fee paid by horse owner to jockey per accepted mount ($100 - $10,000)'); " +
                 "END"
             );
 

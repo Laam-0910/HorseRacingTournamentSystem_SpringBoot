@@ -961,12 +961,13 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
 
 function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invitations, onSendInvitation, onViewProfile, refereesMap }: {
   race: any; isReg: boolean; eligibleHorses: any[]; jockeys: any[]; bookedJockeysMap?: Record<number, number[]>; invitations: any[];
-  onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
+  onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number; jockeyPrizePercentage?: number }) => void;
   onViewProfile: (id: number) => void;
   refereesMap?: Record<number, any[]>;
 }) {
   const [horseId, setHorseId] = useState("");
   const [jockeyId, setJockeyId] = useState("");
+  const [jockeyPrizePct, setJockeyPrizePct] = useState("20");
 
   const filteredJockeys = jockeys.filter((j: any) => {
     const bookedIds = bookedJockeysMap?.[race.id] || [];
@@ -998,8 +999,10 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!horseId || !jockeyId) return;
-    onSendInvitation({ horseId: parseInt(horseId), raceId: race.id, jockeyId: parseInt(jockeyId) });
-    setHorseId(""); setJockeyId("");
+    const pct = parseFloat(jockeyPrizePct);
+    const validPct = isNaN(pct) ? 20 : Math.max(20, Math.min(50, pct));
+    onSendInvitation({ horseId: parseInt(horseId), raceId: race.id, jockeyId: parseInt(jockeyId), jockeyPrizePercentage: validPct });
+    setHorseId(""); setJockeyId(""); setJockeyPrizePct("20");
   };
 
   const assignedReferees = refereesMap?.[race.id] || [];
@@ -1075,6 +1078,22 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
                       🔍 View Jockey Profile
                     </button>
                   )}
+                </div>
+              <div>
+                <label style={labelStyle}>{$t("Jockey Prize Share % (20% - 50%)", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <input
+                    type="number"
+                    min="20"
+                    max="50"
+                    step="1"
+                    value={jockeyPrizePct}
+                    onChange={e => setJockeyPrizePct(e.target.value)}
+                    required
+                    style={{ ...inputStyle, width: "80px", textAlign: "center" }}
+                  />
+                  <span style={{ fontSize: "0.75rem", color: "#fbbf24", fontFamily: "monospace", fontWeight: 700 }}>%</span>
+                  <span style={{ fontSize: "0.65rem", color: "#a0a0a0", fontFamily: "monospace" }}>(Owner: {100 - (parseFloat(jockeyPrizePct) || 20)}%)</span>
                 </div>
               </div>
               <button type="submit" style={{ width: "100%", padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}>
@@ -1237,6 +1256,10 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
                       >
                         {inv.jockeyName ?? `Jockey #${inv.jockeyId}`}
                       </button>
+                    </div>
+                    <div>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Jockey Share:", (localStorage.getItem('app-lang') || 'vi'))} </span>
+                      <strong style={{ color: "#fbbf24", fontFamily: "monospace" }}>{inv.jockeyPrizePercentage ?? 20}%</strong>
                     </div>
                     {assignedRefs.length > 0 && (
                       <div style={{ width: "100%", display: "flex", alignItems: "center", gap: "6px" }}>
@@ -1552,12 +1575,12 @@ export default function HorseOwner() {
     } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to register horse(s).")); }
   };
 
-  const handleSendInvitation = async (form: { horseId: number; raceId: number; jockeyId: number }) => {
+  const handleSendInvitation = async (form: { horseId: number; raceId: number; jockeyId: number; jockeyPrizePercentage?: number }) => {
     if (!user) return;
     const lang = localStorage.getItem("app-lang") || "vi";
     try {
       setErrorMsg(""); setSuccessMsg("");
-      await api.post("/invitations", { ...form, ownerId: user.id, status: "PENDING" });
+      await api.post("/invitations", { ...form, ownerId: user.id, status: "PENDING", jockeyPrizePercentage: form.jockeyPrizePercentage ?? 20 });
       setSuccessMsg(lang === "vi" ? "Đã gửi lời mời tới nài ngựa." : "Invitation sent to jockey.");
       fetchData();
     } catch (err: any) {

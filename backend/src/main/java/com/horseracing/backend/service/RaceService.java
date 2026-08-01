@@ -70,7 +70,7 @@ public class RaceService {
 
         Race race = raceMapper.toEntity(dto); // Chuyển đổi từ RaceDTO sang Race Entity
 
-        // Auto-populate minRating and maxRating from SeasonClassRule
+        // Auto-populate minRating, maxRating, and default purse from SeasonClassRule
         if (race.getRaceMeetingId() != null && race.getClassLevel() != null) { // Kiểm tra nếu có thông tin Ngày hội đua và Hạng đua Class
             Optional<RaceMeeting> meetingOpt = raceMeetingRepository.findById(race.getRaceMeetingId()); // Tra cứu thông tin Ngày hội đua theo ID
             if (meetingOpt.isPresent()) { // Nếu tìm thấy Ngày hội đua
@@ -89,10 +89,31 @@ public class RaceService {
                             
                             // Tự động điền tiền thưởng Purse nếu chưa nhập hoặc bằng 0
                             if (race.getPurse() == null || race.getPurse().compareTo(BigDecimal.ZERO) <= 0) {
+                                BigDecimal defaultPurse = null;
                                 if (rule.getMinPrize() != null && rule.getMinPrize().compareTo(BigDecimal.ZERO) > 0) {
-                                    race.setPurse(rule.getMinPrize());
+                                    defaultPurse = rule.getMinPrize();
                                 } else if (rule.getMaxPrize() != null && rule.getMaxPrize().compareTo(BigDecimal.ZERO) > 0) {
-                                    race.setPurse(rule.getMaxPrize());
+                                    defaultPurse = rule.getMaxPrize();
+                                }
+
+                                // Kiểm tra default purse có vừa budget remaining không
+                                if (defaultPurse != null) {
+                                    RaceMeeting meeting = meetingOpt.get();
+                                    BigDecimal totalBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+                                    List<Race> existingRaces = raceRepository.findByRaceMeetingId(race.getRaceMeetingId());
+                                    BigDecimal allocated = existingRaces.stream()
+                                            .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus()))
+                                            .map(r -> r.getPurse() != null ? r.getPurse() : BigDecimal.ZERO)
+                                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                    BigDecimal remaining = totalBudget.subtract(allocated);
+                                    if (remaining.compareTo(BigDecimal.ZERO) > 0) {
+                                        // Cap auto-fill purse to remaining budget if it exceeds
+                                        if (defaultPurse.compareTo(remaining) > 0) {
+                                            defaultPurse = remaining;
+                                        }
+                                        race.setPurse(defaultPurse);
+                                    }
+                                    // If remaining <= 0, don't auto-fill; let the budget validation catch it
                                 }
                             }
                             break; // Thoát vòng lặp tìm kiếm quy định
@@ -119,7 +140,9 @@ public class RaceService {
 
         race.setStatus("SCHEDULED"); // Đặt trạng thái khởi tạo trận đua là SCHEDULED
         validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries()); // Kiểm tra giới hạn số lượng ngựa tối thiểu và tối đa
+        validatePurseWithinClassRange(race.getRaceMeetingId(), race.getClassLevel(), race.getPurse()); // Kiểm tra purse nằm trong khoảng [minPrize, maxPrize] của SeasonClassRule
         validateRacePurseAgainstMeetingBudget(race.getRaceMeetingId(), race.getPurse(), null);
+        validateClassPurseHierarchy(race.getRaceMeetingId(), race.getClassLevel(), race.getPurse(), null); // Kiểm tra thứ tự tiền thưởng theo hạng: Class 1 > 2 > 3 > 4 > 5
         race.updatePrizeDistribution(); // Tự động tính toán phân chia tiền thưởng (Top 1: 50%, Top 2: 30%, Top 3: 20%)
         Race savedRace = raceRepository.save(race); // Lưu đối tượng trận đua vào cơ sở dữ liệu
 
@@ -178,7 +201,9 @@ public class RaceService {
         }
 
         validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries()); // Kiểm tra giới hạn số lượng ngựa đăng ký tham gia
+        validatePurseWithinClassRange(race.getRaceMeetingId(), race.getClassLevel(), race.getPurse()); // Kiểm tra purse nằm trong khoảng [minPrize, maxPrize] của SeasonClassRule
         validateRacePurseAgainstMeetingBudget(race.getRaceMeetingId(), race.getPurse(), id); // Validate purse against parent RaceMeeting budget
+        validateClassPurseHierarchy(race.getRaceMeetingId(), race.getClassLevel(), race.getPurse(), id); // Kiểm tra thứ tự tiền thưởng theo hạng: Class 1 > 2 > 3 > 4 > 5
         race.updatePrizeDistribution(); // Tự động cập nhật phân chia tiền thưởng
         Race savedRace = raceRepository.save(race); // Lưu các thay đổi của trận đua vào DB
         String meetingName = raceMeetingRepository.findById(savedRace.getRaceMeetingId()) // Trích xuất tên Ngày hội đua tương ứng
@@ -409,12 +434,116 @@ public class RaceService {
                     .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus()))
                     .map(r -> r.getPurse() != null ? r.getPurse() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal availableBudget = totalBudget.subtract(allocatedPurses);
-            if (availableBudget.compareTo(BigDecimal.ZERO) < 0) {
-                availableBudget = BigDecimal.ZERO;
+            BigDecimal newTotal = allocatedPurses.add(newPurse);
+            if (newTotal.compareTo(totalBudget) > 0) {
+                BigDecimal availableBudget = totalBudget.subtract(allocatedPurses);
+                if (availableBudget.compareTo(BigDecimal.ZERO) < 0) {
+                    availableBudget = BigDecimal.ZERO;
+                }
+                throw new IllegalArgumentException(String.format(
+                        "Race purse ($%,.2f) exceeds remaining Race Meeting budget ($%,.2f). Total allocated would be $%,.2f / $%,.2f.",
+                        newPurse, availableBudget, newTotal, totalBudget));
             }
-            if (newPurse.compareTo(availableBudget) > 0) {
-                throw new IllegalArgumentException(String.format("Race purse ($%,.2f) exceeds remaining Race Meeting budget ($%,.2f).", newPurse, availableBudget));
+        }
+    }
+
+    /**
+     * Extracts the numeric class number from a class level string (e.g. "Class 1" -> 1, "Class 5" -> 5).
+     * Returns -1 if the class level does not match the expected pattern.
+     */
+    private int extractClassNumber(String classLevel) {
+        if (classLevel == null) return -1;
+        String normalized = classLevel.trim().toLowerCase();
+        if (!normalized.startsWith("class")) return -1;
+        String numPart = normalized.replace("class", "").trim();
+        try {
+            return Integer.parseInt(numPart);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Validates that purse amounts follow class hierarchy within the same Race Meeting:
+     * Class 1 purse > Class 2 purse > Class 3 purse > Class 4 purse > Class 5 purse.
+     * A higher class (lower number) must always have a strictly greater purse than a lower class (higher number).
+     */
+    private void validateClassPurseHierarchy(Integer meetingId, String newClassLevel, BigDecimal newPurse, Integer excludeRaceId) {
+        if (meetingId == null || newClassLevel == null || newPurse == null || newPurse.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        int newClassNum = extractClassNumber(newClassLevel);
+        if (newClassNum < 1 || newClassNum > 5) return; // Chỉ validate Class 1-5
+
+        List<Race> racesInMeeting = raceRepository.findByRaceMeetingId(meetingId);
+        for (Race existingRace : racesInMeeting) {
+            // Bỏ qua chính race đang được update
+            if (excludeRaceId != null && existingRace.getId().equals(excludeRaceId)) continue;
+            // Bỏ qua các race đã bị hủy
+            if ("CANCELLED".equalsIgnoreCase(existingRace.getStatus())) continue;
+
+            int existingClassNum = extractClassNumber(existingRace.getClassLevel());
+            if (existingClassNum < 1 || existingClassNum > 5) continue;
+            BigDecimal existingPurse = existingRace.getPurse() != null ? existingRace.getPurse() : BigDecimal.ZERO;
+            if (existingPurse.compareTo(BigDecimal.ZERO) <= 0) continue;
+
+            // newClassNum nhỏ hơn => class cao hơn => purse phải LỚN HƠN
+            if (newClassNum < existingClassNum) {
+                if (newPurse.compareTo(existingPurse) <= 0) {
+                    throw new IllegalArgumentException(String.format(
+                            "Class %d purse ($%,.2f) must be greater than Class %d purse ($%,.2f). Higher class must have higher prize money.",
+                            newClassNum, newPurse, existingClassNum, existingPurse));
+                }
+            }
+            // newClassNum lớn hơn => class thấp hơn => purse phải NHỎ HƠN
+            else if (newClassNum > existingClassNum) {
+                if (newPurse.compareTo(existingPurse) >= 0) {
+                    throw new IllegalArgumentException(String.format(
+                            "Class %d purse ($%,.2f) must be less than Class %d purse ($%,.2f). Lower class must have lower prize money.",
+                            newClassNum, newPurse, existingClassNum, existingPurse));
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates that the race purse falls within the [minPrize, maxPrize] range defined in SeasonClassRule.
+     * This prevents any class from being assigned an unreasonably large or small purse.
+     * Since the prize ranges are non-overlapping (Class 1 min > Class 2 max > Class 2 min > ...),
+     * this inherently guarantees class hierarchy regardless of creation order.
+     */
+    private void validatePurseWithinClassRange(Integer meetingId, String classLevel, BigDecimal purse) {
+        if (meetingId == null || classLevel == null || purse == null || purse.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        Optional<RaceMeeting> meetingOpt = raceMeetingRepository.findById(meetingId);
+        if (!meetingOpt.isPresent()) return;
+        Integer seasonId = meetingOpt.get().getSeasonId();
+        if (seasonId == null) return;
+
+        List<SeasonClassRule> rules = seasonClassRuleRepository.findBySeasonId(seasonId);
+        String normalizedLevel = classLevel.trim().toLowerCase();
+        if (!normalizedLevel.startsWith("class")) {
+            normalizedLevel = "class " + normalizedLevel;
+        }
+
+        for (SeasonClassRule rule : rules) {
+            String ruleLevel = rule.getClassLevel() != null ? rule.getClassLevel().trim().toLowerCase() : "";
+            if (ruleLevel.equals(normalizedLevel)) {
+                BigDecimal minPrize = rule.getMinPrize();
+                BigDecimal maxPrize = rule.getMaxPrize();
+
+                if (minPrize != null && purse.compareTo(minPrize) < 0) {
+                    throw new IllegalArgumentException(String.format(
+                            "Race purse ($%,.2f) is below the minimum allowed for %s ($%,.2f). Please enter a purse between $%,.2f and $%,.2f.",
+                            purse, classLevel, minPrize, minPrize, maxPrize != null ? maxPrize : minPrize));
+                }
+                if (maxPrize != null && purse.compareTo(maxPrize) > 0) {
+                    throw new IllegalArgumentException(String.format(
+                            "Race purse ($%,.2f) exceeds the maximum allowed for %s ($%,.2f). Please enter a purse between $%,.2f and $%,.2f.",
+                            purse, classLevel, maxPrize, minPrize != null ? minPrize : BigDecimal.ZERO, maxPrize));
+                }
+                break;
             }
         }
     }

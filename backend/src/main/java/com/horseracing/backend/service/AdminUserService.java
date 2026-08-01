@@ -349,6 +349,25 @@ public class AdminUserService {
         target.setStatus("APPROVED");
         raceEntryRepository.save(target);
 
+        // Chuyển tiền tạm giữ Escrow (Hire Fee) từ hệ thống sang Ví của Jockey khi Admin phê duyệt
+        invitationRepository.findByJockeyIdAndRaceIdAndHorseId(target.getJockeyId(), target.getRaceId(), target.getHorseId())
+                .stream()
+                .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()))
+                .forEach(i -> {
+                    BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500.00");
+                    if ("HELD".equalsIgnoreCase(i.getPayoutStatus()) && hireFee.compareTo(BigDecimal.ZERO) > 0 && i.getJockeyId() != null) {
+                        Optional<User> jockeyUserOpt = userRepository.findById(i.getJockeyId());
+                        if (jockeyUserOpt.isPresent()) {
+                            User jockey = jockeyUserOpt.get();
+                            BigDecimal jWallet = jockey.getWalletBalance() != null ? jockey.getWalletBalance() : BigDecimal.ZERO;
+                            jockey.setWalletBalance(jWallet.add(hireFee));
+                            userRepository.save(jockey);
+                        }
+                        i.setPayoutStatus("PAID");
+                        invitationRepository.save(i);
+                    }
+                });
+
         // 4. Auto-reject other pending entries for the same jockey or horse in this race
         for (RaceEntry other : raceEntries) {
             if (!other.getId().equals(target.getId())) {
@@ -362,6 +381,18 @@ public class AdminUserService {
                             .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()))
                             .forEach(i -> {
                                 i.setStatus("REJECTED");
+                                // Nếu có tiền cọc bị hủy do trùng lặp, hoàn tiền về cho Owner
+                                BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500.00");
+                                if ("HELD".equalsIgnoreCase(i.getPayoutStatus()) && hireFee.compareTo(BigDecimal.ZERO) > 0 && i.getOwnerId() != null) {
+                                    Optional<User> ownerOpt = userRepository.findById(i.getOwnerId());
+                                    if (ownerOpt.isPresent()) {
+                                        User owner = ownerOpt.get();
+                                        BigDecimal oWallet = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                                        owner.setWalletBalance(oWallet.add(hireFee));
+                                        userRepository.save(owner);
+                                    }
+                                    i.setPayoutStatus("REFUNDED");
+                                }
                                 invitationRepository.save(i);
                             });
                 }
@@ -373,8 +404,6 @@ public class AdminUserService {
 
         autoAssignGates(target.getRaceId());
         autoCalculateWeights(target.getRaceId());
-        autoAssignGates(entry.getRaceId()); // Tự động xáo trộn và gán cổng xuất phát cho các thí sinh đã duyệt
-        autoCalculateWeights(entry.getRaceId()); // Tự động tính toán cân nặng handicap và cân mang thực tế
     }
 
     // Từ chối lượt đăng ký thi đấu của ngựa/nài trong trận đua
@@ -386,13 +415,26 @@ public class AdminUserService {
         entry.setStatus("REJECTED"); // Cập nhật trạng thái sang REJECTED
         raceEntryRepository.save(entry); // Lưu đối tượng bị từ chối vào DB
 
-        // Reject the corresponding invitation so the jockey is freed up
-        // Đặt trạng thái lời mời tương ứng sang REJECTED để giải phóng nài ngựa nhận lời mời khác
+        // Reject the corresponding invitation so the jockey is freed up, and refund Escrow hire fee to Owner
         invitationRepository.findByJockeyIdAndRaceIdAndHorseId(entry.getJockeyId(), entry.getRaceId(), entry.getHorseId())
                 .stream()
                 .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()))
                 .forEach(i -> {
                     i.setStatus("REJECTED"); // Đổi trạng thái lời mời thành REJECTED
+
+                    // Hoàn trả 100% tiền tạm giữ Escrow ($500) về cho ví Owner
+                    BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500.00");
+                    if ("HELD".equalsIgnoreCase(i.getPayoutStatus()) && hireFee.compareTo(BigDecimal.ZERO) > 0 && i.getOwnerId() != null) {
+                        Optional<User> ownerOpt = userRepository.findById(i.getOwnerId());
+                        if (ownerOpt.isPresent()) {
+                            User owner = ownerOpt.get();
+                            BigDecimal oWallet = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                            owner.setWalletBalance(oWallet.add(hireFee));
+                            userRepository.save(owner);
+                        }
+                        i.setPayoutStatus("REFUNDED");
+                    }
+
                     invitationRepository.save(i); // Lưu lời mời đã cập nhật vào DB
                 });
 
@@ -400,7 +442,6 @@ public class AdminUserService {
         notificationService.notifyPartiesOnRaceEntryDecision(entry, false);
 
         autoCalculateWeights(entry.getRaceId());
-        autoCalculateWeights(entry.getRaceId()); // Tính toán lại cân nặng của các lượt đua còn lại
     }
 
     // Phê duyệt đăng ký Nài ngựa tham gia Ngày hội đua

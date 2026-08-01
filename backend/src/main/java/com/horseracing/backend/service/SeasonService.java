@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -120,10 +121,74 @@ public class SeasonService {
     // Ghi nhận lưu các quy định phân hạng điểm Rating của mùa giải
     @Transactional
     public void saveSeasonRules(Integer seasonId, List<SeasonClassRuleDTO> rules) {
+        validateSeasonClassRulesHierarchy(rules);
         for (SeasonClassRuleDTO dto : rules) {
             SeasonClassRule rule = seasonClassRuleMapper.toEntity(dto);
             rule.setSeasonId(seasonId);
             seasonClassRuleRepository.save(rule);
+        }
+    }
+
+    /**
+     * Validates that season class rules adhere to business rules:
+     * 1) For each class: 0 < minPrize < maxPrize
+     * 2) Class 1 minPrize > Class 2 maxPrize
+     * 3) Class 2 minPrize > Class 3 maxPrize
+     * 4) Class 3 minPrize > Class 4 maxPrize
+     * 5) Class 4 minPrize > Class 5 maxPrize
+     * 6) Sum of minPrizes for all classes <= $10,000,000 (Race Meeting min budget limit)
+     */
+    private void validateSeasonClassRulesHierarchy(List<SeasonClassRuleDTO> rules) {
+        if (rules == null || rules.isEmpty()) return;
+
+        Map<Integer, SeasonClassRuleDTO> classMap = new HashMap<>();
+        BigDecimal totalMinPrizeSum = BigDecimal.ZERO;
+
+        for (SeasonClassRuleDTO rule : rules) {
+            if (rule.getClassLevel() == null) continue;
+            String level = rule.getClassLevel().trim().toLowerCase();
+            int classNum = -1;
+            if (level.startsWith("class")) {
+                try {
+                    classNum = Integer.parseInt(level.replace("class", "").trim());
+                } catch (NumberFormatException ignored) {}
+            }
+            if (classNum < 1 || classNum > 5) continue;
+
+            BigDecimal minPrize = rule.getMinPrize();
+            BigDecimal maxPrize = rule.getMaxPrize();
+
+            if (minPrize == null || minPrize.compareTo(BigDecimal.ZERO) <= 0) {
+                throw new IllegalArgumentException(String.format("Minimum prize money for %s must be greater than $0.00.", rule.getClassLevel()));
+            }
+            if (maxPrize == null || maxPrize.compareTo(minPrize) <= 0) {
+                throw new IllegalArgumentException(String.format("Maximum prize money ($%,.2f) must be strictly greater than minimum prize money ($%,.2f) for %s.",
+                        maxPrize != null ? maxPrize : BigDecimal.ZERO, minPrize, rule.getClassLevel()));
+            }
+
+            classMap.put(classNum, rule);
+            totalMinPrizeSum = totalMinPrizeSum.add(minPrize);
+        }
+
+        // Check non-overlapping hierarchy: Class 1 Min > Class 2 Max > Class 2 Min > Class 3 Max ...
+        for (int i = 1; i < 5; i++) {
+            SeasonClassRuleDTO higher = classMap.get(i);
+            SeasonClassRuleDTO lower = classMap.get(i + 1);
+            if (higher != null && lower != null && higher.getMinPrize() != null && lower.getMaxPrize() != null) {
+                if (higher.getMinPrize().compareTo(lower.getMaxPrize()) <= 0) {
+                    throw new IllegalArgumentException(String.format(
+                            "Class %d minimum prize ($%,.2f) must be strictly greater than Class %d maximum prize ($%,.2f). Higher classes must offer higher prizes.",
+                            i, higher.getMinPrize(), i + 1, lower.getMaxPrize()));
+                }
+            }
+        }
+
+        // Check against Race Meeting min budget limit ($10,000,000)
+        BigDecimal maxAllowedSum = new BigDecimal("10000000.00");
+        if (totalMinPrizeSum.compareTo(maxAllowedSum) > 0) {
+            throw new IllegalArgumentException(String.format(
+                    "Total minimum prizes for all classes ($%,.2f) exceeds the minimum Race Meeting budget limit ($%,.2f).",
+                    totalMinPrizeSum, maxAllowedSum));
         }
     }
 
