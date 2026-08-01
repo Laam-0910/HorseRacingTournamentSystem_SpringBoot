@@ -129,11 +129,11 @@ export default function RaceDaySchedule() {
     const minVal = parseInt(minEntries);
     const maxVal = parseInt(maxEntries);
     if (isNaN(minVal) || minVal <= 1) {
-      alert($t("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1).", (localStorage.getItem('app-lang') || 'vi')));
+      alert($t("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1.", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
     if (isNaN(maxVal) || maxVal >= 15) {
-      alert($t("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15).", (localStorage.getItem('app-lang') || 'vi')));
+      alert($t("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15.", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
     if (maxVal < minVal) {
@@ -173,10 +173,9 @@ export default function RaceDaySchedule() {
       setStartTime("");
       fetchRacesDetails(selectedMeetingId); // Tải lại danh sách
     } catch (err: any) {
-      const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
       // Xử lý lỗi trùng giờ chạy trong cùng ngày hội đua
       if (err.message?.includes("DUPLICATE_RACE_TIME")) {
-        alert(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
+        alert("Another race is already scheduled at this exact time for this meeting.");
       } else {
         alert(getErrMsg(err, "Failed to schedule race: "));
       }

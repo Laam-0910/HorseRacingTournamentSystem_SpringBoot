@@ -143,7 +143,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
     let isComponentMounted = true;
 
     const connect = () => {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+      const apiBase = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname || "localhost"}:8080/api`;
       const hostPart = apiBase.replace(/^https?:\/\//, "").split("/")[0];
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${hostPart}/ws/chat/${selectedRace.id}`;

@@ -2,11 +2,11 @@
   "Lịch sử đua": {
     "en": "Race History"
   },
-  "Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1).": {
-    "en": "Minimum entries must be greater than 1 (> 1)."
+  "Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1.": {
+    "en": "Minimum entries must be greater than 1."
   },
-  "Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15).": {
-    "en": "Maximum entries must be less than 15 (< 15)."
+  "Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15.": {
+    "en": "Maximum entries must be less than 15."
   },
   "Số lượng ngựa tối thiểu không được lớn hơn số lượng tối đa.": {
     "en": "Minimum entries cannot be greater than maximum entries."

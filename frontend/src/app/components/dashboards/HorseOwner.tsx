@@ -534,8 +534,7 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
     }
     
     if (age < 2 || age > 10) {
-      const isVi = (localStorage.getItem('app-lang') || 'vi') === 'vi';
-      alert(isVi ? "Tuổi của ngựa đăng ký phải nằm trong khoảng từ 2 đến 10 tuổi." : "Horse age must be between 2 and 10 years old.");
+      alert("Horse age must be between 2 and 10 years old.");
       return false;
     }
 
@@ -713,11 +712,11 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
             ))}          <div>
             <label style={labelStyle}>{$t("Gender / Sex", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <select value={sex} onChange={e => setSex(e.target.value)} style={inputStyle}>
-              <option value="Gelding">Gelding (Thiến)</option>
-              <option value="Colt">Colt (Đực non)</option>
-              <option value="Horse">Horse (Đực trưởng thành)</option>
-              <option value="Filly">Filly (Cái non)</option>
-              <option value="Mare">Mare (Cái trưởng thành)</option>
+              <option value="Gelding">Gelding</option>
+              <option value="Colt">Colt</option>
+              <option value="Horse">Horse</option>
+              <option value="Filly">Filly</option>
+              <option value="Mare">Mare</option>
             </select>
           </div>
             <InlineDatePicker label={$t("Date of Birth", (localStorage.getItem('app-lang') || 'vi'))} value={dateOfBirth} onChange={setDateOfBirth} />
@@ -801,11 +800,11 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
               <div>
                 <label style={labelStyle}>{$t("Gender / Sex", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <select value={editSex} onChange={e => setEditSex(e.target.value)} style={inputStyle}>
-                  <option value="Gelding">Gelding (Thiến)</option>
-                  <option value="Colt">Colt (Đực non)</option>
-                  <option value="Horse">Horse (Đực trưởng thành)</option>
-                  <option value="Filly">Filly (Cái non)</option>
-                  <option value="Mare">Mare (Cái trưởng thành)</option>
+                  <option value="Gelding">Gelding</option>
+                  <option value="Colt">Colt</option>
+                  <option value="Horse">Horse</option>
+                  <option value="Filly">Filly</option>
+                  <option value="Mare">Mare</option>
                 </select>
               </div>
               <InlineDatePicker label={$t("Date of Birth", (localStorage.getItem('app-lang') || 'vi'))} value={editDob} onChange={setEditDob} />

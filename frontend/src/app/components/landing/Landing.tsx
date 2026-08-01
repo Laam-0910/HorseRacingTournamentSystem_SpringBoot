@@ -951,7 +951,7 @@ export default function Landing() {
           bg,
           title: n.title,
           desc: n.message,
-          time: lang === "vi" ? "Thông báo" : "Notification"
+          time: "Notification"
         });
       });
     }
@@ -965,9 +965,7 @@ export default function Landing() {
         color: "#c9a227",
         bg: "rgba(201,162,39,0.1)",
         title: "Active Seasons",
-        desc: lang === "vi" 
-          ? `Mùa giải ${activeSeason.name} đang diễn ra! Đăng ký tham gia ngay.`
-          : `Season ${activeSeason.name} is currently active! Register now.`,
+        desc: `Season ${activeSeason.name} is currently active! Register now.`,
         time: "Active"
       });
     }
@@ -993,9 +991,7 @@ export default function Landing() {
           color: "#60a5fa",
           bg: "rgba(96,165,250,0.1)",
           title: "Upcoming Event",
-          desc: lang === "vi"
-            ? `${upcomingMeeting.name} sẽ bắt đầu tại ${upcomingMeeting.venue}.`
-            : `${upcomingMeeting.name} starts soon at ${upcomingMeeting.venue}.`,
+          desc: `${upcomingMeeting.name} starts soon at ${upcomingMeeting.venue}.`,
           time: formatDate(upcomingMeeting.startDate)
         });
       }
@@ -1009,9 +1005,7 @@ export default function Landing() {
           color: "#ef4444",
           bg: "rgba(239,68,68,0.1)",
           title: "Incidents Pending Decision",
-          desc: lang === "vi"
-            ? `Có ${pendingViolations.length} sự cố vi phạm đang chờ xử lý quyết định phạt.`
-            : `There are ${pendingViolations.length} violation reports awaiting penalty decision.`,
+          desc: `There are ${pendingViolations.length} violation reports awaiting penalty decision.`,
           time: "Admin Alert"
         });
       }
@@ -1024,9 +1018,7 @@ export default function Landing() {
           color: "#fbbf24",
           bg: "rgba(251,191,36,0.1)",
           title: "Races Pending Results",
-          desc: lang === "vi"
-            ? `Có ${unprocessRaces.length} trận đua đã kết thúc cần được duyệt kết quả chính thức.`
-            : `There are ${unprocessRaces.length} finished races awaiting official results processing.`,
+          desc: `There are ${unprocessRaces.length} finished races awaiting official results processing.`,
           time: "Action Required"
         });
       }
@@ -1043,9 +1035,7 @@ export default function Landing() {
           color: "#ef4444",
           bg: "rgba(239,68,68,0.1)",
           title: "Horse Violation Warning",
-          desc: lang === "vi"
-            ? `Ngựa ${latestOwnerViol.horseName || "của bạn"} bị báo cáo lỗi: ${latestOwnerViol.violation?.description || "Vi phạm luật chạy"}`
-            : `Your horse ${latestOwnerViol.horseName || ""} was reported for: ${latestOwnerViol.violation?.description || "Rule violation"}`,
+          desc: `Your horse ${latestOwnerViol.horseName || ""} was reported for: ${latestOwnerViol.violation?.description || "Rule violation"}`,
           time: "Alert"
         });
       }
@@ -1282,7 +1272,7 @@ export default function Landing() {
             ) : (() => {
               // Lấy 1 trận làm đại diện (Ưu tiên trận đang phát WebCam trước)
               const r = liveRaces.find(race => race.streamMode === "WEBCAM") || liveRaces[0];
-              const embedUrl = r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "";
+              const embedUrl = (r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "") || "";
               const useWebCam = r.streamMode === "WEBCAM" || !r.youtubeLiveUrl;
 
               return (

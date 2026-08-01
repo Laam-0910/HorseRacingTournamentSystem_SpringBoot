@@ -163,11 +163,11 @@ export default function Race() {
     const minVal = parseInt(minEntries, 10);
     const maxVal = parseInt(maxEntries, 10);
     if (isNaN(minVal) || minVal <= 1) {
-      setError($t("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1).", (localStorage.getItem('app-lang') || 'vi')));
+      setError($t("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1.", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
     if (isNaN(maxVal) || maxVal >= 15) {
-      setError($t("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15).", (localStorage.getItem('app-lang') || 'vi')));
+      setError($t("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15.", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
     if (maxVal < minVal) {
@@ -218,10 +218,9 @@ export default function Race() {
         throw new Error(res.error || "Failed to create race.");
       }
     } catch (err: any) {
-      const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
       // Báo lỗi trùng lặp thời gian trong cùng buổi hội đua
       if (err.message?.includes("DUPLICATE_RACE_TIME")) {
-        setError(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
+        setError("Another race is already scheduled at this exact time for this meeting.");
       } else {
         setError(getErrMsg(err, "Failed to create race."));
       }
@@ -255,11 +254,11 @@ export default function Race() {
     const minVal = parseInt(editMinEntries, 10);
     const maxVal = parseInt(editMaxEntries, 10);
     if (isNaN(minVal) || minVal <= 1) {
-      alert($t("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1).", (localStorage.getItem('app-lang') || 'vi')));
+      alert($t("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1.", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
     if (isNaN(maxVal) || maxVal >= 15) {
-      alert($t("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15).", (localStorage.getItem('app-lang') || 'vi')));
+      alert($t("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15.", (localStorage.getItem('app-lang') || 'vi')));
       return;
     }
     if (maxVal < minVal) {
@@ -302,9 +301,8 @@ export default function Race() {
         throw new Error(res.error || "Failed to update race.");
       }
     } catch (err: any) {
-      const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
       if (err.message?.includes("DUPLICATE_RACE_TIME")) {
-        setEditError(isVi ? "Thời gian bắt đầu trận đấu trùng lặp với một trận đấu khác trong cùng buổi đua (Meeting)." : "Another race is already scheduled at this exact time for this meeting.");
+        setEditError("Another race is already scheduled at this exact time for this meeting.");
       } else {
         setEditError(getErrMsg(err, "Failed to update race."));
       }

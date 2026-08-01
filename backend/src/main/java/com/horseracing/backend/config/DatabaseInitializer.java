@@ -28,7 +28,7 @@ public class DatabaseInitializer implements InitializingBean {
         try {
             // 1. Kiểm tra và thêm cột description (mô tả) vào bảng Horse
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Horse') AND name = 'description') " +
+                "IF OBJECT_ID('Horse', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Horse') AND name = 'description') " +
                 "BEGIN " +
                 "    ALTER TABLE Horse ADD description NVARCHAR(MAX) NULL; " +
                 "END"
@@ -36,7 +36,7 @@ public class DatabaseInitializer implements InitializingBean {
             
             // 2. Kiểm tra và thêm cột avatar (ảnh đại diện) dạng base64/URL vào bảng Horse
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Horse') AND name = 'avatar') " +
+                "IF OBJECT_ID('Horse', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Horse') AND name = 'avatar') " +
                 "BEGIN " +
                 "    ALTER TABLE Horse ADD avatar VARCHAR(MAX) NULL; " +
                 "END"
@@ -44,7 +44,7 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 3. Kiểm tra và thêm cột avatar vào bảng User
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'avatar') " +
+                "IF OBJECT_ID('[User]', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'avatar') " +
                 "BEGIN " +
                 "    ALTER TABLE [User] ADD avatar VARCHAR(MAX) NULL; " +
                 "END"
@@ -52,7 +52,7 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 4. Kiểm tra và thêm cột biography (tiểu sử) vào bảng User
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'biography') " +
+                "IF OBJECT_ID('[User]', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'biography') " +
                 "BEGIN " +
                 "    ALTER TABLE [User] ADD biography NVARCHAR(MAX) NULL; " +
                 "END"
@@ -60,7 +60,7 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 4b. Kiểm tra và thêm cột balance (số dư ví) vào bảng User
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'balance') " +
+                "IF OBJECT_ID('[User]', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'balance') " +
                 "BEGIN " +
                 "    ALTER TABLE [User] ADD balance DECIMAL(15,2) NOT NULL DEFAULT 0.00; " +
                 "END"
@@ -68,13 +68,13 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 4c. Kiểm tra và thêm cột min_prize, max_prize vào bảng SeasonClassRule nếu chưa có
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SeasonClassRule') AND name = 'min_prize') " +
+                "IF OBJECT_ID('SeasonClassRule', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SeasonClassRule') AND name = 'min_prize') " +
                 "BEGIN " +
                 "    ALTER TABLE SeasonClassRule ADD min_prize DECIMAL(15,2) NULL; " +
                 "END"
             );
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SeasonClassRule') AND name = 'max_prize') " +
+                "IF OBJECT_ID('SeasonClassRule', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SeasonClassRule') AND name = 'max_prize') " +
                 "BEGIN " +
                 "    ALTER TABLE SeasonClassRule ADD max_prize DECIMAL(15,2) NULL; " +
                 "END"
@@ -82,7 +82,7 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 5. Kiểm tra và thêm cột min_entries (số lượng ngựa chạy tối thiểu, mặc định là 3) vào bảng Race
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'min_entries') " +
+                "IF OBJECT_ID('Race', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'min_entries') " +
                 "BEGIN " +
                 "    ALTER TABLE Race ADD min_entries INT NOT NULL DEFAULT 3; " +
                 "END"
@@ -90,7 +90,7 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 6. Kiểm tra và thêm cột max_entries (số lượng ngựa chạy tối đa, mặc định là 14) vào bảng Race
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'max_entries') " +
+                "IF OBJECT_ID('Race', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'max_entries') " +
                 "BEGIN " +
                 "    ALTER TABLE Race ADD max_entries INT NOT NULL DEFAULT 14; " +
                 "END"
@@ -98,7 +98,7 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 7. Kiểm tra và thêm cột steward_report (báo cáo của trọng tài) vào bảng Race
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'steward_report') " +
+                "IF OBJECT_ID('Race', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'steward_report') " +
                 "BEGIN " +
                 "    ALTER TABLE Race ADD steward_report NVARCHAR(MAX) NULL; " +
                 "END"
@@ -106,7 +106,7 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 8. Kiểm tra và thêm cột youtube_live_url (đường dẫn livestream) vào bảng Race
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'youtube_live_url') " +
+                "IF OBJECT_ID('Race', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'youtube_live_url') " +
                 "BEGIN " +
                 "    ALTER TABLE Race ADD youtube_live_url VARCHAR(500) NULL; " +
                 "END"
@@ -114,7 +114,7 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 8.01 Kiểm tra và thêm cột stream_mode (YOUTUBE hoặc WEBCAM) vào bảng Race
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'stream_mode') " +
+                "IF OBJECT_ID('Race', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'stream_mode') " +
                 "BEGIN " +
                 "    ALTER TABLE Race ADD stream_mode VARCHAR(20) NOT NULL DEFAULT 'YOUTUBE'; " +
                 "END"
@@ -122,25 +122,25 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 8.1 Thêm các cột phân chia tiền thưởng vào bảng Race
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'total_prize_pool') " +
+                "IF OBJECT_ID('Race', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'total_prize_pool') " +
                 "BEGIN " +
                 "    ALTER TABLE Race ADD total_prize_pool DECIMAL(12,2) NULL; " +
                 "END"
             );
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'first_place_prize') " +
+                "IF OBJECT_ID('Race', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'first_place_prize') " +
                 "BEGIN " +
                 "    ALTER TABLE Race ADD first_place_prize DECIMAL(12,2) NULL; " +
                 "END"
             );
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'second_place_prize') " +
+                "IF OBJECT_ID('Race', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'second_place_prize') " +
                 "BEGIN " +
                 "    ALTER TABLE Race ADD second_place_prize DECIMAL(12,2) NULL; " +
                 "END"
             );
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'third_place_prize') " +
+                "IF OBJECT_ID('Race', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'third_place_prize') " +
                 "BEGIN " +
                 "    ALTER TABLE Race ADD third_place_prize DECIMAL(12,2) NULL; " +
                 "END"
@@ -148,25 +148,25 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 8.2 Thêm các cột hoa hồng tiền mời và phí thuê nài ngựa vào bảng RaceInvitation
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'commission_amount') " +
+                "IF OBJECT_ID('RaceInvitation', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'commission_amount') " +
                 "BEGIN " +
                 "    ALTER TABLE RaceInvitation ADD commission_amount DECIMAL(12,2) NULL; " +
                 "END"
             );
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'commission_rate') " +
+                "IF OBJECT_ID('RaceInvitation', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'commission_rate') " +
                 "BEGIN " +
                 "    ALTER TABLE RaceInvitation ADD commission_rate DECIMAL(5,2) NULL; " +
                 "END"
             );
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'payout_status') " +
+                "IF OBJECT_ID('RaceInvitation', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'payout_status') " +
                 "BEGIN " +
                 "    ALTER TABLE RaceInvitation ADD payout_status VARCHAR(30) NULL DEFAULT 'PENDING'; " +
                 "END"
             );
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'hire_fee') " +
+                "IF OBJECT_ID('RaceInvitation', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('RaceInvitation') AND name = 'hire_fee') " +
                 "BEGIN " +
                 "    ALTER TABLE RaceInvitation ADD hire_fee DECIMAL(12,2) NULL DEFAULT 500.00; " +
                 "END"
@@ -174,7 +174,7 @@ public class DatabaseInitializer implements InitializingBean {
 
             // 8.3 Thêm cột wallet_balance vào bảng [User]
             jdbcTemplate.execute(
-                "IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'wallet_balance') " +
+                "IF OBJECT_ID('[User]', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'wallet_balance') " +
                 "BEGIN " +
                 "    ALTER TABLE [User] ADD wallet_balance DECIMAL(18,2) NOT NULL DEFAULT 0.00; " +
                 "END"
