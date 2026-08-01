@@ -190,7 +190,7 @@ export default function LiveSettings() {
                       onClick={() => window.dispatchEvent(new CustomEvent("OPEN_BROADCASTER", { detail: r }))}
                       className={`px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 text-xs font-bold rounded-lg transition flex items-center gap-1 ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
                     >
-                      <span>📱</span> {$t("Phát từ Camera Điện thoại", (localStorage.getItem('app-lang') || 'vi'))}
+                      <span>📱</span> {$t("Mobile Camera Broadcast", (localStorage.getItem('app-lang') || 'en'))}
                     </button>
                     <button
                       disabled={r.status !== "RUNNING"}
@@ -244,7 +244,7 @@ export default function LiveSettings() {
                         onClick={() => window.dispatchEvent(new CustomEvent("OPEN_BROADCASTER", { detail: r }))}
                         className={`px-3 py-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border border-rose-500/30 text-xs font-bold rounded-lg transition inline-flex items-center gap-1 ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
-                        <span>📱</span> {$t("Phát từ Camera Điện thoại", (localStorage.getItem('app-lang') || 'vi'))}
+                        <span>📱</span> {$t("Mobile Camera Broadcast", (localStorage.getItem('app-lang') || 'en'))}
                       </button>
                       <button
                         disabled={r.status !== "RUNNING"}
