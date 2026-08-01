@@ -69,7 +69,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
       }
     } catch (err: any) {
       console.error("Camera access error:", err);
-      setError($t("Không thể kích hoạt Camera tự động. Vui lòng bấm 'Cho phép (Allow)' khi trình duyệt xin quyền, hoặc dùng nút 'Chụp/Tải Ảnh Máy Quay' ở bên dưới.", localStorage.getItem("app-lang") || "vi"));
+      setError($t("Unable to activate camera automatically. Please click 'Allow' when prompted by your browser.", localStorage.getItem("app-lang") || "en"));
     }
   };
 
@@ -147,7 +147,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
             canvas.height = 450;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const dataUrl = canvas.toDataURL("image/jpeg", 0.65); // Đồ họa HD cân bằng mượt mà nhẹ nhàng (~12KB/frame)
-            const uName = user?.fullName || user?.username || "Trọng tài";
+            const uName = user?.fullName || user?.username || "Referee";
             const broadcasterId = user?.id ? `user_${user.id}_${camInstanceId}` : `anon_${camInstanceId}`;
             const broadcasterName = `${uName} (${camInstanceId.replace("cam_", "Cam ")})`;
             wsRef.current.send(JSON.stringify({
@@ -197,7 +197,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
             <span style={{ fontSize: "11px", fontWeight: "bold", color: "#ef4444", fontFamily: "monospace" }}>LIVE CAM #{raceId}</span>
           </div>
           <div style={{ display: "flex", gap: "4px" }}>
-            <button onClick={() => setIsMinimized(false)} style={{ background: "#c9a227", border: "none", color: "#000", borderRadius: "4px", padding: "3px 8px", fontSize: "10px", cursor: "pointer", fontWeight: "bold" }}>📌 Phóng lớn</button>
+            <button onClick={() => setIsMinimized(false)} style={{ background: "#c9a227", border: "none", color: "#000", borderRadius: "4px", padding: "3px 8px", fontSize: "10px", cursor: "pointer", fontWeight: "bold" }}>📌 Expand</button>
             <button onClick={onClose} style={{ background: "rgba(255,255,255,0.15)", border: "none", color: "#fff", borderRadius: "4px", padding: "3px 8px", fontSize: "10px", cursor: "pointer", fontWeight: "bold" }}>✕</button>
           </div>
         </div>
@@ -212,7 +212,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
           <button
             onClick={toggleFacingMode}
             style={{ position: "absolute", bottom: 6, right: 6, background: "rgba(0,0,0,0.6)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.9rem" }}
-            title={$t("Lật camera trước/sau", localStorage.getItem("app-lang") || "vi")}
+            title={$t("Switch front/rear camera", localStorage.getItem("app-lang") || "en")}
           >
             🔄
           </button>
@@ -231,13 +231,13 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
             <span style={{ fontSize: "1.2rem" }}>📱</span>
             <div>
               <h4 style={{ color: "#fff", margin: 0, fontSize: "1rem", fontWeight: "bold" }}>
-                {$t("Mobile Camera Broadcaster", localStorage.getItem("app-lang") || "vi")}
+                {$t("Mobile Camera Broadcaster", localStorage.getItem("app-lang") || "en")}
               </h4>
               <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.75rem" }}>Race #{raceId} {raceTitle ? `- ${raceTitle}` : ""}</span>
             </div>
           </div>
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-            <button onClick={() => setIsMinimized(true)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fbbf24", borderRadius: "0.375rem", padding: "4px 8px", fontSize: "11px", cursor: "pointer", fontWeight: "bold" }}>📌 Thu nhỏ góc màn hình</button>
+            <button onClick={() => setIsMinimized(true)} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fbbf24", borderRadius: "0.375rem", padding: "4px 8px", fontSize: "11px", cursor: "pointer", fontWeight: "bold" }}>📌 Minimize</button>
             <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", color: "#fff", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", fontWeight: "bold" }}>✕</button>
           </div>
         </div>
@@ -266,7 +266,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
                 onClick={() => startCamera(facingMode)}
                 style={{ padding: "0.75rem 1.25rem", background: "linear-gradient(135deg, #10b981 0%, #059669 100%)", color: "#fff", border: "none", borderRadius: "0.5rem", fontWeight: "bold", fontSize: "0.9rem", cursor: "pointer", boxShadow: "0 4px 12px rgba(16,185,129,0.4)" }}
               >
-                {$t("👉 Bấm vào đây để Bật Camera (Allow)", localStorage.getItem("app-lang") || "vi")}
+                {$t("👉 Click here to Turn On Camera (Allow)", localStorage.getItem("app-lang") || "en")}
               </button>
             </div>
           )}
@@ -283,7 +283,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
           <button
             onClick={toggleFacingMode}
             style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(0,0,0,0.6)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "50%", width: 38, height: 38, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem" }}
-            title={$t("Lật camera trước/sau", localStorage.getItem("app-lang") || "vi")}
+            title={$t("Switch front/rear camera", localStorage.getItem("app-lang") || "en")}
           >
             🔄
           </button>
@@ -292,17 +292,17 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
         {/* Hướng Dẫn Kết Nối Điện Thoại (Mobile Connection Helper) */}
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "0.75rem 1rem", fontSize: "0.75rem" }}>
           <div style={{ fontWeight: "bold", color: "#fbbf24", marginBottom: "0.35rem", display: "flex", alignItems: "center", gap: "6px" }}>
-            <span>🌐</span> {$t("Bật quyền Camera Điện thoại khi kết nối qua IP (Chrome Android):", localStorage.getItem("app-lang") || "vi")}
+            <span>🌐</span> {$t("Mobile Camera Permission Setup (Chrome Android):", localStorage.getItem("app-lang") || "en")}
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", color: "rgba(255,255,255,0.7)", fontFamily: "monospace", fontSize: "0.7rem" }}>
             <div>
-              1. Mở Chrome trên Điện thoại gõ đường dẫn: <code style={{ color: "#fbbf24", background: "rgba(0,0,0,0.4)", padding: "1px 4px", borderRadius: 3 }}>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>
+              1. Open Chrome on mobile and visit: <code style={{ color: "#fbbf24", background: "rgba(0,0,0,0.4)", padding: "1px 4px", borderRadius: 3 }}>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>
             </div>
             <div>
-              2. Điền IP của máy tính (ví dụ: <code style={{ color: "#fbbf24" }}>http://192.168.137.1:5173</code>) $\rightarrow$ Chọn <strong style={{ color: "#10b981" }}>Enabled</strong> $\rightarrow$ Bấm <strong style={{ color: "#fbbf24" }}>Relaunch</strong>.
+              2. Enter PC IP (e.g. <code style={{ color: "#fbbf24" }}>http://192.168.137.1:5173</code>) $\rightarrow$ Select <strong style={{ color: "#10b981" }}>Enabled</strong> $\rightarrow$ Click <strong style={{ color: "#fbbf24" }}>Relaunch</strong>.
             </div>
             <div>
-              3. Mở lại trang web $\rightarrow$ Bấm <strong style={{ color: "#10b981" }}>Bắt đầu phát sóng</strong> $\rightarrow$ Chọn <strong style={{ color: "#10b981" }}>Cho phép (Allow Camera)</strong>.
+              3. Reopen website $\rightarrow$ Click <strong style={{ color: "#10b981" }}>Start Broadcasting</strong> $\rightarrow$ Select <strong style={{ color: "#10b981" }}>Allow Camera</strong>.
             </div>
           </div>
         </div>
@@ -314,14 +314,14 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
               onClick={handleStartLive}
               style={{ flex: 1, padding: "0.85rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.75rem", fontWeight: "bold", fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
             >
-              <span>🔴</span> {$t("Bắt đầu phát sóng (Go Live)", localStorage.getItem("app-lang") || "vi")}
+              <span>🔴</span> {$t("Start Broadcasting (Go Live)", localStorage.getItem("app-lang") || "en")}
             </button>
           ) : (
             <button
               onClick={handleStopLive}
               style={{ flex: 1, padding: "0.85rem", background: "rgba(255,255,255,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.3)", borderRadius: "0.75rem", fontWeight: "bold", fontSize: "0.9rem", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
             >
-              <span>⏹</span> {$t("Dừng phát sóng (End Stream)", localStorage.getItem("app-lang") || "vi")}
+              <span>⏹</span> {$t("Stop Stream (End Stream)", localStorage.getItem("app-lang") || "en")}
             </button>
           )}
           <button

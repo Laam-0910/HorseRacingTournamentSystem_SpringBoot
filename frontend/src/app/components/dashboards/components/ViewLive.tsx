@@ -317,7 +317,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                     gap: "4px"
                   }}
                 >
-                  <span>📱</span> {$t("Góc Cam Trọng tài (Đang chờ kết nối)", (localStorage.getItem('app-lang') || 'vi'))}
+                  <span>📱</span> {$t("Referee Camera Angle (Awaiting Connection)", (localStorage.getItem('app-lang') || 'en'))}
                 </button>
               )}
 
@@ -339,7 +339,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                     gap: "4px"
                   }}
                 >
-                  <span>📺</span> {$t("Kênh YouTube Chính", (localStorage.getItem('app-lang') || 'vi'))}
+                  <span>📺</span> {$t("Main YouTube Channel", (localStorage.getItem('app-lang') || 'en'))}
                 </button>
               )}
             </div>

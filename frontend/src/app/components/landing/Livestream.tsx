@@ -326,7 +326,7 @@ export default function Livestream() {
             // Vòng quay đang tải
             <div className="flex flex-col items-center justify-center h-[450px] bg-[#151310] border border-[#2a2825] rounded-2xl">
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500 mb-4"></div>
-              <p className="text-white/60 font-mono text-sm">{$t("Đang tải dữ liệu livestream...", (localStorage.getItem('app-lang') || 'vi'))}</p>
+              <p className="text-white/60 font-mono text-sm">{$t("Loading livestream data...", (localStorage.getItem('app-lang') || 'en'))}</p>
             </div>
           ) : selectedRace ? (
             <div className="space-y-4">
@@ -356,7 +356,7 @@ export default function Livestream() {
                           gap: "4px"
                         }}
                       >
-                        <span>📱</span> {$t(`Cam ${b.name}`, (localStorage.getItem('app-lang') || 'vi'))}
+                        <span>📱</span> {$t(`Cam ${b.name}`, (localStorage.getItem('app-lang') || 'en'))}
                       </button>
                     );
                   })
@@ -377,7 +377,7 @@ export default function Livestream() {
                       gap: "4px"
                     }}
                   >
-                    <span>📱</span> {$t("Góc Cam Trọng tài", (localStorage.getItem('app-lang') || 'vi'))}
+                    <span>📱</span> {$t("Referee Camera Angle", (localStorage.getItem('app-lang') || 'en'))}
                   </button>
                 )}
 
@@ -399,7 +399,7 @@ export default function Livestream() {
                       gap: "4px"
                     }}
                   >
-                    <span>📺</span> {$t("Kênh YouTube Chính", (localStorage.getItem('app-lang') || 'vi'))}
+                    <span>📺</span> {$t("Main YouTube Channel", (localStorage.getItem('app-lang') || 'en'))}
                   </button>
                 )}
               </div>
@@ -443,7 +443,7 @@ export default function Livestream() {
                   </>
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-white/50 text-sm font-mono">
-                    <span>{$t("Không tìm thấy luồng phát", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                    <span>{$t("No livestream broadcast found", (localStorage.getItem('app-lang') || 'en'))}</span>
                   </div>
                 )}
               </div>

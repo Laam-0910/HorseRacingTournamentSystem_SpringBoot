@@ -1341,7 +1341,7 @@ export default function RefereeHub() {
                 gap: "0.375rem" 
               }}
             >
-              📱 {$t("Phát từ Camera Điện thoại", (localStorage.getItem('app-lang') || 'vi'))}
+              📱 {$t("Mobile Camera Broadcast", (localStorage.getItem('app-lang') || 'en'))}
             </button>
             <button 
               onClick={() => setLiveMonitorMode(prev => prev === "hidden" ? "floating" : prev === "floating" ? "embedded" : "floating")} 
@@ -1359,7 +1359,7 @@ export default function RefereeHub() {
                 gap: "0.375rem" 
               }}
             >
-              📺 {liveMonitorMode === "floating" ? $t("Màn hình nổi (Floating)") : liveMonitorMode === "embedded" ? $t("Màn hình dưới bảng (Embedded)") : $t("Bật Live Monitor")}
+              📺 {liveMonitorMode === "floating" ? $t("Floating Monitor", (localStorage.getItem('app-lang') || 'en')) : liveMonitorMode === "embedded" ? $t("Embedded Monitor", (localStorage.getItem('app-lang') || 'en')) : $t("Turn on Live Monitor", (localStorage.getItem('app-lang') || 'en'))}
             </button>
             <button onClick={() => setShowViolModal(true)} style={{ padding: "0.5rem 1.25rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}>
               {$t("⚠️ Ghi nhận vi phạm", (localStorage.getItem('app-lang') || 'vi'))}

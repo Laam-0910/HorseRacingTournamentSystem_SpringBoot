@@ -37,7 +37,7 @@ export default function WebCamLiveViewer({ raceId, selectedBroadcasterId, onBroa
         const data = JSON.parse(event.data);
         if (data.type === "FRAME" && data.image) {
           const bId = data.broadcasterId || "default_broadcaster";
-          const bName = data.broadcasterName || "Trọng tài phát sóng";
+          const bName = data.broadcasterName || "Referee Stream";
 
           setBroadcasterFrames(prev => {
             const next = {
@@ -127,7 +127,7 @@ export default function WebCamLiveViewer({ raceId, selectedBroadcasterId, onBroa
         <div className="flex flex-col items-center justify-center text-center p-6 space-y-3">
           <div className="w-12 h-12 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mb-2" />
           <p className="text-amber-400 font-semibold text-sm">
-            {$t("Đang chờ kết nối Camera phát sóng trực tiếp từ Trọng tài...", localStorage.getItem("app-lang") || "vi")}
+            {$t("Waiting for live camera stream from referee...", localStorage.getItem("app-lang") || "en")}
           </p>
           <p className="text-white/40 text-xs font-mono">
             {isConnected ? "Connected to WebSocket Server. Waiting for frames..." : "Connecting to Stream Server..."}
