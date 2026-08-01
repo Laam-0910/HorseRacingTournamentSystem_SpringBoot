@@ -233,13 +233,23 @@ public class RaceService {
         }
     }
 
+    private static final BigDecimal MIN_MEETING_BUDGET = new BigDecimal("10000000"); // 10 triệu
+    private static final BigDecimal MAX_MEETING_BUDGET = new BigDecimal("1000000000"); // 1 tỷ
+
+    private void validateMeetingBudget(BigDecimal budget) {
+        if (budget == null || budget.compareTo(MIN_MEETING_BUDGET) < 0) {
+            throw new IllegalArgumentException("Ngân sách tổng (Total budget) của Race Meeting phải tối thiểu là 10,000,000 (không được nhập số âm hoặc bé hơn 10tr).");
+        }
+        if (budget.compareTo(MAX_MEETING_BUDGET) > 0) {
+            throw new IllegalArgumentException("Ngân sách tổng (Total budget) của Race Meeting không được vượt quá 1,000,000,000 (1 tỷ).");
+        }
+    }
+
     @Transactional
     public RaceMeetingDTO createMeeting(RaceMeetingDTO dto) {
         validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate()); // Kiểm tra ngày của Ngày hội đua có nằm trong khoảng thời gian mùa giải
+        validateMeetingBudget(dto.getTotalBudget()); // Kiểm tra ngân sách trong khoảng 10tr - 1 tỷ
         RaceMeeting meeting = raceMeetingMapper.toEntity(dto); // Chuyển đổi DTO sang Entity RaceMeeting
-        if (meeting.getTotalBudget() == null) { // Nếu tổng ngân sách bị trống
-            meeting.setTotalBudget(java.math.BigDecimal.ZERO); // Đặt mặc định ngân sách ban đầu là 0
-        }
         RaceMeeting savedMeeting = raceMeetingRepository.save(meeting); // Lưu Ngày hội đua vào DB
         String seasonName = seasonRepository.findById(savedMeeting.getSeasonId()) // Tra cứu tên mùa giải tương ứng
                 .map(Season::getName) // Lấy tên mùa giải
@@ -250,6 +260,7 @@ public class RaceService {
     @Transactional
     public RaceMeetingDTO updateMeeting(Integer id, RaceMeetingDTO dto) {
         validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate()); // Kiểm tra ngày Ngày hội đua phù hợp thời gian mùa giải
+        validateMeetingBudget(dto.getTotalBudget()); // Kiểm tra ngân sách trong khoảng 10tr - 1 tỷ
         RaceMeeting meeting = raceMeetingRepository.findById(id) // Tìm Ngày hội đua theo ID
                 .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found with id: " + id)); // Ném ngoại lệ nếu không tồn tại
         meeting.setName(dto.getName()); // Cập nhật tên Ngày hội đua

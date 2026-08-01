@@ -136,12 +136,23 @@ export default function RaceMeeting() {
         }
       }
 
+      // Validate budget: min 10,000,000 (10 triệu) và max 1,000,000,000 (1 tỷ)
+      const budgetValue = totalBudget ? parseFloat(totalBudget) : 0;
+      if (budgetValue < 10000000) {
+        setError($t("Ngân sách tổng (Total budget) phải tối thiểu là 10,000,000 (10 triệu). Không được nhập số âm hoặc bé hơn 10 triệu.", (localStorage.getItem('app-lang') || 'vi')));
+        return;
+      }
+      if (budgetValue > 1000000000) {
+        setError($t("Ngân sách tổng (Total budget) không được vượt quá 1,000,000,000 (1 tỷ).", (localStorage.getItem('app-lang') || 'vi')));
+        return;
+      }
+
       const payload = {
         name,
         startDate: formatDateTime(date), // Định dạng lại chuỗi thời gian phù hợp API
         venue,
         seasonId: parseInt(seasonId),
-        totalBudget: totalBudget ? parseFloat(totalBudget) : 0,
+        totalBudget: budgetValue,
       };
 
       if (editingMeeting) {
@@ -298,13 +309,16 @@ export default function RaceMeeting() {
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Total Budget ($USD)", (localStorage.getItem('app-lang') || 'vi'))}</label>
             <input
               type="number"
-              min="0"
-              step="1000"
+              min="10000000"
+              max="1000000000"
+              step="1000000"
+              required
               value={totalBudget}
               onChange={(e) => setTotalBudget(e.target.value)}
               className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs"
-              placeholder={$t("E.g., 500000", (localStorage.getItem('app-lang') || 'vi'))}
+              placeholder={$t("Min: 10,000,000 — Max: 1,000,000,000", (localStorage.getItem('app-lang') || 'vi'))}
             />
+            <p className="text-[10px] text-white/30 mt-1 font-mono">{$t("Tối thiểu: 10,000,000 (10 triệu) — Tối đa: 1,000,000,000 (1 tỷ)", (localStorage.getItem('app-lang') || 'vi'))}</p>
           </div>
 
           {/* Chọn ngày tổ chức thông qua bộ chọn ngày InlineDatePicker */}
