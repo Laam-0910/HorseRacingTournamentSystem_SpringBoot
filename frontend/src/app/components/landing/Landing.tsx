@@ -1255,7 +1255,7 @@ export default function Landing() {
   // Component quản lý luồng Live tại trang Landing: Tự động phát WebCam -> tự động ngắt sang YouTube -> tự động thông báo Tiếng Anh
   const LandingLiveStreamContainer = ({ r }: { r: any }) => {
     const [activeBroadcasters, setActiveBroadcasters] = useState<any[]>([]);
-    const embedUrl = r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "";
+    const embedUrl = (r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "") || "";
     const hasYouTube = Boolean(r.youtubeLiveUrl && r.youtubeLiveUrl.trim());
 
     return (

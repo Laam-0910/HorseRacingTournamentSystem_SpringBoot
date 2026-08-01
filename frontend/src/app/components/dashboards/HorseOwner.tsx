@@ -1079,6 +1079,7 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
                     </button>
                   )}
                 </div>
+              </div>
               <div>
                 <label style={labelStyle}>{$t("Jockey Prize Share % (20% - 50%)", (localStorage.getItem('app-lang') || 'vi'))}</label>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
