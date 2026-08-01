@@ -20,8 +20,10 @@ export default function WebCamLiveViewer({ raceId, selectedBroadcasterId, onBroa
 
   useEffect(() => {
     const hostname = window.location.hostname || "localhost";
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${hostname}:8080/ws/livestream/${raceId}`;
+    const port = window.location.port ? `:${window.location.port}` : "";
+    const wsUrl = window.location.protocol === "https:"
+      ? `wss://${hostname}${port}/ws/livestream/${raceId}`
+      : `ws://${hostname}:8080/ws/livestream/${raceId}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {

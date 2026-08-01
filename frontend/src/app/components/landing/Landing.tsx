@@ -1252,6 +1252,66 @@ export default function Landing() {
     }
   };
 
+  // Component quản lý luồng Live tại trang Landing: Tự động phát WebCam -> tự động ngắt sang YouTube -> tự động thông báo Tiếng Anh
+  const LandingLiveStreamContainer = ({ r }: { r: any }) => {
+    const [activeBroadcasters, setActiveBroadcasters] = useState<any[]>([]);
+    const embedUrl = r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "";
+    const hasYouTube = Boolean(r.youtubeLiveUrl && r.youtubeLiveUrl.trim());
+
+    return (
+      <div className="max-w-3xl mx-auto">
+        <div className="glass-panel rounded-2xl p-6 relative overflow-hidden group border border-[#2a2825] hover:border-red-500/50 transition-colors">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-5 rounded-bl-full pointer-events-none"></div>
+          
+          <div className="flex items-center justify-between mb-6 relative z-10">
+            <h4 className="font-bold text-xl text-white" style={{ fontFamily: "'Roboto Slab', serif" }}>{r.classLevel} - Race #{r.id}</h4>
+            <span className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-500 font-bold text-[10px] uppercase tracking-widest rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+              LIVE
+            </span>
+          </div>
+          
+          <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
+            {/* Luôn cắm WebCamLiveViewer để theo dõi tín hiệu camera */}
+            <div style={{ display: activeBroadcasters.length > 0 ? "block" : "none" }} className="absolute inset-0">
+              <WebCamLiveViewer raceId={r.id} onBroadcastersFound={(list) => setActiveBroadcasters(list)} />
+            </div>
+
+            {/* Nếu camera tắt (0 camera active) */}
+            {activeBroadcasters.length === 0 && (
+              hasYouTube ? (
+                /* Tự động chuyển sang YouTube */
+                (r.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
+                 r.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
+                 r.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
+                 r.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
+                 r.youtubeLiveUrl.toLowerCase().includes("/stream") ||
+                 r.youtubeLiveUrl.toLowerCase().includes(".mp4?")) ? (
+                  <video
+                    src={r.youtubeLiveUrl}
+                    controls
+                    autoPlay
+                    muted
+                    className="absolute top-0 left-0 w-full h-full border-none"
+                  />
+                ) : (
+                  <iframe src={embedUrl} className="absolute top-0 left-0 w-full h-full border-none" allowFullScreen></iframe>
+                )
+              ) : (
+                /* Nếu không có YouTube luôn -> Thông báo 100% Tiếng Anh tại Landing */
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0d0d0d] p-6 text-center">
+                  <span className="text-5xl block mb-3 opacity-40 grayscale">📡</span>
+                  <p className="text-amber-400 font-semibold text-lg mb-1" style={{ fontFamily: "'Roboto Slab', serif" }}>No livestream is currently in progress.</p>
+                  <p className="text-gray-400 text-xs font-mono">The live camera stream has ended and no YouTube link is available.</p>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderSubView = () => {
     switch (view) {
       case "home":
@@ -1267,56 +1327,11 @@ export default function Landing() {
             {liveRaces.length === 0 ? (
               <div className="glass-panel rounded-2xl flex flex-col items-center justify-center min-h-[40vh] border-dashed border-[#2a2825]">
                 <span className="text-5xl block mb-4 opacity-50 grayscale">📺</span>
-                <p className="text-gray-400 font-mono text-sm max-w-sm text-center">{"No live broadcast currently. There are no races running right now."}</p>
+                <p className="text-gray-400 font-mono text-sm max-w-sm text-center">{"No livestream is currently in progress."}</p>
               </div>
             ) : (() => {
-              // Lấy 1 trận làm đại diện (Ưu tiên trận đang phát WebCam trước)
               const r = liveRaces.find(race => race.streamMode === "WEBCAM") || liveRaces[0];
-              const embedUrl = (r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "") || "";
-              const useWebCam = r.streamMode === "WEBCAM" || !r.youtubeLiveUrl;
-
-              return (
-                <div className="max-w-3xl mx-auto">
-                  <div className="glass-panel rounded-2xl p-6 relative overflow-hidden group border border-[#2a2825] hover:border-red-500/50 transition-colors">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-5 rounded-bl-full pointer-events-none"></div>
-                    
-                    <div className="flex items-center justify-between mb-6 relative z-10">
-                      <h4 className="font-bold text-xl text-white" style={{ fontFamily: "'Roboto Slab', serif" }}>{r.classLevel} - Race #{r.id}</h4>
-                      <span className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-500 font-bold text-[10px] uppercase tracking-widest rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                        <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                        LIVE
-                      </span>
-                    </div>
-                    
-                    <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
-                      {useWebCam ? (
-                        /* Ưu tiên 1: WebCam / Camera Điện thoại phát trực tiếp */
-                        <WebCamLiveViewer raceId={r.id} />
-                      ) : (
-                        /* Ưu tiên 2: Link YouTube / Video nhúng */
-                        r.youtubeLiveUrl && (
-                          r.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
-                          r.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
-                          r.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
-                          r.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
-                          r.youtubeLiveUrl.toLowerCase().includes("/stream") ||
-                          r.youtubeLiveUrl.toLowerCase().includes(".mp4?")
-                        ) ? (
-                          <video
-                            src={r.youtubeLiveUrl}
-                            controls
-                            autoPlay
-                            muted
-                            className="absolute top-0 left-0 w-full h-full border-none"
-                          />
-                        ) : (
-                          <iframe src={embedUrl} className="absolute top-0 left-0 w-full h-full border-none" allowFullScreen></iframe>
-                        )
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
+              return <LandingLiveStreamContainer r={r} />;
             })()}
           </div>
         );

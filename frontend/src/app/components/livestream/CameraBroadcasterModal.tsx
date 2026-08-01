@@ -78,8 +78,10 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
 
     // Mở kết nối WebSocket tín hiệu Livestream
     const hostname = window.location.hostname || "localhost";
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${hostname}:8080/ws/livestream/${raceId}`;
+    const port = window.location.port ? `:${window.location.port}` : "";
+    const wsUrl = window.location.protocol === "https:"
+      ? `wss://${hostname}${port}/ws/livestream/${raceId}`
+      : `ws://${hostname}:8080/ws/livestream/${raceId}`;
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
@@ -141,10 +143,10 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
         if (videoRef.current && ctx && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
           const video = videoRef.current;
           if (video.videoWidth > 0 && video.videoHeight > 0) {
-            canvas.width = 1280;
-            canvas.height = 720;
+            canvas.width = 800;
+            canvas.height = 450;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.82); // Đồ họa Ultra HD 720p nét như truyền hình (~35KB/frame)
+            const dataUrl = canvas.toDataURL("image/jpeg", 0.65); // Đồ họa HD cân bằng mượt mà nhẹ nhàng (~12KB/frame)
             const uName = user?.fullName || user?.username || "Trọng tài";
             const broadcasterId = user?.id ? `user_${user.id}_${camInstanceId}` : `anon_${camInstanceId}`;
             const broadcasterName = `${uName} (${camInstanceId.replace("cam_", "Cam ")})`;
@@ -158,7 +160,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
             }));
           }
         }
-      }, 66); // ~15 FPS HD mượt mà sắc nét cao cấp
+      }, 75); // ~13 FPS mượt mà siêu nhẹ
     } catch (err: any) {
       setError("Failed to start livestream.");
     }
