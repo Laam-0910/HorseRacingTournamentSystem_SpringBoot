@@ -169,29 +169,31 @@ CREATE TABLE Horse (
 GO
 
 CREATE TABLE RaceInvitation (
-    id          INT IDENTITY(1,1) PRIMARY KEY,
-    race_id     INT NOT NULL,
-    horse_id    INT NOT NULL,
-    owner_id    INT NOT NULL,
-    jockey_id   INT NOT NULL,
-    status      VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, ACCEPTED, REJECTED, EXPIRED
+    id                      INT IDENTITY(1,1) PRIMARY KEY,
+    race_id                 INT NOT NULL,
+    horse_id                INT NOT NULL,
+    owner_id                INT NOT NULL,
+    jockey_id               INT NOT NULL,
+    status                  VARCHAR(20) NOT NULL DEFAULT 'PENDING', -- PENDING, ACCEPTED, REJECTED, EXPIRED
+    jockey_prize_percentage DECIMAL(5,2) NULL DEFAULT 20.00,
     CONSTRAINT CK_Invite_Status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'))
 );
 GO
 
 CREATE TABLE RaceEntry (
-    id                  INT IDENTITY(1,1) PRIMARY KEY,
-    race_id             INT NOT NULL,
-    horse_id            INT NOT NULL,
-    jockey_id           INT NOT NULL,
-    gate_number         INT NOT NULL,
-    status              VARCHAR(30) NOT NULL DEFAULT 'PENDING_ADMIN', -- PENDING_ADMIN, APPROVED, RUNNING, FINISHED, DISQUALIFIED, REJECTED
-    final_position      INT NULL,                           -- Individual finish position
-    finish_time         VARCHAR(20) NULL,                   -- Individual race finish time
-    prize_money         DECIMAL(18,2) NULL DEFAULT 0,
-    carried_weight      DECIMAL(5,2) NULL,
-    rating_adjustment   INT NULL,
-    handicap_weight     DECIMAL(5,2) NULL,
+    id                      INT IDENTITY(1,1) PRIMARY KEY,
+    race_id                 INT NOT NULL,
+    horse_id                INT NOT NULL,
+    jockey_id               INT NOT NULL,
+    gate_number             INT NOT NULL,
+    status                  VARCHAR(30) NOT NULL DEFAULT 'PENDING_ADMIN', -- PENDING_ADMIN, APPROVED, RUNNING, FINISHED, DISQUALIFIED, REJECTED
+    final_position          INT NULL,                           -- Individual finish position
+    finish_time             VARCHAR(20) NULL,                   -- Individual race finish time
+    prize_money             DECIMAL(18,2) NULL DEFAULT 0,
+    carried_weight          DECIMAL(5,2) NULL,
+    rating_adjustment       INT NULL,
+    handicap_weight         DECIMAL(5,2) NULL,
+    jockey_prize_percentage DECIMAL(5,2) NULL DEFAULT 20.00,
     CONSTRAINT CK_RaceEntry_Status CHECK (status IN ('PENDING_ADMIN', 'APPROVED', 'RUNNING', 'FINISHED', 'DISQUALIFIED', 'REJECTED', 'STOPPED'))
 );
 GO

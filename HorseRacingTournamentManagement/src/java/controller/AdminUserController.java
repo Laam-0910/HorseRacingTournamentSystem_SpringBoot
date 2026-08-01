@@ -364,7 +364,51 @@ public class AdminUserController extends HttpServlet {
                     
                     newRace.setMinRating(minRating);
                     newRace.setMaxRating(maxRating);
-                    
+
+                    // --- Validate purse against meeting budget & class hierarchy ---
+                    java.math.BigDecimal racePurse = newRace.getPurse() != null ? newRace.getPurse() : java.math.BigDecimal.ZERO;
+                    if (racePurse.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                        // 1) Total budget check: sum of all race purses must not exceed meeting budget
+                        java.math.BigDecimal meetingBudget = checkMeeting.getTotalBudget() != null ? checkMeeting.getTotalBudget() : java.math.BigDecimal.ZERO;
+                        java.math.BigDecimal allocated = java.math.BigDecimal.ZERO;
+                        if (allRaces != null) {
+                            for (RaceDTO r : allRaces) {
+                                if (r.getRaceMeetingId().equals(raceMeetingId) && !"CANCELLED".equalsIgnoreCase(r.getStatus())) {
+                                    allocated = allocated.add(r.getPurse() != null ? r.getPurse() : java.math.BigDecimal.ZERO);
+                                }
+                            }
+                        }
+                        java.math.BigDecimal newTotal = allocated.add(racePurse);
+                        if (newTotal.compareTo(meetingBudget) > 0) {
+                            java.math.BigDecimal remaining = meetingBudget.subtract(allocated);
+                            if (remaining.compareTo(java.math.BigDecimal.ZERO) < 0) remaining = java.math.BigDecimal.ZERO;
+                            throw new IllegalArgumentException(String.format(
+                                "Race purse ($%,.2f) exceeds remaining Race Meeting budget ($%,.2f). Total allocated would be $%,.2f / $%,.2f.",
+                                racePurse, remaining, newTotal, meetingBudget));
+                        }
+
+                        // 2) Class hierarchy check: Class 1 > Class 2 > Class 3 > Class 4 > Class 5
+                        if (allRaces != null) {
+                            for (RaceDTO r : allRaces) {
+                                if (!r.getRaceMeetingId().equals(raceMeetingId)) continue;
+                                if ("CANCELLED".equalsIgnoreCase(r.getStatus())) continue;
+                                if (r.getPurse() == null || r.getPurse().compareTo(java.math.BigDecimal.ZERO) <= 0) continue;
+                                int existingClassNum = extractClassNum(r.getClassLevel());
+                                if (existingClassNum < 1 || existingClassNum > 5) continue;
+                                if (classLevel < existingClassNum && racePurse.compareTo(r.getPurse()) <= 0) {
+                                    throw new IllegalArgumentException(String.format(
+                                        "Class %d purse ($%,.2f) must be greater than Class %d purse ($%,.2f). Higher class must have higher prize money.",
+                                        classLevel, racePurse, existingClassNum, r.getPurse()));
+                                }
+                                if (classLevel > existingClassNum && racePurse.compareTo(r.getPurse()) >= 0) {
+                                    throw new IllegalArgumentException(String.format(
+                                        "Class %d purse ($%,.2f) must be less than Class %d purse ($%,.2f). Lower class must have lower prize money.",
+                                        classLevel, racePurse, existingClassNum, r.getPurse()));
+                                }
+                            }
+                        }
+                    }
+
                     if (raceDAO.create(newRace)) {
                         request.getSession().removeAttribute("createRaceError");
                     } else {
@@ -451,6 +495,52 @@ public class AdminUserController extends HttpServlet {
                         }
                         if (purseStr != null && !purseStr.isEmpty()) {
                             race.setPurse(new java.math.BigDecimal(purseStr));
+                        }
+
+                        // --- Validate purse against meeting budget & class hierarchy ---
+                        java.math.BigDecimal racePurse = race.getPurse() != null ? race.getPurse() : java.math.BigDecimal.ZERO;
+                        if (racePurse.compareTo(java.math.BigDecimal.ZERO) > 0) {
+                            // 1) Total budget check
+                            java.math.BigDecimal meetingBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : java.math.BigDecimal.ZERO;
+                            java.math.BigDecimal allocated = java.math.BigDecimal.ZERO;
+                            if (allRaces != null) {
+                                for (RaceDTO r : allRaces) {
+                                    if (r.getRaceMeetingId().equals(race.getRaceMeetingId()) && !r.getId().equals(raceId) && !"CANCELLED".equalsIgnoreCase(r.getStatus())) {
+                                        allocated = allocated.add(r.getPurse() != null ? r.getPurse() : java.math.BigDecimal.ZERO);
+                                    }
+                                }
+                            }
+                            java.math.BigDecimal newTotal = allocated.add(racePurse);
+                            if (newTotal.compareTo(meetingBudget) > 0) {
+                                java.math.BigDecimal remaining = meetingBudget.subtract(allocated);
+                                if (remaining.compareTo(java.math.BigDecimal.ZERO) < 0) remaining = java.math.BigDecimal.ZERO;
+                                throw new IllegalArgumentException(String.format(
+                                    "Race purse ($%,.2f) exceeds remaining Race Meeting budget ($%,.2f). Total allocated would be $%,.2f / $%,.2f.",
+                                    racePurse, remaining, newTotal, meetingBudget));
+                            }
+
+                            // 2) Class hierarchy check: Class 1 > Class 2 > Class 3 > Class 4 > Class 5
+                            int currentClassNum = extractClassNum(race.getClassLevel());
+                            if (currentClassNum >= 1 && currentClassNum <= 5 && allRaces != null) {
+                                for (RaceDTO r : allRaces) {
+                                    if (!r.getRaceMeetingId().equals(race.getRaceMeetingId())) continue;
+                                    if (r.getId().equals(raceId)) continue;
+                                    if ("CANCELLED".equalsIgnoreCase(r.getStatus())) continue;
+                                    if (r.getPurse() == null || r.getPurse().compareTo(java.math.BigDecimal.ZERO) <= 0) continue;
+                                    int existingClassNum = extractClassNum(r.getClassLevel());
+                                    if (existingClassNum < 1 || existingClassNum > 5) continue;
+                                    if (currentClassNum < existingClassNum && racePurse.compareTo(r.getPurse()) <= 0) {
+                                        throw new IllegalArgumentException(String.format(
+                                            "Class %d purse ($%,.2f) must be greater than Class %d purse ($%,.2f). Higher class must have higher prize money.",
+                                            currentClassNum, racePurse, existingClassNum, r.getPurse()));
+                                    }
+                                    if (currentClassNum > existingClassNum && racePurse.compareTo(r.getPurse()) >= 0) {
+                                        throw new IllegalArgumentException(String.format(
+                                            "Class %d purse ($%,.2f) must be less than Class %d purse ($%,.2f). Lower class must have lower prize money.",
+                                            currentClassNum, racePurse, existingClassNum, r.getPurse()));
+                                    }
+                                }
+                            }
                         }
 
                         if (raceDAO.update(race)) {
@@ -795,5 +885,21 @@ public class AdminUserController extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         processRequest(request, response);
+    }
+
+    /**
+     * Extracts the numeric class number from a class level string (e.g. "Class 1" -> 1, "Class 5" -> 5).
+     * Returns -1 if the class level does not match the expected pattern.
+     */
+    private static int extractClassNum(String classLevel) {
+        if (classLevel == null) return -1;
+        String normalized = classLevel.trim().toLowerCase();
+        if (!normalized.startsWith("class")) return -1;
+        String numPart = normalized.replace("class", "").trim();
+        try {
+            return Integer.parseInt(numPart);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
     }
 }

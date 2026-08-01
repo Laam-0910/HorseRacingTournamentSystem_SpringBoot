@@ -46,4 +46,7 @@ public class RaceInvitation implements Serializable {
 
     @Column(name = "hire_fee")
     private java.math.BigDecimal hireFee = new java.math.BigDecimal("500.00");
+
+    @Column(name = "jockey_prize_percentage", precision = 5, scale = 2)
+    private java.math.BigDecimal jockeyPrizePercentage = new java.math.BigDecimal("20.00");
 }

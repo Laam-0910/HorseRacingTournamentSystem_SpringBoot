@@ -577,6 +577,11 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                     </div>
                   )}
 
+                  <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem" }}>
+                    <span style={{ color: "#a0a0a0" }}>{$t("Prize Share Offered:", (localStorage.getItem('app-lang') || 'vi'))} <strong style={{ color: "#fbbf24", fontFamily: "monospace", fontSize: "0.85rem" }}>{inv.jockeyPrizePercentage ?? 20}%</strong></span>
+                    <span style={{ color: "#a0a0a0" }}>{$t("Hire Fee:", (localStorage.getItem('app-lang') || 'vi'))} <strong style={{ color: "#4ade80", fontFamily: "monospace" }}>${inv.hireFee ?? 500}</strong></span>
+                  </div>
+
                   <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.7rem" }}>
                     <span style={{ color: "#a0a0a0" }}>Invitation: <strong style={{ color: "#f4f2ec" }}>{inv.status}</strong></span>
                     {inv.status === "ACCEPTED" && inv.entryStatus && (

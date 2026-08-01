@@ -54,7 +54,11 @@ public class User implements Serializable {
     }
 
     public void setWalletBalance(BigDecimal walletBalance) {
-        this.balance = walletBalance;
+        if (walletBalance != null) {
+            this.balance = walletBalance.setScale(2, java.math.RoundingMode.HALF_UP);
+        } else {
+            this.balance = BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP);
+        }
     }
 
     @Column(name = "require_otp")

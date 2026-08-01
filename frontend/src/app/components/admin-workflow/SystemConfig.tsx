@@ -9,6 +9,7 @@ const CONFIG_DESC_MAP: Record<string, string> = {
   WEIGHT_PER_POINT: "Weight adjustment (kg) per 1 rating point difference",
   MAX_OVERWEIGHT_ALLOWED: "Maximum overweight allowed for jockeys (kg)",
   SEX_ALLOWANCE: "Sex weight allowance for female horses (Fillies/Mares) (kg)",
+  DEFAULT_JOCKEY_HIRE_FEE: "Default hire fee paid by horse owner to jockey per accepted mount ($100 - $10,000)",
 };
 
 /**

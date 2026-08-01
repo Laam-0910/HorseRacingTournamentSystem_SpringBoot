@@ -54,6 +54,9 @@ public class RaceEntry implements Serializable {
     @Column(name = "handicap_weight")
     private BigDecimal handicapWeight;
 
+    @Column(name = "jockey_prize_percentage", precision = 5, scale = 2)
+    private BigDecimal jockeyPrizePercentage = new BigDecimal("20.00");
+
 
 
 

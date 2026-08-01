@@ -211,17 +211,17 @@ public class ProcessResultsService {
                     // Nếu đạt Hạng 1
                     if (finalPosition != null && finalPosition == 1) {
                         // Thưởng 50% tổng quỹ thưởng của trận đua
-                        prize = purse.multiply(new BigDecimal("0.50"));
+                        prize = purse.multiply(new BigDecimal("0.50")).setScale(2, java.math.RoundingMode.HALF_UP);
                         // Cộng 6 điểm rating cho quán quân
                         ratingAdj = 6;
                     } else if (finalPosition != null && finalPosition == 2) { // Nếu đạt Hạng 2
                         // Thưởng 30% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.30"));
+                        prize = purse.multiply(new BigDecimal("0.30")).setScale(2, java.math.RoundingMode.HALF_UP);
                         // Cộng 3 điểm rating cho á quân
                         ratingAdj = 3;
                     } else if (finalPosition != null && finalPosition == 3) { // Nếu đạt Hạng 3
                         // Thưởng 20% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.20"));
+                        prize = purse.multiply(new BigDecimal("0.20")).setScale(2, java.math.RoundingMode.HALF_UP);
                         // Cộng 1 điểm rating cho hạng 3
                         ratingAdj = 1;
                     } else { // Các thứ hạng khác
@@ -234,10 +234,12 @@ public class ProcessResultsService {
                     // Gán điểm rating điều chỉnh vào lượt đua
                     entry.setRatingAdjustment(ratingAdj);
 
-                    // Phân bổ thưởng vào ví tiền (Wallet balance): 20% cho Nài ngựa (Jockey), 80% cho Chủ ngựa (Owner)
+                    // Phân bổ thưởng vào ví tiền (Wallet balance) theo tỷ lệ thỏa thuận (20% - 50% cho Jockey, phần còn lại cho Owner)
                     if (prize.compareTo(BigDecimal.ZERO) > 0) {
-                        BigDecimal jockeyShare = prize.multiply(new BigDecimal("0.20"));
-                        BigDecimal ownerShare = prize.multiply(new BigDecimal("0.80"));
+                        BigDecimal jockeyPct = entry.getJockeyPrizePercentage() != null ? entry.getJockeyPrizePercentage() : new BigDecimal("20.00");
+                        BigDecimal jockeyRatio = jockeyPct.divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_UP);
+                        BigDecimal jockeyShare = prize.multiply(jockeyRatio).setScale(2, java.math.RoundingMode.HALF_UP);
+                        BigDecimal ownerShare = prize.subtract(jockeyShare).setScale(2, java.math.RoundingMode.HALF_UP);
 
                         // Nạp tiền vào ví của Nài ngựa
                         Optional<User> jOpt = userRepository.findById(entry.getJockeyId());
