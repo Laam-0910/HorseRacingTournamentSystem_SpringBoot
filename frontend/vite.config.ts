@@ -28,6 +28,7 @@ export default defineConfig({
     host: true, // Mở thấu kính Network IP cho phép Điện thoại kết nối
     port: 5173,
     strictPort: true,
+    allowedHosts: true,
   },
   build: {
     outDir: "dist",

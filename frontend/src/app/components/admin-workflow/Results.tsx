@@ -168,8 +168,6 @@ export default function Results() {
         if (isNaN(pos) || pos <= 0) {
           throw new Error(`Invalid position for horse ${e.horseName}`);
         }
-        const isVi = (localStorage.getItem("app-lang") || "vi") === "vi";
-        
         // Kiểm tra thời gian về đích bắt buộc phải nhập
         if (!time) {
           throw new Error(`Finish time is required for horse ${e.horseName}`);
@@ -177,9 +175,7 @@ export default function Results() {
         
         // Ràng buộc định dạng thời gian về đích phải ở dạng MM:SS hoặc MM:SS.ms (phút:giây.mili)
         if (e.status !== "DISQUALIFIED" && !/^\d+:\d+(\.\d+)?$/.test(time.trim())) {
-          throw new Error(isVi 
-            ? `Thời gian của ngựa "${e.horseName}" phải nhập đúng định dạng phút:giây (ví dụ 1:48.35 hoặc 1:48), không được nhập số thường hay có dấu phẩy.`
-            : `Finishing time for horse "${e.horseName}" must be in the format MM:SS or MM:SS.ms (e.g. 1:48.35 or 1:48).`);
+          throw new Error(`Finishing time for horse "${e.horseName}" must be in the format MM:SS or MM:SS.ms (e.g. 1:48.35 or 1:48).`);
         }
         
         // Kiểm tra cân nặng đo lại sau trận

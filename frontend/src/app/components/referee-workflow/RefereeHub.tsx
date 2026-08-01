@@ -549,7 +549,6 @@ export default function RefereeHub() {
     if (!selectedRace) return;
     setLoading(true);
     try {
-      const isVi = (localStorage.getItem('app-lang') || 'vi') === "vi";
 
       // 1. Kiểm tra số lượng chiến mã thực tế tham gia (loại bỏ các ngựa bị SCRATCH)
       const activeCount = raceEntries.filter(item => vetChecks[item.entry.id] !== "SCRATCH").length;
@@ -570,9 +569,7 @@ export default function RefereeHub() {
         const reqWeight = item.entry.carriedWeight || 52.0; // Cân nặng yêu cầu của ban tổ chức
         const weighed = parseFloat(weighedWeights[entryId]); // Cân nặng đo thực tế
         if (isNaN(weighed)) {
-          alert(isVi 
-            ? `Vui lòng nhập cân nặng hợp lệ cho ngựa "${item.horse?.name}".`
-            : `Please enter a valid weight for horse "${item.horse?.name}".`);
+          alert(`Please enter a valid weight for horse "${item.horse?.name}".`);
           setLoading(false);
           return;
         }
@@ -580,17 +577,13 @@ export default function RefereeHub() {
         const diff = weighed - reqWeight;
         // Trả lỗi nếu thiếu cân so với yêu cầu
         if (diff < 0) {
-          alert(isVi 
-            ? `Không thể xác nhận pre-check. Ngựa "${item.horse?.name}" bị thiếu cân (cân nặng đo được ${weighed} kg, yêu cầu tối thiểu ${reqWeight} kg). Nài ngựa phải mang thêm quả cân chì để đạt cân nặng yêu cầu, hoặc phải loại ngựa khỏi cuộc đua (SCRATCH).`
-            : `Cannot confirm pre-check. Horse "${item.horse?.name}" is underweight (weighed ${weighed} kg, required ${reqWeight} kg). Jockey must add lead weights to match required weight, or horse must be scratched.`);
+          alert(`Cannot confirm pre-check. Horse "${item.horse?.name}" is underweight (weighed ${weighed} kg, required ${reqWeight} kg). Jockey must add lead weights to match required weight, or horse must be scratched.`);
           setLoading(false);
           return;
         }
         // Trả lỗi nếu quá cân vượt giới hạn an toàn cho phép là +1.0kg
         if (diff > 1.0) {
-          notify(isVi 
-            ? `Không thể xác nhận pre-check. Ngựa "${item.horse?.name}" bị quá cân (+${diff.toFixed(1)} kg, giới hạn tối đa cho phép là +1.0 kg). Vui lòng điều chỉnh lại cân nặng của nài ngựa hoặc loại ngựa khỏi cuộc đua (SCRATCH).`
-            : `Cannot confirm pre-check. Horse "${item.horse?.name}" is too overweight (+${diff.toFixed(1)} kg, limit is +1.0 kg). Jockey weight must be corrected, or horse must be scratched.`, "error");
+          notify(`Cannot confirm pre-check. Horse "${item.horse?.name}" is too overweight (+${diff.toFixed(1)} kg, limit is +1.0 kg). Jockey weight must be corrected, or horse must be scratched.`, "error");
           setLoading(false);
           return;
         }
@@ -607,7 +600,7 @@ export default function RefereeHub() {
         raceId: selectedRace.id,
         entries: payloadEntries,
       });
-      notify(isVi ? "Kiểm tra trước cuộc đua hoàn tất. Trận đấu đã sẵn sàng bắt đầu!" : "Pre-race check completed. The race is now ready to start!", "success");
+      notify("Pre-race check completed. The race is now ready to start!", "success");
       setActiveView("list");
       setSelectedRace(null);
       fetchDashboard();
@@ -842,7 +835,6 @@ export default function RefereeHub() {
     if (!selectedRace) return;
     setLoading(true);
     try {
-      const isVi = (localStorage.getItem('app-lang') || 'vi') === "vi";
       
       // 1. Ràng buộc biểu thức thời gian và thứ hạng của các chiến mã đạt chuẩn (không bị DQ)
       for (const item of raceEntries) {
@@ -858,25 +850,19 @@ export default function RefereeHub() {
           }
           // Yêu cầu nhập đúng định dạng mm:ss hoặc mm:ss.ms (số giây từ 00 đến 59)
           if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(time.trim())) {
-            notify(isVi 
-              ? `Thời gian của ngựa "${item.horse?.name}" không hợp lệ (${time}). Số giây phải nằm trong khoảng 00-59 (ví dụ 1:48.35 hoặc 1:05).`
-              : `Finishing time for horse "${item.horse?.name}" is invalid (${time}). Seconds must be between 00 and 59 (e.g. 1:48.35 or 1:05).`, "error");
+            notify(`Finishing time for horse "${item.horse?.name}" is invalid (${time}). Seconds must be between 00 and 59 (e.g. 1:48.35 or 1:05).`, "error");
             setLoading(false);
             return;
           }
           const pos = finalPositions[entryId];
           if (!pos || isNaN(parseInt(pos))) {
-            notify(isVi
-              ? `Không thể xác định thứ hạng về đích cho ngựa "${item.horse?.name}". Vui lòng kiểm tra lại thời gian.`
-              : `Cannot determine final position for horse "${item.horse?.name}". Please check the finish time.`, "error");
+            notify(`Cannot determine final position for horse "${item.horse?.name}". Please check the finish time.`, "error");
             setLoading(false);
             return;
           }
           const weight = parseFloat(weighInWeights[entryId]);
           if (isNaN(weight) || weight <= 0) {
-            notify(isVi
-              ? `Vui lòng nhập cân nặng sau đua hợp lệ cho ngựa "${item.horse?.name}".`
-              : `Please enter a valid weigh-in weight for horse "${item.horse?.name}".`, "error");
+            notify(`Please enter a valid weigh-in weight for horse "${item.horse?.name}".`, "error");
             setLoading(false);
             return;
           }
@@ -902,12 +888,12 @@ export default function RefereeHub() {
         results: resultsPayload,
       });
 
-      notify(isVi ? "Kết quả đã được xác minh và công bố chính thức. Đóng trận đấu." : "Results verified and published. Closing race.", "success");
+      notify("Results verified and published. Closing race.", "success");
       setActiveView("list");
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      notify($t("Gửi kết quả thất bại: ", (localStorage.getItem('app-lang') || 'vi')) + getErrMsg(err), "error");
+      notify("Failed to submit results: " + getErrMsg(err), "error");
     } finally {
       setLoading(false);
     }

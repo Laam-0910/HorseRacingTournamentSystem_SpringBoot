@@ -56,14 +56,14 @@ public class ProcessResultsService {
                     // Yêu cầu bắt buộc phải nhập thời gian hoàn thành nếu không bị loại
                     if (finishTime == null || finishTime.trim().isEmpty()) {
                         // Ném lỗi nếu thời gian hoàn thành bị bỏ trống
-                        throw new IllegalArgumentException("Vui lòng nhập thời gian hoàn thành cho tất cả ngựa thi đấu trước khi hoàn tất trận đua.");
+                        throw new IllegalArgumentException("Please enter the finishing time for all participating horses before completing the race.");
                     }
                     // Loại bỏ khoảng trắng thừa của chuỗi thời gian
                     String tStr = finishTime.trim();
                     // Kiểm tra định dạng thời gian (phải là "DQ" hoặc định dạng MM:SS / MM:SS.ms hợp lệ)
                     if (!"DQ".equalsIgnoreCase(tStr) && !tStr.matches("^\\d+:[0-5]\\d(\\.\\d{1,3})?$")) {
                         // Ném ngoại lệ thông báo định dạng thời gian không đúng quy định
-                        throw new IllegalArgumentException("Thời gian hoàn thành ('" + finishTime + "') không hợp lệ. Số giây phải nằm trong khoảng 00-59 (Định dạng MM:SS hoặc MM:SS.ms, ví dụ: 1:48.35).");
+                        throw new IllegalArgumentException("Invalid finish time ('" + finishTime + "'). Seconds must be between 00-59 (Format MM:SS or MM:SS.ms, e.g., 1:48.35).");
                     }
                 }
             }

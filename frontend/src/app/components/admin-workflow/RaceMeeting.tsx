@@ -123,14 +123,14 @@ export default function RaceMeeting() {
       if (selectedSeason && date) {
         const meetingTime = new Date(date).getTime();
         if (selectedSeason.startDate && meetingTime < new Date(selectedSeason.startDate).getTime()) {
-          setError($t("Ngày của Race Meeting không được trước ngày bắt đầu Mùa giải", (localStorage.getItem('app-lang') || 'vi')) + ` (${selectedSeason.startDate} - ${selectedSeason.endDate})`);
+          setError($t("Race Meeting date cannot be before Season start date", (localStorage.getItem('app-lang') || 'vi')) + ` (${selectedSeason.startDate} - ${selectedSeason.endDate})`);
           return;
         }
         if (selectedSeason.endDate) {
           const endDate = new Date(selectedSeason.endDate);
           endDate.setHours(23, 59, 59, 999);
           if (meetingTime > endDate.getTime()) {
-            setError($t("Ngày của Race Meeting không được sau ngày kết thúc Mùa giải", (localStorage.getItem('app-lang') || 'vi')) + ` (${selectedSeason.startDate} - ${selectedSeason.endDate})`);
+            setError($t("Race Meeting date cannot be after Season end date", (localStorage.getItem('app-lang') || 'vi')) + ` (${selectedSeason.startDate} - ${selectedSeason.endDate})`);
             return;
           }
         }
@@ -299,6 +299,11 @@ export default function RaceMeeting() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onInvalid={(e) => {
+                const target = e.target as HTMLInputElement;
+                target.setCustomValidity(target.validity.valueMissing ? $t("Please fill out this field.", (localStorage.getItem('app-lang') || 'vi')) : "");
+              }}
+              onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
               className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs"
               placeholder={$t("E.g., Grand Prix Sunday", (localStorage.getItem('app-lang') || 'vi'))}
             />
@@ -315,6 +320,19 @@ export default function RaceMeeting() {
               required
               value={totalBudget}
               onChange={(e) => setTotalBudget(e.target.value)}
+              onInvalid={(e) => {
+                const target = e.target as HTMLInputElement;
+                if (target.validity.valueMissing) {
+                  target.setCustomValidity($t("Please fill out this field.", (localStorage.getItem('app-lang') || 'vi')));
+                } else if (target.validity.rangeUnderflow) {
+                  target.setCustomValidity($t("Value must be greater than or equal to 10000000.", (localStorage.getItem('app-lang') || 'vi')));
+                } else if (target.validity.rangeOverflow) {
+                  target.setCustomValidity($t("Value must be less than or equal to 1000000000.", (localStorage.getItem('app-lang') || 'vi')));
+                } else {
+                  target.setCustomValidity("");
+                }
+              }}
+              onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
               className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs"
               placeholder={$t("Min: 10,000,000 — Max: 1,000,000,000", (localStorage.getItem('app-lang') || 'vi'))}
             />
@@ -338,6 +356,11 @@ export default function RaceMeeting() {
               required
               value={venue}
               onChange={(e) => setVenue(e.target.value)}
+              onInvalid={(e) => {
+                const target = e.target as HTMLInputElement;
+                target.setCustomValidity(target.validity.valueMissing ? $t("Please fill out this field.", (localStorage.getItem('app-lang') || 'vi')) : "");
+              }}
+              onInput={(e) => (e.target as HTMLInputElement).setCustomValidity("")}
               className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs"
               placeholder={$t("E.g., Epsom Downs Track", (localStorage.getItem('app-lang') || 'vi'))}
             />

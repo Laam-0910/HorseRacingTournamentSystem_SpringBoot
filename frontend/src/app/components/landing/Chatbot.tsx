@@ -19,7 +19,7 @@ export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "Xin chào! Tôi là Trợ lý AI trường đua ngựa. Bạn có thể hỏi tôi bất kỳ thông tin nào về giải đấu, nài ngựa, ngựa đua hoặc vi phạm. (Ví dụ: 'Top 3 ngựa xuất sắc nhất' hoặc 'Thông tin ngựa Storm')",
+      text: "Hello! I am the Horse Racing AI Assistant. You can ask me any questions about tournaments, jockeys, horses, or rule violations (e.g., 'Top 3 best horses' or 'Storm horse info').",
       isHtml: false,
     },
   ]);
@@ -70,14 +70,14 @@ export default function Chatbot() {
         // Trường hợp API phản hồi lỗi nghiệp vụ từ phía máy chủ
         setMessages((prev) => [
           ...prev,
-          { sender: "bot", text: "Xin lỗi, hiện tại tôi không thể kết nối tới cơ sở dữ liệu." },
+          { sender: "bot", text: "Sorry, I cannot connect to the database at the moment." },
         ]);
       }
     } catch (err: any) {
       // Trường hợp xảy ra lỗi mạng hoặc lỗi kết nối đến server Spring Boot/AI
       setMessages((prev) => [
         ...prev,
-        { sender: "bot", text: "Đã xảy ra lỗi khi kết nối tới máy chủ AI: " + (getErrMsg(err, "Unknown error")) },
+        { sender: "bot", text: "An error occurred while connecting to the AI server: " + (getErrMsg(err, "Unknown error")) },
       ]);
     } finally {
       setLoading(false); // Tắt trạng thái chờ
@@ -160,7 +160,7 @@ export default function Chatbot() {
             disabled={loading} // Vô hiệu hóa input khi đang tải
             onChange={(e) => setInput(e.target.value)}
             className="w-full pl-6 pr-16 py-4 bg-[#151310]/60 border border-white/5 rounded-2xl placeholder-slate-500 text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 text-sm transition"
-            placeholder="Hỏi về nài ngựa, kết quả đua..."
+            placeholder="Ask about jockeys, race results..."
           />
           {/* Nút gửi tin nhắn */}
           <button
@@ -168,7 +168,7 @@ export default function Chatbot() {
             disabled={!input.trim() || loading} // Vô hiệu hóa nút nếu không có ký tự nhập
             className="absolute right-3 top-2.5 h-10 px-4 bg-amber-500 hover:bg-amber-400 text-black font-semibold rounded-xl text-xs disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
-            Gửi
+            Send
           </button>
         </form>
       </div>

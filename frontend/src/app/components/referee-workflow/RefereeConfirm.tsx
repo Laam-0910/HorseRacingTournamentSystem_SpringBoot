@@ -97,14 +97,13 @@ export default function RefereeConfirm({ raceId, onBack }: RefereeConfirmProps) 
         const isDq = e.entry.status === "DISQUALIFIED" || times[e.entry.id] === "DQ";
         if (!isDq) {
           const tVal = times[e.entry.id] ? times[e.entry.id].trim() : "";
-          const lang = localStorage.getItem('app-lang') || 'vi';
           if (!tVal) {
-            setError($t("Vui lòng nhập thời gian về đích cho tất cả ngựa thi đấu trước khi hoàn tất trận đua."));
+            setError("Please enter finishing time for all participating horses before finalizing the race.");
             setLoading(false);
             return;
           }
           if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(tVal)) {
-            setError($t("Thời gian hoàn thành không hợp lệ. Số giây phải từ 00 đến 59 (Định dạng MM:SS hoặc MM:SS.ms, ví dụ: 1:48.35)."));
+            setError("Invalid finishing time. Seconds must be between 00 and 59 (Format MM:SS or MM:SS.ms, e.g., 1:48.35).");
             setLoading(false);
             return;
           }

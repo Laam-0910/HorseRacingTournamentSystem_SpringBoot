@@ -204,7 +204,7 @@ public class RaceService {
         Season season = seasonRepository.findById(seasonId).orElse(null); // Tìm mùa giải tương ứng theo ID
         if (season == null) return; // Nếu không tìm thấy mùa giải thì bỏ qua
         if (season.getStartDate() != null && meetingDate.before(season.getStartDate())) { // Kiểm tra ngày diễn ra Ngày hội đua trước ngày bắt đầu mùa giải
-            throw new IllegalArgumentException("Ngày của Race Meeting (" + meetingDate + ") không được trước ngày bắt đầu Mùa giải (" + season.getStartDate() + ")."); // Ném lỗi tham số không hợp lệ
+            throw new IllegalArgumentException("Race Meeting date (" + meetingDate + ") cannot be before Season start date (" + season.getStartDate() + ")."); // Ném lỗi tham số không hợp lệ
         }
         if (season.getEndDate() != null) { // Kiểm tra nếu mùa giải có ngày kết thúc
             Calendar calEnd = Calendar.getInstance(); // Khởi tạo Calendar để thiết lập mốc cuối ngày
@@ -214,7 +214,7 @@ public class RaceService {
             calEnd.set(Calendar.SECOND, 59); // Đặt giây là 59s
             calEnd.set(Calendar.MILLISECOND, 999); // Đặt miligiây là 999ms
             if (meetingDate.after(calEnd.getTime())) { // Kiểm tra nếu Ngày hội đua diễn ra sau thời điểm kết thúc mùa giải
-                throw new IllegalArgumentException("Ngày của Race Meeting (" + meetingDate + ") không được sau ngày kết thúc Mùa giải (" + season.getEndDate() + ")."); // Ném lỗi tham số không hợp lệ
+                throw new IllegalArgumentException("Race Meeting date (" + meetingDate + ") cannot be after Season end date (" + season.getEndDate() + ")."); // Ném lỗi tham số không hợp lệ
             }
         }
     }
@@ -223,13 +223,13 @@ public class RaceService {
         int min = minEntries != null ? minEntries : 3; // Lấy giá trị minEntries hoặc mặc định là 3
         int max = maxEntries != null ? maxEntries : 14; // Lấy giá trị maxEntries hoặc mặc định là 14
         if (min <= 1) { // Kiểm tra nếu số lượng tối thiểu nhỏ hơn hoặc bằng 1
-            throw new IllegalArgumentException("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1)."); // Ném lỗi quy định tối thiểu
+            throw new IllegalArgumentException("Minimum entries must be greater than 1."); // Ném lỗi quy định tối thiểu
         }
         if (max >= 15) { // Kiểm tra nếu số lượng tối đa vượt quá hoặc bằng 15
-            throw new IllegalArgumentException("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15)."); // Ném lỗi quy định tối đa
+            throw new IllegalArgumentException("Maximum entries must be less than 15."); // Ném lỗi quy định tối đa
         }
         if (min > max) { // Kiểm tra nếu số lượng tối thiểu lớn hơn số lượng tối đa
-            throw new IllegalArgumentException("Số lượng ngựa tối thiểu (" + min + ") không được lớn hơn số lượng tối đa (" + max + ")."); // Ném lỗi logic so sánh min/max
+            throw new IllegalArgumentException("Minimum entries (" + min + ") cannot be greater than maximum entries (" + max + ")."); // Ném lỗi logic so sánh min/max
         }
     }
 
@@ -238,10 +238,10 @@ public class RaceService {
 
     private void validateMeetingBudget(BigDecimal budget) {
         if (budget == null || budget.compareTo(MIN_MEETING_BUDGET) < 0) {
-            throw new IllegalArgumentException("Ngân sách tổng (Total budget) của Race Meeting phải tối thiểu là 10,000,000 (không được nhập số âm hoặc bé hơn 10tr).");
+            throw new IllegalArgumentException("Total budget must be at least 10,000,000.");
         }
         if (budget.compareTo(MAX_MEETING_BUDGET) > 0) {
-            throw new IllegalArgumentException("Ngân sách tổng (Total budget) của Race Meeting không được vượt quá 1,000,000,000 (1 tỷ).");
+            throw new IllegalArgumentException("Total budget cannot exceed 1,000,000,000.");
         }
     }
 
