@@ -579,9 +579,18 @@ public class AdminUserController extends HttpServlet {
                     meeting.setStartDate(new java.sql.Timestamp(fullParser.parse(dateStr + " 08:00:00").getTime()));
                     meeting.setVenue(venue);
                     if (purseStr != null && !purseStr.isEmpty()) {
-                        meeting.setTotalBudget(new java.math.BigDecimal(purseStr));
+                        java.math.BigDecimal budgetVal = new java.math.BigDecimal(purseStr);
+                        java.math.BigDecimal minBudget = new java.math.BigDecimal("10000000");
+                        java.math.BigDecimal maxBudget = new java.math.BigDecimal("1000000000");
+                        if (budgetVal.compareTo(minBudget) < 0) {
+                            throw new IllegalArgumentException("Ngân sách tổng (Total budget) phải tối thiểu là 10,000,000 (10 triệu). Không được nhập số âm hoặc bé hơn 10 triệu.");
+                        }
+                        if (budgetVal.compareTo(maxBudget) > 0) {
+                            throw new IllegalArgumentException("Ngân sách tổng (Total budget) không được vượt quá 1,000,000,000 (1 tỷ).");
+                        }
+                        meeting.setTotalBudget(budgetVal);
                     } else {
-                        meeting.setTotalBudget(java.math.BigDecimal.ZERO);
+                        throw new IllegalArgumentException("Ngân sách tổng (Total budget) là bắt buộc. Tối thiểu: 10,000,000 (10 triệu).");
                     }
                     RaceMeetingDAO meetingDAO = new RaceMeetingDAO();
                     meetingDAO.insert(meeting);
