@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
 import { formatDate } from "../../utils/dateTimeHelper";
 import { $t } from "../../../lib/i18n";
+import { Pagination } from "../common/Pagination";
 
 interface AdminWalletModalProps {
   onClose?: () => void;
@@ -19,6 +20,9 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Input states for Top-Up and Withdrawal
   const [activeAction, setActiveAction] = useState<"none" | "topup" | "withdraw">("none");
@@ -180,7 +184,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
               <input
                 type="number"
                 min="1"
-                step="1000"
+                step="any"
                 required
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
@@ -260,38 +264,57 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
             <div className="text-center py-8 bg-black/20 border border-white/5 rounded-xl text-white/40 text-xs font-mono">
               No transaction history recorded yet.
             </div>
-          ) : (
-            <div className="border border-white/10 rounded-xl overflow-x-auto max-h-72 overflow-y-auto">
-              <table className="w-full text-left border-collapse text-xs font-mono">
-                <thead>
-                  <tr className="bg-black/60 text-white/50 border-b border-white/10 uppercase text-[10px]">
-                    <th className="px-4 py-3">TX ID</th>
-                    <th className="px-4 py-3">Transaction Type</th>
-                    <th className="px-4 py-3">Amount ($USD)</th>
-                    <th className="px-4 py-3">Description / Notes</th>
-                    <th className="px-4 py-3">Date & Time</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {walletData?.transactions?.map((tx: any) => {
-                    const amt = Number(tx.amount || 0);
-                    const isPositive = amt > 0;
-                    return (
-                      <tr key={tx.id} className="hover:bg-white/[0.02] transition">
-                        <td className="px-4 py-3 text-white/40">#TX-{tx.id}</td>
-                        <td className="px-4 py-3">{getTxBadge(tx.transactionType)}</td>
-                        <td className={`px-4 py-3 font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {isPositive ? `+${amt.toLocaleString('en-US')}` : `${amt.toLocaleString('en-US')}`}
-                        </td>
-                        <td className="px-4 py-3 text-white/80 max-w-xs truncate">{tx.description}</td>
-                        <td className="px-4 py-3 text-white/40">{formatDate(tx.createdAt)}</td>
+          ) : (() => {
+            const txs = walletData?.transactions || [];
+            const totalItems = txs.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+            const validPage = Math.min(Math.max(1, page), totalPages);
+            const startIndex = (validPage - 1) * pageSize;
+            const paginatedTxs = txs.slice(startIndex, startIndex + pageSize);
+
+            return (
+              <div className="space-y-2">
+                <div className="border border-white/10 rounded-xl overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs font-mono">
+                    <thead>
+                      <tr className="bg-black/60 text-white/50 border-b border-white/10 uppercase text-[10px]">
+                        <th className="px-4 py-3">TX ID</th>
+                        <th className="px-4 py-3">Transaction Type</th>
+                        <th className="px-4 py-3">Amount ($USD)</th>
+                        <th className="px-4 py-3">Description / Notes</th>
+                        <th className="px-4 py-3">Date & Time</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {paginatedTxs.map((tx: any) => {
+                        const amt = Number(tx.amount || 0);
+                        const isPositive = amt > 0;
+                        return (
+                          <tr key={tx.id} className="hover:bg-white/[0.02] transition">
+                            <td className="px-4 py-3 text-white/40">#TX-{tx.id}</td>
+                            <td className="px-4 py-3">{getTxBadge(tx.transactionType)}</td>
+                            <td className={`px-4 py-3 font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {isPositive ? `+${amt.toLocaleString('en-US')}` : `${amt.toLocaleString('en-US')}`}
+                            </td>
+                            <td className="px-4 py-3 text-white/80 max-w-xs truncate">{tx.description}</td>
+                            <td className="px-4 py-3 text-white/40">{formatDate(tx.createdAt)}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  currentPage={validPage}
+                  totalItems={totalItems}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                  pageSizeOptions={[5, 10, 20]}
+                />
+              </div>
+            );
+          })()}
         </div>
 
         {onClose && (

@@ -64,37 +64,32 @@ def chatbot():
     if not message:
         return jsonify({"success": False, "error": "message is required"}), 400
 
-    # ── BẢO MẬT: Chặn yêu cầu nhạy cảm liên quan đến tài khoản mật khẩu
+    # ── SECURITY: Block sensitive requests related to credentials/passwords
     blocked_keywords = ["password", "mật khẩu", "passwd", "admin credential", "danh sách user", "danh sách tài khoản", "user credentials"]
     msg_lower = message.lower()
     if any(kw in msg_lower for kw in blocked_keywords):
-        reply = (
-            "⚠️ Tôi không được phép chia sẻ thông tin tài khoản, mật khẩu hoặc dữ liệu cá nhân của người dùng. Vui lòng liên hệ quản trị viên."
-            if lang != "en" else
-            "⚠️ I am not authorized to share account credentials, passwords, or personal information. Please contact the administrator."
-        )
+        reply = "⚠️ I am not authorized to share account credentials, passwords, or personal information. Please contact the administrator."
         return jsonify({"success": True, "reply": reply})
 
-    # 1. Cập nhật ngữ cảnh hội thoại (Dialogue State Memory) từ tin nhắn mới
+    # 1. Update dialogue state memory from incoming message
     memory.update_state_from_text(session_id, message)
     session = memory.get_session(session_id)
     state = session["state"]
 
-    # 2. RAG: Lấy thông tin thực tế từ Database dựa trên state hiện tại
+    # 2. RAG: Retrieve context from Database based on current state
     db_context = rag_engine.retrieve_db_context(state)
 
-    # 3. Lấy chuỗi lịch sử trò chuyện để làm ngữ cảnh
+    # 3. Retrieve chat history for context
     chat_history = memory.get_history_context(session_id)
 
-    # 4. Tạo phản hồi sử dụng LLM (Gemini hoặc Ollama local)
-    # Nếu chưa bật Gemini hoặc không kết nối được Ollama, ta sẽ tự động fallback sang Chatbot rule-based gốc
+    # 4. Generate response using LLM (Gemini or Ollama local)
     reply = ""
     try:
         reply = rag_engine.generate_answer(message, chat_history, db_context, lang)
     except Exception as e:
         reply = f"EXCEPTION: {str(e)}"
         
-    # Fallback dự phòng nếu LLM không trả về kết quả hoặc lỗi API
+    # Fallback if LLM returns error or API fails
     is_fallback = (
         not reply
         or reply.startswith("EXCEPTION:")
@@ -107,13 +102,7 @@ def chatbot():
     if is_fallback:
         has_429 = "429" in reply or "hết lượt" in reply.lower()
         if has_429:
-            if lang != "en":
-                if any(w in message.lower() for w in ["người yêu", "ny", "tình yêu", "crush", "bạn gái", "bạn trai"]):
-                    reply = "🐎 Ôi, câu hỏi về tình duyên làm tôi hồi hộp đến mức nghẹt thở luôn rồi (Lỗi 429 - Lượt yêu cầu quá nhanh)! Tìm người yêu cũng cần kiên nhẫn như khi huấn luyện chiến mã vậy, hãy đợi vài giây rồi thử hỏi lại tôi nhé! 😉"
-                else:
-                    reply = "🏇 Trợ lý AI đang chạy nước rút trên đường đua nên tạm thời hụt hơi (Lỗi 429 - Quá số lượt yêu cầu). Vui lòng đợi vài giây và gửi lại câu hỏi nhé!"
-            else:
-                reply = "🏇 The AI assistant is temporarily busy coordinating jockeys in the stable (Rate Limit 429). Please wait a few seconds and try again!"
+            reply = "🏇 The AI assistant is temporarily busy coordinating jockeys in the stable (Rate Limit 429). Please wait a few seconds and try again!"
         else:
             reply = chat(message, lang)
 

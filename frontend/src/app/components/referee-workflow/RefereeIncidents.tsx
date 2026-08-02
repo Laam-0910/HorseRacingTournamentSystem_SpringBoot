@@ -2,6 +2,7 @@ import { $t } from '@/lib/i18n';
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
+import { Pagination } from "../common/Pagination";
 
 // Bảng dịch nghĩa tiếng Anh phục vụ nhãn trong component
 const TRANSLATIONS: Record<string, Record<string, string>> = {
@@ -34,6 +35,10 @@ export default function RefereeIncidents() {
   const [incidents, setIncidents] = useState<any[]>([]); // Danh sách sự cố vi phạm
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   // --- Các State phục vụ Modal xem báo cáo giám sát chính thức ---
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
@@ -97,7 +102,7 @@ export default function RefereeIncidents() {
                 <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>{$t("Bạn chưa ghi nhận vi phạm nào.", (localStorage.getItem('app-lang') || 'en'))}</span>
               </div>
             ) : (
-              incidents.map((item: any) => (
+              incidents.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((item: any) => (
                 <div key={item.violation?.id ?? item.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                     <div>
@@ -143,6 +148,15 @@ export default function RefereeIncidents() {
                 </div>
               ))
             )}
+            {!loading && incidents.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalItems={incidents.length}
+                pageSize={pageSize}
+                onPageChange={(p: number) => setCurrentPage(p)}
+                onPageSizeChange={(s: number) => { setPageSize(s); setCurrentPage(1); }}
+              />
+            )}
           </div>
         ) : (
           // Bảng Desktop (Bảng biểu nhiều cột)
@@ -167,7 +181,7 @@ export default function RefereeIncidents() {
                       </div>
                     </td>
                   </tr>
-                ) : incidents.map((item: any) => (
+                ) : incidents.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((item: any) => (
                   <tr key={item.violation?.id ?? item.id}
                     style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
@@ -205,6 +219,17 @@ export default function RefereeIncidents() {
                 ))}
               </tbody>
             </table>
+            {!loading && incidents.length > 0 && (
+              <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                <Pagination
+                  currentPage={currentPage}
+                  totalItems={incidents.length}
+                  pageSize={pageSize}
+                  onPageChange={(p: number) => setCurrentPage(p)}
+                  onPageSizeChange={(s: number) => { setPageSize(s); setCurrentPage(1); }}
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

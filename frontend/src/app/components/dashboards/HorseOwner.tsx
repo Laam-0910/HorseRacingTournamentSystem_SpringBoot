@@ -1,6 +1,6 @@
 // Import hàm đa ngôn ngữ $t
 import { $t } from "@/lib/i18n";
-// Import hook useState và useEffect từ React
+import { Pagination } from "../common/Pagination";
 import { useState, useEffect } from "react";
 // Import hook useAuth từ ngữ cảnh AuthContext
 import { useAuth } from "../../../context/AuthContext";
@@ -237,9 +237,18 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
   onSwitchTab?: (tab: OwnerTab) => void;
 }) {
   const [selectedHorses, setSelectedHorses] = useState<Record<number, number[]>>({});
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(6);
+
   const walletBal = dashboard?.walletBalance !== undefined && dashboard?.walletBalance !== null
     ? Number(dashboard.walletBalance)
     : (user?.walletBalance !== undefined && user?.walletBalance !== null ? Number(user.walletBalance) : 0);
+
+  const totalItems = meetings.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedMeetings = meetings.slice(startIndex, startIndex + pageSize);
 
   const handleCheckbox = (meetingId: number, horseId: number) => {
     setSelectedHorses(prev => {
@@ -298,7 +307,7 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
           </div>
           <div style={{ fontSize: "0.75rem" }}>
             <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏇 Jockey Hire Fee:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}><strong>-$500.00</strong> deducted upon jockey accepting race invitation.</p>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Negotiable <strong>20% - 50%</strong> of prize money held in Escrow Vault.</p>
           </div>
           <div style={{ fontSize: "0.75rem" }}>
             <span style={{ color: "#fbbf24", fontWeight: 600 }}>🤝 Referral Bonus:</span>
@@ -310,10 +319,12 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Available Race Meetings", (localStorage.getItem('app-lang') || 'en'))}</h3>
         <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>{$t("Register your stable for upcoming race day events.", (localStorage.getItem('app-lang') || 'en'))}</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: "1rem" }}>
-          {meetings.length === 0
-            ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No upcoming meetings available.", (localStorage.getItem('app-lang') || 'en'))}</p>
-            : meetings.map((m: any) => {
+        {meetings.length === 0 ? (
+          <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No upcoming meetings available.", (localStorage.getItem('app-lang') || 'en'))}</p>
+        ) : (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(280px,1fr))", gap: "1rem" }}>
+              {paginatedMeetings.map((m: any) => {
                 const isReg = dashboard?.registeredMeetingIds?.includes(m.id);
                 const regStatus = dashboard?.regStatuses?.[m.id];
                 const regHorses = dashboard?.meetingRegisteredHorses?.[m.id] || [];
@@ -439,7 +450,17 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                   </div>
                 );
               })}
-        </div>
+            </div>
+            <Pagination
+              currentPage={validPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[3, 6, 12, 24]}
+            />
+          </>
+        )}
       </div>
     </div>
   );
@@ -479,6 +500,8 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
   const [retiringHorse, setRetiringHorse] = useState<any | null>(null);
   const [retireReason, setRetireReason] = useState("");
   const [retireRequests, setRetireRequests] = useState<any[]>([]);
+  const [retirePage, setRetirePage] = useState(1);
+  const [retirePageSize, setRetirePageSize] = useState(5);
 
   const fetchRetireRequests = async () => {
     try {
@@ -612,6 +635,17 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
   const rejectedHorses = stable.filter((item: any) => item.horse.status === "REJECTED");
   const retiredHorses = stable.filter((item: any) => item.horse.status === "RETIRED");
 
+  const [activePage, setActivePage] = useState(1);
+  const [activePageSize, setActivePageSize] = useState(6);
+  const [rejectedPage, setRejectedPage] = useState(1);
+  const [rejectedPageSize, setRejectedPageSize] = useState(6);
+  const [retiredPage, setRetiredPage] = useState(1);
+  const [retiredPageSize, setRetiredPageSize] = useState(6);
+
+  const paginatedActive = activeHorses.slice((activePage - 1) * activePageSize, activePage * activePageSize);
+  const paginatedRejected = rejectedHorses.slice((rejectedPage - 1) * rejectedPageSize, rejectedPage * rejectedPageSize);
+  const paginatedRetired = retiredHorses.slice((retiredPage - 1) * retiredPageSize, retiredPage * retiredPageSize);
+
   const renderHorseCard = (item: any) => {
     const h = item.horse;
     return (
@@ -660,9 +694,19 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
             {activeHorses.length === 0 ? (
               <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.7rem" }}>{$t("No active or pending horses.", (localStorage.getItem('app-lang') || 'en'))}</p>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
-                {activeHorses.map(item => renderHorseCard(item))}
-              </div>
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+                  {paginatedActive.map(item => renderHorseCard(item))}
+                </div>
+                <Pagination
+                  currentPage={activePage}
+                  totalItems={activeHorses.length}
+                  pageSize={activePageSize}
+                  onPageChange={setActivePage}
+                  onPageSizeChange={setActivePageSize}
+                  pageSizeOptions={[6, 12, 24, 48]}
+                />
+              </>
             )}
           </div>
 
@@ -675,9 +719,19 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
             {rejectedHorses.length === 0 ? (
               <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.7rem" }}>{$t("No rejected declarations.", (localStorage.getItem('app-lang') || 'en'))}</p>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
-                {rejectedHorses.map(item => renderHorseCard(item))}
-              </div>
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+                  {paginatedRejected.map(item => renderHorseCard(item))}
+                </div>
+                <Pagination
+                  currentPage={rejectedPage}
+                  totalItems={rejectedHorses.length}
+                  pageSize={rejectedPageSize}
+                  onPageChange={setRejectedPage}
+                  onPageSizeChange={setRejectedPageSize}
+                  pageSizeOptions={[6, 12, 24, 48]}
+                />
+              </>
             )}
           </div>
 
@@ -690,9 +744,19 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
             {retiredHorses.length === 0 ? (
               <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.7rem" }}>{$t("No retired horses.", (localStorage.getItem('app-lang') || 'en'))}</p>
             ) : (
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
-                {retiredHorses.map(item => renderHorseCard(item))}
-              </div>
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
+                  {paginatedRetired.map(item => renderHorseCard(item))}
+                </div>
+                <Pagination
+                  currentPage={retiredPage}
+                  totalItems={retiredHorses.length}
+                  pageSize={retiredPageSize}
+                  onPageChange={setRetiredPage}
+                  onPageSizeChange={setRetiredPageSize}
+                  pageSizeOptions={[6, 12, 24, 48]}
+                />
+              </>
             )}
           </div>
 
@@ -739,48 +803,66 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
       </div>
 
       {/* Retirement Request History */}
-      <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem" }}>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Retirement Request History", (localStorage.getItem('app-lang') || 'en'))}</h3>
-        {retireRequests.length === 0 ? (
-          <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.75rem" }}>{$t("No retirement requests submitted yet.", (localStorage.getItem('app-lang') || 'en'))}</p>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem", fontFamily: "monospace", textAlign: "left" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#a0a0a0" }}>
-                  <th style={{ padding: "0.5rem" }}>{$t("Horse Name", (localStorage.getItem('app-lang') || 'en'))}</th>
-                  <th style={{ padding: "0.5rem" }}>{$t("Reason", (localStorage.getItem('app-lang') || 'en'))}</th>
-                  <th style={{ padding: "0.5rem" }}>{$t("Status", (localStorage.getItem('app-lang') || 'en'))}</th>
-                  <th style={{ padding: "0.5rem" }}>{$t("Admin Remarks", (localStorage.getItem('app-lang') || 'en'))}</th>
-                  <th style={{ padding: "0.5rem" }}>{$t("Submitted At", (localStorage.getItem('app-lang') || 'en'))}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {retireRequests.map((req: any) => (
-                  <tr key={req.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                    <td style={{ padding: "0.5rem", color: "#f4f2ec", fontWeight: "bold" }}>{req.horseName}</td>
-                    <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.reason}</td>
-                    <td style={{ padding: "0.5rem" }}>
-                      <span style={{
-                        padding: "0.15rem 0.4rem",
-                        borderRadius: "0.25rem",
-                        fontSize: "0.65rem",
-                        fontWeight: "bold",
-                        background: req.status === "APPROVED" ? "rgba(74,222,128,0.1)" : req.status === "REJECTED" ? "rgba(239,68,68,0.1)" : "rgba(251,191,36,0.1)",
-                        color: req.status === "APPROVED" ? "#4ade80" : req.status === "REJECTED" ? "#ef4444" : "#fbbf24"
-                      }}>
-                        {req.status}
-                      </span>
-                    </td>
-                    <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.adminRemarks || "—"}</td>
-                    <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{formatDate(req.createdAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {(() => {
+        const totalItems = retireRequests.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / retirePageSize));
+        const validPage = Math.min(Math.max(1, retirePage), totalPages);
+        const startIndex = (validPage - 1) * retirePageSize;
+        const paginatedRetireRequests = retireRequests.slice(startIndex, startIndex + retirePageSize);
+
+        return (
+          <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem" }}>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Retirement Request History", (localStorage.getItem('app-lang') || 'en'))}</h3>
+            {retireRequests.length === 0 ? (
+              <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.75rem" }}>{$t("No retirement requests submitted yet.", (localStorage.getItem('app-lang') || 'en'))}</p>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem", fontFamily: "monospace", textAlign: "left" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#a0a0a0" }}>
+                      <th style={{ padding: "0.5rem" }}>{$t("Horse Name", (localStorage.getItem('app-lang') || 'en'))}</th>
+                      <th style={{ padding: "0.5rem" }}>{$t("Reason", (localStorage.getItem('app-lang') || 'en'))}</th>
+                      <th style={{ padding: "0.5rem" }}>{$t("Status", (localStorage.getItem('app-lang') || 'en'))}</th>
+                      <th style={{ padding: "0.5rem" }}>{$t("Admin Remarks", (localStorage.getItem('app-lang') || 'en'))}</th>
+                      <th style={{ padding: "0.5rem" }}>{$t("Submitted At", (localStorage.getItem('app-lang') || 'en'))}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paginatedRetireRequests.map((req: any) => (
+                      <tr key={req.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                        <td style={{ padding: "0.5rem", color: "#f4f2ec", fontWeight: "bold" }}>{req.horseName}</td>
+                        <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.reason}</td>
+                        <td style={{ padding: "0.5rem" }}>
+                          <span style={{
+                            padding: "0.15rem 0.4rem",
+                            borderRadius: "0.25rem",
+                            fontSize: "0.65rem",
+                            fontWeight: "bold",
+                            background: req.status === "APPROVED" ? "rgba(74,222,128,0.1)" : req.status === "REJECTED" ? "rgba(239,68,68,0.1)" : "rgba(251,191,36,0.1)",
+                            color: req.status === "APPROVED" ? "#4ade80" : req.status === "REJECTED" ? "#ef4444" : "#fbbf24"
+                          }}>
+                            {req.status}
+                          </span>
+                        </td>
+                        <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.adminRemarks || "—"}</td>
+                        <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{formatDate(req.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <Pagination
+                  currentPage={validPage}
+                  totalItems={totalItems}
+                  pageSize={retirePageSize}
+                  onPageChange={setRetirePage}
+                  onPageSizeChange={setRetirePageSize}
+                  pageSizeOptions={[5, 10, 20]}
+                />
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Edit Horse Modal */}
       {editingHorse && (
@@ -876,6 +958,8 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
   refereesMap?: Record<number, any[]>;
 }) {
   const [seasonFilter, setSeasonFilter] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   const filteredMeetings = (seasonFilter
     ? meetings.filter(m => String(m.seasonId) === seasonFilter)
@@ -884,6 +968,12 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
       // Do NOT show meetings in Calendar if registration was REJECTED or DECLINED
       return regStatus !== "REJECTED" && regStatus !== "DECLINED";
     });
+
+  const totalItems = filteredMeetings.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedMeetings = filteredMeetings.slice(startIndex, startIndex + pageSize);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -897,7 +987,10 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
             <label style={labelStyle}>{$t("Filter by Season", (localStorage.getItem('app-lang') || 'en'))}</label>
             <select
               value={seasonFilter}
-              onChange={e => setSeasonFilter(e.target.value)}
+              onChange={e => {
+                setSeasonFilter(e.target.value);
+                setPage(1);
+              }}
               style={{ ...inputStyle, width: "220px", cursor: "pointer" }}
             >
               <option value="">-- All Seasons --</option>
@@ -907,9 +1000,11 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
         )}
       </div>
 
-      {filteredMeetings.length === 0
-        ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No meetings found.", (localStorage.getItem('app-lang') || 'en'))}</p>
-        : filteredMeetings.map((m: any) => {
+      {filteredMeetings.length === 0 ? (
+        <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No meetings found.", (localStorage.getItem('app-lang') || 'en'))}</p>
+      ) : (
+        <>
+          {paginatedMeetings.map((m: any) => {
             const isReg = dashboard?.registeredMeetingIds?.includes(m.id);
             const regStatus = dashboard?.regStatuses?.[m.id];
             const meetingRaces = allRaces.filter(r => r.raceMeetingId === m.id);
@@ -963,6 +1058,16 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
               </div>
             );
           })}
+          <Pagination
+            currentPage={validPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[5, 10, 20]}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -1127,6 +1232,8 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
 function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, refereesMap }: { invitations: any[]; onViewProfile: (id: number) => void; onResubmit: (entryId: number) => void; onWithdraw: (invitationId: number) => void; refereesMap?: Record<number, any[]> }) {
   const lang = localStorage.getItem("app-lang") || "en";
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -1146,6 +1253,12 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
     return meetingMatch || horseMatch || jockeyMatch || classMatch || idMatch;
   });
 
+  const totalItems = filteredInvitations.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedInvitations = filteredInvitations.slice(startIndex, startIndex + pageSize);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: "1rem" }}>
@@ -1154,12 +1267,15 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
           <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>{$t("Manage and track invitations sent to jockeys for various races.", (localStorage.getItem('app-lang') || 'en'))}</p>
         </div>
 
-        {/* Ô tìm kiếm theo tên giải đấu (Spring Grand Prix 2026...), tên ngựa, tên nài */}
+        {/* Search Input */}
         <div style={{ position: "relative", minWidth: "260px", flex: "1", maxWidth: "340px" }}>
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(1);
+            }}
             placeholder={$t("Search meeting, owner, horse name...", (localStorage.getItem('app-lang') || 'en'))}
             style={{
               width: "100%",
@@ -1179,7 +1295,7 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
           </span>
           {searchQuery && (
             <button
-              onClick={() => setSearchQuery("")}
+              onClick={() => { setSearchQuery(""); setPage(1); }}
               style={{ position: "absolute", right: "0.6rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem" }}
             >
               ✕
@@ -1194,7 +1310,7 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
               {lang === "vi" ? "Chưa gửi lời mời nào phù hợp." : "No matching invitations found."}
             </div>
           ) : (
-            filteredInvitations.map((inv: any) => {
+            paginatedInvitations.map((inv: any) => {
               const displayStatus = (inv.status === "ACCEPTED" && inv.entryStatus) ? inv.entryStatus : inv.status;
               const assignedRefs = refereesMap?.[inv.raceId] || [];
               return (
@@ -1286,6 +1402,14 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
               );
             })
           )}
+          <Pagination
+            currentPage={validPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[5, 10, 20, 50]}
+          />
         </div>
       ) : (
         <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", overflow: "hidden", background: "rgba(255,255,255,0.01)" }}>
@@ -1301,7 +1425,7 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
               <tbody>
                 {filteredInvitations.length === 0
                   ? <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>{lang === "vi" ? "Chưa gửi lời mời nào phù hợp." : "No matching invitations found."}</td></tr>
-                  : filteredInvitations.map((inv: any) => {
+                  : paginatedInvitations.map((inv: any) => {
                     const displayStatus = (inv.status === "ACCEPTED" && inv.entryStatus) ? inv.entryStatus : inv.status;
                     const assignedRefs = refereesMap?.[inv.raceId] || [];
                     return (
@@ -1378,7 +1502,7 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
                                   border: "1px solid rgba(239,68,68,0.3)",
                                   borderRadius: "0.25rem",
                                   color: "#f87171",
-                                  fontSize: "0.6rem",
+                                  fontSize: "0.65rem",
                                   fontFamily: "monospace",
                                   fontWeight: 700,
                                   cursor: "pointer"
@@ -1395,6 +1519,14 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
               </tbody>
             </table>
           </div>
+          <Pagination
+            currentPage={validPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[5, 10, 20, 50]}
+          />
         </div>
       )}
     </div>
@@ -1403,6 +1535,8 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
 
 // ── ResultsView ────────────────────────────────────────────────────────────
 function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings?: number }) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -1410,6 +1544,13 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  const totalItems = results.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedResults = results.slice(startIndex, startIndex + pageSize);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
@@ -1425,7 +1566,7 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
             {results.length === 0 ? (
               <div style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>{$t("No race results available yet.", (localStorage.getItem('app-lang') || 'en'))}</div>
             ) : (
-              results.map((r: any, i: number) => (
+              paginatedResults.map((r: any, i: number) => (
                 <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>
@@ -1458,6 +1599,14 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
                 </div>
               ))
             )}
+            <Pagination
+              currentPage={validPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[5, 10, 20, 50]}
+            />
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
@@ -1472,7 +1621,7 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
               <tbody>
                 {results.length === 0
                   ? <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>{$t("No race results available yet.", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
-                  : results.map((r: any, i: number) => (
+                  : paginatedResults.map((r: any, i: number) => (
                     <tr key={i} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                       <td style={{ padding: "0.875rem 1rem", fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDate(r.startTime)}</td>
                       <td style={{ padding: "0.875rem 1rem", fontSize: "0.8rem", fontWeight: 600, color: "#f4f2ec" }}>{r.meetingName ?? "—"}</td>
@@ -1491,6 +1640,14 @@ function ResultsView({ results, totalEarnings }: { results: any[]; totalEarnings
                   ))}
               </tbody>
             </table>
+            <Pagination
+              currentPage={validPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[5, 10, 20, 50]}
+            />
           </div>
         )}
       </div>

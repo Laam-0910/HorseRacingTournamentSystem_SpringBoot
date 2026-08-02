@@ -17,6 +17,7 @@ import { $t } from '@/lib/i18n';
 // Import CameraBroadcasterModal and WebCamLiveViewer
 import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
 import WebCamLiveViewer, { BroadcasterInfo } from "../livestream/WebCamLiveViewer";
+import { Pagination } from "../common/Pagination";
 
 const PURPLE = "#8b5cf6";
 
@@ -206,6 +207,8 @@ export default function RefereeHub() {
   const [completedCount, setCompletedCount] = useState(0); // Số lượng trận đã hoàn thành
   const [pendingCount, setPendingCount] = useState(0); // Số lượng trận đang chờ xử lý
   const [loading, setLoading] = useState(true);
+  const [assignedPage, setAssignedPage] = useState(1);
+  const [assignedPageSize, setAssignedPageSize] = useState(5);
 
   // Sub-view state
   const [activeView, setActiveView] = useState<"list" | "check" | "supervise" | "confirm">("list");
@@ -714,15 +717,15 @@ export default function RefereeHub() {
         penalty: finalPenalty,
         status: "PENDING",
       });
-      alert(isSevereDq ? $t("Đã ghi nhận vi phạm và LOẠI TRỰC TIẾP thí sinh ngay lập tức!", (localStorage.getItem('app-lang') || 'en')) : $t("Đã ghi nhận vi phạm thành công.", (localStorage.getItem('app-lang') || 'en')));
+      alert(isSevereDq ? $t("Violation logged and competitor DISQUALIFIED immediately!") : $t("Violation logged successfully."));
       setShowViolModal(false);
       setViolDesc("");
       setViolPenalty("");
       setIsSevereDq(false);
-      // Tải lại dữ liệu giám sát trực tiếp
+      // Reload live supervise data
       handleStartSupervise(selectedRace);
     } catch (err: any) {
-      notify($t("Ghi nhận vi phạm thất bại: ", (localStorage.getItem('app-lang') || 'en')) + getErrMsg(err), "error");
+      notify($t("Failed to log violation: ") + getErrMsg(err), "error");
     }
   };
 
@@ -732,12 +735,12 @@ export default function RefereeHub() {
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/stop`, { stewardReport });
-      notify($t("Đã thực hiện dừng khẩn cấp. Trạng thái cuộc đua chuyển thành CANCELLED.", (localStorage.getItem('app-lang') || 'en')), "success");
+      notify($t("Emergency stop executed. Race status changed to CANCELLED."), "success");
       setActiveView("list");
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      notify($t("Không thể dừng cuộc đua: ", (localStorage.getItem('app-lang') || 'en')) + getErrMsg(err), "error");
+      notify($t("Failed to stop race: ") + getErrMsg(err), "error");
       setLoading(false);
     }
   };
@@ -748,7 +751,7 @@ export default function RefereeHub() {
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/suspend`, { stewardReport });
-      notify($t("Đã tạm hoãn cuộc đua. Trạng thái chuyển thành STOPPED.", (localStorage.getItem('app-lang') || 'en')), "info");
+      notify($t("Race suspended. Status changed to STOPPED."), "info");
       if (user?.id) {
         const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
         setAssignedRaces(dashboardRes.assignedRaces || []);
@@ -767,7 +770,7 @@ export default function RefereeHub() {
         setLoading(false);
       }
     } catch (err: any) {
-      notify($t("Không thể tạm hoãn cuộc đua: ", (localStorage.getItem('app-lang') || 'en')) + getErrMsg(err), "error");
+      notify($t("Failed to suspend race: ") + getErrMsg(err), "error");
       setLoading(false);
     }
   };
@@ -778,7 +781,7 @@ export default function RefereeHub() {
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/resume`);
-      notify($t("Đã khôi phục cuộc đua. Trạng thái chuyển thành RUNNING.", (localStorage.getItem('app-lang') || 'en')), "success");
+      notify($t("Race resumed. Status changed to RUNNING."), "success");
       const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
       setAssignedRaces(dashboardRes.assignedRaces || []);
       setCompletedCount(dashboardRes.completedCount || 0);
@@ -790,7 +793,7 @@ export default function RefereeHub() {
         fetchDashboard();
       }
     } catch (err: any) {
-      notify($t("Không thể khôi phục cuộc đua: ", (localStorage.getItem('app-lang') || 'en')) + getErrMsg(err), "error");
+      notify($t("Failed to resume race: ") + getErrMsg(err), "error");
       setLoading(false);
     }
   };
@@ -944,7 +947,7 @@ export default function RefereeHub() {
                   const currentReason = reasonInput.trim();
                   const currentType = reasonModal.type;
                   if (!currentReason) {
-                    notify($t("Vui lòng nhập lý do trước khi xác nhận.", (localStorage.getItem('app-lang') || 'en')), "error");
+                    notify($t("Please enter a reason before confirming."), "error");
                     return;
                   }
                   setReasonModal(null);
@@ -954,7 +957,7 @@ export default function RefereeHub() {
                 }}
                 style={{ padding: "0.5rem 1.25rem", background: reasonModal.type === "emergency" ? "#f59e0b" : "#fbbf24", color: "#000", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer" }}
               >
-                {$t("Xác nhận", (localStorage.getItem('app-lang') || 'en'))}
+                {$t("Confirm")}
               </button>
             </div>
           </div>
@@ -2010,198 +2013,226 @@ export default function RefereeHub() {
       </div>
 
       {/* Assigned Races Table */}
-      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
-        <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{$t("Nhiệm vụ & Trận đấu phân công", (localStorage.getItem('app-lang') || 'en'))}</h3>
-            <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Kiểm tra, giám sát và chốt kết quả cho các trận đấu được giao.")}</p>
-          </div>
-        </div>
-        {isMobile ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
-            {assignedRaces.map((race: any) => {
-              const isPending = !["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status ?? "");
-              const isRunning = race.status === "RUNNING";
-              const isOfficial = race.status === "OFFICIAL";
-              const isStewardsInquiry = race.status === "STEWARDS_INQUIRY";
+      {(() => {
+        const totalItems = assignedRaces.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / assignedPageSize));
+        const validPage = Math.min(Math.max(1, assignedPage), totalPages);
+        const startIndex = (validPage - 1) * assignedPageSize;
+        const paginatedRaces = assignedRaces.slice(startIndex, startIndex + assignedPageSize);
 
-              return (
-                <div key={race.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                    <div>
-                      <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>#{race.id}</span>
-                      <h4 style={{ fontSize: "0.95rem", fontWeight: "bold", color: "#f4f2ec", marginTop: "2px" }}>
-                        {race.meetingName}
-                      </h4>
-                      <span style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", display: "block", marginTop: "2px" }}>📍 {race.venue}</span>
-                    </div>
-                    {statusBadge(race.status, race.preCheckCompleted)}
-                  </div>
-                  <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
-                    📅 {formatDateTime(race.startTime)}
-                  </div>
-                  <div style={{ fontSize: "0.8rem", color: "#f4f2ec", display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</div>
-                      <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "2px" }}>
-                        {race.distanceMeters}m · {race.trackType}
-                      </div>
-                    </div>
-                    <div style={{ flexShrink: 0, marginLeft: "0.5rem" }}>
-                      {isPending && !isRunning && (
-                        race.preCheckCompleted ? (
-                          <button onClick={() => handleStartRace(race)} style={{ padding: "0.375rem 0.75rem", background: "#10b981", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                            {$t("🟢 Bắt đầu trận", (localStorage.getItem('app-lang') || 'en'))}
-                          </button>
-                        ) : race.gatesFullySet ? (
-                          <button onClick={() => handleStartCheck(race)} style={{ padding: "0.375rem 0.75rem", background: PURPLE, color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                            {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
-                          </button>
-                        ) : (
-                          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
-                            <span style={{ fontSize: "8px", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>{$t("Chưa thiết lập Cổng (Gate)", (localStorage.getItem('app-lang') || 'en'))}</span>
-                            <button disabled style={{ padding: "0.375rem 0.75rem", background: "#1f1d1a", color: "#555", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "not-allowed", border: "none" }}>
-                              🔒 {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
-                            </button>
-                          </div>
-                        )
-                      )}
-                      {isRunning && (
-                        <button onClick={() => handleStartSupervise(race)} style={{ padding: "0.375rem 0.75rem", background: "#fbbf24", color: "#000", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                          {$t("👁 Giám sát & Ghi nhận", (localStorage.getItem('app-lang') || 'en'))}
-                        </button>
-                      )}
-                      {isStewardsInquiry && (
-                        <button
-                          onClick={() => handleStartSupervise(race)}
-                          style={{
-                            padding: "0.375rem 0.75rem",
-                            background: "rgba(239,68,68,0.15)",
-                            color: "#ef4444",
-                            fontSize: "0.7rem",
-                            fontFamily: "monospace",
-                            fontWeight: 700,
-                            borderRadius: "0.5rem",
-                            cursor: "pointer",
-                            border: "1px solid rgba(239,68,68,0.4)",
-                            animation: "pulse 1.5s infinite",
-                          }}
-                        >
-                          {$t("🔴 Xác nhận kết quả", (localStorage.getItem('app-lang') || 'en'))}
-                        </button>
-                      )}
-                      {isOfficial && (
-                        <button onClick={() => openStewardReportModal(race.id, race.stewardReport)} style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}>
-                          {$t("📄 Báo cáo Trọng tài", (localStorage.getItem('app-lang') || 'en'))}
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                  {[t.hId, t.hMeeting, t.hTime, t.hDetails, t.hStatus, t.hActions].map((h, i) => (
-                    <th key={h} style={{ padding: "0.75rem 1rem", textAlign: i === 5 ? "right" : "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{$t("Đang tải các trận đấu được giao...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
-                ) : assignedRaces.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} style={{ padding: "3rem", textAlign: "center" }}>
-                      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
-                        <span style={{ fontSize: "2rem" }}>📭</span>
-                        <span style={{ color: "#a0a0a0", fontSize: "0.875rem" }}>{$t("Hiện tại không có trận đấu nào được giao cho bạn.", (localStorage.getItem('app-lang') || 'en'))}</span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : assignedRaces.map((race: any) => {
+        return (
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
+            <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div>
+                <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{$t("Assignments & Assigned Races", (localStorage.getItem('app-lang') || 'en'))}</h3>
+                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Inspect, monitor, and finalize results for assigned races.", (localStorage.getItem('app-lang') || 'en'))}</p>
+              </div>
+            </div>
+            {isMobile ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
+                {paginatedRaces.map((race: any) => {
                   const isPending = !["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status ?? "");
                   const isRunning = race.status === "RUNNING";
                   const isOfficial = race.status === "OFFICIAL";
                   const isStewardsInquiry = race.status === "STEWARDS_INQUIRY";
 
                   return (
-                    <tr key={race.id} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}
-                      onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
-                      onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
-                    >
-                      <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.875rem", color: "#f4f2ec" }}>#{race.id}</td>
-                      <td style={{ padding: "1rem" }}>
-                        <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{race.meetingName}</div>
-                        <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>📍 {race.venue}</div>
-                      </td>
-                      <td style={{ padding: "1rem", fontSize: "0.8rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDateTime(race.startTime)}</td>
-                      <td style={{ padding: "1rem" }}>
-                        <div style={{ fontSize: "0.875rem", color: "#f4f2ec" }}>{formatClassLevel(race.classLevel)}</div>
-                        <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>{race.distanceMeters}m · {race.trackType}</div>
-                      </td>
-                      <td style={{ padding: "1rem" }}>{statusBadge(race.status, race.preCheckCompleted)}</td>
-                      <td style={{ padding: "1rem", textAlign: "right" }}>
-                        {isPending && !isRunning && (
-                          race.preCheckCompleted ? (
-                            <button onClick={() => handleStartRace(race)} style={{ padding: "0.375rem 0.75rem", background: "#10b981", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                              {$t("🟢 Bắt đầu trận", (localStorage.getItem('app-lang') || 'en'))}
-                            </button>
-                          ) : race.gatesFullySet ? (
-                            <button onClick={() => handleStartCheck(race)} style={{ padding: "0.375rem 0.75rem", background: PURPLE, color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                              {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
-                            </button>
-                          ) : (
-                            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
-                              <span style={{ fontSize: "8px", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>{$t("Chưa thiết lập Cổng (Gate)", (localStorage.getItem('app-lang') || 'en'))}</span>
-                              <button disabled style={{ padding: "0.375rem 0.75rem", background: "#1f1d1a", color: "#555", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "not-allowed", border: "none" }}>
-                                🔒 {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
+                    <div key={race.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                        <div>
+                          <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>#{race.id}</span>
+                          <h4 style={{ fontSize: "0.95rem", fontWeight: "bold", color: "#f4f2ec", marginTop: "2px" }}>
+                            {race.meetingName}
+                          </h4>
+                          <span style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", display: "block", marginTop: "2px" }}>📍 {race.venue}</span>
+                        </div>
+                        {statusBadge(race.status, race.preCheckCompleted)}
+                      </div>
+                      <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                        📅 {formatDateTime(race.startTime)}
+                      </div>
+                      <div style={{ fontSize: "0.8rem", color: "#f4f2ec", display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</div>
+                          <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "2px" }}>
+                            {race.distanceMeters}m · {race.trackType}
+                          </div>
+                        </div>
+                        <div style={{ flexShrink: 0, marginLeft: "0.5rem" }}>
+                          {isPending && !isRunning && (
+                            race.preCheckCompleted ? (
+                              <button onClick={() => handleStartRace(race)} style={{ padding: "0.375rem 0.75rem", background: "#10b981", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
+                                {$t("🟢 Bắt đầu trận", (localStorage.getItem('app-lang') || 'en'))}
                               </button>
-                            </div>
-                          )
-                        )}
-                        {isRunning && (
-                          <button onClick={() => handleStartSupervise(race)} style={{ padding: "0.375rem 0.75rem", background: "#fbbf24", color: "#000", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                            {$t("👁 Giám sát & Ghi nhận", (localStorage.getItem('app-lang') || 'en'))}
-                          </button>
-                        )}
-                        {isStewardsInquiry && (
-                          <button
-                            onClick={() => handleStartSupervise(race)}
-                            style={{
-                              padding: "0.375rem 0.75rem",
-                              background: "rgba(239,68,68,0.15)",
-                              color: "#ef4444",
-                              fontSize: "0.7rem",
-                              fontFamily: "monospace",
-                              fontWeight: 700,
-                              borderRadius: "0.5rem",
-                              cursor: "pointer",
-                              border: "1px solid rgba(239,68,68,0.4)",
-                              animation: "pulse 1.5s infinite",
-                            }}
-                          >
-                            {$t("🔴 Xác nhận kết quả", (localStorage.getItem('app-lang') || 'en'))}
-                          </button>
-                        )}
-                        {isOfficial && (
-                          <button onClick={() => openStewardReportModal(race.id, race.stewardReport)} style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}>
-                            {$t("📄 Báo cáo Trọng tài", (localStorage.getItem('app-lang') || 'en'))}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
+                            ) : race.gatesFullySet ? (
+                              <button onClick={() => handleStartCheck(race)} style={{ padding: "0.375rem 0.75rem", background: PURPLE, color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
+                                {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
+                              </button>
+                            ) : (
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
+                                <span style={{ fontSize: "8px", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>{$t("Chưa thiết lập Cổng (Gate)", (localStorage.getItem('app-lang') || 'en'))}</span>
+                                <button disabled style={{ padding: "0.375rem 0.75rem", background: "#1f1d1a", color: "#555", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "not-allowed", border: "none" }}>
+                                  🔒 {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
+                                </button>
+                              </div>
+                            )
+                          )}
+                          {isRunning && (
+                            <button onClick={() => handleStartSupervise(race)} style={{ padding: "0.375rem 0.75rem", background: "#fbbf24", color: "#000", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
+                              {$t("👁 Giám sát & Ghi nhận", (localStorage.getItem('app-lang') || 'en'))}
+                            </button>
+                          )}
+                          {isStewardsInquiry && (
+                            <button
+                              onClick={() => handleStartSupervise(race)}
+                              style={{
+                                padding: "0.375rem 0.75rem",
+                                background: "rgba(239,68,68,0.15)",
+                                color: "#ef4444",
+                                fontSize: "0.7rem",
+                                fontFamily: "monospace",
+                                fontWeight: 700,
+                                borderRadius: "0.5rem",
+                                cursor: "pointer",
+                                border: "1px solid rgba(239,68,68,0.4)",
+                                animation: "pulse 1.5s infinite",
+                              }}
+                            >
+                              {$t("🔴 Xác nhận kết quả", (localStorage.getItem('app-lang') || 'en'))}
+                            </button>
+                          )}
+                          {isOfficial && (
+                            <button onClick={() => openStewardReportModal(race.id, race.stewardReport)} style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}>
+                              {$t("📄 Báo cáo Trọng tài", (localStorage.getItem('app-lang') || 'en'))}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+                <Pagination
+                  currentPage={validPage}
+                  totalItems={totalItems}
+                  pageSize={assignedPageSize}
+                  onPageChange={setAssignedPage}
+                  onPageSizeChange={setAssignedPageSize}
+                  pageSizeOptions={[5, 10, 20]}
+                />
+              </div>
+            ) : (
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                      {[t.hId, t.hMeeting, t.hTime, t.hDetails, t.hStatus, t.hActions].map((h, i) => (
+                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: i === 5 ? "right" : "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{$t("Đang tải các trận đấu được giao...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
+                    ) : assignedRaces.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} style={{ padding: "3rem", textAlign: "center" }}>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+                            <span style={{ fontSize: "2rem" }}>📭</span>
+                            <span style={{ color: "#a0a0a0", fontSize: "0.875rem" }}>{$t("Hiện tại không có trận đấu nào được giao cho bạn.", (localStorage.getItem('app-lang') || 'en'))}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : paginatedRaces.map((race: any) => {
+                      const isPending = !["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status ?? "");
+                      const isRunning = race.status === "RUNNING";
+                      const isOfficial = race.status === "OFFICIAL";
+                      const isStewardsInquiry = race.status === "STEWARDS_INQUIRY";
+
+                      return (
+                        <tr key={race.id} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}
+                          onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
+                          onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
+                        >
+                          <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.875rem", color: "#f4f2ec" }}>#{race.id}</td>
+                          <td style={{ padding: "1rem" }}>
+                            <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{race.meetingName}</div>
+                            <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>📍 {race.venue}</div>
+                          </td>
+                          <td style={{ padding: "1rem", fontSize: "0.8rem", color: "#a0a0a0", fontFamily: "monospace" }}>{formatDateTime(race.startTime)}</td>
+                          <td style={{ padding: "1rem" }}>
+                            <div style={{ fontSize: "0.875rem", color: "#f4f2ec" }}>{formatClassLevel(race.classLevel)}</div>
+                            <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>{race.distanceMeters}m · {race.trackType}</div>
+                          </td>
+                          <td style={{ padding: "1rem" }}>{statusBadge(race.status, race.preCheckCompleted)}</td>
+                          <td style={{ padding: "1rem", textAlign: "right" }}>
+                            {isPending && !isRunning && (
+                              race.preCheckCompleted ? (
+                                <button onClick={() => handleStartRace(race)} style={{ padding: "0.375rem 0.75rem", background: "#10b981", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
+                                  {$t("🟢 Bắt đầu trận", (localStorage.getItem('app-lang') || 'en'))}
+                                </button>
+                              ) : race.gatesFullySet ? (
+                                <button onClick={() => handleStartCheck(race)} style={{ padding: "0.375rem 0.75rem", background: PURPLE, color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
+                                  {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
+                                </button>
+                              ) : (
+                                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
+                                  <span style={{ fontSize: "8px", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>{$t("Chưa thiết lập Cổng (Gate)", (localStorage.getItem('app-lang') || 'en'))}</span>
+                                  <button disabled style={{ padding: "0.375rem 0.75rem", background: "#1f1d1a", color: "#555", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "not-allowed", border: "none" }}>
+                                    🔒 {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
+                                  </button>
+                                </div>
+                              )
+                            )}
+                            {isRunning && (
+                              <button onClick={() => handleStartSupervise(race)} style={{ padding: "0.375rem 0.75rem", background: "#fbbf24", color: "#000", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
+                                {$t("👁 Giám sát & Ghi nhận", (localStorage.getItem('app-lang') || 'en'))}
+                              </button>
+                            )}
+                            {isStewardsInquiry && (
+                              <button
+                                onClick={() => handleStartSupervise(race)}
+                                style={{
+                                  padding: "0.375rem 0.75rem",
+                                  background: "rgba(239,68,68,0.15)",
+                                  color: "#ef4444",
+                                  fontSize: "0.7rem",
+                                  fontFamily: "monospace",
+                                  fontWeight: 700,
+                                  borderRadius: "0.5rem",
+                                  cursor: "pointer",
+                                  border: "1px solid rgba(239,68,68,0.4)",
+                                  animation: "pulse 1.5s infinite",
+                                }}
+                              >
+                                {$t("🔴 Xác nhận kết quả", (localStorage.getItem('app-lang') || 'en'))}
+                              </button>
+                            )}
+                            {isOfficial && (
+                              <button onClick={() => openStewardReportModal(race.id, race.stewardReport)} style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}>
+                                {$t("📄 Báo cáo Trọng tài", (localStorage.getItem('app-lang') || 'en'))}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                {assignedRaces.length > 0 && (
+                  <Pagination
+                    currentPage={validPage}
+                    totalItems={totalItems}
+                    pageSize={assignedPageSize}
+                    onPageChange={setAssignedPage}
+                    onPageSizeChange={setAssignedPageSize}
+                    pageSizeOptions={[5, 10, 20]}
+                  />
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* Steward Report Modal */}
       {showReportModal && (

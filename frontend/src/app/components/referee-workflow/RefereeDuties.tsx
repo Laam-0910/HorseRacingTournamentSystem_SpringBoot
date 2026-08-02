@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
+import { Pagination } from "../common/Pagination";
 
 // Bản dịch Anh hóa nhãn hiển thị cho từng trạng thái trận đấu
 const statusLabels: Record<string, string> = {
@@ -71,6 +72,10 @@ export default function RefereeDuties() {
   // Trạng thái Responsive Mobile
   const [isMobile, setIsMobile] = useState(false);
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
   const t = TRANSLATIONS.en;
 
   // Lắng nghe thay đổi kích thước màn hình để tự động điều chỉnh bố cục UI
@@ -107,7 +112,7 @@ export default function RefereeDuties() {
             <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>{$t("Đang tải lịch trình...", (localStorage.getItem('app-lang') || 'en'))}</p>
           ) : schedule.length === 0 ? (
             <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem", textAlign: "center", padding: "1rem" }}>{$t("Không có nhiệm vụ nào được phân công cho lịch trình của bạn.", (localStorage.getItem('app-lang') || 'en'))}</p>
-          ) : schedule.map((item: any, i: number) => {
+          ) : schedule.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((item: any, i: number) => {
             const race    = item.race    ?? item;
             const meeting = item.meeting ?? {};
             return (
@@ -135,6 +140,15 @@ export default function RefereeDuties() {
               </div>
             );
           })}
+          {!loading && schedule.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalItems={schedule.length}
+              pageSize={pageSize}
+              onPageChange={(p: number) => setCurrentPage(p)}
+              onPageSizeChange={(s: number) => { setPageSize(s); setCurrentPage(1); }}
+            />
+          )}
         </div>
       ) : (
         /* Hiển thị giao diện dạng Bảng (table) trên Desktop */
@@ -156,7 +170,7 @@ export default function RefereeDuties() {
                     {$t("Không có nhiệm vụ nào được phân công cho lịch trình của bạn.", (localStorage.getItem('app-lang') || 'en'))}
                   </td>
                 </tr>
-              ) : schedule.map((item: any, i: number) => {
+              ) : schedule.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((item: any, i: number) => {
                 const race    = item.race    ?? item;
                 const meeting = item.meeting ?? {};
                 return (
@@ -190,6 +204,17 @@ export default function RefereeDuties() {
               })}
             </tbody>
           </table>
+          {!loading && schedule.length > 0 && (
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+              <Pagination
+                currentPage={currentPage}
+                totalItems={schedule.length}
+                pageSize={pageSize}
+                onPageChange={(p: number) => setCurrentPage(p)}
+                onPageSizeChange={(s: number) => { setPageSize(s); setCurrentPage(1); }}
+              />
+            </div>
+          )}
         </div>
       )}
     </div>
