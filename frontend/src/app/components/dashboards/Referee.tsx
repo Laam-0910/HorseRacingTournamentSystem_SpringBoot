@@ -42,16 +42,16 @@ export default function Referee() {
 
   const t = TRANSLATIONS.en;
 
-  // Cấu hình các nút điều hướng sidebar dành riêng cho Referee
+  // Navigation items for Referee
   const navItems = [
-    { index: "01", icon: "layout-dashboard", label: $t("Bảng trọng tài", (localStorage.getItem('app-lang') || 'en')),   view: "hub"       },
-    { index: "02", icon: "alert-triangle",   label: $t("Nhật ký sự cố", (localStorage.getItem('app-lang') || 'en')),     view: "incidents" },
-    { index: "03", icon: "clipboard-check",  label: $t("Lịch phân công", (localStorage.getItem('app-lang') || 'en')),        view: "duties"    },
-    { index: "04", icon: "tv",               label: $t("Phát sóng Livestream", (localStorage.getItem('app-lang') || 'en')), view: "live"     },
+    { index: "01", icon: "layout-dashboard", label: $t("Referee Dashboard"), view: "hub"       },
+    { index: "02", icon: "alert-triangle",   label: $t("Incident Log"),     view: "incidents" },
+    { index: "03", icon: "clipboard-check",  label: $t("Duty Schedule"),    view: "duties"    },
+    { index: "04", icon: "tv",               label: $t("Livestream Feed"),  view: "live"     },
   ];
 
-  // Tìm tiêu đề nhãn tương ứng cho view đang kích hoạt
-  const activeLabel = navItems.find(n => n.view === activeTab)?.label ?? $t("Bảng trọng tài", (localStorage.getItem('app-lang') || 'en'));
+  // Active label for current view
+  const activeLabel = navItems.find(n => n.view === activeTab)?.label ?? $t("Referee Dashboard");
 
   // Xử lý đổi view và làm sạch các banner cũ
   const handleViewChange = (view: string) => {

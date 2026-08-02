@@ -2,7 +2,7 @@ USE HorseRacingDB;
 GO
 
 -- =========================================================================
--- 1. CHÈN 20 NÀI NGỰA MỚI (JOCKEYS)
+-- 1. INSERT 20 JOCKEYS
 -- =========================================================================
 DECLARE @j INT = 1;
 WHILE @j <= 20
@@ -14,9 +14,9 @@ BEGIN
         'hash_joc_' + RIGHT('00' + CAST(@j AS VARCHAR(10)), 3), 
         'jockey_' + CAST(@j AS VARCHAR(10)) + '@jockeys.com', 
         'ACTIVE', 
-        50.0 + (CAST(RAND(CHECKSUM(NEWID())) * 10 AS DECIMAL(5,2))), -- Cân nặng ngẫu nhiên từ 50 đến 60 kg
-        CAST(RAND(CHECKSUM(NEWID())) * 50 AS INT),                   -- Tổng số trận ngẫu nhiên
-        CAST(RAND(CHECKSUM(NEWID())) * 20 AS INT),                   -- Lượt top 3 ngẫu nhiên
+        50.0 + (CAST(RAND(CHECKSUM(NEWID())) * 10 AS DECIMAL(5,2))), -- Random weight between 50 and 60 kg
+        CAST(RAND(CHECKSUM(NEWID())) * 50 AS INT),                   -- Random total races
+        CAST(RAND(CHECKSUM(NEWID())) * 20 AS INT),                   -- Random top 3 finishes
         CASE @j
             WHEN 1 THEN N'Lewis Hamilton' WHEN 2 THEN N'Fernando Alonso' WHEN 3 THEN N'Sebastian Vettel' WHEN 4 THEN N'Max Verstappen'
             WHEN 5 THEN N'Charles Leclerc' WHEN 6 THEN N'Kimi Raikkonen' WHEN 7 THEN N'Valtteri Bottas' WHEN 8 THEN N'Daniel Ricciardo'
@@ -29,7 +29,7 @@ BEGIN
 END;
 
 -- =========================================================================
--- 2. CHÈN 20 KHÁN GIẢ MỚI (SPECTATORS)
+-- 2. INSERT 20 SPECTATORS
 -- =========================================================================
 DECLARE @s INT = 1;
 WHILE @s <= 20
@@ -53,7 +53,7 @@ BEGIN
 END;
 
 -- =========================================================================
--- 3. CHÈN 5 TRỌNG TÀI MỚI (REFEREES)
+-- 3. INSERT 5 REFEREES
 -- =========================================================================
 DECLARE @r INT = 1;
 WHILE @r <= 5
@@ -73,7 +73,7 @@ BEGIN
 END;
 
 -- =========================================================================
--- 4. CHÈN 20 CHỦ NGỰA MỚI (OWNERS) VÀ LƯU ID CỦA HỌ
+-- 4. INSERT 20 OWNERS AND SAVE THEIR IDS
 -- =========================================================================
 DECLARE @InsertedOwners TABLE (id INT, idx INT IDENTITY(1,1));
 
@@ -102,7 +102,7 @@ VALUES
 (2, 'owner_madison',   'hash_own_120', 'madison@owners.com',   'ACTIVE', N'Madison Clark');
 
 -- =========================================================================
--- 5. KHAI BÁO DANH SÁCH 50 TÊN CHIẾN MÃ MẪU
+-- 5. DECLARE LIST OF 50 SAMPLE HORSES
 -- =========================================================================
 DECLARE @HorseNames TABLE (name VARCHAR(150), breed VARCHAR(100), sex VARCHAR(20), idx INT IDENTITY(1,1));
 INSERT INTO @HorseNames (name, breed, sex) VALUES
@@ -158,7 +158,7 @@ INSERT INTO @HorseNames (name, breed, sex) VALUES
 ('Istabraq', 'Thoroughbred', 'Gelding');
 
 -- =========================================================================
--- 6. VÒNG LẶP CHÈN 50 CHIẾN MÃ (CHIA ĐỀU CHO 20 CHỦ NGỰA)
+-- 6. LOOP INSERT 50 HORSES (DISTRIBUTED EQUALLY AMONG 20 OWNERS)
 -- =========================================================================
 DECLARE @k INT = 1;
 DECLARE @owner_id INT;
@@ -166,22 +166,22 @@ DECLARE @h_name VARCHAR(150), @h_breed VARCHAR(100), @h_sex VARCHAR(20);
 
 WHILE @k <= 50
 BEGIN
-    -- Lấy ID của chủ ngựa tiếp theo (xoay vòng từ 1 đến 20)
+    -- Get next owner ID (round-robin 1 to 20)
     SELECT @owner_id = id FROM @InsertedOwners WHERE idx = ((@k - 1) % 20) + 1;
     
-    -- Lấy thông tin ngựa mẫu từ danh sách
+    -- Get sample horse details
     SELECT @h_name = name, @h_breed = breed, @h_sex = sex FROM @HorseNames WHERE idx = @k;
 
-    -- Chèn vào bảng Horse với điểm Rating ngẫu nhiên từ 52 đến 95
+    -- Insert into Horse table with random rating between 52 and 95
     INSERT INTO Horse (owner_id, name, breed, sex, date_of_birth, status, current_rating, total_races, total_wins)
     VALUES (
         @owner_id, 
         @h_name, 
         @h_breed, 
         @h_sex, 
-        DATEADD(day, -CAST(RAND(CHECKSUM(NEWID())) * 1500 AS INT), '2022-01-01'), -- Ngày sinh ngẫu nhiên từ 2018-2022
+        DATEADD(day, -CAST(RAND(CHECKSUM(NEWID())) * 1500 AS INT), '2022-01-01'), -- Random DOB between 2018-2022
         'ACTIVE', 
-        52 + CAST(RAND(CHECKSUM(NEWID())) * 43 AS INT),                         -- Rating ngẫu nhiên từ 52 đến 95
+        52 + CAST(RAND(CHECKSUM(NEWID())) * 43 AS INT),                         -- Random rating between 52 and 95
         0, 
         0
     );

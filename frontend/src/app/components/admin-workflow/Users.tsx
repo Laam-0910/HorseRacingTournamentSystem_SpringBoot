@@ -148,11 +148,11 @@ export default function Users() {
         password: createPassword,
         roleId: parseInt(createRoleId, 10),
       };
-      // Đính kèm cân nặng nếu là kỵ sĩ (ràng buộc 45-100kg)
+      // Include weight if jockey (range 45-100kg)
       if (createRoleId === "3" && createWeight) {
         const wVal = parseFloat(createWeight);
         if (isNaN(wVal) || wVal < 45 || wVal > 100) {
-          setError($t("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.", (localStorage.getItem('app-lang') || 'en')));
+          setError($t("Jockey weight must be between 45kg and 100kg."));
           return;
         }
         body.weight = wVal;
@@ -174,7 +174,7 @@ export default function Users() {
     }
   };
 
-  // Mở modal chỉnh sửa tài khoản và gán dữ liệu ban đầu
+  // Open edit modal and set initial values
   const handleOpenEdit = (user: any) => {
     setEditingUser(user);
     setEditUsername(user.username);
@@ -184,7 +184,7 @@ export default function Users() {
     setEditRequireOtp(!!user.requireOtp);
   };
 
-  // Gửi thông tin cập nhật tài khoản lên API
+  // Submit account update
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingUser) return;
@@ -197,11 +197,11 @@ export default function Users() {
         roleId: parseInt(editRoleId, 10),
         requireOtp: editRequireOtp,
       };
-      // Đính kèm cân nặng nếu vai trò là Jockey (ràng buộc 45-100kg)
+      // Include weight if jockey (range 45-100kg)
       if (editRoleId === "3" && editWeight) {
         const wVal = parseFloat(editWeight);
         if (isNaN(wVal) || wVal < 45 || wVal > 100) {
-          alert($t("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.", (localStorage.getItem('app-lang') || 'en')));
+          alert($t("Jockey weight must be between 45kg and 100kg."));
           return;
         }
         body.weight = wVal;

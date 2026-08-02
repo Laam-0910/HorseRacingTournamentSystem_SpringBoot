@@ -100,7 +100,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 1.5 * 1024 * 1024) { 
-        setProfileErr($t("Ảnh đại diện phải nhỏ hơn 1.5MB", (localStorage.getItem('app-lang') || 'en'))); return;
+        setProfileErr($t("Avatar image size must be under 1.5MB.")); return;
       }
       const reader = new FileReader();
       reader.onload = (event) => { if (event.target?.result) setAvatar(event.target.result as string); };
@@ -114,7 +114,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     if (user?.roleId === 3 && weight) {
       const wVal = parseFloat(weight);
       if (isNaN(wVal) || wVal < 45 || wVal > 100) {
-        setProfileErr($t("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.", (localStorage.getItem('app-lang') || 'en')));
+        setProfileErr($t("Jockey weight must be between 45kg and 100kg."));
         return;
       }
     }
@@ -127,7 +127,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
       });
       if (res.success && res.user) {
         setUser({ ...user, fullName: res.user.fullName, email: res.user.email, weight: res.user.weight, avatar: res.user.avatar, biography: res.user.biography, requireOtp: res.user.requireOtp ?? otpEnabled } as any);
-        setProfileMsg($t("✅ Đã lưu thành công!", (localStorage.getItem('app-lang') || 'en')));
+        setProfileMsg($t("✅ Profile saved successfully!"));
         setTimeout(() => setProfileMsg(""), 3000);
       } else {
         setProfileErr(res.error || "Failed to update profile.");

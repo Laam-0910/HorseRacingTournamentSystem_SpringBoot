@@ -427,4 +427,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   scrollbar-color: rgba(201, 162, 39, 0.25) #110f0e;
 }
 
+@keyframes customTooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 

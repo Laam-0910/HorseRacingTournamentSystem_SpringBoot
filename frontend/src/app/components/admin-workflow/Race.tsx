@@ -5,6 +5,7 @@ import { formatDateTime, formatForDateTimeLocal, formatForApi, formatClassLevel,
 import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 import ProfileModal from "../dashboards/components/ProfileModal";
 import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
+import { Pagination } from "../common/Pagination";
 
 // Cấu trúc đối tượng Ngày hội đua
 interface Meeting {
@@ -109,6 +110,9 @@ export default function Race() {
   // Trọng tài được chọn để phân công theo từng cuộc đua
   const [assignRefSelection, setAssignRefSelection] = useState<Record<number, string>>({});
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Hàm tải đồng bộ dữ liệu cuộc đua, hội đua, trọng tài và bản đồ phân công trọng tài
   const fetchData = async () => {
     setLoading(true);
@@ -159,19 +163,19 @@ export default function Race() {
     setError("");
     setSuccess("");
 
-    // Ràng buộc số lượng ngựa tham gia (min > 1 và max < 15, min <= max)
+    // Entry limits validation (min > 1 and max < 15, min <= max)
     const minVal = parseInt(minEntries, 10);
     const maxVal = parseInt(maxEntries, 10);
     if (isNaN(minVal) || minVal <= 1) {
-      setError($t("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1.", (localStorage.getItem('app-lang') || 'en')));
+      setError($t("Minimum entries must be greater than 1."));
       return;
     }
     if (isNaN(maxVal) || maxVal >= 15) {
-      setError($t("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15.", (localStorage.getItem('app-lang') || 'en')));
+      setError($t("Maximum entries must be less than 15."));
       return;
     }
     if (maxVal < minVal) {
-      setError($t("Số lượng ngựa tối thiểu không được lớn hơn số lượng tối đa.", (localStorage.getItem('app-lang') || 'en')));
+      setError($t("Minimum entries cannot be greater than maximum entries."));
       return;
     }
 
@@ -353,7 +357,7 @@ export default function Race() {
     if (!refId) return;
     const race = races.find(r => r.id === raceId);
     if (race && ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase())) {
-      alert($t("Trận đấu đang diễn ra hoặc đã kết thúc, không thể phân công trọng tài.", (localStorage.getItem('app-lang') || 'en')));
+      alert($t("Race is in progress or completed, cannot assign referee."));
       return;
     }
     setError("");
@@ -374,7 +378,7 @@ export default function Race() {
   const handleRemoveReferee = async (raceId: number, refId: number) => {
     const race = races.find(r => r.id === raceId);
     if (race && ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase())) {
-      alert($t("Trận đấu đang diễn ra hoặc đã kết thúc, không thể xóa trọng tài.", (localStorage.getItem('app-lang') || 'en')));
+      alert($t("Race is in progress or completed, cannot remove referee."));
       return;
     }
     setError("");
@@ -460,7 +464,7 @@ export default function Race() {
                 <input 
                   type="number" 
                   min="0" 
-                  step="1000" 
+                  step="any" 
                   value={purse} 
                   onChange={e => setPurse(e.target.value)} 
                   required 
@@ -629,8 +633,7 @@ export default function Race() {
             })}
           </div>
         ) : (
-          // Bố cục dạng bảng (Desktop)
-<div style={{ overflowX: "auto" }}>
+          <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.018)" }}>
@@ -644,125 +647,139 @@ export default function Race() {
                   <tr><td colSpan={13} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>{$t("Loading races database...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
                 ) : races.length === 0 ? (
                   <tr><td colSpan={13} style={{ padding: "3rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace" }}>{$t("No races found.", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
-                ) : races.map(race => {
-                  const assigned = refereesMap[race.id] || [];
-                  const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
-                  const isRefLocked = ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+                ) : (() => {
+                  const totalItems = races.length;
+                  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+                  const validPage = Math.min(Math.max(1, page), totalPages);
+                  const startIndex = (validPage - 1) * pageSize;
+                  const paginatedRaces = races.slice(startIndex, startIndex + pageSize);
 
-                  const totalPurse = Number(race.purse || 0);
-                  const p1 = totalPurse * 0.50;
-                  const p2 = totalPurse * 0.30;
-                  const p3 = totalPurse * 0.20;
+                  return paginatedRaces.map(race => {
+                    const assigned = refereesMap[race.id] || [];
+                    const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+                    const isRefLocked = ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
 
-                  return (
-                    <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
-                      
-                      {/* Nút sửa lịch */}
-                      <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
-                        <button
-                          disabled={isCompleted}
-                          onClick={() => handleOpenEdit(race)}
-                          style={{
-                            padding: "0.375rem 0.75rem",
-                            borderRadius: "0.25rem",
-                            background: isCompleted ? "rgba(255,255,255,0.05)" : "#c9a227",
-                            color: isCompleted ? "rgba(255,255,255,0.2)" : "#0c0a09",
-                            border: "none",
-                            fontFamily: "monospace",
-                            fontSize: "10px",
-                            fontWeight: "bold",
-                            cursor: isCompleted ? "not-allowed" : "pointer"
-                          }}
-                        >{$t("Edit", (localStorage.getItem('app-lang') || 'en'))}</button>
-                      </td>
+                    const totalPurse = Number(race.purse || 0);
+                    const p1 = totalPurse * 0.50;
+                    const p2 = totalPurse * 0.30;
+                    const p3 = totalPurse * 0.20;
 
-                      <td style={{ padding: "0.75rem 0.75rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>
-                      <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
-                      
-                      {/* Cột Purse & Prize Distribution Breakdown */}
-                      <td style={{ padding: "0.75rem 0.75rem" }}>
-                        <div style={{ fontSize: "11px", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace" }}>${totalPurse.toLocaleString('en-US')}</div>
-                        <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", fontFamily: "monospace", marginTop: "2px" }}>
-                          🥇 50%: ${p1.toLocaleString('en-US')} | 🥈 30%: ${p2.toLocaleString('en-US')} | 🥉 20%: ${p3.toLocaleString('en-US')}
-                        </div>
-                      </td>
-                      <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>
-                      <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.distanceMeters}m</td>
-                      <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{formatDateTime(race.startTime)}</td>
-                      <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{race.minRating} – {race.maxRating}</td>
+                    return (
+                      <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                        <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
+                        
+                        <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
+                          <button
+                            disabled={isCompleted}
+                            onClick={() => handleOpenEdit(race)}
+                            style={{
+                              padding: "0.375rem 0.75rem",
+                              borderRadius: "0.25rem",
+                              background: isCompleted ? "rgba(255,255,255,0.05)" : "#c9a227",
+                              color: isCompleted ? "rgba(255,255,255,0.2)" : "#0c0a09",
+                              border: "none",
+                              fontFamily: "monospace",
+                              fontSize: "10px",
+                              fontWeight: "bold",
+                              cursor: isCompleted ? "not-allowed" : "pointer"
+                            }}
+                          >{$t("Edit", (localStorage.getItem('app-lang') || 'en'))}</button>
+                        </td>
 
-                      <td style={{ padding: "0.75rem 0.75rem", textAlign: "right" }}>{statusBadge(race.status)}</td>
-
-                      {/* Quản lý Livestream */}
-                      <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
-                        {isCompleted ? (
-                          <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
-                        ) : race.youtubeLiveUrl ? (
-                          <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
-                            <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>{$t("LIVE", (localStorage.getItem('app-lang') || 'en'))}</span>
-                            <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>{$t("End Live", (localStorage.getItem('app-lang') || 'en'))}</button>
+                        <td style={{ padding: "0.75rem 0.75rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>
+                        <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
+                        
+                        <td style={{ padding: "0.75rem 0.75rem" }}>
+                          <div style={{ fontSize: "11px", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace" }}>${totalPurse.toLocaleString('en-US')}</div>
+                          <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", fontFamily: "monospace", marginTop: "2px" }}>
+                            🥇 50%: ${p1.toLocaleString('en-US')} | 🥈 30%: ${p2.toLocaleString('en-US')} | 🥉 20%: ${p3.toLocaleString('en-US')}
                           </div>
-                        ) : (
-                          race.status === "RUNNING" ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
-                              <input type="text" placeholder={$t("YouTube URL", (localStorage.getItem('app-lang') || 'en'))} value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", width: 110 }} />
-                              <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Go Live", (localStorage.getItem('app-lang') || 'en'))}</button>
+                        </td>
+                        <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>
+                        <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.distanceMeters}m</td>
+                        <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{formatDateTime(race.startTime)}</td>
+                        <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{race.minRating} – {race.maxRating}</td>
+
+                        <td style={{ padding: "0.75rem 0.75rem", textAlign: "right" }}>{statusBadge(race.status)}</td>
+
+                        <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
+                          {isCompleted ? (
+                            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
+                          ) : race.youtubeLiveUrl ? (
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
+                              <span style={{ fontSize: "10px", color: "#ef4444", fontWeight: "bold", letterSpacing: "0.1em", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#ef4444" }}></span>{$t("LIVE", (localStorage.getItem('app-lang') || 'en'))}</span>
+                              <button type="button" onClick={() => handleEndLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#1f1f22", border: "1px solid #2e2e33", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>{$t("End Live", (localStorage.getItem('app-lang') || 'en'))}</button>
                             </div>
                           ) : (
-                            <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
-                          )
-                        )}
-                      </td>
-
-                      {/* Phân công trọng tài */}
-                      <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
-                          {assigned.map(ref => (
-                            <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "11px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedProfileId(ref.id)}
-                                style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", color: "#f4f2ec" }}
-                                title={`View profile of ${ref.fullName || ref.username}`}
-                              >
-                                {ref.avatar ? (
-                                  <img src={ref.avatar} alt={ref.fullName || ref.username} style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.2)" }} />
-                                ) : (
-                                  <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(201,162,39,0.25)", color: "#c9a227", fontSize: "10px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid rgba(201,162,39,0.4)" }}>
-                                    {ref.fullName ? ref.fullName.charAt(0).toUpperCase() : (ref.username ? ref.username.charAt(0).toUpperCase() : 'R')}
-                                  </div>
-                                )}
-                                <span style={{ fontWeight: 600, textDecoration: "underline", color: "#fbbf24" }}>{ref.fullName || ref.username}</span>
-                              </button>
-                              {!isRefLocked && (
-                                <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "2px", fontSize: "12px", lineHeight: 1 }} title="Remove referee">×</button>
-                              )}
-                            </div>
-                          ))}
-                          {!isRefLocked && (
-                            <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
-                              <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none" }}>
-                                <option value="">{$t("-- Assign Referee --", (localStorage.getItem('app-lang') || 'en'))}</option>
-                                {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
-                                  <option key={rUser.id} value={rUser.id}>👤 {rUser.username}</option>
-                                ))}
-                              </select>
-                              <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Assign", (localStorage.getItem('app-lang') || 'en'))}</button>
-                            </div>
+                            race.status === "RUNNING" ? (
+                              <div style={{ display: "flex", flexDirection: "column", gap: "4px", alignItems: "center" }}>
+                                <input type="text" placeholder={$t("YouTube URL", (localStorage.getItem('app-lang') || 'en'))} value={liveUrls[race.id] || ""} onChange={e => setLiveUrls(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "4px", color: "#f4f2ec", width: 110 }} />
+                                <button type="button" onClick={() => handleGoLive(race.id)} style={{ fontSize: "9px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#ef4444", color: "#fff", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Go Live", (localStorage.getItem('app-lang') || 'en'))}</button>
+                              </div>
+                            ) : (
+                              <span style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)" }}>-</span>
+                            )
                           )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        </td>
+
+                        <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", alignItems: "center" }}>
+                            {assigned.map(ref => (
+                              <div key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "6px", background: "#1f1f22", color: "#f4f2ec", fontSize: "11px", padding: "0.2rem 0.6rem", borderRadius: "0.375rem", border: "1px solid #2e2e33" }}>
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedProfileId(ref.id)}
+                                  style={{ background: "none", border: "none", padding: 0, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px", color: "#f4f2ec" }}
+                                  title={`View profile of ${ref.fullName || ref.username}`}
+                                >
+                                  {ref.avatar ? (
+                                    <img src={ref.avatar} alt={ref.fullName || ref.username} style={{ width: 18, height: 18, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "1px solid rgba(255,255,255,0.2)" }} />
+                                  ) : (
+                                    <div style={{ width: 18, height: 18, borderRadius: "50%", background: "rgba(201,162,39,0.25)", color: "#c9a227", fontSize: "10px", fontWeight: "bold", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "1px solid rgba(201,162,39,0.4)" }}>
+                                      {ref.fullName ? ref.fullName.charAt(0).toUpperCase() : (ref.username ? ref.username.charAt(0).toUpperCase() : 'R')}
+                                    </div>
+                                  )}
+                                  <span style={{ fontWeight: 600, textDecoration: "underline", color: "#fbbf24" }}>{ref.fullName || ref.username}</span>
+                                </button>
+                                {!isRefLocked && (
+                                  <button type="button" onClick={() => handleRemoveReferee(race.id, ref.id)} style={{ background: "none", border: "none", color: "#ef4444", fontWeight: "bold", cursor: "pointer", marginLeft: "2px", fontSize: "12px", lineHeight: 1 }} title="Remove referee">×</button>
+                                )}
+                              </div>
+                            ))}
+                            {!isRefLocked && (
+                              <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "4px" }}>
+                                <select value={assignRefSelection[race.id] || ""} onChange={e => setAssignRefSelection(prev => ({ ...prev, [race.id]: e.target.value }))} style={{ fontSize: "10px", padding: "0.25rem", background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.25rem", color: "#f4f2ec", outline: "none" }}>
+                                  <option value="">{$t("-- Assign Referee --", (localStorage.getItem('app-lang') || 'en'))}</option>
+                                  {referees.filter(r => !assigned.some(a => a.id === r.id)).map(rUser => (
+                                    <option key={rUser.id} value={rUser.id}>👤 {rUser.username}</option>
+                                  ))}
+                                </select>
+                                <button type="button" onClick={() => handleAssignReferee(race.id)} style={{ fontSize: "10px", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0c0a09", border: "none", fontWeight: "bold", cursor: "pointer" }}>{$t("Assign", (localStorage.getItem('app-lang') || 'en'))}</button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()}
               </tbody>
             </table>
           </div>
         )}
         <div style={{ padding: "0.75rem 1.5rem", borderTop: "1px solid rgba(201,162,39,0.10)", background: "rgba(255,255,255,0.012)" }}>
-          <p style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)" }}>{races.length} {$t("races total inside current active season meetings.", (localStorage.getItem('app-lang') || 'en'))}</p>
+          {races.length > 0 && (
+            <Pagination
+              currentPage={Math.min(Math.max(1, page), Math.max(1, Math.ceil(races.length / pageSize)))}
+              totalItems={races.length}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[5, 10, 20, 50]}
+            />
+          )}
+          <p style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.3)", marginTop: "0.5rem" }}>{races.length} {$t("races total inside current active season meetings.", (localStorage.getItem('app-lang') || 'en'))}</p>
         </div>
       </div>
 

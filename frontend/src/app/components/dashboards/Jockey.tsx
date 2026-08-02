@@ -18,6 +18,7 @@ import ProfileModal from "./components/ProfileModal";
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import ViewLive from "./components/ViewLive";
 import UserWalletView from "./components/UserWalletView";
+import { Pagination } from "../common/Pagination";
 
 // Định nghĩa các Tab giao diện khả dụng trong Dashboard của Jockey
 type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "live" | "wallet" | "profile";
@@ -110,6 +111,15 @@ function StatusBadge({ status }: { status: string }) {
  */
 function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void; user: any }) {
   const walletBal = user?.walletBalance !== undefined && user?.walletBalance !== null ? Number(user.walletBalance) : 0;
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(6);
+
+  const totalItems = meetings.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedMeetings = meetings.slice(startIndex, startIndex + pageSize);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Khối Thẻ Thống kê hiệu suất & Ví Tiền */}
@@ -158,56 +168,68 @@ function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; me
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Available Race Meetings", (localStorage.getItem('app-lang') || 'en'))}</h3>
         <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>{$t("Register for race meetings to make yourself available for stable hire invitations.", (localStorage.getItem('app-lang') || 'en'))}</p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
-          {meetings.length === 0 ? (
-            <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>{$t("No upcoming meetings available.", (localStorage.getItem('app-lang') || 'en'))}</p>
-          ) : meetings.map((m: any) => {
-            const isReg = dashboard?.registeredMeetingIds?.includes(m.id);
-            const regStatus = dashboard?.regStatuses?.[m.id];
+        {meetings.length === 0 ? (
+          <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>{$t("No upcoming meetings available.", (localStorage.getItem('app-lang') || 'en'))}</p>
+        ) : (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
+              {paginatedMeetings.map((m: any) => {
+                const isReg = dashboard?.registeredMeetingIds?.includes(m.id);
+                const regStatus = dashboard?.regStatuses?.[m.id];
 
-            return (
-              <div key={m.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                  <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
-                  {isReg ? <StatusBadge status={regStatus ?? "APPROVED"} /> : <StatusBadge status="UNREGISTERED" />}
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                  <span>📍 {m.venue}</span>
-                  <span>📅 {formatDate(m.startDate || m.date)}</span>
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", background: "rgba(52,211,153,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(52,211,153,0.2)" }}>
-                  🎟️ <strong>Race Meeting Registration Fee:</strong> <span style={{ color: "#4ade80", fontWeight: "bold" }}>FREE ($0 - Jockey)</span>
-                </div>
-                {/* Hiển thị nút đăng ký hoặc dòng trạng thái đã đăng ký */}
-                {isReg && regStatus === "REJECTED" ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                    <p style={{ fontSize: "0.65rem", color: "#ef4444", fontFamily: "monospace", fontStyle: "italic" }}>
-                      ⚠️ {$t("Your registration for this meeting was rejected. You can re-register again below.", (localStorage.getItem('app-lang') || 'en'))}
-                    </p>
-                    <button
-                      onClick={() => onRegister(m.id)}
-                      style={{ width: "100%", padding: "0.625rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
-                    >
-                      🔄 {$t("Register Again as Jockey", (localStorage.getItem('app-lang') || 'en'))}
-                    </button>
+                return (
+                  <div key={m.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                      <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
+                      {isReg ? <StatusBadge status={regStatus ?? "APPROVED"} /> : <StatusBadge status="UNREGISTERED" />}
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                      <span>📍 {m.venue}</span>
+                      <span>📅 {formatDate(m.startDate || m.date)}</span>
+                    </div>
+                    <div style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", background: "rgba(52,211,153,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(52,211,153,0.2)" }}>
+                      🎟️ <strong>Race Meeting Registration Fee:</strong> <span style={{ color: "#4ade80", fontWeight: "bold" }}>FREE ($0 - Jockey)</span>
+                    </div>
+                    {/* Hiển thị nút đăng ký hoặc dòng trạng thái đã đăng ký */}
+                    {isReg && regStatus === "REJECTED" ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        <p style={{ fontSize: "0.65rem", color: "#ef4444", fontFamily: "monospace", fontStyle: "italic" }}>
+                          ⚠️ {$t("Your registration for this meeting was rejected. You can re-register again below.", (localStorage.getItem('app-lang') || 'en'))}
+                        </p>
+                        <button
+                          onClick={() => onRegister(m.id)}
+                          style={{ width: "100%", padding: "0.625rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
+                        >
+                          🔄 {$t("Register Again as Jockey", (localStorage.getItem('app-lang') || 'en'))}
+                        </button>
+                      </div>
+                    ) : isReg ? (
+                      <button
+                        disabled
+                        style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "not-allowed" }}
+                      >
+                        {$t("Already Registered", (localStorage.getItem('app-lang') || 'en'))}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => onRegister(m.id)}
+                        style={{ width: "100%", padding: "0.625rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
+                      >{$t("Register as Jockey", (localStorage.getItem('app-lang') || 'en'))}</button>
+                    )}
                   </div>
-                ) : isReg ? (
-                  <button
-                    disabled
-                    style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "not-allowed" }}
-                  >
-                    {$t("Already Registered", (localStorage.getItem('app-lang') || 'en'))}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => onRegister(m.id)}
-                    style={{ width: "100%", padding: "0.625rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
-                  >{$t("Register as Jockey", (localStorage.getItem('app-lang') || 'en'))}</button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
+            <Pagination
+              currentPage={validPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[3, 6, 12]}
+            />
+          </>
+        )}
       </div>
     </div>
   );
@@ -219,6 +241,9 @@ function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; me
  */
 function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: boolean; onViewHorse: (horse: { id: number; name: string }) => void }) {
   const [isMobile, setIsMobile] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -231,6 +256,12 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
   const loadingText = $t("Loading...", (localStorage.getItem('app-lang') || 'en'));
   const emptyText = $t("No scheduled mounts at the moment.", (localStorage.getItem('app-lang') || 'en'));
 
+  const totalItems = mounts.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedMounts = mounts.slice(startIndex, startIndex + pageSize);
+
   // Hiển thị bố cục dạng thẻ (card) trên Mobile
   if (isMobile) {
     return (
@@ -242,7 +273,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
           <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem", fontFamily: "monospace" }}>{emptyText}</p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {mounts.map((m, i) => (
+            {paginatedMounts.map((m, i) => (
               <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                   <div>
@@ -282,6 +313,14 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
                 </div>
               </div>
             ))}
+            <Pagination
+              currentPage={validPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[5, 10, 20]}
+            />
           </div>
         )}
       </div>
@@ -306,7 +345,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
               <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{loadingText}</td></tr>
             ) : mounts.length === 0 ? (
               <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>{emptyText}</td></tr>
-            ) : mounts.map((m, i) => (
+            ) : paginatedMounts.map((m, i) => (
               <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
                 <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", color: "#a0a0a0" }}>#{m.raceId}</td>
                 <td style={{ padding: "0.75rem 1rem", fontWeight: 700, color: "#f4f2ec" }}>
@@ -337,6 +376,16 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
             ))}
           </tbody>
         </table>
+        {mounts.length > 0 && (
+          <Pagination
+            currentPage={validPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[5, 10, 20]}
+          />
+        )}
       </div>
     </div>
   );
@@ -810,6 +859,15 @@ function RaceRow({ race, refereesMap }: { race: any; refereesMap?: Record<number
  * Component CalendarView - Biểu diễn lịch thi đấu công khai cho Jockey theo dõi
  */
 function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; allRaces: any[]; refereesMap?: Record<number, any[]> }) {
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  const totalItems = meetings.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedMeetings = meetings.slice(startIndex, startIndex + pageSize);
+
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Race Calendar", (localStorage.getItem('app-lang') || 'en'))}</h3>
@@ -817,7 +875,7 @@ function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; al
         <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No upcoming race meetings scheduled.", (localStorage.getItem('app-lang') || 'en'))}</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-          {meetings.map((m: any, i: number) => {
+          {paginatedMeetings.map((m: any, i: number) => {
             const meetingRaces = allRaces.filter(r => r.raceMeetingId === m.id);
 
             return (
@@ -844,6 +902,14 @@ function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; al
               </div>
             );
           })}
+          <Pagination
+            currentPage={validPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[3, 5, 10]}
+          />
         </div>
       )}
     </div>
@@ -856,6 +922,9 @@ function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; al
  */
 function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violations: any[]; onAcknowledge: (id: number) => void; onViewProfile?: (id: number) => void }) {
   const [isMobile, setIsMobile] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -867,6 +936,12 @@ function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violatio
   const title = $t("Rule Violations", (localStorage.getItem('app-lang') || 'en'));
   const emptyText = "✅ " + $t("No rule violations recorded.", (localStorage.getItem('app-lang') || 'en'));
 
+  const totalItems = violations.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedViolations = violations.slice(startIndex, startIndex + pageSize);
+
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{title}</h3>
@@ -876,7 +951,7 @@ function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violatio
         </div>
       ) : isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-          {violations.map((v: any, i: number) => (
+          {paginatedViolations.map((v: any, i: number) => (
             <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                 <div>
@@ -927,6 +1002,14 @@ function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violatio
               )}
             </div>
           ))}
+          <Pagination
+            currentPage={validPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[5, 10, 20]}
+          />
         </div>
       ) : (
         <div className="rounded-xl overflow-x-auto" style={{ border: "1px solid #2a2825" }}>
@@ -939,7 +1022,7 @@ function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violatio
               </tr>
             </thead>
             <tbody>
-              {violations.map((v: any, i: number) => (
+              {paginatedViolations.map((v: any, i: number) => (
                 <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
                   <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec", fontSize: "0.8rem" }}>{v.raceName}</td>
                   <td style={{ padding: "0.75rem 1rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.75rem" }}>{v.date}</td>
@@ -976,6 +1059,14 @@ function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violatio
               ))}
             </tbody>
           </table>
+          <Pagination
+            currentPage={validPage}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={setPageSize}
+            pageSizeOptions={[5, 10, 20]}
+          />
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
+import { Pagination } from "../common/Pagination";
 
 // Cấu trúc thuộc tính truyền vào component InlineDatePicker
 interface InlineDatePickerProps {
@@ -188,6 +189,15 @@ export default function Season() {
   const [extendError, setExtendError] = useState("");
   const [isMobile, setIsMobile] = useState(false);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
+
+  const totalItems = seasons.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedSeasons = seasons.slice(startIndex, startIndex + pageSize);
+
   // Quy đổi chuỗi ngày dd-MM-yyyy sang chuỗi timestamp API yêu cầu (yyyy-MM-dd 00:00:00)
   const toDbFormat = (d: string) => d ? `${d} 00:00:00` : "";
 
@@ -221,34 +231,13 @@ export default function Season() {
     }
   };
 
-  // --- State cho chỉnh sửa Quy tắc Class Rules ---
-  const [editableRules, setEditableRules] = useState<any[]>([]);
-  const [isEditingRules, setIsEditingRules] = useState(false);
-  const [rulesError, setRulesError] = useState("");
-  const [rulesSuccess, setRulesSuccess] = useState("");
-
   // Tải quy chế phân hạng Class Rules của một mùa giải cụ thể
   const fetchRules = async (seasonId: number) => {
     try {
       const rules = await api.get<any[]>(`/races/seasons/${seasonId}/rules`);
       setSeasonRules(rules);
-      setEditableRules(rules.map((r: any) => ({ ...r })));
     } catch (err: any) {
       console.error("Failed to load rules", err);
-    }
-  };
-
-  const handleSaveRules = async () => {
-    if (!selectedSeasonId) return;
-    setRulesError("");
-    setRulesSuccess("");
-    try {
-      await api.post(`/races/seasons/${selectedSeasonId}/rules`, editableRules);
-      setRulesSuccess("Season class prize rules updated successfully.");
-      setIsEditingRules(false);
-      fetchRules(selectedSeasonId);
-    } catch (err: any) {
-      setRulesError(getErrMsg(err, "Failed to save season rules."));
     }
   };
 
@@ -545,13 +534,9 @@ export default function Season() {
         </div>
 
         {isMobile ? (
-          // Bố cục Mobile (dạng thẻ)
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
-            {loading ? (
-              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>{$t("Loading seasons...", (localStorage.getItem('app-lang') || 'en'))}</p>
-            ) : seasons.length === 0 ? (
-              <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>{$t("No seasons found.", (localStorage.getItem('app-lang') || 'en'))}</p>
-            ) : seasons.map(season => (
+          // Bố cục Mobile (Danh sách Thẻ)
+          <div className="space-y-3 p-4">
+            {paginatedSeasons.map(season => (
               <div
                 key={season.id}
                 onClick={() => setSelectedSeasonId(season.id)}
@@ -593,6 +578,14 @@ export default function Season() {
                 </div>
               </div>
             ))}
+            <Pagination
+              currentPage={validPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[5, 10, 20]}
+            />
           </div>
         ) : (
           // Bố cục Desktop (Bảng biểu)
@@ -607,7 +600,7 @@ export default function Season() {
                 </tr>
               </thead>
               <tbody>
-                {seasons.map(season => (
+                {paginatedSeasons.map(season => (
                   <tr
                     key={season.id}
                     onClick={() => setSelectedSeasonId(season.id)}
@@ -650,105 +643,40 @@ export default function Season() {
                 ))}
               </tbody>
             </table>
+            <Pagination
+              currentPage={validPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[5, 10, 20]}
+            />
           </div>
         )}
 
-        {/* Khối hiển thị & chỉnh sửa Class rules tương ứng dưới bảng */}
+        {/* Khối hiển thị Class rules tương ứng dưới bảng (Chế độ chỉ xem) */}
         {selectedSeasonId !== null && seasonRules.length > 0 && (
           <div className="px-6 py-4 border-t" style={{ borderColor: "rgba(201,162,39,0.08)" }}>
             <div className="flex items-center justify-between mb-3">
               <p className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
                 Class Prize Rules & Rating Limits — Season S-{selectedSeasonId}
               </p>
-              {!isEditingRules ? (
-                <button
-                  type="button"
-                  onClick={() => { setIsEditingRules(true); setRulesError(""); setRulesSuccess(""); }}
-                  className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded text-xs font-mono font-semibold transition cursor-pointer"
-                >
-                  ✏️ Edit Class Rules
-                </button>
-              ) : (
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { setIsEditingRules(false); setRulesError(""); setEditableRules(seasonRules.map(r => ({ ...r }))); }}
-                    className="px-3 py-1 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 rounded text-xs font-mono transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveRules}
-                    className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black rounded text-xs font-mono font-bold transition cursor-pointer"
-                  >
-                    💾 Save Rules
-                  </button>
-                </div>
-              )}
             </div>
 
-            {rulesError && (
-              <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl mb-3">⚠️ {rulesError}</p>
-            )}
-            {rulesSuccess && (
-              <p className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl mb-3">✓ {rulesSuccess}</p>
-            )}
-
-            {!isEditingRules ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                {seasonRules.map(rule => (
-                  <div key={rule.id} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(201,162,39,0.12)" }}>
-                    <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
-                    <p className="text-[10px] font-mono text-white/50 mt-1">Rating: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
-                    <p className="text-[10px] font-mono text-emerald-400 font-semibold mt-1">
-                      Min Prize: ${rule.minPrize ? rule.minPrize.toLocaleString() : '0'}
-                    </p>
-                    <p className="text-[10px] font-mono text-emerald-400/80 mt-0.5">
-                      Max Prize: ${rule.maxPrize ? rule.maxPrize.toLocaleString() : '0'}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                {editableRules.map((rule, idx) => (
-                  <div key={rule.id || idx} className="rounded-lg p-3 border space-y-2" style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(201,162,39,0.25)" }}>
-                    <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
-                    <div>
-                      <label className="text-[9px] font-mono text-white/40 block">Min Prize ($)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={rule.minPrize ?? ''}
-                        onChange={e => {
-                          const val = parseFloat(e.target.value);
-                          const updated = [...editableRules];
-                          updated[idx] = { ...updated[idx], minPrize: isNaN(val) ? 0 : val };
-                          setEditableRules(updated);
-                        }}
-                        className="w-full px-2 py-1 bg-black/40 border border-white/10 rounded text-xs text-white font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[9px] font-mono text-white/40 block">Max Prize ($)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={rule.maxPrize ?? ''}
-                        onChange={e => {
-                          const val = parseFloat(e.target.value);
-                          const updated = [...editableRules];
-                          updated[idx] = { ...updated[idx], maxPrize: isNaN(val) ? 0 : val };
-                          setEditableRules(updated);
-                        }}
-                        className="w-full px-2 py-1 bg-black/40 border border-white/10 rounded text-xs text-white font-mono"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {seasonRules.map(rule => (
+                <div key={rule.id} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(201,162,39,0.12)" }}>
+                  <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
+                  <p className="text-[10px] font-mono text-white/50 mt-1">Rating: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
+                  <p className="text-[10px] font-mono text-emerald-400 font-semibold mt-1">
+                    Min Prize: ${rule.minPrize ? rule.minPrize.toLocaleString() : '0'}
+                  </p>
+                  <p className="text-[10px] font-mono text-emerald-400/80 mt-0.5">
+                    Max Prize: ${rule.maxPrize ? rule.maxPrize.toLocaleString() : '0'}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

@@ -36,20 +36,17 @@ export default function Register() {
     
     // 1. Kiểm tra họ và tên hợp lệ (không trống và dài ít nhất 3 ký tự)
     if (!form.fullName.trim()) {
-      // Đặt thông báo lỗi nếu họ tên trống
-      setError($t("Vui lòng nhập họ và tên đầy đủ"));
+      setError($t("Please enter your full name"));
       return;
     }
     if (form.fullName.trim().length < 3) {
-      // Đặt thông báo lỗi nếu họ tên dưới 3 ký tự
-      setError($t("Họ và tên phải có ít nhất 3 ký tự"));
+      setError($t("Full name must be at least 3 characters"));
       return;
     }
     
-    // 2. Kiểm tra tên đăng nhập (username) hợp lệ
+    // 2. Validate username
     if (!form.username.trim()) {
-      // Đặt thông báo lỗi nếu username trống
-      setError($t("Vui lòng nhập username đăng nhập"));
+      setError($t("Please enter a username for login"));
       return;
     }
     if (form.username.trim().length < 3) {
