@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RaceMeetingMapper {
 
-    public RaceMeetingDTO toDTO(RaceMeeting meeting, String seasonName) {
+    public RaceMeetingDTO toDTO(RaceMeeting meeting, String seasonName, String seasonStatus) {
         if (meeting == null) {
             return null;
         }
@@ -19,11 +19,19 @@ public class RaceMeetingMapper {
                 .startDate(meeting.getStartDate())
                 .venue(meeting.getVenue())
                 .totalBudget(meeting.getTotalBudget())
+                .ticketPrice(meeting.getTicketPrice())
+                .ticketSettled(meeting.getTicketSettled())
+                .status(meeting.getStatus() != null ? meeting.getStatus() : "ACTIVE")
+                .seasonStatus(seasonStatus)
                 .build();
     }
 
+    public RaceMeetingDTO toDTO(RaceMeeting meeting, String seasonName) {
+        return toDTO(meeting, seasonName, null);
+    }
+
     public RaceMeetingDTO toDTO(RaceMeeting meeting) {
-        return toDTO(meeting, null);
+        return toDTO(meeting, null, null);
     }
 
     public RaceMeeting toEntity(RaceMeetingDTO dto) {
@@ -37,6 +45,9 @@ public class RaceMeetingMapper {
         meeting.setStartDate(dto.getStartDate());
         meeting.setVenue(dto.getVenue());
         meeting.setTotalBudget(dto.getTotalBudget());
+        meeting.setTicketPrice(dto.getTicketPrice());
+        meeting.setTicketSettled(dto.getTicketSettled() != null ? dto.getTicketSettled() : false);
+        meeting.setStatus(dto.getStatus() != null ? dto.getStatus() : "ACTIVE");
         return meeting;
     }
 }

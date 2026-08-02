@@ -4,6 +4,7 @@ import com.horseracing.backend.dto.HorseRaceMeetingRegistrationDTO;
 import com.horseracing.backend.dto.JockeyRaceMeetingRegistrationDTO;
 import com.horseracing.backend.dto.OwnerRaceMeetingRegistrationDTO;
 import com.horseracing.backend.dto.RegistrationMeetingRequestDTO;
+import com.horseracing.backend.service.AdminUserService;
 import com.horseracing.backend.service.RegistrationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,13 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
-/**
- * Controller RegistrationController - Lớp kiểm soát các endpoint liên quan đến Đăng ký tham gia Ngày hội đua.
- * - Hỗ trợ kỵ sĩ gửi yêu cầu đăng ký tham gia ngày đua.
- * - Hỗ trợ chủ ngựa gửi yêu cầu đăng ký tham gia ngày đua.
- * - Hỗ trợ đăng ký chiến mã cụ thể tham gia ngày đua.
- * - Các yêu cầu đăng ký mặc định ở trạng thái PENDING chờ Admin phê duyệt.
- */
 @RestController // Đánh dấu lớp là REST Controller để xử lý các yêu cầu HTTP từ frontend
 @RequestMapping("/api/registrations") // Định nghĩa đường dẫn gốc cho các endpoint đăng ký ngày đua
 @RequiredArgsConstructor // Tự động inject dependency bằng constructor chứa các trường final
@@ -25,6 +19,18 @@ import java.util.Map;
 public class RegistrationController {
 
     private final RegistrationService registrationService; // Dịch vụ xử lý đăng ký tham gia ngày hội đua
+    private final AdminUserService adminUserService;
+
+    // API lấy danh sách chi tiết người đăng ký tham gia RaceMeeting (phục vụ Admin View thông tin)
+    @GetMapping("/meeting/{meetingId}")
+    public ResponseEntity<?> getMeetingRegistrations(@PathVariable Integer meetingId) {
+        try {
+            return ResponseEntity.ok(adminUserService.getMeetingRegistrationsDetails(meetingId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
 
     // API phục vụ Nài ngựa đăng ký tham gia thi đấu tại Ngày hội đua
     @PostMapping("/jockey") // Xử lý HTTP POST request gửi tới /api/registrations/jockey

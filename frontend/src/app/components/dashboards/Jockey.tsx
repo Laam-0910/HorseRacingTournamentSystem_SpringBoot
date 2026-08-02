@@ -17,21 +17,23 @@ import ProfileModal from "./components/ProfileModal";
 // Import HorsePerformanceModal hiển thị thông số thành tích ngựa
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import ViewLive from "./components/ViewLive";
+import UserWalletView from "./components/UserWalletView";
 
 // Định nghĩa các Tab giao diện khả dụng trong Dashboard của Jockey
-type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "live" | "profile";
+type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "live" | "wallet" | "profile";
 
 // Mã màu xanh đặc trưng làm giao diện chủ đạo cho kỵ sĩ Jockey
 const ROLE_COLOR = "#3b82c4";
 
 // Cấu hình các nút điều hướng sidebar dành cho Jockey
 const NAV_ITEMS = [
-  { index: "01", icon: "layout-dashboard", label: "Jockey Hub",    view: "hub"         },
-  { index: "02", icon: "flag",             label: "My Mounts",     view: "mounts"      },
-  { index: "03", icon: "calendar",         label: "Race Calendar", view: "calendar"    },
-  { index: "04", icon: "mail",             label: "Invitations",   view: "invitations" },
-  { index: "05", icon: "alert-triangle",   label: "Rule Violations", view: "violations" },
-  { index: "06", icon: "tv",               label: "Live Stream Arena", view: "live" },
+  { index: "01", icon: "layout-dashboard", label: $t("Jockey Hub", (localStorage.getItem('app-lang') || 'en')),          view: "hub"         },
+  { index: "02", icon: "wallet",           label: $t("Wallet & Transactions", (localStorage.getItem('app-lang') || 'en')), view: "wallet"      },
+  { index: "03", icon: "flag",             label: $t("My Mounts", (localStorage.getItem('app-lang') || 'en')),           view: "mounts"      },
+  { index: "04", icon: "calendar",         label: $t("Race Calendar", (localStorage.getItem('app-lang') || 'en')),       view: "calendar"    },
+  { index: "05", icon: "mail",             label: $t("Invitations", (localStorage.getItem('app-lang') || 'en')),         view: "invitations" },
+  { index: "06", icon: "alert-triangle",   label: $t("Rule Violations", (localStorage.getItem('app-lang') || 'en')),     view: "violations"  },
+  { index: "07", icon: "tv",               label: $t("Live Stream Arena", (localStorage.getItem('app-lang') || 'en')),   view: "live"        },
 ];
 
 // ── Sub-views (Các Component hiển thị giao diện con) ──────────────────────────
@@ -96,7 +98,7 @@ function StatusBadge({ status }: { status: string }) {
       color: fg,
       border: `1px solid ${bc}`
     }}>
-      {$t(s, (localStorage.getItem('app-lang') || 'vi'))}
+      {$t(s, (localStorage.getItem('app-lang') || 'en'))}
     </span>
   );
 }
@@ -113,10 +115,10 @@ function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; me
       {/* Khối Thẻ Thống kê hiệu suất & Ví Tiền */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "1rem" }}>
         <StatsCard label="💰 Wallet Balance" value={`$${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} color="#fbbf24" />
-        <StatsCard label={$t("Total Rides", (localStorage.getItem('app-lang') || 'vi'))}     value={dashboard?.jockeyStats?.totalRaces} />
-        <StatsCard label={$t("Wins (1st)", (localStorage.getItem('app-lang') || 'vi'))}      value={dashboard?.jockeyStats?.totalWins}   color="#4ade80" />
-        <StatsCard label={$t("Top 3 Finishes", (localStorage.getItem('app-lang') || 'vi'))}  value={dashboard?.jockeyStats?.top3}   color={ROLE_COLOR} />
-        <StatsCard label={$t("Win Rate", (localStorage.getItem('app-lang') || 'vi'))}        value={dashboard?.jockeyStats?.winRate ? `${Number(dashboard.jockeyStats.winRate).toFixed(1)}%` : "0.0%"} color="#c9a227" />
+        <StatsCard label={$t("Total Rides", (localStorage.getItem('app-lang') || 'en'))}     value={dashboard?.jockeyStats?.totalRaces} />
+        <StatsCard label={$t("Wins (1st)", (localStorage.getItem('app-lang') || 'en'))}      value={dashboard?.jockeyStats?.totalWins}   color="#4ade80" />
+        <StatsCard label={$t("Top 3 Finishes", (localStorage.getItem('app-lang') || 'en'))}  value={dashboard?.jockeyStats?.top3}   color={ROLE_COLOR} />
+        <StatsCard label={$t("Win Rate", (localStorage.getItem('app-lang') || 'en'))}        value={dashboard?.jockeyStats?.winRate ? `${Number(dashboard.jockeyStats.winRate).toFixed(1)}%` : "0.0%"} color="#c9a227" />
       </div>
 
       {/* Dedicated Wallet & Financial Rules Card */}
@@ -154,11 +156,11 @@ function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; me
 
       {/* Danh sách ngày hội đua đang mở đăng ký */}
       <div>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Available Race Meetings", (localStorage.getItem('app-lang') || 'vi'))}</h3>
-        <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>{$t("Register for race meetings to make yourself available for stable hire invitations.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Available Race Meetings", (localStorage.getItem('app-lang') || 'en'))}</h3>
+        <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>{$t("Register for race meetings to make yourself available for stable hire invitations.", (localStorage.getItem('app-lang') || 'en'))}</p>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "1rem" }}>
           {meetings.length === 0 ? (
-            <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>{$t("No upcoming meetings available.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+            <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>{$t("No upcoming meetings available.", (localStorage.getItem('app-lang') || 'en'))}</p>
           ) : meetings.map((m: any) => {
             const isReg = dashboard?.registeredMeetingIds?.includes(m.id);
             const regStatus = dashboard?.regStatuses?.[m.id];
@@ -173,19 +175,34 @@ function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; me
                   <span>📍 {m.venue}</span>
                   <span>📅 {formatDate(m.startDate || m.date)}</span>
                 </div>
+                <div style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", background: "rgba(52,211,153,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(52,211,153,0.2)" }}>
+                  🎟️ <strong>Race Meeting Registration Fee:</strong> <span style={{ color: "#4ade80", fontWeight: "bold" }}>FREE ($0 - Jockey)</span>
+                </div>
                 {/* Hiển thị nút đăng ký hoặc dòng trạng thái đã đăng ký */}
-                {isReg ? (
+                {isReg && regStatus === "REJECTED" ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                    <p style={{ fontSize: "0.65rem", color: "#ef4444", fontFamily: "monospace", fontStyle: "italic" }}>
+                      ⚠️ {$t("Your registration for this meeting was rejected. You can re-register again below.", (localStorage.getItem('app-lang') || 'en'))}
+                    </p>
+                    <button
+                      onClick={() => onRegister(m.id)}
+                      style={{ width: "100%", padding: "0.625rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
+                    >
+                      🔄 {$t("Register Again as Jockey", (localStorage.getItem('app-lang') || 'en'))}
+                    </button>
+                  </div>
+                ) : isReg ? (
                   <button
                     disabled
                     style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "not-allowed" }}
                   >
-                    {$t("Already Registered", (localStorage.getItem('app-lang') || 'vi'))}
+                    {$t("Already Registered", (localStorage.getItem('app-lang') || 'en'))}
                   </button>
                 ) : (
                   <button
                     onClick={() => onRegister(m.id)}
                     style={{ width: "100%", padding: "0.625rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}
-                  >{$t("Register as Jockey", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                  >{$t("Register as Jockey", (localStorage.getItem('app-lang') || 'en'))}</button>
                 )}
               </div>
             );
@@ -209,10 +226,10 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const lang = localStorage.getItem("app-lang") || "vi";
-  const title = $t("My Mounts", (localStorage.getItem('app-lang') || 'vi'));
-  const loadingText = $t("Loading...", (localStorage.getItem('app-lang') || 'vi'));
-  const emptyText = $t("No scheduled mounts at the moment.", (localStorage.getItem('app-lang') || 'vi'));
+  const lang = localStorage.getItem("app-lang") || "en";
+  const title = $t("My Mounts", (localStorage.getItem('app-lang') || 'en'));
+  const loadingText = $t("Loading...", (localStorage.getItem('app-lang') || 'en'));
+  const emptyText = $t("No scheduled mounts at the moment.", (localStorage.getItem('app-lang') || 'en'));
 
   // Hiển thị bố cục dạng thẻ (card) trên Mobile
   if (isMobile) {
@@ -229,7 +246,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
               <div key={i} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid #2a2825", borderRadius: "0.75rem", padding: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                   <div>
-                    <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>{$t("Race #", (localStorage.getItem('app-lang') || 'vi'))}{m.raceId}</span>
+                    <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)" }}>{$t("Race #", (localStorage.getItem('app-lang') || 'en'))}{m.raceId}</span>
                     <h4 style={{ fontSize: "0.95rem", fontWeight: "bold", color: "#f4f2ec", marginTop: "2px" }}>
                       <button
                         type="button"
@@ -260,7 +277,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
                     onClick={() => onViewHorse({ id: m.horseId, name: m.horseName || `Horse #${m.horseId}` })}
                     style={{ padding: "0.3rem 0.6rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.375rem", color: "#c9a227", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}
                   >
-                    📈 {$t("Lịch sử đua", (localStorage.getItem('app-lang') || 'vi'))}
+                    📈 {$t("Race History", (localStorage.getItem('app-lang') || 'en'))}
                   </button>
                 </div>
               </div>
@@ -280,7 +297,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
           <thead>
             <tr style={{ background: `rgba(59,130,196,0.08)`, borderBottom: "1px solid #2a2825" }}>
               {["Race ID", "Horse", "Gate", "Weight (kg)", "Status", "Race History"].map(h => (
-                <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
+                <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{$t(h, (localStorage.getItem('app-lang') || 'en'))}</th>
               ))}
             </tr>
           </thead>
@@ -305,7 +322,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
                 <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", color: "#c9a227", fontWeight: 700 }}>{m.gateNumber ?? "TBD"}</td>
                 <td style={{ padding: "0.75rem 1rem", color: "#f4f2ec" }}>{m.carriedWeight ?? "TBD"} kg</td>
                 <td style={{ padding: "0.75rem 1rem" }}>
-                  <span style={{ padding: "0.125rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.6rem", fontFamily: "monospace", fontWeight: 700, textTransform: "uppercase", background: m.status === "APPROVED" ? "rgba(74,222,128,0.1)" : "rgba(42,40,37,0.5)", color: m.status === "APPROVED" ? "#4ade80" : "#a0a0a0" }}>{$t(m.status || '', (localStorage.getItem('app-lang') || 'vi'))}</span>
+                  <span style={{ padding: "0.125rem 0.5rem", borderRadius: "0.25rem", fontSize: "0.6rem", fontFamily: "monospace", fontWeight: 700, textTransform: "uppercase", background: m.status === "APPROVED" ? "rgba(74,222,128,0.1)" : "rgba(42,40,37,0.5)", color: m.status === "APPROVED" ? "#4ade80" : "#a0a0a0" }}>{$t(m.status || '', (localStorage.getItem('app-lang') || 'en'))}</span>
                 </td>
                 <td style={{ padding: "0.75rem 1rem" }}>
                   <button
@@ -313,7 +330,7 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
                     onClick={() => onViewHorse({ id: m.horseId, name: m.horseName || `Horse #${m.horseId}` })}
                     style={{ padding: "0.35rem 0.75rem", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.375rem", color: "#c9a227", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer", fontWeight: 700 }}
                   >
-                    📈 {$t("Lịch sử đua", (localStorage.getItem('app-lang') || 'vi'))}
+                    📈 {$t("Race History", (localStorage.getItem('app-lang') || 'en'))}
                   </button>
                 </td>
               </tr>
@@ -337,7 +354,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
   onViewHorse: (horse: { id: number; name: string }) => void;
   refereesMap?: Record<number, any[]>;
 }) {
-  const lang = localStorage.getItem("app-lang") || "vi";
+  const lang = localStorage.getItem("app-lang") || "en";
   const [filter, setFilter] = useState<string>("ALL");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
@@ -406,15 +423,15 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
   };
 
   const t = {
-    title: $t("Jockey Ride Invitations & Applications", (localStorage.getItem('app-lang') || 'vi')),
-    subTitle: $t("Manage incoming ride offers from stable owners and track your accepted race registration status.", (localStorage.getItem('app-lang') || 'vi')),
+    title: $t("Jockey Ride Invitations & Applications", (localStorage.getItem('app-lang') || 'en')),
+    subTitle: $t("Manage incoming ride offers from stable owners and track your accepted race registration status.", (localStorage.getItem('app-lang') || 'en')),
     noOffers: lang === "vi" ? "Không tìm thấy lời mời hoặc đơn đăng ký phù hợp với bộ lọc." : "No invitations found matching the selected filter.",
-    offerFrom: $t("Offer from Stable Owner ", (localStorage.getItem('app-lang') || 'vi')),
-    horse: $t("Horse", (localStorage.getItem('app-lang') || 'vi')),
-    status: $t("Status", (localStorage.getItem('app-lang') || 'vi')),
+    offerFrom: $t("Offer from Stable Owner ", (localStorage.getItem('app-lang') || 'en')),
+    horse: $t("Horse", (localStorage.getItem('app-lang') || 'en')),
+    status: $t("Status", (localStorage.getItem('app-lang') || 'en')),
     entryStatus: lang === "vi" ? "Trạng thái đơn:" : "Entry Status:",
-    accept: $t("Accept Offer", (localStorage.getItem('app-lang') || 'vi')),
-    reject: $t("Reject", (localStorage.getItem('app-lang') || 'vi')),
+    accept: $t("Accept Offer", (localStorage.getItem('app-lang') || 'en')),
+    reject: $t("Reject", (localStorage.getItem('app-lang') || 'en')),
   };
 
   const filterTabs = [
@@ -473,7 +490,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            placeholder={$t("Search meeting, owner, horse name...", (localStorage.getItem('app-lang') || 'vi'))}
+            placeholder={$t("Search meeting, owner, horse name...", (localStorage.getItem('app-lang') || 'en'))}
             style={{
               width: "100%",
               padding: "0.45rem 0.75rem 0.45rem 2.2rem",
@@ -568,7 +585,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                   {/* Trọng tài phân công cho trận đua */}
                   {refereesMap && refereesMap[inv.raceId] && refereesMap[inv.raceId].length > 0 && (
                     <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: "0.4rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-                      <span style={{ color: "#c9a227", fontWeight: 700 }}>⚖️ {$t("Assigned Referee:", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                      <span style={{ color: "#c9a227", fontWeight: 700 }}>⚖️ {$t("Assigned Referee:", (localStorage.getItem('app-lang') || 'en'))}</span>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
                         {refereesMap[inv.raceId].map((ref: any) => (
                           <span key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(255,255,255,0.04)", padding: "0.15rem 0.5rem", borderRadius: "0.25rem", border: "1px solid rgba(255,255,255,0.08)", color: "#f4f2ec" }}>
@@ -579,6 +596,11 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                       </div>
                     </div>
                   )}
+
+                  <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem" }}>
+                    <span style={{ color: "#a0a0a0" }}>{$t("Prize Share Offered:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#fbbf24", fontFamily: "monospace", fontSize: "0.85rem" }}>{inv.jockeyPrizePercentage ?? 20}%</strong></span>
+                    <span style={{ color: "#a0a0a0" }}>{$t("Hire Fee:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#4ade80", fontFamily: "monospace" }}>${inv.hireFee ?? 500}</strong></span>
+                  </div>
 
                   <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.7rem" }}>
                     <span style={{ color: "#a0a0a0" }}>Invitation: <strong style={{ color: "#f4f2ec" }}>{inv.status}</strong></span>
@@ -725,15 +747,15 @@ function RaceRow({ race, refereesMap }: { race: any; refereesMap?: Record<number
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }} onClick={() => setExpanded(!expanded)}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", color: "#3b82c4" }}>{$t("Race #", (localStorage.getItem('app-lang') || 'vi'))}{race.id}</span>
-            <span style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{$t(race.classLevel || "", (localStorage.getItem('app-lang') || 'vi'))}</span>
+            <span style={{ fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", color: "#3b82c4" }}>{$t("Race #", (localStorage.getItem('app-lang') || 'en'))}{race.id}</span>
+            <span style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{$t(race.classLevel || "", (localStorage.getItem('app-lang') || 'en'))}</span>
           </div>
           <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>
-            {$t("Time:", (localStorage.getItem('app-lang') || 'vi'))} {formatDateTime(race.startTime)} | {$t("Distance:", (localStorage.getItem('app-lang') || 'vi'))} {race.distanceMeters}m | {$t("Track:", (localStorage.getItem('app-lang') || 'vi'))} {race.trackType}
+            {$t("Time:", (localStorage.getItem('app-lang') || 'en'))} {formatDateTime(race.startTime)} | {$t("Distance:", (localStorage.getItem('app-lang') || 'en'))} {race.distanceMeters}m | {$t("Track:", (localStorage.getItem('app-lang') || 'en'))} {race.trackType}
           </p>
           {assignedReferees.length > 0 && (
             <div style={{ fontSize: "10px", color: "#a0a0a0", fontFamily: "monospace", marginTop: "4px", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
-              <span style={{ color: "#c9a227", fontWeight: 700 }}>⚖️ {$t("Referee:", (localStorage.getItem('app-lang') || 'vi'))}</span>
+              <span style={{ color: "#c9a227", fontWeight: 700 }}>⚖️ {$t("Referee:", (localStorage.getItem('app-lang') || 'en'))}</span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
                 {assignedReferees.map((ref: any) => (
                   <span key={ref.id} style={{ display: "inline-flex", alignItems: "center", gap: "4px", color: "#fbbf24", fontWeight: 600 }}>
@@ -746,26 +768,26 @@ function RaceRow({ race, refereesMap }: { race: any; refereesMap?: Record<number
           )}
         </div>
         <button style={{ background: "none", border: "none", color: "#3b82c4", fontSize: "0.7rem", fontFamily: "monospace", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}>
-          {expanded ? "▲ " + $t("Collapse", (localStorage.getItem('app-lang') || 'vi')) : "▼ " + $t("View Entries", (localStorage.getItem('app-lang') || 'vi'))}
+          {expanded ? "▲ " + $t("Collapse", (localStorage.getItem('app-lang') || 'en')) : "▼ " + $t("View Entries", (localStorage.getItem('app-lang') || 'en'))}
         </button>
       </div>
 
       {expanded && (
         <div style={{ marginTop: "0.75rem", background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "0.5rem", padding: "0.75rem" }}>
-          <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>{$t("Approved Race Entries", (localStorage.getItem('app-lang') || 'vi'))}</p>
+          <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c9a227", marginBottom: "0.5rem" }}>{$t("Approved Race Entries", (localStorage.getItem('app-lang') || 'en'))}</p>
           {loading ? (
-            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("Loading entries...", (localStorage.getItem('app-lang') || 'vi'))}</p>
+            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("Loading entries...", (localStorage.getItem('app-lang') || 'en'))}</p>
           ) : entries.length === 0 ? (
-            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No approved entries for this race yet.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+            <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No approved entries for this race yet.", (localStorage.getItem('app-lang') || 'en'))}</p>
           ) : (
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "11px" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#a0a0a0", textAlign: "left" }}>
-                  <th style={{ padding: "0.25rem" }}>{$t("Gate", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                  <th style={{ padding: "0.25rem" }}>{$t("Horse", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                  <th style={{ padding: "0.25rem" }}>{$t("Jockey", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                  <th style={{ padding: "0.25rem" }}>{$t("Owner", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                  <th style={{ padding: "0.25rem" }}>{$t("Weight", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th style={{ padding: "0.25rem" }}>{$t("Gate", (localStorage.getItem('app-lang') || 'en'))}</th>
+                  <th style={{ padding: "0.25rem" }}>{$t("Horse", (localStorage.getItem('app-lang') || 'en'))}</th>
+                  <th style={{ padding: "0.25rem" }}>{$t("Jockey", (localStorage.getItem('app-lang') || 'en'))}</th>
+                  <th style={{ padding: "0.25rem" }}>{$t("Owner", (localStorage.getItem('app-lang') || 'en'))}</th>
+                  <th style={{ padding: "0.25rem" }}>{$t("Weight", (localStorage.getItem('app-lang') || 'en'))}</th>
                 </tr>
               </thead>
               <tbody>
@@ -793,9 +815,9 @@ function RaceRow({ race, refereesMap }: { race: any; refereesMap?: Record<number
 function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; allRaces: any[]; refereesMap?: Record<number, any[]> }) {
   return (
     <div>
-      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Race Calendar", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+      <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Race Calendar", (localStorage.getItem('app-lang') || 'en'))}</h3>
       {meetings.length === 0 ? (
-        <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No upcoming race meetings scheduled.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+        <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No upcoming race meetings scheduled.", (localStorage.getItem('app-lang') || 'en'))}</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           {meetings.map((m: any, i: number) => {
@@ -809,13 +831,13 @@ function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; al
                     <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
                     <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue} · 📅 {formatDate(m.startDate || m.date)}</p>
                   </div>
-                  <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: `rgba(59,130,196,0.1)`, color: ROLE_COLOR }}>{ $t(m.status ?? "UPCOMING", (localStorage.getItem('app-lang') || 'vi')) }</span>
+                  <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: `rgba(59,130,196,0.1)`, color: ROLE_COLOR }}>{ $t(m.status ?? "UPCOMING", (localStorage.getItem('app-lang') || 'en')) }</span>
                 </div>
 
                 {/* Danh sách các cuộc đua thuộc Ngày hội đua đó */}
                 <div style={{ padding: "0.75rem 1.25rem" }}>
                   {meetingRaces.length === 0 ? (
-                    <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", padding: "0.5rem 0" }}>{$t("No races scheduled for this meeting.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                    <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", padding: "0.5rem 0" }}>{$t("No races scheduled for this meeting.", (localStorage.getItem('app-lang') || 'en'))}</p>
                   ) : (
                     meetingRaces.map((race: any) => (
                       <RaceRow key={race.id} race={race} refereesMap={refereesMap} />
@@ -844,9 +866,9 @@ function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violatio
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const lang = localStorage.getItem("app-lang") || "vi";
-  const title = $t("Rule Violations", (localStorage.getItem('app-lang') || 'vi'));
-  const emptyText = "✅ " + $t("No rule violations recorded.", (localStorage.getItem('app-lang') || 'vi'));
+  const lang = localStorage.getItem("app-lang") || "en";
+  const title = $t("Rule Violations", (localStorage.getItem('app-lang') || 'en'));
+  const emptyText = "✅ " + $t("No rule violations recorded.", (localStorage.getItem('app-lang') || 'en'));
 
   return (
     <div>
@@ -874,7 +896,7 @@ function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violatio
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "11px", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem" }}>
                 <div>
-                  <span style={{ color: "rgba(255,255,255,0.4)", display: "block", fontSize: "10px", fontFamily: "monospace" }}>{$t("Referee:", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)", display: "block", fontSize: "10px", fontFamily: "monospace" }}>{$t("Referee:", (localStorage.getItem('app-lang') || 'en'))}</span>
                   <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
                     <button
                       type="button"
@@ -891,14 +913,14 @@ function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violatio
                   </div>
                 </div>
                 <div>
-                  <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Penalty:", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                  <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Penalty:", (localStorage.getItem('app-lang') || 'en'))}</span>
                   <div style={{ color: "#c9a227", fontWeight: "bold", marginTop: "2px" }}>{v.penalty}</div>
                 </div>
               </div>
               <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px" }}>
-                <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Status:", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Status:", (localStorage.getItem('app-lang') || 'en'))}</span>
                 <span style={{ color: v.status === "CONFIRMED" ? "#4ade80" : "#f87171", fontWeight: "bold" }}>
-                  {v.status === "CONFIRMED" ? $t("Acknowledged", (localStorage.getItem('app-lang') || 'vi')) : $t("Pending Acknowledgment", (localStorage.getItem('app-lang') || 'vi'))}
+                  {v.status === "CONFIRMED" ? $t("Acknowledged", (localStorage.getItem('app-lang') || 'en')) : $t("Pending Acknowledgment", (localStorage.getItem('app-lang') || 'en'))}
                 </span>
               </div>
               {v.status !== "CONFIRMED" && (
@@ -944,7 +966,7 @@ function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violatio
                   </td>
                   <td style={{ padding: "0.75rem 1rem", color: "#c9a227", fontSize: "0.8rem" }}>{v.penalty}</td>
                   <td style={{ padding: "0.75rem 1rem", color: v.status === "CONFIRMED" ? "#4ade80" : "#f87171", fontFamily: "monospace", fontSize: "0.75rem" }}>
-                    {v.status === "CONFIRMED" ? $t("Acknowledged", (localStorage.getItem('app-lang') || 'vi')) : $t("Pending Acknowledgment", (localStorage.getItem('app-lang') || 'vi'))}
+                    {v.status === "CONFIRMED" ? $t("Acknowledged", (localStorage.getItem('app-lang') || 'en')) : $t("Pending Acknowledgment", (localStorage.getItem('app-lang') || 'en'))}
                   </td>
                   <td style={{ padding: "0.75rem 1rem" }}>
                     {v.status !== "CONFIRMED" && (
@@ -1079,6 +1101,7 @@ export default function Jockey() {
       case "invitations": return <InvitationsView invitations={invitations} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} refereesMap={refereesMap} />;
       case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} onViewProfile={setSelectedProfileId} />;
       case "live":        return <ViewLive />;
+      case "wallet":      return <UserWalletView user={user} roleLabel="Jockey" roleColor="#3b82c4" />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;
       default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} />;
     }

@@ -35,6 +35,10 @@ public class RaceService {
     private final SeasonClassRuleRepository seasonClassRuleRepository;
     private final RaceMapper raceMapper;
     private final RaceMeetingMapper raceMeetingMapper;
+    private final com.horseracing.backend.repository.UserRepository userRepository;
+    private final com.horseracing.backend.repository.WalletTransactionRepository walletTransactionRepository;
+    private final com.horseracing.backend.repository.OwnerRaceMeetingRegistrationRepository ownerRegRepository;
+    private final com.horseracing.backend.repository.RaceInvitationRepository raceInvitationRepository;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -70,7 +74,7 @@ public class RaceService {
 
         Race race = raceMapper.toEntity(dto); // Chuyển đổi từ RaceDTO sang Race Entity
 
-        // Auto-populate minRating and maxRating from SeasonClassRule
+        // Auto-populate minRating, maxRating, and default purse from SeasonClassRule
         if (race.getRaceMeetingId() != null && race.getClassLevel() != null) { // Kiểm tra nếu có thông tin Ngày hội đua và Hạng đua Class
             Optional<RaceMeeting> meetingOpt = raceMeetingRepository.findById(race.getRaceMeetingId()); // Tra cứu thông tin Ngày hội đua theo ID
             if (meetingOpt.isPresent()) { // Nếu tìm thấy Ngày hội đua
@@ -89,10 +93,31 @@ public class RaceService {
                             
                             // Tự động điền tiền thưởng Purse nếu chưa nhập hoặc bằng 0
                             if (race.getPurse() == null || race.getPurse().compareTo(BigDecimal.ZERO) <= 0) {
+                                BigDecimal defaultPurse = null;
                                 if (rule.getMinPrize() != null && rule.getMinPrize().compareTo(BigDecimal.ZERO) > 0) {
-                                    race.setPurse(rule.getMinPrize());
+                                    defaultPurse = rule.getMinPrize();
                                 } else if (rule.getMaxPrize() != null && rule.getMaxPrize().compareTo(BigDecimal.ZERO) > 0) {
-                                    race.setPurse(rule.getMaxPrize());
+                                    defaultPurse = rule.getMaxPrize();
+                                }
+
+                                // Kiểm tra default purse có vừa budget remaining không
+                                if (defaultPurse != null) {
+                                    RaceMeeting meeting = meetingOpt.get();
+                                    BigDecimal totalBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+                                    List<Race> existingRaces = raceRepository.findByRaceMeetingId(race.getRaceMeetingId());
+                                    BigDecimal allocated = existingRaces.stream()
+                                            .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus()))
+                                            .map(r -> r.getPurse() != null ? r.getPurse() : BigDecimal.ZERO)
+                                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                                    BigDecimal remaining = totalBudget.subtract(allocated);
+                                    if (remaining.compareTo(BigDecimal.ZERO) > 0) {
+                                        // Cap auto-fill purse to remaining budget if it exceeds
+                                        if (defaultPurse.compareTo(remaining) > 0) {
+                                            defaultPurse = remaining;
+                                        }
+                                        race.setPurse(defaultPurse);
+                                    }
+                                    // If remaining <= 0, don't auto-fill; let the budget validation catch it
                                 }
                             }
                             break; // Thoát vòng lặp tìm kiếm quy định
@@ -119,7 +144,9 @@ public class RaceService {
 
         race.setStatus("SCHEDULED"); // Đặt trạng thái khởi tạo trận đua là SCHEDULED
         validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries()); // Kiểm tra giới hạn số lượng ngựa tối thiểu và tối đa
+        validatePurseWithinClassRange(race.getRaceMeetingId(), race.getClassLevel(), race.getPurse()); // Kiểm tra purse nằm trong khoảng [minPrize, maxPrize] của SeasonClassRule
         validateRacePurseAgainstMeetingBudget(race.getRaceMeetingId(), race.getPurse(), null);
+        validateClassPurseHierarchy(race.getRaceMeetingId(), race.getClassLevel(), race.getPurse(), null); // Kiểm tra thứ tự tiền thưởng theo hạng: Class 1 > 2 > 3 > 4 > 5
         race.updatePrizeDistribution(); // Tự động tính toán phân chia tiền thưởng (Top 1: 50%, Top 2: 30%, Top 3: 20%)
         Race savedRace = raceRepository.save(race); // Lưu đối tượng trận đua vào cơ sở dữ liệu
 
@@ -178,7 +205,9 @@ public class RaceService {
         }
 
         validateRaceEntriesLimits(race.getMinEntries(), race.getMaxEntries()); // Kiểm tra giới hạn số lượng ngựa đăng ký tham gia
+        validatePurseWithinClassRange(race.getRaceMeetingId(), race.getClassLevel(), race.getPurse()); // Kiểm tra purse nằm trong khoảng [minPrize, maxPrize] của SeasonClassRule
         validateRacePurseAgainstMeetingBudget(race.getRaceMeetingId(), race.getPurse(), id); // Validate purse against parent RaceMeeting budget
+        validateClassPurseHierarchy(race.getRaceMeetingId(), race.getClassLevel(), race.getPurse(), id); // Kiểm tra thứ tự tiền thưởng theo hạng: Class 1 > 2 > 3 > 4 > 5
         race.updatePrizeDistribution(); // Tự động cập nhật phân chia tiền thưởng
         Race savedRace = raceRepository.save(race); // Lưu các thay đổi của trận đua vào DB
         String meetingName = raceMeetingRepository.findById(savedRace.getRaceMeetingId()) // Trích xuất tên Ngày hội đua tương ứng
@@ -189,14 +218,17 @@ public class RaceService {
     }
 
     public List<RaceMeetingDTO> getAllMeetings() {
-        // Tạo Map ánh xạ giữa ID Mùa giải và Tên mùa giải
-        Map<Integer, String> seasonMap = seasonRepository.findAll().stream() // Truy vấn toàn bộ các mùa giải
-                .collect(Collectors.toMap(Season::getId, Season::getName)); // Gom thành Map key: id, value: name
+        // Tạo Map ánh xạ giữa ID Mùa giải và Season object
+        Map<Integer, Season> seasonMap = seasonRepository.findAll().stream()
+                .collect(Collectors.toMap(Season::getId, s -> s));
 
         // Lấy tất cả Ngày hội đua và chuyển thành DTO
-        return raceMeetingRepository.findAll().stream() // Duyệt danh sách các Ngày hội đua
-                .map(m -> raceMeetingMapper.toDTO(m, seasonMap.get(m.getSeasonId()))) // Ánh xạ từng Ngày hội đua sang RaceMeetingDTO
-                .collect(Collectors.toList()); // Trả về danh sách List<RaceMeetingDTO>
+        return raceMeetingRepository.findAll().stream()
+                .map(m -> {
+                    Season s = seasonMap.get(m.getSeasonId());
+                    return raceMeetingMapper.toDTO(m, s != null ? s.getName() : null, s != null ? s.getStatus() : null);
+                })
+                .collect(Collectors.toList());
     }
 
     private void validateMeetingDateInSeason(Integer seasonId, java.util.Date meetingDate) {
@@ -204,7 +236,7 @@ public class RaceService {
         Season season = seasonRepository.findById(seasonId).orElse(null); // Tìm mùa giải tương ứng theo ID
         if (season == null) return; // Nếu không tìm thấy mùa giải thì bỏ qua
         if (season.getStartDate() != null && meetingDate.before(season.getStartDate())) { // Kiểm tra ngày diễn ra Ngày hội đua trước ngày bắt đầu mùa giải
-            throw new IllegalArgumentException("Ngày của Race Meeting (" + meetingDate + ") không được trước ngày bắt đầu Mùa giải (" + season.getStartDate() + ")."); // Ném lỗi tham số không hợp lệ
+            throw new IllegalArgumentException("Race Meeting date (" + meetingDate + ") cannot be before Season start date (" + season.getStartDate() + ")."); // Ném lỗi tham số không hợp lệ
         }
         if (season.getEndDate() != null) { // Kiểm tra nếu mùa giải có ngày kết thúc
             Calendar calEnd = Calendar.getInstance(); // Khởi tạo Calendar để thiết lập mốc cuối ngày
@@ -214,7 +246,7 @@ public class RaceService {
             calEnd.set(Calendar.SECOND, 59); // Đặt giây là 59s
             calEnd.set(Calendar.MILLISECOND, 999); // Đặt miligiây là 999ms
             if (meetingDate.after(calEnd.getTime())) { // Kiểm tra nếu Ngày hội đua diễn ra sau thời điểm kết thúc mùa giải
-                throw new IllegalArgumentException("Ngày của Race Meeting (" + meetingDate + ") không được sau ngày kết thúc Mùa giải (" + season.getEndDate() + ")."); // Ném lỗi tham số không hợp lệ
+                throw new IllegalArgumentException("Race Meeting date (" + meetingDate + ") cannot be after Season end date (" + season.getEndDate() + ")."); // Ném lỗi tham số không hợp lệ
             }
         }
     }
@@ -223,35 +255,97 @@ public class RaceService {
         int min = minEntries != null ? minEntries : 3; // Lấy giá trị minEntries hoặc mặc định là 3
         int max = maxEntries != null ? maxEntries : 14; // Lấy giá trị maxEntries hoặc mặc định là 14
         if (min <= 1) { // Kiểm tra nếu số lượng tối thiểu nhỏ hơn hoặc bằng 1
-            throw new IllegalArgumentException("Số lượng ngựa tối thiểu (Min entries) phải lớn hơn 1 (> 1)."); // Ném lỗi quy định tối thiểu
+            throw new IllegalArgumentException("Minimum entries must be greater than 1."); // Ném lỗi quy định tối thiểu
         }
         if (max >= 15) { // Kiểm tra nếu số lượng tối đa vượt quá hoặc bằng 15
-            throw new IllegalArgumentException("Số lượng ngựa tối đa (Max entries) phải nhỏ hơn 15 (< 15)."); // Ném lỗi quy định tối đa
+            throw new IllegalArgumentException("Maximum entries must be less than 15."); // Ném lỗi quy định tối đa
         }
         if (min > max) { // Kiểm tra nếu số lượng tối thiểu lớn hơn số lượng tối đa
-            throw new IllegalArgumentException("Số lượng ngựa tối thiểu (" + min + ") không được lớn hơn số lượng tối đa (" + max + ")."); // Ném lỗi logic so sánh min/max
+            throw new IllegalArgumentException("Minimum entries (" + min + ") cannot be greater than maximum entries (" + max + ")."); // Ném lỗi logic so sánh min/max
+        }
+    }
+
+    private static final BigDecimal MIN_MEETING_BUDGET = new BigDecimal("10000000"); // 10 triệu
+    private static final BigDecimal MAX_MEETING_BUDGET = new BigDecimal("1000000000"); // 1 tỷ
+
+    private void validateMeetingBudget(BigDecimal budget) {
+        if (budget == null || budget.compareTo(MIN_MEETING_BUDGET) < 0) {
+            throw new IllegalArgumentException("Total budget must be at least 10,000,000.");
+        }
+        if (budget.compareTo(MAX_MEETING_BUDGET) > 0) {
+            throw new IllegalArgumentException("Total budget cannot exceed 1,000,000,000.");
         }
     }
 
     @Transactional
     public RaceMeetingDTO createMeeting(RaceMeetingDTO dto) {
         validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate()); // Kiểm tra ngày của Ngày hội đua có nằm trong khoảng thời gian mùa giải
-        RaceMeeting meeting = raceMeetingMapper.toEntity(dto); // Chuyển đổi DTO sang Entity RaceMeeting
-        if (meeting.getTotalBudget() == null) { // Nếu tổng ngân sách bị trống
-            meeting.setTotalBudget(java.math.BigDecimal.ZERO); // Đặt mặc định ngân sách ban đầu là 0
+        validateMeetingBudget(dto.getTotalBudget()); // Kiểm tra ngân sách trong khoảng 10tr - 1 tỷ
+
+        BigDecimal budget = dto.getTotalBudget() != null ? dto.getTotalBudget() : BigDecimal.ZERO;
+
+        // Trừ ngân sách làm giải đấu từ Ví Admin (role_id = 1)
+        com.horseracing.backend.entity.User admin = userRepository.findAll().stream()
+                .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
+                .findFirst().orElse(null);
+        if (admin != null) {
+            BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
+            if (adminBal.compareTo(budget) < 0) {
+                throw new IllegalArgumentException("Admin wallet balance ($" + adminBal + ") is insufficient to fund meeting budget ($" + budget + "). Please top up Admin wallet.");
+            }
+            admin.setWalletBalance(adminBal.subtract(budget));
+            userRepository.save(admin);
+
+            com.horseracing.backend.entity.WalletTransaction tx = new com.horseracing.backend.entity.WalletTransaction();
+            tx.setUserId(admin.getId());
+            tx.setAmount(budget.negate());
+            tx.setTransactionType("MEETING_BUDGET_ALLOCATION");
+            tx.setDescription("Allocated total budget for Race Meeting: " + dto.getName());
+            tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+            walletTransactionRepository.save(tx);
         }
+
+        RaceMeeting meeting = raceMeetingMapper.toEntity(dto); // Chuyển đổi DTO sang Entity RaceMeeting
         RaceMeeting savedMeeting = raceMeetingRepository.save(meeting); // Lưu Ngày hội đua vào DB
-        String seasonName = seasonRepository.findById(savedMeeting.getSeasonId()) // Tra cứu tên mùa giải tương ứng
-                .map(Season::getName) // Lấy tên mùa giải
-                .orElse(null); // Mặc định null nếu không tìm thấy
-        return raceMeetingMapper.toDTO(savedMeeting, seasonName); // Trả về DTO của Ngày hội đua đã tạo
+        Season s = seasonRepository.findById(savedMeeting.getSeasonId()).orElse(null);
+        String seasonName = s != null ? s.getName() : null;
+        String seasonStatus = s != null ? s.getStatus() : null;
+        return raceMeetingMapper.toDTO(savedMeeting, seasonName, seasonStatus); // Trả về DTO của Ngày hội đua đã tạo
     }
 
     @Transactional
     public RaceMeetingDTO updateMeeting(Integer id, RaceMeetingDTO dto) {
         validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate()); // Kiểm tra ngày Ngày hội đua phù hợp thời gian mùa giải
+        validateMeetingBudget(dto.getTotalBudget()); // Kiểm tra ngân sách trong khoảng 10tr - 1 tỷ
         RaceMeeting meeting = raceMeetingRepository.findById(id) // Tìm Ngày hội đua theo ID
                 .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found with id: " + id)); // Ném ngoại lệ nếu không tồn tại
+
+        BigDecimal oldBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+        BigDecimal newBudget = dto.getTotalBudget() != null ? dto.getTotalBudget() : oldBudget;
+        BigDecimal budgetDiff = newBudget.subtract(oldBudget);
+
+        if (budgetDiff.compareTo(BigDecimal.ZERO) != 0) {
+            com.horseracing.backend.entity.User admin = userRepository.findAll().stream()
+                    .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
+                    .findFirst().orElse(null);
+            if (admin != null) {
+                BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
+                if (budgetDiff.compareTo(BigDecimal.ZERO) > 0 && adminBal.compareTo(budgetDiff) < 0) {
+                    throw new IllegalArgumentException("Admin wallet balance ($" + adminBal + ") is insufficient to increase meeting budget by $" + budgetDiff);
+                }
+                admin.setWalletBalance(adminBal.subtract(budgetDiff));
+                userRepository.save(admin);
+
+                com.horseracing.backend.entity.WalletTransaction tx = new com.horseracing.backend.entity.WalletTransaction();
+                tx.setUserId(admin.getId());
+                tx.setAmount(budgetDiff.negate());
+                tx.setTransactionType(budgetDiff.compareTo(BigDecimal.ZERO) > 0 ? "MEETING_BUDGET_ALLOCATION" : "MEETING_BUDGET_REFUND");
+                tx.setDescription("Adjusted budget for Race Meeting '" + meeting.getName() + "' (Diff: $" + budgetDiff + ")");
+                tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                walletTransactionRepository.save(tx);
+            }
+        }
+
         meeting.setName(dto.getName()); // Cập nhật tên Ngày hội đua
         meeting.setVenue(dto.getVenue()); // Cập nhật địa điểm tổ chức
         meeting.setStartDate(dto.getStartDate()); // Cập nhật ngày bắt đầu tổ chức
@@ -259,66 +353,145 @@ public class RaceService {
         if (dto.getTotalBudget() != null) { // Nếu có truyền vào tổng ngân sách mới
             meeting.setTotalBudget(dto.getTotalBudget()); // Cập nhật tổng ngân sách giải thưởng
         }
+        // Keep ticketPrice locked once created to preserve financial integrity for participants
+        // Do not update meeting.setTicketPrice on edit
         RaceMeeting savedMeeting = raceMeetingRepository.save(meeting); // Lưu thông tin Ngày hội đua đã chỉnh sửa
-        String seasonName = seasonRepository.findById(savedMeeting.getSeasonId()) // Tra cứu tên mùa giải tương ứng
-                .map(Season::getName) // Lấy tên mùa giải
-                .orElse(null); // Mặc định null nếu không tìm thấy
-        return raceMeetingMapper.toDTO(savedMeeting, seasonName); // Trả về DTO Ngày hội đua sau khi cập nhật
+        Season sUp = seasonRepository.findById(savedMeeting.getSeasonId()).orElse(null);
+        String seasonName = sUp != null ? sUp.getName() : null;
+        String seasonStatus = sUp != null ? sUp.getStatus() : null;
+        return raceMeetingMapper.toDTO(savedMeeting, seasonName, seasonStatus); // Trả về DTO Ngày hội đua sau khi cập nhật
     }
 
     @Transactional
     public void deleteMeeting(Integer id) {
-        if (!raceMeetingRepository.existsById(id)) { // Kiểm tra xem Ngày hội đua có tồn tại trong DB không
-            throw new IllegalArgumentException("Race Meeting not found with id: " + id); // Ném ngoại lệ nếu ID không tồn tại
+        RaceMeeting meeting = raceMeetingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found with id: " + id));
+
+        // A. Hoàn tiền ngân sách giải đua về lại Ví Admin (Chỉ hoàn nếu buổi đua đang ACTIVE và có totalBudget > 0)
+        // Nếu buổi đua đang INACTIVE, ngân sách đã được hoàn về Ví Admin lúc deactive rồi nên không hoàn lần 2.
+        if ("ACTIVE".equalsIgnoreCase(meeting.getStatus())) {
+            BigDecimal budget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+            com.horseracing.backend.entity.User admin = userRepository.findAll().stream()
+                    .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
+                    .findFirst().orElse(null);
+
+            if (admin != null && budget.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
+                admin.setWalletBalance(adminBal.add(budget));
+                userRepository.save(admin);
+
+                com.horseracing.backend.entity.WalletTransaction tx = new com.horseracing.backend.entity.WalletTransaction();
+                tx.setUserId(admin.getId());
+                tx.setAmount(budget);
+                tx.setTransactionType("MEETING_BUDGET_REFUND");
+                tx.setDescription("Refund allocated budget due to deletion of active Race Meeting: " + meeting.getName());
+                tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                walletTransactionRepository.save(tx);
+            }
+        }
+
+        // B. Tự động hoàn lại 100% tiền vé cho tất cả Horse Owners đã đăng ký mà chưa diễn ra
+        BigDecimal ticketPrice = meeting.getTicketPrice() != null ? meeting.getTicketPrice() : BigDecimal.ZERO;
+        if (ticketPrice.compareTo(BigDecimal.ZERO) > 0) {
+            List<com.horseracing.backend.entity.OwnerRaceMeetingRegistration> ownerRegs = ownerRegRepository.findByRaceMeetingId(id);
+            for (com.horseracing.backend.entity.OwnerRaceMeetingRegistration reg : ownerRegs) {
+                if (!"REJECTED".equalsIgnoreCase(reg.getStatus()) && reg.getOwnerId() != null) {
+                    userRepository.findById(reg.getOwnerId()).ifPresent(owner -> {
+                        BigDecimal curBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                        owner.setWalletBalance(curBal.add(ticketPrice));
+                        userRepository.save(owner);
+
+                        com.horseracing.backend.entity.WalletTransaction txOwner = new com.horseracing.backend.entity.WalletTransaction();
+                        txOwner.setUserId(owner.getId());
+                        txOwner.setAmount(ticketPrice);
+                        txOwner.setTransactionType("TICKET_REFUND");
+                        txOwner.setDescription("Ticket fee refund from Escrow Vault due to deletion of Race Meeting: " + meeting.getName());
+                        txOwner.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                        walletTransactionRepository.save(txOwner);
+                    });
+                }
+            }
+        }
+        List<com.horseracing.backend.entity.Race> meetingRaces = raceRepository.findByRaceMeetingId(id);
+        for (com.horseracing.backend.entity.Race r : meetingRaces) {
+            List<com.horseracing.backend.entity.RaceInvitation> invs = raceInvitationRepository.findByRaceId(r.getId());
+            for (com.horseracing.backend.entity.RaceInvitation inv : invs) {
+                if ("HELD".equalsIgnoreCase(inv.getPayoutStatus()) && inv.getOwnerId() != null) {
+                    BigDecimal hireFee = inv.getHireFee() != null ? inv.getHireFee() : new BigDecimal("500.00");
+                    if (hireFee.compareTo(BigDecimal.ZERO) > 0) {
+                        userRepository.findById(inv.getOwnerId()).ifPresent(owner -> {
+                            BigDecimal curBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                            owner.setWalletBalance(curBal.add(hireFee));
+                            userRepository.save(owner);
+
+                            com.horseracing.backend.entity.WalletTransaction txHire = new com.horseracing.backend.entity.WalletTransaction();
+                            txHire.setUserId(owner.getId());
+                            txHire.setAmount(hireFee);
+                            txHire.setTransactionType("JOCKEY_HIRE_REFUND");
+                            txHire.setDescription("Jockey hire fee refund from Escrow Vault due to deletion of Race Meeting: " + meeting.getName());
+                            txHire.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                            walletTransactionRepository.save(txHire);
+                        });
+                    }
+                    inv.setPayoutStatus("REFUNDED");
+                    inv.setStatus("REJECTED");
+                    raceInvitationRepository.save(inv);
+                }
+            }
         }
 
         // 1. Delete Violations associated with races of this meeting
-        entityManager.createNativeQuery( // Xóa các bản ghi vi phạm thuộc các trận đua trong Ngày hội đua này
+        entityManager.createNativeQuery(
             "DELETE FROM Violation WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi truy vấn xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 2. Delete RaceEntries
-        entityManager.createNativeQuery( // Xóa các bản ghi lượt đăng ký thi đấu thuộc Ngày hội đua này
+        entityManager.createNativeQuery(
             "DELETE FROM RaceEntry WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 3. Delete RaceInvitations
-        entityManager.createNativeQuery( // Xóa các lời mời thi đấu liên quan đến các trận đua trong Ngày hội đua
+        entityManager.createNativeQuery(
             "DELETE FROM RaceInvitation WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 4. Delete RaceReferees
-        entityManager.createNativeQuery( // Xóa danh sách phân công trọng tài liên quan đến Ngày hội đua
+        entityManager.createNativeQuery(
             "DELETE FROM RaceReferee WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 4.5. Delete ChatMessages
-        entityManager.createNativeQuery( // Xóa lịch sử tin nhắn trò chuyện thuộc các trận đua trong Ngày hội đua này
+        entityManager.createNativeQuery(
             "DELETE FROM ChatMessage WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
         ).setParameter("meetingId", id).executeUpdate();
 
         // 5. Delete Races
-        entityManager.createNativeQuery( // Xóa toàn bộ các trận đua trực thuộc Ngày hội đua này
+        entityManager.createNativeQuery(
             "DELETE FROM Race WHERE race_meeting_id = :meetingId"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 6. Delete HorseRegistrations
-        entityManager.createNativeQuery( // Xóa các đơn đăng ký tham gia Ngày hội đua của chiến mã
+        entityManager.createNativeQuery(
             "DELETE FROM HorseRaceMeetingRegistration WHERE race_meeting_id = :meetingId"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 7. Delete JockeyRegistrations
-        entityManager.createNativeQuery( // Xóa các đơn đăng ký tham gia Ngày hội đua của nài ngựa
+        entityManager.createNativeQuery(
             "DELETE FROM JockeyRaceMeetingRegistration WHERE race_meeting_id = :meetingId"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 8. Delete OwnerRegistrations
-        entityManager.createNativeQuery( // Xóa các đơn đăng ký tham gia Ngày hội đua của chủ ngựa
+        entityManager.createNativeQuery(
             "DELETE FROM OwnerRaceMeetingRegistration WHERE race_meeting_id = :meetingId"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
+
+        // 8.5. Unlink WalletTransaction foreign keys to allow meeting deletion without constraint violation
+        entityManager.createNativeQuery(
+            "UPDATE WalletTransaction SET race_meeting_id = NULL WHERE race_meeting_id = :meetingId"
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 9. Delete the RaceMeeting itself
-        raceMeetingRepository.deleteById(id); // Xóa bản ghi Ngày hội đua chính khỏi cơ sở dữ liệu
+        raceMeetingRepository.deleteById(id);
     }
 
     public List<RaceDTO> getLiveRaces() {
@@ -398,12 +571,116 @@ public class RaceService {
                     .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus()))
                     .map(r -> r.getPurse() != null ? r.getPurse() : BigDecimal.ZERO)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal availableBudget = totalBudget.subtract(allocatedPurses);
-            if (availableBudget.compareTo(BigDecimal.ZERO) < 0) {
-                availableBudget = BigDecimal.ZERO;
+            BigDecimal newTotal = allocatedPurses.add(newPurse);
+            if (newTotal.compareTo(totalBudget) > 0) {
+                BigDecimal availableBudget = totalBudget.subtract(allocatedPurses);
+                if (availableBudget.compareTo(BigDecimal.ZERO) < 0) {
+                    availableBudget = BigDecimal.ZERO;
+                }
+                throw new IllegalArgumentException(String.format(
+                        "Race purse ($%,.2f) exceeds remaining Race Meeting budget ($%,.2f). Total allocated would be $%,.2f / $%,.2f.",
+                        newPurse, availableBudget, newTotal, totalBudget));
             }
-            if (newPurse.compareTo(availableBudget) > 0) {
-                throw new IllegalArgumentException(String.format("Race purse ($%,.2f) exceeds remaining Race Meeting budget ($%,.2f).", newPurse, availableBudget));
+        }
+    }
+
+    /**
+     * Extracts the numeric class number from a class level string (e.g. "Class 1" -> 1, "Class 5" -> 5).
+     * Returns -1 if the class level does not match the expected pattern.
+     */
+    private int extractClassNumber(String classLevel) {
+        if (classLevel == null) return -1;
+        String normalized = classLevel.trim().toLowerCase();
+        if (!normalized.startsWith("class")) return -1;
+        String numPart = normalized.replace("class", "").trim();
+        try {
+            return Integer.parseInt(numPart);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Validates that purse amounts follow class hierarchy within the same Race Meeting:
+     * Class 1 purse > Class 2 purse > Class 3 purse > Class 4 purse > Class 5 purse.
+     * A higher class (lower number) must always have a strictly greater purse than a lower class (higher number).
+     */
+    private void validateClassPurseHierarchy(Integer meetingId, String newClassLevel, BigDecimal newPurse, Integer excludeRaceId) {
+        if (meetingId == null || newClassLevel == null || newPurse == null || newPurse.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        int newClassNum = extractClassNumber(newClassLevel);
+        if (newClassNum < 1 || newClassNum > 5) return; // Chỉ validate Class 1-5
+
+        List<Race> racesInMeeting = raceRepository.findByRaceMeetingId(meetingId);
+        for (Race existingRace : racesInMeeting) {
+            // Bỏ qua chính race đang được update
+            if (excludeRaceId != null && existingRace.getId().equals(excludeRaceId)) continue;
+            // Bỏ qua các race đã bị hủy
+            if ("CANCELLED".equalsIgnoreCase(existingRace.getStatus())) continue;
+
+            int existingClassNum = extractClassNumber(existingRace.getClassLevel());
+            if (existingClassNum < 1 || existingClassNum > 5) continue;
+            BigDecimal existingPurse = existingRace.getPurse() != null ? existingRace.getPurse() : BigDecimal.ZERO;
+            if (existingPurse.compareTo(BigDecimal.ZERO) <= 0) continue;
+
+            // newClassNum nhỏ hơn => class cao hơn => purse phải LỚN HƠN
+            if (newClassNum < existingClassNum) {
+                if (newPurse.compareTo(existingPurse) <= 0) {
+                    throw new IllegalArgumentException(String.format(
+                            "Class %d purse ($%,.2f) must be greater than Class %d purse ($%,.2f). Higher class must have higher prize money.",
+                            newClassNum, newPurse, existingClassNum, existingPurse));
+                }
+            }
+            // newClassNum lớn hơn => class thấp hơn => purse phải NHỎ HƠN
+            else if (newClassNum > existingClassNum) {
+                if (newPurse.compareTo(existingPurse) >= 0) {
+                    throw new IllegalArgumentException(String.format(
+                            "Class %d purse ($%,.2f) must be less than Class %d purse ($%,.2f). Lower class must have lower prize money.",
+                            newClassNum, newPurse, existingClassNum, existingPurse));
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates that the race purse falls within the [minPrize, maxPrize] range defined in SeasonClassRule.
+     * This prevents any class from being assigned an unreasonably large or small purse.
+     * Since the prize ranges are non-overlapping (Class 1 min > Class 2 max > Class 2 min > ...),
+     * this inherently guarantees class hierarchy regardless of creation order.
+     */
+    private void validatePurseWithinClassRange(Integer meetingId, String classLevel, BigDecimal purse) {
+        if (meetingId == null || classLevel == null || purse == null || purse.compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+        Optional<RaceMeeting> meetingOpt = raceMeetingRepository.findById(meetingId);
+        if (!meetingOpt.isPresent()) return;
+        Integer seasonId = meetingOpt.get().getSeasonId();
+        if (seasonId == null) return;
+
+        List<SeasonClassRule> rules = seasonClassRuleRepository.findBySeasonId(seasonId);
+        String normalizedLevel = classLevel.trim().toLowerCase();
+        if (!normalizedLevel.startsWith("class")) {
+            normalizedLevel = "class " + normalizedLevel;
+        }
+
+        for (SeasonClassRule rule : rules) {
+            String ruleLevel = rule.getClassLevel() != null ? rule.getClassLevel().trim().toLowerCase() : "";
+            if (ruleLevel.equals(normalizedLevel)) {
+                BigDecimal minPrize = rule.getMinPrize();
+                BigDecimal maxPrize = rule.getMaxPrize();
+
+                if (minPrize != null && purse.compareTo(minPrize) < 0) {
+                    throw new IllegalArgumentException(String.format(
+                            "Race purse ($%,.2f) is below the minimum allowed for %s ($%,.2f). Please enter a purse between $%,.2f and $%,.2f.",
+                            purse, classLevel, minPrize, minPrize, maxPrize != null ? maxPrize : minPrize));
+                }
+                if (maxPrize != null && purse.compareTo(maxPrize) > 0) {
+                    throw new IllegalArgumentException(String.format(
+                            "Race purse ($%,.2f) exceeds the maximum allowed for %s ($%,.2f). Please enter a purse between $%,.2f and $%,.2f.",
+                            purse, classLevel, maxPrize, minPrize != null ? minPrize : BigDecimal.ZERO, maxPrize));
+                }
+                break;
             }
         }
     }

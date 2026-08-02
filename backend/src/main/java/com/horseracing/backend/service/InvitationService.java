@@ -14,11 +14,15 @@ import com.horseracing.backend.repository.RaceRepository;
 import com.horseracing.backend.repository.RaceMeetingRepository;
 import com.horseracing.backend.repository.JockeyRaceMeetingRegistrationRepository;
 import com.horseracing.backend.repository.HorseRaceMeetingRegistrationRepository;
+import com.horseracing.backend.entity.SystemConfig;
+import com.horseracing.backend.repository.SystemConfigRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.horseracing.backend.entity.WalletTransaction;
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -38,6 +42,8 @@ public class InvitationService {
     private final JockeyRaceMeetingRegistrationRepository jockeyRegRepository;
     private final HorseRaceMeetingRegistrationRepository horseRegRepository;
     private final NotificationService notificationService;
+    private final SystemConfigRepository systemConfigRepository;
+    private final com.horseracing.backend.repository.WalletTransactionRepository walletTransactionRepository;
 
     // Lấy danh sách lời mời thi đấu lọc theo Nài ngựa (Jockey) hoặc Chủ sở hữu (Owner)
     public List<RaceInvitationDTO> getInvitations(Integer jockeyId, Integer ownerId) {
@@ -162,8 +168,28 @@ public class InvitationService {
                 .filter(reg -> "APPROVED".equalsIgnoreCase(reg.getStatus()))
                 .orElseThrow(() -> new IllegalArgumentException("HORSE_NOT_APPROVED"));
 
+        // 7. Kiểm tra phần trăm ăn chia giải thưởng cho Nài ngựa (20% - 50%)
+        BigDecimal pct = dto.getJockeyPrizePercentage();
+        if (pct == null) {
+            pct = new BigDecimal("20.00");
+        } else {
+            if (pct.compareTo(new BigDecimal("20.00")) < 0 || pct.compareTo(new BigDecimal("50.00")) > 0) {
+                throw new IllegalArgumentException("Jockey prize share percentage must be between 20% and 50%.");
+            }
+        }
+
         RaceInvitation invite = invitationMapper.toEntity(dto); // Ánh xạ DTO sang Entity
         invite.setStatus("PENDING"); // Thiết lập trạng thái lời mời là PENDING
+        invite.setJockeyPrizePercentage(pct);
+
+        // Đọc Phí thuê Nài ngựa mặc định từ SystemConfig (hoặc 500.00 nếu chưa cấu hình)
+        BigDecimal defaultHireFee = systemConfigRepository.findById("DEFAULT_JOCKEY_HIRE_FEE")
+                .map(SystemConfig::getConfigValue)
+                .map(v -> {
+                    try { return new BigDecimal(v); } catch (Exception e) { return new BigDecimal("500.00"); }
+                })
+                .orElse(new BigDecimal("500.00"));
+        invite.setHireFee(defaultHireFee);
 
         // Tự động tính toán hoa hồng lời mời (5% giải thưởng hoặc mặc định $500)
         BigDecimal rate = new BigDecimal("5.00");
@@ -205,15 +231,35 @@ public class InvitationService {
             throw new IllegalArgumentException("Invitation is not pending");
         }
 
-        // Verify Owner has sufficient wallet balance for hire fee before accepting
+        // Resolve Owner ID from Horse if ownerId on invitation is null
+        Integer ownerId = invite.getOwnerId();
+        if (ownerId == null && invite.getHorseId() != null) {
+            Optional<Horse> hOpt = horseRepository.findById(invite.getHorseId());
+            if (hOpt.isPresent()) {
+                ownerId = hOpt.get().getOwnerId();
+                invite.setOwnerId(ownerId);
+            }
+        }
+
+        // Verify Owner has sufficient wallet balance for hire fee before accepting & deduct into Escrow Vault
         BigDecimal hireFee = invite.getHireFee() != null ? invite.getHireFee() : new BigDecimal("500.00");
-        if (invite.getOwnerId() != null && hireFee.compareTo(BigDecimal.ZERO) > 0) {
-            User owner = userRepository.findById(invite.getOwnerId())
+        if (ownerId != null && hireFee.compareTo(BigDecimal.ZERO) > 0) {
+            User owner = userRepository.findById(ownerId)
                     .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
             BigDecimal ownerBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
             if (ownerBal.compareTo(hireFee) < 0) {
                 throw new IllegalArgumentException(String.format("Owner has insufficient wallet balance ($%,.2f available, $%,.2f required for hire fee).", ownerBal, hireFee));
             }
+            owner.setWalletBalance(ownerBal.subtract(hireFee));
+            userRepository.save(owner);
+
+            com.horseracing.backend.entity.WalletTransaction txOwner = new com.horseracing.backend.entity.WalletTransaction();
+            txOwner.setUserId(owner.getId());
+            txOwner.setAmount(hireFee.negate());
+            txOwner.setTransactionType("JOCKEY_HIRE_FEE");
+            txOwner.setDescription("Jockey hire fee held in Escrow Vault for invitation #" + invite.getId());
+            txOwner.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            walletTransactionRepository.save(txOwner);
         }
 
         // Kiểm tra xem nài ngựa đã có lượt đua hoạt động nào trong trận này chưa
@@ -231,59 +277,32 @@ public class InvitationService {
             throw new IllegalArgumentException("This horse already has an active entry in this race.");
         }
 
-        // Khởi tạo lượt thi đấu chính thức RaceEntry
+        // Khởi tạo hoặc cập nhật lượt thi đấu chính thức RaceEntry (tránh trùng lặp bản ghi)
         Optional<User> jockeyOpt = userRepository.findById(invite.getJockeyId());
         BigDecimal weight = jockeyOpt.isPresent() && jockeyOpt.get().getWeight() != null ? jockeyOpt.get().getWeight() : BigDecimal.ZERO;
 
-        RaceEntry entry = new RaceEntry();
+        Optional<RaceEntry> existingEntryOpt = activeEntries.stream()
+                .filter(e -> e.getHorseId().equals(invite.getHorseId()))
+                .findFirst();
+
+        RaceEntry entry = existingEntryOpt.orElseGet(RaceEntry::new);
         entry.setRaceId(invite.getRaceId());
         entry.setHorseId(invite.getHorseId());
         entry.setJockeyId(invite.getJockeyId());
-        entry.setGateNumber(0); // Admin sẽ gán số cổng sau
-        entry.setStatus("PENDING_ADMIN"); // Đặt trạng thái chờ Admin duyệt
+        if (entry.getGateNumber() == null) entry.setGateNumber(0);
+        entry.setStatus("PENDING_ADMIN");
         entry.setCarriedWeight(weight);
         entry.setPrizeMoney(BigDecimal.ZERO);
         entry.setRatingAdjustment(0);
         entry.setHandicapWeight(BigDecimal.ZERO);
-        entry.setJockeySharePercentage(invite.getJockeySharePercentage() != null ? invite.getJockeySharePercentage() : new BigDecimal("10.00"));
+        entry.setJockeyPrizePercentage(invite.getJockeyPrizePercentage() != null ? invite.getJockeyPrizePercentage() : new BigDecimal("20.00"));
 
-        raceEntryRepository.save(entry); // Lưu lượt thi đấu vào CSDL
+        raceEntryRepository.save(entry);
 
-        // Cập nhật trạng thái lời mời sang ACCEPTED và payoutStatus sang PAID
+        // Cập nhật trạng thái lời mời sang ACCEPTED và payoutStatus sang HELD (Hệ thống tạm giữ tiền)
         invite.setStatus("ACCEPTED");
-        invite.setPayoutStatus("PAID");
+        invite.setPayoutStatus("HELD");
         invitationRepository.save(invite);
-
-        // Cộng tiền hoa hồng trực tiếp vào ví người mời (Owner/Inviter)
-        if (invite.getOwnerId() != null && invite.getCommissionAmount() != null && invite.getCommissionAmount().compareTo(BigDecimal.ZERO) > 0) {
-            Optional<User> inviterOpt = userRepository.findById(invite.getOwnerId());
-            if (inviterOpt.isPresent()) {
-                User inviter = inviterOpt.get();
-                BigDecimal currentBal = inviter.getWalletBalance() != null ? inviter.getWalletBalance() : BigDecimal.ZERO;
-                inviter.setWalletBalance(currentBal.add(invite.getCommissionAmount()));
-                userRepository.save(inviter);
-            }
-        }
-
-        // Chuyển phí thuê nài ngựa (Hire Fee) từ Chủ ngựa sang Ví tiền mặt của Kỵ sĩ (Jockey)
-        if (hireFee.compareTo(BigDecimal.ZERO) > 0 && invite.getJockeyId() != null) {
-            Optional<User> jockeyUserOpt = userRepository.findById(invite.getJockeyId());
-            if (jockeyUserOpt.isPresent()) {
-                User jockey = jockeyUserOpt.get();
-                BigDecimal jWallet = jockey.getWalletBalance() != null ? jockey.getWalletBalance() : BigDecimal.ZERO;
-                jockey.setWalletBalance(jWallet.add(hireFee));
-                userRepository.save(jockey);
-            }
-            if (invite.getOwnerId() != null) {
-                Optional<User> ownerOpt = userRepository.findById(invite.getOwnerId());
-                if (ownerOpt.isPresent()) {
-                    User owner = ownerOpt.get();
-                    BigDecimal oWallet = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
-                    owner.setWalletBalance(oWallet.subtract(hireFee));
-                    userRepository.save(owner);
-                }
-            }
-        }
 
         // Từ chối tất cả các lời mời đang chờ/đã chấp nhận khác cho con ngựa hoặc nài ngựa này trong trận đua
         List<RaceInvitation> allInvites = invitationRepository.findByRaceId(invite.getRaceId());
@@ -350,6 +369,21 @@ public class InvitationService {
                 .filter(i -> "REJECTED".equalsIgnoreCase(i.getStatus()))
                 .forEach(i -> {
                     i.setStatus("ACCEPTED");
+                    
+                    // Nếu đã từng refund, thực hiện khóa lại tiền cọc Escrow từ ví Owner
+                    BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500.00");
+                    if ("REFUNDED".equalsIgnoreCase(i.getPayoutStatus()) && hireFee.compareTo(BigDecimal.ZERO) > 0 && i.getOwnerId() != null) {
+                        User owner = userRepository.findById(i.getOwnerId())
+                                .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
+                        BigDecimal ownerBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                        if (ownerBal.compareTo(hireFee) < 0) {
+                            throw new IllegalArgumentException(String.format("Owner has insufficient wallet balance ($%,.2f available, $%,.2f required to resubmit).", ownerBal, hireFee));
+                        }
+                        owner.setWalletBalance(ownerBal.subtract(hireFee));
+                        userRepository.save(owner);
+                        i.setPayoutStatus("HELD");
+                    }
+                    
                     invitationRepository.save(i);
 
                     // Từ chối tất cả các lời mời đang chờ/đã chấp nhận khác cho ngựa hoặc nài ngựa này trong trận đua này
@@ -409,6 +443,19 @@ public class InvitationService {
             if (entryOpt.isPresent()) {
                 raceEntryRepository.delete(entryOpt.get()); // Xóa lượt thi đấu
             }
+        }
+
+        // Nếu tiền đang được tạm giữ trong Escrow ("HELD"), hoàn tiền lại 100% vào ví của Owner
+        BigDecimal hireFee = invite.getHireFee() != null ? invite.getHireFee() : new BigDecimal("500.00");
+        if ("HELD".equalsIgnoreCase(invite.getPayoutStatus()) && hireFee.compareTo(BigDecimal.ZERO) > 0 && invite.getOwnerId() != null) {
+            Optional<User> ownerOpt = userRepository.findById(invite.getOwnerId());
+            if (ownerOpt.isPresent()) {
+                User owner = ownerOpt.get();
+                BigDecimal oWallet = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                owner.setWalletBalance(oWallet.add(hireFee));
+                userRepository.save(owner);
+            }
+            invite.setPayoutStatus("REFUNDED");
         }
 
         invite.setStatus("REJECTED"); // Cập nhật trạng thái lời mời rút lại sang REJECTED

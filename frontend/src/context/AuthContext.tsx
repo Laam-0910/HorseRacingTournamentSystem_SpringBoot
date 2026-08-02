@@ -15,6 +15,7 @@ export interface AuthUser {
   totalRacesParticipated?: number; // Tổng số trận đua đã tham gia
   totalTop3Finishes?: number; // Tổng số lần đạt top 3 cán đích
   biography?: string; // Lời tự giới thiệu/tiểu sử cá nhân
+  walletBalance?: number; // Số dư ví khả dụng hiện tại
 }
 
 // Định nghĩa Interface AuthContextType quy định cấu trúc Context State và các hàm thao tác

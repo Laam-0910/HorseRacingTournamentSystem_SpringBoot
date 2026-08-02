@@ -5,7 +5,7 @@ export default function UserEdit() {
   return ( // Trả về giao diện người dùng
     <div>
       {/* TODO: chuyen noi dung tu component mau (HR.zip) hoac JSP tuong ung vao day */}
-      <h1>{$t("UserEdit", (localStorage.getItem('app-lang') || 'vi'))}</h1>
+      <h1>{$t("UserEdit", (localStorage.getItem('app-lang') || 'en'))}</h1>
     </div>
   );
 }

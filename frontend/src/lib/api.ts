@@ -4,6 +4,10 @@ const getApiBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
+  // Nếu trang chạy HTTPS (Mobile / Hotspot), dùng relative path /api để qua Vite Proxy tránh lỗi Mixed Content
+  if (typeof window !== "undefined" && window.location.protocol === "https:") {
+    return "/api";
+  }
   const hostname = window.location.hostname || "localhost";
   return `http://${hostname}:8080/api`;
 };

@@ -44,6 +44,9 @@ public class PublicDataController {
     @Autowired
     private RaceRefereeRepository raceRefereeRepository;
 
+    @Autowired
+    private WalletTransactionRepository walletTransactionRepository;
+
     // Lấy danh sách Trọng tài được phân công theo từng cuộc đua (Công khai)
     @GetMapping("/races/referees")
     public ResponseEntity<?> getPublicRaceReferees() {
@@ -102,11 +105,19 @@ public class PublicDataController {
 
     // Lấy bảng xếp hạng vị trí cán đích chính thức của cuộc đua
     @GetMapping("/results")
-        public ResponseEntity<?> getResults(@RequestParam Integer raceId) {
+    public ResponseEntity<?> getResults(@RequestParam Integer raceId) {
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
         
-        List<Map<String, Object>> results = new ArrayList<>();
+        // Khử trùng lặp theo horseId và bỏ qua các bản ghi REJECTED
+        Map<Integer, RaceEntry> uniqueMap = new LinkedHashMap<>();
         for (RaceEntry entry : entries) {
+            if (!"REJECTED".equalsIgnoreCase(entry.getStatus())) {
+                uniqueMap.putIfAbsent(entry.getHorseId(), entry);
+            }
+        }
+
+        List<Map<String, Object>> results = new ArrayList<>();
+        for (RaceEntry entry : uniqueMap.values()) {
             Map<String, Object> map = new HashMap<>();
             map.put("entry", entry);
             
@@ -474,12 +485,62 @@ public class PublicDataController {
             }
             Integer userId = Integer.parseInt(userIdObj.toString());
             BigDecimal amount = new BigDecimal(amtObj.toString());
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Deposit amount must be greater than 0"));
+            }
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
             BigDecimal current = user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO;
             user.setWalletBalance(current.add(amount));
+            user.setBalance(current.add(amount));
             userRepository.save(user);
+
+            WalletTransaction tx = new WalletTransaction();
+            tx.setUserId(userId);
+            tx.setAmount(amount);
+            tx.setTransactionType("SELF_DEPOSIT");
+            tx.setDescription("Self deposit into wallet via online payment gateway");
+            tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            walletTransactionRepository.save(tx);
+
             return ResponseEntity.ok(Map.of("success", true, "message", "Deposit successful", "newBalance", user.getWalletBalance()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/wallet/withdraw")
+    public ResponseEntity<?> selfWithdrawWallet(@RequestBody Map<String, Object> request) {
+        try {
+            Object userIdObj = request.get("userId");
+            Object amtObj = request.get("amount");
+            if (userIdObj == null || amtObj == null) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "userId and amount are required"));
+            }
+            Integer userId = Integer.parseInt(userIdObj.toString());
+            BigDecimal amount = new BigDecimal(amtObj.toString());
+            if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Withdrawal amount must be greater than 0"));
+            }
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+            BigDecimal current = user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO;
+            if (amount.compareTo(current) > 0) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Insufficient funds in wallet. Available: $" + current));
+            }
+            user.setWalletBalance(current.subtract(amount));
+            user.setBalance(current.subtract(amount));
+            userRepository.save(user);
+
+            WalletTransaction tx = new WalletTransaction();
+            tx.setUserId(userId);
+            tx.setAmount(amount.negate());
+            tx.setTransactionType("WITHDRAWAL");
+            tx.setDescription("Cash-out withdrawal to bank account / e-wallet");
+            tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            walletTransactionRepository.save(tx);
+
+            return ResponseEntity.ok(Map.of("success", true, "message", "Withdrawal successful", "newBalance", user.getWalletBalance()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }

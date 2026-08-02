@@ -29,6 +29,7 @@ public class RaceInvitationMapper {
                 .commissionRate(invite.getCommissionRate())
                 .payoutStatus(invite.getPayoutStatus())
                 .hireFee(invite.getHireFee())
+                .jockeyPrizePercentage(invite.getJockeyPrizePercentage())
                 .build();
     }
 
@@ -51,7 +52,7 @@ public class RaceInvitationMapper {
         invite.setOwnerId(dto.getOwnerId());
         invite.setJockeyId(dto.getJockeyId());
         invite.setStatus(dto.getStatus());
-        invite.setJockeySharePercentage(dto.getJockeySharePercentage() != null ? dto.getJockeySharePercentage() : new java.math.BigDecimal("10.00"));
+        invite.setJockeyPrizePercentage(dto.getJockeyPrizePercentage() != null ? dto.getJockeyPrizePercentage() : dto.getJockeySharePercentage());
         return invite;
     }
 }

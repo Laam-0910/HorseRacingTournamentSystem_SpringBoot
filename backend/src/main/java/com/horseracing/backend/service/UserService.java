@@ -94,7 +94,7 @@ public class UserService {
 
         if (roleId != null && roleId == 3 && weight != null) {
             if (weight.doubleValue() < 45.0 || weight.doubleValue() > 100.0) {
-                throw new IllegalArgumentException("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.");
+                throw new IllegalArgumentException("Jockey weight must be between 45kg and 100kg.");
             }
         }
 
@@ -124,7 +124,7 @@ public class UserService {
         user.setRequireOtp(requireOtp);
         if (roleId != null && roleId == 3 && weight != null) {
             if (weight.doubleValue() < 45.0 || weight.doubleValue() > 100.0) {
-                throw new IllegalArgumentException("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.");
+                throw new IllegalArgumentException("Jockey weight must be between 45kg and 100kg.");
             }
         }
         user.setWeight(weight);

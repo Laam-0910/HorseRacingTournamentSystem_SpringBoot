@@ -353,7 +353,7 @@ public class AdminUserController {
         }
     }
 
-    // Nạp tiền vào ví của người dùng
+    // Nạp tiền hoặc cài đặt số dư ví của người dùng
     @PostMapping("/users/{userId}/deposit")
     public ResponseEntity<?> depositUserWallet(@PathVariable Integer userId, @RequestBody Map<String, Object> request) {
         try {
@@ -362,10 +362,95 @@ public class AdminUserController {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Amount is required"));
             }
             java.math.BigDecimal amount = new java.math.BigDecimal(amtObj.toString());
-            UserDTO updatedUser = adminUserService.depositWalletBalance(userId, amount);
-            return ResponseEntity.ok(Map.of("success", true, "message", "Wallet deposit successful", "user", updatedUser));
+            boolean setMode = request.get("setMode") != null && Boolean.parseBoolean(request.get("setMode").toString());
+            UserDTO updatedUser = adminUserService.adjustWalletBalance(userId, amount, setMode);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Wallet balance updated successfully", "user", updatedUser));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    // --- Quản lý Ví Admin (Admin Wallet & Funding Source) ---
+
+    // Lấy thông tin Ví Admin & lịch sử giao dịch
+    @GetMapping("/wallet")
+    public ResponseEntity<?> getAdminWallet() {
+        try {
+            return ResponseEntity.ok(adminUserService.getAdminWalletInfo());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Nạp tiền vào Ví Admin
+    @PostMapping("/wallet/topup")
+    public ResponseEntity<?> topUpAdminWallet(@RequestBody Map<String, Object> body) {
+        try {
+            Object amtObj = body.get("amount");
+            if (amtObj == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Amount is required"));
+            }
+            java.math.BigDecimal amount = new java.math.BigDecimal(amtObj.toString());
+            return ResponseEntity.ok(adminUserService.topUpAdminWallet(amount));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Rút tiền khỏi Ví Admin (Admin Withdrawal với nhật ký)
+    @PostMapping("/wallet/withdraw")
+    public ResponseEntity<?> withdrawAdminWallet(@RequestBody Map<String, Object> body) {
+        try {
+            Object amtObj = body.get("amount");
+            if (amtObj == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Amount is required"));
+            }
+            java.math.BigDecimal amount = new java.math.BigDecimal(amtObj.toString());
+            String notes = body.get("notes") != null ? body.get("notes").toString() : "";
+            return ResponseEntity.ok(adminUserService.withdrawAdminWallet(amount, notes));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Quyết toán doanh thu bán vé từ Quỹ Tạm Giữ của RaceMeeting vào Ví Admin
+    @PostMapping("/meetings/{meetingId}/settle-tickets")
+    public ResponseEntity<?> settleMeetingTicketRevenue(@PathVariable Integer meetingId) {
+        try {
+            return ResponseEntity.ok(adminUserService.settleMeetingTicketRevenue(meetingId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Đổi trạng thái RaceMeeting (ACTIVE <-> INACTIVE)
+    @PostMapping("/meetings/{meetingId}/toggle-status")
+    public ResponseEntity<?> toggleMeetingStatus(@PathVariable Integer meetingId) {
+        try {
+            String newStatus = adminUserService.toggleMeetingStatus(meetingId);
+            return ResponseEntity.ok(Map.of("success", true, "status", newStatus));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Tra cứu danh sách lịch sử biến động tiền vé của riêng một Buổi đua
+    @GetMapping("/meetings/{meetingId}/transactions")
+    public ResponseEntity<?> getMeetingTransactions(@PathVariable Integer meetingId) {
+        try {
+            return ResponseEntity.ok(adminUserService.getMeetingTransactions(meetingId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Lấy thông tin Ví & Lịch sử giao dịch cá nhân người dùng
+    @GetMapping("/users/{userId}/wallet")
+    public ResponseEntity<?> getUserWalletInfo(@PathVariable Integer userId) {
+        try {
+            return ResponseEntity.ok(adminUserService.getUserWalletInfo(userId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }

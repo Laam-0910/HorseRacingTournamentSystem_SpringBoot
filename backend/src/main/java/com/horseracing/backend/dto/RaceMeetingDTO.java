@@ -17,10 +17,14 @@ public class RaceMeetingDTO {
     private Integer seasonId;
     private String seasonName; // Tên của Mùa giải để tiện hiển thị
     private String name;        // ví dụ: Spring Gold Cup Day
-    
+
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "GMT+7")
     private Timestamp startDate;
-    
+
     private String venue;
     private BigDecimal totalBudget;
+    private BigDecimal ticketPrice;
+    private Boolean ticketSettled;
+    private String status;
+    private String seasonStatus; // Trạng thái của Season cha để kiểm soát UI
 }

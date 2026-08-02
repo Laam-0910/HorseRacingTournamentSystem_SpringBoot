@@ -151,7 +151,7 @@ public class HorseService {
         int age = java.time.Period.between(birthDate, currentDate).getYears();
 
         if (age < 2 || age > 10) {
-            throw new IllegalArgumentException("Tuổi của ngựa đăng ký phải nằm trong khoảng từ 2 đến 10 tuổi (Horse age must be between 2 and 10 years old).");
+            throw new IllegalArgumentException("Registered horse age must be between 2 and 10 years old.");
         }
 
         if (age >= 4) {

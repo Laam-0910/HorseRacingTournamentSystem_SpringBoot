@@ -28,7 +28,7 @@ export default function Register() {
   // Trạng thái hiển thị vòng chờ gọi API đăng ký
   const [loading, setLoading] = useState(false);
   // Đọc ngôn ngữ hiện tại của ứng dụng
-  const lang = localStorage.getItem("app-lang") || "vi";
+  const lang = localStorage.getItem("app-lang") || "en";
 
   // Hàm xử lý khi người dùng submit form đăng ký
   const handleSubmit = async (e: React.FormEvent) => {

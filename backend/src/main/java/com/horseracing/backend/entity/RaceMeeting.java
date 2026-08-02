@@ -37,6 +37,29 @@ public class RaceMeeting implements Serializable {
     @Column(name = "total_budget")
     private BigDecimal totalBudget;
 
+    @Column(name = "ticket_price")
+    private BigDecimal ticketPrice;
+
+    @Column(name = "ticket_settled")
+    private Boolean ticketSettled = false;
+
+    @Column(name = "status")
+    private String status = "ACTIVE";
+
+    @Column(name = "last_allocated_budget")
+    private BigDecimal lastAllocatedBudget;
+
+    @PrePersist
+    @PreUpdate
+    public void ensureDefaults() {
+        if (ticketSettled == null) {
+            ticketSettled = false;
+        }
+        if (status == null || status.trim().isEmpty()) {
+            status = "ACTIVE";
+        }
+    }
+
 
 
 

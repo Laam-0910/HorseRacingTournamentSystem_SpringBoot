@@ -86,10 +86,15 @@
               <input
                 type="number"
                 name="purse"
-                placeholder="e.g. 1200000"
+                min="10000000"
+                max="1000000000"
+                step="1000000"
+                required
+                placeholder="e.g. 50000000"
                 class="w-full rounded-lg pl-8 pr-3 py-2.5 text-xs text-[#f4f2ec] outline-none"
                 style="background: rgba(255,255,255,0.05); border: 1px solid rgba(201,162,39,0.22); color-scheme: dark"
               />
+              <p class="text-[9px] font-mono mt-1" style="color: rgba(255,255,255,0.3)">Min: 10,000,000 (10 triệu) — Max: 1,000,000,000 (1 tỷ)</p>
             </div>
           </div>
         </div>

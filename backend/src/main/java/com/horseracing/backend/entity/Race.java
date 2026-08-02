@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Timestamp;
 import jakarta.persistence.*;
 
@@ -85,10 +86,11 @@ public class Race implements Serializable {
     public void updatePrizeDistribution() {
         BigDecimal pool = (this.totalPrizePool != null) ? this.totalPrizePool : this.purse;
         if (pool != null) {
+            pool = pool.setScale(2, RoundingMode.HALF_UP);
             this.totalPrizePool = pool;
-            this.firstPlacePrize = pool.multiply(new BigDecimal("0.50"));
-            this.secondPlacePrize = pool.multiply(new BigDecimal("0.30"));
-            this.thirdPlacePrize = pool.multiply(new BigDecimal("0.20"));
+            this.firstPlacePrize = pool.multiply(new BigDecimal("0.50")).setScale(2, RoundingMode.HALF_UP);
+            this.secondPlacePrize = pool.multiply(new BigDecimal("0.30")).setScale(2, RoundingMode.HALF_UP);
+            this.thirdPlacePrize = pool.subtract(this.firstPlacePrize).subtract(this.secondPlacePrize).setScale(2, RoundingMode.HALF_UP);
         }
     }
 }

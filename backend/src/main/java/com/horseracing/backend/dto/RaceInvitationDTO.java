@@ -33,4 +33,5 @@ public class RaceInvitationDTO {
     private java.math.BigDecimal commissionRate;   // Tỷ lệ hoa hồng (%)
     private String payoutStatus;    // PENDING, PAID, REJECTED
     private java.math.BigDecimal hireFee; // Phí thuê nài ngựa
+    private java.math.BigDecimal jockeyPrizePercentage; // Tỷ lệ chia thưởng cho nài ngựa (% từ 20% đến 50%)
 }
