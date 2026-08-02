@@ -10,11 +10,7 @@ import { api, getErrMsg } from "../../../lib/api";
 import { confirm } from "../../../lib/confirm";
 // Import các hàm hỗ trợ định dạng ngày giờ và hạng đấu
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
-// Import hàm lấy URL nhúng YouTube từ thư viện úutils
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
-// Import hàm đa ngôn ngữ $t
-import { $t } from '@/lib/i18n';
-// Import CameraBroadcasterModal and WebCamLiveViewer
 import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
 import WebCamLiveViewer, { BroadcasterInfo } from "../livestream/WebCamLiveViewer";
 import { Pagination } from "../common/Pagination";
@@ -336,9 +332,9 @@ export default function RefereeHub() {
               type="button"
               onClick={() => setShowViolModal(true)}
               style={{ padding: "3px 8px", fontSize: "10px", background: "rgba(239,68,68,0.25)", border: "1px solid rgba(239,68,68,0.5)", color: "#f87171", borderRadius: "0.25rem", cursor: "pointer", fontWeight: "bold", display: "flex", alignItems: "center", gap: "4px" }}
-              title={$t("Ghi nhận vi phạm luật đua tức thì", (localStorage.getItem('app-lang') || 'en'))}
+              title="Record rule violation immediately"
             >
-              <span>🚩</span> {$t("Ghi vi phạm", (localStorage.getItem('app-lang') || 'en'))}
+              <span>🚩</span> Record Violation
             </button>
 
             {/* Size selector for floating window */}
@@ -717,7 +713,7 @@ export default function RefereeHub() {
         penalty: finalPenalty,
         status: "PENDING",
       });
-      alert(isSevereDq ? $t("Violation logged and competitor DISQUALIFIED immediately!") : $t("Violation logged successfully."));
+      alert(isSevereDq ? "Violation logged and competitor DISQUALIFIED immediately!" : "Violation logged successfully.");
       setShowViolModal(false);
       setViolDesc("");
       setViolPenalty("");
@@ -725,7 +721,7 @@ export default function RefereeHub() {
       // Reload live supervise data
       handleStartSupervise(selectedRace);
     } catch (err: any) {
-      notify($t("Failed to log violation: ") + getErrMsg(err), "error");
+      notify("Failed to log violation: " + getErrMsg(err), "error");
     }
   };
 
@@ -735,12 +731,12 @@ export default function RefereeHub() {
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/stop`, { stewardReport });
-      notify($t("Emergency stop executed. Race status changed to CANCELLED."), "success");
+      notify("Emergency stop executed. Race status changed to CANCELLED.", "success");
       setActiveView("list");
       setSelectedRace(null);
       fetchDashboard();
     } catch (err: any) {
-      notify($t("Failed to stop race: ") + getErrMsg(err), "error");
+      notify("Failed to stop race: " + getErrMsg(err), "error");
       setLoading(false);
     }
   };
@@ -751,7 +747,7 @@ export default function RefereeHub() {
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/suspend`, { stewardReport });
-      notify($t("Race suspended. Status changed to STOPPED."), "info");
+      notify("Race suspended. Status changed to STOPPED.", "info");
       if (user?.id) {
         const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
         setAssignedRaces(dashboardRes.assignedRaces || []);
@@ -770,7 +766,7 @@ export default function RefereeHub() {
         setLoading(false);
       }
     } catch (err: any) {
-      notify($t("Failed to suspend race: ") + getErrMsg(err), "error");
+      notify("Failed to suspend race: " + getErrMsg(err), "error");
       setLoading(false);
     }
   };
@@ -781,7 +777,7 @@ export default function RefereeHub() {
     setLoading(true);
     try {
       await api.post(`/referee/races/${selectedRace.id}/resume`);
-      notify($t("Race resumed. Status changed to RUNNING."), "success");
+      notify("Race resumed. Status changed to RUNNING.", "success");
       const dashboardRes = await api.get<any>(`/referee/${user.id}/dashboard`);
       setAssignedRaces(dashboardRes.assignedRaces || []);
       setCompletedCount(dashboardRes.completedCount || 0);
@@ -793,7 +789,7 @@ export default function RefereeHub() {
         fetchDashboard();
       }
     } catch (err: any) {
-      notify($t("Failed to resume race: ") + getErrMsg(err), "error");
+      notify("Failed to resume race: " + getErrMsg(err), "error");
       setLoading(false);
     }
   };
@@ -904,7 +900,7 @@ export default function RefereeHub() {
 
   const openStewardReportModal = (raceId: string, report: string) => {
     setReportModalRaceId(raceId);
-    setReportModalContent(report && report.trim() !== "null" ? report : $t("Không có báo cáo nào được ghi nhận cho trận đấu này.", (localStorage.getItem('app-lang') || 'en')));
+    setReportModalContent(report && report.trim() !== "null" ? report : "No report was recorded for this race.");
     setShowReportModal(true);
   };
 
@@ -930,7 +926,7 @@ export default function RefereeHub() {
             <textarea
               value={reasonInput}
               onChange={e => setReasonInput(e.target.value)}
-              placeholder={$t("Nhập chi tiết lý do (Steward's Report)...", (localStorage.getItem('app-lang') || 'en'))}
+              placeholder="Enter reason details (Steward's Report)..."
               style={{ width: "100%", height: "90px", padding: "0.75rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.5rem", color: "#fff", fontSize: "0.85rem", outline: "none", resize: "none", marginBottom: "1rem" }}
             />
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
@@ -939,7 +935,7 @@ export default function RefereeHub() {
                 onClick={() => setReasonModal(null)}
                 style={{ padding: "0.5rem 1rem", background: "rgba(255,255,255,0.1)", color: "#aaa", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", cursor: "pointer" }}
               >
-                {$t("Hủy", (localStorage.getItem('app-lang') || 'en'))}
+                Cancel
               </button>
               <button
                 type="button"
@@ -947,7 +943,7 @@ export default function RefereeHub() {
                   const currentReason = reasonInput.trim();
                   const currentType = reasonModal.type;
                   if (!currentReason) {
-                    notify($t("Please enter a reason before confirming."), "error");
+                    notify("Please enter a reason before confirming.", "error");
                     return;
                   }
                   setReasonModal(null);
@@ -957,7 +953,7 @@ export default function RefereeHub() {
                 }}
                 style={{ padding: "0.5rem 1.25rem", background: reasonModal.type === "emergency" ? "#f59e0b" : "#fbbf24", color: "#000", border: "none", borderRadius: "0.375rem", fontSize: "0.8rem", fontWeight: "bold", cursor: "pointer" }}
               >
-                {$t("Confirm")}
+                Confirm
               </button>
             </div>
           </div>
@@ -1009,26 +1005,26 @@ export default function RefereeHub() {
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         <div style={{ marginBottom: "0.5rem" }}>
           <button onClick={() => setActiveView("list")} style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: "11px", color: "#a0a0a0", background: "none", border: "none", cursor: "pointer" }}>
-            <Icon name="arrow-left" /> {$t("Quay lại Bảng trọng tài", (localStorage.getItem('app-lang') || 'en'))}
+            <Icon name="arrow-left" /> Back to Referee Hub
           </button>
         </div>
 
         {!isGatesFullySet && (
           <div style={{ padding: "1rem", background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)", borderRadius: "0.5rem", color: "#f87171", fontSize: "12px", display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <Icon name="alert-triangle" />
-            <span>{$t("Cảnh báo: Cổng xuất phát chưa được thiết lập đầy đủ cho tất cả nài/ngựa. Hãy yêu cầu Admin cấu hình cổng trước khi bắt đầu cuộc đua.", (localStorage.getItem('app-lang') || 'en'))}</span>
+            <span>Warning: Starting gates are not fully configured. Please ask Admin to configure them before starting the race.</span>
           </div>
         )}
 
         {isGatesFullySet && (
           <div style={{ padding: "1rem", background: "rgba(16,185,129,0.05)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "0.5rem", color: "#34d399", fontSize: "12px", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span>{$t("Thông tin: Trận đấu đã đầy đủ cổng xuất phát. Bạn có thể cho phép bắt đầu cuộc đua trước giờ bằng cách bấm Xác nhận kiểm tra phía dưới để đưa trạng thái trận đấu sang RUNNING ngay lập tức.", (localStorage.getItem('app-lang') || 'en'))}</span>
+            <span>Info: All starting gates are configured. You can start the race early by confirming the pre-race check below to transition the status to RUNNING immediately.</span>
           </div>
         )}
 
         <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.4)", padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
           <div>
-            <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em" }}>{$t("Kiểm tra tiền trận đấu cho", (localStorage.getItem('app-lang') || 'en'))}</span>
+            <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em" }}>Pre-Race inspection for</span>
             <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f4f2ec", fontFamily: "'Roboto Slab', serif", marginTop: "0.25rem" }}>{selectedRace.meetingName} - Race #{selectedRace.id}</h2>
             <p style={{ fontSize: "12px", color: "#a0a0a0", display: "flex", gap: "1rem", marginTop: "0.5rem" }}>
               <span>📍 {selectedRace.venue}</span>
@@ -1037,15 +1033,15 @@ export default function RefereeHub() {
           </div>
           <div style={{ display: "flex", gap: "1rem", fontSize: "11px", fontFamily: "monospace" }}>
             <div style={{ background: "rgba(21,19,16,0.6)", padding: "0.5rem 1rem", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.375rem" }}>
-              <span style={{ fontSize: "8px", color: "#a0a0a0", display: "block" }}>{$t("Hạng đấu", (localStorage.getItem('app-lang') || 'en'))}</span>
+              <span style={{ fontSize: "8px", color: "#a0a0a0", display: "block" }}>Class Level</span>
               <strong style={{ color: "#f4f2ec" }}>{formatClassLevel(selectedRace.classLevel)}</strong>
             </div>
             <div style={{ background: "rgba(21,19,16,0.6)", padding: "0.5rem 1rem", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.375rem" }}>
-              <span style={{ fontSize: "8px", color: "#a0a0a0", display: "block" }}>{$t("Cự ly", (localStorage.getItem('app-lang') || 'en'))}</span>
+              <span style={{ fontSize: "8px", color: "#a0a0a0", display: "block" }}>Distance</span>
               <strong style={{ color: "#f4f2ec" }}>{selectedRace.distanceMeters}m</strong>
             </div>
             <div style={{ background: "rgba(21,19,16,0.6)", padding: "0.5rem 1rem", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.375rem" }}>
-              <span style={{ fontSize: "8px", color: "#a0a0a0", display: "block" }}>{$t("Loại đường chạy", (localStorage.getItem('app-lang') || 'en'))}</span>
+              <span style={{ fontSize: "8px", color: "#a0a0a0", display: "block" }}>Track Type</span>
               <strong style={{ color: "#f4f2ec" }}>{selectedRace.trackType}</strong>
             </div>
           </div>
@@ -1054,8 +1050,8 @@ export default function RefereeHub() {
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)", padding: "1.25rem 1.5rem", flexWrap: "wrap", gap: "1rem" }}>
             <div>
-              <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>{$t("Kiểm tra cân nặng Ngựa & Nài", (localStorage.getItem('app-lang') || 'en'))}</h3>
-              <p style={{ fontSize: "11px", color: "#a0a0a0" }}>{$t("Xác minh trọng lượng tạ mang theo, giống ngựa và kiểm tra an toàn trang bị trước khi mở cổng.")}</p>
+              <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>Horse & Jockey Weight Check</h3>
+              <p style={{ fontSize: "11px", color: "#a0a0a0" }}>Verify carried weights, horse breeding, and equipment checks before opening the gates.</p>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span style={{ fontSize: "11px", color: "#a0a0a0", fontFamily: "monospace" }}>Sort by:</span>
@@ -1076,22 +1072,22 @@ export default function RefereeHub() {
                 const reqWeight = item.entry.carriedWeight || 52.0;
                 const weighed = parseFloat(weighedWeights[entryId]);
                 const diff = weighed - reqWeight;
-                let badgeText = $t("Đã xác nhận", (localStorage.getItem('app-lang') || 'en'));
+                let badgeText = "Verified";
                 let badgeStyle = { bg: "rgba(16,185,129,0.1)", color: "#34d399" };
                 if (vetChecks[entryId] === "SCRATCH") {
-                  badgeText = $t("BỊ LOẠI (Y TẾ)", (localStorage.getItem('app-lang') || 'en'));
+                  badgeText = "SCRATCHED";
                   badgeStyle = { bg: "rgba(239,68,68,0.1)", color: "#f87171" };
                 } else if (diff > 1.0) {
-                  badgeText = $t("Quá cân nghiêm trọng (Tối đa +1.0kg)", (localStorage.getItem('app-lang') || 'en'));
+                  badgeText = "Critical Overweight (Max +1.0kg)";
                   badgeStyle = { bg: "rgba(239,68,68,0.1)", color: "#f87171" };
                 } else if (diff > 0) {
-                  badgeText = `${$t("Quá cân", (localStorage.getItem('app-lang') || 'en'))} +${diff.toFixed(1)}kg (${$t("Đã xác nhận", (localStorage.getItem('app-lang') || 'en'))})`;
+                  badgeText = `Overweight +${diff.toFixed(1)}kg (Verified)`;
                   badgeStyle = { bg: "rgba(245,158,11,0.1)", color: "#fbbf24" };
                 } else if (diff < 0) {
-                  badgeText = `${$t("Cần mang thêm chì", (localStorage.getItem('app-lang') || 'en'))}: +${Math.abs(diff).toFixed(1)}kg`;
+                  badgeText = `Requires Lead Weight: +${Math.abs(diff).toFixed(1)}kg`;
                   badgeStyle = { bg: "rgba(59,130,246,0.1)", color: "#60a5fa" };
                 } else {
-                  badgeText = $t("Cân nặng chuẩn", (localStorage.getItem('app-lang') || 'en'));
+                  badgeText = "Perfect Weight";
                   badgeStyle = { bg: "rgba(16,185,129,0.1)", color: "#34d399" };
                 }
 
@@ -1160,8 +1156,8 @@ export default function RefereeHub() {
                             color: "#fff",
                           }}
                         >
-                          <option value="CLEARED">Cleared ({$t("Đã xác nhận", (localStorage.getItem('app-lang') || 'en'))})</option>
-                          <option value="SCRATCH">{$t("BỊ LOẠI (Y TẾ)", (localStorage.getItem('app-lang') || 'en'))}</option>
+                          <option value="CLEARED">Cleared (Verified)</option>
+                          <option value="SCRATCH">SCRATCHED (VET)</option>
                         </select>
                       </div>
                     </div>
@@ -1179,7 +1175,7 @@ export default function RefereeHub() {
               <table style={{ width: "100%", borderCollapse: "collapse" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                    {[$t("Cổng", (localStorage.getItem('app-lang') || 'en')), $t("Thông tin Ngựa", (localStorage.getItem('app-lang') || 'en')), $t("Thông tin Nài", (localStorage.getItem('app-lang') || 'en')), $t("Cân nặng trước đua (Weigh-Out) (kg)", (localStorage.getItem('app-lang') || 'en')), $t("Cân nặng yêu cầu", (localStorage.getItem('app-lang') || 'en')), $t("Khám y tế & An toàn", (localStorage.getItem('app-lang') || 'en')), $t("Trạng thái", (localStorage.getItem('app-lang') || 'en'))].map(h => (
+                    {["Gate", "Horse Details", "Jockey Details", "Weigh-Out Weight (kg)", "Required Weight", "Vet & Safety Check", "Status"].map(h => (
                       <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
                     ))}
                   </tr>
@@ -1190,22 +1186,22 @@ export default function RefereeHub() {
                     const reqWeight = item.entry.carriedWeight || 52.0;
                     const weighed = parseFloat(weighedWeights[entryId]);
                     const diff = weighed - reqWeight;
-                    let badgeText = $t("Đã xác nhận", (localStorage.getItem('app-lang') || 'en'));
+                    let badgeText = "Verified";
                     let badgeStyle = { bg: "rgba(16,185,129,0.1)", color: "#34d399" };
                     if (vetChecks[entryId] === "SCRATCH") {
-                      badgeText = $t("BỊ LOẠI (Y TẾ)", (localStorage.getItem('app-lang') || 'en'));
+                      badgeText = "SCRATCHED";
                       badgeStyle = { bg: "rgba(239,68,68,0.1)", color: "#f87171" };
                     } else if (diff > 1.0) {
-                      badgeText = $t("Quá cân nghiêm trọng (Tối đa +1.0kg)", (localStorage.getItem('app-lang') || 'en'));
+                      badgeText = "Critical Overweight (Max +1.0kg)";
                       badgeStyle = { bg: "rgba(239,68,68,0.1)", color: "#f87171" };
                     } else if (diff > 0) {
-                      badgeText = `${$t("Quá cân", (localStorage.getItem('app-lang') || 'en'))} +${diff.toFixed(1)}kg (${$t("Đã xác nhận", (localStorage.getItem('app-lang') || 'en'))})`;
+                      badgeText = `Overweight +${diff.toFixed(1)}kg (Verified)`;
                       badgeStyle = { bg: "rgba(245,158,11,0.1)", color: "#fbbf24" };
                     } else if (diff < 0) {
-                      badgeText = `${$t("Cần mang thêm chì", (localStorage.getItem('app-lang') || 'en'))}: +${Math.abs(diff).toFixed(1)}kg`;
+                      badgeText = `Requires Lead Weight: +${Math.abs(diff).toFixed(1)}kg`;
                       badgeStyle = { bg: "rgba(59,130,246,0.1)", color: "#60a5fa" };
                     } else {
-                      badgeText = $t("Cân nặng chuẩn", (localStorage.getItem('app-lang') || 'en'));
+                      badgeText = "Perfect Weight";
                       badgeStyle = { bg: "rgba(16,185,129,0.1)", color: "#34d399" };
                     }
 
@@ -1232,8 +1228,8 @@ export default function RefereeHub() {
                         </td>
                         <td style={{ padding: "1rem" }}>
                           <select value={vetChecks[entryId]} onChange={e => setVetChecks(prev => ({ ...prev, [entryId]: e.target.value }))} style={{ padding: "0.25rem 0.5rem", fontSize: "11px", width: 140, outline: "none" }}>
-                            <option value="CLEARED">Cleared ({$t("Đã xác nhận", (localStorage.getItem('app-lang') || 'en'))})</option>
-                            <option value="SCRATCH">{$t("BỊ LOẠI (Y TẾ)", (localStorage.getItem('app-lang') || 'en'))}</option>
+                            <option value="CLEARED">Cleared (Verified)</option>
+                            <option value="SCRATCH">SCRATCHED (VET)</option>
                           </select>
                         </td>
                         <td style={{ padding: "1rem" }}>
@@ -1252,13 +1248,13 @@ export default function RefereeHub() {
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem", borderRadius: "0.75rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
-            <h4 style={{ fontWeight: "bold", color: "#f4f2ec" }}>{$t("Hoàn thành danh sách kiểm tra an toàn?", (localStorage.getItem('app-lang') || 'en'))}</h4>
-            <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{$t("Đảm bảo bác sĩ thú y đã kiểm duyệt tất cả ngựa, nài ngựa đã được cân và hộp xuất phát an toàn.")}</p>
+            <h4 style={{ fontWeight: "bold", color: "#f4f2ec" }}>Safety Checklist Complete?</h4>
+            <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>Ensure veterinarians have cleared all horses, jockeys are weighed out, and starting boxes are safe.</p>
           </div>
           <div style={{ display: "flex", gap: "1rem" }}>
-            <button onClick={() => setActiveView("list")} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2d2d30", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Hủy", (localStorage.getItem('app-lang') || 'en'))}</button>
+            <button onClick={() => setActiveView("list")} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2d2d30", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
             <button onClick={handleConfirmCheck} disabled={!isGatesFullySet} style={{ padding: "0.5rem 1rem", background: isGatesFullySet ? "#10b981" : "#1f1f22", color: isGatesFullySet ? "#fff" : "#555", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace", fontWeight: "bold", cursor: isGatesFullySet ? "pointer" : "not-allowed" }}>
-              {$t("Xác nhận kiểm tra & Mở cổng xuất phát", (localStorage.getItem('app-lang') || 'en'))}
+              Confirm Pre-Race Check & Open Gates
             </button>
           </div>
         </div>
@@ -1272,13 +1268,13 @@ export default function RefereeHub() {
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         <div style={{ marginBottom: "0.5rem" }}>
           <button onClick={() => setActiveView("list")} style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: "11px", color: "#a0a0a0", background: "none", border: "none", cursor: "pointer" }}>
-            <Icon name="arrow-left" /> {$t("Quay lại Bảng trọng tài", (localStorage.getItem('app-lang') || 'en'))}
+            <Icon name="arrow-left" /> Back to Referee Hub
           </button>
         </div>
 
         <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.4)", padding: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
           <div>
-            <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em" }}>{$t("Giám sát trực tiếp cho", (localStorage.getItem('app-lang') || 'en'))}</span>
+            <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em" }}>Live supervision for</span>
             <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f4f2ec", fontFamily: "'Roboto Slab', serif", marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
               {selectedRace.meetingName} - Race #{selectedRace.id}
               <span style={{
@@ -1295,7 +1291,7 @@ export default function RefereeHub() {
             <p style={{ fontSize: "12px", color: "#a0a0a0", display: "flex", gap: "1rem", marginTop: "0.5rem", alignItems: "center" }}>
               <span>📍 {selectedRace.venue}</span>
               <span style={{ color: selectedRace.status === "STOPPED" ? "#fbbf24" : "#eab308", display: "flex", alignItems: "center", gap: "4px" }}>
-                <Icon name="activity" /> {selectedRace.status === "STOPPED" ? ($t("Trận đấu đang tạm dừng", (localStorage.getItem('app-lang') || 'en'))) : $t("Trận đấu đang diễn ra", (localStorage.getItem('app-lang') || 'en'))}
+                <Icon name="activity" /> {selectedRace.status === "STOPPED" ? "Race Suspended" : "Race in Progress"}
               </span>
             </p>
           </div>
@@ -1304,11 +1300,11 @@ export default function RefereeHub() {
               <button
                 onClick={() => {
                   setReasonInput("");
-                  setReasonModal({ type: "suspend", title: $t("Nhập lý do tạm hoãn cuộc đua (Steward's Report):", (localStorage.getItem('app-lang') || 'en')) });
+                  setReasonModal({ type: "suspend", title: "Enter reason for race suspension (Steward's Report):" });
                 }}
                 style={{ padding: "0.5rem 1.25rem", background: "#fbbf24", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
               >
-                ⏸️ {$t("Tạm hoãn cuộc đua", (localStorage.getItem('app-lang') || 'en'))}
+                ⏸️ Suspend Race
               </button>
             )}
             {selectedRace.status === "STOPPED" && (
@@ -1316,17 +1312,17 @@ export default function RefereeHub() {
                 onClick={handleResumeRace}
                 style={{ padding: "0.5rem 1.25rem", background: "#10b981", color: "#fff", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
               >
-                ▶️ {$t("Khôi phục cuộc đua", (localStorage.getItem('app-lang') || 'en'))}
+                ▶️ Resume Race
               </button>
             )}
             <button
               onClick={() => {
                 setReasonInput("");
-                setReasonModal({ type: "emergency", title: $t("Nhập lý do tạm dừng/hoãn cuộc đua khẩn cấp (Steward's Report):", (localStorage.getItem('app-lang') || 'en')) });
+                setReasonModal({ type: "emergency", title: "Enter reason for emergency race stop (Steward's Report):" });
               }}
               style={{ padding: "0.5rem 1.25rem", background: "#f59e0b", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}
             >
-              {$t("🛑 Dừng trận đấu khẩn cấp", (localStorage.getItem('app-lang') || 'en'))}
+              🛑 Emergency Stop
             </button>
             <button 
               onClick={() => window.dispatchEvent(new CustomEvent("OPEN_BROADCASTER", { detail: selectedRace }))} 
@@ -1344,7 +1340,7 @@ export default function RefereeHub() {
                 gap: "0.375rem" 
               }}
             >
-              📱 {$t("Mobile Camera Broadcast", (localStorage.getItem('app-lang') || 'en'))}
+              📱 Mobile Camera Broadcast
             </button>
             <button 
               onClick={() => setLiveMonitorMode(prev => prev === "hidden" ? "floating" : prev === "floating" ? "embedded" : "floating")} 
@@ -1362,10 +1358,10 @@ export default function RefereeHub() {
                 gap: "0.375rem" 
               }}
             >
-              📺 {liveMonitorMode === "floating" ? $t("Floating Monitor", (localStorage.getItem('app-lang') || 'en')) : liveMonitorMode === "embedded" ? $t("Embedded Monitor", (localStorage.getItem('app-lang') || 'en')) : $t("Turn on Live Monitor", (localStorage.getItem('app-lang') || 'en'))}
+              📺 {liveMonitorMode === "floating" ? "Floating Monitor" : liveMonitorMode === "embedded" ? "Embedded Monitor" : "Turn on Live Monitor"}
             </button>
             <button onClick={() => setShowViolModal(true)} style={{ padding: "0.5rem 1.25rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.375rem" }}>
-              {$t("⚠️ Ghi nhận vi phạm", (localStorage.getItem('app-lang') || 'en'))}
+              ⚠️ Record Violation
             </button>
           </div>
         </div>
@@ -1375,8 +1371,8 @@ export default function RefereeHub() {
           <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)", padding: "1.25rem 1.5rem", flexWrap: "wrap", gap: "1rem" }}>
               <div>
-                <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>{$t("Thí sinh đang chạy", (localStorage.getItem('app-lang') || 'en'))}</h3>
-                <p style={{ fontSize: "11px", color: "#a0a0a0" }}>{$t("Các đối thủ đang chạy trên đường đua.", (localStorage.getItem('app-lang') || 'en'))}</p>
+                <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>Active Runners</h3>
+                <p style={{ fontSize: "11px", color: "#a0a0a0" }}>Competitors currently running on the track.</p>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <span style={{ fontSize: "11px", color: "#a0a0a0", fontFamily: "monospace" }}>Sort by:</span>
@@ -1475,7 +1471,7 @@ export default function RefereeHub() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                      {[$t("Cổng", (localStorage.getItem('app-lang') || 'en')), $t("Thông tin Ngựa", (localStorage.getItem('app-lang') || 'en')), $t("Thông tin Nài", (localStorage.getItem('app-lang') || 'en')), $t("Cân nặng trước đua (Weigh-Out) (kg)", (localStorage.getItem('app-lang') || 'en')), $t("Trạng thái", (localStorage.getItem('app-lang') || 'en')), "Action"].map(h => (
+                      {["Gate", "Horse Details", "Jockey Details", "Weigh-Out Weight (kg)", "Status", "Action"].map(h => (
                         <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
                       ))}
                     </tr>
@@ -1565,14 +1561,14 @@ export default function RefereeHub() {
           {/* Incidents Recorded */}
           <div className="rounded-xl flex flex-col overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)" }}>
-              <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>{$t("Sự cố / Vi phạm đã ghi nhận", (localStorage.getItem('app-lang') || 'en'))}</h3>
-              <p style={{ fontSize: "11px", color: "#a0a0a0" }}>{$t("Các vi phạm đã được trọng tài ghi nhận cho trận đấu này.", (localStorage.getItem('app-lang') || 'en'))}</p>
+              <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>Incidents Recorded</h3>
+              <p style={{ fontSize: "11px", color: "#a0a0a0" }}>Violations logged by stewards for this race.</p>
             </div>
             <div style={{ padding: "1.5rem", flex: 1, overflowY: "auto", maxHeight: "350px" }}>
               {violations.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "2rem 0", color: "#a0a0a0" }}>
                   <Icon name="thumbs-up" color="#10b981" />
-                  <p style={{ fontSize: "12px", marginTop: "0.5rem" }}>{$t("Không có sự cố nào được ghi nhận. Trận đấu sạch cho đến nay.", (localStorage.getItem('app-lang') || 'en'))}</p>
+                  <p style={{ fontSize: "12px", marginTop: "0.5rem" }}>No incidents recorded. Clean race so far.</p>
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -1580,7 +1576,7 @@ export default function RefereeHub() {
                     <div key={i} style={{ padding: "1rem", borderRadius: "0.5rem", background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.2)" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.25rem" }}>
                         <h4 style={{ fontWeight: "bold", color: "#f87171", fontSize: "12px" }}>{v.horseName}</h4>
-                        <span style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", background: "rgba(239,68,68,0.2)", color: "#f87171", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>{$t("Loại (DQ)", (localStorage.getItem('app-lang') || 'en'))}</span>
+                        <span style={{ fontSize: "8px", fontFamily: "monospace", textTransform: "uppercase", background: "rgba(239,68,68,0.2)", color: "#f87171", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>DQ</span>
                       </div>
                       <p style={{ fontSize: "11px", color: "#a0a0a0" }}>Jockey: <span style={{ color: "#fff" }}>{v.jockeyName}</span></p>
                       <p style={{ fontSize: "11px", background: "rgba(0,0,0,0.3)", padding: "0.5rem", borderRadius: "0.25rem", margin: "0.5rem 0", fontFamily: "monospace", color: "#f4f2ec" }}>{v.violation?.description}</p>
@@ -1601,11 +1597,11 @@ export default function RefereeHub() {
         {/* Finalization Bar */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem", borderRadius: "0.75rem", flexWrap: "wrap", gap: "1rem" }}>
           <div>
-            <h4 style={{ fontWeight: "bold", color: "#f4f2ec" }}>{$t("Trận đấu đã kết thúc?", (localStorage.getItem('app-lang') || 'en'))}</h4>
-            <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>{$t("Chuyển sang bảng nhập kết quả chung cuộc để điền thứ hạng, thời gian chạy và gửi báo cáo chính thức.")}</p>
+            <h4 style={{ fontWeight: "bold", color: "#f4f2ec" }}>Race Completed?</h4>
+            <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "2px" }}>Transition to the final results sheet to enter positions, race times, and submit your official report.</p>
           </div>
           <button onClick={handleStartConfirmResults} style={{ padding: "0.625rem 1.25rem", background: "#fbbf24", color: "#000", border: "none", borderRadius: "0.5rem", fontSize: "12px", fontWeight: "bold", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <Icon name="check-square" /> {$t("Kết thúc trận & Nhập kết quả", (localStorage.getItem('app-lang') || 'en'))}
+            <Icon name="check-square" /> Finish Race & Enter Results
           </button>
         </div>
 
@@ -1618,15 +1614,15 @@ export default function RefereeHub() {
             <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "28rem", overflow: "hidden" }}>
               <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <Icon name="alert-triangle" color="#ef4444" /> {$t("Ghi nhận vi phạm luật đua", (localStorage.getItem('app-lang') || 'en'))}
+                  <Icon name="alert-triangle" color="#ef4444" /> Log Rules Violation
                 </h3>
                 <button onClick={() => setShowViolModal(false)} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "1.25rem" }}>✕</button>
               </div>
               <form onSubmit={handleSaveViolation} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div>
-                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>{$t("Thí sinh (Ngựa / Nài)", (localStorage.getItem('app-lang') || 'en'))}</label>
+                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Runner (Horse / Jockey)</label>
                   <select value={violRunner} onChange={e => setViolRunner(e.target.value)} required style={{ width: "100%", padding: "0.5rem", outline: "none" }}>
-                    <option value="">{$t("-- Chọn Thí sinh --", (localStorage.getItem('app-lang') || 'en'))}</option>
+                    <option value="">-- Select Runner --</option>
                     {sortedEntries.map(item => (
                       <option key={item.entry.id} value={`${item.horse.id}-${item.jockey.id}`}>
                         {item.horse?.name} ({item.jockey?.username})
@@ -1635,22 +1631,22 @@ export default function RefereeHub() {
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>{$t("Mô tả vi phạm", (localStorage.getItem('app-lang') || 'en'))}</label>
+                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Violation Description</label>
                   <textarea value={violDesc} onChange={e => setViolDesc(e.target.value)} required placeholder="Describe what happened..." style={{ width: "100%", padding: "0.5rem", height: 80, resize: "none", outline: "none" }} />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>{$t("Hình phạt áp dụng", (localStorage.getItem('app-lang') || 'en'))}</label>
-                  <input type="text" value={isSevereDq ? `DISQUALIFIED (${$t("Loại (DQ)", (localStorage.getItem('app-lang') || 'en'))})` : violPenalty} disabled={isSevereDq} onChange={e => setViolPenalty(e.target.value)} required={!isSevereDq} placeholder="e.g. Fine $500..." style={{ width: "100%", padding: "0.5rem", outline: "none", opacity: isSevereDq ? 0.5 : 1 }} />
+                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Assessed Penalty</label>
+                  <input type="text" value={isSevereDq ? "DISQUALIFIED (DQ)" : violPenalty} disabled={isSevereDq} onChange={e => setViolPenalty(e.target.value)} required={!isSevereDq} placeholder="e.g. Fine $500..." style={{ width: "100%", padding: "0.5rem", outline: "none", opacity: isSevereDq ? 0.5 : 1 }} />
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   <input type="checkbox" id="severeDq" checked={isSevereDq} onChange={e => setIsSevereDq(e.target.checked)} style={{ width: 16, height: 16, cursor: "pointer" }} />
                   <label htmlFor="severeDq" style={{ fontSize: "11px", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>
-                    {$t("Vi phạm cực kỳ nghiêm trọng (Loại trực tiếp khỏi trận đấu ngay lập tức)", (localStorage.getItem('app-lang') || 'en'))}
+                    Severe rules violation (Disqualify runner from the race immediately)
                   </label>
                 </div>
                 <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
-                  <button type="button" onClick={() => { setShowViolModal(false); setIsSevereDq(false); }} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2d2d30", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Hủy", (localStorage.getItem('app-lang') || 'en'))}</button>
-                  <button type="submit" style={{ padding: "0.5rem 1rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>{$t("Lưu vi phạm", (localStorage.getItem('app-lang') || 'en'))}</button>
+                  <button type="button" onClick={() => { setShowViolModal(false); setIsSevereDq(false); }} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2d2d30", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
+                  <button type="submit" style={{ padding: "0.5rem 1rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>Save Violation</button>
                 </div>
               </form>
             </div>
@@ -1662,27 +1658,26 @@ export default function RefereeHub() {
   }
 
   if (activeView === "confirm" && selectedRace) {
-    const lang = localStorage.getItem("app-lang") || "en";
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
         <div style={{ marginBottom: "0.5rem" }}>
           <button onClick={() => setActiveView("supervise")} style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", fontSize: "11px", color: "#a0a0a0", background: "none", border: "none", cursor: "pointer" }}>
-            <Icon name="arrow-left" /> {$t("Quay lại Bảng trọng tài", (localStorage.getItem('app-lang') || 'en'))}
+            <Icon name="arrow-left" /> Back to Referee Hub
           </button>
         </div>
 
         <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.4)", padding: "1.5rem" }}>
-          <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em" }}>{$t("Nhập kết quả chung cuộc cho", (localStorage.getItem('app-lang') || 'en'))}</span>
+          <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase", letterSpacing: "0.1em" }}>Final Result entry for</span>
           <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#f4f2ec", fontFamily: "'Roboto Slab', serif", marginTop: "0.25rem" }}>{selectedRace.meetingName} - Race #{selectedRace.id}</h2>
-          <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Gửi thứ hạng, thời gian chạy chính thức, các trường hợp loại trực tiếp và lập Báo cáo của Trọng tài để chia giải thưởng và cập nhật điểm rating.")}</p>
+          <p style={{ fontSize: "11px", color: "#a0a0a0", marginTop: "0.25rem" }}>Submit official positions, timings, disqualifications and compile the Steward's Report to distribute prizes and update ratings.</p>
         </div>
 
         <form onSubmit={handleConfirmResults} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
           <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)", padding: "1.25rem 1.5rem", flexWrap: "wrap", gap: "1rem" }}>
               <div>
-                <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>{$t("Bảng thứ hạng chính thức", (localStorage.getItem('app-lang') || 'en'))}</h3>
-                <p style={{ fontSize: "11px", color: "#a0a0a0" }}>{$t("Xác minh thứ hạng và thời gian của từng con ngựa. Chọn cột DQ để loại thí sinh khỏi trận đấu.", (localStorage.getItem('app-lang') || 'en'))}</p>
+                <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>Official Finishing Sheet</h3>
+                <p style={{ fontSize: "11px", color: "#a0a0a0" }}>Verify each horse's position and timing. Check the DQ column to disqualify a runner.</p>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <span style={{ fontSize: "11px", color: "#a0a0a0", fontFamily: "monospace" }}>Sort by:</span>
@@ -1705,13 +1700,13 @@ export default function RefereeHub() {
                   const weighedOut = item.entry.carriedWeight || 52.0;
                   const weighedIn = parseFloat(weighInWeights[entryId]) || 0;
                   const diff = weighedIn - weighedOut;
-                  let wiText = $t("Cân sau đua đạt", (localStorage.getItem('app-lang') || 'en'));
+                  let wiText = "Weigh-In Passed";
                   let wiColor = "#34d399";
                   if (diff < -0.5) {
-                    wiText = `${$t("SAI LỆCH THIẾU CÂN", (localStorage.getItem('app-lang') || 'en'))}: ${diff.toFixed(1)} kg (${$t("Loại (DQ)", (localStorage.getItem('app-lang') || 'en')).toLowerCase()})`;
+                    wiText = `UNDERWEIGHT DISCREPANCY: ${diff.toFixed(1)} kg (dq)`;
                     wiColor = "#f87171";
                   } else {
-                    wiText = `${$t("Cân sau đua đạt", (localStorage.getItem('app-lang') || 'en'))} (${diff >= 0 ? "+" : ""}${diff.toFixed(1)} kg)`;
+                    wiText = `Weigh-In Passed (${diff >= 0 ? "+" : ""}${diff.toFixed(1)} kg)`;
                   }
 
                   return (
@@ -1723,11 +1718,11 @@ export default function RefereeHub() {
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                           <label style={{ fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)", display: "flex", alignItems: "center", gap: "0.25rem", cursor: isAlreadyDq ? "not-allowed" : "pointer" }}>
                             <input type="checkbox" checked={isDq} disabled={isAlreadyDq} onChange={e => setDisqualifiedList(prev => ({ ...prev, [entryId]: e.target.checked }))} style={{ width: 16, height: 16 }} />
-                            {$t("Loại (DQ)", (localStorage.getItem('app-lang') || 'en'))}
+                            DQ
                           </label>
                           {isAlreadyDq && (
                             <span style={{ fontSize: "9px", color: "#f87171", fontWeight: "bold" }}>
-                              ({$t("Vi phạm", (localStorage.getItem('app-lang') || 'en'))})
+                              (Violation)
                             </span>
                           )}
                         </div>
@@ -1749,11 +1744,11 @@ export default function RefereeHub() {
                       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", alignItems: "flex-start" }}>
                         <div>
                           <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>
-                            {$t("Thứ hạng chung cuộc", (localStorage.getItem('app-lang') || 'en'))}
+                            Final Position
                           </label>
                           {isAlreadyDq ? (
                             <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", display: "inline-block" }}>
-                              {$t("BỊ LOẠI", (localStorage.getItem('app-lang') || 'en'))}
+                              DISQUALIFIED
                             </span>
                           ) : (
                             <input type="text" readOnly disabled value={isDq ? "DQ" : finalPositions[entryId] ? `${finalPositions[entryId]}` : "—"} style={{ width: "100%", padding: "0.375rem 0.5rem", fontSize: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#c9a227", fontWeight: "bold", textAlign: "center", outline: "none", borderRadius: "0.25rem" }} />
@@ -1762,7 +1757,7 @@ export default function RefereeHub() {
 
                         <div>
                           <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>
-                            {$t("Cân nặng sau đua (Weigh-In) (kg)", (localStorage.getItem('app-lang') || 'en'))}
+                            Weigh-In Weight (kg)
                           </label>
                           {isAlreadyDq ? (
                             <span style={{ fontSize: "11px", color: "#a0a0a0" }}>—</span>
@@ -1783,7 +1778,7 @@ export default function RefereeHub() {
 
                         <div style={{ gridColumn: "span 2" }}>
                           <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>
-                            {$t("Thời gian chạy", (localStorage.getItem('app-lang') || 'en'))}
+                            Finish Time
                           </label>
                           {isAlreadyDq ? (
                             <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f87171", fontFamily: "monospace" }}>
@@ -1805,9 +1800,7 @@ export default function RefereeHub() {
                                   } else if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(val.trim())) {
                                     setFinishTimeErrors(prev => ({
                                       ...prev,
-                                      [entryId]: lang === "vi" 
-                                        ? "Sai định dạng! Số giây phải từ 00 đến 59 (ví dụ: 1:48.35)" 
-                                        : "Invalid format! Seconds must be between 00 and 59 (e.g. 1:48.35)"
+                                      [entryId]: "Invalid format! Seconds must be between 00 and 59 (e.g. 1:48.35)"
                                     }));
                                   } else {
                                     setFinishTimeErrors(prev => ({ ...prev, [entryId]: "" }));
@@ -1842,8 +1835,8 @@ export default function RefereeHub() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                      {[$t("Cổng", (localStorage.getItem('app-lang') || 'en')), $t("Thông tin Ngựa", (localStorage.getItem('app-lang') || 'en')), $t("Thông tin Nài", (localStorage.getItem('app-lang') || 'en')), $t("Thứ hạng chung cuộc", (localStorage.getItem('app-lang') || 'en')), $t("Cân nặng sau đua (Weigh-In) (kg)", (localStorage.getItem('app-lang') || 'en')), $t("Thời gian chạy", (localStorage.getItem('app-lang') || 'en')), $t("Loại (DQ)", (localStorage.getItem('app-lang') || 'en'))].map(h => (
-                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: h === $t("Loại (DQ)", (localStorage.getItem('app-lang') || 'en')) ? "center" : "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
+                      {["Gate", "Horse Details", "Jockey Details", "Final Position", "Weigh-In Weight (kg)", "Finish Time", "DQ"].map(h => (
+                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: h === "DQ" ? "center" : "left", fontSize: "9px", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -1855,13 +1848,13 @@ export default function RefereeHub() {
                       const weighedOut = item.entry.carriedWeight || 52.0;
                       const weighedIn = parseFloat(weighInWeights[entryId]) || 0;
                       const diff = weighedIn - weighedOut;
-                      let wiText = $t("Cân sau đua đạt", (localStorage.getItem('app-lang') || 'en'));
+                      let wiText = "Weigh-In Passed";
                       let wiColor = "#34d399";
                       if (diff < -0.5) {
-                        wiText = `${$t("SAI LỆCH THIẾU CÂN", (localStorage.getItem('app-lang') || 'en'))}: ${diff.toFixed(1)} kg (${$t("Loại (DQ)", (localStorage.getItem('app-lang') || 'en')).toLowerCase()})`;
+                        wiText = `UNDERWEIGHT DISCREPANCY: ${diff.toFixed(1)} kg (dq)`;
                         wiColor = "#f87171";
                       } else {
-                        wiText = `${$t("Cân sau đua đạt", (localStorage.getItem('app-lang') || 'en'))} (${diff >= 0 ? "+" : ""}${diff.toFixed(1)} kg)`;
+                        wiText = `Weigh-In Passed (${diff >= 0 ? "+" : ""}${diff.toFixed(1)} kg)`;
                       }
 
                       return (
@@ -1882,7 +1875,7 @@ export default function RefereeHub() {
                           <td style={{ padding: "1rem" }}>
                             {isAlreadyDq ? (
                               <span style={{ fontSize: "11px", fontWeight: "bold", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem" }}>
-                                {$t("BỊ LOẠI", (localStorage.getItem('app-lang') || 'en'))}
+                                DISQUALIFIED
                               </span>
                             ) : (
                               <input type="text" readOnly disabled value={isDq ? "DQ" : finalPositions[entryId] ? `${finalPositions[entryId]}` : "—"} style={{ width: 70, padding: "0.25rem 0.5rem", fontSize: "12px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", color: "#c9a227", fontWeight: "bold", textAlign: "center", outline: "none", borderRadius: "0.25rem" }} />
@@ -1926,9 +1919,7 @@ export default function RefereeHub() {
                                     } else if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(val.trim())) {
                                       setFinishTimeErrors(prev => ({
                                         ...prev,
-                                        [entryId]: lang === "vi" 
-                                          ? "Sai định dạng! Số giây phải từ 00 đến 59 (ví dụ: 1:48.35)" 
-                                          : "Invalid format! Seconds must be between 00 and 59 (e.g. 1:48.35)"
+                                        [entryId]: "Invalid format! Seconds must be between 00 and 59 (e.g. 1:48.35)"
                                       }));
                                     } else {
                                       setFinishTimeErrors(prev => ({ ...prev, [entryId]: "" }));
@@ -1957,7 +1948,7 @@ export default function RefereeHub() {
                             <input type="checkbox" checked={isDq} disabled={isAlreadyDq} onChange={e => setDisqualifiedList(prev => ({ ...prev, [entryId]: e.target.checked }))} style={{ width: 16, height: 16, cursor: isAlreadyDq ? "not-allowed" : "pointer" }} />
                             {isAlreadyDq && (
                               <div style={{ fontSize: "9px", color: "#f87171", marginTop: "4px", fontWeight: "bold" }}>
-                                {$t("Vi phạm", (localStorage.getItem('app-lang') || 'en'))}
+                                Violation
                               </div>
                             )}
                           </td>
@@ -1971,15 +1962,15 @@ export default function RefereeHub() {
           </div>
 
           <div className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)", padding: "1.5rem" }}>
-            <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>{$t("Báo cáo chính thức của Trọng tài", (localStorage.getItem('app-lang') || 'en'))}</h3>
-            <p style={{ fontSize: "11px", color: "#a0a0a0", marginBottom: "0.75rem" }}>{$t("Cung cấp bản tóm tắt bằng văn bản về cuộc đua, mô tả chi tiết bất kỳ cuộc điều tra sự cố, cảnh cáo hoặc ghi chú y tế.")}</p>
+            <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec" }}>Steward's Official Report</h3>
+            <p style={{ fontSize: "11px", color: "#a0a0a0", marginBottom: "0.75rem" }}>Provide a written summary of the race, detailing any incident inquiries, warnings, or vet notes.</p>
             <textarea value={stewardReport} onChange={e => setStewardReport(e.target.value)} required rows={5} placeholder="Insert race description..." style={{ width: "100%", padding: "0.75rem", background: "rgba(0,0,0,0.2)", border: "1px solid rgba(201,162,39,0.2)", borderRadius: "0.5rem", color: "#fff", fontSize: "12px", resize: "none", outline: "none" }} />
           </div>
 
           <div style={{ display: "flex", gap: "1rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={() => setActiveView("supervise")} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2d2d30", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Hủy", (localStorage.getItem('app-lang') || 'en'))}</button>
+            <button type="button" onClick={() => setActiveView("supervise")} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2d2d30", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
             <button type="submit" style={{ padding: "0.5rem 1rem", background: "#10b981", color: "#fff", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>
-              {$t("Phê duyệt & Công bố chính thức", (localStorage.getItem('app-lang') || 'en'))}
+              Approve & Declare Official
             </button>
           </div>
         </form>
@@ -1989,16 +1980,14 @@ export default function RefereeHub() {
     );
   }
 
-
-
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Stats Grid */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1.5rem" }}>
         {[
-          { label: $t("Tổng số phân công", (localStorage.getItem('app-lang') || 'en')),       value: completedCount + pendingCount, color: PURPLE,    bg: `rgba(139,92,246,0.1)`,  icon: "📋" },
-          { label: $t("Chờ kiểm duyệt/Giám sát", (localStorage.getItem('app-lang') || 'en')), value: pendingCount,   color: "#eab308",  bg: "rgba(234,179,8,0.1)",   icon: "⏱" },
-          { label: $t("Trận đấu đã hoàn thành", (localStorage.getItem('app-lang') || 'en')),          value: completedCount,  color: "#4ade80",  bg: "rgba(74,222,128,0.1)",  icon: "✅" },
+          { label: "Total Assignments",       value: completedCount + pendingCount, color: PURPLE,    bg: `rgba(139,92,246,0.1)`,  icon: "📋" },
+          { label: "Pending Check/Supervision", value: pendingCount,   color: "#eab308",  bg: "rgba(234,179,8,0.1)",   icon: "⏱" },
+          { label: "Completed Races",          value: completedCount,  color: "#4ade80",  bg: "rgba(74,222,128,0.1)",  icon: "✅" },
         ].map(s => (
           <div key={s.label} className="rounded-xl" style={{ border: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem", background: "rgba(21,19,16,0.5)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
@@ -2024,8 +2013,8 @@ export default function RefereeHub() {
           <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
             <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
               <div>
-                <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{$t("Assignments & Assigned Races", (localStorage.getItem('app-lang') || 'en'))}</h3>
-                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Inspect, monitor, and finalize results for assigned races.", (localStorage.getItem('app-lang') || 'en'))}</p>
+                <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>Assigned Races & Duties</h3>
+                <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>Inspect, monitor, and finalize results for races assigned to you.</p>
               </div>
             </div>
             {isMobile ? (
@@ -2062,24 +2051,24 @@ export default function RefereeHub() {
                           {isPending && !isRunning && (
                             race.preCheckCompleted ? (
                               <button onClick={() => handleStartRace(race)} style={{ padding: "0.375rem 0.75rem", background: "#10b981", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                                {$t("🟢 Bắt đầu trận", (localStorage.getItem('app-lang') || 'en'))}
+                                🟢 Start Race
                               </button>
                             ) : race.gatesFullySet ? (
                               <button onClick={() => handleStartCheck(race)} style={{ padding: "0.375rem 0.75rem", background: PURPLE, color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                                {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
+                                ☑ Start Pre-Race Check
                               </button>
                             ) : (
                               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
-                                <span style={{ fontSize: "8px", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>{$t("Chưa thiết lập Cổng (Gate)", (localStorage.getItem('app-lang') || 'en'))}</span>
+                                <span style={{ fontSize: "8px", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>Gates Not Set</span>
                                 <button disabled style={{ padding: "0.375rem 0.75rem", background: "#1f1d1a", color: "#555", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "not-allowed", border: "none" }}>
-                                  🔒 {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
+                                  🔒 ☑ Start Pre-Race Check
                                 </button>
                               </div>
                             )
                           )}
                           {isRunning && (
                             <button onClick={() => handleStartSupervise(race)} style={{ padding: "0.375rem 0.75rem", background: "#fbbf24", color: "#000", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                              {$t("👁 Giám sát & Ghi nhận", (localStorage.getItem('app-lang') || 'en'))}
+                              👁 Monitor & Record
                             </button>
                           )}
                           {isStewardsInquiry && (
@@ -2098,12 +2087,12 @@ export default function RefereeHub() {
                                 animation: "pulse 1.5s infinite",
                               }}
                             >
-                              {$t("🔴 Xác nhận kết quả", (localStorage.getItem('app-lang') || 'en'))}
+                              🔴 Confirm Results
                             </button>
                           )}
                           {isOfficial && (
                             <button onClick={() => openStewardReportModal(race.id, race.stewardReport)} style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}>
-                              {$t("📄 Báo cáo Trọng tài", (localStorage.getItem('app-lang') || 'en'))}
+                              📄 Steward Report
                             </button>
                           )}
                         </div>
@@ -2125,20 +2114,20 @@ export default function RefereeHub() {
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead>
                     <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                      {[t.hId, t.hMeeting, t.hTime, t.hDetails, t.hStatus, t.hActions].map((h, i) => (
+                      {["Race ID", "Race Meeting", "Start Time", "Race Details", "Status", "Actions"].map((h, i) => (
                         <th key={h} style={{ padding: "0.75rem 1rem", textAlign: i === 5 ? "right" : "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
-                      <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{$t("Đang tải các trận đấu được giao...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
+                      <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>Loading assigned races...</td></tr>
                     ) : assignedRaces.length === 0 ? (
                       <tr>
                         <td colSpan={6} style={{ padding: "3rem", textAlign: "center" }}>
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
                             <span style={{ fontSize: "2rem" }}>📭</span>
-                            <span style={{ color: "#a0a0a0", fontSize: "0.875rem" }}>{$t("Hiện tại không có trận đấu nào được giao cho bạn.", (localStorage.getItem('app-lang') || 'en'))}</span>
+                            <span style={{ color: "#a0a0a0", fontSize: "0.875rem" }}>No races assigned to you at the moment.</span>
                           </div>
                         </td>
                       </tr>
@@ -2168,24 +2157,24 @@ export default function RefereeHub() {
                             {isPending && !isRunning && (
                               race.preCheckCompleted ? (
                                 <button onClick={() => handleStartRace(race)} style={{ padding: "0.375rem 0.75rem", background: "#10b981", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                                  {$t("🟢 Bắt đầu trận", (localStorage.getItem('app-lang') || 'en'))}
+                                  🟢 Start Race
                                 </button>
                               ) : race.gatesFullySet ? (
                                 <button onClick={() => handleStartCheck(race)} style={{ padding: "0.375rem 0.75rem", background: PURPLE, color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                                  {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
+                                  ☑ Start Pre-Race Check
                                 </button>
                               ) : (
                                 <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
-                                  <span style={{ fontSize: "8px", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>{$t("Chưa thiết lập Cổng (Gate)", (localStorage.getItem('app-lang') || 'en'))}</span>
+                                  <span style={{ fontSize: "8px", color: "#f87171", background: "rgba(239,68,68,0.1)", padding: "0.125rem 0.25rem", borderRadius: "0.25rem" }}>Gates Not Set</span>
                                   <button disabled style={{ padding: "0.375rem 0.75rem", background: "#1f1d1a", color: "#555", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "not-allowed", border: "none" }}>
-                                    🔒 {$t("☑ Bắt đầu kiểm tra", (localStorage.getItem('app-lang') || 'en'))}
+                                    🔒 ☑ Start Pre-Race Check
                                   </button>
                                 </div>
                               )
                             )}
                             {isRunning && (
                               <button onClick={() => handleStartSupervise(race)} style={{ padding: "0.375rem 0.75rem", background: "#fbbf24", color: "#000", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer", border: "none" }}>
-                                {$t("👁 Giám sát & Ghi nhận", (localStorage.getItem('app-lang') || 'en'))}
+                                👁 Monitor & Record
                               </button>
                             )}
                             {isStewardsInquiry && (
@@ -2204,12 +2193,12 @@ export default function RefereeHub() {
                                   animation: "pulse 1.5s infinite",
                                 }}
                               >
-                                {$t("🔴 Xác nhận kết quả", (localStorage.getItem('app-lang') || 'en'))}
+                                🔴 Confirm Results
                               </button>
                             )}
                             {isOfficial && (
                               <button onClick={() => openStewardReportModal(race.id, race.stewardReport)} style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}>
-                                {$t("📄 Báo cáo Trọng tài", (localStorage.getItem('app-lang') || 'en'))}
+                                📄 Steward Report
                               </button>
                             )}
                           </td>
@@ -2240,7 +2229,7 @@ export default function RefereeHub() {
           <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "32rem", overflow: "hidden" }}>
             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                {$t("Báo cáo chính thức của Trọng tài", (localStorage.getItem('app-lang') || 'en'))}
+                Steward's Official Report
               </h3>
               <button onClick={() => setShowReportModal(false)} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "1.25rem" }}>✕</button>
             </div>
@@ -2251,7 +2240,7 @@ export default function RefereeHub() {
               </div>
             </div>
             <div style={{ padding: "1rem 1.5rem", background: "rgba(0,0,0,0.2)", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "flex-end" }}>
-              <button onClick={() => setShowReportModal(false)} style={{ padding: "0.5rem 1rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Đóng", (localStorage.getItem('app-lang') || 'en'))}</button>
+              <button onClick={() => setShowReportModal(false)} style={{ padding: "0.5rem 1rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Close</button>
             </div>
           </div>
         </div>

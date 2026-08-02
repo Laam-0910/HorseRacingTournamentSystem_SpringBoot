@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../../lib/utils";
 import { useAuth } from "../../../../context/AuthContext";
-import { $t } from '@/lib/i18n';
+import WebCamLiveViewer, { BroadcasterInfo } from "../../livestream/WebCamLiveViewer";
 
 interface Race {
   id: number;
@@ -16,58 +16,30 @@ interface Race {
   meetingName: string;
 }
 
-const TRANSLATIONS: Record<string, any> = {
-  en: {
-    title: "Live Arena Watch",
-    selectRace: "Select Race:",
-    loading: "Loading live screen...",
-    noLive: "No Active Live Streams",
-    noLiveSub: "No live broadcast currently running or stream link is empty. Please check back later!",
-    distance: "Distance",
-    trackType: "Track Type",
-    startTime: "Start Time",
-    activeStreams: "Live Streams",
-    watching: "WATCHING",
-    watch: "WATCH",
-    chatHeader: "Live Chat",
-    chatPlaceholder: "Chat here...",
-    send: "Send",
-    online: "Online",
-    chatMock1: "Horse #3 is accelerating insanely fast!",
-    chatMock2: "Jockey Ryan is riding very strategically.",
-    chatMock3: "Amazing! Final lap is here guys!",
-    theaterMode: "Theater Mode",
-    defaultMode: "Default Mode",
-  }
-};
-
 interface ViewLiveProps {
   preselectedRaceId?: number | null;
   onClearPreselect?: () => void;
 }
 
-import WebCamLiveViewer, { BroadcasterInfo } from "../../livestream/WebCamLiveViewer";
-
 export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLiveProps) {
-  const t = TRANSLATIONS.en;
-  const { user } = useAuth(); // Thông tin người dùng hiện tại
+  const { user } = useAuth(); // Current user info
 
-  // State quản lý danh sách live và lựa chọn
+  // State management for live races and selection
   const [liveRaces, setLiveRaces] = useState<Race[]>([]);
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   
-  // State quản lý danh sách Trọng tài / Camera đang phát và camera được chọn
+  // State management for Referee / Camera broadcasters and selected camera
   const [broadcasterList, setBroadcasterList] = useState<BroadcasterInfo[]>([]);
   const [selectedBroadcasterId, setSelectedBroadcasterId] = useState<string | null>(null);
 
-  // State quản lý Chat
+  // State management for Chat
   const [chatMessages, setChatMessages] = useState<{ user: string; text: string; time: string }[]>([]);
   const [newMsg, setNewMsg] = useState("");
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connectionState, setConnectionState] = useState<"connecting" | "connected" | "disconnected">("connecting");
-  const [isTheaterMode, setIsTheaterMode] = useState(false); // Chế độ rạp phim
+  const [isTheaterMode, setIsTheaterMode] = useState(false);
 
   // Generate or retrieve persistent guest username
   const [username] = useState<string>(() => {
@@ -112,9 +84,9 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
 
   useEffect(() => {
     setChatMessages([
-      { user: "User_881", text: $t("Ngựa số 3 tăng tốc kinh quá!", (localStorage.getItem('app-lang') || 'en')), time: "14:15" },
-      { user: "SpectatorX", text: $t("Jockey nài ngựa Ryan chạy rất thông minh.", (localStorage.getItem('app-lang') || 'en')), time: "14:16" },
-      { user: "RaceAnalyst", text: $t("Quá hay! Vòng cuối rồi anh em ơi!", (localStorage.getItem('app-lang') || 'en')), time: "14:17" }
+      { user: "User_881", text: "Horse #3 is accelerating insanely fast!", time: "14:15" },
+      { user: "SpectatorX", text: "Jockey Ryan is riding very strategically.", time: "14:16" },
+      { user: "RaceAnalyst", text: "Amazing! Final lap is here guys!", time: "14:17" }
     ]);
   }, []);
 
@@ -233,7 +205,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
         >
           <span className="text-base">⚠️</span>
           <span>
-            {$t("Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)", (localStorage.getItem('app-lang') || 'en'))}
+            Stewards' Inquiry - Race under inquiry by referees for possible violation (Official results pending)
           </span>
         </div>
       )}
@@ -248,7 +220,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse"></span>
-          <span>{$t("Phòng xem trực tiếp", (localStorage.getItem('app-lang') || 'en'))}</span>
+          <span>Live Stream Arena</span>
         </h3>
         {selectedRace && (
           <button
@@ -256,21 +228,21 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
             className="bg-white/[0.03] hover:bg-white/[0.08] border border-white/5 hover:border-amber-500/20 text-white text-xs font-mono px-3.5 py-1.5 rounded-xl transition flex items-center space-x-1.5"
           >
             <span>🎭</span>
-            <span>{isTheaterMode ? $t("Mặc định", (localStorage.getItem('app-lang') || 'en')) : $t("Rạp phim", (localStorage.getItem('app-lang') || 'en'))}</span>
+            <span>{isTheaterMode ? "Default Mode" : "Theater Mode"}</span>
           </button>
         )}
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center h-96 bg-white/[0.01] border border-white/5 rounded-2xl">
-          <p className="text-sm text-white/40 font-mono">{$t("Đang tải dữ liệu...", (localStorage.getItem('app-lang') || 'en'))}</p>
+          <p className="text-sm text-white/40 font-mono">Loading live screen...</p>
         </div>
       ) : selectedRace ? (
         <div className={`gap-6 ${isTheaterMode ? "flex flex-col" : "grid grid-cols-1 lg:grid-cols-3"}`}>
           
           {/* Player & Stats */}
           <div className={`${isTheaterMode ? "w-full" : "lg:col-span-2"} space-y-4`}>
-            {/* Multi-Camera Angle Selector Tabs - Ưu tiên WebCam Trọng tài trước, YouTube cuối cùng */}
+            {/* Multi-Camera Angle Selector Tabs */}
             <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
               {broadcasterList.length > 0 ? (
                 broadcasterList.map((b) => {
@@ -296,7 +268,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                         gap: "4px"
                       }}
                     >
-                      <span>📱</span> {$t(`Cam ${b.name}`, (localStorage.getItem('app-lang') || 'en'))}
+                      <span>📱</span> Ref Cam {b.name}
                     </button>
                   );
                 })
@@ -317,11 +289,11 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                     gap: "4px"
                   }}
                 >
-                  <span>📱</span> {$t("Referee Camera Angle (Awaiting Connection)", (localStorage.getItem('app-lang') || 'en'))}
+                  <span>📱</span> Referee Camera Angle (Awaiting Connection)
                 </button>
               )}
 
-              {/* Nút YouTube LUÔN LUÔN xếp ở Cuối Cùng */}
+              {/* YouTube Button */}
               {selectedRace?.youtubeLiveUrl && (
                 <button
                   onClick={() => setSelectedRace(prev => prev ? { ...prev, streamMode: "YOUTUBE" } : prev)}
@@ -339,7 +311,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                     gap: "4px"
                   }}
                 >
-                  <span>📺</span> {$t("Main YouTube Channel", (localStorage.getItem('app-lang') || 'en'))}
+                  <span>📺</span> Main YouTube Channel
                 </button>
               )}
             </div>
@@ -391,15 +363,15 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
               
               <div className="grid grid-cols-3 gap-4 pt-3 border-t border-white/5 text-xs font-mono text-white/60">
                 <div>
-                  <span className="block text-white/40 text-[10px] uppercase mb-0.5">{$t("Cự ly", (localStorage.getItem('app-lang') || 'en'))}</span>
+                  <span className="block text-white/40 text-[10px] uppercase mb-0.5">Distance</span>
                   <span className="text-white font-semibold">{selectedRace.distanceMeters}m</span>
                 </div>
                 <div>
-                  <span className="block text-white/40 text-[10px] uppercase mb-0.5">{$t("Đường đua", (localStorage.getItem('app-lang') || 'en'))}</span>
+                  <span className="block text-white/40 text-[10px] uppercase mb-0.5">Track Type</span>
                   <span className="text-white font-semibold">{selectedRace.trackType}</span>
                 </div>
                 <div>
-                  <span className="block text-white/40 text-[10px] uppercase mb-0.5">{$t("Khởi tranh", (localStorage.getItem('app-lang') || 'en'))}</span>
+                  <span className="block text-white/40 text-[10px] uppercase mb-0.5">Start Time</span>
                   <span className="text-white font-semibold">{selectedRace.startTime}</span>
                 </div>
               </div>
@@ -413,7 +385,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
             {liveRaces.length > 0 && (
               <div className="bg-white/[0.015] border border-white/5 p-4 rounded-2xl space-y-3">
                 <h5 className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider">
-                  {$t("Luồng Phát Trực Tiếp", (localStorage.getItem('app-lang') || 'en'))} ({liveRaces.length})
+                  Live Streams ({liveRaces.length})
                 </h5>
                 <div className="space-y-2 max-h-[140px] overflow-y-auto scrollbar-hide">
                   {liveRaces.map((r) => {
@@ -437,7 +409,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                             ? "bg-amber-500/20 text-amber-400" 
                             : "bg-rose-500/10 text-rose-400 animate-pulse"
                         }`}>
-                          {isCurrent ? $t("ĐANG XEM", (localStorage.getItem('app-lang') || 'en')) : $t("XEM", (localStorage.getItem('app-lang') || 'en'))}
+                          {isCurrent ? "WATCHING" : "WATCH"}
                         </span>
                       </button>
                     );
@@ -450,12 +422,12 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
             <div className="flex flex-col h-[280px] bg-white/[0.015] border border-white/5 rounded-2xl overflow-hidden flex-grow">
               <div className="px-4 py-3 bg-[#151310] border-b border-white/5 flex items-center justify-between">
                 <h5 className="text-[10px] font-mono font-bold text-amber-500 uppercase tracking-wider">
-                  {$t("Trò chuyện", (localStorage.getItem('app-lang') || 'en'))}
+                  Live Chat
                 </h5>
                 {connectionState === "connected" ? (
                   <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[9px] font-mono uppercase flex items-center gap-1.5">
                     <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
-                    {$t("Online", (localStorage.getItem('app-lang') || 'en'))}
+                    Online
                   </span>
                 ) : connectionState === "connecting" ? (
                   <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[9px] font-mono uppercase flex items-center gap-1.5">
@@ -509,14 +481,14 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                   type="text"
                   value={newMsg}
                   onChange={e => setNewMsg(e.target.value)}
-                  placeholder={$t("Chat ở đây...", (localStorage.getItem('app-lang') || 'en'))}
+                  placeholder="Chat here..."
                   className="flex-1 bg-black/40 border border-white/5 focus:border-amber-500/30 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none placeholder-white/20"
                 />
                 <button
                   type="submit"
                   className="bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold px-3 rounded-lg transition"
                 >
-                  {$t("Gửi", (localStorage.getItem('app-lang') || 'en'))}
+                  Send
                 </button>
               </form>
             </div>
@@ -527,9 +499,9 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
       ) : (
         <div className="flex flex-col items-center justify-center py-20 bg-white/[0.01] border border-white/5 rounded-2xl text-center space-y-3">
           <div className="text-3xl">📺</div>
-          <h4 className="text-sm font-bold text-white font-serif">{$t("Hiện tại không có trận đấu nào livestream", (localStorage.getItem('app-lang') || 'en'))}</h4>
+          <h4 className="text-sm font-bold text-white font-serif">No Active Live Streams</h4>
           <p className="text-xs text-white/40 max-w-sm">
-            {$t("Admin chưa khởi chạy livestream hoặc không có trận đấu nào đang diễn ra. Vui lòng quay lại sau!", (localStorage.getItem('app-lang') || 'en'))}
+            Admin has not started a livestream yet or no race is currently running. Please check back later!
           </p>
         </div>
       )}

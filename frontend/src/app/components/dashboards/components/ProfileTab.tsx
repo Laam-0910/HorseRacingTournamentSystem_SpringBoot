@@ -1,46 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../../../../context/AuthContext";
 import { api, getErrMsg } from "../../../../lib/api";
-import { $t } from '@/lib/i18n';
 
 interface Props {
   roleColor: string;
   roleLabel: string;
 }
-
-const PROFILE_TRANSLATIONS: Record<string, any> = {
-  en: {
-    personalProfile: "Edit Profile",
-    emailAddress: "Email Address",
-    saveChanges: "Save Changes",
-    savingChanges: "Saving...",
-    passwordSettings: "Password",
-    passwordSettingsDesc: "Request a security code via Gmail to change your password.",
-    changePassBtn: "Request Password Change",
-    sendingCode: "Sending...",
-    twoFactor: "2-Factor Auth (2FA)",
-    twoFactorDesc: "Protect your account with email OTP on every login.",
-    noteAdmin: "Note: Admins & Referees bypass 2FA.",
-    upload: "Upload",
-    fullName: "Full Name",
-    weight: "Weight (kg)",
-    verCode: "OTP Code",
-    enterOtp: "Enter 6-digit OTP",
-    newPass: "New Password",
-    confirmPass: "Confirm",
-    atLeast4: "Min 8 chars (uppercase, digit, special)",
-    reEnter: "Re-enter Password",
-    updatePass: "Update",
-    updating: "Processing...",
-    cancel: "Cancel",
-    avatarSizeErr: "Image must be < 1.5MB",
-    enabled: "Enabled",
-    disabled: "Disabled",
-    successMsg: "✅ Saved successfully!",
-    biography: "Biography",
-    biographyPlace: "Share your jockey experience..."
-  }
-};
 
 // ── Component hiển thị Tab Hồ sơ cá nhân ──────────────────────────────
 export default function ProfileTab({ roleColor, roleLabel }: Props) {
@@ -60,8 +25,6 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
-  const st = PROFILE_TRANSLATIONS.en;
   
   // Khởi tạo các state thông tin cá nhân
   const [fullName, setFullName] = useState(user?.fullName || user?.username || ""); // Họ và tên
@@ -100,7 +63,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 1.5 * 1024 * 1024) { 
-        setProfileErr($t("Avatar image size must be under 1.5MB.")); return;
+        setProfileErr("Avatar image size must be under 1.5MB."); return;
       }
       const reader = new FileReader();
       reader.onload = (event) => { if (event.target?.result) setAvatar(event.target.result as string); };
@@ -114,7 +77,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     if (user?.roleId === 3 && weight) {
       const wVal = parseFloat(weight);
       if (isNaN(wVal) || wVal < 45 || wVal > 100) {
-        setProfileErr($t("Jockey weight must be between 45kg and 100kg."));
+        setProfileErr("Jockey weight must be between 45kg and 100kg.");
         return;
       }
     }
@@ -127,13 +90,13 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
       });
       if (res.success && res.user) {
         setUser({ ...user, fullName: res.user.fullName, email: res.user.email, weight: res.user.weight, avatar: res.user.avatar, biography: res.user.biography, requireOtp: res.user.requireOtp ?? otpEnabled } as any);
-        setProfileMsg($t("✅ Profile saved successfully!"));
+        setProfileMsg("✅ Profile saved successfully!");
         setTimeout(() => setProfileMsg(""), 3000);
       } else {
         setProfileErr(res.error || "Failed to update profile.");
       }
     } catch (err: any) {
-      setProfileErr(getErrMsg(err, "Error."));
+      setProfileErr(getErrMsg(err, "Error updating profile."));
     } finally {
       setProfileLoading(false);
     }
@@ -145,9 +108,9 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
       const res = await api.post<any>("/auth/forgot-password", { email: user?.email });
       if (res.success && res.otpTxId) {
         setOtpTxId(res.otpTxId); setPassMode(true);
-        setPassMsg("🔑 Code sent!");
+        setPassMsg("🔑 Verification code sent to your email!");
       } else {
-        setPassErr(res.error || "Error");
+        setPassErr(res.error || "Error sending verification code.");
       }
     } catch (err: any) {
       setPassErr("Failed to send code.");
@@ -159,17 +122,16 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const handleConfirmPassChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPassMsg(""); setPassErr("");
-    const lang = localStorage.getItem('app-lang') || 'en';
 
     if (newPassword !== confirmPassword) { 
-      setPassErr($t("Passwords do not match.")); 
+      setPassErr("Passwords do not match."); 
       return; 
     }
 
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(newPassword)) {
       setPassErr(
-        $t("New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)")
+        "New password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)"
       );
       return;
     }
@@ -178,13 +140,13 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     try {
       const res = await api.post<any>("/auth/verify-forgot-password", { otpTxId, otp: otpCode.trim(), newPassword });
       if (res.success) {
-        setPassMsg("✅ " + $t("Saved successfully!"));
+        setPassMsg("✅ Password updated successfully!");
         setTimeout(() => { setPassMode(false); setOtpCode(""); setNewPassword(""); setConfirmPassword(""); setPassMsg(""); }, 2000);
       } else {
-        setPassErr(res.error || $t("Verification failed"));
+        setPassErr(res.error || "Verification failed");
       }
     } catch (err: any) {
-      setPassErr(getErrMsg(err, "Error."));
+      setPassErr(getErrMsg(err, "Error verifying code."));
     } finally {
       setPassLoading(false);
     }
@@ -198,7 +160,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
       setOtpEnabled(next);
       setUser({ ...user, requireOtp: next } as any);
     } catch {
-      setOtpMsg("Error");
+      setOtpMsg("Error toggling 2FA");
     } finally {
       setOtpLoading(false);
     }
@@ -232,6 +194,12 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     display: "block", fontSize: "0.75rem", fontWeight: 600, color: "rgba(255,255,255,0.6)",
     marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "1px", fontFamily: "'Outfit', 'Inter', sans-serif"
   };
+
+  const displayRoleLabel = roleLabel === "Horse Owner" || roleLabel === "Chủ ngựa" ? "HORSE OWNER" 
+    : roleLabel === "Jockey" || roleLabel === "Nài ngựa" ? "JOCKEY" 
+    : roleLabel === "Admin" || roleLabel === "Quản trị viên" ? "ADMIN"
+    : roleLabel === "Referee" || roleLabel === "Trọng tài" ? "REFEREE"
+    : roleLabel.toUpperCase();
 
   return (
     <div style={{ position: "relative", minHeight: "85vh", padding: isMobile ? "0.5rem" : "1.5rem", fontFamily: "'Outfit', 'Inter', sans-serif" }}>
@@ -313,14 +281,14 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                </div>
                <div className="glass-badge" style={{ position: "absolute", bottom: "-5px", left: "50%", transform: "translateX(-50%)", padding: "4px 12px", borderRadius: "100px", fontSize: "0.65rem", fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: "4px" }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  {$t("Đổi ảnh", (localStorage.getItem('app-lang') || 'en'))}
+                  Change Avatar
                </div>
              </div>
 
              <div style={{ zIndex: 2, textAlign: isMobile ? "center" : "left" }}>
                <h2 style={{ fontSize: "2.5rem", fontWeight: 800, color: "#fff", margin: "0 0 0.5rem 0", letterSpacing: "-1px" }}>{user?.fullName || user?.username}</h2>
                <span style={{ color: roleColor, padding: "0.4rem 1.25rem", borderRadius: "100px", fontSize: "0.8rem", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase", background: `${roleColor}15`, border: `1px solid ${roleColor}33` }}>
-                 {$t(roleLabel === "Horse Owner" ? "OWNER" : roleLabel.toUpperCase())}
+                 {displayRoleLabel}
                </span>
              </div>
           </div>
@@ -358,7 +326,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                    </div>
                    <div className="glass-badge" style={{ position: "absolute", bottom: "-10px", left: "50%", transform: "translateX(-50%)", padding: "4px 12px", borderRadius: "100px", fontSize: "0.65rem", fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: "4px" }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                      {$t("Đổi ảnh", (localStorage.getItem('app-lang') || 'en'))}
+                      Change Avatar
                    </div>
                  </div>
 
@@ -366,7 +334,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                  
                  <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", zIndex: 2, flexWrap: "wrap" }}>
                    <span className="glass-badge" style={{ color: roleColor, padding: "0.4rem 1rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>
-                     {$t("Nài ngựa", (localStorage.getItem('app-lang') || 'en'))}
+                     Jockey
                    </span>
                    {(user.totalTop3Finishes || 0) > 10 && (
                      <span style={{ background: "rgba(250, 204, 21, 0.15)", color: "#facc15", border: "1px solid rgba(250, 204, 21, 0.3)", padding: "0.4rem 1rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>
@@ -379,24 +347,24 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
               {/* BENTO BOX 2: Stats (Spans 8 cols) */}
               <div style={{ ...bentoBoxStyle, gridColumn: isMobile ? "span 1" : isTablet ? "span 2" : "span 8", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: "2rem", padding: "2rem" }}>
                  <div style={{ textAlign: "center" }}>
-                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{$t("Trận tham gia", (localStorage.getItem('app-lang') || 'en'))}</p>
+                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>Races Participated</p>
                    <h1 style={{ fontSize: "4.5rem", fontWeight: 800, margin: 0, background: `linear-gradient(to bottom, #fff, rgba(255,255,255,0.4))`, WebkitBackgroundClip: "text", color: "transparent", lineHeight: 1 }}>{user.totalRacesParticipated || 0}</h1>
                  </div>
                  
                  <div style={{ width: "1px", height: "80px", background: "rgba(255,255,255,0.1)", display: isMobile ? "none" : "block" }} />
                  
                  <div style={{ textAlign: "center" }}>
-                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{$t("Lọt Top 3", (localStorage.getItem('app-lang') || 'en'))}</p>
+                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>Top 3 Finishes</p>
                    <h1 style={{ fontSize: "4.5rem", fontWeight: 800, margin: 0, background: `linear-gradient(to bottom, #10b981, #047857)`, WebkitBackgroundClip: "text", color: "transparent", lineHeight: 1 }}>{user.totalTop3Finishes || 0}</h1>
                  </div>
 
                  <div style={{ width: "1px", height: "80px", background: "rgba(255,255,255,0.1)", display: isMobile ? "none" : "block" }} />
                  <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{$t("Danh hiệu", (localStorage.getItem('app-lang') || 'en'))}</p>
+                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>Achievement Title</p>
                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.5rem" }}>
                      <span style={{ fontSize: "3rem", filter: "drop-shadow(0 0 15px rgba(251, 191, 36, 0.4))" }}>{(user.totalTop3Finishes || 0) > 10 ? "🏆" : "🏅"}</span>
                      <h2 style={{ fontSize: "2rem", fontWeight: 800, margin: 0, color: "#fff" }}>
-                        {(user.totalTop3Finishes || 0) > 10 ? <span style={{ color: "#fbbf24" }}>{$t("Vô địch", (localStorage.getItem('app-lang') || 'en'))}</span> : <span style={{ color: "#60a5fa" }}>{$t("Tiềm năng", (localStorage.getItem('app-lang') || 'en'))}</span>}
+                        {(user.totalTop3Finishes || 0) > 10 ? <span style={{ color: "#fbbf24" }}>Champion</span> : <span style={{ color: "#60a5fa" }}>Rising Star</span>}
                      </h2>
                    </div>
                  </div>
@@ -410,7 +378,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={roleColor} strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                </div>
-               <h3 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff", margin: 0 }}>{$t("Cập nhật hồ sơ", (localStorage.getItem('app-lang') || 'en'))}</h3>
+               <h3 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff", margin: 0 }}>Edit Profile</h3>
              </div>
 
              <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "1.25rem", flex: 1 }}>
@@ -418,12 +386,12 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                 
                 <div style={{ display: "flex", gap: "1.25rem", flexDirection: isMobile ? "column" : "row" }}>
                   <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>{$t("Họ và tên", (localStorage.getItem('app-lang') || 'en'))}</label>
+                    <label style={labelStyle}>Full Name</label>
                     <input type="text" className="bento-input" required value={fullName} onChange={e => setFullName(e.target.value)} style={inputStyle} />
                   </div>
                   {user?.roleId === 3 && (
                     <div style={{ width: isMobile ? "100%" : "120px" }}>
-                      <label style={labelStyle}>{$t("Cân nặng (kg)", (localStorage.getItem('app-lang') || 'en'))}</label>
+                      <label style={labelStyle}>Weight (kg)</label>
                       <input type="number" step="0.1" className="bento-input" required value={weight} onChange={e => setWeight(e.target.value)} style={inputStyle} />
                     </div>
                   )}
@@ -431,10 +399,10 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
 
                 {user?.roleId === 3 && (
                   <div>
-                    <label style={labelStyle}>{$t("Giới thiệu cá nhân", (localStorage.getItem('app-lang') || 'en'))}</label>
+                    <label style={labelStyle}>Biography</label>
                     <textarea 
                       className="bento-input" 
-                      placeholder={$t("Chia sẻ kinh nghiệm làm nài ngựa của bạn...", (localStorage.getItem('app-lang') || 'en'))} 
+                      placeholder="Share your jockey experience..." 
                       value={biography} 
                       onChange={e => setBiography(e.target.value)} 
                       style={{ ...inputStyle, minHeight: "100px", resize: "vertical" }} 
@@ -443,7 +411,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                 )}
 
                 <div>
-                  <label style={labelStyle}>{$t("Địa chỉ Email", (localStorage.getItem('app-lang') || 'en'))}</label>
+                  <label style={labelStyle}>Email Address</label>
                   <input type="email" className="bento-input" disabled readOnly value={email} style={{ ...inputStyle, opacity: 0.6, cursor: "not-allowed" }} />
                 </div>
 
@@ -451,7 +419,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                   {profileMsg && <div style={{ padding: "0.85rem", borderRadius: "12px", background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16,185,129,0.3)", color: "#10b981", fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem", textAlign: "center" }}>{profileMsg}</div>}
                   {profileErr && <div style={{ padding: "0.85rem", borderRadius: "12px", background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem", textAlign: "center" }}>{profileErr}</div>}
                   <button type="submit" disabled={profileLoading} className="bento-btn" style={{ width: "100%", padding: "1.2rem", background: `linear-gradient(135deg, ${roleColor}, ${roleColor}aa)`, color: "#fff", border: "none", borderRadius: "16px", fontSize: "1rem", fontWeight: 700, cursor: profileLoading ? "not-allowed" : "pointer", transition: "all 0.3s" }}>
-                    {profileLoading ? $t("Đang lưu...", (localStorage.getItem('app-lang') || 'en')) : $t("Lưu thay đổi", (localStorage.getItem('app-lang') || 'en'))}
+                    {profileLoading ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
              </form>
@@ -464,39 +432,39 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                  <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                  </div>
-                 <h3 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff", margin: 0 }}>{$t("Đổi mật khẩu", (localStorage.getItem('app-lang') || 'en'))}</h3>
+                 <h3 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff", margin: 0 }}>Password Settings</h3>
                </div>
 
                {!passMode ? (
                  <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                   <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: "2rem" }}>{$t("Yêu cầu mã xác minh qua Gmail để thiết lập mật khẩu mới.", (localStorage.getItem('app-lang') || 'en'))}</p>
+                   <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: "2rem" }}>Request a security code via Gmail to change your password.</p>
                    <div style={{ marginTop: "auto" }}>
                      <button onClick={handleRequestPassCode} disabled={passLoading} className="bento-btn" style={{ width: "100%", padding: "1.2rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", borderRadius: "16px", fontSize: "0.95rem", fontWeight: 600, cursor: passLoading ? "not-allowed" : "pointer", transition: "all 0.3s" }}>
-                       {passLoading ? $t("Đang gửi mã...", (localStorage.getItem('app-lang') || 'en')) : $t("Yêu cầu đổi mật khẩu", (localStorage.getItem('app-lang') || 'en'))}
+                       {passLoading ? "Sending..." : "Request Password Change"}
                      </button>
                    </div>
                  </div>
                ) : (
                  <form onSubmit={handleConfirmPassChange} style={{ display: "flex", flexDirection: "column", gap: "1.25rem", height: "100%" }}>
                    <div>
-                     <label style={labelStyle}>{st.verCode}</label>
-                     <input type="text" className="bento-input" maxLength={6} required placeholder={st.enterOtp} value={otpCode} onChange={e => setOtpCode(e.target.value)} style={inputStyle} />
+                     <label style={labelStyle}>OTP Code</label>
+                     <input type="text" className="bento-input" maxLength={6} required placeholder="Enter 6-digit OTP" value={otpCode} onChange={e => setOtpCode(e.target.value)} style={inputStyle} />
                    </div>
                    <div style={{ display: "flex", gap: "1.25rem" }}>
                      <div style={{ flex: 1 }}>
-                       <label style={labelStyle}>{st.newPass}</label>
-                       <input type="password" className="bento-input" required placeholder={st.atLeast4} value={newPassword} onChange={e => setNewPassword(e.target.value)} style={inputStyle} />
+                       <label style={labelStyle}>New Password</label>
+                       <input type="password" className="bento-input" required placeholder="Min 8 chars (uppercase, digit, special)" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={inputStyle} />
                      </div>
                      <div style={{ flex: 1 }}>
-                       <label style={labelStyle}>{st.confirmPass}</label>
-                       <input type="password" className="bento-input" required placeholder={st.reEnter} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={inputStyle} />
+                       <label style={labelStyle}>Confirm Password</label>
+                       <input type="password" className="bento-input" required placeholder="Re-enter new password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={inputStyle} />
                      </div>
                    </div>
                    {passMsg && <div style={{ color: "#10b981", fontSize: "0.85rem", fontWeight: 600, textAlign: "center" }}>{passMsg}</div>}
                    {passErr && <div style={{ color: "#ef4444", fontSize: "0.85rem", fontWeight: 600, textAlign: "center" }}>{passErr}</div>}
                    <div style={{ display: "flex", gap: "1rem", marginTop: "auto", paddingTop: "0.5rem" }}>
-                     <button type="submit" disabled={passLoading} className="bento-btn" style={{ flex: 2, padding: "1.1rem", background: "#fff", color: "#000", border: "none", borderRadius: "16px", fontSize: "1rem", fontWeight: 700, cursor: passLoading ? "not-allowed" : "pointer" }}>{st.updatePass}</button>
-                     <button type="button" onClick={() => setPassMode(false)} style={{ flex: 1, padding: "1.1rem", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: "16px", fontSize: "1rem", fontWeight: 600, cursor: "pointer" }}>{st.cancel}</button>
+                     <button type="submit" disabled={passLoading} className="bento-btn" style={{ flex: 2, padding: "1.1rem", background: "#fff", color: "#000", border: "none", borderRadius: "16px", fontSize: "1rem", fontWeight: 700, cursor: passLoading ? "not-allowed" : "pointer" }}>Update Password</button>
+                     <button type="button" onClick={() => setPassMode(false)} style={{ flex: 1, padding: "1.1rem", background: "transparent", border: "1px solid rgba(255,255,255,0.2)", color: "#fff", borderRadius: "16px", fontSize: "1rem", fontWeight: 600, cursor: "pointer" }}>Cancel</button>
                    </div>
                  </form>
                )}
@@ -510,9 +478,9 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={otpEnabled ? "#10b981" : "#fff"} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                    </div>
                    <div>
-                     <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#fff", margin: "0 0 0.25rem 0" }}>{$t("Bảo mật 2 Lớp (2FA)", (localStorage.getItem('app-lang') || 'en'))}</h3>
+                     <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#fff", margin: "0 0 0.25rem 0" }}>2-Factor Auth (2FA)</h3>
                      <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", padding: "0.2rem 0.6rem", borderRadius: "100px", background: otpEnabled ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.1)", color: otpEnabled ? "#10b981" : "rgba(255,255,255,0.5)", display: "inline-block" }}>
-                       {otpEnabled ? $t("Đang Bật", (localStorage.getItem('app-lang') || 'en')) : $t("Đã Tắt", (localStorage.getItem('app-lang') || 'en'))}
+                       {otpEnabled ? "Enabled" : "Disabled"}
                      </span>
                    </div>
                  </div>
@@ -524,12 +492,12 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                </div>
                
                <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: 0 }}>
-                 {$t("Bảo vệ tài khoản bằng mã OTP gửi qua email mỗi lần đăng nhập.", (localStorage.getItem('app-lang') || 'en'))}
+                 Protect your account with email OTP on every login.
                </p>
 
                <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
                  <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", lineHeight: 1.5, margin: 0 }}>
-                   {$t("Lưu ý: Quản trị viên & Trọng tài không bắt buộc dùng 2FA.", (localStorage.getItem('app-lang') || 'en'))}
+                   Note: Admins & Referees bypass 2FA.
                  </p>
                </div>
             </div>

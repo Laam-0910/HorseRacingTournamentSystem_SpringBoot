@@ -1,11 +1,10 @@
-import { $t } from '@/lib/i18n';
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
 import { Pagination } from "../common/Pagination";
 
-// Bản dịch Anh hóa nhãn hiển thị cho từng trạng thái trận đấu
+// English labels for race statuses
 const statusLabels: Record<string, string> = {
   SCHEDULED:          "Scheduled",
   DECLARATION_OPEN:   "Declaration Open",
@@ -19,12 +18,11 @@ const statusLabels: Record<string, string> = {
 };
 
 /**
- * Hàm sinh nhãn trạng thái (Status Badge) được định dạng kiểu CSS & phối màu tùy biến theo trạng thái cuộc đua
+ * Status Badge component formatted for race status
  */
 function statusBadge(status: string) {
   const s = (status ?? "").toUpperCase();
   
-  // Định nghĩa màu nền, màu chữ và nội dung nhãn dịch cho mỗi trạng thái
   const cfg: Record<string, { bg: string; color: string; label: string }> = {
     SCHEDULED:          { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.SCHEDULED },
     DECLARATION_OPEN:   { bg: "rgba(59,130,246,0.1)",  color: "#60a5fa", label: statusLabels.DECLARATION_OPEN },
@@ -44,41 +42,16 @@ function statusBadge(status: string) {
   );
 }
 
-// Từ điển tiếng Anh bổ trợ dịch giao diện
-const TRANSLATIONS: Record<string, Record<string, string>> = {
-  en: {
-    refereeSchedule: "Referee Schedule",
-    scheduleSub: "List of upcoming and past races where you are assigned as a steward.",
-    scheduleHeader: "Schedule",
-    meetingVenue: "Meeting & Venue",
-    raceDetails: "Race & Details",
-    status: "Status",
-    loadingSchedule: "Loading schedule...",
-    noDuties: "No duties assigned to your schedule."
-  }
-};
-
-/**
- * Component RefereeDuties - Lịch làm việc/phân công nhiệm vụ của Trọng tài.
- * Liệt kê toàn bộ các cuộc đua (races) mà trọng tài hiện tại được Ban tổ chức (Admin)
- * chỉ định giám sát trong mùa giải.
- */
 export default function RefereeDuties() {
   const { user } = useAuth();
-  // State lưu danh sách cuộc đua được phân công giám sát
   const [schedule, setSchedule] = useState<any[]>([]);
-  // Trạng thái chờ khi gọi API
   const [loading, setLoading] = useState(true);
-  // Trạng thái Responsive Mobile
   const [isMobile, setIsMobile] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
-  const t = TRANSLATIONS.en;
-
-  // Lắng nghe thay đổi kích thước màn hình để tự động điều chỉnh bố cục UI
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -86,7 +59,6 @@ export default function RefereeDuties() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Gọi API lấy thông tin phân công của Trọng tài dựa trên mã user ID
   useEffect(() => {
     if (!user) return;
     api.get<any>(`/referee/${user.id}/dashboard`)
@@ -97,21 +69,21 @@ export default function RefereeDuties() {
 
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
-      {/* Khối tiêu đề */}
+      {/* Header Block */}
       <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)" }}>
-        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{$t("Lịch trình trọng tài", (localStorage.getItem('app-lang') || 'en'))}</h3>
+        <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>Referee Schedule</h3>
         <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>
-          {$t("Danh sách các cuộc đua sắp diễn ra và đã diễn ra mà bạn được phân công làm trọng tài.", (localStorage.getItem('app-lang') || 'en'))}
+          List of upcoming and past races where you are assigned as a steward.
         </p>
       </div>
 
-      {/* Hiển thị giao diện danh sách thẻ (card) trên Mobile */}
+      {/* Mobile Card Layout */}
       {isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
           {loading ? (
-            <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>{$t("Đang tải lịch trình...", (localStorage.getItem('app-lang') || 'en'))}</p>
+            <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>Loading schedule...</p>
           ) : schedule.length === 0 ? (
-            <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem", textAlign: "center", padding: "1rem" }}>{$t("Không có nhiệm vụ nào được phân công cho lịch trình của bạn.", (localStorage.getItem('app-lang') || 'en'))}</p>
+            <p style={{ color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem", textAlign: "center", padding: "1rem" }}>No duties assigned to your schedule.</p>
           ) : schedule.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((item: any, i: number) => {
             const race    = item.race    ?? item;
             const meeting = item.meeting ?? {};
@@ -151,23 +123,23 @@ export default function RefereeDuties() {
           )}
         </div>
       ) : (
-        /* Hiển thị giao diện dạng Bảng (table) trên Desktop */
+        /* Desktop Table Layout */
         <div style={{ overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                {[$t("Lịch trình", (localStorage.getItem('app-lang') || 'en')), $t("Giải đua & Địa điểm", (localStorage.getItem('app-lang') || 'en')), $t("Trận đấu & Chi tiết", (localStorage.getItem('app-lang') || 'en')), $t("Trạng thái", (localStorage.getItem('app-lang') || 'en'))].map(h => (
+                {["Schedule", "Meeting & Venue", "Race & Details", "Status"].map(h => (
                   <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{$t("Đang tải lịch trình...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
+                <tr><td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>Loading schedule...</td></tr>
               ) : schedule.length === 0 ? (
                 <tr>
                   <td colSpan={4} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontFamily: "monospace", fontSize: "0.875rem" }}>
-                    {$t("Không có nhiệm vụ nào được phân công cho lịch trình của bạn.", (localStorage.getItem('app-lang') || 'en'))}
+                    No duties assigned to your schedule.
                   </td>
                 </tr>
               ) : schedule.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((item: any, i: number) => {
@@ -179,25 +151,21 @@ export default function RefereeDuties() {
                     onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"}
                     onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}
                   >
-                    {/* Cột 1: Thời gian bắt đầu trận đấu */}
                     <td style={{ padding: "1rem", fontFamily: "monospace", fontSize: "0.8rem", color: "#f4f2ec" }}>
                       {formatDateTime(race.startTime ?? item.startTime) || "—"}
                     </td>
-                    {/* Cột 2: Giải hội đua & địa danh diễn ra */}
                     <td style={{ padding: "1rem" }}>
                       <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>{meeting.name ?? item.meetingName ?? "—"}</div>
                       <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
                         📍 {meeting.venue ?? item.venue ?? "—"}
                       </div>
                     </td>
-                    {/* Cột 3: Mã cuộc đua và chi tiết thể loại */}
                     <td style={{ padding: "1rem" }}>
                       <div style={{ fontWeight: 600, color: "#f4f2ec", fontSize: "0.875rem" }}>Race #{race.id ?? item.raceId}</div>
                       <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
                         {formatClassLevel(race.classLevel)} · {race.distanceMeters}m · {race.trackType}
                       </div>
                     </td>
-                    {/* Cột 4: Badge trạng thái cuộc đua */}
                     <td style={{ padding: "1rem" }}>{statusBadge(race.status ?? item.status)}</td>
                   </tr>
                 );

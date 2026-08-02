@@ -1,52 +1,23 @@
-import { $t } from '@/lib/i18n';
 import { useState, useEffect } from "react";
 import { useAuth } from "../../../context/AuthContext";
 import { api } from "../../../lib/api";
 import { Pagination } from "../common/Pagination";
 
-// Bảng dịch nghĩa tiếng Anh phục vụ nhãn trong component
-const TRANSLATIONS: Record<string, Record<string, string>> = {
-  en: {
-    stewardIncidentLog: "Steward Incident Log",
-    incidentSub: "Historical list of rule violations and penalties issued by you.",
-    id: "ID",
-    raceMeeting: "Race & Meeting",
-    horse: "Horse",
-    jockey: "Jockey",
-    violationDetails: "Violation Details",
-    assessedPenalty: "Assessed Penalty",
-    loadingIncidents: "Loading incidents...",
-    noViolations: "No violations logged by you yet.",
-    hReport: "Steward Report",
-    viewReport: "View Report",
-    close: "Close",
-    stewardReportTitle: "📄 Steward's Official Report",
-  }
-};
-
 /**
- * Component RefereeIncidents - Nhật ký Sự cố và Vi phạm luật đua dành cho Trọng tài.
- * - Trích xuất lịch sử toàn bộ sự cố đã được trọng tài hiện tại ghi nhận từ dashboard.
- * - Hiển thị chi tiết vi phạm, hình phạt áp dụng (phạt tiền, loại trực tiếp DQ,...).
- * - Cung cấp cửa sổ xem nhanh Báo cáo chính thức của Trọng tài (Steward Report) liên quan đến sự cố đó.
+ * Component RefereeIncidents - Steward Incident Log for Referees.
  */
 export default function RefereeIncidents() {
   const { user } = useAuth();
-  const [incidents, setIncidents] = useState<any[]>([]); // Danh sách sự cố vi phạm
+  const [incidents, setIncidents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
-  // --- Các State phục vụ Modal xem báo cáo giám sát chính thức ---
   const [selectedReport, setSelectedReport] = useState<string | null>(null);
   const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
 
-  const t = TRANSLATIONS.en;
-
-  // Lắng nghe kích thước màn hình để thực hiện Responsive di động
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -54,13 +25,11 @@ export default function RefereeIncidents() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Tải danh sách sự cố từ API dashboard của Trọng tài hiện tại
   useEffect(() => {
     if (!user) return;
     api.get<any>(`/referee/${user.id}/dashboard`)
       .then(res => {
         const allViolations: any[] = [];
-        // Lọc tất cả vi phạm (violations) từ các trận đua được giao nhiệm vụ
         (res.assignedRaces || []).forEach((race: any) => {
           (race.violations || []).forEach((viol: any) => {
             allViolations.push({
@@ -84,22 +53,21 @@ export default function RefereeIncidents() {
     <div className="space-y-6">
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.3)" }}>
         
-        {/* Tiêu đề vùng nhật ký sự cố */}
+        {/* Header */}
         <div style={{ padding: "1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(21,19,16,0.6)" }}>
-          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>{$t("Nhật ký sự cố cuộc đua", (localStorage.getItem('app-lang') || 'en'))}</h3>
-          <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{$t("Danh sách lịch sử các vi phạm quy tắc và hình phạt đã được bạn ghi nhận.", (localStorage.getItem('app-lang') || 'en'))}</p>
+          <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec" }}>Steward Incident Log</h3>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginTop: "0.25rem" }}>Historical list of rule violations and penalties issued by you.</p>
         </div>
 
-        {/* Nội dung danh sách sự cố */}
+        {/* Content */}
         {isMobile ? (
-          // Giao diện Responsive dạng Thẻ (Mobile)
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
-              <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>{$t("Đang tải dữ liệu...", (localStorage.getItem('app-lang') || 'en'))}</p>
+              <p style={{ color: "#a0a0a0", fontSize: "0.8rem", textAlign: "center", padding: "1rem" }}>Loading incidents...</p>
             ) : incidents.length === 0 ? (
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", padding: "2rem" }}>
                 <span style={{ fontSize: "2rem" }}>🛡️</span>
-                <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>{$t("Bạn chưa ghi nhận vi phạm nào.", (localStorage.getItem('app-lang') || 'en'))}</span>
+                <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>No violations logged by you yet.</span>
               </div>
             ) : (
               incidents.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((item: any) => (
@@ -114,34 +82,31 @@ export default function RefereeIncidents() {
                         Race #{item.raceId} · {item.classLevel}
                       </span>
                     </div>
-                    {/* Nhãn hình phạt */}
                     <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.375rem", fontSize: "0.7rem", fontWeight: 700, color: "#ef4444", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", fontFamily: "monospace" }}>
                       {item.violation?.penalty ?? item.penalty}
                     </span>
                   </div>
                   <div style={{ fontSize: "0.8rem", color: "#f4f2ec", display: "flex", flexWrap: "wrap", gap: "1rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                     <div>
-                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Chiến mã", (localStorage.getItem('app-lang') || 'en'))}: </span>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Horse: </span>
                       <strong>{item.horseName}</strong>
                     </div>
                     <div>
-                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Nài ngựa", (localStorage.getItem('app-lang') || 'en'))}: </span>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>Jockey: </span>
                       <span style={{ color: "#fbbf24" }}>{item.jockeyName}</span>
                     </div>
                   </div>
-                  {/* Chi tiết mô tả lỗi vi phạm */}
                   <div style={{ fontSize: "0.8rem", color: "#a0a0a0", background: "rgba(255,255,255,0.01)", padding: "0.625rem", borderRadius: "0.375rem", border: "1px solid rgba(255,255,255,0.03)" }}>
-                    <strong>{$t("Chi tiết vi phạm", (localStorage.getItem('app-lang') || 'en'))}: </strong>
+                    <strong>Violation Details: </strong>
                     {item.violation?.description ?? item.description}
                   </div>
-                  {/* Nút Xem Báo cáo Trọng tài */}
                   {item.stewardReport && (
                     <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "0.25rem" }}>
                       <button
                         onClick={() => { setSelectedReport(item.stewardReport); setSelectedRaceId(item.raceId); }}
                         style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}
                       >
-                        📄 {$t("Xem báo cáo", (localStorage.getItem('app-lang') || 'en'))}
+                        📄 View Report
                       </button>
                     </div>
                   )}
@@ -159,25 +124,24 @@ export default function RefereeIncidents() {
             )}
           </div>
         ) : (
-          // Bảng Desktop (Bảng biểu nhiều cột)
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                  {[$t("ID", (localStorage.getItem('app-lang') || 'en')), $t("Trận đấu & Ngày hội đua", (localStorage.getItem('app-lang') || 'en')), $t("Chiến mã", (localStorage.getItem('app-lang') || 'en')), $t("Nài ngựa", (localStorage.getItem('app-lang') || 'en')), $t("Chi tiết vi phạm", (localStorage.getItem('app-lang') || 'en')), $t("Hình phạt áp dụng", (localStorage.getItem('app-lang') || 'en')), $t("Báo cáo cuộc đua", (localStorage.getItem('app-lang') || 'en'))].map(h => (
+                  {["ID", "Race & Meeting", "Horse", "Jockey", "Violation Details", "Assessed Penalty", "Steward Report"].map(h => (
                     <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#a0a0a0" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>{$t("Đang tải dữ liệu...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
+                  <tr><td colSpan={7} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0" }}>Loading incidents...</td></tr>
                 ) : incidents.length === 0 ? (
                   <tr>
                     <td colSpan={7} style={{ padding: "3rem", textAlign: "center" }}>
                       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
                         <span style={{ fontSize: "2rem" }}>🛡️</span>
-                        <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>{$t("Bạn chưa ghi nhận vi phạm nào.", (localStorage.getItem('app-lang') || 'en'))}</span>
+                        <span style={{ color: "#4ade80", fontSize: "0.875rem", fontFamily: "monospace" }}>No violations logged by you yet.</span>
                       </div>
                     </td>
                   </tr>
@@ -209,7 +173,7 @@ export default function RefereeIncidents() {
                           onClick={() => { setSelectedReport(item.stewardReport); setSelectedRaceId(item.raceId); }}
                           style={{ padding: "0.375rem 0.75rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", fontSize: "0.7rem", fontFamily: "monospace", fontWeight: 700, borderRadius: "0.5rem", cursor: "pointer" }}
                         >
-                          📄 {$t("Xem báo cáo", (localStorage.getItem('app-lang') || 'en'))}
+                          📄 View Report
                         </button>
                       ) : (
                         <span style={{ fontSize: "0.7rem", color: "#666", fontFamily: "monospace" }}>N/A</span>
@@ -234,13 +198,13 @@ export default function RefereeIncidents() {
         )}
       </div>
 
-      {/* MODAL XEM BÁO CÁO GIÁM SÁT CHÍNH THỨC (Steward Report Modal) */}
+      {/* Steward Report Modal */}
       {selectedReport && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100, padding: "1rem" }} className="flex items-center justify-center">
           <div style={{ background: "#151310", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", width: "100%", maxWidth: "32rem", overflow: "hidden", margin: "auto" }}>
             <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <h3 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec", display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                {$t("📄 Báo cáo giám sát chính thức", (localStorage.getItem('app-lang') || 'en'))}
+                📄 Steward's Official Report
               </h3>
               <button onClick={() => setSelectedReport(null)} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "1.25rem" }}>✕</button>
             </div>
@@ -251,7 +215,7 @@ export default function RefereeIncidents() {
               </div>
             </div>
             <div style={{ padding: "1rem 1.5rem", background: "rgba(0,0,0,0.2)", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "flex-end" }}>
-              <button onClick={() => setSelectedReport(null)} style={{ padding: "0.5rem 1rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>{$t("Đóng", (localStorage.getItem('app-lang') || 'en'))}</button>
+              <button onClick={() => setSelectedReport(null)} style={{ padding: "0.5rem 1rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Close</button>
             </div>
           </div>
         </div>
