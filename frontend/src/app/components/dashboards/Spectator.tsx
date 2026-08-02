@@ -81,9 +81,9 @@ export default function Spectator() {
   // Cờ hiệu xác định thiết bị di động phục vụ Responsive UI
   const [isMobile, setIsMobile] = useState(false);
 
-  // --- Hệ thống Chatbot AI trợ lý ảo dành cho Khán giả ---
+  // --- AI Assistant Chatbot for Spectators ---
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(() => {
-    const welcome = $t("Chào bạn! Tôi là trợ lý AI. Hỏi tôi về ngựa, nài, xếp hạng rating hoặc dự đoán trận đấu nhé.");
+    const welcome = $t("Hello! I am your AI assistant. Ask me about horses, jockeys, rating rankings, or race predictions.");
     return [{
       sender: "ai",
       text: welcome,
@@ -189,7 +189,7 @@ export default function Spectator() {
     } catch (err: any) {
       const errorReply: ChatMessage = {
         sender: "ai",
-        text: $t("Rất tiếc, đã có lỗi kết nối đến máy chủ AI. Xin vui lòng thử lại sau."),
+        text: $t("Sorry, a connection error occurred with the AI server. Please try again later."),
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       };
       setChatMessages(prev => [...prev, errorReply]);
@@ -236,20 +236,20 @@ export default function Spectator() {
           <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
             <div>
               <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.5rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>
-                {$t("Chào mừng đến với Hệ Thống Quản Lý Đua Ngựa")}
+                {$t("Welcome to Horse Racing Management System")}
               </h2>
               <p style={{ color: "#a0a0a0", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
-                {$t("Chọn một mục từ menu bên trái để bắt đầu.")}
+                {$t("Select an item from the left menu to begin.")}
               </p>
             </div>
 
             {/* Upcoming Meetings */}
             <div>
               <h3 style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "1.1rem", color: "#c9a227", textTransform: "uppercase", letterSpacing: "0.1em", borderBottom: "1px solid #2a2825", paddingBottom: "0.5rem", marginBottom: "1rem" }}>
-                {$t("Buổi đua sắp diễn ra")}
+                {$t("Upcoming Race Meetings")}
               </h3>
               {meetings.length === 0
-                ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>{$t("Không có buổi đua nào được lên lịch.")}</p>
+                ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", fontSize: "0.875rem" }}>{$t("No race meetings scheduled.")}</p>
                 : <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))", gap: "1rem" }}>
                   {meetings.slice(0, 6).map((m: any) => (
                     <div key={m.id} className="rounded-lg" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.25rem", transition: "border-color 0.2s" }}
@@ -275,9 +275,9 @@ export default function Spectator() {
       case "racecard":
         return (
           <div>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Thông tin trận đấu (Racecard)")}</h3>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Racecard Information")}</h3>
             {races.length === 0
-              ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("Chưa có trận đấu nào được tạo.")}</p>
+              ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No races created yet.")}</p>
               : <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 {races.map((r: any) => {
                   const isExpanded = expandedRaceId === r.id;
@@ -316,11 +316,11 @@ export default function Spectator() {
                         <div style={{ padding: "1.25rem", background: "rgba(0,0,0,0.15)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                           {loading ? (
                             <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontFamily: "monospace" }}>
-                              {$t("Đang tải dữ liệu và phân tích tỷ lệ thắng AI...")}
+                              {$t("Loading data and analyzing AI win probability...")}
                             </div>
                           ) : sortedEntries.length === 0 ? (
                             <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontStyle: "italic" }}>
-                              {$t("Chưa có nài ngựa đăng ký cho trận này.")}
+                              {$t("No jockeys registered for this race yet.")}
                             </div>
                           ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -347,7 +347,7 @@ export default function Spectator() {
                                       fontFamily: "monospace"
                                     }}
                                   >
-                                    📺 {$t("Xem Live Ngay")}
+                                    📺 {$t("Watch Live Now")}
                                   </button>
                                 </div>
                               )}
@@ -406,13 +406,13 @@ export default function Spectator() {
         const finishedRaces = races.filter(r => r.status === "FINISHED" || r.status === "OFFICIAL");
         return (
           <div>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Kết quả chính thức")}</h3>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Official Results")}</h3>
 
             {isMobile ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 {finishedRaces.length === 0 ? (
                   <p style={{ color: "#a0a0a0", fontStyle: "italic", textAlign: "center", padding: "2rem" }}>
-                    {$t("Chưa có trận đấu nào hoàn thành.")}
+                    {$t("No completed races yet.")}
                   </p>
                 ) : finishedRaces.map((r: any) => {
                   const isExpanded = expandedRaceId === r.id;
@@ -458,7 +458,7 @@ export default function Spectator() {
                               className="bg-amber-950/20 border border-amber-500/20 text-amber-500 font-bold uppercase tracking-wider text-center py-2 rounded-lg mb-3 animate-pulse"
                               style={{ animationDuration: "1.5s", fontSize: "10px" }}
                             >
-                              {$t("Kết quả chưa chính thức (Đang chờ trọng tài xác nhận)")}
+                              {$t("Unofficial Result (Awaiting Steward Confirmation)")}
                             </div>
                           )}
                           {r.status === "STEWARDS_INQUIRY" && (
@@ -466,17 +466,17 @@ export default function Spectator() {
                               className="bg-rose-950/40 border border-rose-500/30 text-rose-500 font-bold uppercase tracking-wider text-center py-2 rounded-lg mb-3 animate-pulse"
                               style={{ animationDuration: "1.5s", fontSize: "10px" }}
                             >
-                              {$t("⚠️ Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)")}
+                              {$t("⚠️ Stewards' Inquiry - Race under inquiry for potential rule violation (Unofficial Result)")}
                             </div>
                           )}
 
                           {loading ? (
                             <p style={{ textAlign: "center", color: "#a0a0a0", fontSize: "12px", fontFamily: "monospace" }}>
-                              {$t("Đang tải bảng kết quả...")}
+                              {$t("Loading standings table...")}
                             </p>
                           ) : sortedStandings.length === 0 ? (
                             <p style={{ textAlign: "center", color: "#a0a0a0", fontSize: "12px", fontStyle: "italic" }}>
-                              {$t("Chưa có kết quả chính thức.")}
+                              {$t("No official results recorded.")}
                             </p>
                           ) : (
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
@@ -530,7 +530,7 @@ export default function Spectator() {
                     {finishedRaces.length === 0 ? (
                       <tr>
                         <td colSpan={5} style={{ padding: "2rem", textAlign: "center", color: "#a0a0a0", fontStyle: "italic" }}>
-                          {$t("Chưa có trận đấu nào hoàn thành.")}
+                          {$t("No completed races yet.")}
                         </td>
                       </tr>
                     ) : finishedRaces.map((r: any) => {
@@ -577,11 +577,11 @@ export default function Spectator() {
                               <td colSpan={5} style={{ padding: "1.25rem", background: "rgba(0,0,0,0.2)", borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
                                 {loading ? (
                                   <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontFamily: "monospace" }}>
-                                    {$t("Đang tải bảng kết quả về đích...")}
+                                    {$t("Loading finish standings table...")}
                                   </div>
                                 ) : sortedStandings.length === 0 ? (
                                   <div style={{ textAlign: "center", color: "#a0a0a0", padding: "1rem", fontSize: "12px", fontStyle: "italic" }}>
-                                    {$t("Chưa có kết quả chính thức nào được lưu cho trận này.")}
+                                    {$t("No official results recorded for this race yet.")}
                                   </div>
                                 ) : (
                                   <div style={{ overflowX: "auto" }}>
@@ -590,7 +590,7 @@ export default function Spectator() {
                                         className="bg-amber-950/20 border border-amber-500/20 text-amber-500 font-bold uppercase tracking-wider text-center py-2 rounded-lg mb-3 animate-pulse"
                                         style={{ animationDuration: "1.5s", fontSize: "11px" }}
                                       >
-                                        {$t("Kết quả chưa chính thức (Đang chờ trọng tài xác nhận)")}
+                                        {$t("Unofficial Result (Awaiting Steward Confirmation)")}
                                       </div>
                                     )}
                                     {r.status === "STEWARDS_INQUIRY" && (
@@ -598,7 +598,7 @@ export default function Spectator() {
                                         className="bg-rose-950/40 border border-rose-500/30 text-rose-500 font-bold uppercase tracking-wider text-center py-2 rounded-lg mb-3 animate-pulse"
                                         style={{ animationDuration: "1.5s", fontSize: "11px" }}
                                       >
-                                        {$t("⚠️ Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)")}
+                                        {$t("⚠️ Stewards' Inquiry - Race under inquiry for potential rule violation (Unofficial Result)")}
                                       </div>
                                     )}
                                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
@@ -690,10 +690,10 @@ export default function Spectator() {
       case "horses":
         return (
           <div>
-            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Danh sách Chiến mã")}</h3>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Horse Registry")}</h3>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "1rem" }}>
               {horses.length === 0
-                ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("Không tìm thấy ngựa đã đăng ký.")}</p>
+                ? <p style={{ color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>{$t("No registered horses found.")}</p>
                 : horses.map((h: any) => (
                   <div
                     key={h.id}

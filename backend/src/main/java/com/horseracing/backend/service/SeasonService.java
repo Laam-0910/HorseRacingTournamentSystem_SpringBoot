@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,13 +65,27 @@ public class SeasonService {
         String startStr = (String) body.get("startDate");
         String endStr = (String) body.get("endDate");
 
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Season name cannot be empty.");
+        }
+        if (seasonRepository.existsByNameIgnoreCase(name.trim())) {
+            throw new IllegalArgumentException("Season with name '" + name.trim() + "' already exists.");
+        }
+
         // Phân tích định dạng ngày từ chuỗi sang java.sql.Date
         java.sql.Date startDate = DateTimeParser.parseDate(startStr);
         java.sql.Date endDate = DateTimeParser.parseDate(endStr);
         String classRuleMethod = (String) body.get("classRuleMethod");
 
+        if (startDate == null || endDate == null) {
+            throw new IllegalArgumentException("Start date and end date are required.");
+        }
+        if (!startDate.before(endDate)) {
+            throw new IllegalArgumentException("Start date (" + startDate + ") must be before end date (" + endDate + ").");
+        }
+
         Season season = new Season();
-        season.setName(name);
+        season.setName(name.trim());
         season.setStartDate(startDate);
         season.setEndDate(endDate);
         season.setStatus("ACTIVE"); // Thiết lập trạng thái hoạt động mặc định
@@ -90,21 +105,34 @@ public class SeasonService {
         // Trường hợp tạo quy định phân hạng thủ công (MANUAL)
         else if (body.get("manualClasses") != null) {
             List<Map<String, Object>> manualRules = (List<Map<String, Object>>) body.get("manualClasses");
+            List<SeasonClassRuleDTO> dtos = new ArrayList<>();
             for (Map<String, Object> ruleMap : manualRules) {
                 String classLevelName = (String) ruleMap.get("classLevelName");
-                Integer minRating = (Integer) ruleMap.get("minRating");
-                Integer maxRating = (Integer) ruleMap.get("maxRating");
-                BigDecimal minPrize = new BigDecimal(String.valueOf(ruleMap.get("minPrize")));
-                BigDecimal maxPrize = new BigDecimal(String.valueOf(ruleMap.get("maxPrize")));
+                Integer minRating = ruleMap.get("minRating") != null ? Integer.parseInt(ruleMap.get("minRating").toString()) : null;
+                Integer maxRating = ruleMap.get("maxRating") != null ? Integer.parseInt(ruleMap.get("maxRating").toString()) : null;
+                BigDecimal minPrize = ruleMap.get("minPrize") != null ? new BigDecimal(String.valueOf(ruleMap.get("minPrize"))) : BigDecimal.ZERO;
+                BigDecimal maxPrize = ruleMap.get("maxPrize") != null ? new BigDecimal(String.valueOf(ruleMap.get("maxPrize"))) : BigDecimal.ZERO;
 
+                SeasonClassRuleDTO dto = new SeasonClassRuleDTO();
+                dto.setClassLevel(classLevelName);
+                dto.setMinRating(minRating);
+                dto.setMaxRating(maxRating);
+                dto.setMinPrize(minPrize);
+                dto.setMaxPrize(maxPrize);
+                dtos.add(dto);
+            }
+
+            validateSeasonClassRulesHierarchy(dtos);
+
+            for (SeasonClassRuleDTO dto : dtos) {
                 SeasonClassRule rule = new SeasonClassRule();
                 rule.setSeasonId(savedSeason.getId());
-                rule.setClassLevel(classLevelName);
-                rule.setClassName(classLevelName + " Custom Tier");
-                rule.setMinRating(minRating);
-                rule.setMaxRating(maxRating);
-                rule.setMinPrize(minPrize);
-                rule.setMaxPrize(maxPrize);
+                rule.setClassLevel(dto.getClassLevel());
+                rule.setClassName(dto.getClassLevel() + " Custom Tier");
+                rule.setMinRating(dto.getMinRating());
+                rule.setMaxRating(dto.getMaxRating());
+                rule.setMinPrize(dto.getMinPrize());
+                rule.setMaxPrize(dto.getMaxPrize());
 
                 seasonClassRuleRepository.save(rule);
             }
@@ -287,12 +315,10 @@ public class SeasonService {
 
     /**
      * Validates that season class rules adhere to business rules:
-     * 1) For each class: 0 < minPrize < maxPrize
-     * 2) Class 1 minPrize > Class 2 maxPrize
-     * 3) Class 2 minPrize > Class 3 maxPrize
-     * 4) Class 3 minPrize > Class 4 maxPrize
-     * 5) Class 4 minPrize > Class 5 maxPrize
-     * 6) Sum of minPrizes for all classes <= $10,000,000 (Race Meeting min budget limit)
+     * 1) For each class: 0 < minPrize < maxPrize and minRating < maxRating
+     * 2) Rating hierarchy: Lower class maxRating < Higher class minRating (Class 5 max < Class 4 min < Class 3 min...)
+     * 3) Prize hierarchy: Class 1 minPrize > Class 2 maxPrize > Class 3 maxPrize...
+     * 4) Sum of minPrizes for all classes <= $10,000,000 (Race Meeting min budget limit)
      */
     private void validateSeasonClassRulesHierarchy(List<SeasonClassRuleDTO> rules) {
         if (rules == null || rules.isEmpty()) return;
@@ -311,8 +337,18 @@ public class SeasonService {
             }
             if (classNum < 1 || classNum > 5) continue;
 
+            Integer minRating = rule.getMinRating();
+            Integer maxRating = rule.getMaxRating();
             BigDecimal minPrize = rule.getMinPrize();
             BigDecimal maxPrize = rule.getMaxPrize();
+
+            if (minRating == null) {
+                throw new IllegalArgumentException(String.format("Minimum rating for %s is required.", rule.getClassLevel()));
+            }
+            if (maxRating != null && minRating >= maxRating) {
+                throw new IllegalArgumentException(String.format("Minimum rating (%d) must be strictly less than maximum rating (%d) for %s.",
+                        minRating, maxRating, rule.getClassLevel()));
+            }
 
             if (minPrize == null || minPrize.compareTo(BigDecimal.ZERO) <= 0) {
                 throw new IllegalArgumentException(String.format("Minimum prize money for %s must be greater than $0.00.", rule.getClassLevel()));
@@ -326,15 +362,34 @@ public class SeasonService {
             totalMinPrizeSum = totalMinPrizeSum.add(minPrize);
         }
 
-        // Check non-overlapping hierarchy: Class 1 Min > Class 2 Max > Class 2 Min > Class 3 Max ...
+        // Check contiguous non-overlapping rating and prize hierarchy across classes (Class 1 top, Class 5 bottom)
         for (int i = 1; i < 5; i++) {
             SeasonClassRuleDTO higher = classMap.get(i);
             SeasonClassRuleDTO lower = classMap.get(i + 1);
-            if (higher != null && lower != null && higher.getMinPrize() != null && lower.getMaxPrize() != null) {
-                if (higher.getMinPrize().compareTo(lower.getMaxPrize()) <= 0) {
-                    throw new IllegalArgumentException(String.format(
-                            "Class %d minimum prize ($%,.2f) must be strictly greater than Class %d maximum prize ($%,.2f). Higher classes must offer higher prizes.",
-                            i, higher.getMinPrize(), i + 1, lower.getMaxPrize()));
+            if (higher != null && lower != null) {
+                // Rating hierarchy check: Higher class min rating MUST BE EXACTLY equal to lower class max rating + 1
+                if (lower.getMaxRating() != null && higher.getMinRating() != null) {
+                    int expectedMinRating = lower.getMaxRating() + 1;
+                    if (higher.getMinRating() != expectedMinRating) {
+                        if (higher.getMinRating() < expectedMinRating) {
+                            throw new IllegalArgumentException(String.format(
+                                    "Class %d maximum rating (%d) overlaps with Class %d minimum rating (%d). Rating ranges cannot overlap.",
+                                    i + 1, lower.getMaxRating(), i, higher.getMinRating()));
+                        } else {
+                            throw new IllegalArgumentException(String.format(
+                                    "Class %d minimum rating (%d) must be contiguous with Class %d maximum rating (%d). Expected Class %d minimum rating to be %d.",
+                                    i, higher.getMinRating(), i + 1, lower.getMaxRating(), i, expectedMinRating));
+                        }
+                    }
+                }
+
+                // Prize hierarchy check: Higher class min prize > Lower class max prize
+                if (higher.getMinPrize() != null && lower.getMaxPrize() != null) {
+                    if (higher.getMinPrize().compareTo(lower.getMaxPrize()) <= 0) {
+                        throw new IllegalArgumentException(String.format(
+                                "Class %d minimum prize ($%,.2f) must be strictly greater than Class %d maximum prize ($%,.2f). Higher classes must offer higher prizes.",
+                                i, higher.getMinPrize(), i + 1, lower.getMaxPrize()));
+                    }
                 }
             }
         }

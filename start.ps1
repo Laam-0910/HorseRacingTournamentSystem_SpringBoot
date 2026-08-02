@@ -12,13 +12,13 @@ Write-Host "  HORSE RACING TOURNAMENT SYSTEM" -ForegroundColor Cyan
 Write-Host "================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Dọn dẹp port 8080 & 5000 nếu đang bị chiếm giữ
+# Clear ports 8080 & 5000 if occupied
 Write-Host "[0/2] Clearing ports 8080 and 5000..." -ForegroundColor Yellow
 Get-NetTCPConnection -LocalPort 8080,5000 -ErrorAction SilentlyContinue | ForEach-Object {
     Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue
 }
 
-# Backend (Spring Boot tu start Python AI)
+# Backend (Spring Boot automatically launches Python AI)
 Write-Host "[1/2] Starting Backend..." -ForegroundColor Yellow
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "if (-not `$env:JAVA_HOME) { `$env:JAVA_HOME = 'D:\AndroidStudio\jbr' }; `$env:PATH=`"`$env:JAVA_HOME\bin;`$env:PATH`"; cd '$PSScriptRoot\backend'; .\mvnw.cmd spring-boot:run"
 

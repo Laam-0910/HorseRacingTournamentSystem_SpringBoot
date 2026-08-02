@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface SeasonRepository extends JpaRepository<Season, Integer> {
-
+    boolean existsByNameIgnoreCase(String name);
 }

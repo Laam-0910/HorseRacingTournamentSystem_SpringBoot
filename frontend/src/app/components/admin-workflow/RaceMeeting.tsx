@@ -4,6 +4,7 @@ import { api, getErrMsg } from "../../../lib/api";
 import { formatDate, formatDateTime } from "../../utils/dateTimeHelper";
 import InlineDatePicker from "../ui/InlineDatePicker";
 import { confirm } from "../../../lib/confirm";
+import { Pagination } from "../common/Pagination";
 
 /**
  * Component RaceMeeting - Phân hệ cấu hình Ngày hội đua (Race Meeting) dành cho Admin.
@@ -14,6 +15,10 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
   const [meetings, setMeetings] = useState<any[]>([]); // Danh sách ngày hội đua
   const [seasons, setSeasons] = useState<any[]>([]);   // Danh sách các mùa giải trong hệ thống
   const [adminWalletBal, setAdminWalletBal] = useState<number | null>(null);
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
 
   // Các state lưu giá trị input phục vụ Form tạo mới/chỉnh sửa
   const [name, setName] = useState(""); // Tên ngày hội đua
@@ -196,18 +201,18 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
       // Validate budget: min 10,000,000 và max 1,000,000,000
       const budgetValue = totalBudget ? parseFloat(totalBudget) : 0;
       if (budgetValue < 10000000) {
-        setError($t("Ngân sách tổng (Total budget) phải tối thiểu là 10,000,000 (10 triệu).", (localStorage.getItem('app-lang') || 'en')));
+        setError($t("Total budget must be at least 10,000,000."));
         return;
       }
       if (budgetValue > 1000000000) {
-        setError($t("Ngân sách tổng (Total budget) không được vượt quá 1,000,000,000 (1 tỷ).", (localStorage.getItem('app-lang') || 'en')));
+        setError($t("Total budget cannot exceed 1,000,000,000."));
         return;
       }
 
-      // Validate giá vé (Ticket Price): không âm
+      // Validate ticket price: non-negative
       const ticketValue = ticketPrice ? parseFloat(ticketPrice) : 0;
       if (ticketValue < 0) {
-        setError($t("Giá vé (Ticket Price) không được âm.", (localStorage.getItem('app-lang') || 'en')));
+        setError($t("Ticket Price cannot be negative."));
         return;
       }
 
@@ -241,6 +246,12 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
     }
   };
 
+  const totalItems = meetings.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+  const validPage = Math.min(Math.max(1, page), totalPages);
+  const startIndex = (validPage - 1) * pageSize;
+  const paginatedMeetings = meetings.slice(startIndex, startIndex + pageSize);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
       {/* Cột hiển thị Danh sách các Ngày hội đua */}
@@ -257,46 +268,57 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {meetings.length === 0 ? (
               <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>{$t("No meetings found.", (localStorage.getItem('app-lang') || 'en'))}</p>
-            ) : meetings.map((m) => (
-              <div key={m.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "4px" }}>
-                      <span style={{ fontFamily: "monospace", fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>#{m.id}</span>
-                      <span style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.05)", padding: "1px 6px", borderRadius: "4px" }}>Season #{m.seasonId}</span>
-                    </div>
-                    <div style={{ fontWeight: 600, color: "#fff", fontSize: "0.9rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{m.name}</div>
-                    <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginTop: "4px", fontFamily: "monospace" }}>
-                      📅 {formatDate(m.startDate || m.date)}
-                    </div>
-                    <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
-                      📍 {m.venue}
-                    </div>
-                    <div style={{ fontSize: "0.75rem", color: "#fbbf24", marginTop: "4px", fontFamily: "monospace", fontWeight: "bold" }}>
-                      💰 Budget: ${Number(m.totalBudget || 0).toLocaleString('en-US')}
-                    </div>
-                    <div style={{ fontSize: "0.75rem", color: "#34d399", marginTop: "2px", fontFamily: "monospace", fontWeight: "bold" }}>
-                      🎟️ Ticket Price: ${Number(m.ticketPrice || 0).toLocaleString('en-US')}
+            ) : (
+              <>
+                {paginatedMeetings.map((m) => (
+                  <div key={m.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "4px" }}>
+                          <span style={{ fontFamily: "monospace", fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>#{m.id}</span>
+                          <h4 style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#f4f2ec" }}>{m.name}</h4>
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
+                          📅 {formatDate(m.startDate || m.date)}
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
+                          📍 {m.venue}
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "#fbbf24", marginTop: "4px", fontFamily: "monospace", fontWeight: "bold" }}>
+                          💰 Budget: ${Number(m.totalBudget || 0).toLocaleString('en-US')}
+                        </div>
+                        <div style={{ fontSize: "0.75rem", color: "#34d399", marginTop: "2px", fontFamily: "monospace", fontWeight: "bold" }}>
+                          🎟️ Ticket Price: ${Number(m.ticketPrice || 0).toLocaleString('en-US')}
+                        </div>
+                      </div>
+                      {/* Nút Xem / Sửa / Xóa */}
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", flexShrink: 0 }}>
+                        <button
+                          onClick={() => setViewingMeeting(m)}
+                          className="px-2.5 py-1 text-xs font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 rounded-md transition"
+                        >👁️ {$t("View", (localStorage.getItem('app-lang') || 'en'))}</button>
+                        <button
+                          onClick={() => handleEdit(m)}
+                          className="px-2.5 py-1 text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-md transition"
+                        >{$t("Edit", (localStorage.getItem('app-lang') || 'en'))}</button>
+                        <button
+                          onClick={() => handleDelete(m.id)}
+                          className="px-2.5 py-1 text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-md transition"
+                        >{$t("Delete", (localStorage.getItem('app-lang') || 'en'))}</button>
+                      </div>
                     </div>
                   </div>
-                  {/* Nút Xem / Sửa / Xóa */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", flexShrink: 0 }}>
-                    <button
-                      onClick={() => setViewingMeeting(m)}
-                      className="px-2.5 py-1 text-xs font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 rounded-md transition"
-                    >👁️ {$t("View", (localStorage.getItem('app-lang') || 'en'))}</button>
-                    <button
-                      onClick={() => handleEdit(m)}
-                      className="px-2.5 py-1 text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-md transition"
-                    >{$t("Edit", (localStorage.getItem('app-lang') || 'en'))}</button>
-                    <button
-                      onClick={() => handleDelete(m.id)}
-                      className="px-2.5 py-1 text-xs font-bold bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-md transition"
-                    >{$t("Delete", (localStorage.getItem('app-lang') || 'en'))}</button>
-                  </div>
-                </div>
-              </div>
-            ))}
+                ))}
+                <Pagination
+                  currentPage={validPage}
+                  totalItems={totalItems}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={setPageSize}
+                  pageSizeOptions={[5, 10, 20]}
+                />
+              </>
+            )}
           </div>
         ) : (
           /* Bảng Desktop */
@@ -316,7 +338,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-sm">
-                {meetings.map((m) => {
+                {paginatedMeetings.map((m) => {
                   const mStatus = m.status || "ACTIVE";
                   const matchedSeason = seasons.find(s => s.id === m.seasonId);
                   const isSeasonClosed = m.seasonStatus === 'CLOSED' || m.seasonStatus === 'INACTIVE' || matchedSeason?.status === 'CLOSED' || matchedSeason?.status === 'INACTIVE';
@@ -384,6 +406,14 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                 })}
               </tbody>
             </table>
+            <Pagination
+              currentPage={validPage}
+              totalItems={totalItems}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={setPageSize}
+              pageSizeOptions={[5, 10, 20]}
+            />
           </div>
         )}
       </div>
@@ -440,7 +470,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
               type="number"
               min="10000000"
               max="1000000000"
-              step="1000000"
+              step="any"
               required
               value={totalBudget}
               onChange={(e) => setTotalBudget(e.target.value)}

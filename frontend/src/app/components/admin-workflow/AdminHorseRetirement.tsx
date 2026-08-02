@@ -1,6 +1,7 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
+import { Pagination } from "../common/Pagination";
 
 // Định nghĩa cấu trúc dữ liệu yêu cầu giải nghệ ngựa của Chủ ngựa
 interface Request {
@@ -47,6 +48,8 @@ export default function AdminHorseRetirement() {
   const [requests, setRequests] = useState<Request[]>([]);
   // State lưu danh sách tất cả ngựa đang hoạt động (ACTIVE) để điền vào select box của form bắt buộc giải nghệ
   const [activeHorses, setActiveHorses] = useState<Horse[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(5);
   // Trạng thái chờ gọi API
   const [loading, setLoading] = useState(true);
   // Banner thông báo lỗi / thành công
@@ -206,41 +209,59 @@ export default function AdminHorseRetirement() {
             <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#f4f2ec", marginBottom: "1rem" }}>{$t("Retirement History", (localStorage.getItem('app-lang') || 'en'))}</h3>
             {processedRequests.length === 0 ? (
               <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.75rem", fontFamily: "monospace" }}>{$t("No processed requests found.", (localStorage.getItem('app-lang') || 'en'))}</p>
-            ) : (
-              <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem", textAlign: "left", fontFamily: "monospace" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#a0a0a0" }}>
-                      <th style={{ padding: "0.5rem" }}>{$t("Horse Name", (localStorage.getItem('app-lang') || 'en'))}</th>
-                      <th style={{ padding: "0.5rem" }}>{$t("Owner", (localStorage.getItem('app-lang') || 'en'))}</th>
-                      <th style={{ padding: "0.5rem" }}>{$t("Reason", (localStorage.getItem('app-lang') || 'en'))}</th>
-                      <th style={{ padding: "0.5rem" }}>{$t("Status", (localStorage.getItem('app-lang') || 'en'))}</th>
-                      <th style={{ padding: "0.5rem" }}>{$t("Remarks", (localStorage.getItem('app-lang') || 'en'))}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {processedRequests.map(req => (
-                      <tr key={req.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                        <td style={{ padding: "0.5rem", color: "#f4f2ec", fontWeight: "bold" }}>{req.horseName}</td>
-                        <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.ownerName}</td>
-                        <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.reason}</td>
-                        <td style={{ padding: "0.5rem" }}>
-                          <span style={{
-                            padding: "0.15rem 0.4rem",
-                            borderRadius: "0.25rem",
-                            fontSize: "0.65rem",
-                            fontWeight: "bold",
-                            background: req.status === "APPROVED" ? "rgba(74,222,128,0.1)" : "rgba(239,68,68,0.1)",
-                            color: req.status === "APPROVED" ? "#4ade80" : "#ef4444"
-                          }}>{req.status}</span>
-                        </td>
-                        <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.adminRemarks || "—"}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            ) : (() => {
+              const totalItems = processedRequests.length;
+              const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+              const validPage = Math.min(Math.max(1, page), totalPages);
+              const startIndex = (validPage - 1) * pageSize;
+              const paginatedRequests = processedRequests.slice(startIndex, startIndex + pageSize);
+
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                  <div style={{ overflowX: "auto" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.75rem", textAlign: "left", fontFamily: "monospace" }}>
+                      <thead>
+                        <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", color: "#a0a0a0" }}>
+                          <th style={{ padding: "0.5rem" }}>{$t("Horse Name", (localStorage.getItem('app-lang') || 'en'))}</th>
+                          <th style={{ padding: "0.5rem" }}>{$t("Owner", (localStorage.getItem('app-lang') || 'en'))}</th>
+                          <th style={{ padding: "0.5rem" }}>{$t("Reason", (localStorage.getItem('app-lang') || 'en'))}</th>
+                          <th style={{ padding: "0.5rem" }}>{$t("Status", (localStorage.getItem('app-lang') || 'en'))}</th>
+                          <th style={{ padding: "0.5rem" }}>{$t("Remarks", (localStorage.getItem('app-lang') || 'en'))}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {paginatedRequests.map(req => (
+                          <tr key={req.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                            <td style={{ padding: "0.5rem", color: "#f4f2ec", fontWeight: "bold" }}>{req.horseName}</td>
+                            <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.ownerName}</td>
+                            <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.reason}</td>
+                            <td style={{ padding: "0.5rem" }}>
+                              <span style={{
+                                padding: "0.15rem 0.4rem",
+                                borderRadius: "0.25rem",
+                                fontSize: "0.65rem",
+                                fontWeight: "bold",
+                                background: req.status === "APPROVED" ? "rgba(74,222,128,0.1)" : "rgba(239,68,68,0.1)",
+                                color: req.status === "APPROVED" ? "#4ade80" : "#ef4444"
+                              }}>{req.status}</span>
+                            </td>
+                            <td style={{ padding: "0.5rem", color: "#a0a0a0" }}>{req.adminRemarks || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <Pagination
+                    currentPage={validPage}
+                    totalItems={totalItems}
+                    pageSize={pageSize}
+                    onPageChange={setPage}
+                    onPageSizeChange={setPageSize}
+                    pageSizeOptions={[5, 10, 20]}
+                  />
+                </div>
+              );
+            })()}
           </div>
         </div>
 

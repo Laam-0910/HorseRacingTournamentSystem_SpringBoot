@@ -2,6 +2,7 @@ import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
 import { parseSafeDate } from "../../utils/dateTimeHelper";
+import { Pagination } from "../common/Pagination";
 
 /**
  * Component RegistrationProcessing - Phân hệ Xử lý đơn đăng ký của hệ thống dành cho Admin.
@@ -19,6 +20,19 @@ export default function RegistrationProcessing() {
   const [pendingJockeyRegs, setPendingJockeyRegs] = useState<any[]>([]); // Kỵ sĩ tham gia hội đua
   const [pendingOwnerRegs, setPendingOwnerRegs] = useState<any[]>([]); // Chủ ngựa tham gia hội đua
   const [pendingSystemHorses, setPendingSystemHorses] = useState<any[]>([]); // Khai báo ngựa mới
+
+  // Pagination states
+  const [pageEntries, setPageEntries] = useState(1);
+  const [pageSizeEntries, setPageSizeEntries] = useState(5);
+
+  const [pageHorse, setPageHorse] = useState(1);
+  const [pageSizeHorse, setPageSizeHorse] = useState(5);
+
+  const [pageOwner, setPageOwner] = useState(1);
+  const [pageSizeOwner, setPageSizeOwner] = useState(5);
+
+  const [pageJockey, setPageJockey] = useState(1);
+  const [pageSizeJockey, setPageSizeJockey] = useState(5);
 
   // Các state lưu số liệu thống kê tổng hợp đơn
   const [awaitingDecisionCount, setAwaitingDecisionCount] = useState(0);
@@ -230,112 +244,110 @@ export default function RegistrationProcessing() {
       )}
 
       {/* 1. KHỐI ĐƠN: ĐĂNG KÝ LƯỢT CHẠY CUỘC ĐUA (Pending Race Entries) */}
-      <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-        <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
-          <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Race Entries & Predictions", (localStorage.getItem('app-lang') || 'en'))}</h4>
-          <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Race meeting entry submissions awaiting steward approval", (localStorage.getItem('app-lang') || 'en'))}</p>
-        </div>
-        {isMobile ? (
-          // Bố cục di động
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
-            {loading ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</div>
-            ) : pendingEntries.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending race entries found.", (localStorage.getItem('app-lang') || 'en'))}</div>
-            ) : pendingEntries.map((e) => (
-              <div key={e.entry?.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>REG-{e.entry?.id}</span>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button onClick={() => handleEntryReject(e.entry?.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✕ Reject</button>
-                    <button onClick={() => handleEntryApprove(e.entry?.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
-                  </div>
-                </div>
-                <div style={{ marginBottom: '0.5rem' }}>
-                  <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px' }}>{e.horse?.name}</div>
-                  <span style={{ fontSize: '9px', fontFamily: 'monospace', color: '#c9a227', background: 'rgba(201,162,39,0.1)', border: '1px solid rgba(201,162,39,0.2)', padding: '2px 6px', borderRadius: '3px', display: 'inline-block', marginTop: '4px' }}>⭐ Rating: {e.horse?.currentRating}</span>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '12px' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{$t("Owner:", (localStorage.getItem('app-lang') || 'en'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username || `Owner #${e.horse?.ownerId}`}</span></span>
-                  <span style={{ color: 'rgba(255,255,255,0.3)' }}>|</span>
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{$t("Jockey:", (localStorage.getItem('app-lang') || 'en'))}<span style={{ color: '#3b82c4' }}>{e.jockey?.username}</span> <span style={{ color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>({e.jockey?.weight} kg)</span></span>
-                </div>
-                <div style={{ marginBottom: '0.5rem' }}>
-                  <div style={{ fontSize: '12px', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
-                    <span>{e.meeting?.name || `Race #${e.race?.id}`}</span>
-                    {e.race?.classLevel && (
-                      <span style={{ fontSize: '9px', fontFamily: 'monospace', color: '#fbbf24', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.3)', padding: '1px 5px', borderRadius: '3px' }}>{e.race.classLevel}</span>
+      {(() => {
+        const totalItems = pendingEntries.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / pageSizeEntries));
+        const validPage = Math.min(Math.max(1, pageEntries), totalPages);
+        const startIndex = (validPage - 1) * pageSizeEntries;
+        const paginatedEntries = pendingEntries.slice(startIndex, startIndex + pageSizeEntries);
+
+        return (
+          <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
+            <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
+              <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Race Entries & Predictions", (localStorage.getItem('app-lang') || 'en'))}</h4>
+              <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Race meeting entry submissions awaiting steward approval", (localStorage.getItem('app-lang') || 'en'))}</p>
+            </div>
+            {isMobile ? (
+              // Bố cục di động
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
+                {loading ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</div>
+                ) : paginatedEntries.length === 0 ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending race entries found.", (localStorage.getItem('app-lang') || 'en'))}</div>
+                ) : paginatedEntries.map((e: any) => (
+                  <div key={e.raceEntry?.id ?? e.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>ENT-{e.raceEntry?.id ?? e.id}</span>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button onClick={() => handleEntryReject(e.raceEntry?.id ?? e.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✕ Reject</button>
+                        <button onClick={() => handleEntryApprove(e.raceEntry?.id ?? e.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
+                      </div>
+                    </div>
+                    <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px' }}>{e.horse?.name}</div>
+                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Jockey: {e.jockey?.name}</div>
+                    <div style={{ fontSize: '12px', color: '#a0a0a0', marginTop: '0.25rem' }}>{e.meeting?.name} · Race #{e.race?.id}</div>
+                    {e.prediction != null && (
+                      <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#c9a227', marginTop: '0.25rem' }}>🤖 AI Win: {(e.prediction * 100).toFixed(1)}%</div>
                     )}
                   </div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Distance: {e.race?.distanceMeters}m ({e.race?.trackType})</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', fontSize: '12px' }}>
-                  <span style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}>Carried: {e.entry?.carriedWeight} kg</span>
-                  <span style={{ padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '10px', fontWeight: 'bold', fontFamily: 'monospace', background: parseFloat(e.predictionScore) >= 70 ? 'rgba(16,185,129,0.1)' : parseFloat(e.predictionScore) >= 40 ? 'rgba(245,158,11,0.1)' : 'rgba(255,255,255,0.05)', color: parseFloat(e.predictionScore) >= 70 ? '#34d399' : parseFloat(e.predictionScore) >= 40 ? '#fbbf24' : 'rgba(255,255,255,0.6)', border: `1px solid ${parseFloat(e.predictionScore) >= 70 ? '#34d39940' : parseFloat(e.predictionScore) >= 40 ? '#fbbf2440' : 'transparent'}` }}>AI: {e.predictionScore}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          // Bảng Desktop
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                  {["Ref", "Horse & Rating", "Owner", "Assigned Jockey", "Target Race", "Carried Weight", "AI Win Chance", "Actions"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 7 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'en'))}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {loading ? (
-                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
-                ) : pendingEntries.length === 0 ? (
-                  <tr><td colSpan={8} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No pending race entries found.", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
-                ) : pendingEntries.map((e) => (
-                  <tr key={e.entry?.id} className="hover:bg-white/[0.015] transition-colors">
-                    <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>REG-{e.entry?.id}</td>
-                    <td style={{ padding: "0.75rem 1rem" }}>
-                      <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.horse?.name}</div>
-                      <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#c9a227", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.2)", padding: "2px 6px", borderRadius: "3px", display: "inline-block", marginTop: "4px" }}>
-                        ⭐ Rating: {e.horse?.currentRating}
-                      </span>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>{e.owner?.username || `Owner #${e.horse?.ownerId}`}</td>
-                    <td style={{ padding: "0.75rem 1rem" }}>
-                      <div style={{ fontSize: "12px", fontWeight: "semibold", color: "#3b82c4" }}>{e.jockey?.username}</div>
-                      <div style={{ fontSize: "10px", fontFamily: "monospace", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Weight: {e.jockey?.weight} kg</div>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem" }}>
-                      <div style={{ fontSize: "12px", color: "#fff", fontWeight: "semibold", display: "flex", alignItems: "center", gap: "0.375rem", flexWrap: "wrap" }}>
-                        <span>{e.meeting?.name || `Race #${e.race?.id}`}</span>
-                        {e.race?.classLevel && (
-                          <span style={{ fontSize: "9px", fontFamily: "monospace", color: "#fbbf24", background: "rgba(245,158,11,0.15)", border: "1px solid rgba(245,158,11,0.3)", padding: "1px 5px", borderRadius: "3px" }}>
-                            {e.race.classLevel}
-                          </span>
-                        )}
-                      </div>
-                      <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "3px" }}>Distance: {e.race?.distanceMeters}m ({e.race?.trackType})</div>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{e.entry?.carriedWeight} kg</td>
-                    <td style={{ padding: "0.75rem 1rem" }}>
-                      <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: parseFloat(e.predictionScore) >= 70 ? "rgba(16,185,129,0.1)" : parseFloat(e.predictionScore) >= 40 ? "rgba(245,158,11,0.1)" : "rgba(255,255,255,0.05)", color: parseFloat(e.predictionScore) >= 70 ? "#34d399" : parseFloat(e.predictionScore) >= 40 ? "#fbbf24" : "rgba(255,255,255,0.6)", border: `1px solid ${parseFloat(e.predictionScore) >= 70 ? "#34d39940" : parseFloat(e.predictionScore) >= 40 ? "#fbbf2440" : "transparent"}` }}>
-                        {e.predictionScore}%
-                      </span>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
-                      <div style={{ display: "inline-flex", gap: "0.5rem" }}>
-                        <button onClick={() => handleEntryReject(e.entry?.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
-                        <button onClick={() => handleEntryApprove(e.entry?.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
-                      </div>
-                    </td>
-                  </tr>
                 ))}
-              </tbody>
-            </table>
+                {!loading && pendingEntries.length > 0 && (
+                  <Pagination
+                    currentPage={pageEntries}
+                    totalItems={pendingEntries.length}
+                    pageSize={pageSizeEntries}
+                    onPageChange={(p: number) => setPageEntries(p)}
+                    onPageSizeChange={(s: number) => { setPageSizeEntries(s); setPageEntries(1); }}
+                  />
+                )}
+              </div>
+            ) : (
+              // Desktop table
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                      {["Ref", "Horse", "Jockey", "Meeting / Race", "AI Prediction", "Actions"].map((h, idx) => (
+                        <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 5 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'en'))}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {loading ? (
+                      <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
+                    ) : paginatedEntries.length === 0 ? (
+                      <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No pending race entries found.", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
+                    ) : paginatedEntries.map((e: any) => (
+                      <tr key={e.raceEntry?.id ?? e.id} className="hover:bg-white/[0.015] transition-colors">
+                        <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>ENT-{e.raceEntry?.id ?? e.id}</td>
+                        <td style={{ padding: "0.75rem 1rem" }}>
+                          <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.horse?.name}</div>
+                          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Rating: {e.horse?.currentRating}</div>
+                        </td>
+                        <td style={{ padding: "0.75rem 1rem", fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>{e.jockey?.name}</td>
+                        <td style={{ padding: "0.75rem 1rem" }}>
+                          <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.meeting?.name}</div>
+                          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginTop: "2px" }}>Race #{e.race?.id}</div>
+                        </td>
+                        <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>
+                          {e.prediction != null ? `${(e.prediction * 100).toFixed(1)}%` : "N/A"}
+                        </td>
+                        <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
+                          <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                            <button onClick={() => handleEntryReject(e.raceEntry?.id ?? e.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
+                            <button onClick={() => handleEntryApprove(e.raceEntry?.id ?? e.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!loading && pendingEntries.length > 0 && (
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                    <Pagination
+                      currentPage={pageEntries}
+                      totalItems={pendingEntries.length}
+                      pageSize={pageSizeEntries}
+                      onPageChange={(p: number) => setPageEntries(p)}
+                      onPageSizeChange={(s: number) => { setPageSizeEntries(s); setPageEntries(1); }}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
 
       {/* 2. KHỐI ĐƠN: ĐĂNG KÝ CHIẾN MÃ THAM GIA HỘI ĐUA (Pending Horse Meeting Registrations) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
