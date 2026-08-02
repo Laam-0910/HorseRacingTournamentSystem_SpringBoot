@@ -17,6 +17,12 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
   const [walletData, setWalletData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [amountInput, setAmountInput] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchWalletData = async () => {
     if (!user?.id) return;
@@ -36,6 +42,62 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
     fetchWalletData();
   }, [user?.id]);
 
+  const handleDeposit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = Number(amountInput);
+    if (!val || val <= 0) {
+      setError("Please enter a valid amount greater than 0.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    setSuccessMsg("");
+    try {
+      const res = await api.post<any>("/public/wallet/deposit", { userId: user.id, amount: val });
+      if (res.success) {
+        setSuccessMsg(`Successfully deposited $${val.toLocaleString()} into your wallet!`);
+        setShowDepositModal(false);
+        setAmountInput("");
+        if (user) user.walletBalance = res.newBalance;
+        fetchWalletData();
+      } else {
+        setError(res.error || "Deposit failed.");
+      }
+    } catch (err: any) {
+      setError(getErrMsg(err, "Failed to deposit funds."));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleWithdraw = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const val = Number(amountInput);
+    if (!val || val <= 0) {
+      setError("Please enter a valid amount greater than 0.");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    setSuccessMsg("");
+    try {
+      const res = await api.post<any>("/public/wallet/withdraw", { userId: user.id, amount: val });
+      if (res.success) {
+        setSuccessMsg(`Successfully withdrawn $${val.toLocaleString()} from your wallet!`);
+        setShowWithdrawModal(false);
+        setAmountInput("");
+        if (user) user.walletBalance = res.newBalance;
+        fetchWalletData();
+      } else {
+        setError(res.error || "Withdrawal failed.");
+      }
+    } catch (err: any) {
+      setError(getErrMsg(err, "Failed to withdraw cash."));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const walletBalance = user?.walletBalance !== undefined && user?.walletBalance !== null
     ? Number(user.walletBalance)
     : Number(walletData?.walletBalance || 0);
@@ -49,9 +111,16 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
       case "TICKET_REFUND":
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">TICKET REFUND</span>;
       case "JOCKEY_MOUNT_FEE":
+      case "JOCKEY_HIRE_FEE":
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30">MOUNT FEE</span>;
+      case "JOCKEY_HIRE_INCOME":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">HIRE INCOME</span>;
       case "RACE_PRIZE_MONEY":
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">PRIZE MONEY</span>;
+      case "SELF_DEPOSIT":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">DEPOSIT</span>;
+      case "WITHDRAWAL":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">WITHDRAWAL</span>;
       default:
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white/70">{type}</span>;
     }
@@ -76,24 +145,153 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
             {$t("Wallet Management", (localStorage.getItem('app-lang') || 'en'))}
           </h2>
           <p className="text-xs text-white/60 mt-1 font-mono">
-            Welcome, {user?.username ?? user?.fullName ?? roleLabel}. Manage your wallet balance, track ticket fees, and view full transaction history.
+            Welcome, {user?.username ?? user?.fullName ?? roleLabel}. Deposit funds, cash out withdrawals, and view your full transaction history.
           </p>
         </div>
 
-        <div className="bg-black/40 border border-white/10 p-5 rounded-2xl min-w-[16rem] text-right font-mono">
-          <span className="text-xs text-white/50 block uppercase">Current Available Balance</span>
-          <div className="text-3xl font-extrabold mt-1" style={{ color: roleColor }}>
-            ${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+        <div className="flex flex-col items-end gap-3 font-mono">
+          <div className="bg-black/40 border border-white/10 p-5 rounded-2xl min-w-[16rem] text-right">
+            <span className="text-xs text-white/50 block uppercase">Current Available Balance</span>
+            <div className="text-3xl font-extrabold mt-1" style={{ color: roleColor }}>
+              ${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+            </div>
+            <span className="text-[10px] text-emerald-400 font-bold block mt-1">
+              ✓ Account Active
+            </span>
           </div>
-          <span className="text-[10px] text-emerald-400 font-bold block mt-1">
-            ✓ Account Active
-          </span>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setAmountInput(""); setError(""); setShowDepositModal(true); }}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-gradient-to-r from-emerald-400 to-teal-500 hover:brightness-110 shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5"
+            >
+              <span>➕</span> Deposit Funds
+            </button>
+
+            <button
+              onClick={() => { setAmountInput(""); setError(""); setShowWithdrawModal(true); }}
+              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-amber-500 to-rose-500 hover:brightness-110 shadow-lg shadow-rose-500/20 transition-all flex items-center gap-1.5"
+            >
+              <span>💸</span> Withdraw Cash
+            </button>
+          </div>
         </div>
       </div>
+
+      {successMsg && (
+        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-xl text-xs font-mono">
+          ✅ {successMsg}
+        </div>
+      )}
 
       {error && (
         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-xs font-mono">
           ⚠️ {error}
+        </div>
+      )}
+
+      {/* Deposit Modal */}
+      {showDepositModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#121110] border border-white/15 rounded-2xl w-full max-w-md p-6 space-y-5 font-mono shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <h3 className="text-base font-bold text-white font-serif flex items-center gap-2">
+                <span>💳 Deposit Funds to Wallet</span>
+              </h3>
+              <button onClick={() => setShowDepositModal(false)} className="text-white/50 hover:text-white text-lg font-bold">✕</button>
+            </div>
+
+            <form onSubmit={handleDeposit} className="space-y-4">
+              <div>
+                <label className="text-xs text-white/60 block mb-1.5 uppercase font-bold">Deposit Amount ($USD)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="1"
+                  required
+                  value={amountInput}
+                  onChange={(e) => setAmountInput(e.target.value)}
+                  placeholder="e.g. 5000"
+                  className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
+                />
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-[11px] text-white/60 space-y-1">
+                <div className="flex justify-between"><span>Current Balance:</span> <span className="text-white font-bold">${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
+                <div className="flex justify-between"><span>Estimated Balance:</span> <span className="text-emerald-400 font-bold">${(walletBalance + (Number(amountInput) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowDepositModal(false)}
+                  className="flex-1 py-3 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-xl border border-white/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-black text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                >
+                  {submitting ? "Processing..." : "Confirm Deposit"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Withdraw Modal */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#121110] border border-white/15 rounded-2xl w-full max-w-md p-6 space-y-5 font-mono shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <h3 className="text-base font-bold text-white font-serif flex items-center gap-2">
+                <span>💸 Cash-Out Withdrawal</span>
+              </h3>
+              <button onClick={() => setShowWithdrawModal(false)} className="text-white/50 hover:text-white text-lg font-bold">✕</button>
+            </div>
+
+            <form onSubmit={handleWithdraw} className="space-y-4">
+              <div>
+                <label className="text-xs text-white/60 block mb-1.5 uppercase font-bold">Withdrawal Amount ($USD)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="1"
+                  max={walletBalance}
+                  required
+                  value={amountInput}
+                  onChange={(e) => setAmountInput(e.target.value)}
+                  placeholder={`Max: $${walletBalance.toLocaleString()}`}
+                  className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-rose-500 font-mono"
+                />
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-[11px] text-white/60 space-y-1">
+                <div className="flex justify-between"><span>Available Balance:</span> <span className="text-white font-bold">${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
+                <div className="flex justify-between"><span>Remaining Balance:</span> <span className="text-amber-400 font-bold">${Math.max(0, walletBalance - (Number(amountInput) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowWithdrawModal(false)}
+                  className="flex-1 py-3 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-xl border border-white/10"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || Number(amountInput) > walletBalance}
+                  className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-rose-500 hover:brightness-110 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-500/20 disabled:opacity-50"
+                >
+                  {submitting ? "Processing..." : "Confirm Withdrawal"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
