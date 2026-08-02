@@ -923,7 +923,7 @@ export default function Landing() {
 
   const getDynamicNotifications = () => {
     const list: any[] = [];
-    const lang = localStorage.getItem("app-lang") || "vi";
+    const lang = localStorage.getItem("app-lang") || "en";
 
     // Tải danh sách thông báo động từ Dashboard (Chủ ngựa & Nài ngựa)
     if (dashboardNotifs.length > 0) {

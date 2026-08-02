@@ -35,6 +35,10 @@ public class RaceService {
     private final SeasonClassRuleRepository seasonClassRuleRepository;
     private final RaceMapper raceMapper;
     private final RaceMeetingMapper raceMeetingMapper;
+    private final com.horseracing.backend.repository.UserRepository userRepository;
+    private final com.horseracing.backend.repository.WalletTransactionRepository walletTransactionRepository;
+    private final com.horseracing.backend.repository.OwnerRaceMeetingRegistrationRepository ownerRegRepository;
+    private final com.horseracing.backend.repository.RaceInvitationRepository raceInvitationRepository;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -214,14 +218,17 @@ public class RaceService {
     }
 
     public List<RaceMeetingDTO> getAllMeetings() {
-        // Tạo Map ánh xạ giữa ID Mùa giải và Tên mùa giải
-        Map<Integer, String> seasonMap = seasonRepository.findAll().stream() // Truy vấn toàn bộ các mùa giải
-                .collect(Collectors.toMap(Season::getId, Season::getName)); // Gom thành Map key: id, value: name
+        // Tạo Map ánh xạ giữa ID Mùa giải và Season object
+        Map<Integer, Season> seasonMap = seasonRepository.findAll().stream()
+                .collect(Collectors.toMap(Season::getId, s -> s));
 
         // Lấy tất cả Ngày hội đua và chuyển thành DTO
-        return raceMeetingRepository.findAll().stream() // Duyệt danh sách các Ngày hội đua
-                .map(m -> raceMeetingMapper.toDTO(m, seasonMap.get(m.getSeasonId()))) // Ánh xạ từng Ngày hội đua sang RaceMeetingDTO
-                .collect(Collectors.toList()); // Trả về danh sách List<RaceMeetingDTO>
+        return raceMeetingRepository.findAll().stream()
+                .map(m -> {
+                    Season s = seasonMap.get(m.getSeasonId());
+                    return raceMeetingMapper.toDTO(m, s != null ? s.getName() : null, s != null ? s.getStatus() : null);
+                })
+                .collect(Collectors.toList());
     }
 
     private void validateMeetingDateInSeason(Integer seasonId, java.util.Date meetingDate) {
@@ -274,12 +281,36 @@ public class RaceService {
     public RaceMeetingDTO createMeeting(RaceMeetingDTO dto) {
         validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate()); // Kiểm tra ngày của Ngày hội đua có nằm trong khoảng thời gian mùa giải
         validateMeetingBudget(dto.getTotalBudget()); // Kiểm tra ngân sách trong khoảng 10tr - 1 tỷ
+
+        BigDecimal budget = dto.getTotalBudget() != null ? dto.getTotalBudget() : BigDecimal.ZERO;
+
+        // Trừ ngân sách làm giải đấu từ Ví Admin (role_id = 1)
+        com.horseracing.backend.entity.User admin = userRepository.findAll().stream()
+                .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
+                .findFirst().orElse(null);
+        if (admin != null) {
+            BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
+            if (adminBal.compareTo(budget) < 0) {
+                throw new IllegalArgumentException("Admin wallet balance ($" + adminBal + ") is insufficient to fund meeting budget ($" + budget + "). Please top up Admin wallet.");
+            }
+            admin.setWalletBalance(adminBal.subtract(budget));
+            userRepository.save(admin);
+
+            com.horseracing.backend.entity.WalletTransaction tx = new com.horseracing.backend.entity.WalletTransaction();
+            tx.setUserId(admin.getId());
+            tx.setAmount(budget.negate());
+            tx.setTransactionType("MEETING_BUDGET_ALLOCATION");
+            tx.setDescription("Allocated total budget for Race Meeting: " + dto.getName());
+            tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+            walletTransactionRepository.save(tx);
+        }
+
         RaceMeeting meeting = raceMeetingMapper.toEntity(dto); // Chuyển đổi DTO sang Entity RaceMeeting
         RaceMeeting savedMeeting = raceMeetingRepository.save(meeting); // Lưu Ngày hội đua vào DB
-        String seasonName = seasonRepository.findById(savedMeeting.getSeasonId()) // Tra cứu tên mùa giải tương ứng
-                .map(Season::getName) // Lấy tên mùa giải
-                .orElse(null); // Mặc định null nếu không tìm thấy
-        return raceMeetingMapper.toDTO(savedMeeting, seasonName); // Trả về DTO của Ngày hội đua đã tạo
+        Season s = seasonRepository.findById(savedMeeting.getSeasonId()).orElse(null);
+        String seasonName = s != null ? s.getName() : null;
+        String seasonStatus = s != null ? s.getStatus() : null;
+        return raceMeetingMapper.toDTO(savedMeeting, seasonName, seasonStatus); // Trả về DTO của Ngày hội đua đã tạo
     }
 
     @Transactional
@@ -288,6 +319,33 @@ public class RaceService {
         validateMeetingBudget(dto.getTotalBudget()); // Kiểm tra ngân sách trong khoảng 10tr - 1 tỷ
         RaceMeeting meeting = raceMeetingRepository.findById(id) // Tìm Ngày hội đua theo ID
                 .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found with id: " + id)); // Ném ngoại lệ nếu không tồn tại
+
+        BigDecimal oldBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+        BigDecimal newBudget = dto.getTotalBudget() != null ? dto.getTotalBudget() : oldBudget;
+        BigDecimal budgetDiff = newBudget.subtract(oldBudget);
+
+        if (budgetDiff.compareTo(BigDecimal.ZERO) != 0) {
+            com.horseracing.backend.entity.User admin = userRepository.findAll().stream()
+                    .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
+                    .findFirst().orElse(null);
+            if (admin != null) {
+                BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
+                if (budgetDiff.compareTo(BigDecimal.ZERO) > 0 && adminBal.compareTo(budgetDiff) < 0) {
+                    throw new IllegalArgumentException("Admin wallet balance ($" + adminBal + ") is insufficient to increase meeting budget by $" + budgetDiff);
+                }
+                admin.setWalletBalance(adminBal.subtract(budgetDiff));
+                userRepository.save(admin);
+
+                com.horseracing.backend.entity.WalletTransaction tx = new com.horseracing.backend.entity.WalletTransaction();
+                tx.setUserId(admin.getId());
+                tx.setAmount(budgetDiff.negate());
+                tx.setTransactionType(budgetDiff.compareTo(BigDecimal.ZERO) > 0 ? "MEETING_BUDGET_ALLOCATION" : "MEETING_BUDGET_REFUND");
+                tx.setDescription("Adjusted budget for Race Meeting '" + meeting.getName() + "' (Diff: $" + budgetDiff + ")");
+                tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                walletTransactionRepository.save(tx);
+            }
+        }
+
         meeting.setName(dto.getName()); // Cập nhật tên Ngày hội đua
         meeting.setVenue(dto.getVenue()); // Cập nhật địa điểm tổ chức
         meeting.setStartDate(dto.getStartDate()); // Cập nhật ngày bắt đầu tổ chức
@@ -295,66 +353,145 @@ public class RaceService {
         if (dto.getTotalBudget() != null) { // Nếu có truyền vào tổng ngân sách mới
             meeting.setTotalBudget(dto.getTotalBudget()); // Cập nhật tổng ngân sách giải thưởng
         }
+        // Keep ticketPrice locked once created to preserve financial integrity for participants
+        // Do not update meeting.setTicketPrice on edit
         RaceMeeting savedMeeting = raceMeetingRepository.save(meeting); // Lưu thông tin Ngày hội đua đã chỉnh sửa
-        String seasonName = seasonRepository.findById(savedMeeting.getSeasonId()) // Tra cứu tên mùa giải tương ứng
-                .map(Season::getName) // Lấy tên mùa giải
-                .orElse(null); // Mặc định null nếu không tìm thấy
-        return raceMeetingMapper.toDTO(savedMeeting, seasonName); // Trả về DTO Ngày hội đua sau khi cập nhật
+        Season sUp = seasonRepository.findById(savedMeeting.getSeasonId()).orElse(null);
+        String seasonName = sUp != null ? sUp.getName() : null;
+        String seasonStatus = sUp != null ? sUp.getStatus() : null;
+        return raceMeetingMapper.toDTO(savedMeeting, seasonName, seasonStatus); // Trả về DTO Ngày hội đua sau khi cập nhật
     }
 
     @Transactional
     public void deleteMeeting(Integer id) {
-        if (!raceMeetingRepository.existsById(id)) { // Kiểm tra xem Ngày hội đua có tồn tại trong DB không
-            throw new IllegalArgumentException("Race Meeting not found with id: " + id); // Ném ngoại lệ nếu ID không tồn tại
+        RaceMeeting meeting = raceMeetingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found with id: " + id));
+
+        // A. Hoàn tiền ngân sách giải đua về lại Ví Admin (Chỉ hoàn nếu buổi đua đang ACTIVE và có totalBudget > 0)
+        // Nếu buổi đua đang INACTIVE, ngân sách đã được hoàn về Ví Admin lúc deactive rồi nên không hoàn lần 2.
+        if ("ACTIVE".equalsIgnoreCase(meeting.getStatus())) {
+            BigDecimal budget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+            com.horseracing.backend.entity.User admin = userRepository.findAll().stream()
+                    .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
+                    .findFirst().orElse(null);
+
+            if (admin != null && budget.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
+                admin.setWalletBalance(adminBal.add(budget));
+                userRepository.save(admin);
+
+                com.horseracing.backend.entity.WalletTransaction tx = new com.horseracing.backend.entity.WalletTransaction();
+                tx.setUserId(admin.getId());
+                tx.setAmount(budget);
+                tx.setTransactionType("MEETING_BUDGET_REFUND");
+                tx.setDescription("Refund allocated budget due to deletion of active Race Meeting: " + meeting.getName());
+                tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                walletTransactionRepository.save(tx);
+            }
+        }
+
+        // B. Tự động hoàn lại 100% tiền vé cho tất cả Horse Owners đã đăng ký mà chưa diễn ra
+        BigDecimal ticketPrice = meeting.getTicketPrice() != null ? meeting.getTicketPrice() : BigDecimal.ZERO;
+        if (ticketPrice.compareTo(BigDecimal.ZERO) > 0) {
+            List<com.horseracing.backend.entity.OwnerRaceMeetingRegistration> ownerRegs = ownerRegRepository.findByRaceMeetingId(id);
+            for (com.horseracing.backend.entity.OwnerRaceMeetingRegistration reg : ownerRegs) {
+                if (!"REJECTED".equalsIgnoreCase(reg.getStatus()) && reg.getOwnerId() != null) {
+                    userRepository.findById(reg.getOwnerId()).ifPresent(owner -> {
+                        BigDecimal curBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                        owner.setWalletBalance(curBal.add(ticketPrice));
+                        userRepository.save(owner);
+
+                        com.horseracing.backend.entity.WalletTransaction txOwner = new com.horseracing.backend.entity.WalletTransaction();
+                        txOwner.setUserId(owner.getId());
+                        txOwner.setAmount(ticketPrice);
+                        txOwner.setTransactionType("TICKET_REFUND");
+                        txOwner.setDescription("Ticket fee refund from Escrow Vault due to deletion of Race Meeting: " + meeting.getName());
+                        txOwner.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                        walletTransactionRepository.save(txOwner);
+                    });
+                }
+            }
+        }
+        List<com.horseracing.backend.entity.Race> meetingRaces = raceRepository.findByRaceMeetingId(id);
+        for (com.horseracing.backend.entity.Race r : meetingRaces) {
+            List<com.horseracing.backend.entity.RaceInvitation> invs = raceInvitationRepository.findByRaceId(r.getId());
+            for (com.horseracing.backend.entity.RaceInvitation inv : invs) {
+                if ("HELD".equalsIgnoreCase(inv.getPayoutStatus()) && inv.getOwnerId() != null) {
+                    BigDecimal hireFee = inv.getHireFee() != null ? inv.getHireFee() : new BigDecimal("500.00");
+                    if (hireFee.compareTo(BigDecimal.ZERO) > 0) {
+                        userRepository.findById(inv.getOwnerId()).ifPresent(owner -> {
+                            BigDecimal curBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                            owner.setWalletBalance(curBal.add(hireFee));
+                            userRepository.save(owner);
+
+                            com.horseracing.backend.entity.WalletTransaction txHire = new com.horseracing.backend.entity.WalletTransaction();
+                            txHire.setUserId(owner.getId());
+                            txHire.setAmount(hireFee);
+                            txHire.setTransactionType("JOCKEY_HIRE_REFUND");
+                            txHire.setDescription("Jockey hire fee refund from Escrow Vault due to deletion of Race Meeting: " + meeting.getName());
+                            txHire.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                            walletTransactionRepository.save(txHire);
+                        });
+                    }
+                    inv.setPayoutStatus("REFUNDED");
+                    inv.setStatus("REJECTED");
+                    raceInvitationRepository.save(inv);
+                }
+            }
         }
 
         // 1. Delete Violations associated with races of this meeting
-        entityManager.createNativeQuery( // Xóa các bản ghi vi phạm thuộc các trận đua trong Ngày hội đua này
+        entityManager.createNativeQuery(
             "DELETE FROM Violation WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi truy vấn xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 2. Delete RaceEntries
-        entityManager.createNativeQuery( // Xóa các bản ghi lượt đăng ký thi đấu thuộc Ngày hội đua này
+        entityManager.createNativeQuery(
             "DELETE FROM RaceEntry WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 3. Delete RaceInvitations
-        entityManager.createNativeQuery( // Xóa các lời mời thi đấu liên quan đến các trận đua trong Ngày hội đua
+        entityManager.createNativeQuery(
             "DELETE FROM RaceInvitation WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 4. Delete RaceReferees
-        entityManager.createNativeQuery( // Xóa danh sách phân công trọng tài liên quan đến Ngày hội đua
+        entityManager.createNativeQuery(
             "DELETE FROM RaceReferee WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 4.5. Delete ChatMessages
-        entityManager.createNativeQuery( // Xóa lịch sử tin nhắn trò chuyện thuộc các trận đua trong Ngày hội đua này
+        entityManager.createNativeQuery(
             "DELETE FROM ChatMessage WHERE race_id IN (SELECT id FROM Race WHERE race_meeting_id = :meetingId)"
         ).setParameter("meetingId", id).executeUpdate();
 
         // 5. Delete Races
-        entityManager.createNativeQuery( // Xóa toàn bộ các trận đua trực thuộc Ngày hội đua này
+        entityManager.createNativeQuery(
             "DELETE FROM Race WHERE race_meeting_id = :meetingId"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 6. Delete HorseRegistrations
-        entityManager.createNativeQuery( // Xóa các đơn đăng ký tham gia Ngày hội đua của chiến mã
+        entityManager.createNativeQuery(
             "DELETE FROM HorseRaceMeetingRegistration WHERE race_meeting_id = :meetingId"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 7. Delete JockeyRegistrations
-        entityManager.createNativeQuery( // Xóa các đơn đăng ký tham gia Ngày hội đua của nài ngựa
+        entityManager.createNativeQuery(
             "DELETE FROM JockeyRaceMeetingRegistration WHERE race_meeting_id = :meetingId"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 8. Delete OwnerRegistrations
-        entityManager.createNativeQuery( // Xóa các đơn đăng ký tham gia Ngày hội đua của chủ ngựa
+        entityManager.createNativeQuery(
             "DELETE FROM OwnerRaceMeetingRegistration WHERE race_meeting_id = :meetingId"
-        ).setParameter("meetingId", id).executeUpdate(); // Gán tham số meetingId và thực thi câu lệnh SQL xóa
+        ).setParameter("meetingId", id).executeUpdate();
+
+        // 8.5. Unlink WalletTransaction foreign keys to allow meeting deletion without constraint violation
+        entityManager.createNativeQuery(
+            "UPDATE WalletTransaction SET race_meeting_id = NULL WHERE race_meeting_id = :meetingId"
+        ).setParameter("meetingId", id).executeUpdate();
 
         // 9. Delete the RaceMeeting itself
-        raceMeetingRepository.deleteById(id); // Xóa bản ghi Ngày hội đua chính khỏi cơ sở dữ liệu
+        raceMeetingRepository.deleteById(id);
     }
 
     public List<RaceDTO> getLiveRaces() {

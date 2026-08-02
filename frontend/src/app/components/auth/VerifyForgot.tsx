@@ -42,7 +42,7 @@ export default function VerifyForgot() {
     setError("");
     setSuccess("");
 
-    const lang = localStorage.getItem("app-lang") || "vi";
+    const lang = localStorage.getItem("app-lang") || "en";
 
     // 1. Kiểm tra hai mật khẩu nhập vào có trùng khớp nhau không
     if (newPassword !== confirmPassword) {

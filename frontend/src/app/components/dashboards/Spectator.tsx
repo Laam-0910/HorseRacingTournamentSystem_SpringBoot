@@ -15,13 +15,13 @@ type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats
 const ROLE_COLOR = "#ef4444";
 
 const NAV_ITEMS = [
-  { index: "01", icon: "layout-dashboard", label: $t("Overview", (localStorage.getItem('app-lang') || 'vi')),   view: "home"         },
-  { index: "02", icon: "tv",               label: $t("Live Watch", (localStorage.getItem('app-lang') || 'vi')), view: "live"         },
-  { index: "03", icon: "info",             label: $t("Racecard", (localStorage.getItem('app-lang') || 'vi')),   view: "racecard"     },
-  { index: "04", icon: "award",            label: $t("Results", (localStorage.getItem('app-lang') || 'vi')),    view: "results"      },
-  { index: "05", icon: "activity",         label: $t("Horses", (localStorage.getItem('app-lang') || 'vi')),     view: "horses"       },
-  { index: "06", icon: "bar-chart-3",      label: $t("Statistics", (localStorage.getItem('app-lang') || 'vi')), view: "stats"        },
-  { index: "07", icon: "mail",             label: $t("AI Assistant", (localStorage.getItem('app-lang') || 'vi')), view: "ai-assistant" },
+  { index: "01", icon: "layout-dashboard", label: $t("Overview", (localStorage.getItem('app-lang') || 'en')),   view: "home"         },
+  { index: "02", icon: "tv",               label: $t("Live Watch", (localStorage.getItem('app-lang') || 'en')), view: "live"         },
+  { index: "03", icon: "info",             label: $t("Racecard", (localStorage.getItem('app-lang') || 'en')),   view: "racecard"     },
+  { index: "04", icon: "award",            label: $t("Results", (localStorage.getItem('app-lang') || 'en')),    view: "results"      },
+  { index: "05", icon: "activity",         label: $t("Horses", (localStorage.getItem('app-lang') || 'en')),     view: "horses"       },
+  { index: "06", icon: "bar-chart-3",      label: $t("Statistics", (localStorage.getItem('app-lang') || 'en')), view: "stats"        },
+  { index: "07", icon: "mail",             label: $t("AI Assistant", (localStorage.getItem('app-lang') || 'en')), view: "ai-assistant" },
 ];
 
 interface ChatMessage {
@@ -39,7 +39,7 @@ interface ChatMessage {
 export default function Spectator() {
   const { user } = useAuth();
   // Đọc ngôn ngữ hiện tại của ứng dụng
-  const lang = localStorage.getItem("app-lang") || "vi";
+  const lang = localStorage.getItem("app-lang") || "en";
 
   // State lưu Tab đang được xem, mặc định là "home"
   const [activeTab, setActiveTab] = useState<SpectatorTab>(() => {
@@ -258,7 +258,7 @@ export default function Spectator() {
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.75rem" }}>
                         <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "0.95rem" }}>{m.name}</h4>
-                        <span style={{ fontSize: "0.55rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.2rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,157,111,0.15)", color: "#4a9d6f", whiteSpace: "nowrap" }}>{$t("Active", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                        <span style={{ fontSize: "0.55rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.2rem 0.5rem", borderRadius: "0.25rem", background: "rgba(74,157,111,0.15)", color: "#4a9d6f", whiteSpace: "nowrap" }}>{$t("Active", (localStorage.getItem('app-lang') || 'en'))}</span>
                       </div>
                       <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>📍 {m.venue}</p>
                       <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>📅 {formatDate(m.startDate || m.date)}</p>
@@ -522,7 +522,7 @@ export default function Spectator() {
                   <thead>
                     <tr style={{ background: "rgba(239,68,68,0.06)", borderBottom: "1px solid #2a2825" }}>
                       {["Race", "Distance", "Track", "Status", "Start Time"].map(h => (
-                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{$t(h, (localStorage.getItem('app-lang') || 'vi'))}</th>
+                        <th key={h} style={{ padding: "0.75rem 1rem", textAlign: "left", fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: ROLE_COLOR }}>{$t(h, (localStorage.getItem('app-lang') || 'en'))}</th>
                       ))}
                     </tr>
                   </thead>
@@ -604,13 +604,13 @@ export default function Spectator() {
                                     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
                                       <thead>
                                         <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", color: "#c9a227", textAlign: "left" }}>
-                                          <th style={{ padding: "0.5rem" }}>{$t("Pos", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                                          <th style={{ padding: "0.5rem" }}>{$t("Gate", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                                          <th style={{ padding: "0.5rem" }}>{$t("Horse", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                                          <th style={{ padding: "0.5rem" }}>{$t("Jockey", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                                          <th style={{ padding: "0.5rem" }}>{$t("Owner", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                                          <th style={{ padding: "0.5rem" }}>{$t("Weight (Out/In)", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                                          <th style={{ padding: "0.5rem" }}>{$t("Finish Time", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Pos", (localStorage.getItem('app-lang') || 'en'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Gate", (localStorage.getItem('app-lang') || 'en'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Horse", (localStorage.getItem('app-lang') || 'en'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Jockey", (localStorage.getItem('app-lang') || 'en'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Owner", (localStorage.getItem('app-lang') || 'en'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Weight (Out/In)", (localStorage.getItem('app-lang') || 'en'))}</th>
+                                          <th style={{ padding: "0.5rem" }}>{$t("Finish Time", (localStorage.getItem('app-lang') || 'en'))}</th>
                                         </tr>
                                       </thead>
                                       <tbody>
@@ -705,12 +705,12 @@ export default function Spectator() {
                   >
                     {h.avatar
                       ? <img src={h.avatar} alt={h.name} style={{ width: "100%", height: "9rem", objectFit: "cover" }} />
-                      : <div style={{ width: "100%", height: "9rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontFamily: "monospace", fontSize: "0.7rem" }}>{$t("NO IMAGE", (localStorage.getItem('app-lang') || 'vi'))}</div>}
+                      : <div style={{ width: "100%", height: "9rem", background: "#0e0c09", display: "flex", alignItems: "center", justifyContent: "center", color: "#3a3835", fontFamily: "monospace", fontSize: "0.7rem" }}>{$t("NO IMAGE", (localStorage.getItem('app-lang') || 'en'))}</div>}
                     <div style={{ padding: "0.875rem" }}>
                       <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", fontSize: "0.95rem" }}>{h.name}</h4>
                       <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.25rem" }}>{h.breed}</p>
                       <div style={{ marginTop: "0.5rem", display: "flex", justifyContent: "space-between", fontSize: "0.7rem" }}>
-                        <span style={{ color: "#a0a0a0", fontFamily: "monospace" }}>{$t("Rating:", (localStorage.getItem('app-lang') || 'vi'))} <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
+                        <span style={{ color: "#a0a0a0", fontFamily: "monospace" }}>{$t("Rating:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#c9a227" }}>{h.currentRating}</strong></span>
                         <span style={{ color: "#a0a0a0", fontFamily: "monospace" }}>W: {h.totalWins ?? 0}</span>
                       </div>
                       <p style={{ fontSize: "0.6rem", color: "#c9a227", fontFamily: "monospace", marginTop: "0.4rem", textAlign: "center" }}>Click to view performance →</p>
@@ -881,7 +881,7 @@ export default function Spectator() {
                 <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
                   <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between" }}>
                     <span>🥇 {$t("Chiến Mã Thắng Nhiều Nhất")}</span>
-                    <span style={{ fontSize: "0.75rem", color: "#c9a227", fontFamily: "monospace" }}>{$t("wins", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#c9a227", fontFamily: "monospace" }}>{$t("wins", (localStorage.getItem('app-lang') || 'en'))}</span>
                   </h4>
                   {topWinsHorses.length === 0 ? (
                     <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>
@@ -921,7 +921,7 @@ export default function Spectator() {
                 <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
                   <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between" }}>
                     <span>⚡️ {$t("Chiến Mã Rating Cao Nhất")}</span>
-                    <span style={{ fontSize: "0.75rem", color: "#4a9d6f", fontFamily: "monospace" }}>{$t("rating", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#4a9d6f", fontFamily: "monospace" }}>{$t("rating", (localStorage.getItem('app-lang') || 'en'))}</span>
                   </h4>
                   {topRatingHorses.length === 0 ? (
                     <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>
@@ -963,7 +963,7 @@ export default function Spectator() {
                 <div className="rounded-xl" style={{ background: "rgba(21,19,16,0.4)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.5rem" }}>
                   <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between" }}>
                     <span>🏁 {$t("Trận Đấu Theo Phân Hạng")}</span>
-                    <span style={{ fontSize: "0.75rem", color: "#ef4444", fontFamily: "monospace" }}>{$t("races", (localStorage.getItem('app-lang') || 'vi'))}</span>
+                    <span style={{ fontSize: "0.75rem", color: "#ef4444", fontFamily: "monospace" }}>{$t("races", (localStorage.getItem('app-lang') || 'en'))}</span>
                   </h4>
                   {classList.length === 0 ? (
                     <p style={{ color: "#a0a0a0", fontStyle: "italic", fontSize: "0.8rem", fontFamily: "monospace" }}>

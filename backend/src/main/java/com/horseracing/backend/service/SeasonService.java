@@ -29,6 +29,9 @@ import com.horseracing.backend.utils.DateTimeParser;
  * - Xem và lưu quy tắc phân hạng rating cho từng mùa giải.
  * - Gia hạn thời gian mùa giải (Cập nhật ngày bắt đầu và kết thúc).
  */
+import com.horseracing.backend.entity.RaceMeeting;
+import com.horseracing.backend.repository.RaceMeetingRepository;
+
 @Service
 @RequiredArgsConstructor
 public class SeasonService {
@@ -37,6 +40,15 @@ public class SeasonService {
     private final SeasonClassRuleRepository seasonClassRuleRepository; // Kho lưu trữ quy định hạng
     private final SeasonMapper seasonMapper; // Bộ ánh xạ mùa giải
     private final SeasonClassRuleMapper seasonClassRuleMapper; // Bộ ánh xạ quy định hạng
+    private final RaceMeetingRepository raceMeetingRepository;
+    private final com.horseracing.backend.repository.OwnerRaceMeetingRegistrationRepository ownerRegRepository;
+    private final com.horseracing.backend.repository.JockeyRaceMeetingRegistrationRepository jockeyRegRepository;
+    private final com.horseracing.backend.repository.HorseRaceMeetingRegistrationRepository horseRegRepository;
+    private final com.horseracing.backend.repository.UserRepository userRepository;
+    private final com.horseracing.backend.repository.WalletTransactionRepository walletTransactionRepository;
+    private final com.horseracing.backend.repository.RaceRepository raceRepository;
+    private final com.horseracing.backend.repository.RaceInvitationRepository raceInvitationRepository;
+    private final com.horseracing.backend.repository.RaceEntryRepository raceEntryRepository;
 
     // Lấy danh sách toàn bộ mùa giải
     public List<SeasonDTO> getAllSeasons() {
@@ -106,8 +118,152 @@ public class SeasonService {
     public String toggleSeasonStatus(Integer id) {
         Season season = seasonRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Season not found"));
-        season.setStatus("ACTIVE".equals(season.getStatus()) ? "CLOSED" : "ACTIVE");
+        String nextStatus = "ACTIVE".equals(season.getStatus()) ? "CLOSED" : "ACTIVE";
+        season.setStatus(nextStatus);
         seasonRepository.save(season);
+
+        // Nếu mùa giải bị Khóa / Đóng (CLOSED), chuyển toàn bộ các RaceMeeting trực thuộc sang INACTIVE, hoàn lại ngân sách giải về Ví Admin, hoàn 100% tiền vé từ Escrow và reset danh sách người tham gia
+        if ("CLOSED".equals(nextStatus) || "LOCKED".equals(nextStatus)) {
+            List<RaceMeeting> meetings = raceMeetingRepository.findBySeasonId(id);
+            com.horseracing.backend.entity.User admin = userRepository.findAll().stream()
+                    .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
+                    .findFirst().orElse(null);
+
+            for (RaceMeeting m : meetings) {
+                boolean wasActive = !"INACTIVE".equalsIgnoreCase(m.getStatus());
+                m.setStatus("INACTIVE");
+
+                // Hoàn lại ngân sách giải đấu ($totalBudget) về Ví Admin nếu meeting đang active và đặt totalBudget = 0
+                BigDecimal curBudget = m.getTotalBudget() != null ? m.getTotalBudget() : BigDecimal.ZERO;
+                if (curBudget.compareTo(BigDecimal.ZERO) > 0) {
+                    m.setLastAllocatedBudget(curBudget); // Lưu mốc ngân sách cũ
+                }
+                BigDecimal budgetToRefund = m.getLastAllocatedBudget() != null ? m.getLastAllocatedBudget() : curBudget;
+
+                if (wasActive && admin != null && budgetToRefund.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
+                    admin.setWalletBalance(adminBal.add(budgetToRefund));
+                    userRepository.save(admin);
+
+                    com.horseracing.backend.entity.WalletTransaction txAdmin = new com.horseracing.backend.entity.WalletTransaction();
+                    txAdmin.setUserId(admin.getId());
+                    txAdmin.setAmount(budgetToRefund);
+                    txAdmin.setTransactionType("MEETING_BUDGET_REFUND");
+                    txAdmin.setDescription("Budget refund to Admin Wallet due to Season Lock (" + season.getName() + ") for Meeting '" + m.getName() + "'");
+                    txAdmin.setRaceMeetingId(m.getId());
+                    txAdmin.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                    walletTransactionRepository.save(txAdmin);
+                }
+
+                // Đặt totalBudget của RaceMeeting về 0
+                m.setTotalBudget(BigDecimal.ZERO);
+                raceMeetingRepository.save(m);
+
+                // Hoàn lại tiền vé cho Chủ ngựa từ Quỹ Escrow Vault
+                BigDecimal ticketPrice = m.getTicketPrice() != null ? m.getTicketPrice() : BigDecimal.ZERO;
+                if (ticketPrice.compareTo(BigDecimal.ZERO) > 0) {
+                    List<com.horseracing.backend.entity.OwnerRaceMeetingRegistration> ownerRegs = ownerRegRepository.findByRaceMeetingId(m.getId());
+                    for (com.horseracing.backend.entity.OwnerRaceMeetingRegistration reg : ownerRegs) {
+                        if (!"REJECTED".equalsIgnoreCase(reg.getStatus()) && reg.getOwnerId() != null) {
+                            userRepository.findById(reg.getOwnerId()).ifPresent(owner -> {
+                                BigDecimal curBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                                owner.setWalletBalance(curBal.add(ticketPrice));
+                                userRepository.save(owner);
+
+                                com.horseracing.backend.entity.WalletTransaction txOwner = new com.horseracing.backend.entity.WalletTransaction();
+                                txOwner.setUserId(owner.getId());
+                                txOwner.setAmount(ticketPrice);
+                                txOwner.setTransactionType("TICKET_REFUND");
+                                txOwner.setDescription("Ticket fee refund from Escrow Vault due to Season Lock (" + season.getName() + ")");
+                                txOwner.setRaceMeetingId(m.getId());
+                                txOwner.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                                walletTransactionRepository.save(txOwner);
+                            });
+                        }
+                        reg.setStatus("REJECTED");
+                        ownerRegRepository.save(reg);
+                    }
+                }
+
+                // Hoàn lại tiền cọc thuê nài (Hire Fee) cho Owner và thu hồi từ Jockey (nếu đã thanh toán) khi Deactive Season
+                List<com.horseracing.backend.entity.Race> sRaces = raceRepository.findByRaceMeetingId(m.getId());
+                for (com.horseracing.backend.entity.Race r : sRaces) {
+                    List<com.horseracing.backend.entity.RaceInvitation> invs = raceInvitationRepository.findByRaceId(r.getId());
+                    for (com.horseracing.backend.entity.RaceInvitation inv : invs) {
+                        if (!"REFUNDED".equalsIgnoreCase(inv.getPayoutStatus()) && inv.getOwnerId() != null) {
+                            BigDecimal hireFee = inv.getHireFee() != null ? inv.getHireFee() : new BigDecimal("500.00");
+                            boolean wasHeldOrPaid = "HELD".equalsIgnoreCase(inv.getPayoutStatus()) || "PAID".equalsIgnoreCase(inv.getPayoutStatus());
+                            if (hireFee.compareTo(BigDecimal.ZERO) > 0 && wasHeldOrPaid) {
+                                // Nếu đã thanh toán cho Jockey (PAID), thu hồi tiền từ ví Jockey
+                                if ("PAID".equalsIgnoreCase(inv.getPayoutStatus()) && inv.getJockeyId() != null) {
+                                    userRepository.findById(inv.getJockeyId()).ifPresent(jockey -> {
+                                        BigDecimal jBal = jockey.getWalletBalance() != null ? jockey.getWalletBalance() : BigDecimal.ZERO;
+                                        jockey.setWalletBalance(jBal.subtract(hireFee));
+                                        userRepository.save(jockey);
+
+                                        com.horseracing.backend.entity.WalletTransaction txClawback = new com.horseracing.backend.entity.WalletTransaction();
+                                        txClawback.setUserId(jockey.getId());
+                                        txClawback.setAmount(hireFee.negate());
+                                        txClawback.setTransactionType("JOCKEY_HIRE_CLAWBACK");
+                                        txClawback.setDescription("Jockey hire fee clawback due to Season Lock (" + season.getName() + ")");
+                                        txClawback.setRaceMeetingId(m.getId());
+                                        txClawback.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                                        walletTransactionRepository.save(txClawback);
+                                    });
+                                }
+                                // Hoàn lại 100% tiền cọc thuê nài về ví của Owner nếu tiền thực sự đã được trừ (HELD/PAID)
+                                userRepository.findById(inv.getOwnerId()).ifPresent(owner -> {
+                                    BigDecimal ownerBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                                    owner.setWalletBalance(ownerBal.add(hireFee));
+                                    userRepository.save(owner);
+
+                                    com.horseracing.backend.entity.WalletTransaction txHire = new com.horseracing.backend.entity.WalletTransaction();
+                                    txHire.setUserId(owner.getId());
+                                    txHire.setAmount(hireFee);
+                                    txHire.setTransactionType("JOCKEY_HIRE_REFUND");
+                                    txHire.setDescription("Jockey hire fee refund due to Season Lock (" + season.getName() + ")");
+                                    txHire.setRaceMeetingId(m.getId());
+                                    txHire.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                                    walletTransactionRepository.save(txHire);
+                                });
+                            }
+                            inv.setPayoutStatus("REFUNDED");
+                            inv.setStatus("REJECTED");
+                            raceInvitationRepository.save(inv);
+                        }
+                    }
+                }
+
+                // Reset danh sách đăng ký kỵ sĩ, chiến mã và các lượt thi đấu RaceEntry về REJECTED
+                List<com.horseracing.backend.entity.JockeyRaceMeetingRegistration> jockeyRegs = jockeyRegRepository.findByRaceMeetingId(m.getId());
+                for (com.horseracing.backend.entity.JockeyRaceMeetingRegistration jReg : jockeyRegs) {
+                    jReg.setStatus("REJECTED");
+                    jockeyRegRepository.save(jReg);
+                }
+                List<com.horseracing.backend.entity.HorseRaceMeetingRegistration> horseRegs = horseRegRepository.findByRaceMeetingId(m.getId());
+                for (com.horseracing.backend.entity.HorseRaceMeetingRegistration hReg : horseRegs) {
+                    hReg.setStatus("REJECTED");
+                    horseRegRepository.save(hReg);
+                }
+                for (com.horseracing.backend.entity.Race r : sRaces) {
+                    if (!"FINISHED".equalsIgnoreCase(r.getStatus())) {
+                        r.setStatus("DECLARATION_OPEN");
+                        raceRepository.save(r);
+                    }
+                    List<com.horseracing.backend.entity.RaceEntry> entries = raceEntryRepository.findByRaceId(r.getId());
+                    for (com.horseracing.backend.entity.RaceEntry entry : entries) {
+                        if (!"FINISHED".equalsIgnoreCase(entry.getStatus())) {
+                            entry.setStatus("REJECTED");
+                            entry.setGateNumber(0);
+                            entry.setCarriedWeight(BigDecimal.ZERO);
+                            entry.setHandicapWeight(BigDecimal.ZERO);
+                            raceEntryRepository.save(entry);
+                        }
+                    }
+                }
+            }
+        }
+
         return season.getStatus();
     }
 

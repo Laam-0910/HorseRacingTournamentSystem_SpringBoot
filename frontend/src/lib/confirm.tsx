@@ -22,7 +22,7 @@ export function confirm(message: string): Promise<boolean> {
       resolve(value);
     };
 
-    const lang = localStorage.getItem("app-lang") || "vi";
+    const lang = localStorage.getItem("app-lang") || "en";
 
     // Tiến hành vẽ giao diện Confirm Dialog tùy biến
     root.render(
@@ -169,7 +169,7 @@ export function showAlert(message: string): Promise<void> {
       resolve();
     };
 
-    const lang = localStorage.getItem("app-lang") || "vi";
+    const lang = localStorage.getItem("app-lang") || "en";
 
     root.render(
       <div style={{

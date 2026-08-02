@@ -139,10 +139,10 @@ export default function LiveSettings() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-          <span>{$t("Race Livestream Broadcasting", (localStorage.getItem('app-lang') || 'vi'))}</span>
+          <span>{$t("Race Livestream Broadcasting", (localStorage.getItem('app-lang') || 'en'))}</span>
         </h3>
         <div className="flex items-center space-x-2">
-          <span className="text-xs text-white/60 font-semibold uppercase tracking-wider">{$t("Select Meeting:", (localStorage.getItem('app-lang') || 'vi'))}</span>
+          <span className="text-xs text-white/60 font-semibold uppercase tracking-wider">{$t("Select Meeting:", (localStorage.getItem('app-lang') || 'en'))}</span>
           <select
             value={selectedMeetingId || ""}
             onChange={(e) => setSelectedMeetingId(parseInt(e.target.value))}
@@ -160,7 +160,7 @@ export default function LiveSettings() {
       {/* Khu vực bảng hoặc danh sách cuộc đua */}
       <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
         {loading ? (
-          <p className="p-6 text-sm text-white/40 text-center">{$t("Loading races...", (localStorage.getItem('app-lang') || 'vi'))}</p>
+          <p className="p-6 text-sm text-white/40 text-center">{$t("Loading races...", (localStorage.getItem('app-lang') || 'en'))}</p>
         ) : races.length > 0 ? (
           isMobile ? (
             // Layout thẻ cho thiết bị di động
@@ -174,7 +174,7 @@ export default function LiveSettings() {
                     </span>
                   </div>
                   <div>
-                    <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>{$t("YouTube Broadcast URL", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                    <label style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", display: "block", marginBottom: "4px" }}>{$t("YouTube Broadcast URL", (localStorage.getItem('app-lang') || 'en'))}</label>
                     <input
                       type="text"
                       disabled={r.status !== "RUNNING"} // Chỉ cho phép nhập link khi trận đang RUNNING
@@ -196,13 +196,13 @@ export default function LiveSettings() {
                       disabled={r.status !== "RUNNING"}
                       onClick={() => handleSave(r.id)}
                       className={`px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
-                    >{$t("Save", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                    >{$t("Save", (localStorage.getItem('app-lang') || 'en'))}</button>
                     {r.youtubeLiveUrl && (
                       <button
                         disabled={r.status !== "RUNNING"}
                         onClick={() => handleRemove(r.id)}
                         className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed" : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20"}`}
-                      >{$t("Remove", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                      >{$t("Remove", (localStorage.getItem('app-lang') || 'en'))}</button>
                     )}
                   </div>
                 </div>
@@ -213,10 +213,10 @@ export default function LiveSettings() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#151310] text-xs font-semibold text-white/60 uppercase tracking-wider border-b border-white/5">
-                  <th className="px-6 py-4">{$t("Class Level", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                  <th className="px-6 py-4">{$t("Race Status", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                  <th className="px-6 py-4">{$t("YouTube Broadcast URL", (localStorage.getItem('app-lang') || 'vi'))}</th>
-                  <th className="px-6 py-4 text-right">{$t("Actions", (localStorage.getItem('app-lang') || 'vi'))}</th>
+                  <th className="px-6 py-4">{$t("Class Level", (localStorage.getItem('app-lang') || 'en'))}</th>
+                  <th className="px-6 py-4">{$t("Race Status", (localStorage.getItem('app-lang') || 'en'))}</th>
+                  <th className="px-6 py-4">{$t("YouTube Broadcast URL", (localStorage.getItem('app-lang') || 'en'))}</th>
+                  <th className="px-6 py-4 text-right">{$t("Actions", (localStorage.getItem('app-lang') || 'en'))}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-sm">
@@ -250,13 +250,13 @@ export default function LiveSettings() {
                         disabled={r.status !== "RUNNING"}
                         onClick={() => handleSave(r.id)}
                         className={`px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "opacity-50 cursor-not-allowed" : ""}`}
-                      >{$t("Save", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                      >{$t("Save", (localStorage.getItem('app-lang') || 'en'))}</button>
                       {r.youtubeLiveUrl && (
                         <button
                           disabled={r.status !== "RUNNING"}
                           onClick={() => handleRemove(r.id)}
                           className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition ${r.status !== "RUNNING" ? "bg-white/5 text-white/20 border border-white/5 cursor-not-allowed" : "bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20"}`}
-                        >{$t("Remove", (localStorage.getItem('app-lang') || 'vi'))}</button>
+                        >{$t("Remove", (localStorage.getItem('app-lang') || 'en'))}</button>
                       )}
                     </td>
                   </tr>
@@ -265,7 +265,7 @@ export default function LiveSettings() {
             </table>
           )
         ) : (
-          <p className="p-6 text-sm text-white/40 text-center">{$t("No races scheduled for this meeting.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+          <p className="p-6 text-sm text-white/40 text-center">{$t("No races scheduled for this meeting.", (localStorage.getItem('app-lang') || 'en'))}</p>
         )}
       </div>
 

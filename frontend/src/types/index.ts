@@ -25,7 +25,12 @@ export interface Horse {
 export interface RaceMeeting {
   id: number;
   seasonId: number;
-  // TODO: bo sung field con thieu
+  name: string;
+  startDate?: string;
+  venue?: string;
+  totalBudget?: number;
+  ticketPrice?: number;
+  ticketSettled?: boolean;
 }
 
 export interface Race {

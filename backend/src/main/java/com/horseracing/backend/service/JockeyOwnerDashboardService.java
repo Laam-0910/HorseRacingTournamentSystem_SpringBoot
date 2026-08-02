@@ -20,12 +20,14 @@ public class JockeyOwnerDashboardService {
     private final HorseRepository horseRepository;
     private final RaceRepository raceRepository;
     private final RaceMeetingRepository raceMeetingRepository;
+    private final SeasonRepository seasonRepository;
     private final RaceEntryRepository raceEntryRepository;
     private final RaceInvitationRepository invitationRepository;
     private final JockeyRaceMeetingRegistrationRepository jockeyRegRepository;
     private final OwnerRaceMeetingRegistrationRepository ownerRegRepository;
     private final HorseRaceMeetingRegistrationRepository horseRegRepository;
     private final ViolationRepository violationRepository;
+    private final com.horseracing.backend.repository.WalletTransactionRepository walletTransactionRepository;
 
     private final UserMapper userMapper;
     private final HorseMapper horseMapper;
@@ -37,7 +39,18 @@ public class JockeyOwnerDashboardService {
     // Tra cứu dữ liệu bảng điều khiển (Dashboard) của Nài ngựa
     @Transactional(readOnly = true)
     public Map<String, Object> getJockeyDashboard(Integer jockeyId) {
-        List<RaceMeeting> meetings = raceMeetingRepository.findAll(); // Lấy tất cả Ngày hội đua
+        // Lấy danh sách ID các mùa giải đang ACTIVE
+        Set<Integer> activeSeasonIds = seasonRepository.findAll().stream()
+                .filter(s -> "ACTIVE".equalsIgnoreCase(s.getStatus()))
+                .map(Season::getId)
+                .collect(Collectors.toSet());
+
+        // Chỉ hiển thị các Ngày hội đua đang ACTIVE thuộc Mùa giải đang ACTIVE
+        List<RaceMeeting> meetings = raceMeetingRepository.findAll().stream()
+                .filter(m -> "ACTIVE".equalsIgnoreCase(m.getStatus() != null ? m.getStatus() : "ACTIVE"))
+                .filter(m -> activeSeasonIds.contains(m.getSeasonId()))
+                .collect(Collectors.toList());
+
         List<JockeyRaceMeetingRegistration> myRegs = jockeyRegRepository.findByJockeyId(jockeyId); // Lấy danh sách đăng ký của nài
 
         Set<Integer> registeredMeetingIds = new HashSet<>(); // Set lưu danh sách ID các Ngày hội đua nài đã đăng ký
@@ -182,6 +195,22 @@ public class JockeyOwnerDashboardService {
         response.put("jockeyStats", stats);
         response.put("notifications", notificationList);
 
+        // Đồng bộ số dư ví khả dụng của Kỵ sĩ theo sổ cái giao dịch: Base ($15,000.00) + Sum(WalletTransaction)
+        userRepository.findById(jockeyId).ifPresent(u -> {
+            BigDecimal baseBal = new BigDecimal("15000.00");
+            List<WalletTransaction> txs = walletTransactionRepository.findByUserIdOrderByCreatedAtDesc(jockeyId);
+            BigDecimal netTx = txs.stream()
+                    .map(WalletTransaction::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal calcBal = baseBal.add(netTx);
+            if (calcBal.compareTo(BigDecimal.ZERO) < 0) calcBal = BigDecimal.ZERO;
+            if (u.getWalletBalance() == null || u.getWalletBalance().compareTo(calcBal) != 0) {
+                u.setWalletBalance(calcBal);
+                userRepository.save(u);
+            }
+            response.put("walletBalance", calcBal);
+        });
         return response; // Trả về thông số Dashboard Nài ngựa
     }
 
@@ -251,7 +280,18 @@ public class JockeyOwnerDashboardService {
     // Tra cứu dữ liệu bảng điều khiển (Dashboard) của Chủ sở hữu Ngựa (Owner)
     @Transactional(readOnly = true)
     public Map<String, Object> getOwnerDashboard(Integer ownerId) {
-        List<RaceMeeting> meetings = raceMeetingRepository.findAll(); // Lấy tất cả Ngày hội đua
+        // Lấy danh sách ID các mùa giải đang ACTIVE
+        Set<Integer> activeSeasonIds = seasonRepository.findAll().stream()
+                .filter(s -> "ACTIVE".equalsIgnoreCase(s.getStatus()))
+                .map(Season::getId)
+                .collect(Collectors.toSet());
+
+        // Chỉ hiển thị các Ngày hội đua đang ACTIVE thuộc Mùa giải đang ACTIVE
+        List<RaceMeeting> meetings = raceMeetingRepository.findAll().stream()
+                .filter(m -> "ACTIVE".equalsIgnoreCase(m.getStatus() != null ? m.getStatus() : "ACTIVE"))
+                .filter(m -> activeSeasonIds.contains(m.getSeasonId()))
+                .collect(Collectors.toList());
+
         List<OwnerRaceMeetingRegistration> myRegs = ownerRegRepository.findByOwnerId(ownerId); // Lấy các đăng ký của chủ
 
         Set<Integer> registeredMeetingIds = new HashSet<>(); // Set lưu danh sách ID các Ngày hội đua chủ đã đăng ký
@@ -517,6 +557,22 @@ public class JockeyOwnerDashboardService {
         response.put("bookedHorsesMap", bookedHorsesMap);
         response.put("notifications", notificationList);
 
+        // Đồng bộ số dư ví khả dụng theo sổ cái giao dịch
+        userRepository.findById(ownerId).ifPresent(u -> {
+            BigDecimal baseBal = new BigDecimal("60000.00");
+            List<WalletTransaction> txs = walletTransactionRepository.findByUserIdOrderByCreatedAtDesc(ownerId);
+            BigDecimal netTx = txs.stream()
+                    .map(WalletTransaction::getAmount)
+                    .filter(Objects::nonNull)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal calcBal = baseBal.add(netTx);
+            if (calcBal.compareTo(BigDecimal.ZERO) < 0) calcBal = BigDecimal.ZERO;
+            if (u.getWalletBalance() == null || u.getWalletBalance().compareTo(calcBal) != 0) {
+                u.setWalletBalance(calcBal);
+                userRepository.save(u);
+            }
+            response.put("walletBalance", calcBal);
+        });
         return response; // Trả về kết quả tổng hợp cho Owner Dashboard
     }
 

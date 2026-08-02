@@ -320,6 +320,62 @@ public class DatabaseInitializer implements InitializingBean {
             }
 
 
+            // Clean up any stale RaceEntry records & reset gate_number under inactive meetings or closed seasons
+            try {
+                jdbcTemplate.update(
+                    "UPDATE RaceEntry SET status = 'REJECTED', gate_number = 0 WHERE status <> 'FINISHED' AND race_id IN (" +
+                    "  SELECT r.id FROM Race r JOIN RaceMeeting m ON r.race_meeting_id = m.id LEFT JOIN Season s ON m.season_id = s.id WHERE m.status <> 'ACTIVE' OR s.status <> 'ACTIVE'" +
+                    ")"
+                );
+                jdbcTemplate.update(
+                    "UPDATE Race SET status = 'DECLARATION_OPEN' WHERE status <> 'FINISHED' AND race_meeting_id IN (" +
+                    "  SELECT m.id FROM RaceMeeting m LEFT JOIN Season s ON m.season_id = s.id WHERE m.status <> 'ACTIVE' OR s.status <> 'ACTIVE'" +
+                    ")"
+                );
+            } catch (Exception ex) {
+                System.err.println("Note on RaceEntry stale & gate reset cleanup: " + ex.getMessage());
+            }
+
+            // Clean up any errant JOCKEY_HIRE_REFUND transactions where no matching JOCKEY_HIRE_FEE exists for that user
+            try {
+                jdbcTemplate.update(
+                    "DELETE FROM WalletTransaction WHERE transaction_type = 'JOCKEY_HIRE_REFUND' " +
+                    "AND user_id NOT IN (SELECT DISTINCT user_id FROM WalletTransaction WHERE transaction_type = 'JOCKEY_HIRE_FEE')"
+                );
+            } catch (Exception ex) {
+                System.err.println("Note on transaction cleanup: " + ex.getMessage());
+            }
+
+            // Deduplicate RaceEntry records: keep only 1 entry per (race_id, horse_id)
+            try {
+                jdbcTemplate.update(
+                    "DELETE FROM RaceEntry WHERE id NOT IN (" +
+                    "  SELECT MIN(id) FROM RaceEntry GROUP BY race_id, horse_id" +
+                    ")"
+                );
+            } catch (Exception ex) {
+                System.err.println("Note on RaceEntry deduplication: " + ex.getMessage());
+            }
+
+            // Sync specific base balances per user, plus sum of WalletTransactions
+            try {
+                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 60000.00, balance = 60000.00 WHERE username = 'owner_jackson'");
+                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 85000.00, balance = 85000.00 WHERE username = 'owner_miller'");
+                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 120000.00, balance = 120000.00 WHERE username = 'owner_chen'");
+                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 15000.00, balance = 15000.00 WHERE username = 'jockey_ryan'");
+                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 18500.00, balance = 18500.00 WHERE username = 'jockey_emma'");
+                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 22000.00, balance = 22000.00 WHERE username = 'jockey_carlos'");
+                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 12000.00, balance = 12000.00 WHERE username = 'jockey_naomi'");
+
+                jdbcTemplate.update(
+                    "UPDATE u SET u.wallet_balance = u.wallet_balance + ISNULL(txSum.total, 0), u.balance = u.balance + ISNULL(txSum.total, 0) " +
+                    "FROM [User] u " +
+                    "JOIN (SELECT user_id, SUM(amount) AS total FROM WalletTransaction GROUP BY user_id) txSum ON u.id = txSum.user_id"
+                );
+            } catch (Exception ex) {
+                System.err.println("Note on wallet balance sync: " + ex.getMessage());
+            }
+
             System.out.println("Database columns, ChatMessage table, HorseRetirementRequest table, and RaceEntry auto-seeding verified successfully.");
         } catch (Exception e) {
             System.err.println("Failed to update database schema: " + e.getMessage());

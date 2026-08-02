@@ -33,8 +33,7 @@ public class AuthController {
         // Kiểm tra xem tiến trình đăng nhập có trả về lỗi hay không
         if (!response.getSuccess()) {
             // Nếu thất bại (sai mật khẩu hoặc tài khoản chưa kích hoạt), trả về phản hồi lỗi HTTP status 400 Bad Request
-            return ResponseEntity.badRequest().body(response);
-        }
+    }
         // Nếu đăng nhập thành công, trả về phản hồi HTTP status 200 OK cùng dữ liệu User và mã Token
         return ResponseEntity.ok(response);
     }

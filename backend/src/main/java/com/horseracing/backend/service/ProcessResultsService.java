@@ -16,9 +16,13 @@ import java.util.Optional;
 public class ProcessResultsService {
 
     private final RaceRepository raceRepository; // Kho dữ liệu quản lý các trận đua
+    private final RaceMeetingRepository raceMeetingRepository; // Kho dữ liệu quản lý ngày hội đua
     private final RaceEntryRepository raceEntryRepository; // Kho dữ liệu quản lý thông tin lượt đua của từng ngựa
     private final HorseRepository horseRepository; // Kho dữ liệu quản lý thông tin chiến mã
     private final UserRepository userRepository; // Kho dữ liệu quản lý người dùng (nài ngựa, chủ ngựa)
+    private final AdminUserService adminUserService; // Dịch vụ quản lý thanh toán & ví Admin
+    private final WalletTransactionRepository walletTransactionRepository; // Kho lưu trữ giao dịch ví tiền
+    private final RaceInvitationRepository invitationRepository; // Kho dữ liệu lời mời thi đấu
 
     @Transactional // Đảm bảo toàn bộ quá trình cập nhật kết quả trận đua được thực thi trong một Transaction
     public void confirmResults(Integer raceId, String stewardReport, List<Map<String, Object>> entriesResults) {
@@ -248,6 +252,15 @@ public class ProcessResultsService {
                             BigDecimal currentBal = jUser.getWalletBalance() != null ? jUser.getWalletBalance() : BigDecimal.ZERO;
                             jUser.setWalletBalance(currentBal.add(jockeyShare));
                             userRepository.save(jUser);
+
+                            WalletTransaction txJockey = new WalletTransaction();
+                            txJockey.setUserId(jUser.getId());
+                            txJockey.setAmount(jockeyShare);
+                            txJockey.setTransactionType("RACE_PRIZE_MONEY");
+                            txJockey.setDescription("Race prize money (" + jockeyPct + "%) for Position #" + finalPosition + " in Race #" + race.getId());
+                            txJockey.setRaceMeetingId(race.getRaceMeetingId());
+                            txJockey.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                            walletTransactionRepository.save(txJockey);
                         }
 
                         // Nạp tiền vào ví của Chủ ngựa
@@ -259,8 +272,45 @@ public class ProcessResultsService {
                                 BigDecimal currentBal = oUser.getWalletBalance() != null ? oUser.getWalletBalance() : BigDecimal.ZERO;
                                 oUser.setWalletBalance(currentBal.add(ownerShare));
                                 userRepository.save(oUser);
+
+                                WalletTransaction txOwner = new WalletTransaction();
+                                txOwner.setUserId(oUser.getId());
+                                txOwner.setAmount(ownerShare);
+                                txOwner.setTransactionType("RACE_PRIZE_MONEY");
+                                txOwner.setDescription("Race prize money (" + (new BigDecimal("100.00").subtract(jockeyPct)) + "%) for Position #" + finalPosition + " in Race #" + race.getId());
+                                txOwner.setRaceMeetingId(race.getRaceMeetingId());
+                                txOwner.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                                walletTransactionRepository.save(txOwner);
                             }
                         }
+                    }
+
+                    // Giải ngân Tiền thuê Nài ngựa (Jockey Hire Fee) từ Escrow Vault sang Ví Jockey khi trận đua kết thúc
+                    if (entry.getJockeyId() != null) {
+                        invitationRepository.findByJockeyIdAndRaceIdAndHorseId(entry.getJockeyId(), entry.getRaceId(), entry.getHorseId())
+                                .stream()
+                                .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()) && "HELD".equalsIgnoreCase(i.getPayoutStatus()))
+                                .forEach(i -> {
+                                    BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500.00");
+                                    if (hireFee.compareTo(BigDecimal.ZERO) > 0) {
+                                        userRepository.findById(i.getJockeyId()).ifPresent(jockey -> {
+                                            BigDecimal currentBal = jockey.getWalletBalance() != null ? jockey.getWalletBalance() : BigDecimal.ZERO;
+                                            jockey.setWalletBalance(currentBal.add(hireFee));
+                                            userRepository.save(jockey);
+
+                                            WalletTransaction txJockeyHire = new WalletTransaction();
+                                            txJockeyHire.setUserId(jockey.getId());
+                                            txJockeyHire.setAmount(hireFee);
+                                            txJockeyHire.setTransactionType("JOCKEY_HIRE_INCOME");
+                                            txJockeyHire.setDescription("Jockey hire fee payout for completed Race #" + race.getId());
+                                            txJockeyHire.setRaceMeetingId(race.getRaceMeetingId());
+                                            txJockeyHire.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                                            walletTransactionRepository.save(txJockeyHire);
+                                        });
+                                    }
+                                    i.setPayoutStatus("PAID");
+                                    invitationRepository.save(i);
+                                });
                     }
 
                     // Cập nhật chỉ số thống kê của Nài ngựa (Jockey)
@@ -314,5 +364,67 @@ public class ProcessResultsService {
         race.setYoutubeLiveUrl(null);
         // Lưu thông tin trận đua đã cập nhật vào CSDL
         raceRepository.save(race);
+
+        // Tự động kích hoạt chốt doanh thu vé về Ví Admin khi trận đua hoàn tất (Auto-Settlement)
+        if (race.getRaceMeetingId() != null) {
+            try {
+                adminUserService.settleMeetingTicketRevenue(race.getRaceMeetingId());
+            } catch (Exception ex) {
+                // Đã chốt trước đó hoặc không đủ điều kiện -> bỏ qua an toàn
+            }
+
+            // Tự động kiểm tra nếu tất cả các trận đua trong Buổi đua đã hoàn thành -> Hoàn số tiền ngân sách dôi dư chưa sử dụng về Ví Admin
+            try {
+                Optional<RaceMeeting> meetingOpt = raceMeetingRepository.findById(race.getRaceMeetingId());
+                if (meetingOpt.isPresent()) {
+                    RaceMeeting meeting = meetingOpt.get();
+                    List<Race> meetingRaces = raceRepository.findByRaceMeetingId(meeting.getId());
+                    boolean allFinished = meetingRaces.stream().allMatch(r -> 
+                        "OFFICIAL".equalsIgnoreCase(r.getStatus()) || 
+                        "FINISHED".equalsIgnoreCase(r.getStatus()) || 
+                        "CANCELLED".equalsIgnoreCase(r.getStatus())
+                    );
+
+                    if (allFinished) {
+                        BigDecimal allocatedBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+                        // Tính tổng tiền thưởng thực tế đã trao cho các vị trí thắng giải
+                        BigDecimal totalAwardedPurses = meetingRaces.stream()
+                                .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus()))
+                                .map(r -> raceEntryRepository.findByRaceId(r.getId()))
+                                .flatMap(List::stream)
+                                .map(e -> e.getPrizeMoney() != null ? e.getPrizeMoney() : BigDecimal.ZERO)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                        BigDecimal unspentBudget = allocatedBudget.subtract(totalAwardedPurses);
+                        if (unspentBudget.compareTo(BigDecimal.ZERO) > 0) {
+                            // Tìm tài khoản Admin để hoàn lại số tiền dư
+                            List<User> admins = userRepository.findAll().stream()
+                                    .filter(u -> (u.getRoleId() != null && u.getRoleId() == 1) || "admin_root".equalsIgnoreCase(u.getUsername()))
+                                    .toList();
+                            if (!admins.isEmpty()) {
+                                User admin = admins.get(0);
+                                BigDecimal curBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
+                                admin.setWalletBalance(curBal.add(unspentBudget));
+                                admin.setBalance(curBal.add(unspentBudget));
+                                userRepository.save(admin);
+
+                                WalletTransaction txRefund = new WalletTransaction();
+                                txRefund.setUserId(admin.getId());
+                                txRefund.setAmount(unspentBudget);
+                                txRefund.setTransactionType("ADMIN_BUDGET_REFUND");
+                                txRefund.setDescription("Unspent budget refund ($" + unspentBudget + ") for completed Race Meeting #" + meeting.getId() + " (" + meeting.getName() + ")");
+                                txRefund.setRaceMeetingId(meeting.getId());
+                                txRefund.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                                walletTransactionRepository.save(txRefund);
+                            }
+                        }
+                        meeting.setStatus("ENDED");
+                        raceMeetingRepository.save(meeting);
+                    }
+                }
+            } catch (Exception ex) {
+                System.err.println("Note on Admin budget refund: " + ex.getMessage());
+            }
+        }
     }
 }

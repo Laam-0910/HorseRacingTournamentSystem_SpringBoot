@@ -100,7 +100,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 1.5 * 1024 * 1024) { 
-        setProfileErr($t("Ảnh đại diện phải nhỏ hơn 1.5MB", (localStorage.getItem('app-lang') || 'vi'))); return;
+        setProfileErr($t("Ảnh đại diện phải nhỏ hơn 1.5MB", (localStorage.getItem('app-lang') || 'en'))); return;
       }
       const reader = new FileReader();
       reader.onload = (event) => { if (event.target?.result) setAvatar(event.target.result as string); };
@@ -114,7 +114,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     if (user?.roleId === 3 && weight) {
       const wVal = parseFloat(weight);
       if (isNaN(wVal) || wVal < 45 || wVal > 100) {
-        setProfileErr($t("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.", (localStorage.getItem('app-lang') || 'vi')));
+        setProfileErr($t("Cân nặng của Nài ngựa (Jockey) phải nằm trong khoảng từ 45kg đến 100kg.", (localStorage.getItem('app-lang') || 'en')));
         return;
       }
     }
@@ -127,7 +127,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
       });
       if (res.success && res.user) {
         setUser({ ...user, fullName: res.user.fullName, email: res.user.email, weight: res.user.weight, avatar: res.user.avatar, biography: res.user.biography, requireOtp: res.user.requireOtp ?? otpEnabled } as any);
-        setProfileMsg($t("✅ Đã lưu thành công!", (localStorage.getItem('app-lang') || 'vi')));
+        setProfileMsg($t("✅ Đã lưu thành công!", (localStorage.getItem('app-lang') || 'en')));
         setTimeout(() => setProfileMsg(""), 3000);
       } else {
         setProfileErr(res.error || "Failed to update profile.");
@@ -159,7 +159,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const handleConfirmPassChange = async (e: React.FormEvent) => {
     e.preventDefault();
     setPassMsg(""); setPassErr("");
-    const lang = localStorage.getItem('app-lang') || 'vi';
+    const lang = localStorage.getItem('app-lang') || 'en';
 
     if (newPassword !== confirmPassword) { 
       setPassErr($t("Passwords do not match.")); 
@@ -313,7 +313,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                </div>
                <div className="glass-badge" style={{ position: "absolute", bottom: "-5px", left: "50%", transform: "translateX(-50%)", padding: "4px 12px", borderRadius: "100px", fontSize: "0.65rem", fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: "4px" }}>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  {$t("Đổi ảnh", (localStorage.getItem('app-lang') || 'vi'))}
+                  {$t("Đổi ảnh", (localStorage.getItem('app-lang') || 'en'))}
                </div>
              </div>
 
@@ -358,7 +358,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                    </div>
                    <div className="glass-badge" style={{ position: "absolute", bottom: "-10px", left: "50%", transform: "translateX(-50%)", padding: "4px 12px", borderRadius: "100px", fontSize: "0.65rem", fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", gap: "4px" }}>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                      {$t("Đổi ảnh", (localStorage.getItem('app-lang') || 'vi'))}
+                      {$t("Đổi ảnh", (localStorage.getItem('app-lang') || 'en'))}
                    </div>
                  </div>
 
@@ -366,7 +366,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                  
                  <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center", zIndex: 2, flexWrap: "wrap" }}>
                    <span className="glass-badge" style={{ color: roleColor, padding: "0.4rem 1rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>
-                     {$t("Nài ngựa", (localStorage.getItem('app-lang') || 'vi'))}
+                     {$t("Nài ngựa", (localStorage.getItem('app-lang') || 'en'))}
                    </span>
                    {(user.totalTop3Finishes || 0) > 10 && (
                      <span style={{ background: "rgba(250, 204, 21, 0.15)", color: "#facc15", border: "1px solid rgba(250, 204, 21, 0.3)", padding: "0.4rem 1rem", borderRadius: "100px", fontSize: "0.75rem", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase" }}>
@@ -379,24 +379,24 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
               {/* BENTO BOX 2: Stats (Spans 8 cols) */}
               <div style={{ ...bentoBoxStyle, gridColumn: isMobile ? "span 1" : isTablet ? "span 2" : "span 8", display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "space-around", flexWrap: "wrap", gap: "2rem", padding: "2rem" }}>
                  <div style={{ textAlign: "center" }}>
-                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{$t("Trận tham gia", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{$t("Trận tham gia", (localStorage.getItem('app-lang') || 'en'))}</p>
                    <h1 style={{ fontSize: "4.5rem", fontWeight: 800, margin: 0, background: `linear-gradient(to bottom, #fff, rgba(255,255,255,0.4))`, WebkitBackgroundClip: "text", color: "transparent", lineHeight: 1 }}>{user.totalRacesParticipated || 0}</h1>
                  </div>
                  
                  <div style={{ width: "1px", height: "80px", background: "rgba(255,255,255,0.1)", display: isMobile ? "none" : "block" }} />
                  
                  <div style={{ textAlign: "center" }}>
-                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{$t("Lọt Top 3", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{$t("Lọt Top 3", (localStorage.getItem('app-lang') || 'en'))}</p>
                    <h1 style={{ fontSize: "4.5rem", fontWeight: 800, margin: 0, background: `linear-gradient(to bottom, #10b981, #047857)`, WebkitBackgroundClip: "text", color: "transparent", lineHeight: 1 }}>{user.totalTop3Finishes || 0}</h1>
                  </div>
 
                  <div style={{ width: "1px", height: "80px", background: "rgba(255,255,255,0.1)", display: isMobile ? "none" : "block" }} />
                  <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{$t("Danh hiệu", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                   <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.85rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "2px", margin: "0 0 0.5rem 0" }}>{$t("Danh hiệu", (localStorage.getItem('app-lang') || 'en'))}</p>
                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.5rem" }}>
                      <span style={{ fontSize: "3rem", filter: "drop-shadow(0 0 15px rgba(251, 191, 36, 0.4))" }}>{(user.totalTop3Finishes || 0) > 10 ? "🏆" : "🏅"}</span>
                      <h2 style={{ fontSize: "2rem", fontWeight: 800, margin: 0, color: "#fff" }}>
-                        {(user.totalTop3Finishes || 0) > 10 ? <span style={{ color: "#fbbf24" }}>{$t("Vô địch", (localStorage.getItem('app-lang') || 'vi'))}</span> : <span style={{ color: "#60a5fa" }}>{$t("Tiềm năng", (localStorage.getItem('app-lang') || 'vi'))}</span>}
+                        {(user.totalTop3Finishes || 0) > 10 ? <span style={{ color: "#fbbf24" }}>{$t("Vô địch", (localStorage.getItem('app-lang') || 'en'))}</span> : <span style={{ color: "#60a5fa" }}>{$t("Tiềm năng", (localStorage.getItem('app-lang') || 'en'))}</span>}
                      </h2>
                    </div>
                  </div>
@@ -410,7 +410,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={roleColor} strokeWidth="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
                </div>
-               <h3 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff", margin: 0 }}>{$t("Cập nhật hồ sơ", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+               <h3 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff", margin: 0 }}>{$t("Cập nhật hồ sơ", (localStorage.getItem('app-lang') || 'en'))}</h3>
              </div>
 
              <form onSubmit={handleSaveProfile} style={{ display: "flex", flexDirection: "column", gap: "1.25rem", flex: 1 }}>
@@ -418,12 +418,12 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                 
                 <div style={{ display: "flex", gap: "1.25rem", flexDirection: isMobile ? "column" : "row" }}>
                   <div style={{ flex: 1 }}>
-                    <label style={labelStyle}>{$t("Họ và tên", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                    <label style={labelStyle}>{$t("Họ và tên", (localStorage.getItem('app-lang') || 'en'))}</label>
                     <input type="text" className="bento-input" required value={fullName} onChange={e => setFullName(e.target.value)} style={inputStyle} />
                   </div>
                   {user?.roleId === 3 && (
                     <div style={{ width: isMobile ? "100%" : "120px" }}>
-                      <label style={labelStyle}>{$t("Cân nặng (kg)", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                      <label style={labelStyle}>{$t("Cân nặng (kg)", (localStorage.getItem('app-lang') || 'en'))}</label>
                       <input type="number" step="0.1" className="bento-input" required value={weight} onChange={e => setWeight(e.target.value)} style={inputStyle} />
                     </div>
                   )}
@@ -431,10 +431,10 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
 
                 {user?.roleId === 3 && (
                   <div>
-                    <label style={labelStyle}>{$t("Giới thiệu cá nhân", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                    <label style={labelStyle}>{$t("Giới thiệu cá nhân", (localStorage.getItem('app-lang') || 'en'))}</label>
                     <textarea 
                       className="bento-input" 
-                      placeholder={$t("Chia sẻ kinh nghiệm làm nài ngựa của bạn...", (localStorage.getItem('app-lang') || 'vi'))} 
+                      placeholder={$t("Chia sẻ kinh nghiệm làm nài ngựa của bạn...", (localStorage.getItem('app-lang') || 'en'))} 
                       value={biography} 
                       onChange={e => setBiography(e.target.value)} 
                       style={{ ...inputStyle, minHeight: "100px", resize: "vertical" }} 
@@ -443,7 +443,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                 )}
 
                 <div>
-                  <label style={labelStyle}>{$t("Địa chỉ Email", (localStorage.getItem('app-lang') || 'vi'))}</label>
+                  <label style={labelStyle}>{$t("Địa chỉ Email", (localStorage.getItem('app-lang') || 'en'))}</label>
                   <input type="email" className="bento-input" disabled readOnly value={email} style={{ ...inputStyle, opacity: 0.6, cursor: "not-allowed" }} />
                 </div>
 
@@ -451,7 +451,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                   {profileMsg && <div style={{ padding: "0.85rem", borderRadius: "12px", background: "rgba(16, 185, 129, 0.15)", border: "1px solid rgba(16,185,129,0.3)", color: "#10b981", fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem", textAlign: "center" }}>{profileMsg}</div>}
                   {profileErr && <div style={{ padding: "0.85rem", borderRadius: "12px", background: "rgba(239, 68, 68, 0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", fontSize: "0.9rem", fontWeight: 600, marginBottom: "1rem", textAlign: "center" }}>{profileErr}</div>}
                   <button type="submit" disabled={profileLoading} className="bento-btn" style={{ width: "100%", padding: "1.2rem", background: `linear-gradient(135deg, ${roleColor}, ${roleColor}aa)`, color: "#fff", border: "none", borderRadius: "16px", fontSize: "1rem", fontWeight: 700, cursor: profileLoading ? "not-allowed" : "pointer", transition: "all 0.3s" }}>
-                    {profileLoading ? $t("Đang lưu...", (localStorage.getItem('app-lang') || 'vi')) : $t("Lưu thay đổi", (localStorage.getItem('app-lang') || 'vi'))}
+                    {profileLoading ? $t("Đang lưu...", (localStorage.getItem('app-lang') || 'en')) : $t("Lưu thay đổi", (localStorage.getItem('app-lang') || 'en'))}
                   </button>
                 </div>
              </form>
@@ -464,15 +464,15 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                  <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                  </div>
-                 <h3 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff", margin: 0 }}>{$t("Đổi mật khẩu", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+                 <h3 style={{ fontSize: "1.35rem", fontWeight: 700, color: "#fff", margin: 0 }}>{$t("Đổi mật khẩu", (localStorage.getItem('app-lang') || 'en'))}</h3>
                </div>
 
                {!passMode ? (
                  <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                   <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: "2rem" }}>{$t("Yêu cầu mã xác minh qua Gmail để thiết lập mật khẩu mới.", (localStorage.getItem('app-lang') || 'vi'))}</p>
+                   <p style={{ fontSize: "0.95rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, marginBottom: "2rem" }}>{$t("Yêu cầu mã xác minh qua Gmail để thiết lập mật khẩu mới.", (localStorage.getItem('app-lang') || 'en'))}</p>
                    <div style={{ marginTop: "auto" }}>
                      <button onClick={handleRequestPassCode} disabled={passLoading} className="bento-btn" style={{ width: "100%", padding: "1.2rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)", color: "#fff", borderRadius: "16px", fontSize: "0.95rem", fontWeight: 600, cursor: passLoading ? "not-allowed" : "pointer", transition: "all 0.3s" }}>
-                       {passLoading ? $t("Đang gửi mã...", (localStorage.getItem('app-lang') || 'vi')) : $t("Yêu cầu đổi mật khẩu", (localStorage.getItem('app-lang') || 'vi'))}
+                       {passLoading ? $t("Đang gửi mã...", (localStorage.getItem('app-lang') || 'en')) : $t("Yêu cầu đổi mật khẩu", (localStorage.getItem('app-lang') || 'en'))}
                      </button>
                    </div>
                  </div>
@@ -510,9 +510,9 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={otpEnabled ? "#10b981" : "#fff"} strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
                    </div>
                    <div>
-                     <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#fff", margin: "0 0 0.25rem 0" }}>{$t("Bảo mật 2 Lớp (2FA)", (localStorage.getItem('app-lang') || 'vi'))}</h3>
+                     <h3 style={{ fontSize: "1.25rem", fontWeight: 700, color: "#fff", margin: "0 0 0.25rem 0" }}>{$t("Bảo mật 2 Lớp (2FA)", (localStorage.getItem('app-lang') || 'en'))}</h3>
                      <span style={{ fontSize: "0.7rem", fontWeight: 700, textTransform: "uppercase", padding: "0.2rem 0.6rem", borderRadius: "100px", background: otpEnabled ? "rgba(16,185,129,0.2)" : "rgba(255,255,255,0.1)", color: otpEnabled ? "#10b981" : "rgba(255,255,255,0.5)", display: "inline-block" }}>
-                       {otpEnabled ? $t("Đang Bật", (localStorage.getItem('app-lang') || 'vi')) : $t("Đã Tắt", (localStorage.getItem('app-lang') || 'vi'))}
+                       {otpEnabled ? $t("Đang Bật", (localStorage.getItem('app-lang') || 'en')) : $t("Đã Tắt", (localStorage.getItem('app-lang') || 'en'))}
                      </span>
                    </div>
                  </div>
@@ -524,12 +524,12 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                </div>
                
                <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: 0 }}>
-                 {$t("Bảo vệ tài khoản bằng mã OTP gửi qua email mỗi lần đăng nhập.", (localStorage.getItem('app-lang') || 'vi'))}
+                 {$t("Bảo vệ tài khoản bằng mã OTP gửi qua email mỗi lần đăng nhập.", (localStorage.getItem('app-lang') || 'en'))}
                </p>
 
                <div style={{ marginTop: "1.5rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255,255,255,0.1)" }}>
                  <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", lineHeight: 1.5, margin: 0 }}>
-                   {$t("Lưu ý: Quản trị viên & Trọng tài không bắt buộc dùng 2FA.", (localStorage.getItem('app-lang') || 'vi'))}
+                   {$t("Lưu ý: Quản trị viên & Trọng tài không bắt buộc dùng 2FA.", (localStorage.getItem('app-lang') || 'en'))}
                  </p>
                </div>
             </div>

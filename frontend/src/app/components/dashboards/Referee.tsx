@@ -44,14 +44,14 @@ export default function Referee() {
 
   // Cấu hình các nút điều hướng sidebar dành riêng cho Referee
   const navItems = [
-    { index: "01", icon: "layout-dashboard", label: $t("Bảng trọng tài", (localStorage.getItem('app-lang') || 'vi')),   view: "hub"       },
-    { index: "02", icon: "alert-triangle",   label: $t("Nhật ký sự cố", (localStorage.getItem('app-lang') || 'vi')),     view: "incidents" },
-    { index: "03", icon: "clipboard-check",  label: $t("Lịch phân công", (localStorage.getItem('app-lang') || 'vi')),        view: "duties"    },
-    { index: "04", icon: "tv",               label: $t("Phát sóng Livestream", (localStorage.getItem('app-lang') || 'vi')), view: "live"     },
+    { index: "01", icon: "layout-dashboard", label: $t("Bảng trọng tài", (localStorage.getItem('app-lang') || 'en')),   view: "hub"       },
+    { index: "02", icon: "alert-triangle",   label: $t("Nhật ký sự cố", (localStorage.getItem('app-lang') || 'en')),     view: "incidents" },
+    { index: "03", icon: "clipboard-check",  label: $t("Lịch phân công", (localStorage.getItem('app-lang') || 'en')),        view: "duties"    },
+    { index: "04", icon: "tv",               label: $t("Phát sóng Livestream", (localStorage.getItem('app-lang') || 'en')), view: "live"     },
   ];
 
   // Tìm tiêu đề nhãn tương ứng cho view đang kích hoạt
-  const activeLabel = navItems.find(n => n.view === activeTab)?.label ?? $t("Bảng trọng tài", (localStorage.getItem('app-lang') || 'vi'));
+  const activeLabel = navItems.find(n => n.view === activeTab)?.label ?? $t("Bảng trọng tài", (localStorage.getItem('app-lang') || 'en'));
 
   // Xử lý đổi view và làm sạch các banner cũ
   const handleViewChange = (view: string) => {

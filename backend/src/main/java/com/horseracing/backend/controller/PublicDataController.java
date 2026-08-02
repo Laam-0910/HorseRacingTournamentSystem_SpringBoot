@@ -102,11 +102,19 @@ public class PublicDataController {
 
     // Lấy bảng xếp hạng vị trí cán đích chính thức của cuộc đua
     @GetMapping("/results")
-        public ResponseEntity<?> getResults(@RequestParam Integer raceId) {
+    public ResponseEntity<?> getResults(@RequestParam Integer raceId) {
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
         
-        List<Map<String, Object>> results = new ArrayList<>();
+        // Khử trùng lặp theo horseId và bỏ qua các bản ghi REJECTED
+        Map<Integer, RaceEntry> uniqueMap = new LinkedHashMap<>();
         for (RaceEntry entry : entries) {
+            if (!"REJECTED".equalsIgnoreCase(entry.getStatus())) {
+                uniqueMap.putIfAbsent(entry.getHorseId(), entry);
+            }
+        }
+
+        List<Map<String, Object>> results = new ArrayList<>();
+        for (RaceEntry entry : uniqueMap.values()) {
             Map<String, Object> map = new HashMap<>();
             map.put("entry", entry);
             

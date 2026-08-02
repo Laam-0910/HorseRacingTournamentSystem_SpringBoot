@@ -118,7 +118,10 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     startCamera(nextMode);
   };
 
-  // Bắt đầu Go Live
+  // Tự động nhận diện thiết bị (Mobile Device vs Laptop / Desktop)
+  const isMobileDevice = typeof window !== "undefined" && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window));
+
+  // Bắt đầu Go Live với Profile tối ưu hóa theo loại thiết bị
   const handleStartLive = async () => {
     try {
       // Cập nhật streamMode của Race trong DB thành WEBCAM
@@ -138,18 +141,26 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
       // Xóa interval cũ nếu có để tránh trùng lặp phát frame
       if (intervalRef.current) clearInterval(intervalRef.current);
 
-      // Phát khung hình với tốc độ 15 FPS nhẹ nhàng (480x270)
+      // Cấu hình kích thước & tần số khung hình thích ứng thiết bị:
+      // Mobile: 800x450, ~13 FPS, 0.65 JPEG Quality (Hardware Encoded)
+      // Laptop: 720x405, ~15 FPS, 0.60 JPEG Quality (Low-Latency CPU Profile)
+      const targetWidth = isMobileDevice ? 800 : 720;
+      const targetHeight = isMobileDevice ? 450 : 405;
+      const intervalMs = isMobileDevice ? 75 : 65; // Laptop slice interval siêu tốc 65ms
+      const jpegQuality = isMobileDevice ? 0.65 : 0.60;
+
       intervalRef.current = setInterval(() => {
         if (videoRef.current && ctx && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
           const video = videoRef.current;
           if (video.videoWidth > 0 && video.videoHeight > 0) {
-            canvas.width = 800;
-            canvas.height = 450;
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            const dataUrl = canvas.toDataURL("image/jpeg", 0.65); // Đồ họa HD cân bằng mượt mà nhẹ nhàng (~12KB/frame)
+            const dataUrl = canvas.toDataURL("image/jpeg", jpegQuality);
             const uName = user?.fullName || user?.username || "Referee";
+            const deviceTag = isMobileDevice ? "Mobile Cam" : "Laptop Webcam";
             const broadcasterId = user?.id ? `user_${user.id}_${camInstanceId}` : `anon_${camInstanceId}`;
-            const broadcasterName = `${uName} (${camInstanceId.replace("cam_", "Cam ")})`;
+            const broadcasterName = `${uName} (${deviceTag} #${camInstanceId.replace("cam_", "")})`;
             wsRef.current.send(JSON.stringify({
               type: "FRAME",
               raceId,
@@ -160,7 +171,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
             }));
           }
         }
-      }, 75); // ~13 FPS mượt mà siêu nhẹ
+      }, intervalMs);
     } catch (err: any) {
       setError("Failed to start livestream.");
     }
@@ -328,7 +339,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
             onClick={onClose}
             style={{ padding: "0.85rem 1.25rem", background: "rgba(255,255,255,0.05)", color: "#fff", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.75rem", fontWeight: "bold", fontSize: "0.85rem", cursor: "pointer" }}
           >
-            {$t("Close", localStorage.getItem("app-lang") || "vi")}
+            {$t("Close", localStorage.getItem("app-lang") || "en")}
           </button>
         </div>
 
