@@ -70,6 +70,7 @@ public class RaceService {
         }
         validateRaceTimeMatchesMeeting(dto.getStartTime(), dto.getRaceMeetingId()); // Kiểm tra ngày giờ xuất phát trận đua phải trùng ngày với Ngày hội đua
         validateUniqueRaceTime(dto.getStartTime(), dto.getRaceMeetingId(), null); // Kiểm tra không trùng giờ xuất phát với các trận khác cùng Ngày hội đua
+        validateUniqueClassLevelInMeeting(dto.getClassLevel(), dto.getRaceMeetingId(), null); // Kiểm tra không tạo trùng Class Level trong cùng Race Meeting
         validateLiveUrl(dto.getYoutubeLiveUrl()); // Kiểm tra định dạng đường dẫn Livestream YouTube hợp lệ
 
         Race race = raceMapper.toEntity(dto); // Chuyển đổi từ RaceDTO sang Race Entity
@@ -280,6 +281,7 @@ public class RaceService {
     @Transactional
     public RaceMeetingDTO createMeeting(RaceMeetingDTO dto) {
         validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate()); // Kiểm tra ngày của Ngày hội đua có nằm trong khoảng thời gian mùa giải
+        validateUniqueMeetingNameInSeason(dto.getName(), dto.getSeasonId(), null); // Kiểm tra không trùng tên Ngày hội đua trong cùng Season
         validateMeetingBudget(dto.getTotalBudget()); // Kiểm tra ngân sách trong khoảng 10tr - 1 tỷ
 
         BigDecimal budget = dto.getTotalBudget() != null ? dto.getTotalBudget() : BigDecimal.ZERO;
@@ -316,6 +318,7 @@ public class RaceService {
     @Transactional
     public RaceMeetingDTO updateMeeting(Integer id, RaceMeetingDTO dto) {
         validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate()); // Kiểm tra ngày Ngày hội đua phù hợp thời gian mùa giải
+        validateUniqueMeetingNameInSeason(dto.getName(), dto.getSeasonId(), id); // Kiểm tra không trùng tên Ngày hội đua trong cùng Season
         validateMeetingBudget(dto.getTotalBudget()); // Kiểm tra ngân sách trong khoảng 10tr - 1 tỷ
         RaceMeeting meeting = raceMeetingRepository.findById(id) // Tìm Ngày hội đua theo ID
                 .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found with id: " + id)); // Ném ngoại lệ nếu không tồn tại
@@ -528,6 +531,34 @@ public class RaceService {
                 java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd-MM-yyyy"); // Định dạng hiển thị ngày dd-MM-yyyy
                 throw new IllegalArgumentException("Race start time must be on the same date as the selected Race Meeting (" 
                         + sdf.format(meeting.getStartDate()) + ")"); // Ném ngoại lệ yêu cầu thời gian xuất phát phải cùng ngày với Ngày hội đua
+            }
+        }
+    }
+
+    private void validateUniqueClassLevelInMeeting(String classLevel, Integer meetingId, Integer excludeRaceId) {
+        if (classLevel == null || meetingId == null) return; // Bỏ qua nếu thiếu dữ liệu
+        String normalizedNew = classLevel.trim().toLowerCase(); // Chuẩn hóa tên class về chữ thường
+        List<Race> existingRaces = raceRepository.findByRaceMeetingId(meetingId); // Lấy danh sách trận đua thuộc Ngày hội đua này
+        for (Race r : existingRaces) { // Duyệt từng trận đua đang tồn tại
+            if (excludeRaceId != null && r.getId().equals(excludeRaceId)) continue; // Bỏ qua chính trận đua đang được cập nhật
+            if ("CANCELLED".equalsIgnoreCase(r.getStatus())) continue; // Bỏ qua các trận đua đã hủy
+            if (r.getClassLevel() != null && r.getClassLevel().trim().toLowerCase().equals(normalizedNew)) { // Nếu tìm thấy trùng Class Level
+                throw new IllegalArgumentException("DUPLICATE_CLASS_LEVEL:" + classLevel); // Ném ngoại lệ báo lỗi trùng Class Level
+            }
+        }
+    }
+
+    private void validateUniqueMeetingNameInSeason(String name, Integer seasonId, Integer excludeMeetingId) {
+        if (name == null || name.trim().isEmpty() || seasonId == null) return;
+        String normalizedName = name.trim().toLowerCase();
+        List<RaceMeeting> existingMeetings = raceMeetingRepository.findAll();
+        for (RaceMeeting m : existingMeetings) {
+            if (excludeMeetingId != null && m.getId().equals(excludeMeetingId)) continue;
+            if ("CANCELLED".equalsIgnoreCase(m.getStatus())) continue;
+            if (seasonId.equals(m.getSeasonId()) && m.getName() != null) {
+                if (m.getName().trim().toLowerCase().equals(normalizedName)) {
+                    throw new IllegalArgumentException("DUPLICATE_MEETING_NAME:" + name.trim());
+                }
             }
         }
     }
