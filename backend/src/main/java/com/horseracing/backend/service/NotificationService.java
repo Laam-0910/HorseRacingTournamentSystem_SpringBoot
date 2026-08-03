@@ -27,21 +27,34 @@ public class NotificationService {
     private RaceMeetingRepository raceMeetingRepository;
 
     /**
-     * Build descriptive Race & Race Meeting string (e.g. Race #1 of Race Meeting Summer Grand Prix 2026)
+     * Get Race Meeting name by ID
      */
-    private String getRaceMeetingDetails(Integer raceId) {
+    public String getMeetingName(Integer meetingId) {
+        if (meetingId == null) return "Race Meeting";
+        return raceMeetingRepository.findById(meetingId)
+                .map(RaceMeeting::getName)
+                .orElse("Race Meeting #" + meetingId);
+    }
+
+    /**
+     * Build descriptive Race & Race Meeting string (e.g. Race #1 (Class 3) of Race Meeting 'Summer Grand Prix 2026')
+     */
+    public String getRaceMeetingDetails(Integer raceId) {
         if (raceId == null) return "Unknown Race";
         Optional<Race> raceOpt = raceRepository.findById(raceId);
         if (raceOpt.isPresent()) {
             Race race = raceOpt.get();
+            String raceLabel = (race.getClassLevel() != null && !race.getClassLevel().isBlank())
+                    ? "Class " + race.getClassLevel()
+                    : "Race #" + race.getId();
             if (race.getRaceMeetingId() != null) {
                 Optional<RaceMeeting> meetingOpt = raceMeetingRepository.findById(race.getRaceMeetingId());
                 if (meetingOpt.isPresent()) {
-                    return String.format("Race #%d of Race Meeting %s",
-                            race.getId(), meetingOpt.get().getName());
+                    return String.format("Race #%d (%s) of Race Meeting '%s'",
+                            race.getId(), raceLabel, meetingOpt.get().getName());
                 }
             }
-            return "Race #" + race.getId();
+            return String.format("Race #%d (%s)", race.getId(), raceLabel);
         }
         return "Race #" + raceId;
     }
@@ -86,7 +99,7 @@ public class NotificationService {
             String statusText = accepted ? "ACCEPTED" : "DECLINED";
 
             String message = String.format(
-                "Jockey %s HAS %s your invitation for Horse %s in %s.",
+                "Jockey %s HAS %s your invitation for Horse '%s' in %s.",
                 jockey.getUsername(), statusText, horse.getName(), raceMeetingDetails
             );
 
@@ -118,6 +131,27 @@ public class NotificationService {
     }
 
     /**
+     * Send detailed notification for Race Meeting Registrations (Jockey, Owner, Horse).
+     */
+    public void notifyMeetingRegistrationDecision(String roleType, Integer userId, Integer meetingId, String extraName, boolean approved) {
+        try {
+            if (userId == null) return;
+            String meetingName = getMeetingName(meetingId);
+            String decision = approved ? "APPROVED" : "REJECTED";
+            String extraStr = extraName != null && !extraName.isBlank() ? " for Horse '" + extraName + "'" : "";
+
+            String message = String.format(
+                "Your %s registration%s for Race Meeting '%s' has been %s by the Steward.",
+                roleType, extraStr, meetingName, decision
+            );
+
+            saveNotification(userId, "Steward Decision", message);
+        } catch (Exception e) {
+            System.err.println("Failed to dispatch meeting registration notification: " + e.getMessage());
+        }
+    }
+
+    /**
      * Send notification to both Owner and Jockey when a Race Entry is approved or rejected by Admin.
      */
     public void notifyPartiesOnRaceEntryDecision(RaceEntry entry, boolean approved) {
@@ -127,14 +161,15 @@ public class NotificationService {
 
             String decision = approved ? "APPROVED" : "REJECTED";
             String raceMeetingDetails = getRaceMeetingDetails(entry.getRaceId());
+            String horseName = horseOpt.map(Horse::getName).orElse("Horse");
 
             if (horseOpt.isPresent()) {
                 Horse horse = horseOpt.get();
                 Optional<User> ownerOpt = userRepository.findById(horse.getOwnerId());
                 if (ownerOpt.isPresent()) {
                     String message = String.format(
-                        "Race Entry for Horse %s in %s has been %s by the Steward.",
-                        horse.getName(), raceMeetingDetails, decision
+                        "Race Entry for Horse '%s' in %s has been %s by the Steward.",
+                        horseName, raceMeetingDetails, decision
                     );
                     saveNotification(ownerOpt.get().getId(), "Race Entry Decision", message);
                 }
@@ -143,8 +178,8 @@ public class NotificationService {
             if (jockeyOpt.isPresent()) {
                 User jockey = jockeyOpt.get();
                 String message = String.format(
-                    "Race Entry in %s has been %s by the Steward.",
-                    raceMeetingDetails, decision
+                    "Race Entry to ride Horse '%s' in %s has been %s by the Steward.",
+                    horseName, raceMeetingDetails, decision
                 );
                 saveNotification(jockey.getId(), "Race Entry Decision", message);
             }
@@ -152,6 +187,7 @@ public class NotificationService {
             System.err.println("Failed to dispatch race entry decision notification: " + e.getMessage());
         }
     }
+
 
     /**
      * Send notification to Jockey when Horse Owner sends a new race invitation.

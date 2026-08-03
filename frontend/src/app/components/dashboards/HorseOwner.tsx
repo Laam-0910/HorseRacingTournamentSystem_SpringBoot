@@ -16,6 +16,7 @@ import ProfileModal from "./components/ProfileModal";
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import ViewLive from "./components/ViewLive";
 import UserWalletView from "./components/UserWalletView";
+import NotificationCenterView from "./components/NotificationCenterView";
 
 interface InlineDatePickerProps {
   label: string;
@@ -157,18 +158,19 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
 }
 
 
-type OwnerTab = "hub" | "stable" | "calendar" | "invitations" | "results" | "live" | "wallet" | "profile";
+type OwnerTab = "hub" | "stable" | "calendar" | "invitations" | "results" | "live" | "wallet" | "profile" | "notifications";
 
 const ROLE_COLOR = "#4a9d6f";
 
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: "Owner Hub",           view: "hub"         },
   { index: "02", icon: "wallet",           label: "Wallet & Transactions", view: "wallet"      },
-  { index: "03", icon: "book-open",         label: "My Stable",          view: "stable"      },
-  { index: "04", icon: "calendar",          label: "Race Calendar",      view: "calendar"    },
-  { index: "05", icon: "mail",              label: "Invitations",        view: "invitations" },
-  { index: "06", icon: "award",             label: "Stable Race History", view: "results"     },
-  { index: "07", icon: "tv",                label: "Live Stream Arena",  view: "live"        },
+  { index: "03", icon: "bell",             label: "Notifications",      view: "notifications"},
+  { index: "04", icon: "book-open",         label: "My Stable",          view: "stable"      },
+  { index: "05", icon: "calendar",          label: "Race Calendar",      view: "calendar"    },
+  { index: "06", icon: "mail",              label: "Invitations",        view: "invitations" },
+  { index: "07", icon: "award",             label: "Stable Race History", view: "results"     },
+  { index: "08", icon: "tv",                label: "Live Stream Arena",  view: "live"        },
 ];
 
 const inputStyle: React.CSSProperties = {
@@ -298,7 +300,7 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
             <div style={{ textAlign: "right" }}>
               <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Available Wallet</span>
               <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#fbbf24", fontFamily: "monospace", lineHeight: "1.2" }}>
-                ${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                {walletBal.toLocaleString('en-US')} VND
               </div>
             </div>
             {onSwitchTab && (
@@ -313,23 +315,17 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", borderTop: "1px solid rgba(251, 191, 36, 0.15)", paddingTop: "1rem" }}>
-          <div style={{ background: "rgba(0,0,0,0.3)", padding: "0.75rem 1rem", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)" }}>
-            <span style={{ color: "#fbbf24", fontWeight: 700, fontSize: "0.75rem" }}>🏆 Purse Allocation:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "4px", lineHeight: "1.4" }}>
-              Top 3 finishes receive purse prizes (1st: <strong>50%</strong>, 2nd: <strong>30%</strong>, 3rd: <strong>20%</strong>).
-            </p>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: ROLE_COLOR, fontWeight: 600 }}>🏆 Prize Money Allocation:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Owner receives major share of official race purse distribution minus agreed jockey prize share.</p>
           </div>
-          <div style={{ background: "rgba(0,0,0,0.3)", padding: "0.75rem 1rem", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)" }}>
-            <span style={{ color: "#fbbf24", fontWeight: 700, fontSize: "0.75rem" }}>🏇 Jockey Hire Fee:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "4px", lineHeight: "1.4" }}>
-              Upfront mount fee (default <strong>$500</strong>) paid to jockey upon invitation acceptance.
-            </p>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: ROLE_COLOR, fontWeight: 600 }}>🏇 Jockey Mount Fee:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Mount hire fee specified per invitation paid to jockey upon invitation acceptance.</p>
           </div>
-          <div style={{ background: "rgba(0,0,0,0.3)", padding: "0.75rem 1rem", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)" }}>
-            <span style={{ color: "#fbbf24", fontWeight: 700, fontSize: "0.75rem" }}>🤝 Jockey Prize Share:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "4px", lineHeight: "1.4" }}>
-              Negotiable <strong>20% – 50%</strong> of earned prize money allocated to jockey.
-            </p>
+          <div style={{ fontSize: "0.75rem" }}>
+            <span style={{ color: ROLE_COLOR, fontWeight: 600 }}>🏷️ Entry Fee & Refunds:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Full refund issued automatically if race is cancelled or entry is rejected by stewards.</p>
           </div>
         </div>
       </div>
@@ -361,7 +357,7 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                     </div>
 
                     <div style={{ fontSize: "0.75rem", color: "#fbbf24", fontFamily: "monospace", marginTop: "0.25rem", background: "rgba(251,191,36,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(251,191,36,0.2)" }}>
-                      💰 <strong>Total Meeting Budget:</strong> ${Number(m.totalBudget || m.total_budget || 500000).toLocaleString('en-US')}
+                      💰 <strong>Total Meeting Budget:</strong> {Number(m.totalBudget || m.total_budget || 500000).toLocaleString('en-US')} VND
                       <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>
                         Place Prizes: 1st (50%), 2nd (30%), 3rd (20%) · 80% Owner / 20% Jockey split
                       </div>
@@ -1859,6 +1855,8 @@ export default function HorseOwner() {
         return <ViewLive />;
       case "wallet":
         return <UserWalletView user={user} roleLabel="Horse Owner" roleColor="#4a9d6f" />;
+      case "notifications":
+        return <NotificationCenterView userId={user?.id} />;
       case "profile":
         return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Horse Owner" />;
       default:

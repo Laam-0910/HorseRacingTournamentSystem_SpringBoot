@@ -309,10 +309,10 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                           📍 {m.venue}
                         </div>
                         <div style={{ fontSize: "0.75rem", color: "#fbbf24", marginTop: "4px", fontFamily: "monospace", fontWeight: "bold" }}>
-                          💰 Budget: ${Number(m.totalBudget || 0).toLocaleString('en-US')}
+                          💰 Budget: {Number(m.totalBudget || 0).toLocaleString('en-US')} VNĐ
                         </div>
                         <div style={{ fontSize: "0.75rem", color: "#34d399", marginTop: "2px", fontFamily: "monospace", fontWeight: "bold" }}>
-                          🎟️ Ticket Price: ${Number(m.ticketPrice || 0).toLocaleString('en-US')}
+                          🎟️ Ticket Price: {Number(m.ticketPrice || 0).toLocaleString('en-US')} VNĐ
                         </div>
                       </div>
                       {/* Nút Xem / Sửa / Xóa */}
@@ -354,8 +354,8 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                   <th className="px-5 py-4">{$t("Meeting Name", (localStorage.getItem('app-lang') || 'en'))}</th>
                   <th className="px-5 py-4">{$t("Season", (localStorage.getItem('app-lang') || 'en'))}</th>
                   <th className="px-5 py-4">{$t("Status", (localStorage.getItem('app-lang') || 'en'))}</th>
-                  <th className="px-5 py-4">{$t("Total Budget ($)", (localStorage.getItem('app-lang') || 'en'))}</th>
-                  <th className="px-5 py-4">{$t("Registration Fee ($)", (localStorage.getItem('app-lang') || 'en'))}</th>
+                  <th className="px-5 py-4">{$t("Total Budget (VND)", (localStorage.getItem('app-lang') || 'en'))}</th>
+                  <th className="px-5 py-4">{$t("Registration Fee (VND)", (localStorage.getItem('app-lang') || 'en'))}</th>
                   <th className="px-5 py-4">{$t("Date", (localStorage.getItem('app-lang') || 'en'))}</th>
                   <th className="px-5 py-4">{$t("Venue", (localStorage.getItem('app-lang') || 'en'))}</th>
                   <th className="px-5 py-4 text-right">{$t("Actions", (localStorage.getItem('app-lang') || 'en'))}</th>
@@ -387,8 +387,8 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                           {mStatus}
                         </span>
                       </td>
-                      <td className="px-5 py-4 font-mono font-bold text-amber-400">${Number(m.totalBudget || 0).toLocaleString('en-US')}</td>
-                      <td className="px-5 py-4 font-mono font-bold text-emerald-400">${Number(m.ticketPrice || 0).toLocaleString('en-US')}</td>
+                      <td className="px-5 py-4 font-mono font-bold text-amber-400">{Number(m.totalBudget || 0).toLocaleString('en-US')} VNĐ</td>
+                      <td className="px-5 py-4 font-mono font-bold text-emerald-400">{Number(m.ticketPrice || 0).toLocaleString('en-US')} VNĐ</td>
                       <td className="px-5 py-4 text-white/80">{formatDate(m.startDate || m.date)}</td>
                       <td className="px-5 py-4 text-white/60">📍 {m.venue}</td>
                       <td className="px-5 py-4 text-right space-x-2">
@@ -480,13 +480,13 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
           {/* Nhập Ngân sách tổng (Total Budget) */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Total Budget ($USD)", (localStorage.getItem('app-lang') || 'en'))}</label>
+              <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Total Budget (VND)", (localStorage.getItem('app-lang') || 'en'))}</label>
               {adminWalletBal != null && (
                 <span
                   onClick={() => onOpenWallet && onOpenWallet()}
                   className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 cursor-pointer hover:bg-amber-500/20 transition"
                 >
-                  🏦 Admin Wallet: ${Number(adminWalletBal).toLocaleString('en-US')}
+                  🏦 Admin Wallet: {Number(adminWalletBal).toLocaleString('en-US')} VNĐ
                 </span>
               )}
             </div>
@@ -510,7 +510,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-xs font-semibold text-amber-400 uppercase tracking-wider block flex items-center gap-1.5">
-                <span>🎟️</span> {$t("Ticket Price ($USD)", (localStorage.getItem('app-lang') || 'en'))}
+                <span>🎟️</span> {$t("Ticket Price (VND)", (localStorage.getItem('app-lang') || 'en'))}
               </label>
               {editingMeeting && (
                 <span className="text-[10px] font-mono text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">

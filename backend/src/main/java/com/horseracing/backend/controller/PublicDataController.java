@@ -2,6 +2,7 @@ package com.horseracing.backend.controller;
 
 import com.horseracing.backend.entity.*;
 import com.horseracing.backend.repository.*;
+import com.horseracing.backend.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -55,7 +56,11 @@ public class PublicDataController {
     private SystemConfigRepository systemConfigRepository;
 
     @Autowired
+<<<<<<< HEAD
     private ChatMessageRepository chatMessageRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     // Lấy danh sách tin nhắn chat công khai theo raceId
     @GetMapping("/chat/{raceId}")
@@ -113,6 +118,8 @@ public class PublicDataController {
         }
         return ResponseEntity.ok(map);
     }
+
+    // ... (rest of endpoints) ...
 
     // Lấy thống kê tổng hợp toàn hệ thống
     @GetMapping("/stats")
@@ -575,8 +582,11 @@ public class PublicDataController {
 
     /**
      * POST /api/public/wallet/withdraw
-     * Tạo yêu cầu rút tiền (PENDING) thay vì trừ ví ngay lập tức.
-     * Tiền chỉ bị trừ khi Admin mark as PROCESSED sau khi đã chuyển khoản thật.
+     * Đơn rút tiền của người dùng:
+     * - Nếu PAYMENT_GATEWAY_MODE = 'MOCK' hoặc AUTO_DISBURSEMENT_ENABLED = 'TRUE':
+     *   Tự động xác nhận chuyển khoản thành công (PROCESSED) + Trừ ví tức thì.
+     * - Nếu PAYMENT_GATEWAY_MODE = 'LIVE' và AUTO_DISBURSEMENT_ENABLED = 'FALSE':
+     *   Tạo yêu cầu PENDING chờ Admin chuyển khoản thật và duyệt thủ công.
      */
     @PostMapping("/wallet/withdraw")
     public ResponseEntity<?> selfWithdrawWallet(@RequestBody Map<String, Object> request) {
@@ -616,7 +626,14 @@ public class PublicDataController {
             String accountHolder = request.get("accountHolder") != null ? request.get("accountHolder").toString() : "";
             String notes = request.get("notes") != null ? request.get("notes").toString() : "";
 
-            // Tạo WithdrawalRequest với status = PENDING (KHÔNG trừ ví ngay)
+            // Đọc cấu hình Gateway Mode & Auto Disbursement Payout
+            String mode = systemConfigRepository.findById("PAYMENT_GATEWAY_MODE")
+                    .map(c -> c.getConfigValue().toUpperCase()).orElse("MOCK");
+            String autoDisburse = systemConfigRepository.findById("AUTO_DISBURSEMENT_ENABLED")
+                    .map(c -> c.getConfigValue().toUpperCase()).orElse("TRUE");
+
+            boolean isInstantAutoPayout = "MOCK".equals(mode) || "TRUE".equals(autoDisburse);
+
             WithdrawalRequest wr = new WithdrawalRequest();
             wr.setUserId(userId);
             wr.setAmount(amount);
@@ -624,17 +641,55 @@ public class PublicDataController {
             wr.setAccountNumber(accountNumber);
             wr.setAccountHolder(accountHolder.toUpperCase());
             wr.setNotes(notes);
-            wr.setStatus("PENDING");
             wr.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-            withdrawalRequestRepository.save(wr);
 
-            return ResponseEntity.ok(Map.of(
-                "success", true,
-                "message", "Withdrawal request submitted successfully. Your request is pending admin review. Estimated processing time: 1-3 business days.",
-                "requestId", wr.getId(),
-                "status", "PENDING",
-                "currentBalance", current
-            ));
+            if (isInstantAutoPayout) {
+                // 🟢 INSTANT AUTO PAYOUT (MOCK Mode hoặc LIVE với Auto Disbursement): Trừ ví ngay lập tức + Mark PROCESSED
+                user.setWalletBalance(current.subtract(amount));
+                userRepository.save(user);
+
+                wr.setStatus("PROCESSED");
+                wr.setProcessedNote("Instant auto-disbursement payout (" + mode + " Mode)");
+                wr.setProcessedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                withdrawalRequestRepository.save(wr);
+
+                // Ghi log giao dịch WITHDRAWAL
+                StringBuilder desc = new StringBuilder("Cash-out payout via ").append(bankName);
+                if (!accountNumber.isBlank()) desc.append(" | Acc: ").append(accountNumber);
+                if (!accountHolder.isBlank()) desc.append(" (Holder: ").append(accountHolder.toUpperCase()).append(")");
+                if (!notes.isBlank()) desc.append(" | Note: ").append(notes);
+
+                WalletTransaction tx = new WalletTransaction();
+                tx.setUserId(userId);
+                tx.setAmount(amount.negate());
+                tx.setTransactionType("WITHDRAWAL");
+                tx.setDescription(desc.toString());
+                tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                walletTransactionRepository.save(tx);
+
+                // Gửi thông báo rút tiền thành công
+                notificationService.notifyUserOnWithdrawalStatus(userId, amount, true, "Auto-disbursement payout via " + bankName);
+
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Withdrawal processed successfully! " + String.format("%,.0f", amount) + " VND transferred to your bank account via NAPAS 24/7.",
+                    "requestId", wr.getId(),
+                    "status", "PROCESSED",
+                    "newBalance", user.getWalletBalance()
+                ));
+            } else {
+                // 🟡 MANUAL APPROVAL FLOW (LIVE Mode với Auto Disbursement = FALSE): Giữ nguyên ví + Mark PENDING
+                wr.setStatus("PENDING");
+                withdrawalRequestRepository.save(wr);
+
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Withdrawal request submitted successfully. Your request is pending Admin manual bank transfer approval. Estimated processing time: 1-3 business days.",
+                    "requestId", wr.getId(),
+                    "status", "PENDING",
+                    "currentBalance", current
+                ));
+            }
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }

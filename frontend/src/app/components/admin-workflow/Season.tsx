@@ -150,11 +150,11 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
 
 // Luật cấu hình hạng mặc định của hệ thống
 const DEFAULT_TEMPLATE_RULES = [
-  { classLevelName: "Class 1", minRating: 95, maxRating: null as number | null, minPrize: 300000, maxPrize: 1000000 },
-  { classLevelName: "Class 2", minRating: 80, maxRating: 94, minPrize: 200000, maxPrize: 299999 },
-  { classLevelName: "Class 3", minRating: 60, maxRating: 79, minPrize: 100000, maxPrize: 199999 },
-  { classLevelName: "Class 4", minRating: 40, maxRating: 59, minPrize: 50000, maxPrize: 99999 },
-  { classLevelName: "Class 5", minRating: 0,  maxRating: 39, minPrize: 20000, maxPrize: 49999 },
+  { classLevelName: "Class 1", minRating: 95, maxRating: null as number | null, minPrize: 300000000, maxPrize: 1000000000 },
+  { classLevelName: "Class 2", minRating: 80, maxRating: 94, minPrize: 200000000, maxPrize: 299999000 },
+  { classLevelName: "Class 3", minRating: 60, maxRating: 79, minPrize: 100000000, maxPrize: 199999000 },
+  { classLevelName: "Class 4", minRating: 40, maxRating: 59, minPrize: 50000000, maxPrize: 99999000 },
+  { classLevelName: "Class 5", minRating: 0,  maxRating: 39, minPrize: 20000000, maxPrize: 49999000 },
 ];
 
 /**
@@ -586,8 +586,8 @@ export default function Season() {
                         <th className="py-2 pr-4 text-left">{$t("Class Level", (localStorage.getItem('app-lang') || 'en'))}</th>
                         <th className="py-2 px-2 text-left">{$t("Min Rating", (localStorage.getItem('app-lang') || 'en'))}</th>
                         <th className="py-2 px-2 text-left">{$t("Max Rating", (localStorage.getItem('app-lang') || 'en'))}</th>
-                        <th className="py-2 px-2 text-left">{$t("Min Prize ($)", (localStorage.getItem('app-lang') || 'en'))}</th>
-                        <th className="py-2 px-2 text-left">{$t("Max Prize ($)", (localStorage.getItem('app-lang') || 'en'))}</th>
+                        <th className="py-2 px-2 text-left">{$t("Min Prize (VND)", (localStorage.getItem('app-lang') || 'en'))}</th>
+                        <th className="py-2 px-2 text-left">{$t("Max Prize (VND)", (localStorage.getItem('app-lang') || 'en'))}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
@@ -868,10 +868,10 @@ export default function Season() {
                     <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
                     <p className="text-[10px] font-mono text-white/50 mt-1">Rating: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
                     <p className="text-[10px] font-mono text-emerald-400 font-semibold mt-1">
-                      Min Prize: ${rule.minPrize ? rule.minPrize.toLocaleString() : '0'}
+                      Min Prize: {rule.minPrize ? rule.minPrize.toLocaleString() : '0'} VND
                     </p>
                     <p className="text-[10px] font-mono text-emerald-400/80 mt-0.5">
-                      Max Prize: ${rule.maxPrize ? rule.maxPrize.toLocaleString() : '0'}
+                      Max Prize: {rule.maxPrize ? rule.maxPrize.toLocaleString() : '0'} VND
                     </p>
                   </div>
                 ))}
@@ -972,6 +972,21 @@ export default function Season() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal Edit Class Rules */}
+      {editingRulesSeason && (
+        <SeasonRulesEdit
+          seasonId={editingRulesSeason.id}
+          seasonName={editingRulesSeason.name}
+          onClose={() => setEditingRulesSeason(null)}
+          onSaved={() => {
+            fetchSeasons();
+            if (selectedSeasonId === editingRulesSeason.id) {
+              fetchRules(editingRulesSeason.id);
+            }
+          }}
+        />
       )}
     </div>
   );

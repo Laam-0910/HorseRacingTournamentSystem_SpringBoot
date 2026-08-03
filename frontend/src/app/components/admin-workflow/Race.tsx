@@ -112,6 +112,7 @@ export default function Race() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [seasonRules, setSeasonRules] = useState<any[]>([]);
+  const [prizeShares, setPrizeShares] = useState({ s1: 0.50, s2: 0.30, s3: 0.20, p1Pct: 50, p2Pct: 30, p3Pct: 20 });
 
   // Fetch Season Rules whenever selected Meeting changes
   useEffect(() => {
@@ -142,8 +143,27 @@ export default function Race() {
         api.get<Race[]>("/races").catch(() => []),
         api.get<User[]>("/public/users?roleId=5").catch(() => []), // Tải trọng tài
         api.get<Record<number, User[]>>("/admin/races/referees").catch(() => ({})), // Tải ánh xạ phân công trọng tài
+        api.get<any[]>("/system/configs").catch(() => []),
       ]);
       setMeetings(meetingsData);
+      setRaces(racesData);
+      setReferees(usersData);
+      setRefereesMap(refsMapData);
+
+      const configs = arguments[0]?.[4] || [];
+      if (Array.isArray(configs) && configs.length > 0) {
+        const cMap: Record<string, string> = {};
+        configs.forEach((c: any) => { if (c.configKey) cMap[c.configKey] = c.configValue; });
+        const s1 = parseFloat(cMap["PRIZE_SHARE_1ST"] || "50") / 100;
+        const s2 = parseFloat(cMap["PRIZE_SHARE_2ND"] || "30") / 100;
+        const s3 = parseFloat(cMap["PRIZE_SHARE_3RD"] || "20") / 100;
+        setPrizeShares({
+          s1, s2, s3,
+          p1Pct: Math.round(s1 * 100),
+          p2Pct: Math.round(s2 * 100),
+          p3Pct: Math.round(s3 * 100)
+        });
+      }
       setRaces(racesData);
       setReferees(usersData);
       setRefereesMap(refsMapData);
@@ -793,9 +813,9 @@ export default function Race() {
                     const isRefLocked = ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
 
                     const totalPurse = Number(race.purse || 0);
-                    const p1 = totalPurse * 0.50;
-                    const p2 = totalPurse * 0.30;
-                    const p3 = totalPurse * 0.20;
+                    const p1 = totalPurse * prizeShares.s1;
+                    const p2 = totalPurse * prizeShares.s2;
+                    const p3 = totalPurse * prizeShares.s3;
 
                     return (
                       <tr key={race.id} style={{ borderBottom: "1px solid rgba(255,255,255,0.05)", transition: "background 0.2s" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.025)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
@@ -823,9 +843,9 @@ export default function Race() {
                         <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
                         
                         <td style={{ padding: "0.75rem 0.75rem" }}>
-                          <div style={{ fontSize: "11px", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace" }}>${totalPurse.toLocaleString('en-US')}</div>
+                          <div style={{ fontSize: "11px", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace" }}>{totalPurse.toLocaleString('en-US')} VNĐ</div>
                           <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", fontFamily: "monospace", marginTop: "2px" }}>
-                            🥇 50%: ${p1.toLocaleString('en-US')} | 🥈 30%: ${p2.toLocaleString('en-US')} | 🥉 20%: ${p3.toLocaleString('en-US')}
+                            🥇 {prizeShares.p1Pct}%: {p1.toLocaleString('en-US')} VNĐ | 🥈 {prizeShares.p2Pct}%: {p2.toLocaleString('en-US')} VNĐ | 🥉 {prizeShares.p3Pct}%: {p3.toLocaleString('en-US')} VNĐ
                           </div>
                         </td>
                         <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>

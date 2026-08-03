@@ -20,6 +20,7 @@ import Race from "../admin-workflow/Race";
 import Results from "../admin-workflow/Results";
 import AdminHorseRetirement from "../admin-workflow/AdminHorseRetirement";
 import AdminWalletModal from "../admin-workflow/AdminWalletModal";
+import NotificationCenterView from "./components/NotificationCenterView";
 
 // Định nghĩa tập hợp các View con có sẵn trong bảng điều khiển Admin
 type AdminTab =
@@ -37,7 +38,8 @@ type AdminTab =
   | "live-settings"
   | "retirement"
   | "wallet"
-  | "profile";
+  | "profile"
+  | "notifications";
 
 // Mã màu vàng gold chủ đạo cho trang điều khiển Admin
 const ROLE_COLOR = "#c9a227";
@@ -46,18 +48,19 @@ const ROLE_COLOR = "#c9a227";
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: $t("Dashboard Overview", (localStorage.getItem('app-lang') || 'en')),        view: "welcome"       },
   { index: "02", icon: "wallet",           label: $t("Admin Wallet & Capital", (localStorage.getItem('app-lang') || 'en')),     view: "wallet"        },
-  { index: "03", icon: "layers",           label: $t("Season Initialization", (localStorage.getItem('app-lang') || 'en')),     view: "season"        },
-  { index: "04", icon: "calendar",         label: $t("Race Meeting Management", (localStorage.getItem('app-lang') || 'en')),   view: "race-meeting"  },
-  { index: "05", icon: "flag",             label: $t("Race Configuration", (localStorage.getItem('app-lang') || 'en')),        view: "race"          },
-  { index: "06", icon: "file-check",       label: $t("Registration Processing", (localStorage.getItem('app-lang') || 'en')),   view: "processing"    },
-  { index: "07", icon: "layout",           label: $t("Racecard Management", (localStorage.getItem('app-lang') || 'en')),       view: "racecard"      },
-  { index: "08", icon: "clipboard-list",   label: $t("Race Day Schedule", (localStorage.getItem('app-lang') || 'en')),         view: "schedule"      },
-  { index: "09", icon: "award",            label: $t("Process Results & Close", (localStorage.getItem('app-lang') || 'en')),   view: "results"       },
-  { index: "10", icon: "user-cog",         label: $t("User & Role Management", (localStorage.getItem('app-lang') || 'en')),    view: "users"         },
-  { index: "11", icon: "flag",             label: $t("Horse Registry Directory", (localStorage.getItem('app-lang') || 'en')),  view: "horses"        },
-  { index: "12", icon: "settings",         label: $t("System Configuration", (localStorage.getItem('app-lang') || 'en')),      view: "config"        },
-  { index: "13", icon: "tv",               label: $t("Camera Live Setting", (localStorage.getItem('app-lang') || 'en')),       view: "live-settings" },
-  { index: "14", icon: "heart-off",        label: $t("Horse Retirement", (localStorage.getItem('app-lang') || 'en')),          view: "retirement"    },
+  { index: "03", icon: "bell",             label: $t("Notifications", (localStorage.getItem('app-lang') || 'en')),             view: "notifications" },
+  { index: "04", icon: "layers",           label: $t("Season Initialization", (localStorage.getItem('app-lang') || 'en')),     view: "season"        },
+  { index: "05", icon: "calendar",         label: $t("Race Meeting Management", (localStorage.getItem('app-lang') || 'en')),   view: "race-meeting"  },
+  { index: "06", icon: "flag",             label: $t("Race Configuration", (localStorage.getItem('app-lang') || 'en')),        view: "race"          },
+  { index: "07", icon: "file-check",       label: $t("Registration Processing", (localStorage.getItem('app-lang') || 'en')),   view: "processing"    },
+  { index: "08", icon: "layout",           label: $t("Racecard Management", (localStorage.getItem('app-lang') || 'en')),       view: "racecard"      },
+  { index: "09", icon: "clipboard-list",   label: $t("Race Day Schedule", (localStorage.getItem('app-lang') || 'en')),         view: "schedule"      },
+  { index: "10", icon: "award",            label: $t("Process Results & Close", (localStorage.getItem('app-lang') || 'en')),   view: "results"       },
+  { index: "11", icon: "user-cog",         label: $t("User & Role Management", (localStorage.getItem('app-lang') || 'en')),    view: "users"         },
+  { index: "12", icon: "flag",             label: $t("Horse Registry Directory", (localStorage.getItem('app-lang') || 'en')),  view: "horses"        },
+  { index: "13", icon: "settings",         label: $t("System Configuration", (localStorage.getItem('app-lang') || 'en')),      view: "config"        },
+  { index: "14", icon: "tv",               label: $t("Camera Live Setting", (localStorage.getItem('app-lang') || 'en')),       view: "live-settings" },
+  { index: "15", icon: "heart-off",        label: $t("Horse Retirement", (localStorage.getItem('app-lang') || 'en')),          view: "retirement"    },
 ];
 
 /**
@@ -318,6 +321,7 @@ export default function Admin() {
       case "live-settings": return <LiveSettings />;
       case "retirement":    return <AdminHorseRetirement />;
       case "wallet":        return <AdminWalletModal isPage={true} />;
+      case "notifications": return <NotificationCenterView userId={user?.id} />;
       case "profile":       return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Admin" />;
       default:              return <AdminWelcome onViewChange={setActiveTab} onOpenWallet={() => setShowWalletModal(true)} />;
     }

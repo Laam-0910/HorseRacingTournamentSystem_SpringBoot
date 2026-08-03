@@ -323,77 +323,13 @@ INSERT INTO [User] (role_id, username, password_hash, email, status, weight, tot
 (5, 'referee_scott',   '123456', 'scott@referees.com',   'ACTIVE', NULL, NULL, NULL, N'David Scott',      10000.00);
 GO
 
-INSERT INTO Season (name, start_date, end_date, status) VALUES
-('2025-2026 Championship Season', '2025-09-01', '2026-06-30', 'ACTIVE'),
-('2026-2027 Grand Prix Season',   '2026-09-01', '2027-06-30', 'ACTIVE');
-GO
-
-INSERT INTO SeasonClassRule (season_id, class_level, class_name, min_rating, max_rating, min_prize, max_prize) VALUES
-(2, 'Class 1', 'Elite Championship',    95, NULL, 300000.00, 1000000.00),
-(2, 'Class 2', 'Premium Group',         80, 94,   200000.00, 299999.00),
-(2, 'Class 3', 'Advanced Tier',         60, 79,   100000.00, 199999.00),
-(2, 'Class 4', 'Intermediate Level',    40, 59,   50000.00,  99999.00),
-(2, 'Class 5', 'Entry Division',        0,  39,   20000.00,  49999.00);
-GO
-
-INSERT INTO RaceMeeting (season_id, name, start_date, venue, total_budget) VALUES
-(1, 'Spring Grand Prix 2026',    '2026-03-15 08:00:00', 'Sha Tin Racecourse', 800000.00),
-(2, 'Spring Gold Cup Day',       '2026-08-15 13:00:00', 'Royal Ascot Arena',  1200000.00);
-GO
-
-INSERT INTO JockeyRaceMeetingRegistration (race_meeting_id, jockey_id, status) VALUES
-(2, 5, 'APPROVED'), (2, 6, 'APPROVED'), (2, 7, 'APPROVED'), (2, 8, 'APPROVED');
-GO
-
-INSERT INTO OwnerRaceMeetingRegistration (race_meeting_id, owner_id, status) VALUES
-(2, 2, 'APPROVED'), (2, 3, 'APPROVED'), (2, 4, 'APPROVED');
-GO
-
-INSERT INTO Race (race_meeting_id, start_time, registration_start_time, registration_end_time, status, class_level, min_rating, max_rating, distance_meters, track_type, purse, max_entries, first_place_prize, second_place_prize, third_place_prize) VALUES
-(1, '2026-03-15 10:00:00', '2026-03-01 08:00:00', '2026-03-10 18:00:00', 'OFFICIAL',          'Class 3', 60,  79,   1200, 'Turf', 150000.00, 14, 75000.00, 45000.00, 30000.00),
-(1, '2026-03-15 14:00:00', '2026-03-01 08:00:00', '2026-03-10 18:00:00', 'OFFICIAL',          'Class 4', 40,  59,   1000, 'Dirt', 80000.00,  14, 40000.00, 24000.00, 16000.00),
-(2, '2026-08-15 14:30:00', '2026-08-01 08:00:00', '2026-08-12 18:00:00', 'DECLARATION_OPEN',  'Class 2', 80,  94,   1200, 'Turf', 250000.00, 12, 125000.00, 75000.00, 50000.00),
-(2, '2026-08-15 15:30:00', '2026-08-01 08:00:00', '2026-08-12 18:00:00', 'SCHEDULED',         'Class 1', 95,  NULL, 2000, 'Turf', 800000.00, 14, 400000.00, 240000.00, 160000.00);
-GO
-
 INSERT INTO Horse (owner_id, name, breed, sex, date_of_birth, status, current_rating, total_races, total_wins) VALUES
-(2, 'Thunder King', 'Thoroughbred', 'Gelding', '2018-04-10', 'ACTIVE',  88, 15, 6),
-(2, 'Silver Arrow',  'Arabian',      'Horse',   '2019-07-22', 'ACTIVE',  75, 10, 2),
-(3, 'Storm Runner',  'Quarter Horse','Gelding', '2017-11-05', 'ACTIVE',  82, 12, 4),
-(3, 'Dark Phantom',  'Thoroughbred', 'Mare',    '2020-02-18', 'INJURED', 65, 8,  1),
-(4, 'Golden Flash',  'Akhal-Teke',   'Mare',    '2018-09-30', 'ACTIVE',  91, 18, 8),
-(4, 'Iron Blaze',    'Hanoverian',   'Colt',    '2019-03-14', 'ACTIVE',  78, 14, 3);
-GO
-
-INSERT INTO HorseRaceMeetingRegistration (race_meeting_id, horse_id, status) VALUES
-(2, 1, 'APPROVED'), (2, 2, 'APPROVED'), (2, 3, 'APPROVED'), (2, 5, 'APPROVED'), (2, 6, 'APPROVED');
-GO
-
-INSERT INTO RaceInvitation (race_id, horse_id, owner_id, jockey_id, status) VALUES
-(1, 1, 2, 5, 'ACCEPTED'), (1, 3, 3, 7, 'ACCEPTED'), (1, 5, 4, 6, 'ACCEPTED'),
-(2, 2, 2, 5, 'ACCEPTED'), (2, 6, 4, 8, 'ACCEPTED'),
-(3, 1, 2, 5, 'PENDING'),  (3, 5, 4, 6, 'PENDING');
-GO
-
-INSERT INTO RaceEntry (race_id, horse_id, jockey_id, gate_number, status, final_position, finish_time, prize_money, carried_weight, rating_adjustment) VALUES
-(1, 1, 5, 1, 'FINISHED', 1, '1:48.32', 84000.00, 60.00,  6), 
-(1, 3, 7, 2, 'FINISHED', 2, '1:49.10', 31500.00, 57.50,  3), 
-(1, 5, 6, 3, 'FINISHED', 3, '1:49.55', 17250.00, 55.00,  1), 
-(2, 2, 5, 1, 'FINISHED', 1, '1:50.22', 44800.00, 60.00,  6), 
-(2, 6, 8, 2, 'FINISHED', 2, '1:51.00', 16800.00, 56.20,  3),
-(3, 1, 5, 1, 'APPROVED', NULL, NULL, 0.00, 58.00, 0),
-(3, 3, 7, 2, 'APPROVED', NULL, NULL, 0.00, 56.00, 0),
-(3, 5, 6, 3, 'APPROVED', NULL, NULL, 0.00, 55.00, 0),
-(4, 2, 5, 1, 'APPROVED', NULL, NULL, 0.00, 58.50, 0),
-(4, 6, 8, 2, 'APPROVED', NULL, NULL, 0.00, 55.50, 0);  
-GO
-
-INSERT INTO RaceReferee (race_id, referee_id) VALUES
-(1, 10), (1, 11), (2, 10), (3, 11);
-GO
-
-INSERT INTO Violation (race_id, horse_id, jockey_id, referee_id, description, penalty) VALUES
-(1, 3, 7, 10, 'Jockey cut off lane at turn 2', 'Fine $500');
+(2, 'Thunder King', 'Thoroughbred', 'Gelding', '2018-04-10', 'ACTIVE',  88, 0, 0),
+(2, 'Silver Arrow',  'Arabian',      'Horse',   '2019-07-22', 'ACTIVE',  75, 0, 0),
+(3, 'Storm Runner',  'Quarter Horse','Gelding', '2017-11-05', 'ACTIVE',  82, 0, 0),
+(3, 'Dark Phantom',  'Thoroughbred', 'Mare',    '2020-02-18', 'ACTIVE',  65, 0, 0),
+(4, 'Golden Flash',  'Akhal-Teke',   'Mare',    '2018-09-30', 'ACTIVE',  91, 0, 0),
+(4, 'Iron Blaze',    'Hanoverian',   'Colt',    '2019-03-14', 'ACTIVE',  78, 0, 0);
 GO
 
 PRINT 'HorseRacingDB created successfully: notifications & wallet_balance columns added, all passwords set to 123456.';
