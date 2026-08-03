@@ -356,6 +356,17 @@ public class ProcessResultsService {
             }
         }
 
+        // Chuyển tất cả các lượt thi đấu SUSPENDED_DEFICIT còn sót lại của trận này sang REJECTED (DNS - Không xuất phát do nợ ví)
+        List<RaceEntry> raceEntries = raceEntryRepository.findByRaceId(race.getId());
+        for (RaceEntry re : raceEntries) {
+            if ("SUSPENDED_DEFICIT".equalsIgnoreCase(re.getStatus())) {
+                re.setStatus("REJECTED");
+                re.setFinalPosition(null);
+                re.setFinishTime("DNS");
+                raceEntryRepository.save(re);
+            }
+        }
+
         // Cập nhật báo cáo giám sát của trọng tài cho trận đua
         race.setStewardReport(stewardReport);
         // Đổi trạng thái trận đua thành OFFICIAL (kết quả chính thức)

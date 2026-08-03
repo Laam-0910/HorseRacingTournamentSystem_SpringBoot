@@ -176,7 +176,7 @@ export default function Season() {
   const [success, setSuccess] = useState("");
 
   // --- Các State phục vụ Biểu mẫu Tạo Mùa giải mới ---
-  const [newSeasonName, setNewSeasonName] = useState("2026–2027 Grand Prix Season");
+  const [newSeasonName, setNewSeasonName] = useState("");
   const [newSeasonStartDate, setNewSeasonStartDate] = useState("");
   const [newSeasonEndDate, setNewSeasonEndDate] = useState("");
   const [classRuleMethod, setClassRuleMethod] = useState<"AUTOMATIC" | "MANUAL">("AUTOMATIC"); // Lựa chọn phương thức phân hạng
@@ -231,13 +231,57 @@ export default function Season() {
     }
   };
 
+  // --- State cho chỉnh sửa Quy tắc Class Rules ---
+  const [editableRules, setEditableRules] = useState<any[]>([]);
+  const [isEditingRules, setIsEditingRules] = useState(false);
+  const [rulesError, setRulesError] = useState("");
+  const [rulesSuccess, setRulesSuccess] = useState("");
+
   // Tải quy chế phân hạng Class Rules của một mùa giải cụ thể
   const fetchRules = async (seasonId: number) => {
     try {
       const rules = await api.get<any[]>(`/races/seasons/${seasonId}/rules`);
       setSeasonRules(rules);
+      setEditableRules(rules.map((r: any) => ({ ...r })));
     } catch (err: any) {
       console.error("Failed to load rules", err);
+    }
+  };
+
+  const handleSaveRules = async () => {
+    if (!selectedSeasonId) return;
+    setRulesError("");
+    setRulesSuccess("");
+
+    // Client-side pre-validation: check lower class max prize < upper class min prize
+    const classMap: Record<number, any> = {};
+    for (const r of editableRules) {
+      if (!r.classLevel) continue;
+      const numStr = r.classLevel.toLowerCase().replace("class", "").trim();
+      const num = parseInt(numStr, 10);
+      if (!isNaN(num)) classMap[num] = r;
+    }
+
+    for (let i = 1; i < 5; i++) {
+      const upper = classMap[i];
+      const lower = classMap[i + 1];
+      if (upper && lower) {
+        const upperMin = parseFloat(upper.minPrize) || 0;
+        const lowerMax = parseFloat(lower.maxPrize) || 0;
+        if (lowerMax >= upperMin) {
+          setRulesError(`Class ${i + 1} maximum prize ($${lowerMax.toLocaleString()}) must be strictly smaller than Class ${i} minimum prize ($${upperMin.toLocaleString()}).`);
+          return;
+        }
+      }
+    }
+
+    try {
+      await api.post(`/races/seasons/${selectedSeasonId}/rules`, editableRules);
+      setRulesSuccess("Season class prize rules updated successfully.");
+      setIsEditingRules(false);
+      fetchRules(selectedSeasonId);
+    } catch (err: any) {
+      setRulesError(getErrMsg(err, "Failed to save season rules."));
     }
   };
 
@@ -313,6 +357,18 @@ export default function Season() {
     setError("");
     setSuccess("");
     
+    if (!newSeasonName || !newSeasonName.trim()) {
+      setError("Season Name cannot be empty.");
+      return;
+    }
+
+    const normSeasonName = newSeasonName.replace(/[–—]/g, "-").replace(/\s+/g, " ").trim().toLowerCase();
+    const isDuplicateSeason = seasons.some(s => s.name && s.name.replace(/[–—]/g, "-").replace(/\s+/g, " ").trim().toLowerCase() === normSeasonName);
+    if (isDuplicateSeason) {
+      setError(`A Season named "${newSeasonName.trim()}" already exists. Season names must be unique.`);
+      return;
+    }
+
     if (!newSeasonStartDate || !newSeasonEndDate) {
       setError("Please select both start and end dates.");
       return;
@@ -339,7 +395,7 @@ export default function Season() {
       await api.post("/races/seasons", payload);
       setSuccess("Season initialized successfully!");
       // Reset biểu mẫu nhập liệu
-      setNewSeasonName("2026–2027 Grand Prix Season");
+      setNewSeasonName("");
       setNewSeasonStartDate("");
       setNewSeasonEndDate("");
       setClassRuleMethod("AUTOMATIC");
@@ -396,7 +452,7 @@ export default function Season() {
                   onChange={e => setNewSeasonName(e.target.value)}
                   className="w-full rounded-lg px-3 py-2.5 text-xs text-[#f4f2ec] outline-none"
                   style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)" }}
-                  placeholder={$t("e.g. 2026–2027 Grand Prix Season", (localStorage.getItem('app-lang') || 'en'))}
+                  placeholder={$t("Enter Season Name (e.g. 2026–2027 Grand Prix Season)", (localStorage.getItem('app-lang') || 'en'))}
                 />
               </div>
               <InlineDatePicker label={$t("Season Start Date", (localStorage.getItem('app-lang') || 'en'))} value={newSeasonStartDate} onChange={setNewSeasonStartDate} />
@@ -473,36 +529,60 @@ export default function Season() {
                   <p className="text-[10px] font-mono mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{$t("Adjust ratings for the 5 season classes before initialization:", (localStorage.getItem('app-lang') || 'en'))}</p>
                 </div>
                 <div className="overflow-x-auto pt-2">
-                  <table className="w-full text-xs font-mono text-left min-w-[600px]">
+                  <table className="w-full text-xs font-mono text-left min-w-[700px]">
                     <thead>
                       <tr className="border-b pb-2" style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>
                         <th className="py-2 pr-4 text-left">{$t("Class Level", (localStorage.getItem('app-lang') || 'en'))}</th>
-                        <th className="py-2 px-4 text-left">{$t("Min Rating", (localStorage.getItem('app-lang') || 'en'))}</th>
-                        <th className="py-2 px-4 text-left">{$t("Max Rating", (localStorage.getItem('app-lang') || 'en'))}</th>
+                        <th className="py-2 px-2 text-left">{$t("Min Rating", (localStorage.getItem('app-lang') || 'en'))}</th>
+                        <th className="py-2 px-2 text-left">{$t("Max Rating", (localStorage.getItem('app-lang') || 'en'))}</th>
+                        <th className="py-2 px-2 text-left">{$t("Min Prize ($)", (localStorage.getItem('app-lang') || 'en'))}</th>
+                        <th className="py-2 px-2 text-left">{$t("Max Prize ($)", (localStorage.getItem('app-lang') || 'en'))}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
                       {manualRules.map((rule, index) => (
                         <tr key={index}>
                           <td className="py-3 pr-4 font-bold text-[#c9a227]">{rule.classLevelName}</td>
-                          <td className="py-2 px-4">
+                          <td className="py-2 px-2">
                             <input
                               type="number"
                               value={rule.minRating ?? ""}
                               onChange={e => updateManualRule(index, "minRating", e.target.value)}
                               required
-                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-24"
+                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-20"
                               style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
                             />
                           </td>
-                          <td className="py-2 px-4">
+                          <td className="py-2 px-2">
                             <input
                               type="number"
                               value={rule.maxRating ?? ""}
                               onChange={e => updateManualRule(index, "maxRating", e.target.value)}
                               placeholder={$t("No limit", (localStorage.getItem('app-lang') || 'en'))}
-                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-24"
+                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-20"
                               style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <input
+                              type="number"
+                              min="0"
+                              value={rule.minPrize ?? ""}
+                              onChange={e => updateManualRule(index, "minPrize", e.target.value)}
+                              required
+                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#4ade80] w-28 font-mono"
+                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(74,222,128,0.2)" }}
+                            />
+                          </td>
+                          <td className="py-2 px-2">
+                            <input
+                              type="number"
+                              min="0"
+                              value={rule.maxPrize ?? ""}
+                              onChange={e => updateManualRule(index, "maxPrize", e.target.value)}
+                              required
+                              className="rounded px-2.5 py-1.5 text-xs outline-none text-[#4ade80] w-28 font-mono"
+                              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(74,222,128,0.2)" }}
                             />
                           </td>
                         </tr>
@@ -654,29 +734,102 @@ export default function Season() {
           </div>
         )}
 
-        {/* Khối hiển thị Class rules tương ứng dưới bảng (Chế độ chỉ xem) */}
+        {/* Khối hiển thị & chỉnh sửa Class rules tương ứng dưới bảng */}
         {selectedSeasonId !== null && seasonRules.length > 0 && (
           <div className="px-6 py-4 border-t" style={{ borderColor: "rgba(201,162,39,0.08)" }}>
             <div className="flex items-center justify-between mb-3">
               <p className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
                 Class Prize Rules & Rating Limits — Season S-{selectedSeasonId}
               </p>
+              {!isEditingRules ? (
+                <button
+                  type="button"
+                  onClick={() => { setIsEditingRules(true); setRulesError(""); setRulesSuccess(""); }}
+                  className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded text-xs font-mono font-semibold transition cursor-pointer"
+                >
+                  ✏️ Edit Class Rules
+                </button>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setIsEditingRules(false); setRulesError(""); setEditableRules(seasonRules.map(r => ({ ...r }))); }}
+                    className="px-3 py-1 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 rounded text-xs font-mono transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveRules}
+                    className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black rounded text-xs font-mono font-bold transition cursor-pointer"
+                  >
+                    💾 Save Rules
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              {seasonRules.map(rule => (
-                <div key={rule.id} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(201,162,39,0.12)" }}>
-                  <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
-                  <p className="text-[10px] font-mono text-white/50 mt-1">Rating: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
-                  <p className="text-[10px] font-mono text-emerald-400 font-semibold mt-1">
-                    Min Prize: ${rule.minPrize ? rule.minPrize.toLocaleString() : '0'}
-                  </p>
-                  <p className="text-[10px] font-mono text-emerald-400/80 mt-0.5">
-                    Max Prize: ${rule.maxPrize ? rule.maxPrize.toLocaleString() : '0'}
-                  </p>
-                </div>
-              ))}
-            </div>
+            {rulesError && (
+              <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl mb-3">⚠️ {rulesError}</p>
+            )}
+            {rulesSuccess && (
+              <p className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl mb-3">✓ {rulesSuccess}</p>
+            )}
+
+            {!isEditingRules ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {seasonRules.map(rule => (
+                  <div key={rule.id} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(201,162,39,0.12)" }}>
+                    <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
+                    <p className="text-[10px] font-mono text-white/50 mt-1">Rating: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
+                    <p className="text-[10px] font-mono text-emerald-400 font-semibold mt-1">
+                      Min Prize: ${rule.minPrize ? rule.minPrize.toLocaleString() : '0'}
+                    </p>
+                    <p className="text-[10px] font-mono text-emerald-400/80 mt-0.5">
+                      Max Prize: ${rule.maxPrize ? rule.maxPrize.toLocaleString() : '0'}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                {editableRules.map((rule, idx) => (
+                  <div key={rule.id || idx} className="rounded-lg p-3 border space-y-2" style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(201,162,39,0.25)" }}>
+                    <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
+                    <div>
+                      <label className="text-[9px] font-mono text-white/40 block">Min Prize ($)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={rule.minPrize ?? ''}
+                        onChange={e => {
+                          const val = parseFloat(e.target.value);
+                          const updated = [...editableRules];
+                          updated[idx] = { ...updated[idx], minPrize: isNaN(val) ? 0 : val };
+                          setEditableRules(updated);
+                        }}
+                        className="w-full px-2 py-1 bg-black/40 border border-white/10 rounded text-xs text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-mono text-white/40 block">Max Prize ($)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={rule.maxPrize ?? ''}
+                        onChange={e => {
+                          const val = parseFloat(e.target.value);
+                          const updated = [...editableRules];
+                          updated[idx] = { ...updated[idx], maxPrize: isNaN(val) ? 0 : val };
+                          setEditableRules(updated);
+                        }}
+                        className="w-full px-2 py-1 bg-black/40 border border-white/10 rounded text-xs text-white font-mono"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

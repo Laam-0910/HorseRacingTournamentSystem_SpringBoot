@@ -3,6 +3,7 @@ import { api, getErrMsg } from "../../../../lib/api";
 import { formatDate } from "../../../utils/dateTimeHelper";
 import { $t } from "../../../../lib/i18n";
 import { Pagination } from "../../common/Pagination";
+import VietQRModal from "../../common/VietQRModal";
 
 interface UserWalletViewProps {
   user: any;
@@ -22,7 +23,14 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
 
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [gatewayMode, setGatewayMode] = useState<"MOCK" | "LIVE">("MOCK");
+
   const [amountInput, setAmountInput] = useState("");
+  const [bankName, setBankName] = useState("Vietcombank");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountHolder, setAccountHolder] = useState("");
+  const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -44,23 +52,35 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
 
   useEffect(() => {
     fetchWalletData();
+    api.get<any[]>("/admin/configs").then(configs => {
+      const modeConfig = configs.find(c => c.configKey === "PAYMENT_GATEWAY_MODE");
+      if (modeConfig && modeConfig.configValue?.toUpperCase() === "LIVE") {
+        setGatewayMode("LIVE");
+      }
+    }).catch(() => {});
   }, [user?.id]);
 
-  const handleDeposit = async (e: React.FormEvent) => {
+  const handleDepositPrompt = (e: React.FormEvent) => {
     e.preventDefault();
     const val = Number(amountInput);
     if (!val || val <= 0) {
       setError("Please enter a valid amount greater than 0.");
       return;
     }
+    setShowDepositModal(false);
+    setShowQrModal(true);
+  };
+
+  const handleConfirmDeposit = async () => {
+    const val = Number(amountInput);
     setSubmitting(true);
     setError("");
     setSuccessMsg("");
     try {
       const res = await api.post<any>("/public/wallet/deposit", { userId: user.id, amount: val });
       if (res.success) {
-        setSuccessMsg(`Successfully deposited $${val.toLocaleString()} into your wallet!`);
-        setShowDepositModal(false);
+        setSuccessMsg(`Successfully deposited $${val.toLocaleString('en-US', { minimumFractionDigits: 2 })} into your wallet via VietQR!`);
+        setShowQrModal(false);
         setAmountInput("");
         if (user) user.walletBalance = res.newBalance;
         fetchWalletData();
@@ -81,15 +101,30 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
       setError("Please enter a valid amount greater than 0.");
       return;
     }
+    if (!accountNumber.trim() || !accountHolder.trim()) {
+      setError("Bank Account Number and Account Holder Name are required for cash-out payout.");
+      return;
+    }
+
     setSubmitting(true);
     setError("");
     setSuccessMsg("");
     try {
-      const res = await api.post<any>("/public/wallet/withdraw", { userId: user.id, amount: val });
+      const res = await api.post<any>("/public/wallet/withdraw", {
+        userId: user.id,
+        amount: val,
+        bankName,
+        accountNumber: accountNumber.trim(),
+        accountHolder: accountHolder.trim(),
+        notes: notes.trim()
+      });
       if (res.success) {
-        setSuccessMsg(`Successfully withdrawn $${val.toLocaleString()} from your wallet!`);
+        setSuccessMsg(`Successfully requested cash-out withdrawal of $${val.toLocaleString('en-US', { minimumFractionDigits: 2 })} to ${bankName} (${accountNumber.trim()})!`);
         setShowWithdrawModal(false);
         setAmountInput("");
+        setAccountNumber("");
+        setAccountHolder("");
+        setNotes("");
         if (user) user.walletBalance = res.newBalance;
         fetchWalletData();
       } else {
@@ -204,12 +239,12 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
           <div className="bg-[#121110] border border-white/15 rounded-2xl w-full max-w-md p-6 space-y-5 font-mono shadow-2xl">
             <div className="flex items-center justify-between border-b border-white/10 pb-4">
               <h3 className="text-base font-bold text-white font-serif flex items-center gap-2">
-                <span>💳 Deposit Funds to Wallet</span>
+                <span>💳 Deposit Funds via VietQR Gateway</span>
               </h3>
               <button onClick={() => setShowDepositModal(false)} className="text-white/50 hover:text-white text-lg font-bold">✕</button>
             </div>
 
-            <form onSubmit={handleDeposit} className="space-y-4">
+            <form onSubmit={handleDepositPrompt} className="space-y-4">
               <div>
                 <label className="text-xs text-white/60 block mb-1.5 uppercase font-bold">Deposit Amount ($USD)</label>
                 <input
@@ -219,7 +254,7 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
                   required
                   value={amountInput}
                   onChange={(e) => setAmountInput(e.target.value)}
-                  placeholder="e.g. 5000"
+                  placeholder="e.g. 500"
                   className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-emerald-500 font-mono"
                 />
               </div>
@@ -239,10 +274,9 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-black text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+                  className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-black text-xs font-bold rounded-xl shadow-lg shadow-emerald-500/20"
                 >
-                  {submitting ? "Processing..." : "Confirm Deposit"}
+                  📱 Generate VietQR Code
                 </button>
               </div>
             </form>
@@ -253,17 +287,17 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
       {/* Withdraw Modal */}
       {showWithdrawModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#121110] border border-white/15 rounded-2xl w-full max-w-md p-6 space-y-5 font-mono shadow-2xl">
-            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+          <div className="bg-[#121110] border border-white/15 rounded-2xl w-full max-w-md p-6 space-y-4 font-mono shadow-2xl">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
               <h3 className="text-base font-bold text-white font-serif flex items-center gap-2">
-                <span>💸 Cash-Out Withdrawal</span>
+                <span>💸 Cash-Out Withdrawal Payout</span>
               </h3>
               <button onClick={() => setShowWithdrawModal(false)} className="text-white/50 hover:text-white text-lg font-bold">✕</button>
             </div>
 
-            <form onSubmit={handleWithdraw} className="space-y-4">
+            <form onSubmit={handleWithdraw} className="space-y-3">
               <div>
-                <label className="text-xs text-white/60 block mb-1.5 uppercase font-bold">Withdrawal Amount ($USD)</label>
+                <label className="text-xs text-white/60 block mb-1 uppercase font-bold">Withdrawal Amount ($USD)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -273,11 +307,66 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
                   value={amountInput}
                   onChange={(e) => setAmountInput(e.target.value)}
                   placeholder={`Max: $${walletBalance.toLocaleString()}`}
-                  className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-rose-500 font-mono"
+                  className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-mono"
                 />
               </div>
 
-              <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-[11px] text-white/60 space-y-1">
+              <div>
+                <label className="text-xs text-white/60 block mb-1 uppercase font-bold">Receiving Bank / E-Wallet</label>
+                <select
+                  value={bankName}
+                  onChange={(e) => setBankName(e.target.value)}
+                  className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-mono"
+                >
+                  <option value="Vietcombank">Vietcombank (VCB)</option>
+                  <option value="Techcombank">Techcombank (TCB)</option>
+                  <option value="MB Bank">MB Bank</option>
+                  <option value="ACB">ACB</option>
+                  <option value="VietinBank">VietinBank</option>
+                  <option value="BIDV">BIDV</option>
+                  <option value="Sacombank">Sacombank</option>
+                  <option value="MoMo E-Wallet">MoMo E-Wallet</option>
+                  <option value="ZaloPay">ZaloPay</option>
+                  <option value="PayPal">PayPal</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-white/60 block mb-1 uppercase font-bold">Bank Account Number / ID *</label>
+                <input
+                  type="text"
+                  required
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.target.value)}
+                  placeholder="e.g. 10123456789"
+                  className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-white/60 block mb-1 uppercase font-bold">Account Holder Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={accountHolder}
+                  onChange={(e) => setAccountHolder(e.target.value)}
+                  placeholder="e.g. NGUYEN VAN A"
+                  className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-mono uppercase"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-white/60 block mb-1 uppercase font-bold">Payout Notes (Optional)</label>
+                <input
+                  type="text"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="e.g. Cash out race earnings"
+                  className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-mono"
+                />
+              </div>
+
+              <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-[10px] text-white/60 space-y-0.5">
                 <div className="flex justify-between"><span>Available Balance:</span> <span className="text-white font-bold">${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
                 <div className="flex justify-between"><span>Remaining Balance:</span> <span className="text-amber-400 font-bold">${Math.max(0, walletBalance - (Number(amountInput) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
               </div>
@@ -286,14 +375,14 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
                 <button
                   type="button"
                   onClick={() => setShowWithdrawModal(false)}
-                  className="flex-1 py-3 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-xl border border-white/10"
+                  className="flex-1 py-2.5 bg-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-xl border border-white/10"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={submitting || Number(amountInput) > walletBalance}
-                  className="flex-1 py-3 bg-gradient-to-r from-amber-500 to-rose-500 hover:brightness-110 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-500/20 disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 hover:brightness-110 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-500/20 disabled:opacity-50"
                 >
                   {submitting ? "Processing..." : "Confirm Withdrawal"}
                 </button>
@@ -302,6 +391,20 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
           </div>
         </div>
       )}
+
+      {/* VietQR Modal for Deposit */}
+      <VietQRModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        onConfirmSuccess={handleConfirmDeposit}
+        amount={Number(amountInput) || 0}
+        transferNote={`TOPUP ${user?.username ?? 'USER'}`}
+        accountName="HORSE RACING SYSTEM FUNDING"
+        accountNumber="9999 8888 6868"
+        bankName="Vietcombank (VCB)"
+        gatewayMode={gatewayMode}
+        loading={submitting}
+      />
 
       {/* Transaction History Log Table */}
       <div className="bg-white/[0.015] border border-white/10 rounded-2xl p-5 space-y-4">

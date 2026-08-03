@@ -952,6 +952,35 @@ public class AdminUserService {
             entry.setHandicapWeight(null); // Xóa handicap weight
             raceEntryRepository.save(entry); // Lưu lượt thi đấu
         }
+
+        // Hoàn lại tiền Phí Thuê Nài (Hire Fee) đang tạm giữ trong Escrow về cho Chủ Ngựa
+        List<RaceInvitation> invitations = invitationRepository.findByRaceId(raceId);
+        for (RaceInvitation invite : invitations) {
+            if ("HELD".equalsIgnoreCase(invite.getPayoutStatus()) || "ACCEPTED".equalsIgnoreCase(invite.getStatus())) {
+                BigDecimal hireFee = invite.getHireFee() != null ? invite.getHireFee() : new BigDecimal("500.00");
+                Integer ownerId = invite.getOwnerId();
+                if (ownerId != null && hireFee.compareTo(BigDecimal.ZERO) > 0) {
+                    Optional<User> ownerOpt = userRepository.findById(ownerId);
+                    if (ownerOpt.isPresent()) {
+                        User owner = ownerOpt.get();
+                        BigDecimal cur = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
+                        owner.setWalletBalance(cur.add(hireFee));
+                        userRepository.save(owner);
+
+                        WalletTransaction txRefund = new WalletTransaction();
+                        txRefund.setUserId(owner.getId());
+                        txRefund.setAmount(hireFee);
+                        txRefund.setTransactionType("INVITATION_CANCELLED_REFUND");
+                        txRefund.setDescription("Refund jockey hire fee due to cancelled race #" + raceId);
+                        txRefund.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                        walletTransactionRepository.save(txRefund);
+                    }
+                }
+                invite.setPayoutStatus("REFUNDED");
+                invite.setStatus("REJECTED");
+                invitationRepository.save(invite);
+            }
+        }
     }
 
     @Transactional(readOnly = true)

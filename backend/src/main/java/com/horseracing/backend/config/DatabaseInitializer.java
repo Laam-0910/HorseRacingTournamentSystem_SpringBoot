@@ -80,6 +80,19 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
+            // Seed default class rules for Season 1 if missing
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SeasonClassRule', 'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM SeasonClassRule WHERE season_id = 1) " +
+                "BEGIN " +
+                "    INSERT INTO SeasonClassRule (season_id, class_level, class_name, min_rating, max_rating, min_prize, max_prize) VALUES " +
+                "    (1, 'Class 1', 'Elite Championship',    95, NULL, 300000.00, 1000000.00), " +
+                "    (1, 'Class 2', 'Premium Group',         80, 94,   200000.00, 299999.00), " +
+                "    (1, 'Class 3', 'Advanced Tier',         60, 79,   100000.00, 199999.00), " +
+                "    (1, 'Class 4', 'Intermediate Level',    40, 59,   50000.00,  99999.00), " +
+                "    (1, 'Class 5', 'Entry Division',        0,  39,   20000.00,  49999.00); " +
+                "END"
+            );
+
             // 5. Kiểm tra và thêm cột min_entries (số lượng ngựa chạy tối thiểu, mặc định là 3) vào bảng Race
             jdbcTemplate.execute(
                 "IF OBJECT_ID('Race', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Race') AND name = 'min_entries') " +
@@ -224,6 +237,32 @@ public class DatabaseInitializer implements InitializingBean {
                 "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'DEFAULT_JOCKEY_HIRE_FEE') " +
                 "BEGIN " +
                 "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('DEFAULT_JOCKEY_HIRE_FEE', '500.00', 'Default hire fee paid by horse owner to jockey per accepted mount ($100 - $10,000)'); " +
+                "END"
+            );
+
+            // 8.6 Khởi tạo cấu hình Cổng Thanh Toán (Payment Gateway Mode & API Keys)
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PAYMENT_GATEWAY_MODE') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYMENT_GATEWAY_MODE', 'MOCK', 'Payment Gateway Mode: MOCK (Virtual Money Demo) or LIVE (Real Money Gateway)'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PAYOS_CLIENT_ID') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_CLIENT_ID', 'NOT_SET', 'PayOS Payment Gateway Client ID (for LIVE real money mode)'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PAYOS_API_KEY') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_API_KEY', 'NOT_SET', 'PayOS Payment Gateway API Key (for LIVE real money mode)'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PAYOS_CHECKSUM_KEY') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_CHECKSUM_KEY', 'NOT_SET', 'PayOS Payment Gateway Checksum Key (for LIVE real money mode)'); " +
                 "END"
             );
 

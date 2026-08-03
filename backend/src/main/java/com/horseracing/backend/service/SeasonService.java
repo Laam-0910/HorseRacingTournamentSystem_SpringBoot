@@ -68,8 +68,11 @@ public class SeasonService {
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("Season name cannot be empty.");
         }
-        if (seasonRepository.existsByNameIgnoreCase(name.trim())) {
-            throw new IllegalArgumentException("Season with name '" + name.trim() + "' already exists.");
+        String normName = name.replaceAll("[–—]", "-").replaceAll("\\s+", " ").trim().toLowerCase();
+        boolean duplicateExists = seasonRepository.findAll().stream()
+                .anyMatch(s -> s.getName() != null && s.getName().replaceAll("[–—]", "-").replaceAll("\\s+", " ").trim().toLowerCase().equals(normName));
+        if (duplicateExists) {
+            throw new IllegalArgumentException("DUPLICATE_SEASON_NAME: A Season named '" + name.trim() + "' already exists.");
         }
 
         // Phân tích định dạng ngày từ chuỗi sang java.sql.Date
@@ -295,9 +298,19 @@ public class SeasonService {
         return season.getStatus();
     }
 
-    // Lấy các quy định phân hạng điểm Rating của mùa giải
+    // Lấy các quy định phân hạng điểm Rating của mùa giải (Tự động khởi tạo luật mặc định nếu chưa có)
+    @Transactional
     public List<SeasonClassRuleDTO> getSeasonRules(Integer seasonId) {
-        return seasonClassRuleRepository.findBySeasonId(seasonId).stream()
+        List<SeasonClassRule> rules = seasonClassRuleRepository.findBySeasonId(seasonId);
+        if (rules.isEmpty() && seasonRepository.existsById(seasonId)) {
+            SeasonClassRule class1 = new SeasonClassRule(null, seasonId, "Class 1", "Elite Championship", 95, null, new BigDecimal("300000"), new BigDecimal("1000000"));
+            SeasonClassRule class2 = new SeasonClassRule(null, seasonId, "Class 2", "Premium Group", 80, 94, new BigDecimal("200000"), new BigDecimal("299999"));
+            SeasonClassRule class3 = new SeasonClassRule(null, seasonId, "Class 3", "Advanced Tier", 60, 79, new BigDecimal("100000"), new BigDecimal("199999"));
+            SeasonClassRule class4 = new SeasonClassRule(null, seasonId, "Class 4", "Intermediate Level", 40, 59, new BigDecimal("50000"), new BigDecimal("99999"));
+            SeasonClassRule class5 = new SeasonClassRule(null, seasonId, "Class 5", "Entry Division", 0, 39, new BigDecimal("20000"), new BigDecimal("49999"));
+            rules = seasonClassRuleRepository.saveAll(List.of(class1, class2, class3, class4, class5));
+        }
+        return rules.stream()
                 .map(seasonClassRuleMapper::toDTO)
                 .collect(Collectors.toList());
     }
@@ -383,12 +396,13 @@ public class SeasonService {
                     }
                 }
 
-                // Prize hierarchy check: Higher class min prize > Lower class max prize
+                // Prize hierarchy check:
+                // Lower class max prize MUST BE strictly smaller than upper class min prize (Class 5 Max < Class 4 Min, Class 4 Max < Class 3 Min...)
                 if (higher.getMinPrize() != null && lower.getMaxPrize() != null) {
-                    if (higher.getMinPrize().compareTo(lower.getMaxPrize()) <= 0) {
+                    if (lower.getMaxPrize().compareTo(higher.getMinPrize()) >= 0) {
                         throw new IllegalArgumentException(String.format(
-                                "Class %d minimum prize ($%,.2f) must be strictly greater than Class %d maximum prize ($%,.2f). Higher classes must offer higher prizes.",
-                                i, higher.getMinPrize(), i + 1, lower.getMaxPrize()));
+                                "Class %d maximum prize ($%,.2f) must be strictly smaller than Class %d minimum prize ($%,.2f). Lower classes must have smaller maximum prizes than higher class minimum prizes.",
+                                i + 1, lower.getMaxPrize(), i, higher.getMinPrize()));
                     }
                 }
             }

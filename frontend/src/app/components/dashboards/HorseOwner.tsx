@@ -282,34 +282,54 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
       )}
 
       {/* Dedicated Wallet & Financial Rules Card */}
-      <div className="rounded-xl border p-4" style={{ background: "rgba(251, 191, 36, 0.05)", borderColor: "rgba(251, 191, 36, 0.2)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "1.5rem" }}>💰</span>
+      <div className="rounded-2xl border p-5 relative overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(251,191,36,0.06), rgba(15,13,10,0.8))", borderColor: "rgba(251, 191, 36, 0.25)", boxShadow: "0 10px 30px rgba(0,0,0,0.4)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem", flexWrap: "wrap", gap: "1rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <div style={{ padding: "0.5rem 0.75rem", borderRadius: "0.75rem", background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.3)", fontSize: "1.5rem" }}>
+              💰
+            </div>
             <div>
-              <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#fbbf24" }}>Owner Wallet & Revenue Breakdown</h4>
-              <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.6)" }}>Current available balance & automatic financial distribution rules</p>
+              <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.1rem", color: "#fbbf24" }}>Owner Wallet & Financial Breakdown</h4>
+              <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>Real-time available balance & automatic financial distribution rules</p>
             </div>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>Available Wallet</span>
-            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fbbf24", fontFamily: "monospace" }}>
-              ${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ textAlign: "right" }}>
+              <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.05em" }}>Available Wallet</span>
+              <div style={{ fontSize: "1.6rem", fontWeight: 800, color: "#fbbf24", fontFamily: "monospace", lineHeight: "1.2" }}>
+                ${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </div>
             </div>
+            {onSwitchTab && (
+              <button
+                onClick={() => onSwitchTab("wallet")}
+                style={{ padding: "0.5rem 1rem", borderRadius: "0.75rem", background: "#fbbf24", color: "#000", fontSize: "0.75rem", fontWeight: 700, fontFamily: "monospace", border: "none", cursor: "pointer", transition: "all 0.2s" }}
+              >
+                💳 Manage Wallet
+              </button>
+            )}
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", borderTop: "1px solid rgba(251, 191, 36, 0.15)", paddingTop: "0.75rem" }}>
-          <div style={{ fontSize: "0.75rem" }}>
-            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏆 Prize Money Split:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Owner receives <strong>80%</strong> of place prize (1st: 50%, 2nd: 30%, 3rd: 20% of purse).</p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "1rem", borderTop: "1px solid rgba(251, 191, 36, 0.15)", paddingTop: "1rem" }}>
+          <div style={{ background: "rgba(0,0,0,0.3)", padding: "0.75rem 1rem", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 700, fontSize: "0.75rem" }}>🏆 Purse Allocation:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "4px", lineHeight: "1.4" }}>
+              Top 3 finishes receive purse prizes (1st: <strong>50%</strong>, 2nd: <strong>30%</strong>, 3rd: <strong>20%</strong>).
+            </p>
           </div>
-          <div style={{ fontSize: "0.75rem" }}>
-            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏇 Jockey Hire Fee:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Negotiable <strong>20% - 50%</strong> of prize money held in Escrow Vault.</p>
+          <div style={{ background: "rgba(0,0,0,0.3)", padding: "0.75rem 1rem", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 700, fontSize: "0.75rem" }}>🏇 Jockey Hire Fee:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "4px", lineHeight: "1.4" }}>
+              Upfront mount fee (default <strong>$500</strong>) paid to jockey upon invitation acceptance.
+            </p>
           </div>
-          <div style={{ fontSize: "0.75rem" }}>
-            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🤝 Referral Bonus:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}><strong>5% commission</strong> credited for accepted invitation referrals.</p>
+          <div style={{ background: "rgba(0,0,0,0.3)", padding: "0.75rem 1rem", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.05)" }}>
+            <span style={{ color: "#fbbf24", fontWeight: 700, fontSize: "0.75rem" }}>🤝 Jockey Prize Share:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "4px", lineHeight: "1.4" }}>
+              Negotiable <strong>20% – 50%</strong> of earned prize money allocated to jockey.
+            </p>
           </div>
         </div>
       </div>
@@ -1382,7 +1402,7 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
                     </div>
                     <div>
                       <span style={{ color: "rgba(255,255,255,0.4)" }}>Jockey Share: </span>
-                      <strong style={{ color: "#fbbf24", fontFamily: "monospace" }}>{inv.jockeyPrizePercentage ?? inv.jockeySharePercentage ?? 20}%</strong>
+                      <strong style={{ color: "#fbbf24", fontFamily: "monospace" }}>{inv.jockeyPrizePercentage ?? 20}%</strong>
                     </div>
                     {assignedRefs.length > 0 && (
                       <div style={{ width: "100%", display: "flex", alignItems: "center", gap: "6px" }}>

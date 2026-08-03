@@ -628,7 +628,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                     </p>
                   )}
                   <p style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", fontWeight: 700, marginTop: "0.25rem" }}>
-                    💰 {lang === "vi" ? "Tỷ lệ chia thưởng được hưởng:" : "Offered Prize Share:"} {inv.jockeySharePercentage ?? 10}%
+                    💰 {lang === "vi" ? "Tỷ lệ chia thưởng được hưởng:" : "Offered Prize Share:"} {inv.jockeyPrizePercentage ?? 20}%
                   </p>
 
                   {/* Trọng tài phân công cho trận đua */}

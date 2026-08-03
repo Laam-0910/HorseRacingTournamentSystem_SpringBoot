@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import basicSsl from "@vitejs/plugin-basic-ssl";
 import path from "path";
 
 const mobileLivestreamBannerPlugin = () => ({
@@ -17,32 +16,42 @@ const mobileLivestreamBannerPlugin = () => ({
   }
 });
 
-export default defineConfig({
-  plugins: [react(), basicSsl(), mobileLivestreamBannerPlugin()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-  server: {
-    host: true, // Mở thấu kính Network IP cho phép Điện thoại kết nối
-    port: 5173,
-    strictPort: true,
-    allowedHosts: true,
-    proxy: {
-      "/api": {
-        target: "http://localhost:8080",
-        changeOrigin: true,
-        secure: false,
-      },
-      "/ws": {
-        target: "ws://localhost:8080",
-        ws: true,
-        changeOrigin: true,
+export default defineConfig(async () => {
+  const plugins: any[] = [react(), mobileLivestreamBannerPlugin()];
+  try {
+    const basicSsl = (await import("@vitejs/plugin-basic-ssl")).default;
+    plugins.push(basicSsl());
+  } catch {
+    // SSL plugin optional fallback
+  }
+
+  return {
+    plugins,
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
       },
     },
-  },
-  build: {
-    outDir: "dist",
-  },
+    server: {
+      host: true, // Mở thấu kính Network IP cho phép Điện thoại kết nối
+      port: 5173,
+      strictPort: false,
+      allowedHosts: true,
+      proxy: {
+        "/api": {
+          target: "http://localhost:8080",
+          changeOrigin: true,
+          secure: false,
+        },
+        "/ws": {
+          target: "ws://localhost:8080",
+          ws: true,
+          changeOrigin: true,
+        },
+      },
+    },
+    build: {
+      outDir: "dist",
+    },
+  };
 });

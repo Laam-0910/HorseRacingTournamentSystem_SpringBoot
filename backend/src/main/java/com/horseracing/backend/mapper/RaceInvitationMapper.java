@@ -11,6 +11,7 @@ public class RaceInvitationMapper {
         if (invite == null) {
             return null;
         }
+        java.math.BigDecimal pct = invite.getJockeyPrizePercentage() != null ? invite.getJockeyPrizePercentage() : new java.math.BigDecimal("20.00");
         return RaceInvitationDTO.builder()
                 .id(invite.getId())
                 .raceId(invite.getRaceId())
@@ -24,12 +25,11 @@ public class RaceInvitationMapper {
                 .jockeyName(jockeyName)
                 .jockeyAvatar(jockeyAvatar)
                 .status(invite.getStatus())
-                .jockeySharePercentage(invite.getJockeySharePercentage() != null ? invite.getJockeySharePercentage() : new java.math.BigDecimal("10.00"))
                 .commissionAmount(invite.getCommissionAmount())
                 .commissionRate(invite.getCommissionRate())
                 .payoutStatus(invite.getPayoutStatus())
                 .hireFee(invite.getHireFee())
-                .jockeyPrizePercentage(invite.getJockeyPrizePercentage())
+                .jockeyPrizePercentage(pct)
                 .build();
     }
 
@@ -52,7 +52,8 @@ public class RaceInvitationMapper {
         invite.setOwnerId(dto.getOwnerId());
         invite.setJockeyId(dto.getJockeyId());
         invite.setStatus(dto.getStatus());
-        invite.setJockeyPrizePercentage(dto.getJockeyPrizePercentage() != null ? dto.getJockeyPrizePercentage() : dto.getJockeySharePercentage());
+        java.math.BigDecimal pct = dto.getJockeyPrizePercentage() != null ? dto.getJockeyPrizePercentage() : new java.math.BigDecimal("20.00");
+        invite.setJockeyPrizePercentage(pct);
         return invite;
     }
 }

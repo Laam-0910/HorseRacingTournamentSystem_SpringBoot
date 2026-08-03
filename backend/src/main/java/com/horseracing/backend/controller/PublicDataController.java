@@ -495,15 +495,32 @@ public class PublicDataController {
             user.setBalance(current.add(amount));
             userRepository.save(user);
 
-            WalletTransaction tx = new WalletTransaction();
-            tx.setUserId(userId);
-            tx.setAmount(amount);
-            tx.setTransactionType("SELF_DEPOSIT");
-            tx.setDescription("Self deposit into wallet via online payment gateway");
-            tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-            walletTransactionRepository.save(tx);
+            // Auto-reactivate any SUSPENDED_DEFICIT entries if wallet balance is restored to >= 0
+            if (user.getWalletBalance().compareTo(BigDecimal.ZERO) >= 0) {
+                if (user.getRoleId() != null && user.getRoleId() == 2) {
+                    List<Horse> ownerHorses = horseRepository.findByOwnerId(user.getId());
+                    List<Integer> hIds = ownerHorses.stream().map(Horse::getId).collect(Collectors.toList());
+                    if (!hIds.isEmpty()) {
+                        List<RaceEntry> suspended = raceEntryRepository.findAll().stream()
+                                .filter(e -> hIds.contains(e.getHorseId()) && "SUSPENDED_DEFICIT".equalsIgnoreCase(e.getStatus()))
+                                .collect(Collectors.toList());
+                        for (RaceEntry e : suspended) {
+                            e.setStatus("APPROVED");
+                            raceEntryRepository.save(e);
+                        }
+                    }
+                } else {
+                    List<RaceEntry> suspended = raceEntryRepository.findByJockeyId(user.getId()).stream()
+                            .filter(e -> "SUSPENDED_DEFICIT".equalsIgnoreCase(e.getStatus()))
+                            .collect(Collectors.toList());
+                    for (RaceEntry e : suspended) {
+                        e.setStatus("APPROVED");
+                        raceEntryRepository.save(e);
+                    }
+                }
+            }
 
-            return ResponseEntity.ok(Map.of("success", true, "message", "Deposit successful", "newBalance", user.getWalletBalance()));
+            return ResponseEntity.ok(Map.of("success", true, "message", "Deposit successful. Active race entries restored.", "newBalance", user.getWalletBalance()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
@@ -532,11 +549,21 @@ public class PublicDataController {
             user.setBalance(current.subtract(amount));
             userRepository.save(user);
 
+            String bankName = request.get("bankName") != null ? request.get("bankName").toString() : "Bank Transfer";
+            String accountNumber = request.get("accountNumber") != null ? request.get("accountNumber").toString() : "";
+            String accountHolder = request.get("accountHolder") != null ? request.get("accountHolder").toString() : "";
+            String notes = request.get("notes") != null ? request.get("notes").toString() : "";
+
+            StringBuilder desc = new StringBuilder("Cash-out payout via ").append(bankName);
+            if (!accountNumber.isBlank()) desc.append(" | Acc: ").append(accountNumber);
+            if (!accountHolder.isBlank()) desc.append(" (Holder: ").append(accountHolder.toUpperCase()).append(")");
+            if (!notes.isBlank()) desc.append(" | Note: ").append(notes);
+
             WalletTransaction tx = new WalletTransaction();
             tx.setUserId(userId);
             tx.setAmount(amount.negate());
             tx.setTransactionType("WITHDRAWAL");
-            tx.setDescription("Cash-out withdrawal to bank account / e-wallet");
+            tx.setDescription(desc.toString());
             tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
             walletTransactionRepository.save(tx);
 

@@ -328,7 +328,11 @@ INSERT INTO SystemConfig (config_key, config_value, description) VALUES
 ('WEIGHT_PER_POINT',       '0.5',  N'Weight adjustment in kg per 1 point rating difference'),
 ('MAX_OVERWEIGHT_ALLOWED', '1.0',  N'Maximum allowed overweight allowance for Jockey (kg)'),
 ('SEX_ALLOWANCE',          '1.5',  N'Sex allowance for female horses (Fillies/Mares) (kg)'),
-('DEFAULT_JOCKEY_HIRE_FEE','500.00', N'Default hire fee paid by horse owner to jockey per accepted mount ($100 - $10,000)');
+('DEFAULT_JOCKEY_HIRE_FEE','500.00', N'Default hire fee paid by horse owner to jockey per accepted mount ($100 - $10,000)'),
+('PAYMENT_GATEWAY_MODE',  'MOCK', N'Payment Gateway Mode: MOCK (Virtual Money Demo) or LIVE (Real Money Gateway)'),
+('PAYOS_CLIENT_ID',       'NOT_SET', N'PayOS Payment Gateway Client ID (for LIVE real money mode)'),
+('PAYOS_API_KEY',          'NOT_SET', N'PayOS Payment Gateway API Key (for LIVE real money mode)'),
+('PAYOS_CHECKSUM_KEY',     'NOT_SET', N'PayOS Payment Gateway Checksum Key (for LIVE real money mode)');
 GO
 
 INSERT INTO Role (role_name) VALUES ('Admin'), ('Owner'), ('Jockey'), ('Spectator'), ('Referee');
@@ -355,6 +359,11 @@ INSERT INTO Season (name, start_date, end_date, status) VALUES
 GO
 
 INSERT INTO SeasonClassRule (season_id, class_level, class_name, min_rating, max_rating, min_prize, max_prize) VALUES
+(1, 'Class 1', 'Elite Championship',    95, NULL, 300000.00, 1000000.00),
+(1, 'Class 2', 'Premium Group',         80, 94,   200000.00, 299999.00),
+(1, 'Class 3', 'Advanced Tier',         60, 79,   100000.00, 199999.00),
+(1, 'Class 4', 'Intermediate Level',    40, 59,   50000.00,  99999.00),
+(1, 'Class 5', 'Entry Division',        0,  39,   20000.00,  49999.00),
 (2, 'Class 1', 'Elite Championship',    95, NULL, 300000.00, 1000000.00),
 (2, 'Class 2', 'Premium Group',         80, 94,   200000.00, 299999.00),
 (2, 'Class 3', 'Advanced Tier',         60, 79,   100000.00, 199999.00),
