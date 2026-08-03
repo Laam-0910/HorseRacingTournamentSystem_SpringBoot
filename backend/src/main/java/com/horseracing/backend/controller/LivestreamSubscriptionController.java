@@ -16,6 +16,7 @@ import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/public/livestream")
@@ -59,7 +60,16 @@ public class LivestreamSubscriptionController {
             return false;
         });
 
-        return ResponseEntity.ok(Map.of("hasAccess", hasAccess));
+        Optional<LivestreamSubscription> activeSub = userSubs.stream().filter(sub -> {
+            if (sub.getExpiresAt() != null && sub.getExpiresAt().before(now)) return false;
+            return true;
+        }).findFirst();
+
+        Map<String, Object> resp = new java.util.HashMap<>();
+        resp.put("hasAccess", hasAccess);
+        resp.put("packageType", activeSub.map(LivestreamSubscription::getPackageType).orElse(null));
+        resp.put("expiresAt", activeSub.map(s -> s.getExpiresAt() != null ? s.getExpiresAt().toString() : "").orElse(""));
+        return ResponseEntity.ok(resp);
     }
 
     /**

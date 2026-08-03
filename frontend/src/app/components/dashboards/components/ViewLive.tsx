@@ -35,6 +35,8 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
   // Paywall & Subscription state
   const [hasAccess, setHasAccess] = useState<boolean>(true);
   const [showPaywallModal, setShowPaywallModal] = useState<boolean>(false);
+  const [subInfo, setSubInfo] = useState<any>(null);
+  const [preselectedPkg, setPreselectedPkg] = useState<"RACEMEETING" | "SEASON">("RACEMEETING");
   
   // State management for Referee / Camera broadcasters and selected camera
   const [broadcasterList, setBroadcasterList] = useState<BroadcasterInfo[]>([]);
@@ -105,6 +107,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
     api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${selectedRace.raceMeetingId || ""}`)
       .then(res => {
         setHasAccess(res.hasAccess);
+        setSubInfo(res);
         if (!res.hasAccess) {
           setShowPaywallModal(true); // Auto popup VietQR payment modal on entry
         }
@@ -250,6 +253,36 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
           </button>
         )}
       </div>
+
+      {/* Spectator Active Subscription & Upgrade/Renew Action Bar */}
+      {user?.roleId === 4 && hasAccess && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", padding: "0.75rem 1rem", borderRadius: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "14px" }}>🟢</span>
+            <span style={{ fontSize: "12px", fontWeight: "bold", color: "#34d399", fontFamily: "monospace" }}>
+              Active Pass: {subInfo?.packageType === "SEASON" ? "Season Pass (Unlimited HD Access)" : "RaceMeeting Pass (24h Event Access)"}
+            </span>
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+            {subInfo?.packageType !== "SEASON" && (
+              <button
+                type="button"
+                onClick={() => { setPreselectedPkg("SEASON"); setShowPaywallModal(true); }}
+                style={{ padding: "0.4rem 0.85rem", background: "linear-gradient(135deg, #c9a227 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", fontSize: "11px", borderRadius: "0.5rem", border: "none", cursor: "pointer", fontFamily: "monospace" }}
+              >
+                ⚡ Upgrade to Season Pass (64,000 VND)
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => { setPreselectedPkg(subInfo?.packageType === "SEASON" ? "SEASON" : "RACEMEETING"); setShowPaywallModal(true); }}
+              style={{ padding: "0.4rem 0.85rem", background: "rgba(255,255,255,0.08)", color: "#fff", fontWeight: "bold", fontSize: "11px", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer", fontFamily: "monospace" }}
+            >
+              🔄 Renew Pass (-15% Discount)
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="flex items-center justify-center h-96 bg-white/[0.01] border border-white/5 rounded-2xl">
@@ -409,6 +442,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                 seasonId={null}
                 raceMeetingId={selectedRace.raceMeetingId}
                 raceMeetingName={selectedRace.meetingName}
+                initialPackage={preselectedPkg}
                 onSuccess={() => {
                   setHasAccess(true);
                   setShowPaywallModal(false);
