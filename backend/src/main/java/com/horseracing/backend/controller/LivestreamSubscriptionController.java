@@ -157,7 +157,20 @@ public class LivestreamSubscriptionController {
 
             subscriptionRepository.save(sub);
 
-            // Increment Admin wallet balance & log transaction
+            // Log purchase transaction for Spectator user
+            WalletTransaction userTx = new WalletTransaction();
+            userTx.setUserId(userId);
+            userTx.setAmount(amount);
+            userTx.setTransactionType("LIVESTREAM_PPV_PURCHASE");
+            userTx.setDescription("Unlocked Livestream HD Access (" + packageType.toUpperCase() + " Pass via VietQR)");
+            if (raceMeetingId != null) userTx.setRaceMeetingId(raceMeetingId);
+            userTx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+            walletTransactionRepository.save(userTx);
+
+            // Print explicit server system log
+            System.out.println("[LIVESTREAM_PURCHASE_LOG] User #" + userId + " successfully unlocked " + packageType.toUpperCase() + " pass for " + amount + " VND via VietQR.");
+
+            // Increment Admin wallet balance & log revenue transaction
             userRepository.findAll().stream()
                     .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
                     .findFirst()
