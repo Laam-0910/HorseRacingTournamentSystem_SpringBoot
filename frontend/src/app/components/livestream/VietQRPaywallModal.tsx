@@ -6,6 +6,7 @@ interface VietQRPaywallModalProps {
   seasonId?: number | null;
   raceMeetingId?: number | null;
   raceMeetingName?: string;
+  initialPackage?: "RACEMEETING" | "SEASON";
   onSuccess: () => void;
   onClose: () => void;
 }
@@ -15,10 +16,11 @@ export default function VietQRPaywallModal({
   seasonId,
   raceMeetingId,
   raceMeetingName,
+  initialPackage,
   onSuccess,
   onClose,
 }: VietQRPaywallModalProps) {
-  const [selectedPackage, setSelectedPackage] = useState<"RACEMEETING" | "SEASON">("RACEMEETING");
+  const [selectedPackage, setSelectedPackage] = useState<"RACEMEETING" | "SEASON">(initialPackage || "RACEMEETING");
   const [quote, setQuote] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [purchasing, setPurchasing] = useState(false);

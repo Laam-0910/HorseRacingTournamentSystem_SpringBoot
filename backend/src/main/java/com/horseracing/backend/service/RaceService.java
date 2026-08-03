@@ -39,6 +39,7 @@ public class RaceService {
     private final com.horseracing.backend.repository.WalletTransactionRepository walletTransactionRepository;
     private final com.horseracing.backend.repository.OwnerRaceMeetingRegistrationRepository ownerRegRepository;
     private final com.horseracing.backend.repository.RaceInvitationRepository raceInvitationRepository;
+    private final com.horseracing.backend.repository.SystemConfigRepository systemConfigRepository;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;

@@ -16,6 +16,7 @@ import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/public/livestream")
@@ -60,7 +61,16 @@ public class LivestreamSubscriptionController {
             return false;
         });
 
-        return ResponseEntity.ok(Map.of("hasAccess", hasAccess));
+        Optional<LivestreamSubscription> activeSub = userSubs.stream().filter(sub -> {
+            if (sub.getExpiresAt() != null && sub.getExpiresAt().before(now)) return false;
+            return true;
+        }).findFirst();
+
+        Map<String, Object> resp = new java.util.HashMap<>();
+        resp.put("hasAccess", hasAccess);
+        resp.put("packageType", activeSub.map(LivestreamSubscription::getPackageType).orElse(null));
+        resp.put("expiresAt", activeSub.map(s -> s.getExpiresAt() != null ? s.getExpiresAt().toString() : "").orElse(""));
+        return ResponseEntity.ok(resp);
     }
 
     /**
@@ -185,7 +195,20 @@ public class LivestreamSubscriptionController {
             // Gửi thông báo đến Spectator đã đăng ký mua thẻ xem live thành công
             notificationService.notifySpectatorOnTicketPurchase(userId, packageType, amount);
 
-            // Increment Admin wallet balance & log transaction
+            // Log purchase transaction for Spectator user
+            WalletTransaction userTx = new WalletTransaction();
+            userTx.setUserId(userId);
+            userTx.setAmount(amount);
+            userTx.setTransactionType("LIVESTREAM_PPV_PURCHASE");
+            userTx.setDescription("Unlocked Livestream HD Access (" + packageType.toUpperCase() + " Pass via VietQR)");
+            if (raceMeetingId != null) userTx.setRaceMeetingId(raceMeetingId);
+            userTx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+            walletTransactionRepository.save(userTx);
+
+            // Print explicit server system log
+            System.out.println("[LIVESTREAM_PURCHASE_LOG] User #" + userId + " successfully unlocked " + packageType.toUpperCase() + " pass for " + amount + " VND via VietQR.");
+
+            // Increment Admin wallet balance & log revenue transaction
             userRepository.findAll().stream()
                     .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
                     .findFirst()

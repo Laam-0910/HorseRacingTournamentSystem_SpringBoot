@@ -42,18 +42,10 @@ public class AdminUserController {
     private final UserService userService;
     private final SystemConfigService systemConfigService;
     private final RaceService raceService;
-
-    @Autowired
-    private WithdrawalRequestRepository withdrawalRequestRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private WalletTransactionRepository walletTransactionRepository;
-
-    @Autowired
-    private NotificationService notificationService;
+    private final NotificationService notificationService;
+    private final WithdrawalRequestRepository withdrawalRequestRepository;
+    private final UserRepository userRepository;
+    private final WalletTransactionRepository walletTransactionRepository;
 
     // --- Quản lý Tài khoản (User Management) ---
     

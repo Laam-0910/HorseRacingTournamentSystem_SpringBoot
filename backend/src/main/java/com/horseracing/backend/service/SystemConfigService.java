@@ -35,20 +35,20 @@ public class SystemConfigService {
     }
 
     private void ensureDefaultConfigsExist() {
-        Map<String, String> defaultMap = Map.of(
-            "PAYMENT_GATEWAY_MODE", "MOCK",
-            "AUTO_DISBURSEMENT_ENABLED", "TRUE",
-            "MIN_WITHDRAWAL_AMOUNT", "50000",
-            "DEFAULT_JOCKEY_HIRE_FEE", "500000.00",
-            "MIN_TICKET_PRICE", "10000.00",
-            "MAX_TICKET_PRICE", "5000000.00",
-            "PRIZE_SHARE_1ST", "50.00",
-            "PRIZE_SHARE_2ND", "30.00",
-            "PRIZE_SHARE_3RD", "20.00",
-            "PAYOS_CLIENT_ID", "",
-            "PAYOS_API_KEY", "",
-            "PAYOS_CHECKSUM_KEY", "",
-            "PAYOS_PAYOUT_API_KEY", ""
+        Map<String, String> defaultMap = Map.ofEntries(
+            Map.entry("PAYMENT_GATEWAY_MODE", "MOCK"),
+            Map.entry("AUTO_DISBURSEMENT_ENABLED", "TRUE"),
+            Map.entry("MIN_WITHDRAWAL_AMOUNT", "50000"),
+            Map.entry("DEFAULT_JOCKEY_HIRE_FEE", "500000.00"),
+            Map.entry("MIN_TICKET_PRICE", "10000.00"),
+            Map.entry("MAX_TICKET_PRICE", "5000000.00"),
+            Map.entry("PRIZE_SHARE_1ST", "50.00"),
+            Map.entry("PRIZE_SHARE_2ND", "30.00"),
+            Map.entry("PRIZE_SHARE_3RD", "20.00"),
+            Map.entry("PAYOS_CLIENT_ID", ""),
+            Map.entry("PAYOS_API_KEY", ""),
+            Map.entry("PAYOS_CHECKSUM_KEY", ""),
+            Map.entry("PAYOS_PAYOUT_API_KEY", "")
         );
 
         for (Map.Entry<String, String> e : defaultMap.entrySet()) {
