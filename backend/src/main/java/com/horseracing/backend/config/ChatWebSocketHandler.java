@@ -121,12 +121,14 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
         System.err.println("Transport error for session " + session.getId() + ": " + exception.getMessage());
-        session.close(CloseStatus.SERVER_ERROR); // Đóng kết nối do lỗi hệ thống
+        try {
+            if (session.isOpen()) session.close(CloseStatus.SERVER_ERROR);
+        } catch (Exception e) {}
     }
 
     // Tiện ích hỗ trợ trích xuất raceId từ đường dẫn URI (Ví dụ: /ws/chat/12 -> 12)
     private String getRaceId(WebSocketSession session) {
-        if (session.getUri() == null) {
+        if (session == null || session.getUri() == null) {
             return null;
         }
         String path = session.getUri().getPath();
@@ -135,8 +137,11 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
         try {
             String[] segments = path.split("/");
-            if (segments.length > 0) {
-                return segments[segments.length - 1]; // Trả về phần tử cuối cùng đại diện cho raceId
+            for (int i = segments.length - 1; i >= 0; i--) {
+                String seg = segments[i].trim();
+                if (!seg.isEmpty()) {
+                    return seg;
+                }
             }
         } catch (Exception e) {
             System.err.println("Error extracting raceId from URI path " + path + ": " + e.getMessage());

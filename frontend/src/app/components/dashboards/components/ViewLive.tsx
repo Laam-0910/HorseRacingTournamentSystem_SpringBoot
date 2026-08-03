@@ -88,13 +88,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
     }
   };
 
-  useEffect(() => {
-    setChatMessages([
-      { user: "User_881", text: "Horse #3 is accelerating insanely fast!", time: "14:15" },
-      { user: "SpectatorX", text: "Jockey Ryan is riding very strategically.", time: "14:16" },
-      { user: "RaceAnalyst", text: "Amazing! Final lap is here guys!", time: "14:17" }
-    ]);
-  }, []);
+
 
   useEffect(() => {
     fetchLiveRaces();
