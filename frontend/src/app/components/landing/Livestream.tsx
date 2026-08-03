@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { api } from "../../../lib/api";
+import { api, getWebSocketUrl } from "../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
 import { useAuth } from "../../../context/AuthContext";
 import { $t } from '@/lib/i18n';
 import WebCamLiveViewer, { BroadcasterInfo } from "../livestream/WebCamLiveViewer";
+import HorseRacingSimulator from "./HorseRacingSimulator";
 
 // Khai báo kiểu dữ liệu cấu trúc cho một Trận Đấu (Race) trong livestream
 interface Race {
@@ -111,7 +112,7 @@ export default function Livestream() {
     const fetchLiveRaces = async () => {
       try {
         const data = await api.get<Race[]>("/races/live");
-        const activeRaces = Array.isArray(data) ? data : [];
+        const activeRaces = (Array.isArray(data) ? data : []).filter(r => r.status !== "CANCELLED");
         setLiveRaces(activeRaces);
         
         if (activeRaces.length > 0) {
@@ -147,40 +148,30 @@ export default function Livestream() {
     }
 
     let isComponentMounted = true;
-
-    // Tải lịch sử tin nhắn chat cũ từ cơ sở dữ liệu trước khi kết nối socket mới
-    api.get<any[]>(`/public/chat/history?raceId=${selectedRace.id}`)
-      .then(history => {
-        if (isComponentMounted) {
-          setChatMessages([
-            { user: "System", text: `Welcome to the live chat for Race #${selectedRace.id}!`, time: "" },
-            ...(history || []).map(h => ({
-              user: h.user,
-              text: h.text,
-              time: h.time
-            }))
-          ]);
-        }
-      })
-      .catch(() => {
-        if (isComponentMounted) {
-          setChatMessages([
-            { user: "System", text: `Welcome to the live chat for Race #${selectedRace.id}!`, time: "" }
-          ]);
-        }
-      });
-
-    setConnectionState("connecting");
-
     let ws: WebSocket | null = null;
     let reconnectTimeout: number;
 
+    setConnectionState("connecting");
+
+    // Reset messages for the new race and fetch chat history from REST API
+    setChatMessages([
+      { user: "System", text: `Welcome to the live chat for Race #${selectedRace.id}!`, time: "" }
+    ]);
+
+    api.get<any[]>(`/public/chat/${selectedRace.id}`)
+      .then(history => {
+        if (history && history.length > 0 && isComponentMounted) {
+          setChatMessages([
+            { user: "System", text: `Welcome to the live chat for Race #${selectedRace.id}!`, time: "" },
+            ...history
+          ]);
+        }
+      })
+      .catch(() => {});
+
     // Hàm thiết lập kết nối WebSocket
     const connect = () => {
-      // Phân tích cấu hình địa chỉ API cơ sở để sinh ra URL ws:// hoặc wss:// tương ứng
-      const hostname = window.location.hostname || "localhost";
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${hostname}:8080/ws/chat/${selectedRace.id}`;
+      const wsUrl = getWebSocketUrl(`/ws/chat/${selectedRace.id}`);
       
       ws = new WebSocket(wsUrl);
 
@@ -197,14 +188,18 @@ export default function Livestream() {
         try {
           const data = JSON.parse(event.data);
           if (data && data.user && data.text) {
-            setChatMessages(prev => [
-              ...prev,
-              {
-                user: data.user,
-                text: data.text,
-                time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              }
-            ]);
+            setChatMessages(prev => {
+              const exists = prev.some(m => m.user === data.user && m.text === data.text);
+              if (exists) return prev;
+              return [
+                ...prev,
+                {
+                  user: data.user,
+                  text: data.text,
+                  time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }
+              ];
+            });
           }
         } catch (err) {
           console.error("Failed to parse WebSocket message", err);
@@ -245,21 +240,36 @@ export default function Livestream() {
     };
   }, [selectedRace?.id]);
 
-  // Hàm xử lý gửi tin nhắn của kịch bản chat trực tiếp lên WebSocket
+  // Hàm xử lý gửi tin nhắn của kịch bản chat trực tiếp
   const handleSendChat = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMsg.trim() || !socket || socket.readyState !== WebSocket.OPEN) return;
+    const msgText = newMsg.trim();
+    if (!msgText || !selectedRace?.id) return;
     
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const payload = {
       user: username,
-      text: newMsg.trim(),
+      text: msgText,
       time
     };
     
-    // Gửi payload tin nhắn dưới dạng chuỗi JSON
-    socket.send(JSON.stringify(payload));
-    setNewMsg(""); // Reset ô nhập chat
+    // 1. Cập nhật giao diện lập tức tại client
+    setChatMessages(prev => [...prev, payload]);
+    setNewMsg("");
+
+    // 2. Gửi qua WebSocket nếu đã mở
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      try {
+        socket.send(JSON.stringify(payload));
+      } catch (err) {}
+    }
+
+    // 3. Gửi dự phòng qua REST API
+    api.post("/public/chat/send", {
+      raceId: selectedRace.id,
+      user: username,
+      text: msgText
+    }).catch(() => {});
   };
 
   // Phân tích và chuyển đổi URL video YouTube hoặc video cục bộ để render
@@ -329,122 +339,88 @@ export default function Livestream() {
             </div>
           ) : selectedRace ? (
             <div className="space-y-4">
-              {/* Thanh chuyển đổi máy quay các Trọng tài - Ưu tiên WebCam trước, YouTube CUỐI CÙNG */}
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                {broadcasterList.length > 0 ? (
-                  broadcasterList.map(b => {
-                    const isSelected = selectedRace.streamMode !== "YOUTUBE" && (selectedBroadcasterId === b.id || (!selectedBroadcasterId && broadcasterList[broadcasterList.length - 1]?.id === b.id));
-                    return (
-                      <button
-                        key={b.id}
-                        onClick={() => {
-                          setSelectedBroadcasterId(b.id);
-                          setSelectedRace(prev => prev ? { ...prev, streamMode: "WEBCAM" } : prev);
-                        }}
-                        style={{
-                          padding: "0.4rem 0.85rem",
-                          fontSize: "11px",
-                          borderRadius: "0.5rem",
-                          fontWeight: "bold",
-                          background: isSelected ? "#ef4444" : "rgba(255,255,255,0.05)",
-                          color: "#fff",
-                          border: isSelected ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "4px"
-                        }}
-                      >
-                        <span>📱</span> {$t(`Cam ${b.name}`, (localStorage.getItem('app-lang') || 'en'))}
-                      </button>
-                    );
-                  })
-                ) : (
-                  <button
-                    onClick={() => setSelectedRace(prev => prev ? { ...prev, streamMode: "WEBCAM" } : prev)}
-                    style={{
-                      padding: "0.4rem 0.85rem",
-                      fontSize: "11px",
-                      borderRadius: "0.5rem",
-                      fontWeight: "bold",
-                      background: selectedRace.streamMode !== "YOUTUBE" ? "#ef4444" : "rgba(255,255,255,0.05)",
-                      color: "#fff",
-                      border: selectedRace.streamMode !== "YOUTUBE" ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px"
-                    }}
-                  >
-                    <span>📱</span> {$t("Referee Camera Angle", (localStorage.getItem('app-lang') || 'en'))}
-                  </button>
-                )}
-
-                {/* Nút Kênh YouTube Chính - LUÔN LUÔN XẾP CỦA CÙNG */}
-                {selectedRace.youtubeLiveUrl && (
-                  <button
-                    onClick={() => setSelectedRace(prev => prev ? { ...prev, streamMode: "YOUTUBE" } : prev)}
-                    style={{
-                      padding: "0.4rem 0.85rem",
-                      fontSize: "11px",
-                      borderRadius: "0.5rem",
-                      fontWeight: "bold",
-                      background: selectedRace.streamMode === "YOUTUBE" ? "#ef4444" : "rgba(255,255,255,0.05)",
-                      color: "#fff",
-                      border: selectedRace.streamMode === "YOUTUBE" ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px"
-                    }}
-                  >
-                    <span>📺</span> {$t("Main YouTube Channel", (localStorage.getItem('app-lang') || 'en'))}
-                  </button>
-                )}
-              </div>
-
-              {/* Vùng chứa Iframe / Video Player / WebCam theo tỷ lệ chuẩn 16:9 */}
-              <div className="relative w-full pb-[56.25%] h-0 rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black">
-                {selectedRace.streamMode !== "YOUTUBE" ? (
-                  /* Trình phát WebCam Stream truyền từ Điện thoại / Camera các Trọng tài */
-                  <WebCamLiveViewer
-                    raceId={selectedRace.id}
-                    selectedBroadcasterId={selectedBroadcasterId}
-                    onBroadcastersFound={list => setBroadcasterList(list)}
-                  />
-                ) : selectedRace.youtubeLiveUrl && (
-                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
-                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
-                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
-                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
-                  selectedRace.youtubeLiveUrl.toLowerCase().includes("/stream") ||
-                  selectedRace.youtubeLiveUrl.toLowerCase().includes(".mp4?")
-                ) ? (
-                  // Trình phát HTML5 Video nếu link là tệp tin video trực tiếp (.mp4...)
-                  <video
-                    className="absolute top-0 left-0 w-full h-full border-none"
-                    src={selectedRace.youtubeLiveUrl}
-                    controls
-                    autoPlay
-                  />
-                ) : embedUrl ? (
-                  <>
-                    {/* Trình phát Iframe cho các nguồn YouTube embed */}
-                    <iframe
-                      className="absolute top-0 left-0 w-full h-full border-none"
-                      src={iframeSrc}
-                      title={selectedRace.classLevel}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    ></iframe>
-                    {/* Lớp che mờ bảo vệ ở chân trình phát ngăn các click tương tác ngoài ý muốn của YouTube */}
-                    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: "14%", zIndex: 10, background: "transparent", cursor: "default" }} onClick={e => e.stopPropagation()} />
-                  </>
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white/50 text-sm font-mono">
-                    <span>{$t("No livestream broadcast found", (localStorage.getItem('app-lang') || 'en'))}</span>
+              {/* Live Class / Race Switcher Bar (For Spectator, Horse Owner, Jockey) */}
+              {liveRaces.filter(r => r.status !== "CANCELLED").length > 0 && (
+                <div className="bg-[#151310] border border-amber-500/20 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+                  <div className="flex items-center gap-2">
+                    <span className="relative flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                    </span>
+                    <span className="text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">
+                      Live Stream Switcher ({liveRaces.filter(r => r.status !== "CANCELLED").length} Active Classes):
+                    </span>
                   </div>
-                )}
+
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {liveRaces
+                      .filter((r) => r.status !== "CANCELLED")
+                      .map((r) => {
+                        const isSelected = selectedRace?.id === r.id;
+                        return (
+                          <button
+                            key={r.id}
+                            onClick={() => setSelectedRace(r)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition flex items-center gap-2 cursor-pointer ${
+                              isSelected
+                                ? "bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-lg shadow-rose-500/20 border border-rose-400 ring-2 ring-rose-500/30"
+                                : "bg-white/5 hover:bg-white/10 text-white/80 border border-white/10"
+                            }`}
+                          >
+                            <span>🏁</span>
+                            <span>{r.classLevel}</span>
+                            {r.meetingName && (
+                              <span className="text-[10px] opacity-75 font-normal">({r.meetingName})</span>
+                            )}
+                          </button>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
+
+              {/* 2D JavaScript Simulation Model Demo */}
+              <HorseRacingSimulator />
+
+              {/* Callout Box to Enter Dashboard to Watch Real Live Broadcast */}
+              <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 border border-amber-500/30 rounded-2xl p-5 space-y-3 shadow-xl">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">🔒</span>
+                  <div>
+                    <h4 className="text-sm font-bold text-amber-400 font-serif uppercase tracking-wide">
+                      Real-Time Camera Stream & Interactive Live Chat
+                    </h4>
+                    <p className="text-xs text-white/70 font-mono mt-0.5">
+                      You are watching the AI Statistical Performance Simulation preview on the landing page. To access the actual real-time referee camera broadcasts, YouTube streams, and live chat, please enter your Dashboard!
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 pt-1 flex-wrap">
+                  <button
+                    onClick={() => {
+                      if (user) {
+                        const role = user.roleId === 1 ? "admin" : user.roleId === 2 ? "owner" : user.roleId === 3 ? "jockey" : user.roleId === 5 ? "referee" : "spectator";
+                        navigate(`/dashboard/${role}`);
+                      } else {
+                        navigate("/login");
+                      }
+                    }}
+                    className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-black font-mono font-bold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center gap-2"
+                  >
+                    <span>🔑</span>
+                    <span>{user ? "Go to Dashboard to Watch Real Live Stream" : "Sign In to Watch Real Live Stream"}</span>
+                  </button>
+
+                  {!user && (
+                    <button
+                      onClick={() => navigate("/register")}
+                      className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-mono text-xs rounded-xl border border-white/15 transition cursor-pointer"
+                    >
+                      Register New Account
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Hộp hiển thị Thông tin Chi tiết Trận đấu */}

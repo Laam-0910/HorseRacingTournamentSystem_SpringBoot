@@ -52,10 +52,10 @@ public class LivestreamSubscriptionController {
                 return false;
             }
             if ("SEASON".equalsIgnoreCase(sub.getPackageType())) {
-                return seasonId == null || seasonId.equals(sub.getSeasonId());
+                return seasonId != null && seasonId.equals(sub.getSeasonId());
             }
             if ("RACEMEETING".equalsIgnoreCase(sub.getPackageType())) {
-                return meetingId == null || meetingId.equals(sub.getRaceMeetingId());
+                return meetingId != null && meetingId.equals(sub.getRaceMeetingId());
             }
             return false;
         });
@@ -68,7 +68,8 @@ public class LivestreamSubscriptionController {
         Map<String, Object> resp = new java.util.HashMap<>();
         resp.put("hasAccess", hasAccess);
         resp.put("packageType", activeSub.map(LivestreamSubscription::getPackageType).orElse(null));
-        resp.put("expiresAt", activeSub.map(s -> s.getExpiresAt() != null ? s.getExpiresAt().toString() : "").orElse(""));
+        resp.put("expiresAt", activeSub.map(s -> s.getExpiresAt() != null ? s.getExpiresAt().getTime() : 0L).orElse(0L));
+        resp.put("expiresAtFormatted", activeSub.map(s -> s.getExpiresAt() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(s.getExpiresAt()) : "").orElse(""));
         return ResponseEntity.ok(resp);
     }
 
@@ -182,11 +183,31 @@ public class LivestreamSubscriptionController {
             sub.setPricePaid(amount);
             sub.setPurchaseTime(new Timestamp(System.currentTimeMillis()));
 
-            // Season passes expire in 1 year (365 days), Meeting passes expire in 3 days
-            long expiryMillis = "SEASON".equalsIgnoreCase(packageType)
-                    ? System.currentTimeMillis() + 365L * 24 * 3600 * 1000
-            : System.currentTimeMillis() + 3L * 24 * 3600 * 1000;
-            sub.setExpiresAt(new Timestamp(expiryMillis));
+            // Cumulative Renewal Extension: If user already has an active pass, extend from existing expiry date!
+            long currentBaseTime = System.currentTimeMillis();
+            List<LivestreamSubscription> existingSubs = subscriptionRepository.findByUserId(userId);
+            Optional<LivestreamSubscription> activePass = existingSubs.stream()
+                    .filter(s -> {
+                        if (s.getExpiresAt() == null || s.getExpiresAt().before(new Timestamp(System.currentTimeMillis()))) return false;
+                        if ("SEASON".equalsIgnoreCase(packageType) && "SEASON".equalsIgnoreCase(s.getPackageType())) {
+                            return seasonId == null || seasonId.equals(s.getSeasonId());
+                        }
+                        if ("RACEMEETING".equalsIgnoreCase(packageType) && "RACEMEETING".equalsIgnoreCase(s.getPackageType())) {
+                            return raceMeetingId == null || raceMeetingId.equals(s.getRaceMeetingId());
+                        }
+                        return false;
+                    })
+                    .findFirst();
+
+            if (activePass.isPresent() && activePass.get().getExpiresAt() != null) {
+                currentBaseTime = activePass.get().getExpiresAt().getTime();
+            }
+
+            long durationMillis = "SEASON".equalsIgnoreCase(packageType)
+                    ? 365L * 24 * 3600 * 1000
+                    : 3L * 24 * 3600 * 1000;
+
+            sub.setExpiresAt(new Timestamp(currentBaseTime + durationMillis));
             sub.setPaymentMethod(payMethod);
 
             subscriptionRepository.save(sub);

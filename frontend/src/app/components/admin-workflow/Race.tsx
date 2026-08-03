@@ -122,7 +122,13 @@ export default function Race() {
     const selectedM = meetings.find(m => m.id === parseInt(meetingId));
     if (selectedM && (selectedM as any).seasonId) {
       api.get<any[]>(`/races/seasons/${(selectedM as any).seasonId}/rules`)
-        .then(rules => setSeasonRules(rules))
+        .then(rules => {
+          setSeasonRules(rules);
+          const activeRule = rules.find(r => r.classLevel?.toLowerCase() === classLevel.toLowerCase());
+          if (activeRule && activeRule.minPrize != null && (!purse || purse === "50000")) {
+            setPurse(String(activeRule.minPrize));
+          }
+        })
         .catch(() => setSeasonRules([]));
     }
   }, [meetingId, meetings]);
@@ -222,6 +228,24 @@ export default function Race() {
       return;
     }
 
+    // Kiểm tra giới hạn Purse theo Quy định Season Class Rules
+    const currentRule = seasonRules.find(r => r.classLevel?.toLowerCase() === classLevel.toLowerCase());
+    if (currentRule) {
+      const purseVal = parseFloat(purse);
+      if (!isNaN(purseVal)) {
+        const minP = Number(currentRule.minPrize || 0);
+        const maxP = Number(currentRule.maxPrize || 0);
+        if (currentRule.minPrize != null && purseVal < minP) {
+          setError(`Race purse (${Math.round(purseVal).toLocaleString()} VNĐ) is below the minimum allowed for ${classLevel} (${Math.round(minP).toLocaleString()} VNĐ). Please enter a purse between ${Math.round(minP).toLocaleString()} VNĐ and ${Math.round(maxP).toLocaleString()} VNĐ.`);
+          return;
+        }
+        if (currentRule.maxPrize != null && purseVal > maxP) {
+          setError(`Race purse (${Math.round(purseVal).toLocaleString()} VNĐ) exceeds the maximum allowed for ${classLevel} (${Math.round(maxP).toLocaleString()} VNĐ). Please enter a purse between ${Math.round(minP).toLocaleString()} VNĐ and ${Math.round(maxP).toLocaleString()} VNĐ.`);
+          return;
+        }
+      }
+    }
+
     try {
       const res = await api.post<any>("/races", {
         raceMeetingId: parseInt(meetingId),
@@ -311,6 +335,23 @@ export default function Race() {
           const pad = (n: number) => String(n).padStart(2, '0');
           const formattedMeetDate = `${pad(meetDate.getDate())}-${pad(meetDate.getMonth() + 1)}-${meetDate.getFullYear()}`;
           alert(`Race start time must be on the same date as the selected Race Meeting (${formattedMeetDate}).`);
+          return;
+        }
+      }
+    }
+
+    const currentRule = seasonRules.find(r => r.classLevel?.toLowerCase() === editingRace.classLevel?.toLowerCase());
+    if (currentRule) {
+      const purseVal = parseFloat(editPurse);
+      if (!isNaN(purseVal)) {
+        const minP = Number(currentRule.minPrize || 0);
+        const maxP = Number(currentRule.maxPrize || 0);
+        if (currentRule.minPrize != null && purseVal < minP) {
+          setEditError(`Race purse (${Math.round(purseVal).toLocaleString()} VNĐ) is below the minimum allowed for ${editingRace.classLevel} (${Math.round(minP).toLocaleString()} VNĐ). Please enter a purse between ${Math.round(minP).toLocaleString()} VNĐ and ${Math.round(maxP).toLocaleString()} VNĐ.`);
+          return;
+        }
+        if (currentRule.maxPrize != null && purseVal > maxP) {
+          setEditError(`Race purse (${Math.round(purseVal).toLocaleString()} VNĐ) exceeds the maximum allowed for ${editingRace.classLevel} (${Math.round(maxP).toLocaleString()} VNĐ). Please enter a purse between ${Math.round(minP).toLocaleString()} VNĐ and ${Math.round(maxP).toLocaleString()} VNĐ.`);
           return;
         }
       }
@@ -475,7 +516,14 @@ export default function Race() {
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "rgba(255,255,255,0.4)" }}>Class Level</label>
                 <select 
                   value={classLevel} 
-                  onChange={e => setClassLevel(e.target.value)} 
+                  onChange={e => {
+                    const newClass = e.target.value;
+                    setClassLevel(newClass);
+                    const matchingRule = seasonRules.find(r => r.classLevel?.toLowerCase() === newClass.toLowerCase());
+                    if (matchingRule && matchingRule.minPrize != null) {
+                      setPurse(String(matchingRule.minPrize));
+                    }
+                  }} 
                   required 
                   style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }}
                 >
@@ -513,28 +561,50 @@ export default function Race() {
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#fbbf24" }}>
-                  Total Prize Money / Purse ($)
+                  Total Prize Money / Purse (VNĐ)
                 </label>
-                <input 
-                  type="number" 
-                  min="0" 
-                  step="any" 
-                  value={purse} 
-                  onChange={e => setPurse(e.target.value)} 
-                  required 
-                  placeholder="50000" 
-                  style={{ width: "100%", padding: "0.625rem", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.3)", color: "#fbbf24", borderRadius: "0.5rem", fontSize: "0.75rem", fontWeight: "bold", fontFamily: "monospace", outline: "none" }} 
-                />
-                <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginTop: "3px" }}>
-                  🥇 50%: {(Number(purse || 0) * 0.5).toLocaleString()} VND | 🥈 30%: {(Number(purse || 0) * 0.3).toLocaleString()} VND | 🥉 20%: {(Number(purse || 0) * 0.2).toLocaleString()} VND
-                </div>
                 {(() => {
                   const rule = seasonRules.find(r => r.classLevel?.toLowerCase() === classLevel.toLowerCase());
-                  if (!rule) return null;
+                  const purseVal = parseFloat(purse);
+                  const isViolated = rule && !isNaN(purseVal) && (
+                    (rule.minPrize != null && purseVal < Number(rule.minPrize)) ||
+                    (rule.maxPrize != null && purseVal > Number(rule.maxPrize))
+                  );
+                  const placeholderText = rule ? `${Number(rule.minPrize || 0)} - ${Number(rule.maxPrize || 0)}` : "Enter Purse Amount";
+
                   return (
-                    <div style={{ fontSize: "9px", color: "#34d399", fontFamily: "monospace", marginTop: "3px", fontWeight: "bold" }}>
-                      ℹ Season Purse Boundary for {classLevel}: {Number(rule.minPrize || 0).toLocaleString()} VND - {Number(rule.maxPrize || 0).toLocaleString()} VND
-                    </div>
+                    <>
+                      <input 
+                        type="number" 
+                        min="0" 
+                        step="any" 
+                        value={purse} 
+                        onChange={e => setPurse(e.target.value)} 
+                        required 
+                        placeholder={placeholderText} 
+                        style={{
+                          width: "100%",
+                          padding: "0.625rem",
+                          background: isViolated ? "rgba(239,68,68,0.1)" : "rgba(251,191,36,0.06)",
+                          border: isViolated ? "1px solid rgba(239,68,68,0.5)" : "1px solid rgba(251,191,36,0.3)",
+                          color: isViolated ? "#f87171" : "#fbbf24",
+                          borderRadius: "0.5rem",
+                          fontSize: "0.75rem",
+                          fontWeight: "bold",
+                          fontFamily: "monospace",
+                          outline: "none"
+                        }} 
+                      />
+                      <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginTop: "3px" }}>
+                        🥇 50%: {(Number(purse || 0) * 0.5).toLocaleString()} VND | 🥈 30%: {(Number(purse || 0) * 0.3).toLocaleString()} VND | 🥉 20%: {(Number(purse || 0) * 0.2).toLocaleString()} VND
+                      </div>
+                      {rule && (
+                        <div style={{ fontSize: "9px", color: isViolated ? "#f87171" : "#34d399", fontFamily: "monospace", marginTop: "3px", fontWeight: "bold" }}>
+                          {isViolated ? "⚠️ Purse violates " : "ℹ "}
+                          Season Purse Boundary for {classLevel}: {Number(rule.minPrize || 0).toLocaleString()} VND - {Number(rule.maxPrize || 0).toLocaleString()} VND
+                        </div>
+                      )}
+                    </>
                   );
                 })()}
               </div>
@@ -878,8 +948,8 @@ export default function Race() {
                   <input type="number" value={editDistance} onChange={e => setEditDistance(e.target.value)} required style={inputStyle} />
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, color: "#fbbf24" }}>Total Purse / Prize Money ($)</label>
-                  <input type="number" min="0" step="1000" value={editPurse} onChange={e => setEditPurse(e.target.value)} required style={{ ...inputStyle, borderColor: "rgba(251,191,36,0.3)", color: "#fbbf24", fontWeight: "bold" }} />
+                  <label style={{ ...labelStyle, color: "#fbbf24" }}>Total Purse / Prize Money (VNĐ)</label>
+                  <input type="number" min="0" step="any" value={editPurse} onChange={e => setEditPurse(e.target.value)} required style={{ ...inputStyle, borderColor: "rgba(251,191,36,0.3)", color: "#fbbf24", fontWeight: "bold" }} />
                 </div>
                 <div>
                   <label style={labelStyle}>Track Type</label>

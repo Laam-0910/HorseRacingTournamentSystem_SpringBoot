@@ -32,6 +32,19 @@ export default function VietQRPaywallModal({
   const accountNumber = "08410092005";
   const accountHolder = "HORSE RACING ORG";
 
+  const [timeLeft, setTimeLeft] = useState(300); // 5-minute countdown timer (300s)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const minutes = Math.floor(timeLeft / 60);
+  const seconds = timeLeft % 60;
+  const formattedTime = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
   useEffect(() => {
     if (userId) {
       api.get<any>(`/public/users/${userId}`)
@@ -56,6 +69,7 @@ export default function VietQRPaywallModal({
   }, [selectedPackage, userId, seasonId, raceMeetingId]);
 
   const [isMockMode, setIsMockMode] = useState<boolean>(true);
+  const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
 
   useEffect(() => {
     api.get<any>("/public/wallet/webhook/mode")
@@ -63,21 +77,24 @@ export default function VietQRPaywallModal({
       .catch(() => setIsMockMode(true));
   }, []);
 
-  // Auto-polling check access & simulated QR scan auto-activation every 3.5 seconds
+  // Auto-polling check access & simulated QR scan auto-activation every 2.5 seconds
   useEffect(() => {
     let isCancelled = false;
-    const interval = setInterval(async () => {
+    const checkPayment = async () => {
       try {
         const accessRes = await api.get<any>(
           `/public/livestream/access?userId=${userId}${seasonId ? `&seasonId=${seasonId}` : ""}${raceMeetingId ? `&raceMeetingId=${raceMeetingId}` : ""}`
         );
-        if (accessRes.hasAccess && !isCancelled) {
-          onSuccess();
+        if (accessRes.hasAccess && !isCancelled && !paymentSuccess) {
+          setPaymentSuccess(true);
+          setTimeout(() => {
+            if (!isCancelled) onSuccess();
+          }, 1200);
           return;
         }
 
         // Auto trigger purchase simulation ONLY if system is in MOCK mode
-        if (isMockMode && quote && !purchasing && !payingViaWallet && !isCancelled) {
+        if (isMockMode && quote && !purchasing && !payingViaWallet && !isCancelled && !paymentSuccess) {
           const res = await api.post<any>("/public/livestream/purchase", {
             userId,
             packageType: selectedPackage,
@@ -86,20 +103,24 @@ export default function VietQRPaywallModal({
             amount: quote.finalPrice,
             paymentMethod: "VIETQR"
           });
-          if (res.success && !isCancelled) {
+          if (res.success && !isCancelled && !paymentSuccess) {
+            setPaymentSuccess(true);
             onSuccess();
           }
         }
       } catch (err) {
         // Silent poll error
       }
-    }, 3500);
+    };
+
+    checkPayment();
+    const interval = setInterval(checkPayment, 2500);
 
     return () => {
       isCancelled = true;
       clearInterval(interval);
     };
-  }, [userId, seasonId, raceMeetingId, selectedPackage, quote, purchasing, payingViaWallet, isMockMode, onSuccess]);
+  }, [userId, seasonId, raceMeetingId, selectedPackage, quote, purchasing, payingViaWallet, isMockMode, onSuccess, paymentSuccess]);
 
   const finalAmount = quote ? Number(quote.finalPrice) : selectedPackage === "RACEMEETING" ? 15000 : 79000;
   const transferContent = `PPV_${userId}_${selectedPackage}_${raceMeetingId || seasonId || 1}`;
@@ -118,6 +139,7 @@ export default function VietQRPaywallModal({
         paymentMethod: "WALLET",
       });
       if (res.success) {
+        setPaymentSuccess(true);
         onSuccess();
       }
     } catch (err: any) {
@@ -145,6 +167,12 @@ export default function VietQRPaywallModal({
         </div>
 
         <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+          {paymentSuccess && (
+            <div style={{ padding: "1rem", borderRadius: "0.5rem", background: "rgba(16,185,129,0.2)", border: "1px solid #10b981", color: "#34d399", fontSize: "13px", fontWeight: "bold", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+              <span>🎉</span> Payment Received & Verified! HD Stream Unlocked. Closing window...
+            </div>
+          )}
+
           {error && (
             <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171", fontSize: "12px" }}>
               ⚠ {error}
@@ -243,6 +271,10 @@ export default function VietQRPaywallModal({
             </div>
 
             <div style={{ fontSize: "11px", color: "#a0a0a0", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontFamily: "monospace", color: "#fbbf24", background: "rgba(251,191,36,0.1)", padding: "4px 8px", borderRadius: "6px", border: "1px solid rgba(251,191,36,0.2)", marginBottom: "4px" }}>
+                <span>⏱️ QR expires in:</span>
+                <strong style={{ color: "#fcd34d" }}>{formattedTime}</strong>
+              </div>
               <div>Bank: <strong style={{ color: "#fff" }}>{bankName}</strong></div>
               <div>Account: <strong style={{ color: "#c9a227", fontFamily: "monospace" }}>{accountNumber}</strong></div>
               <div>Holder: <strong style={{ color: "#fff" }}>{accountHolder}</strong></div>

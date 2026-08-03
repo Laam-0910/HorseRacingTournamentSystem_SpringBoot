@@ -10,5 +10,6 @@ import java.util.Optional;
 public interface SeasonClassRuleRepository extends JpaRepository<SeasonClassRule, Integer> {
 
     List<SeasonClassRule> findBySeasonId(Integer seasonId);
+    void deleteBySeasonId(Integer seasonId);
 
 }

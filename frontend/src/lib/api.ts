@@ -15,6 +15,22 @@ const getApiBaseUrl = () => {
 const API_BASE_URL = getApiBaseUrl();
 
 /**
+ * Tự động tính toán WebSocket URL phù hợp với HTTP/HTTPS và Vite Proxy.
+ * - Khi chạy HTTPS (5173) hoặc Vite Dev, dùng hostname + port hiện tại qua Vite Proxy (/ws) để tránh Mixed Content & SSL handshake fail.
+ */
+export function getWebSocketUrl(path: string): string {
+  if (typeof window === "undefined") return "";
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  
+  if (window.location.protocol === "https:" || window.location.port === "5173" || window.location.port === "3000") {
+    return `${protocol}//${window.location.host}${path}`;
+  }
+  
+  const hostname = window.location.hostname || "localhost";
+  return `ws://${hostname}:8080${path}`;
+}
+
+/**
  * Trích xuất thông báo lỗi sạch từ một Error object bất kỳ.
  * - Ưu tiên lấy message từ response body của backend (field "error" hoặc "message").
  * - Loại bỏ mọi URL localhost/IP khỏi chuỗi thông báo.

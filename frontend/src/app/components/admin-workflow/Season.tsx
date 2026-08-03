@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
 import { Pagination } from "../common/Pagination";
-import SeasonRulesEdit from "./SeasonRulesEdit";
 
 // Cấu trúc thuộc tính truyền vào component InlineDatePicker
 interface InlineDatePickerProps {
@@ -183,9 +182,13 @@ export default function Season() {
   const [classRuleMethod, setClassRuleMethod] = useState<"AUTOMATIC" | "MANUAL">("AUTOMATIC"); // Lựa chọn phương thức phân hạng
   const [manualRules, setManualRules] = useState(DEFAULT_TEMPLATE_RULES.map(r => ({ ...r }))); // Bộ luật nhập thủ công
 
-  // --- Các State phục vụ hộp thoại Gia hạn Mùa giải & Edit Rules ---
+  // --- Các State phục vụ hộp thoại Gia hạn Mùa giải & Chỉnh sửa Class Rules ---
   const [extendingSeason, setExtendingSeason] = useState<any | null>(null); // Lưu thông tin mùa giải đang gia hạn
-  const [editingRulesSeason, setEditingRulesSeason] = useState<any | null>(null); // Season object currently editing class rules
+  const [isEditingSeasonRules, setIsEditingSeasonRules] = useState(false);
+  const [editingRulesList, setEditingRulesList] = useState<any[]>([]);
+  const [rulesError, setRulesError] = useState("");
+  const [rulesSuccess, setRulesSuccess] = useState("");
+  const [rulesSaving, setRulesSaving] = useState(false);
   const [extendStartDateInput, setExtendStartDateInput] = useState("");
   const [extendDateInput, setExtendDateInput] = useState("");
   const [extendError, setExtendError] = useState("");
@@ -233,33 +236,76 @@ export default function Season() {
     }
   };
 
-  // --- State cho chỉnh sửa Quy tắc Class Rules ---
-  const [editableRules, setEditableRules] = useState<any[]>([]);
-  const [isEditingRules, setIsEditingRules] = useState(false);
-  const [rulesError, setRulesError] = useState("");
-  const [rulesSuccess, setRulesSuccess] = useState("");
+  // Deduplicate rules by classLevel to ensure exactly 5 class levels
+  const deduplicateRulesList = (list: any[]) => {
+    const map = new Map<string, any>();
+    for (const r of list) {
+      if (!r.classLevel) continue;
+      const classKey = r.classLevel.trim().toLowerCase();
+      if (!map.has(classKey)) {
+        map.set(classKey, r);
+      }
+    }
+    return Array.from(map.values());
+  };
 
   // Tải quy chế phân hạng Class Rules của một mùa giải cụ thể
   const fetchRules = async (seasonId: number) => {
     try {
       const rules = await api.get<any[]>(`/races/seasons/${seasonId}/rules`);
-      setSeasonRules(rules);
-      setEditableRules(rules.map((r: any) => ({ ...r })));
+      const cleanRules = deduplicateRulesList(rules);
+      setSeasonRules(cleanRules);
     } catch (err: any) {
       console.error("Failed to load rules", err);
     }
   };
 
-  const handleSaveRules = async () => {
+  // Bắt đầu chỉnh sửa Class Rules cho mùa giải
+  const handleStartEditRules = async (seasonId: number) => {
+    setSelectedSeasonId(seasonId);
+    setRulesError("");
+    setRulesSuccess("");
+    try {
+      const res = await api.get<any[]>(`/races/seasons/${seasonId}/rules`);
+      const rawData = (Array.isArray(res) && res.length > 0) ? res : DEFAULT_TEMPLATE_RULES.map(r => ({
+        classLevel: r.classLevelName,
+        minRating: r.minRating,
+        maxRating: r.maxRating,
+        minPrize: r.minPrize,
+        maxPrize: r.maxPrize
+      }));
+      const data = deduplicateRulesList(rawData);
+      setSeasonRules(data);
+      setEditingRulesList(data.map((r: any) => ({ ...r })));
+      setIsEditingSeasonRules(true);
+    } catch (err: any) {
+      setRulesError(getErrMsg(err, "Failed to load rules for editing."));
+    }
+  };
+
+  // Cập nhật từng ô giá trị trong bảng chỉnh sửa Class Rules
+  const updateEditingRule = (index: number, field: string, value: any) => {
+    setEditingRulesList(prev => {
+      const next = [...prev];
+      next[index] = {
+        ...next[index],
+        [field]: value === "" ? null : Number(value)
+      };
+      return next;
+    });
+  };
+
+  // Lưu cấu hình Class Rules của mùa giải
+  const handleSaveSeasonRules = async () => {
     if (!selectedSeasonId) return;
     setRulesError("");
     setRulesSuccess("");
+    setRulesSaving(true);
 
-    // Client-side pre-validation: check lower class max prize < upper class min prize
     const classMap: Record<number, any> = {};
-    for (const r of editableRules) {
+    for (const r of editingRulesList) {
       if (!r.classLevel) continue;
-      const numStr = r.classLevel.toLowerCase().replace("class", "").trim();
+      const numStr = (r.classLevel || "").toLowerCase().replace("class", "").trim();
       const num = parseInt(numStr, 10);
       if (!isNaN(num)) classMap[num] = r;
     }
@@ -272,18 +318,21 @@ export default function Season() {
         const lowerMax = parseFloat(lower.maxPrize) || 0;
         if (lowerMax >= upperMin) {
           setRulesError(`Class ${i + 1} maximum prize ($${lowerMax.toLocaleString()}) must be strictly smaller than Class ${i} minimum prize ($${upperMin.toLocaleString()}).`);
+          setRulesSaving(false);
           return;
         }
       }
     }
 
     try {
-      await api.post(`/races/seasons/${selectedSeasonId}/rules`, editableRules);
-      setRulesSuccess("Season class prize rules updated successfully.");
-      setIsEditingRules(false);
+      await api.post(`/races/seasons/${selectedSeasonId}/rules`, editingRulesList);
+      setRulesSuccess("Season class rules updated successfully!");
+      setIsEditingSeasonRules(false);
       fetchRules(selectedSeasonId);
     } catch (err: any) {
       setRulesError(getErrMsg(err, "Failed to save season rules."));
+    } finally {
+      setRulesSaving(false);
     }
   };
 
@@ -719,11 +768,6 @@ export default function Season() {
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition hover:brightness-90"
                           style={{ background: "rgba(201,162,39,0.10)", color: "#c9a227", border: "1px solid rgba(201,162,39,0.30)" }}
                         >{$t("Extend", (localStorage.getItem('app-lang') || 'en'))}</button>
-                        <button
-                          onClick={e => { e.stopPropagation(); setEditingRulesSeason(season); }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition hover:brightness-90"
-                          style={{ background: "rgba(52,211,153,0.10)", color: "#34d399", border: "1px solid rgba(52,211,153,0.30)" }}
-                        >⚙ Edit Rules</button>
                       </div>
                     </td>
                   </tr>
@@ -731,20 +775,6 @@ export default function Season() {
               </tbody>
             </table>
 
-            {/* Modal Edit Class Rules */}
-            {editingRulesSeason && (
-              <SeasonRulesEdit
-                seasonId={editingRulesSeason.id}
-                seasonName={editingRulesSeason.name}
-                onClose={() => setEditingRulesSeason(null)}
-                onSaved={() => {
-                  fetchSeasons();
-                  if (selectedSeasonId === editingRulesSeason.id) {
-                    fetchRules(editingRulesSeason.id);
-                  }
-                }}
-              />
-            )}
             <Pagination
               currentPage={validPage}
               totalItems={totalItems}
@@ -756,39 +786,72 @@ export default function Season() {
           </div>
         )}
 
-        {/* Khối hiển thị & chỉnh sửa Class rules tương ứng dưới bảng */}
-        {selectedSeasonId !== null && seasonRules.length > 0 && (
-          <div className="px-6 py-4 border-t" style={{ borderColor: "rgba(201,162,39,0.08)" }}>
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
-                Class Prize Rules & Rating Limits — Season S-{selectedSeasonId}
-              </p>
-              {!isEditingRules ? (
-                <button
-                  type="button"
-                  onClick={() => { setIsEditingRules(true); setRulesError(""); setRulesSuccess(""); }}
-                  className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded text-xs font-mono font-semibold transition cursor-pointer"
-                >
-                  ✏️ Edit Class Rules
-                </button>
-              ) : (
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { setIsEditingRules(false); setRulesError(""); setEditableRules(seasonRules.map(r => ({ ...r }))); }}
-                    className="px-3 py-1 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 rounded text-xs font-mono transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveRules}
-                    className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black rounded text-xs font-mono font-bold transition cursor-pointer"
-                  >
-                    💾 Save Rules
-                  </button>
+        {/* Khối hiển thị & Chỉnh sửa Class Rules tương ứng dưới bảng (Gộp chung giao diện & logic) */}
+        {selectedSeasonId !== null && (seasonRules.length > 0 || isEditingSeasonRules) && (
+          <div className="px-6 py-5 border-t" style={{ borderColor: "rgba(201,162,39,0.12)" }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-white/10">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-[11px] font-mono uppercase tracking-widest text-[#c9a227] font-bold">
+                    Class Prize Rules & Rating Limits
+                  </p>
+                  {selectedSeasonId && (
+                    <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 font-mono text-[10px] font-bold border border-amber-500/30">
+                      Season S-{selectedSeasonId} ({seasons.find(s => s.id === selectedSeasonId)?.name || `Season #${selectedSeasonId}`})
+                    </span>
+                  )}
                 </div>
-              )}
+                <p className="text-[10px] font-mono text-white/40 mt-0.5">
+                  {isEditingSeasonRules ? "Adjust rating thresholds and purse prize bounds for this season:" : "Configured rating bounds and purse prizes for all 5 class tiers:"}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                <select
+                  value={selectedSeasonId || ""}
+                  onChange={e => {
+                    const sid = parseInt(e.target.value, 10);
+                    if (sid) {
+                      handleStartEditRules(sid);
+                    }
+                  }}
+                  className="bg-black/60 border border-amber-500/30 rounded-lg px-2.5 py-1 text-xs text-amber-400 font-mono outline-none focus:border-amber-400 font-semibold"
+                >
+                  {seasons.map(s => (
+                    <option key={s.id} value={s.id} style={{ background: "#12141a", color: "#fff" }}>
+                      Season S-{s.id}: {s.name} ({s.status})
+                    </option>
+                  ))}
+                </select>
+
+                {!isEditingSeasonRules ? (
+                  <button
+                    type="button"
+                    onClick={() => handleStartEditRules(selectedSeasonId)}
+                    className="px-3 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-mono font-semibold transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    ✏️ Edit Rules
+                  </button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setIsEditingSeasonRules(false); setRulesError(""); }}
+                      className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 rounded-lg text-xs font-mono transition cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveSeasonRules}
+                      disabled={rulesSaving}
+                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-black rounded-lg text-xs font-mono font-bold transition cursor-pointer disabled:opacity-50"
+                    >
+                      {rulesSaving ? "Saving Rules..." : "💾 Save Class Rules"}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             {rulesError && (
@@ -798,10 +861,10 @@ export default function Season() {
               <p className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-2.5 rounded-xl mb-3">✓ {rulesSuccess}</p>
             )}
 
-            {!isEditingRules ? (
+            {!isEditingSeasonRules ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                {seasonRules.map(rule => (
-                  <div key={rule.id} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(201,162,39,0.12)" }}>
+                {seasonRules.map((rule, idx) => (
+                  <div key={rule.id || idx} className="rounded-lg p-3 border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(201,162,39,0.12)" }}>
                     <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
                     <p className="text-[10px] font-mono text-white/50 mt-1">Rating: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
                     <p className="text-[10px] font-mono text-emerald-400 font-semibold mt-1">
@@ -814,42 +877,67 @@ export default function Season() {
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                {editableRules.map((rule, idx) => (
-                  <div key={rule.id || idx} className="rounded-lg p-3 border space-y-2" style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(201,162,39,0.25)" }}>
-                    <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
-                    <div>
-                      <label className="text-[9px] font-mono text-white/40 block">Min Prize ($)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={rule.minPrize ?? ''}
-                        onChange={e => {
-                          const val = parseFloat(e.target.value);
-                          const updated = [...editableRules];
-                          updated[idx] = { ...updated[idx], minPrize: isNaN(val) ? 0 : val };
-                          setEditableRules(updated);
-                        }}
-                        className="w-full px-2 py-1 bg-black/40 border border-white/10 rounded text-xs text-white font-mono"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[9px] font-mono text-white/40 block">Max Prize ($)</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={rule.maxPrize ?? ''}
-                        onChange={e => {
-                          const val = parseFloat(e.target.value);
-                          const updated = [...editableRules];
-                          updated[idx] = { ...updated[idx], maxPrize: isNaN(val) ? 0 : val };
-                          setEditableRules(updated);
-                        }}
-                        className="w-full px-2 py-1 bg-black/40 border border-white/10 rounded text-xs text-white font-mono"
-                      />
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto pt-1">
+                <table className="w-full text-xs font-mono text-left min-w-[700px]">
+                  <thead>
+                    <tr className="border-b pb-2" style={{ borderColor: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)" }}>
+                      <th className="py-2 pr-4 text-left">{$t("Class Level", (localStorage.getItem('app-lang') || 'en'))}</th>
+                      <th className="py-2 px-2 text-left">{$t("Min Rating", (localStorage.getItem('app-lang') || 'en'))}</th>
+                      <th className="py-2 px-2 text-left">{$t("Max Rating", (localStorage.getItem('app-lang') || 'en'))}</th>
+                      <th className="py-2 px-2 text-left">{$t("Min Prize ($)", (localStorage.getItem('app-lang') || 'en'))}</th>
+                      <th className="py-2 px-2 text-left">{$t("Max Prize ($)", (localStorage.getItem('app-lang') || 'en'))}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
+                    {editingRulesList.map((rule, idx) => (
+                      <tr key={idx}>
+                        <td className="py-3 pr-4 font-bold text-[#c9a227]">{rule.classLevel}</td>
+                        <td className="py-2 px-2">
+                          <input
+                            type="number"
+                            value={rule.minRating ?? ""}
+                            onChange={e => updateEditingRule(idx, "minRating", e.target.value)}
+                            required
+                            className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-20"
+                            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <input
+                            type="number"
+                            value={rule.maxRating ?? ""}
+                            onChange={e => updateEditingRule(idx, "maxRating", e.target.value)}
+                            placeholder={$t("No limit", (localStorage.getItem('app-lang') || 'en'))}
+                            className="rounded px-2.5 py-1.5 text-xs outline-none text-[#f4f2ec] w-20"
+                            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <input
+                            type="number"
+                            min="0"
+                            value={rule.minPrize ?? ""}
+                            onChange={e => updateEditingRule(idx, "minPrize", e.target.value)}
+                            required
+                            className="rounded px-2.5 py-1.5 text-xs outline-none text-[#4ade80] w-28 font-mono"
+                            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(74,222,128,0.2)" }}
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          <input
+                            type="number"
+                            min="0"
+                            value={rule.maxPrize ?? ""}
+                            onChange={e => updateEditingRule(idx, "maxPrize", e.target.value)}
+                            required
+                            className="rounded px-2.5 py-1.5 text-xs outline-none text-[#4ade80] w-28 font-mono"
+                            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(74,222,128,0.2)" }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

@@ -89,7 +89,7 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
     try {
       const res = await api.post<any>("/public/wallet/deposit", { userId: user.id, amount: val });
       if (res.success) {
-        setSuccessMsg(`Successfully deposited $${val.toLocaleString('en-US', { minimumFractionDigits: 2 })} into your wallet via VietQR!`);
+        setSuccessMsg(`Successfully deposited ${Math.round(val).toLocaleString('en-US')} VNĐ into your wallet via VietQR!`);
         setShowQrModal(false);
         setAmountInput("");
         if (user) user.walletBalance = res.newBalance;

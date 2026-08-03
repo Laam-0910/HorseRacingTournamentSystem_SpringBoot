@@ -9,6 +9,7 @@ import ProfileModal from "../dashboards/components/ProfileModal";
 import HorsePerformanceModal from "../dashboards/components/HorsePerformanceModal";
 import { PaginationControls } from "../admin-workflow/PaginationControls";
 import WebCamLiveViewer from "../livestream/WebCamLiveViewer";
+import HorseRacingSimulator from "./HorseRacingSimulator";
 
 
 // ─────────────────────────────────────────────
@@ -1260,60 +1261,34 @@ export default function Landing() {
     }
   };
 
-  // Component managing Live stream on Landing: Streams Referee Camera Angle clip in loop mode
+  // Component managing Live 2D JavaScript Simulation Model Demo on Landing
   const LandingLiveStreamContainer = ({ r }: { r: any }) => {
-    const [activeBroadcasters, setActiveBroadcasters] = useState<any[]>([]);
-
     return (
-      <div className="max-w-3xl mx-auto">
-        <div className="glass-panel rounded-2xl p-6 relative overflow-hidden group border border-[#2a2825] hover:border-red-500/50 transition-colors">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-5 rounded-bl-full pointer-events-none"></div>
-          
-          <div className="flex items-center justify-between mb-6 relative z-10">
-            <h4 className="font-bold text-xl text-white" style={{ fontFamily: "'Roboto Slab', serif" }}>
-              🎥 Referee Camera Angle Preview - {r.classLevel} (Race #{r.id})
-            </h4>
-            <span className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-500 font-bold text-[10px] uppercase tracking-widest rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-              REFEREE CAM PREVIEW
-            </span>
-          </div>
-          
-          <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
-            <WebCamLiveViewer raceId={r.id} onBroadcastersFound={(list) => setActiveBroadcasters(list)} />
-            
-            {activeBroadcasters.length === 0 && (
-              <div className="absolute inset-0 bg-[#0d0d0d]">
-                <video
-                  src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-                <div style={{ position: "absolute", top: "12px", left: "12px", background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", border: "1px solid rgba(251,191,36,0.4)", borderRadius: "20px", padding: "4px 12px", color: "#fbbf24", fontSize: "11px", fontWeight: "bold", fontFamily: "monospace" }}>
-                  ● REFEREE CAM PREVIEW (LOOPING TRAILER)
-                </div>
-                <div style={{ position: "absolute", bottom: "16px", right: "16px" }}>
-                  <button
-                    onClick={handleLiveBtnClick}
-                    className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-xs rounded-xl shadow-lg hover:brightness-110 transition cursor-pointer"
-                  >
-                    📺 WATCH FULL LIVE DASHBOARD →
-                  </button>
-                </div>
-              </div>
-            )}
+      <div className="max-w-4xl mx-auto space-y-4">
+        {/* 2D Interactive Horse Racing Simulator Model */}
+        <HorseRacingSimulator />
+
+        {/* Dashboard CTA Redirection Card */}
+        <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 border border-amber-500/30 rounded-2xl p-5 space-y-3 shadow-xl">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">🔒</span>
+            <div>
+              <h4 className="text-sm font-bold text-amber-400 font-serif uppercase tracking-wide">
+                Real HD Camera Stream & Interactive Live Chat
+              </h4>
+              <p className="text-xs text-white/70 font-mono mt-0.5">
+                You are watching the AI Statistical Performance Simulation preview on the landing page. To access real-time referee camera broadcasts, YouTube streams, and live chat, please enter your Dashboard!
+              </p>
+            </div>
           </div>
 
-          <div className="mt-4 flex justify-between items-center text-xs font-mono text-gray-400 border-t border-white/5 pt-4">
-            <span>Angle: Referee Trackside Wide View</span>
+          <div className="flex items-center gap-3 pt-1 flex-wrap">
             <button
               onClick={handleLiveBtnClick}
-              className="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+              className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-black font-mono font-bold text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center gap-2"
             >
-              Watch Full Stream in Dashboard →
+              <span>🔑</span>
+              <span>Watch Real Live Stream in Dashboard →</span>
             </button>
           </div>
         </div>

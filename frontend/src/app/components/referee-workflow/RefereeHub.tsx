@@ -371,45 +371,57 @@ export default function RefereeHub() {
         {/* Video / Simulation Screen Body - 100% Khung phát WebCam máy quay của các Trọng tài (KHÔNG DÙNG YOUTUBE) */}
         <div style={{ height: sizeHeight, background: "#000", position: "relative", overflow: "hidden" }}>
           {/* Thanh chọn góc quay chéo nhau giữa các Trọng tài */}
-          {broadcasterList.length > 0 && (
-            <div style={{ display: "flex", gap: "4px", padding: "4px 8px", background: "rgba(0,0,0,0.65)", position: "absolute", top: 0, left: 0, right: 0, zIndex: 20, flexWrap: "wrap", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-              {broadcasterList.map((b) => {
-                const isSelected = selectedBroadcasterId === b.id || (!selectedBroadcasterId && broadcasterList[broadcasterList.length - 1]?.id === b.id);
-                return (
-                  <button
-                    key={b.id}
-                    type="button"
-                    onClick={() => setSelectedBroadcasterId(b.id)}
-                    style={{
-                      padding: "2px 6px",
-                      fontSize: "9px",
-                      background: isSelected ? "#ef4444" : "rgba(255,255,255,0.15)",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "3px",
-                      cursor: "pointer",
-                      fontWeight: "bold",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "3px"
-                    }}
-                  >
-                    <span>📱</span> Cam {b.name}
-                  </button>
-                );
-              })}
-            </div>
-           )}
+          {(() => {
+            const myBroadcasterPrefix = user?.id ? `user_${user.id}_` : null;
 
-          {/* Trình xem máy quay WebCam Trọng tài trực tiếp */}
-          <WebCamLiveViewer
-            raceId={selectedRace.id}
-            selectedBroadcasterId={selectedBroadcasterId}
-            onBroadcastersFound={list => setBroadcasterList(list)}
-          />
+            return (
+              <>
+                {/* Camera cross-view tabs - hiển thị tất cả các máy quay của Trọng tài */}
+                {broadcasterList.length > 0 && (
+                  <div style={{ display: "flex", gap: "4px", padding: "4px 8px", background: "rgba(0,0,0,0.65)", position: "absolute", top: 0, left: 0, right: 0, zIndex: 20, flexWrap: "wrap", borderBottom: "1px solid rgba(255,255,255,0.1)", alignItems: "center" }}>
+                    <span style={{ fontSize: "9px", color: "#a0a0a0", fontFamily: "monospace" }}>📡 Referee Cams ({broadcasterList.length}):</span>
+                    {broadcasterList.map((b) => {
+                      const isSelf = myBroadcasterPrefix && b.id.startsWith(myBroadcasterPrefix);
+                      const isSelected = selectedBroadcasterId === b.id || (!selectedBroadcasterId && broadcasterList[broadcasterList.length - 1]?.id === b.id);
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => setSelectedBroadcasterId(b.id)}
+                          style={{
+                            padding: "2px 6px",
+                            fontSize: "9px",
+                            background: isSelected ? "#ef4444" : "rgba(255,255,255,0.15)",
+                            color: "#fff",
+                            border: isSelf ? "1px solid #fbbf24" : "none",
+                            borderRadius: "3px",
+                            cursor: "pointer",
+                            fontWeight: "bold",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "3px"
+                          }}
+                        >
+                          <span>📱</span> {isSelf ? `Your Cam (${b.name}) 🔴` : `Cam ${b.name}`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Viewer - phát tất cả các luồng camera trọng tài */}
+                <WebCamLiveViewer
+                  raceId={selectedRace.id}
+                  selectedBroadcasterId={selectedBroadcasterId}
+                  onBroadcastersFound={list => setBroadcasterList(list)}
+                />
+              </>
+            );
+          })()}
         </div>
       </div>
     );
+
   };
 
   // Auto-calculate final positions whenever finishTimes or disqualifiedList changes
@@ -706,7 +718,8 @@ export default function RefereeHub() {
 
     let finalPenalty = isSevereDq ? "DISQUALIFIED (DQ)" : "OFFICIAL_WARNING";
     if (fineAmount && Number(fineAmount) > 0) {
-      const formattedFine = (fineTarget === "owner" ? "Owner Fine $" : "Fine $") + Number(fineAmount).toFixed(2);
+      const fineVal = Math.round(Number(fineAmount));
+      const formattedFine = (fineTarget === "owner" ? "Owner Fine " : "Fine ") + fineVal + " VNĐ";
       finalPenalty = isSevereDq ? `${formattedFine} + DISQUALIFIED (DQ)` : formattedFine;
     } else if (violPenalty.trim()) {
       finalPenalty = isSevereDq ? `${violPenalty.trim()} + DISQUALIFIED (DQ)` : violPenalty.trim();
@@ -726,7 +739,7 @@ export default function RefereeHub() {
       setShowViolModal(false);
       setViolDesc("");
       setViolPenalty("");
-      setFineAmount("500");
+      setFineAmount("50000");
       setFineTarget("jockey");
       setIsSevereDq(false);
       // Reload live supervise data
@@ -1351,7 +1364,7 @@ export default function RefereeHub() {
                 gap: "0.375rem" 
               }}
             >
-              📱 Mobile Camera Broadcast
+              📷 Camera Broadcast
             </button>
             <button 
               onClick={() => setLiveMonitorMode(prev => prev === "hidden" ? "floating" : prev === "floating" ? "embedded" : "floating")} 
@@ -1656,15 +1669,15 @@ export default function RefereeHub() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Fine Amount ($)</label>
-                    <input type="number" min="0" step="50" value={fineAmount} onChange={e => setFineAmount(e.target.value)} placeholder="500" style={{ width: "100%", padding: "0.5rem", outline: "none", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#4ade80", fontWeight: "bold", borderRadius: "0.375rem", fontFamily: "monospace" }} />
+                    <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Fine Amount (VNĐ)</label>
+                    <input type="number" min="0" step="any" value={fineAmount} onChange={e => setFineAmount(e.target.value)} placeholder="50000" style={{ width: "100%", padding: "0.5rem", outline: "none", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#4ade80", fontWeight: "bold", borderRadius: "0.375rem", fontFamily: "monospace" }} />
                   </div>
                 </div>
 
                 {violRunner && fineAmount && Number(fineAmount) > 0 && (
                   <div style={{ fontSize: "10px", color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.08)", padding: "0.5rem 0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(251,191,36,0.2)" }}>
                     💳 <strong>Financial Deduction Preview:</strong><br />
-                    ${Number(fineAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })} will be automatically deducted from {fineTarget === "jockey" ? `Jockey ${sortedEntries.find(i => `${i.horse.id}-${i.jockey.id}` === violRunner)?.jockey?.username}'s wallet` : `Horse Owner's wallet`}.
+                    {Math.round(Number(fineAmount)).toLocaleString('en-US')} VNĐ will be automatically deducted from {fineTarget === "jockey" ? `Jockey ${sortedEntries.find(i => `${i.horse.id}-${i.jockey.id}` === violRunner)?.jockey?.username}'s wallet` : `Horse Owner's wallet`}.
                   </div>
                 )}
 

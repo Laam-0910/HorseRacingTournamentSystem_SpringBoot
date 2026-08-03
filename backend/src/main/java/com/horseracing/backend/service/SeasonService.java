@@ -190,6 +190,14 @@ public class SeasonService {
                 m.setTotalBudget(BigDecimal.ZERO);
                 raceMeetingRepository.save(m);
 
+                // Dừng và xóa toàn bộ luồng livestream của các trận đua thuộc Meeting/Season khi bị Lock
+                List<com.horseracing.backend.entity.Race> seasonMeetingRaces = raceRepository.findByRaceMeetingId(m.getId());
+                for (com.horseracing.backend.entity.Race r : seasonMeetingRaces) {
+                    r.setYoutubeLiveUrl(null);
+                    r.setStreamMode("YOUTUBE");
+                    raceRepository.save(r);
+                }
+
                 // Hoàn lại tiền vé cho Chủ ngựa từ Quỹ Escrow Vault
                 BigDecimal ticketPrice = m.getTicketPrice() != null ? m.getTicketPrice() : BigDecimal.ZERO;
                 if (ticketPrice.compareTo(BigDecimal.ZERO) > 0) {
@@ -304,13 +312,22 @@ public class SeasonService {
         List<SeasonClassRule> rules = seasonClassRuleRepository.findBySeasonId(seasonId);
         if (rules.isEmpty() && seasonRepository.existsById(seasonId)) {
             SeasonClassRule class1 = new SeasonClassRule(null, seasonId, "Class 1", "Elite Championship", 95, null, new BigDecimal("300000"), new BigDecimal("1000000"));
-            SeasonClassRule class2 = new SeasonClassRule(null, seasonId, "Class 2", "Premium Group", 80, 94, new BigDecimal("200000"), new BigDecimal("299999"));
+            SeasonClassRule class2 = new SeasonClassRule(null, seasonId, "Class 2", "Premium Group", 80, 94, new BigDecimal("20000"), new BigDecimal("299999"));
             SeasonClassRule class3 = new SeasonClassRule(null, seasonId, "Class 3", "Advanced Tier", 60, 79, new BigDecimal("100000"), new BigDecimal("199999"));
             SeasonClassRule class4 = new SeasonClassRule(null, seasonId, "Class 4", "Intermediate Level", 40, 59, new BigDecimal("50000"), new BigDecimal("99999"));
             SeasonClassRule class5 = new SeasonClassRule(null, seasonId, "Class 5", "Entry Division", 0, 39, new BigDecimal("20000"), new BigDecimal("49999"));
             rules = seasonClassRuleRepository.saveAll(List.of(class1, class2, class3, class4, class5));
         }
-        return rules.stream()
+
+        // Deduplicate by class level to prevent any historical duplicate rows in DB
+        Map<String, SeasonClassRule> uniqueMap = new java.util.LinkedHashMap<>();
+        for (SeasonClassRule r : rules) {
+            if (r.getClassLevel() != null) {
+                uniqueMap.put(r.getClassLevel().trim().toLowerCase(), r);
+            }
+        }
+
+        return uniqueMap.values().stream()
                 .map(seasonClassRuleMapper::toDTO)
                 .collect(Collectors.toList());
     }
@@ -319,8 +336,17 @@ public class SeasonService {
     @Transactional
     public void saveSeasonRules(Integer seasonId, List<SeasonClassRuleDTO> rules) {
         validateSeasonClassRulesHierarchy(rules);
+
+        // Fetch and delete existing rules cleanly with flush to avoid JPA stale entity state error
+        List<SeasonClassRule> existingRules = seasonClassRuleRepository.findBySeasonId(seasonId);
+        if (!existingRules.isEmpty()) {
+            seasonClassRuleRepository.deleteAll(existingRules);
+            seasonClassRuleRepository.flush();
+        }
+
         for (SeasonClassRuleDTO dto : rules) {
             SeasonClassRule rule = seasonClassRuleMapper.toEntity(dto);
+            rule.setId(null); // Ensure ID is null so JPA performs a clean INSERT
             rule.setSeasonId(seasonId);
             seasonClassRuleRepository.save(rule);
         }

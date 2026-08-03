@@ -1,10 +1,11 @@
 package com.horseracing.backend.config;
 
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.handler.TextWebSocketHandler;
+import org.springframework.web.socket.handler.AbstractWebSocketHandler;
 
 import java.io.IOException;
 import java.net.URI;
@@ -18,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Mỗi trận đua (raceId) có một danh sách các kết nối WebSocket riêng.
  */
 @Component
-public class LivestreamWebSocketHandler extends TextWebSocketHandler {
+public class LivestreamWebSocketHandler extends AbstractWebSocketHandler {
 
     // Lưu danh sách các session đang mở theo từng raceId
     private final Map<String, List<WebSocketSession>> raceLivestreamSessions = new ConcurrentHashMap<>();
@@ -49,6 +50,29 @@ public class LivestreamWebSocketHandler extends TextWebSocketHandler {
                             }
                         } catch (Exception e) {
                             System.err.println("Error relaying livestream message: " + e.getMessage());
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) throws Exception {
+        String raceId = getRaceId(session);
+        if (raceId != null) {
+            List<WebSocketSession> sessions = raceLivestreamSessions.get(raceId);
+            if (sessions != null) {
+                for (WebSocketSession s : sessions) {
+                    if (s.isOpen() && !s.getId().equals(session.getId())) {
+                        try {
+                            synchronized (s) {
+                                if (s.isOpen()) {
+                                    s.sendMessage(message);
+                                }
+                            }
+                        } catch (Exception e) {
+                            System.err.println("Error relaying binary livestream message: " + e.getMessage());
                         }
                     }
                 }

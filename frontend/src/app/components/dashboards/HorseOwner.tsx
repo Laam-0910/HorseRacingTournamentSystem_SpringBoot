@@ -416,13 +416,36 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                     {isReg && regStatus === "REJECTED" ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                         <p style={{ fontSize: "0.65rem", color: "#ef4444", fontFamily: "monospace", fontStyle: "italic" }}>
-                          ⚠️ Your registration for this meeting was rejected. You can re-register again below.
+                          ⚠️ Your registration for this meeting was rejected. You can select horse(s) from your stable to re-register below:
                         </p>
+                        
+                        {/* Horse Selection List for Re-Registration */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                          <p style={{ ...labelStyle, marginBottom: "0.25rem", color: "#f87171" }}>Select Horse(s) to Re-Register:</p>
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "120px", overflowY: "auto", background: "rgba(0,0,0,0.3)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(239,68,68,0.2)" }}>
+                            {stable && stable.length > 0 ? (
+                              stable.map((item: any) => {
+                                const h = item.horse || item;
+                                if (h.status === "RETIRED" || h.status === "REJECTED") return null;
+                                return (
+                                  <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
+                                    <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: "#ef4444" }} />
+                                    <span>🐎 {h.name} (Rating: {h.currentRating ?? 0})</span>
+                                  </label>
+                                );
+                              })
+                            ) : (
+                              <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic" }}>No active horses in stable.</p>
+                            )}
+                          </div>
+                        </div>
+
                         <button
-                          onClick={() => onRegisterOwner(m.id)}
-                          style={{ width: "100%", padding: "0.5rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                          onClick={() => sel.length > 0 ? handleBulkRegister(m.id) : onRegisterOwner(m.id)}
+                          style={{ width: "100%", marginTop: "0.25rem", padding: "0.5rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem" }}
                         >
-                          🔄 Register Again for Event
+                          <span>🔄</span>
+                          <span>{sel.length > 0 ? `Re-Register ${sel.length} Selected Horse(s)` : "Re-Register for Event"}</span>
                         </button>
                       </div>
                     ) : isReg && (

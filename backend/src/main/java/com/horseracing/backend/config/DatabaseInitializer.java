@@ -229,8 +229,9 @@ public class DatabaseInitializer implements InitializingBean {
                 "        amount DECIMAL(18,2) NOT NULL, " +
                 "        transaction_type VARCHAR(50) NOT NULL, " +
                 "        description NVARCHAR(MAX) NULL, " +
-                "        created_at DATETIME DEFAULT GETDATE(), " +
-                "    ); "
+                "        created_at DATETIME DEFAULT GETDATE() " +
+                "    ); " +
+                "END"
             );
             // 8.5 Khởi tạo cấu hình mặc định cho Phí thuê Nài ngựa trong SystemConfig
             jdbcTemplate.execute(

@@ -54,6 +54,46 @@ public class PublicDataController {
     @Autowired
     private SystemConfigRepository systemConfigRepository;
 
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
+
+    // Lấy danh sách tin nhắn chat công khai theo raceId
+    @GetMapping("/chat/{raceId}")
+    public ResponseEntity<?> getRaceChatMessages(@PathVariable Integer raceId) {
+        List<ChatMessage> list = chatMessageRepository.findByRaceIdOrderBySentAtAsc(raceId);
+        List<Map<String, String>> result = new ArrayList<>();
+        for (ChatMessage msg : list) {
+            Map<String, String> m = new HashMap<>();
+            m.put("user", msg.getUsername());
+            m.put("text", msg.getMessageText());
+            m.put("time", msg.getSentAt() != null ? new java.text.SimpleDateFormat("HH:mm").format(msg.getSentAt()) : "");
+            result.add(m);
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    // Gửi tin nhắn chat công khai mới
+    @PostMapping("/chat/send")
+    public ResponseEntity<?> sendRaceChatMessage(@RequestBody Map<String, Object> req) {
+        try {
+            Integer raceId = Integer.parseInt(req.get("raceId").toString());
+            String user = req.get("user") != null ? req.get("user").toString() : "Guest";
+            String text = req.get("text") != null ? req.get("text").toString() : "";
+
+            if (!text.trim().isEmpty()) {
+                ChatMessage chatMessage = new ChatMessage();
+                chatMessage.setRaceId(raceId);
+                chatMessage.setUsername(user);
+                chatMessage.setMessageText(text.trim());
+                chatMessage.setSentAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                chatMessageRepository.save(chatMessage);
+            }
+            return ResponseEntity.ok(Map.of("success", true));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
     // Lấy danh sách Trọng tài được phân công theo từng cuộc đua (Công khai)
     @GetMapping("/races/referees")
     public ResponseEntity<?> getPublicRaceReferees() {

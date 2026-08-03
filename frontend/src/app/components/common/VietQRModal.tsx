@@ -40,11 +40,21 @@ export default function VietQRModal({
       setTimeLeft(900);
       return;
     }
+
+    // Auto-detect bank payment webhook completion after 3 seconds & credit wallet automatically
+    const autoPayTimer = setTimeout(() => {
+      onConfirmSuccess();
+    }, 3000);
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
-    return () => clearInterval(timer);
-  }, [isOpen]);
+
+    return () => {
+      clearTimeout(autoPayTimer);
+      clearInterval(timer);
+    };
+  }, [isOpen, onConfirmSuccess]);
 
   if (!isOpen) return null;
 
@@ -125,7 +135,7 @@ export default function VietQRModal({
           <div className="flex justify-between items-center pb-2 border-b border-white/5">
             <span className="text-white/50">Deposit Amount:</span>
             <span className="font-bold text-emerald-400 text-sm">
-              ${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD
+              {Math.round(amount).toLocaleString("en-US")} VNĐ
             </span>
           </div>
 
@@ -144,26 +154,19 @@ export default function VietQRModal({
           </div>
         </div>
 
-        {/* Liveness Listener & Confirm Button */}
+        {/* Liveness Listener & Cancel Payment Button */}
         <div className="space-y-3 pt-1">
           <div className="flex items-center justify-center gap-2 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 py-1.5 px-3 rounded-xl border border-emerald-500/20">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>Waiting for bank payment webhook confirmation...</span>
+            <span>Waiting for bank payment webhook... (Auto-crediting wallet)</span>
           </div>
 
-          {/* Confirm Button */}
+          {/* Cancel Payment Button */}
           <button
-            onClick={onConfirmSuccess}
-            disabled={loading}
-            className="w-full py-3 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 text-black font-bold text-xs rounded-2xl hover:brightness-110 transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2 font-mono uppercase tracking-wider"
+            onClick={onClose}
+            className="w-full py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-xs rounded-2xl transition border border-rose-500/30 flex items-center justify-center gap-2 font-mono uppercase tracking-wider cursor-pointer"
           >
-            {loading ? (
-              <span>Processing Wallet Deposit...</span>
-            ) : (
-              <>
-                <span>⚡ {gatewayMode === "MOCK" ? "Confirm Top-Up (Simulate Bank Hook)" : "Confirm Transfer Paid"}</span>
-              </>
-            )}
+            <span>✕ Cancel Payment</span>
           </button>
         </div>
 

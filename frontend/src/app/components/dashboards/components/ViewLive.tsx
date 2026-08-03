@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { api, getErrMsg } from "../../../../lib/api";
+import { useState, useEffect, useRef } from "react";
+import { api, getErrMsg, getWebSocketUrl } from "../../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../../lib/utils";
 import { useAuth } from "../../../../context/AuthContext";
 import WebCamLiveViewer, { BroadcasterInfo } from "../../livestream/WebCamLiveViewer";
@@ -33,8 +33,9 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
   const [error, setError] = useState("");
 
   // Paywall & Subscription state
-  const [hasAccess, setHasAccess] = useState<boolean>(true);
+  const [hasAccess, setHasAccess] = useState<boolean>(false);
   const [showPaywallModal, setShowPaywallModal] = useState<boolean>(false);
+  const isManualPaywallOpenRef = useRef(false);
   const [subInfo, setSubInfo] = useState<any>(null);
   const [preselectedPkg, setPreselectedPkg] = useState<"RACEMEETING" | "SEASON">("RACEMEETING");
   
@@ -62,23 +63,26 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
   const fetchLiveRaces = async () => {
     try {
       const data = await api.get<Race[]>("/races/live");
-      const activeRaces = Array.isArray(data) ? data : [];
+      const activeRaces = (Array.isArray(data) ? data : []).filter(r => r.status !== "CANCELLED");
       setLiveRaces(activeRaces);
       
       if (activeRaces.length > 0) {
         if (preselectedRaceId) {
           const found = activeRaces.find(r => r.id === preselectedRaceId);
           if (found) {
-            setSelectedRace(found);
+            setSelectedRace({ ...found, streamMode: found.streamMode || "WEBCAM" });
             if (onClearPreselect) onClearPreselect();
             return;
           }
         }
         setSelectedRace(prev => {
           if (prev && activeRaces.some(r => r.id === prev.id)) {
-            return activeRaces.find(r => r.id === prev.id) || activeRaces[0];
+            const found = activeRaces.find(r => r.id === prev.id) || activeRaces[0];
+            // Default to WEBCAM if streamMode not set
+            return { ...found, streamMode: found.streamMode || "WEBCAM" };
           }
-          return activeRaces[0];
+          const first = activeRaces[0];
+          return { ...first, streamMode: first.streamMode || "WEBCAM" };
         });
       } else {
         setSelectedRace(null);
@@ -98,25 +102,78 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
     return () => clearInterval(interval);
   }, []);
 
+  const isSpectator = Boolean(user && (Number(user.roleId) === 4 || ((user as any).roleName && (user as any).roleName.toLowerCase().includes("spectator"))));
+
   // Check subscription access for spectator role
   useEffect(() => {
-    if (!user || user.roleId !== 4 || !selectedRace) {
+    if (!user || !selectedRace) return;
+
+    if (!isSpectator) {
       setHasAccess(true); // Admins, Referees, Owners, Jockeys have free access
+      setShowPaywallModal(false);
+      isManualPaywallOpenRef.current = false;
       return;
     }
-    api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${selectedRace.raceMeetingId || ""}`)
+
+    const meetingId = selectedRace.raceMeetingId;
+    if (!meetingId) {
+      setHasAccess(false);
+      setShowPaywallModal(true);
+      return;
+    }
+
+    api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${meetingId}`)
       .then(res => {
-        setHasAccess(res.hasAccess);
+        const access = Boolean(res && res.hasAccess);
+        setHasAccess(access);
         setSubInfo(res);
-        if (!res.hasAccess) {
-          setShowPaywallModal(true); // Auto popup VietQR payment modal on entry
+        if (access) {
+          if (!isManualPaywallOpenRef.current) {
+            setShowPaywallModal(false);
+          }
+        } else {
+          setShowPaywallModal(true);
         }
       })
       .catch(() => {
         setHasAccess(false);
         setShowPaywallModal(true);
       });
-  }, [user, selectedRace?.id, selectedRace?.raceMeetingId]);
+  }, [user, isSpectator, selectedRace?.id, selectedRace?.raceMeetingId]);
+
+  // Live Pass Expiration Countdown Timer for Spectators
+  const [timeLeft, setTimeLeft] = useState<{ days: number; hours: number; mins: number; secs: number } | null>(null);
+
+  useEffect(() => {
+    if (!subInfo?.expiresAt) {
+      setTimeLeft(null);
+      return;
+    }
+    const targetMs = typeof subInfo.expiresAt === "number" ? subInfo.expiresAt : new Date(subInfo.expiresAt).getTime();
+    if (isNaN(targetMs) || targetMs <= 0) {
+      setTimeLeft(null);
+      return;
+    }
+
+    const updateTimer = () => {
+      const nowMs = Date.now();
+      const diff = targetMs - nowMs;
+      if (diff <= 0) {
+        setTimeLeft({ days: 0, hours: 0, mins: 0, secs: 0 });
+        setHasAccess(false);
+      } else {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeLeft({ days, hours, mins, secs });
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [subInfo?.expiresAt]);
 
   // WebSocket Connection Lifecycle
   useEffect(() => {
@@ -126,20 +183,29 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
       return;
     }
 
-    // Reset messages for the new race
+    // Reset messages for the new race and fetch chat history from REST API
     setChatMessages([
       { user: "System", text: `Welcome to the live chat for Race #${selectedRace.id}!`, time: "" }
     ]);
     setConnectionState("connecting");
+
+    api.get<any[]>(`/public/chat/${selectedRace.id}`)
+      .then(history => {
+        if (history && history.length > 0) {
+          setChatMessages(prev => [
+            prev[0],
+            ...history
+          ]);
+        }
+      })
+      .catch(() => {});
 
     let ws: WebSocket | null = null;
     let reconnectTimeout: number;
     let isComponentMounted = true;
 
     const connect = () => {
-      const hostname = window.location.hostname || "localhost";
-      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${hostname}:8080/ws/chat/${selectedRace.id}`;
+      const wsUrl = getWebSocketUrl(`/ws/chat/${selectedRace.id}`);
       
       ws = new WebSocket(wsUrl);
 
@@ -154,14 +220,19 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
         try {
           const data = JSON.parse(event.data);
           if (data && data.user && data.text) {
-            setChatMessages(prev => [
-              ...prev,
-              {
-                user: data.user,
-                text: data.text,
-                time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-              }
-            ]);
+            setChatMessages(prev => {
+              // Avoid duplicate message if already added locally
+              const exists = prev.some(m => m.user === data.user && m.text === data.text && Math.abs(m.text.length - data.text.length) === 0);
+              if (exists) return prev;
+              return [
+                ...prev,
+                {
+                  user: data.user,
+                  text: data.text,
+                  time: data.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                }
+              ];
+            });
           }
         } catch (err) {
           console.error("Failed to parse WebSocket message", err);
@@ -201,17 +272,33 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
 
   const handleSendChat = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMsg.trim() || !socket || socket.readyState !== WebSocket.OPEN) return;
+    const msgText = newMsg.trim();
+    if (!msgText || !selectedRace?.id) return;
     
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const payload = {
       user: username,
-      text: newMsg.trim(),
+      text: msgText,
       time
     };
     
-    socket.send(JSON.stringify(payload));
+    // 1. Immediately update UI chat messages locally
+    setChatMessages(prev => [...prev, payload]);
     setNewMsg("");
+
+    // 2. Broadcast via WebSocket if connected
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      try {
+        socket.send(JSON.stringify(payload));
+      } catch (err) {}
+    }
+
+    // 3. Always backup send via REST API to persist in DB
+    api.post("/public/chat/send", {
+      raceId: selectedRace.id,
+      user: username,
+      text: msgText
+    }).catch(() => {});
   };
 
   const embedUrl = selectedRace ? getYouTubeEmbedUrl(selectedRace.youtubeLiveUrl) : null;
@@ -255,30 +342,43 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
       </div>
 
       {/* Spectator Active Subscription & Upgrade/Renew Action Bar */}
-      {user?.roleId === 4 && hasAccess && (
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", padding: "0.75rem 1rem", borderRadius: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "14px" }}>🟢</span>
-            <span style={{ fontSize: "12px", fontWeight: "bold", color: "#34d399", fontFamily: "monospace" }}>
-              Active Pass: {subInfo?.packageType === "SEASON" ? "Season Pass (Unlimited HD Access)" : "RaceMeeting Pass (24h Event Access)"}
-            </span>
+      {isSpectator && hasAccess && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", padding: "0.85rem 1.25rem", borderRadius: "0.85rem", flexWrap: "wrap", gap: "0.75rem", boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{ fontSize: "14px" }}>🟢</span>
+              <span style={{ fontSize: "12.5px", fontWeight: "bold", color: "#34d399", fontFamily: "monospace" }}>
+                Active Pass: {subInfo?.packageType === "SEASON" ? "Season Live Pass (Full Season Access)" : "Meeting Live Pass (Day Access)"}
+              </span>
+            </div>
+            {subInfo?.expiresAt && (
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", fontSize: "11px", fontFamily: "monospace", color: "#a0a0a0", paddingLeft: "1.5rem", flexWrap: "wrap" }}>
+                <span>🗓️ Valid Until: <strong style={{ color: "#fff" }}>{subInfo.expiresAtFormatted || new Date(typeof subInfo.expiresAt === "number" ? subInfo.expiresAt : new Date(subInfo.expiresAt).getTime()).toLocaleString()}</strong></span>
+                {timeLeft && (
+                  <span style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)", color: "#fbbf24", padding: "0.15rem 0.6rem", borderRadius: "0.25rem", fontWeight: "bold" }}>
+                    ⏱️ Remaining: {String(timeLeft.days).padStart(2, '0')}d {String(timeLeft.hours).padStart(2, '0')}h {String(timeLeft.mins).padStart(2, '0')}m {String(timeLeft.secs).padStart(2, '0')}s
+                  </span>
+                )}
+              </div>
+            )}
           </div>
+
           <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
             {subInfo?.packageType !== "SEASON" && (
               <button
                 type="button"
-                onClick={() => { setPreselectedPkg("SEASON"); setShowPaywallModal(true); }}
-                style={{ padding: "0.4rem 0.85rem", background: "linear-gradient(135deg, #c9a227 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", fontSize: "11px", borderRadius: "0.5rem", border: "none", cursor: "pointer", fontFamily: "monospace" }}
+                onClick={() => { setPreselectedPkg("SEASON"); isManualPaywallOpenRef.current = true; setShowPaywallModal(true); }}
+                style={{ padding: "0.45rem 0.85rem", background: "linear-gradient(135deg, #c9a227 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", fontSize: "11px", borderRadius: "0.5rem", border: "none", cursor: "pointer", fontFamily: "monospace" }}
               >
-                ⚡ Upgrade to Season Pass (64,000 VND)
+                ⚡ Upgrade to Season Pass (64,000 VNĐ)
               </button>
             )}
             <button
               type="button"
-              onClick={() => { setPreselectedPkg(subInfo?.packageType === "SEASON" ? "SEASON" : "RACEMEETING"); setShowPaywallModal(true); }}
-              style={{ padding: "0.4rem 0.85rem", background: "rgba(255,255,255,0.08)", color: "#fff", fontWeight: "bold", fontSize: "11px", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer", fontFamily: "monospace" }}
+              onClick={() => { setPreselectedPkg(subInfo?.packageType === "SEASON" ? "SEASON" : "RACEMEETING"); isManualPaywallOpenRef.current = true; setShowPaywallModal(true); }}
+              style={{ padding: "0.45rem 0.85rem", background: "rgba(52,211,153,0.15)", color: "#34d399", fontWeight: "bold", fontSize: "11px", borderRadius: "0.5rem", border: "1px solid rgba(52,211,153,0.3)", cursor: "pointer", fontFamily: "monospace" }}
             >
-              🔄 Renew Pass (-15% Discount)
+              🔄 Extend / Renew Pass (+ Extra Time)
             </button>
           </div>
         </div>
@@ -289,7 +389,48 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
           <p className="text-sm text-white/40 font-mono">Loading live screen...</p>
         </div>
       ) : selectedRace ? (
-        <div className={`gap-6 ${isTheaterMode ? "flex flex-col" : "grid grid-cols-1 lg:grid-cols-3"}`}>
+        <div className="space-y-4">
+          {/* Live Class / Race Switcher Bar (Applies to Horse Owner, Jockey, Spectator) */}
+          {liveRaces.filter(r => r.status !== "CANCELLED").length > 0 && (
+            <div className="bg-[#151310] border border-amber-500/20 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
+              <div className="flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                </span>
+                <span className="text-xs font-bold text-amber-400 uppercase tracking-wider font-mono">
+                  Live Stream Switcher ({liveRaces.filter(r => r.status !== "CANCELLED").length} Active Classes):
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 flex-wrap">
+                {liveRaces
+                  .filter((r) => r.status !== "CANCELLED")
+                  .map((r) => {
+                    const isSelected = selectedRace?.id === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        onClick={() => setSelectedRace(r)}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold font-mono transition flex items-center gap-2 cursor-pointer ${
+                          isSelected
+                            ? "bg-gradient-to-r from-rose-600 to-amber-600 text-white shadow-lg shadow-rose-500/20 border border-rose-400 ring-2 ring-rose-500/30"
+                            : "bg-white/5 hover:bg-white/10 text-white/80 border border-white/10"
+                        }`}
+                      >
+                        <span>🏁</span>
+                        <span>{r.classLevel}</span>
+                        {r.meetingName && (
+                          <span className="text-[10px] opacity-75 font-normal">({r.meetingName})</span>
+                        )}
+                      </button>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+          <div className={`gap-6 ${isTheaterMode ? "flex flex-col" : "grid grid-cols-1 lg:grid-cols-3"}`}>
           
           {/* Player & Stats */}
           <div className={`${isTheaterMode ? "w-full" : "lg:col-span-2"} space-y-4`}>
@@ -369,35 +510,39 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
 
             {/* Embedded Stream */}
             <div className="relative w-full pb-[56.25%] h-0 rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black">
-              {selectedRace.streamMode !== "YOUTUBE" ? (
+              {/* Always mount WebCamLiveViewer so imgRef is ready, just hide when not in WEBCAM mode */}
+              <div style={{ display: selectedRace.streamMode !== "YOUTUBE" ? "block" : "none", position: "absolute", inset: 0 }}>
                 <WebCamLiveViewer
                   raceId={selectedRace.id}
                   selectedBroadcasterId={selectedBroadcasterId}
                   onBroadcastersFound={list => setBroadcasterList(list)}
                 />
-              ) : selectedRace.youtubeLiveUrl && (
-                selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
-                selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
-                selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
-                selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
-                selectedRace.youtubeLiveUrl.toLowerCase().includes("/stream") ||
-                selectedRace.youtubeLiveUrl.toLowerCase().includes(".mp4?")
-              ) ? (
-                <video
-                  className="absolute top-0 left-0 w-full h-full border-none"
-                  src={selectedRace.youtubeLiveUrl}
-                  controls={hasAccess}
-                  autoPlay
-                  muted
-                />
-              ) : (
-                <iframe
-                  className="absolute top-0 left-0 w-full h-full border-none"
-                  src={embedUrl && embedUrl.includes("?") ? embedUrl : `${embedUrl}?autoplay=1&mute=1&rel=0`}
-                  title={selectedRace.classLevel}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                ></iframe>
+              </div>
+              {selectedRace.streamMode === "YOUTUBE" && selectedRace.youtubeLiveUrl && (
+                (
+                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
+                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
+                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
+                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
+                  selectedRace.youtubeLiveUrl.toLowerCase().includes("/stream") ||
+                  selectedRace.youtubeLiveUrl.toLowerCase().includes(".mp4?")
+                ) ? (
+                  <video
+                    className="absolute top-0 left-0 w-full h-full border-none"
+                    src={selectedRace.youtubeLiveUrl}
+                    controls={hasAccess}
+                    autoPlay
+                    muted
+                  />
+                ) : (
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full border-none"
+                    src={embedUrl && embedUrl.includes("?") ? embedUrl : `${embedUrl}?autoplay=1&mute=1&rel=0`}
+                    title={selectedRace.classLevel}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  ></iframe>
+                )
               )}
 
               {/* Paywall Locked Overlay */}
@@ -446,8 +591,20 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                 onSuccess={() => {
                   setHasAccess(true);
                   setShowPaywallModal(false);
+                  isManualPaywallOpenRef.current = false;
+                  if (user && selectedRace) {
+                    api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${selectedRace.raceMeetingId || ""}`)
+                      .then(res => {
+                        setHasAccess(res.hasAccess);
+                        setSubInfo(res);
+                      })
+                      .catch(() => {});
+                  }
                 }}
-                onClose={() => setShowPaywallModal(false)}
+                onClose={() => {
+                  setShowPaywallModal(false);
+                  isManualPaywallOpenRef.current = false;
+                }}
               />
             )}
 
@@ -559,24 +716,6 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                 ))}
               </div>
 
-              {/* Quick Reactions Bar */}
-              <div style={{ display: "flex", gap: "0.25rem", padding: "0.35rem 0.5rem", background: "rgba(0,0,0,0.3)", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                {["🔥", "🏇", "👏", "🏆", "❤️", "😮"].map(emoji => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => {
-                      if (!socket || socket.readyState !== WebSocket.OPEN) return;
-                      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                      socket.send(JSON.stringify({ user: username, text: emoji, time }));
-                    }}
-                    style={{ background: "rgba(255,255,255,0.05)", border: "none", borderRadius: "0.25rem", padding: "2px 6px", cursor: "pointer", fontSize: "0.85rem" }}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-
               <form onSubmit={handleSendChat} className="p-2 border-t border-white/5 bg-[#151310] flex gap-2">
                 <input
                   type="text"
@@ -593,9 +732,8 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                 </button>
               </form>
             </div>
-
           </div>
-
+        </div>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-20 bg-white/[0.01] border border-white/5 rounded-2xl text-center space-y-3">

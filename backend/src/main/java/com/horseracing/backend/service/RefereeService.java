@@ -544,7 +544,8 @@ public class RefereeService {
     private void applyFineToUserWallet(Integer userId, String penaltyStr, String description) {
         if (userId == null || penaltyStr == null) return;
         java.math.BigDecimal fineAmount = java.math.BigDecimal.ZERO;
-        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+(\\.\\d+)?)").matcher(penaltyStr);
+        String cleanPenalty = penaltyStr.replace(",", "");
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+(?:\\.\\d+)?)").matcher(cleanPenalty);
         if (m.find()) {
             try {
                 fineAmount = new java.math.BigDecimal(m.group(1));
@@ -552,7 +553,7 @@ public class RefereeService {
         }
         if (fineAmount.compareTo(java.math.BigDecimal.ZERO) <= 0) {
             if (penaltyStr.toUpperCase().contains("FINE") || penaltyStr.toUpperCase().contains("PHẠT")) {
-                fineAmount = new java.math.BigDecimal("50.00");
+                fineAmount = new java.math.BigDecimal("50000");
             }
         }
 
@@ -561,8 +562,8 @@ public class RefereeService {
             userRepository.findById(userId).ifPresent(user -> {
                 java.math.BigDecimal curBal = user.getWalletBalance() != null ? user.getWalletBalance() : java.math.BigDecimal.ZERO;
                 java.math.BigDecimal newBal = curBal.subtract(fine);
-                if (newBal.compareTo(java.math.BigDecimal.ZERO) < 0) newBal = java.math.BigDecimal.ZERO;
                 user.setWalletBalance(newBal);
+                user.setBalance(newBal);
                 userRepository.save(user);
 
                 WalletTransaction tx = new WalletTransaction();

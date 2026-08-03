@@ -190,6 +190,18 @@ public class RaceService {
         if (body.get("maxEntries") != null) { // Kiểm tra nếu có cập nhật số ngựa tối đa
             race.setMaxEntries(Integer.parseInt(String.valueOf(body.get("maxEntries")))); // Cập nhật giới hạn số ngựa tối đa
         }
+        if (body.get("youtubeLiveUrl") != null || body.containsKey("streamMode")) { // Kiểm tra nếu có cập nhật livestream
+            RaceMeeting mCheck = raceMeetingRepository.findById(race.getRaceMeetingId()).orElse(null);
+            if (mCheck != null) {
+                if ("INACTIVE".equalsIgnoreCase(mCheck.getStatus()) || "CANCELLED".equalsIgnoreCase(mCheck.getStatus())) {
+                    throw new IllegalStateException("Livestream is unavailable because Race Meeting '" + mCheck.getName() + "' is currently INACTIVE.");
+                }
+                Season sCheck = seasonRepository.findById(mCheck.getSeasonId()).orElse(null);
+                if (sCheck != null && ("CLOSED".equalsIgnoreCase(sCheck.getStatus()) || "INACTIVE".equalsIgnoreCase(sCheck.getStatus()) || "CANCELLED".equalsIgnoreCase(sCheck.getStatus()))) {
+                    throw new IllegalStateException("Livestream is unavailable because Season '" + sCheck.getName() + "' is currently INACTIVE.");
+                }
+            }
+        }
         if (body.get("youtubeLiveUrl") != null) { // Kiểm tra nếu có cập nhật đường dẫn phát trực tiếp
             String liveUrl = (String) body.get("youtubeLiveUrl"); // Lấy chuỗi đường dẫn URL
             validateLiveUrl(liveUrl); // Xác thực tính hợp lệ của link Livestream
@@ -498,18 +510,33 @@ public class RaceService {
     }
 
     public List<RaceDTO> getLiveRaces() {
-        // Tạo Map ánh xạ từ ID Ngày hội đua sang Tên ngày hội đua
-        Map<Integer, String> meetingMap = raceMeetingRepository.findAll().stream() // Lấy toàn bộ các Ngày hội đua
-                .collect(Collectors.toMap(RaceMeeting::getId, RaceMeeting::getName)); // Gom nhóm thành Map key: id, value: name
+        Map<Integer, RaceMeeting> meetingEntityMap = raceMeetingRepository.findAll().stream()
+                .collect(Collectors.toMap(RaceMeeting::getId, m -> m));
+        Map<Integer, String> meetingMap = meetingEntityMap.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getName()));
 
-        // Lọc danh sách các trận đua đang ở trạng thái RUNNING, STEWARDS_INQUIRY hoặc có chế độ phát WEBCAM/YouTube
-        return raceRepository.findAll().stream() // Tra cứu tất cả các trận đua
+        Map<Integer, String> seasonStatusMap = seasonRepository.findAll().stream()
+                .collect(Collectors.toMap(Season::getId, s -> s.getStatus() != null ? s.getStatus() : "ACTIVE"));
+
+        return raceRepository.findAll().stream()
+                .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus())) // Loại bỏ hoàn toàn các trận đua đã bị CANCELLED
+                .filter(r -> {
+                    RaceMeeting m = meetingEntityMap.get(r.getRaceMeetingId());
+                    if (m == null || "INACTIVE".equalsIgnoreCase(m.getStatus()) || "CANCELLED".equalsIgnoreCase(m.getStatus())) {
+                        return false;
+                    }
+                    String sStatus = seasonStatusMap.get(m.getSeasonId());
+                    if (sStatus == null || "CLOSED".equalsIgnoreCase(sStatus) || "INACTIVE".equalsIgnoreCase(sStatus) || "CANCELLED".equalsIgnoreCase(sStatus)) {
+                        return false;
+                    }
+                    return true;
+                })
                 .filter(r -> "RUNNING".equalsIgnoreCase(r.getStatus()) 
                           || "STEWARDS_INQUIRY".equalsIgnoreCase(r.getStatus()) 
                           || "WEBCAM".equalsIgnoreCase(r.getStreamMode()) 
-                          || (r.getYoutubeLiveUrl() != null && !r.getYoutubeLiveUrl().trim().isEmpty())) // Lọc trận đua đang chạy hoặc có luồng phát
-                .map(r -> raceMapper.toDTO(r, meetingMap.get(r.getRaceMeetingId()))) // Chuyển đổi sang RaceDTO kèm tên Ngày hội đua
-                .collect(Collectors.toList()); // Trả về danh sách List<RaceDTO>
+                          || (r.getYoutubeLiveUrl() != null && !r.getYoutubeLiveUrl().trim().isEmpty()))
+                .map(r -> raceMapper.toDTO(r, meetingMap.get(r.getRaceMeetingId())))
+                .collect(Collectors.toList());
     }
 
     private void validateRaceTimeMatchesMeeting(Timestamp raceTime, Integer meetingId) {
@@ -612,7 +639,7 @@ public class RaceService {
                     availableBudget = BigDecimal.ZERO;
                 }
                 throw new IllegalArgumentException(String.format(
-                        "Race purse ($%,.2f) exceeds remaining Race Meeting budget ($%,.2f). Total allocated would be $%,.2f / $%,.2f.",
+                        "Race purse (%,.0f VNĐ) exceeds remaining Race Meeting budget (%,.0f VNĐ). Total allocated would be %,.0f / %,.0f VNĐ.",
                         newPurse, availableBudget, newTotal, totalBudget));
             }
         }
@@ -662,7 +689,7 @@ public class RaceService {
             if (newClassNum < existingClassNum) {
                 if (newPurse.compareTo(existingPurse) <= 0) {
                     throw new IllegalArgumentException(String.format(
-                            "Class %d purse ($%,.2f) must be greater than Class %d purse ($%,.2f). Higher class must have higher prize money.",
+                            "Class %d purse (%,.0f VNĐ) must be greater than Class %d purse (%,.0f VNĐ). Higher class must have higher prize money.",
                             newClassNum, newPurse, existingClassNum, existingPurse));
                 }
             }
@@ -670,7 +697,7 @@ public class RaceService {
             else if (newClassNum > existingClassNum) {
                 if (newPurse.compareTo(existingPurse) >= 0) {
                     throw new IllegalArgumentException(String.format(
-                            "Class %d purse ($%,.2f) must be less than Class %d purse ($%,.2f). Lower class must have lower prize money.",
+                            "Class %d purse (%,.0f VNĐ) must be less than Class %d purse (%,.0f VNĐ). Lower class must have lower prize money.",
                             newClassNum, newPurse, existingClassNum, existingPurse));
                 }
             }
@@ -706,12 +733,12 @@ public class RaceService {
 
                 if (minPrize != null && purse.compareTo(minPrize) < 0) {
                     throw new IllegalArgumentException(String.format(
-                            "Race purse ($%,.2f) is below the minimum allowed for %s ($%,.2f). Please enter a purse between $%,.2f and $%,.2f.",
+                            "Race purse (%,.0f VNĐ) is below the minimum allowed for %s (%,.0f VNĐ). Please enter a purse between %,.0f VNĐ and %,.0f VNĐ.",
                             purse, classLevel, minPrize, minPrize, maxPrize != null ? maxPrize : minPrize));
                 }
                 if (maxPrize != null && purse.compareTo(maxPrize) > 0) {
                     throw new IllegalArgumentException(String.format(
-                            "Race purse ($%,.2f) exceeds the maximum allowed for %s ($%,.2f). Please enter a purse between $%,.2f and $%,.2f.",
+                            "Race purse (%,.0f VNĐ) exceeds the maximum allowed for %s (%,.0f VNĐ). Please enter a purse between %,.0f VNĐ and %,.0f VNĐ.",
                             purse, classLevel, maxPrize, minPrize != null ? minPrize : BigDecimal.ZERO, maxPrize));
                 }
                 break;

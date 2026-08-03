@@ -56,7 +56,7 @@ const NAV_ITEMS = [
   { index: "10", icon: "user-cog",         label: $t("User & Role Management", (localStorage.getItem('app-lang') || 'en')),    view: "users"         },
   { index: "11", icon: "flag",             label: $t("Horse Registry Directory", (localStorage.getItem('app-lang') || 'en')),  view: "horses"        },
   { index: "12", icon: "settings",         label: $t("System Configuration", (localStorage.getItem('app-lang') || 'en')),      view: "config"        },
-  { index: "13", icon: "tv",               label: $t("Live Setting", (localStorage.getItem('app-lang') || 'en')),              view: "live-settings" },
+  { index: "13", icon: "tv",               label: $t("Camera Live Setting", (localStorage.getItem('app-lang') || 'en')),       view: "live-settings" },
   { index: "14", icon: "heart-off",        label: $t("Horse Retirement", (localStorage.getItem('app-lang') || 'en')),          view: "retirement"    },
 ];
 
