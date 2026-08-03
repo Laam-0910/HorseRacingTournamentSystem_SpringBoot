@@ -283,6 +283,7 @@ public class RaceService {
         validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate()); // Kiểm tra ngày của Ngày hội đua có nằm trong khoảng thời gian mùa giải
         validateUniqueMeetingNameInSeason(dto.getName(), dto.getSeasonId(), null); // Kiểm tra không trùng tên Ngày hội đua trong cùng Season
         validateMeetingBudget(dto.getTotalBudget()); // Kiểm tra ngân sách trong khoảng 10tr - 1 tỷ
+        validateTicketPrice(dto.getTicketPrice());
 
         BigDecimal budget = dto.getTotalBudget() != null ? dto.getTotalBudget() : BigDecimal.ZERO;
 
@@ -320,6 +321,7 @@ public class RaceService {
         validateMeetingDateInSeason(dto.getSeasonId(), dto.getStartDate()); // Kiểm tra ngày Ngày hội đua phù hợp thời gian mùa giải
         validateUniqueMeetingNameInSeason(dto.getName(), dto.getSeasonId(), id); // Kiểm tra không trùng tên Ngày hội đua trong cùng Season
         validateMeetingBudget(dto.getTotalBudget()); // Kiểm tra ngân sách trong khoảng 10tr - 1 tỷ
+        validateTicketPrice(dto.getTicketPrice());
         RaceMeeting meeting = raceMeetingRepository.findById(id) // Tìm Ngày hội đua theo ID
                 .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found with id: " + id)); // Ném ngoại lệ nếu không tồn tại
 
@@ -716,6 +718,22 @@ public class RaceService {
                 }
                 break;
             }
+        }
+    }
+
+    private void validateTicketPrice(BigDecimal ticketPrice) {
+        if (ticketPrice == null) return;
+        BigDecimal minPrice = systemConfigRepository.findById("MIN_TICKET_PRICE")
+                .map(com.horseracing.backend.entity.SystemConfig::getConfigValue)
+                .map(v -> { try { return new BigDecimal(v); } catch (Exception e) { return new BigDecimal("10000.00"); } })
+                .orElse(new BigDecimal("10000.00"));
+        BigDecimal maxPrice = systemConfigRepository.findById("MAX_TICKET_PRICE")
+                .map(com.horseracing.backend.entity.SystemConfig::getConfigValue)
+                .map(v -> { try { return new BigDecimal(v); } catch (Exception e) { return new BigDecimal("5000000.00"); } })
+                .orElse(new BigDecimal("5000000.00"));
+        if (ticketPrice.compareTo(minPrice) < 0 || ticketPrice.compareTo(maxPrice) > 0) {
+            throw new IllegalArgumentException(String.format(
+                    "Ticket price (%,.0f VND) must be between %,.0f VND and %,.0f VND.", ticketPrice, minPrice, maxPrice));
         }
     }
 }

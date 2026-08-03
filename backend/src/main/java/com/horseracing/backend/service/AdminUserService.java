@@ -448,9 +448,7 @@ public class AdminUserService {
         reg.setStatus("APPROVED");
         jockeyRegRepository.save(reg);
 
-        notificationService.notifyUserOnAdminDecision("Jockey Meeting Registration", reg.getJockeyId(), id, true);
-        reg.setStatus("APPROVED"); // Cập nhật trạng thái sang APPROVED
-        jockeyRegRepository.save(reg); // Lưu vào DB
+        notificationService.notifyMeetingRegistrationDecision("Jockey", reg.getJockeyId(), reg.getRaceMeetingId(), null, true);
     }
 
     // Từ chối đăng ký Nài ngựa tham gia Ngày hội đua
@@ -483,7 +481,7 @@ public class AdminUserService {
         reg.setStatus("REJECTED");
         jockeyRegRepository.save(reg);
 
-        notificationService.notifyUserOnAdminDecision("Jockey Meeting Registration", reg.getJockeyId(), id, false);
+        notificationService.notifyMeetingRegistrationDecision("Jockey", reg.getJockeyId(), reg.getRaceMeetingId(), null, false);
     }
 
     // Phê duyệt đăng ký Chủ ngựa tham gia Ngày hội đua
@@ -510,7 +508,7 @@ public class AdminUserService {
             }
         }
 
-        notificationService.notifyUserOnAdminDecision("Owner Meeting Registration", reg.getOwnerId(), id, true);
+        notificationService.notifyMeetingRegistrationDecision("Horse Owner", reg.getOwnerId(), reg.getRaceMeetingId(), null, true);
     }
 
     // Từ chối đăng ký Chủ ngựa tham gia Ngày hội đua
@@ -555,8 +553,9 @@ public class AdminUserService {
             }
         }
 
-        notificationService.notifyUserOnAdminDecision("Owner Meeting Registration", reg.getOwnerId(), id, false);
+        notificationService.notifyMeetingRegistrationDecision("Horse Owner", reg.getOwnerId(), reg.getRaceMeetingId(), null, false);
     }
+
 
     // Lấy chi tiết danh sách người dùng (Jockey & Owner) đã đăng ký tham gia RaceMeeting kèm thông tin vé
     @Transactional(readOnly = true)
@@ -644,6 +643,10 @@ public class AdminUserService {
                         ownerRegRepository.save(ownerReg);
                     }
                 }
+
+                notificationService.notifyMeetingRegistrationDecision(
+                    "Horse", horse.getOwnerId(), reg.getRaceMeetingId(), horse.getName(), true
+                );
             }
         }
         horseRegRepository.save(reg); // Lưu bản ghi đăng ký đã cập nhật
@@ -661,7 +664,14 @@ public class AdminUserService {
             Horse horse = horseOpt.get();
             horse.setStatus("INACTIVE"); // Chuyển trạng thái con ngựa về INACTIVE
             horseRepository.save(horse);
+
+            if (horse.getOwnerId() != null) {
+                notificationService.notifyMeetingRegistrationDecision(
+                    "Horse", horse.getOwnerId(), reg.getRaceMeetingId(), horse.getName(), false
+                );
+            }
         }
+
         horseRegRepository.save(reg); // Lưu bản ghi đăng ký đã cập nhật
     }
 
@@ -672,6 +682,13 @@ public class AdminUserService {
                 .orElseThrow(() -> new IllegalArgumentException("Horse not found"));
         horse.setStatus("ACTIVE"); // Phê duyệt trạng thái hoạt động ACTIVE
         horseRepository.save(horse); // Lưu vào DB
+
+        if (horse.getOwnerId() != null) {
+            notificationService.notifyUserOnAdminDecision(
+                "New Horse Registry Declaration for '" + horse.getName() + "'",
+                horse.getOwnerId(), id, true
+            );
+        }
     }
 
     // Từ chối hồ sơ chiến mã mới đăng ký vào hệ thống
@@ -681,6 +698,13 @@ public class AdminUserService {
                 .orElseThrow(() -> new IllegalArgumentException("Horse not found"));
         horse.setStatus("REJECTED"); // Từ chối trạng thái REJECTED
         horseRepository.save(horse); // Lưu vào DB
+
+        if (horse.getOwnerId() != null) {
+            notificationService.notifyUserOnAdminDecision(
+                "New Horse Registry Declaration for '" + horse.getName() + "'",
+                horse.getOwnerId(), id, false
+            );
+        }
     }
 
     // Tự động phân bổ cổng xuất phát (Gate Assignment) ngẫu nhiên cho các thí sinh đã duyệt
@@ -944,7 +968,7 @@ public class AdminUserService {
         race.setYoutubeLiveUrl(null); // Xóa đường dẫn phát trực tiếp khi trận đua bị hủy
         raceRepository.save(race); // Lưu trận đua đã cập nhật
 
-        // Hủy toàn bộ các lượt tham gia thi đấu của trận đua này
+        // Hủy toàn bộ các lượt tham gia thi đấu của trận đua này và gửi thông báo
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
         for (RaceEntry entry : entries) {
             entry.setStatus("REJECTED"); // Đổi trạng thái lượt tham gia sang REJECTED
@@ -952,6 +976,16 @@ public class AdminUserService {
             entry.setCarriedWeight(null); // Xóa mốc cân nặng
             entry.setHandicapWeight(null); // Xóa handicap weight
             raceEntryRepository.save(entry); // Lưu lượt thi đấu
+
+            // Gửi thông báo hủy trận đua tới Chủ ngựa & Nài ngựa
+            try {
+                Horse h = horseRepository.findById(entry.getHorseId()).orElse(null);
+                String hName = h != null ? h.getName() : "Horse";
+                Integer ownerId = h != null ? h.getOwnerId() : null;
+                notificationService.notifyPartiesOnRaceCancelled(raceId, ownerId, entry.getJockeyId(), hName);
+            } catch (Exception ex) {
+                System.err.println("Failed to send race cancelled notification: " + ex.getMessage());
+            }
         }
 
         // Hoàn lại tiền Phí Thuê Nài (Hire Fee) đang tạm giữ trong Escrow về cho Chủ Ngựa

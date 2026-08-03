@@ -8,10 +8,12 @@ import com.horseracing.backend.repository.WithdrawalRequestRepository;
 import com.horseracing.backend.repository.UserRepository;
 import com.horseracing.backend.repository.WalletTransactionRepository;
 import com.horseracing.backend.service.AdminUserService;
+import com.horseracing.backend.service.NotificationService;
 import com.horseracing.backend.service.RaceService;
 import com.horseracing.backend.service.SystemConfigService;
 import com.horseracing.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,9 +42,18 @@ public class AdminUserController {
     private final UserService userService;
     private final SystemConfigService systemConfigService;
     private final RaceService raceService;
-    private final WithdrawalRequestRepository withdrawalRequestRepository;
-    private final UserRepository userRepository;
-    private final WalletTransactionRepository walletTransactionRepository;
+
+    @Autowired
+    private WithdrawalRequestRepository withdrawalRequestRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private WalletTransactionRepository walletTransactionRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     // --- Quản lý Tài khoản (User Management) ---
     

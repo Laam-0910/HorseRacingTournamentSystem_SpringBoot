@@ -85,11 +85,11 @@ public class DatabaseInitializer implements InitializingBean {
                 "IF OBJECT_ID('SeasonClassRule', 'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM SeasonClassRule WHERE season_id = 1) " +
                 "BEGIN " +
                 "    INSERT INTO SeasonClassRule (season_id, class_level, class_name, min_rating, max_rating, min_prize, max_prize) VALUES " +
-                "    (1, 'Class 1', 'Elite Championship',    95, NULL, 300000.00, 1000000.00), " +
-                "    (1, 'Class 2', 'Premium Group',         80, 94,   200000.00, 299999.00), " +
-                "    (1, 'Class 3', 'Advanced Tier',         60, 79,   100000.00, 199999.00), " +
-                "    (1, 'Class 4', 'Intermediate Level',    40, 59,   50000.00,  99999.00), " +
-                "    (1, 'Class 5', 'Entry Division',        0,  39,   20000.00,  49999.00); " +
+                "    (1, 'Class 1', 'Elite Championship',    95, NULL, 300000000.00, 1000000000.00), " +
+                "    (1, 'Class 2', 'Premium Group',         80, 94,   200000000.00, 299999000.00), " +
+                "    (1, 'Class 3', 'Advanced Tier',         60, 79,   100000000.00, 199999000.00), " +
+                "    (1, 'Class 4', 'Intermediate Level',    40, 59,   50000000.00,  99999000.00), " +
+                "    (1, 'Class 5', 'Entry Division',        0,  39,   20000000.00,  49999000.00); " +
                 "END"
             );
 
@@ -232,11 +232,45 @@ public class DatabaseInitializer implements InitializingBean {
                 "        created_at DATETIME DEFAULT GETDATE(), " +
                 "    ); "
             );
-            // 8.5 Khởi tạo cấu hình mặc định cho Phí thuê Nài ngựa trong SystemConfig
+            // 8.5 Khởi tạo cấu hình mặc định cho Phí thuê Nài ngựa và Giới hạn Vé trong SystemConfig
             jdbcTemplate.execute(
                 "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'DEFAULT_JOCKEY_HIRE_FEE') " +
                 "BEGIN " +
-                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('DEFAULT_JOCKEY_HIRE_FEE', '500.00', 'Default hire fee paid by horse owner to jockey per accepted mount ($100 - $10,000)'); " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('DEFAULT_JOCKEY_HIRE_FEE', '500000.00', 'Default hire fee paid by horse owner to jockey per accepted mount (10,000 VND - 10,000,000 VND)'); " +
+                "END " +
+                "ELSE " +
+                "BEGIN " +
+                "    UPDATE SystemConfig SET config_value = '500000.00' WHERE config_key = 'DEFAULT_JOCKEY_HIRE_FEE' AND (config_value = '500.00' OR config_value = '500'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'MIN_TICKET_PRICE') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('MIN_TICKET_PRICE', '10000.00', 'Minimum allowed ticket price for a Race Meeting in VND'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'MAX_TICKET_PRICE') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('MAX_TICKET_PRICE', '5000000.00', 'Maximum allowed ticket price for a Race Meeting in VND'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PRIZE_SHARE_1ST') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PRIZE_SHARE_1ST', '50.00', 'Percentage of purse allocated to 1st place (Must be > 2nd place and total sum = 100%)'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PRIZE_SHARE_2ND') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PRIZE_SHARE_2ND', '30.00', 'Percentage of purse allocated to 2nd place'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PRIZE_SHARE_3RD') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PRIZE_SHARE_3RD', '20.00', 'Percentage of purse allocated to 3rd place'); " +
                 "END"
             );
 

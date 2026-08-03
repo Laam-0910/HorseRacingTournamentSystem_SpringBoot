@@ -7,23 +7,25 @@ import ViewLive from "./components/ViewLive";
 import UserWalletView from "./components/UserWalletView";
 import ProfileModal from "./components/ProfileModal";
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
+import NotificationCenterView from "./components/NotificationCenterView";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
 import { formatDate, parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
 import { $t } from '@/lib/i18n';
 
-type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "wallet" | "profile";
+type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "wallet" | "profile" | "notifications";
 
 const ROLE_COLOR = "#ef4444";
 
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: $t("Overview", (localStorage.getItem('app-lang') || 'en')),   view: "home"         },
   { index: "02", icon: "tv",               label: $t("Live Watch", (localStorage.getItem('app-lang') || 'en')), view: "live"         },
-  { index: "03", icon: "info",             label: $t("Racecard", (localStorage.getItem('app-lang') || 'en')),   view: "racecard"     },
-  { index: "04", icon: "award",            label: $t("Results", (localStorage.getItem('app-lang') || 'en')),    view: "results"      },
-  { index: "05", icon: "activity",         label: $t("Horses", (localStorage.getItem('app-lang') || 'en')),     view: "horses"       },
-  { index: "06", icon: "bar-chart-3",      label: $t("Statistics", (localStorage.getItem('app-lang') || 'en')), view: "stats"        },
-  { index: "07", icon: "mail",             label: $t("AI Assistant", (localStorage.getItem('app-lang') || 'en')), view: "ai-assistant" },
-  { index: "08", icon: "credit-card",      label: $t("Wallet & Deposit", (localStorage.getItem('app-lang') || 'en')), view: "wallet" },
+  { index: "03", icon: "bell",             label: $t("Notifications", (localStorage.getItem('app-lang') || 'en')), view: "notifications"},
+  { index: "04", icon: "info",             label: $t("Racecard", (localStorage.getItem('app-lang') || 'en')),   view: "racecard"     },
+  { index: "05", icon: "award",            label: $t("Results", (localStorage.getItem('app-lang') || 'en')),    view: "results"      },
+  { index: "06", icon: "activity",         label: $t("Horses", (localStorage.getItem('app-lang') || 'en')),     view: "horses"       },
+  { index: "07", icon: "bar-chart-3",      label: $t("Statistics", (localStorage.getItem('app-lang') || 'en')), view: "stats"        },
+  { index: "08", icon: "mail",             label: $t("AI Assistant", (localStorage.getItem('app-lang') || 'en')), view: "ai-assistant" },
+  { index: "09", icon: "credit-card",      label: $t("Wallet & Deposit", (localStorage.getItem('app-lang') || 'en')), view: "wallet" },
 ];
 
 interface ChatMessage {
@@ -1290,6 +1292,9 @@ export default function Spectator() {
 
       case "wallet":
         return <UserWalletView user={user} roleColor={ROLE_COLOR} roleLabel="Spectator" />;
+
+      case "notifications":
+        return <NotificationCenterView userId={user?.id} />;
 
       case "profile":
         return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Spectator" />;
