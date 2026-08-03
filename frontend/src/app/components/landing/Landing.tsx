@@ -1218,7 +1218,15 @@ export default function Landing() {
   };
 
   const handleLiveBtnClick = () => {
-    navigate("/livestream");
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    if (user.roleId === 1) navigate("/dashboard/admin");
+    else if (user.roleId === 2) navigate("/dashboard/owner");
+    else if (user.roleId === 3) navigate("/dashboard/jockey");
+    else if (user.roleId === 5) navigate("/dashboard/referee");
+    else navigate("/dashboard/spectator");
   };
 
   const SUB_NAV: { key: SubView; label: string; icon: string }[] = [
@@ -1252,11 +1260,9 @@ export default function Landing() {
     }
   };
 
-  // Component quản lý luồng Live tại trang Landing: Tự động phát WebCam -> tự động ngắt sang YouTube -> tự động thông báo Tiếng Anh
+  // Component managing Live stream on Landing: Streams Referee Camera Angle clip in loop mode
   const LandingLiveStreamContainer = ({ r }: { r: any }) => {
     const [activeBroadcasters, setActiveBroadcasters] = useState<any[]>([]);
-    const embedUrl = (r.youtubeLiveUrl ? getYouTubeEmbedUrl(r.youtubeLiveUrl) : "") || "";
-    const hasYouTube = Boolean(r.youtubeLiveUrl && r.youtubeLiveUrl.trim());
 
     return (
       <div className="max-w-3xl mx-auto">
@@ -1264,48 +1270,51 @@ export default function Landing() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-red-500 opacity-5 rounded-bl-full pointer-events-none"></div>
           
           <div className="flex items-center justify-between mb-6 relative z-10">
-            <h4 className="font-bold text-xl text-white" style={{ fontFamily: "'Roboto Slab', serif" }}>{r.classLevel} - Race #{r.id}</h4>
+            <h4 className="font-bold text-xl text-white" style={{ fontFamily: "'Roboto Slab', serif" }}>
+              🎥 Referee Camera Angle Preview - {r.classLevel} (Race #{r.id})
+            </h4>
             <span className="flex items-center gap-2 px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-500 font-bold text-[10px] uppercase tracking-widest rounded-full animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.2)]">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-              LIVE
+              REFEREE CAM PREVIEW
             </span>
           </div>
           
           <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl border border-white/10 shadow-2xl bg-black">
-            {/* Luôn cắm WebCamLiveViewer để theo dõi tín hiệu camera */}
-            <div style={{ display: activeBroadcasters.length > 0 ? "block" : "none" }} className="absolute inset-0">
-              <WebCamLiveViewer raceId={r.id} onBroadcastersFound={(list) => setActiveBroadcasters(list)} />
-            </div>
-
-            {/* Nếu camera tắt (0 camera active) */}
+            <WebCamLiveViewer raceId={r.id} onBroadcastersFound={(list) => setActiveBroadcasters(list)} />
+            
             {activeBroadcasters.length === 0 && (
-              hasYouTube ? (
-                /* Tự động chuyển sang YouTube */
-                (r.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
-                 r.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
-                 r.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
-                 r.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
-                 r.youtubeLiveUrl.toLowerCase().includes("/stream") ||
-                 r.youtubeLiveUrl.toLowerCase().includes(".mp4?")) ? (
-                  <video
-                    src={r.youtubeLiveUrl}
-                    controls
-                    autoPlay
-                    muted
-                    className="absolute top-0 left-0 w-full h-full border-none"
-                  />
-                ) : (
-                  <iframe src={embedUrl} className="absolute top-0 left-0 w-full h-full border-none" allowFullScreen></iframe>
-                )
-              ) : (
-                /* Nếu không có YouTube luôn -> Thông báo 100% Tiếng Anh tại Landing */
-                <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#0d0d0d] p-6 text-center">
-                  <span className="text-5xl block mb-3 opacity-40 grayscale">📡</span>
-                  <p className="text-amber-400 font-semibold text-lg mb-1" style={{ fontFamily: "'Roboto Slab', serif" }}>No livestream is currently in progress.</p>
-                  <p className="text-gray-400 text-xs font-mono">The live camera stream has ended and no YouTube link is available.</p>
+              <div className="absolute inset-0 bg-[#0d0d0d]">
+                <video
+                  src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+                <div style={{ position: "absolute", top: "12px", left: "12px", background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", border: "1px solid rgba(251,191,36,0.4)", borderRadius: "20px", padding: "4px 12px", color: "#fbbf24", fontSize: "11px", fontWeight: "bold", fontFamily: "monospace" }}>
+                  ● REFEREE CAM PREVIEW (LOOPING TRAILER)
                 </div>
-              )
+                <div style={{ position: "absolute", bottom: "16px", right: "16px" }}>
+                  <button
+                    onClick={handleLiveBtnClick}
+                    className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 text-black font-bold text-xs rounded-xl shadow-lg hover:brightness-110 transition cursor-pointer"
+                  >
+                    📺 WATCH FULL LIVE DASHBOARD →
+                  </button>
+                </div>
+              </div>
             )}
+          </div>
+
+          <div className="mt-4 flex justify-between items-center text-xs font-mono text-gray-400 border-t border-white/5 pt-4">
+            <span>Angle: Referee Trackside Wide View</span>
+            <button
+              onClick={handleLiveBtnClick}
+              className="text-amber-400 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              Watch Full Stream in Dashboard →
+            </button>
           </div>
         </div>
       </div>

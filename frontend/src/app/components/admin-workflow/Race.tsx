@@ -111,6 +111,21 @@ export default function Race() {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [seasonRules, setSeasonRules] = useState<any[]>([]);
+
+  // Fetch Season Rules whenever selected Meeting changes
+  useEffect(() => {
+    if (!meetingId) {
+      setSeasonRules([]);
+      return;
+    }
+    const selectedM = meetings.find(m => m.id === parseInt(meetingId));
+    if (selectedM && (selectedM as any).seasonId) {
+      api.get<any[]>(`/races/seasons/${(selectedM as any).seasonId}/rules`)
+        .then(rules => setSeasonRules(rules))
+        .catch(() => setSeasonRules([]));
+    }
+  }, [meetingId, meetings]);
 
   // Hàm tải đồng bộ dữ liệu cuộc đua, hội đua, trọng tài và bản đồ phân công trọng tài
   const fetchData = async () => {
@@ -511,8 +526,17 @@ export default function Race() {
                   style={{ width: "100%", padding: "0.625rem", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.3)", color: "#fbbf24", borderRadius: "0.5rem", fontSize: "0.75rem", fontWeight: "bold", fontFamily: "monospace", outline: "none" }} 
                 />
                 <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginTop: "3px" }}>
-                  🥇 50%: ${(Number(purse || 0) * 0.5).toLocaleString()} | 🥈 30%: ${(Number(purse || 0) * 0.3).toLocaleString()} | 🥉 20%: ${(Number(purse || 0) * 0.2).toLocaleString()}
+                  🥇 50%: {(Number(purse || 0) * 0.5).toLocaleString()} VND | 🥈 30%: {(Number(purse || 0) * 0.3).toLocaleString()} VND | 🥉 20%: {(Number(purse || 0) * 0.2).toLocaleString()} VND
                 </div>
+                {(() => {
+                  const rule = seasonRules.find(r => r.classLevel?.toLowerCase() === classLevel.toLowerCase());
+                  if (!rule) return null;
+                  return (
+                    <div style={{ fontSize: "9px", color: "#34d399", fontFamily: "monospace", marginTop: "3px", fontWeight: "bold" }}>
+                      ℹ Season Purse Boundary for {classLevel}: {Number(rule.minPrize || 0).toLocaleString()} VND - {Number(rule.maxPrize || 0).toLocaleString()} VND
+                    </div>
+                  );
+                })()}
               </div>
 
               <div>

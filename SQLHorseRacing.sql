@@ -189,6 +189,7 @@ CREATE TABLE RaceInvitation (
     payout_status           VARCHAR(30) NULL DEFAULT 'HELD',
     hire_fee                DECIMAL(12,2) NULL DEFAULT 500.00,
     jockey_prize_percentage DECIMAL(5,2) NULL DEFAULT 20.00,
+    jockey_share_percentage DECIMAL(5,2) NULL DEFAULT 10.00,
     CONSTRAINT CK_Invite_Status CHECK (status IN ('PENDING', 'ACCEPTED', 'REJECTED', 'EXPIRED'))
 );
 GO
@@ -247,6 +248,20 @@ CREATE TABLE notifications (
     is_read     BIT NOT NULL DEFAULT 0,
     created_at  DATETIME DEFAULT GETDATE(),
     read_at     DATETIME NULL
+);
+GO
+
+CREATE TABLE LivestreamSubscription (
+    id               INT IDENTITY(1,1) PRIMARY KEY,
+    user_id          INT NOT NULL,
+    package_type     VARCHAR(30) NOT NULL, -- 'RACEMEETING' or 'SEASON'
+    season_id        INT NULL,
+    race_meeting_id  INT NULL,
+    price_paid       DECIMAL(18,2) NOT NULL,
+    discount_applied DECIMAL(18,2) NULL DEFAULT 0,
+    purchase_time    DATETIME DEFAULT GETDATE(),
+    expires_at       DATETIME NULL,
+    payment_method   VARCHAR(50) NULL DEFAULT 'VIETQR'
 );
 GO
 
@@ -344,11 +359,14 @@ INSERT INTO [User] (role_id, username, password_hash, email, status, weight, tot
 (2, 'owner_jackson',   '123456', 'jackson@owners.com',   'ACTIVE', NULL, NULL, NULL, N'James Jackson',   60000.00, 60000.00),
 (2, 'owner_miller',    '123456', 'miller@owners.com',    'ACTIVE', NULL, NULL, NULL, N'Robert Miller',    85000.00, 85000.00),
 (2, 'owner_chen',      '123456', 'chen@owners.com',      'ACTIVE', NULL, NULL, NULL, N'Chen Wei',        120000.00, 120000.00),
+(2, 'owner_david',     '123456', 'david@owners.com',     'ACTIVE', NULL, NULL, NULL, N'David Harrison',   95000.00, 95000.00),
 (3, 'jockey_ryan',     '123456', 'ryan@jockeys.com',     'ACTIVE', 58.5, 45, 20,    N'Ryan Thompson',   15000.00, 15000.00),
 (3, 'jockey_emma',     '123456', 'emma@jockeys.com',     'ACTIVE', 52.0, 20, 8,     N'Emma Clarke',      18500.00, 18500.00),
 (3, 'jockey_carlos',   '123456', 'carlos@jockeys.com',   'ACTIVE', 55.3, 80, 35,    N'Carlos Rivera',    22000.00, 22000.00),
 (3, 'jockey_naomi',    '123456', 'naomi@jockeys.com',    'ACTIVE', 53.7, 4,  1,     N'Naomi Watanabe',   12000.00, 12000.00),
 (4, 'fan_oliver',      '123456', 'oliver@fans.com',      'ACTIVE', NULL, NULL, NULL, N'Oliver Bennett',    1000.00, 1000.00),
+(4, 'fan_sophia',      '123456', 'sophia@fans.com',      'ACTIVE', NULL, NULL, NULL, N'Sophia Taylor',     5000.00, 5000.00),
+(4, 'fan_lucas',       '123456', 'lucas@fans.com',       'ACTIVE', NULL, NULL, NULL, N'Lucas Martinez',    3500.00, 3500.00),
 (5, 'referee_harris',  '123456', 'harris@referees.com',  'ACTIVE', NULL, NULL, NULL, N'Michael Harris',   10000.00, 10000.00),
 (5, 'referee_scott',   '123456', 'scott@referees.com',   'ACTIVE', NULL, NULL, NULL, N'David Scott',      10000.00, 10000.00);
 GO

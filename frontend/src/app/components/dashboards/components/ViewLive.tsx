@@ -3,6 +3,7 @@ import { api, getErrMsg } from "../../../../lib/api";
 import { getYouTubeEmbedUrl } from "../../../../lib/utils";
 import { useAuth } from "../../../../context/AuthContext";
 import WebCamLiveViewer, { BroadcasterInfo } from "../../livestream/WebCamLiveViewer";
+import VietQRPaywallModal from "../../livestream/VietQRPaywallModal";
 
 interface Race {
   id: number;
@@ -14,6 +15,7 @@ interface Race {
   youtubeLiveUrl: string;
   streamMode?: string;
   meetingName: string;
+  raceMeetingId?: number;
 }
 
 interface ViewLiveProps {
@@ -29,6 +31,10 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Paywall & Subscription state
+  const [hasAccess, setHasAccess] = useState<boolean>(true);
+  const [showPaywallModal, setShowPaywallModal] = useState<boolean>(false);
   
   // State management for Referee / Camera broadcasters and selected camera
   const [broadcasterList, setBroadcasterList] = useState<BroadcasterInfo[]>([]);
@@ -96,6 +102,25 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
     return () => clearInterval(interval);
   }, []);
 
+  // Check subscription access for spectator role
+  useEffect(() => {
+    if (!user || user.roleId !== 4 || !selectedRace) {
+      setHasAccess(true); // Admins, Referees, Owners, Jockeys have free access
+      return;
+    }
+    api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${selectedRace.raceMeetingId || ""}`)
+      .then(res => {
+        setHasAccess(res.hasAccess);
+        if (!res.hasAccess) {
+          setShowPaywallModal(true); // Auto popup VietQR payment modal on entry
+        }
+      })
+      .catch(() => {
+        setHasAccess(false);
+        setShowPaywallModal(true);
+      });
+  }, [user, selectedRace?.id, selectedRace?.raceMeetingId]);
+
   // WebSocket Connection Lifecycle
   useEffect(() => {
     if (!selectedRace) {
@@ -115,10 +140,9 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
     let isComponentMounted = true;
 
     const connect = () => {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || `http://${window.location.hostname || "localhost"}:8080/api`;
-      const hostPart = apiBase.replace(/^https?:\/\//, "").split("/")[0];
+      const hostname = window.location.hostname || "localhost";
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${hostPart}/ws/chat/${selectedRace.id}`;
+      const wsUrl = `${protocol}//${hostname}:8080/ws/chat/${selectedRace.id}`;
       
       ws = new WebSocket(wsUrl);
 
@@ -335,7 +359,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                 <video
                   className="absolute top-0 left-0 w-full h-full border-none"
                   src={selectedRace.youtubeLiveUrl}
-                  controls
+                  controls={hasAccess}
                   autoPlay
                   muted
                 />
@@ -348,7 +372,56 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                   allowFullScreen
                 ></iframe>
               )}
+
+              {/* Paywall Locked Overlay */}
+              {!hasAccess && (
+                <div style={{ position: "absolute", inset: 0, background: "rgba(10,9,8,0.88)", backdropFilter: "blur(12px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 10, padding: "1.5rem", textAlign: "center" }}>
+                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(201,162,39,0.15)", border: "1px solid rgba(201,162,39,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", marginBottom: "0.75rem" }}>
+                    🔒
+                  </div>
+                  <h3 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#f4f2ec", fontFamily: "'Roboto Slab', serif", marginBottom: "0.25rem" }}>
+                    PPV Pass Required
+                  </h3>
+                  <p style={{ fontSize: "12px", color: "#a0a0a0", maxWidth: "24rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
+                    Subscribe to a RaceMeeting Pass (15,000 VND) or Season Pass (79,000 VND) via VietQR to unlock HD live stream broadcasting.
+                  </p>
+                  <button
+                    onClick={() => setShowPaywallModal(true)}
+                    style={{
+                      padding: "0.75rem 1.5rem",
+                      background: "linear-gradient(135deg, #c9a227 0%, #a37f1c 100%)",
+                      color: "#000",
+                      fontWeight: "bold",
+                      borderRadius: "0.5rem",
+                      fontSize: "13px",
+                      cursor: "pointer",
+                      border: "none",
+                      boxShadow: "0 4px 15px rgba(201,162,39,0.3)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem"
+                    }}
+                  >
+                    <span>💳</span> Unlock Stream via VietQR
+                  </button>
+                </div>
+              )}
             </div>
+
+            {/* VietQR Paywall Modal */}
+            {showPaywallModal && user && (
+              <VietQRPaywallModal
+                userId={user.id}
+                seasonId={null}
+                raceMeetingId={selectedRace.raceMeetingId}
+                raceMeetingName={selectedRace.meetingName}
+                onSuccess={() => {
+                  setHasAccess(true);
+                  setShowPaywallModal(false);
+                }}
+                onClose={() => setShowPaywallModal(false)}
+              />
+            )}
 
             {/* Info details */}
             <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl space-y-3">

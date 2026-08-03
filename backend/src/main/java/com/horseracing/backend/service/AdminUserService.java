@@ -688,19 +688,20 @@ public class AdminUserService {
     public void autoAssignGates(Integer raceId) {
         if (raceId == null) return; // Nếu mã trận đua bị null thì kết thúc
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId); // Lấy danh sách thí sinh đăng ký
-        List<RaceEntry> approvedEntries = entries.stream()
-                .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()))
-                .toList(); // Lọc danh sách các thí sinh đã được duyệt
+        List<RaceEntry> activeEntries = entries.stream()
+                .filter(e -> !"REJECTED".equalsIgnoreCase(e.getStatus()) && !"DISQUALIFIED".equalsIgnoreCase(e.getStatus()))
+                .toList(); // Lọc tất cả thí sinh hợp lệ
 
-        int count = approvedEntries.size(); // Số lượng thí sinh đã được duyệt
+        int count = activeEntries.size(); // Số lượng thí sinh tham gia
         List<Integer> gates = new ArrayList<>(); // Khởi tạo danh sách vị trí cổng xuất phát
         for (int i = 1; i <= Math.min(count, 12); i++) {
             gates.add(i); // Đưa các số cổng từ 1 đến tối đa 12 vào danh sách
         }
         Collections.shuffle(gates); // Xáo trộn ngẫu nhiên thứ tự các cổng xuất phát
 
-        for (int i = 0; i < approvedEntries.size(); i++) {
-            RaceEntry entry = approvedEntries.get(i);
+        for (int i = 0; i < activeEntries.size(); i++) {
+            RaceEntry entry = activeEntries.get(i);
+            entry.setStatus("APPROVED"); // Tự động duyệt trạng thái hợp lệ
             if (i < gates.size()) {
                 entry.setGateNumber(gates.get(i)); // Gán cổng ngẫu nhiên cho từng thí sinh
             } else {
