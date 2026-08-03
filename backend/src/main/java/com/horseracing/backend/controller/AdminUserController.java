@@ -8,6 +8,7 @@ import com.horseracing.backend.repository.WithdrawalRequestRepository;
 import com.horseracing.backend.repository.UserRepository;
 import com.horseracing.backend.repository.WalletTransactionRepository;
 import com.horseracing.backend.service.AdminUserService;
+import com.horseracing.backend.service.NotificationService;
 import com.horseracing.backend.service.RaceService;
 import com.horseracing.backend.service.SystemConfigService;
 import com.horseracing.backend.service.UserService;
@@ -40,6 +41,7 @@ public class AdminUserController {
     private final UserService userService;
     private final SystemConfigService systemConfigService;
     private final RaceService raceService;
+    private final NotificationService notificationService;
     private final WithdrawalRequestRepository withdrawalRequestRepository;
     private final UserRepository userRepository;
     private final WalletTransactionRepository walletTransactionRepository;
