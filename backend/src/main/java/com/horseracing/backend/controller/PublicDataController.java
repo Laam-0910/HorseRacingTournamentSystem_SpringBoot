@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Controller PublicDataController - Lớp kiểm soát các endpoint cung cấp dữ liệu công khai và thống kê hiệu suất.
