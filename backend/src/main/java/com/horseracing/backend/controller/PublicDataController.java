@@ -56,7 +56,6 @@ public class PublicDataController {
     private SystemConfigRepository systemConfigRepository;
 
     @Autowired
-<<<<<<< HEAD
     private ChatMessageRepository chatMessageRepository;
 
     @Autowired
