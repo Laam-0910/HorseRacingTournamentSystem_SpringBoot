@@ -30,11 +30,15 @@ public class RefereeService {
     private final RaceMeetingRepository raceMeetingRepository;
     private final WalletTransactionRepository walletTransactionRepository;
     private final RaceInvitationRepository invitationRepository;
+    private final AdminUserService adminUserService;
 
     @Transactional
     public void preRaceCheck(Integer raceId, List<Map<String, Object>> entriesData) {
         Race race = raceRepository.findById(raceId) // Tìm kiếm thông tin trận đua theo raceId
                 .orElseThrow(() -> new IllegalArgumentException("Race not found")); // Ném ngoại lệ nếu không tìm thấy trận đua
+
+        // Auto-recalculate handicap & carried weights using latest SystemConfig parameters
+        adminUserService.autoCalculateWeights(raceId);
 
         // Validate minimum entries (excluding REJECTED and SUSPENDED_DEFICIT)
         long activeCount = entriesData.stream() // Duyệt qua danh sách dữ liệu các lượt đăng ký
