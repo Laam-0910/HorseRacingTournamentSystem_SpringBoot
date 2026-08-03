@@ -467,7 +467,7 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
                       {wr.status === 'REJECTED' && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">❌ REJECTED</span>}
                     </td>
                     <td className="px-3 py-2 text-white/40 text-[10px]">{formatDate(wr.createdAt)}</td>
-                    <td className="px-3 py-2 text-white/50 text-[10px] max-w-[120px] truncate">{wr.processedNote || '—'}</td>
+                    <td className="px-3 py-2 text-white/70 text-[10px] max-w-xs break-words" title={wr.processedNote || ''}>{wr.processedNote || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -517,7 +517,7 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
                         <td className={`px-4 py-3 font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {isPositive ? `+${amt.toLocaleString('en-US')}` : `${amt.toLocaleString('en-US')}`}
                         </td>
-                        <td className="px-4 py-3 text-white/80 max-w-sm truncate">{tx.description}</td>
+                        <td className="px-4 py-3 text-white/80 max-w-md break-words" title={tx.description}>{tx.description}</td>
                         <td className="px-4 py-3 text-white/40">{formatDate(tx.createdAt)}</td>
                       </tr>
                     );

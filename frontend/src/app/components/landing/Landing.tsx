@@ -898,28 +898,47 @@ export default function Landing() {
   });
 
   const [dashboardNotifs, setDashboardNotifs] = useState<any[]>([]);
+  const [dbNotifications, setDbNotifications] = useState<any[]>([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState<number>(0);
+
+  const fetchUserNotifications = async () => {
+    if (!user?.id) return;
+    try {
+      const res: any = await api.get(`/notifications?userId=${user.id}`);
+      if (res && res.notifications && Array.isArray(res.notifications)) {
+        setDbNotifications(res.notifications);
+        setUnreadNotifCount(res.unreadCount || 0);
+      }
+    } catch (err) {
+      console.error("Failed to fetch user notifications:", err);
+    }
+  };
 
   useEffect(() => {
-    if (user?.roleId === 2) {
-      api.get<any>("/owner/dashboard")
-        .then(data => {
-          if (data?.notifications && Array.isArray(data.notifications)) {
-            setDashboardNotifs(data.notifications);
-          }
-        })
-        .catch(() => {});
-    } else if (user?.roleId === 3) {
-      api.get<any>("/jockey/dashboard")
-        .then(data => {
-          if (data?.notifications && Array.isArray(data.notifications)) {
-            setDashboardNotifs(data.notifications);
-          }
-        })
-        .catch(() => {});
+    if (user?.id) {
+      fetchUserNotifications();
+      const interval = setInterval(fetchUserNotifications, 10000);
+      return () => clearInterval(interval);
     } else {
-      setDashboardNotifs([]);
+      setDbNotifications([]);
+      setUnreadNotifCount(0);
     }
   }, [user]);
+
+  const handleMarkNotifRead = async (notifId: number) => {
+    try {
+      await api.post(`/notifications/${notifId}/read`);
+      fetchUserNotifications();
+    } catch {}
+  };
+
+  const handleMarkAllNotifsRead = async () => {
+    if (!user?.id) return;
+    try {
+      await api.post(`/notifications/read-all?userId=${user.id}`);
+      fetchUserNotifications();
+    } catch {}
+  };
 
   const getDynamicNotifications = () => {
     const list: any[] = [];
@@ -2037,12 +2056,128 @@ export default function Landing() {
           {!isMobile && (
             <div style={{ display: "flex", alignItems: "center", gap: "1.5rem", fontSize: "0.7rem", fontFamily: "monospace", color: "#a0a0a0" }}>
               {/* Auth Controls */}
-
-
-
-              {/* Auth Controls */}
               {user ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "1rem" }}>
+                  {/* Notification Bell Dropdown Button */}
+                  <div style={{ position: "relative" }}>
+                    <button
+                      onClick={() => setShowNotifications(v => !v)}
+                      title="Notifications"
+                      style={{
+                        position: "relative",
+                        background: "rgba(255,255,255,0.05)",
+                        border: "1px solid rgba(255,255,255,0.12)",
+                        borderRadius: "50%",
+                        width: "36px",
+                        height: "36px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#f4f2ec",
+                        cursor: "pointer",
+                        fontSize: "1.1rem",
+                        transition: "all 0.2s"
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(201,162,39,0.5)"}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"}
+                    >
+                      🔔
+                      {unreadNotifCount > 0 && (
+                        <span style={{
+                          position: "absolute",
+                          top: "-3px",
+                          right: "-3px",
+                          background: "#ef4444",
+                          color: "#ffffff",
+                          borderRadius: "50%",
+                          fontSize: "10px",
+                          fontWeight: "bold",
+                          width: "18px",
+                          height: "18px",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          border: "2px solid #0e0c09"
+                        }}>
+                          {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Notification Dropdown Drawer Panel */}
+                    {showNotifications && (
+                      <>
+                        <div style={{ position: "fixed", inset: 0, zIndex: 40 }} onClick={() => setShowNotifications(false)} />
+                        <div style={{
+                          position: "absolute",
+                          right: 0,
+                          top: "135%",
+                          width: "22rem",
+                          maxHeight: "26rem",
+                          background: "#181613",
+                          border: "1px solid rgba(201,162,39,0.35)",
+                          borderRadius: "0.75rem",
+                          boxShadow: "0 20px 50px rgba(0,0,0,0.85)",
+                          zIndex: 50,
+                          display: "flex",
+                          flexDirection: "column",
+                          overflow: "hidden"
+                        }}>
+                          {/* Drawer Header */}
+                          <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(201,162,39,0.08)" }}>
+                            <span style={{ fontWeight: "bold", fontSize: "0.85rem", color: "#f4f2ec", fontFamily: "monospace" }}>
+                              🔔 Notifications ({unreadNotifCount})
+                            </span>
+                            {unreadNotifCount > 0 && (
+                              <button
+                                onClick={handleMarkAllNotifsRead}
+                                style={{ fontSize: "0.65rem", color: "#c9a227", background: "none", border: "none", cursor: "pointer", fontFamily: "monospace", textDecoration: "underline" }}
+                              >
+                                Mark all as read
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Drawer Content Body */}
+                          <div style={{ overflowY: "auto", flex: 1, padding: "0.5rem" }} className="divide-y divide-white/5 space-y-1">
+                            {dbNotifications.length === 0 ? (
+                              <div style={{ padding: "1.5rem", textAlign: "center", color: "#a0a0a0", fontSize: "0.75rem", fontStyle: "italic", fontFamily: "monospace" }}>
+                                No notifications yet.
+                              </div>
+                            ) : (
+                              dbNotifications.map((noti) => (
+                                <div
+                                  key={noti.id}
+                                  onClick={() => handleMarkNotifRead(noti.id)}
+                                  style={{
+                                    padding: "0.65rem 0.75rem",
+                                    borderRadius: "0.5rem",
+                                    background: noti.isRead ? "transparent" : "rgba(201,162,39,0.1)",
+                                    borderLeft: noti.isRead ? "3px solid transparent" : "3px solid #c9a227",
+                                    cursor: "pointer",
+                                    transition: "background 0.2s"
+                                  }}
+                                >
+                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
+                                    <p style={{ fontWeight: 700, fontSize: "0.75rem", color: noti.isRead ? "#a0a0a0" : "#f4f2ec" }}>
+                                      {noti.title || "Notification"}
+                                    </p>
+                                    <span style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>
+                                      {formatDate(noti.createdAt)}
+                                    </span>
+                                  </div>
+                                  <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.75)", marginTop: "0.2rem", lineHeight: "1.3", wordBreak: "break-word" }}>
+                                    {noti.message}
+                                  </p>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
                   {/* Avatar circle */}
                   <div style={{
                     width: 38, height: 38, borderRadius: "50%",

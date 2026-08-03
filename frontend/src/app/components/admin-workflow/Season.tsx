@@ -151,11 +151,11 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
 
 // Luật cấu hình hạng mặc định của hệ thống
 const DEFAULT_TEMPLATE_RULES = [
-  { classLevelName: "Class 1", minRating: 95, maxRating: null as number | null, minPrize: 300000, maxPrize: 1000000 },
-  { classLevelName: "Class 2", minRating: 80, maxRating: 94, minPrize: 200000, maxPrize: 299999 },
-  { classLevelName: "Class 3", minRating: 60, maxRating: 79, minPrize: 100000, maxPrize: 199999 },
-  { classLevelName: "Class 4", minRating: 40, maxRating: 59, minPrize: 50000, maxPrize: 99999 },
-  { classLevelName: "Class 5", minRating: 0,  maxRating: 39, minPrize: 20000, maxPrize: 49999 },
+  { classLevelName: "Class 1", minRating: 95, maxRating: null as number | null, minPrize: 300000000, maxPrize: 1000000000 },
+  { classLevelName: "Class 2", minRating: 80, maxRating: 94, minPrize: 200000000, maxPrize: 299999000 },
+  { classLevelName: "Class 3", minRating: 60, maxRating: 79, minPrize: 100000000, maxPrize: 199999000 },
+  { classLevelName: "Class 4", minRating: 40, maxRating: 59, minPrize: 50000000, maxPrize: 99999000 },
+  { classLevelName: "Class 5", minRating: 0,  maxRating: 39, minPrize: 20000000, maxPrize: 49999000 },
 ];
 
 /**
@@ -537,8 +537,8 @@ export default function Season() {
                         <th className="py-2 pr-4 text-left">{$t("Class Level", (localStorage.getItem('app-lang') || 'en'))}</th>
                         <th className="py-2 px-2 text-left">{$t("Min Rating", (localStorage.getItem('app-lang') || 'en'))}</th>
                         <th className="py-2 px-2 text-left">{$t("Max Rating", (localStorage.getItem('app-lang') || 'en'))}</th>
-                        <th className="py-2 px-2 text-left">{$t("Min Prize ($)", (localStorage.getItem('app-lang') || 'en'))}</th>
-                        <th className="py-2 px-2 text-left">{$t("Max Prize ($)", (localStorage.getItem('app-lang') || 'en'))}</th>
+                        <th className="py-2 px-2 text-left">{$t("Min Prize (VND)", (localStorage.getItem('app-lang') || 'en'))}</th>
+                        <th className="py-2 px-2 text-left">{$t("Max Prize (VND)", (localStorage.getItem('app-lang') || 'en'))}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
@@ -731,20 +731,6 @@ export default function Season() {
               </tbody>
             </table>
 
-            {/* Modal Edit Class Rules */}
-            {editingRulesSeason && (
-              <SeasonRulesEdit
-                seasonId={editingRulesSeason.id}
-                seasonName={editingRulesSeason.name}
-                onClose={() => setEditingRulesSeason(null)}
-                onSaved={() => {
-                  fetchSeasons();
-                  if (selectedSeasonId === editingRulesSeason.id) {
-                    fetchRules(editingRulesSeason.id);
-                  }
-                }}
-              />
-            )}
             <Pagination
               currentPage={validPage}
               totalItems={totalItems}
@@ -763,32 +749,6 @@ export default function Season() {
               <p className="text-[10px] font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
                 Class Prize Rules & Rating Limits — Season S-{selectedSeasonId}
               </p>
-              {!isEditingRules ? (
-                <button
-                  type="button"
-                  onClick={() => { setIsEditingRules(true); setRulesError(""); setRulesSuccess(""); }}
-                  className="px-3 py-1 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded text-xs font-mono font-semibold transition cursor-pointer"
-                >
-                  ✏️ Edit Class Rules
-                </button>
-              ) : (
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => { setIsEditingRules(false); setRulesError(""); setEditableRules(seasonRules.map(r => ({ ...r }))); }}
-                    className="px-3 py-1 bg-white/5 hover:bg-white/10 text-white/70 border border-white/10 rounded text-xs font-mono transition cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveRules}
-                    className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-black rounded text-xs font-mono font-bold transition cursor-pointer"
-                  >
-                    💾 Save Rules
-                  </button>
-                </div>
-              )}
             </div>
 
             {rulesError && (
@@ -805,10 +765,10 @@ export default function Season() {
                     <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
                     <p className="text-[10px] font-mono text-white/50 mt-1">Rating: {rule.minRating} – {rule.maxRating ?? "∞"}</p>
                     <p className="text-[10px] font-mono text-emerald-400 font-semibold mt-1">
-                      Min Prize: ${rule.minPrize ? rule.minPrize.toLocaleString() : '0'}
+                      Min Prize: {rule.minPrize ? rule.minPrize.toLocaleString() : '0'} VND
                     </p>
                     <p className="text-[10px] font-mono text-emerald-400/80 mt-0.5">
-                      Max Prize: ${rule.maxPrize ? rule.maxPrize.toLocaleString() : '0'}
+                      Max Prize: {rule.maxPrize ? rule.maxPrize.toLocaleString() : '0'} VND
                     </p>
                   </div>
                 ))}
@@ -819,7 +779,7 @@ export default function Season() {
                   <div key={rule.id || idx} className="rounded-lg p-3 border space-y-2" style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(201,162,39,0.25)" }}>
                     <p className="text-[11px] font-mono font-bold text-amber-400">{rule.classLevel}</p>
                     <div>
-                      <label className="text-[9px] font-mono text-white/40 block">Min Prize ($)</label>
+                      <label className="text-[9px] font-mono text-white/40 block">Min Prize (VND)</label>
                       <input
                         type="number"
                         min="0"
@@ -834,7 +794,7 @@ export default function Season() {
                       />
                     </div>
                     <div>
-                      <label className="text-[9px] font-mono text-white/40 block">Max Prize ($)</label>
+                      <label className="text-[9px] font-mono text-white/40 block">Max Prize (VND)</label>
                       <input
                         type="number"
                         min="0"
@@ -884,6 +844,21 @@ export default function Season() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal Edit Class Rules */}
+      {editingRulesSeason && (
+        <SeasonRulesEdit
+          seasonId={editingRulesSeason.id}
+          seasonName={editingRulesSeason.name}
+          onClose={() => setEditingRulesSeason(null)}
+          onSaved={() => {
+            fetchSeasons();
+            if (selectedSeasonId === editingRulesSeason.id) {
+              fetchRules(editingRulesSeason.id);
+            }
+          }}
+        />
       )}
     </div>
   );

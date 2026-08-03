@@ -64,7 +64,7 @@ export default function Users() {
     if (!depositModalUser || !depositAmount || parseFloat(depositAmount) <= 0) return;
     try {
       await api.post(`/admin/users/${depositModalUser.id}/deposit`, { amount: parseFloat(depositAmount) });
-      showSuccess(`Successfully deposited $${parseFloat(depositAmount).toLocaleString()} into ${depositModalUser.username}'s wallet.`);
+      showSuccess(`Successfully deposited ${parseFloat(depositAmount).toLocaleString()} VNĐ into ${depositModalUser.username}'s wallet.`);
       setDepositModalUser(null);
       setDepositAmount("500");
       fetchData();
@@ -556,7 +556,6 @@ export default function Users() {
                 { id: "general", label: "General Profile" },
                 { id: "role", label: "Role Details & Assets" },
                 { id: "invitations", label: "Invitations History" },
-                { id: "commissions", label: "Invitation Revenue" },
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -680,18 +679,6 @@ export default function Users() {
                       )}
                     </div>
                   )}
-
-                  {activeDetailsTab === "commissions" && (
-                    <div>
-                      <div style={{ background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.5rem", padding: "1.25rem", marginBottom: "1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                          <div style={{ fontSize: "11px", color: "#c9a227", fontFamily: "monospace", textTransform: "uppercase" }}>Total Invitation Referral Earnings</div>
-                          <div style={{ fontSize: "1.5rem", fontWeight: "bold", color: "#fbbf24" }}>${userDetailsData.totalCommission ? Number(userDetailsData.totalCommission).toLocaleString('en-US') : "0.00"}</div>
-                        </div>
-                        <div style={{ fontSize: "2rem" }}>💰</div>
-                      </div>
-                    </div>
-                  )}
                 </>
               ) : null}
             </div>
@@ -719,11 +706,11 @@ export default function Users() {
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <div style={{ background: "rgba(255,255,255,0.03)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.05)" }}>
                 <p style={{ fontSize: "11px", fontFamily: "monospace", color: "#a0a0a0" }}>Recipient: <strong style={{ color: "#f4f2ec" }}>{depositModalUser.fullName || depositModalUser.username}</strong></p>
-                <p style={{ fontSize: "11px", fontFamily: "monospace", color: "#a0a0a0", marginTop: "0.2rem" }}>Current Balance: <strong style={{ color: "#fbbf24" }}>${Number(depositModalUser.walletBalance || 0).toLocaleString('en-US')}</strong></p>
+                <p style={{ fontSize: "11px", fontFamily: "monospace", color: "#a0a0a0", marginTop: "0.2rem" }}>Current Balance: <strong style={{ color: "#fbbf24" }}>{Number(depositModalUser.walletBalance || 0).toLocaleString('en-US')} VNĐ</strong></p>
               </div>
 
               <div>
-                <label style={labelStyle}>Deposit Amount ($USD)</label>
+                <label style={labelStyle}>Deposit Amount (VND)</label>
                 <input
                   type="number"
                   min="1"

@@ -24,6 +24,7 @@ public class ProcessResultsService {
     private final WalletTransactionRepository walletTransactionRepository; // Kho lưu trữ giao dịch ví tiền
     private final RaceInvitationRepository invitationRepository; // Kho dữ liệu lời mời thi đấu
     private final NotificationService notificationService; // Dịch vụ thông báo
+    private final SystemConfigRepository systemConfigRepository; // Kho dữ liệu cấu hình hệ thống
 
     @Transactional // Đảm bảo toàn bộ quá trình cập nhật kết quả trận đua được thực thi trong một Transaction
     public void confirmResults(Integer raceId, String stewardReport, List<Map<String, Object>> entriesResults) {
@@ -43,6 +44,22 @@ public class ProcessResultsService {
 
         // Lấy giá trị tổng quỹ tiền thưởng của trận đua, nếu null mặc định là 0
         BigDecimal purse = race.getPurse() != null ? race.getPurse() : BigDecimal.ZERO;
+
+        // Read dynamic prize shares from SystemConfig (or default 50%, 30%, 20%)
+        BigDecimal share1st = systemConfigRepository.findById("PRIZE_SHARE_1ST")
+                .map(SystemConfig::getConfigValue)
+                .map(v -> { try { return new BigDecimal(v).divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_UP); } catch (Exception e) { return new BigDecimal("0.50"); } })
+                .orElse(new BigDecimal("0.50"));
+
+        BigDecimal share2nd = systemConfigRepository.findById("PRIZE_SHARE_2ND")
+                .map(SystemConfig::getConfigValue)
+                .map(v -> { try { return new BigDecimal(v).divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_UP); } catch (Exception e) { return new BigDecimal("0.30"); } })
+                .orElse(new BigDecimal("0.30"));
+
+        BigDecimal share3rd = systemConfigRepository.findById("PRIZE_SHARE_3RD")
+                .map(SystemConfig::getConfigValue)
+                .map(v -> { try { return new BigDecimal(v).divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_UP); } catch (Exception e) { return new BigDecimal("0.20"); } })
+                .orElse(new BigDecimal("0.20"));
 
         // Vòng lặp thứ nhất: Kiểm tra tính hợp lệ của thời gian hoàn thành cho tất cả các lượt thi đấu
         for (Map<String, Object> res : entriesResults) {
@@ -209,28 +226,19 @@ public class ProcessResultsService {
                     // Thiết lập thời gian hoàn thành lượt chạy
                     entry.setFinishTime(finishTime);
 
-                    // Phân chia tiền thưởng theo Class: Hạng 1 (50%), Hạng 2 (30%), Hạng 3 (20%)
+                    // Phân chia tiền thưởng theo Tỷ lệ cấu hình hệ thống (Mặc định: Hạng 1 50%, Hạng 2 30%, Hạng 3 20%)
                     BigDecimal prize = BigDecimal.ZERO;
-                    // Khởi tạo mức điều chỉnh điểm rating
                     int ratingAdj = 0;
-                    // Nếu đạt Hạng 1
                     if (finalPosition != null && finalPosition == 1) {
-                        // Thưởng 50% tổng quỹ thưởng của trận đua
-                        prize = purse.multiply(new BigDecimal("0.50")).setScale(2, java.math.RoundingMode.HALF_UP);
-                        // Cộng 6 điểm rating cho quán quân
+                        prize = purse.multiply(share1st).setScale(2, java.math.RoundingMode.HALF_UP);
                         ratingAdj = 6;
-                    } else if (finalPosition != null && finalPosition == 2) { // Nếu đạt Hạng 2
-                        // Thưởng 30% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.30")).setScale(2, java.math.RoundingMode.HALF_UP);
-                        // Cộng 3 điểm rating cho á quân
+                    } else if (finalPosition != null && finalPosition == 2) {
+                        prize = purse.multiply(share2nd).setScale(2, java.math.RoundingMode.HALF_UP);
                         ratingAdj = 3;
-                    } else if (finalPosition != null && finalPosition == 3) { // Nếu đạt Hạng 3
-                        // Thưởng 20% tổng quỹ thưởng
-                        prize = purse.multiply(new BigDecimal("0.20")).setScale(2, java.math.RoundingMode.HALF_UP);
-                        // Cộng 1 điểm rating cho hạng 3
+                    } else if (finalPosition != null && finalPosition == 3) {
+                        prize = purse.multiply(share3rd).setScale(2, java.math.RoundingMode.HALF_UP);
                         ratingAdj = 1;
-                    } else { // Các thứ hạng khác
-                        // Không thay đổi điểm rating
+                    } else {
                         ratingAdj = 0;
                     }
 
@@ -292,7 +300,7 @@ public class ProcessResultsService {
                                 .stream()
                                 .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()) && "HELD".equalsIgnoreCase(i.getPayoutStatus()))
                                 .forEach(i -> {
-                                    BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500.00");
+                                    BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500000.00");
                                     if (hireFee.compareTo(BigDecimal.ZERO) > 0) {
                                         userRepository.findById(i.getJockeyId()).ifPresent(jockey -> {
                                             BigDecimal currentBal = jockey.getWalletBalance() != null ? jockey.getWalletBalance() : BigDecimal.ZERO;

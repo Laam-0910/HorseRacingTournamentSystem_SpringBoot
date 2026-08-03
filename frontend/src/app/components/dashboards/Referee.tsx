@@ -7,9 +7,10 @@ import RefereeIncidents from "../referee-workflow/RefereeIncidents";
 import RefereeDuties from "../referee-workflow/RefereeDuties";
 import ProfileTab from "./components/ProfileTab";
 import LiveSettings from "../admin-workflow/LiveSettings";
+import NotificationCenterView from "./components/NotificationCenterView";
 
 // Định nghĩa tập hợp các Tab giao diện khả dụng trong Dashboard của Trọng tài
-type RefereeTab = "hub" | "incidents" | "duties" | "live" | "profile";
+type RefereeTab = "hub" | "incidents" | "duties" | "live" | "profile" | "notifications";
 
 // Mã màu tím đặc trưng làm giao diện chủ đạo cho trọng tài Referee
 const ROLE_COLOR = "#8b5cf6";
@@ -45,9 +46,10 @@ export default function Referee() {
   // Navigation items for Referee
   const navItems = [
     { index: "01", icon: "layout-dashboard", label: $t("Referee Dashboard"), view: "hub"       },
-    { index: "02", icon: "alert-triangle",   label: $t("Incident Log"),     view: "incidents" },
-    { index: "03", icon: "clipboard-check",  label: $t("Duty Schedule"),    view: "duties"    },
-    { index: "04", icon: "tv",               label: $t("Livestream Feed"),  view: "live"     },
+    { index: "02", icon: "bell",             label: $t("Notifications"),     view: "notifications" },
+    { index: "03", icon: "alert-triangle",   label: $t("Incident Log"),     view: "incidents" },
+    { index: "04", icon: "clipboard-check",  label: $t("Duty Schedule"),    view: "duties"    },
+    { index: "05", icon: "tv",               label: $t("Livestream Feed"),  view: "live"     },
   ];
 
   // Active label for current view
@@ -63,12 +65,13 @@ export default function Referee() {
   // Hàm chuyển đổi nội dung render dựa trên tab đang hoạt động
   const renderContent = () => {
     switch (activeTab) {
-      case "hub":       return <RefereeHub />;
-      case "incidents": return <RefereeIncidents />;
-      case "duties":    return <RefereeDuties />;
-      case "live":      return <LiveSettings />;
-      case "profile":   return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Referee" />;
-      default:          return <RefereeHub />;
+      case "hub":           return <RefereeHub />;
+      case "incidents":     return <RefereeIncidents />;
+      case "duties":        return <RefereeDuties />;
+      case "live":          return <LiveSettings />;
+      case "notifications": return <NotificationCenterView userId={user?.id} />;
+      case "profile":       return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Referee" />;
+      default:              return <RefereeHub />;
     }
   };
 

@@ -13,6 +13,7 @@ import com.horseracing.backend.service.RaceService;
 import com.horseracing.backend.service.SystemConfigService;
 import com.horseracing.backend.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

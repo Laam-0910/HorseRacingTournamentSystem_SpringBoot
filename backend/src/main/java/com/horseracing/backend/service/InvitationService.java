@@ -178,21 +178,16 @@ public class InvitationService {
         invite.setStatus("PENDING"); // Thiết lập trạng thái lời mời là PENDING
         invite.setJockeyPrizePercentage(pct);
 
-        // Đọc Phí thuê Nài ngựa mặc định từ SystemConfig (hoặc 500.00 nếu chưa cấu hình)
+        // Read default Jockey Hire Fee from SystemConfig (or 500000.00 VND default)
         BigDecimal defaultHireFee = systemConfigRepository.findById("DEFAULT_JOCKEY_HIRE_FEE")
                 .map(SystemConfig::getConfigValue)
                 .map(v -> {
-                    try { return new BigDecimal(v); } catch (Exception e) { return new BigDecimal("500.00"); }
+                    try { return new BigDecimal(v); } catch (Exception e) { return new BigDecimal("500000.00"); }
                 })
-                .orElse(new BigDecimal("500.00"));
+                .orElse(new BigDecimal("500000.00"));
         invite.setHireFee(defaultHireFee);
-
-        // Tự động tính toán hoa hồng lời mời (5% giải thưởng hoặc mặc định $500)
-        BigDecimal rate = new BigDecimal("5.00");
-        BigDecimal purse = race.getPurse() != null ? race.getPurse() : new BigDecimal("10000.00");
-        BigDecimal commission = purse.multiply(new BigDecimal("0.05"));
-        invite.setCommissionRate(rate);
-        invite.setCommissionAmount(commission);
+        invite.setCommissionRate(BigDecimal.ZERO);
+        invite.setCommissionAmount(BigDecimal.ZERO);
         invite.setPayoutStatus("PENDING");
 
         RaceInvitation savedInvite = invitationRepository.save(invite); // Lưu lời mời vào DB
@@ -241,7 +236,7 @@ public class InvitationService {
         }
 
         // Verify Owner has sufficient wallet balance for hire fee before accepting & deduct into Escrow Vault
-        BigDecimal hireFee = invite.getHireFee() != null ? invite.getHireFee() : new BigDecimal("500.00");
+        BigDecimal hireFee = invite.getHireFee() != null ? invite.getHireFee() : new BigDecimal("500000.00");
         if (ownerId != null && hireFee.compareTo(BigDecimal.ZERO) > 0) {
             User owner = userRepository.findById(ownerId)
                     .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
@@ -371,7 +366,7 @@ public class InvitationService {
                     i.setStatus("ACCEPTED");
                     
                     // Nếu đã từng refund, thực hiện khóa lại tiền cọc Escrow từ ví Owner
-                    BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500.00");
+                    BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500000.00");
                     if ("REFUNDED".equalsIgnoreCase(i.getPayoutStatus()) && hireFee.compareTo(BigDecimal.ZERO) > 0 && i.getOwnerId() != null) {
                         User owner = userRepository.findById(i.getOwnerId())
                                 .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
@@ -446,7 +441,7 @@ public class InvitationService {
         }
 
         // Nếu tiền đang được tạm giữ trong Escrow ("HELD"), hoàn tiền lại 100% vào ví của Owner
-        BigDecimal hireFee = invite.getHireFee() != null ? invite.getHireFee() : new BigDecimal("500.00");
+        BigDecimal hireFee = invite.getHireFee() != null ? invite.getHireFee() : new BigDecimal("500000.00");
         if ("HELD".equalsIgnoreCase(invite.getPayoutStatus()) && hireFee.compareTo(BigDecimal.ZERO) > 0 && invite.getOwnerId() != null) {
             Optional<User> ownerOpt = userRepository.findById(invite.getOwnerId());
             if (ownerOpt.isPresent()) {

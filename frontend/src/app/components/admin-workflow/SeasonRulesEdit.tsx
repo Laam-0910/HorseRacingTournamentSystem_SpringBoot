@@ -16,20 +16,33 @@ export default function SeasonRulesEdit({ seasonId, seasonName, onClose, onSaved
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "auto";
+    };
+  }, []);
+
+  useEffect(() => {
     setLoading(true);
     setError("");
     api.get<any[]>(`/races/seasons/${seasonId}/rules`)
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          setRules(data);
+          // Auto-upgrade legacy unscaled values (< 10,000) to VNĐ scale (* 1000)
+          const sanitized = data.map((r: any) => ({
+            ...r,
+            minPrize: r.minPrize != null && r.minPrize < 10000 ? r.minPrize * 1000 : r.minPrize,
+            maxPrize: r.maxPrize != null && r.maxPrize < 10000 ? r.maxPrize * 1000 : r.maxPrize,
+          }));
+          setRules(sanitized);
         } else {
           // Default template fallback if empty
           setRules([
-            { classLevel: "Class 1", minRating: 95, maxRating: null, minPrize: 300000, maxPrize: 1000000 },
-            { classLevel: "Class 2", minRating: 80, maxRating: 94, minPrize: 200000, maxPrize: 299999 },
-            { classLevel: "Class 3", minRating: 60, maxRating: 79, minPrize: 100000, maxPrize: 199999 },
-            { classLevel: "Class 4", minRating: 40, maxRating: 59, minPrize: 50000, maxPrize: 99999 },
-            { classLevel: "Class 5", minRating: 0,  maxRating: 39, minPrize: 20000, maxPrize: 49999 },
+            { classLevel: "Class 1", minRating: 95, maxRating: null, minPrize: 300000000, maxPrize: 1000000000 },
+            { classLevel: "Class 2", minRating: 80, maxRating: 94, minPrize: 200000000, maxPrize: 299999000 },
+            { classLevel: "Class 3", minRating: 60, maxRating: 79, minPrize: 100000000, maxPrize: 199999000 },
+            { classLevel: "Class 4", minRating: 40, maxRating: 59, minPrize: 50000000, maxPrize: 99999000 },
+            { classLevel: "Class 5", minRating: 0,  maxRating: 39, minPrize: 20000000, maxPrize: 49999000 },
           ]);
         }
       })

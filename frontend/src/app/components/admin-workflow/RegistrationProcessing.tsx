@@ -264,23 +264,28 @@ export default function RegistrationProcessing() {
                   <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</div>
                 ) : paginatedEntries.length === 0 ? (
                   <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending race entries found.", (localStorage.getItem('app-lang') || 'en'))}</div>
-                ) : paginatedEntries.map((e: any) => (
-                  <div key={e.raceEntry?.id ?? e.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                      <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>ENT-{e.raceEntry?.id ?? e.id}</span>
-                      <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button onClick={() => handleEntryReject(e.raceEntry?.id ?? e.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✕ Reject</button>
-                        <button onClick={() => handleEntryApprove(e.raceEntry?.id ?? e.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
+                ) : paginatedEntries.map((e: any) => {
+                  const entryId = e.entry?.id ?? e.raceEntry?.id ?? e.id;
+                  const jockeyName = e.jockey?.fullName || e.jockey?.username || e.entry?.jockeyName || (e.entry?.jockeyId ? `Jockey #${e.entry.jockeyId}` : "Unassigned");
+                  const meetingName = e.meeting?.name || (e.race?.raceMeetingId ? `Meeting #${e.race.raceMeetingId}` : "Race Meeting");
+                  const pred = e.predictionScore != null ? `${e.predictionScore}%` : (e.prediction != null ? `${(e.prediction * 100).toFixed(1)}%` : "N/A");
+
+                  return (
+                    <div key={entryId} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>ENT-{entryId}</span>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button onClick={() => handleEntryReject(entryId)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✕ Reject</button>
+                          <button onClick={() => handleEntryApprove(entryId)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
+                        </div>
                       </div>
+                      <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px' }}>{e.horse?.name ?? e.entry?.horseName ?? "Horse"}</div>
+                      <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Jockey: {jockeyName}</div>
+                      <div style={{ fontSize: '12px', color: '#a0a0a0', marginTop: '0.25rem' }}>{meetingName} · Race #{e.race?.id ?? e.entry?.raceId}</div>
+                      <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#c9a227', marginTop: '0.25rem' }}>🤖 AI Win Prediction: {pred}</div>
                     </div>
-                    <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px' }}>{e.horse?.name}</div>
-                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Jockey: {e.jockey?.name}</div>
-                    <div style={{ fontSize: '12px', color: '#a0a0a0', marginTop: '0.25rem' }}>{e.meeting?.name} · Race #{e.race?.id}</div>
-                    {e.prediction != null && (
-                      <div style={{ fontSize: '11px', fontFamily: 'monospace', color: '#c9a227', marginTop: '0.25rem' }}>🤖 AI Win: {(e.prediction * 100).toFixed(1)}%</div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
                 {!loading && pendingEntries.length > 0 && (
                   <Pagination
                     currentPage={pageEntries}
@@ -307,29 +312,37 @@ export default function RegistrationProcessing() {
                       <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
                     ) : paginatedEntries.length === 0 ? (
                       <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No pending race entries found.", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
-                    ) : paginatedEntries.map((e: any) => (
-                      <tr key={e.raceEntry?.id ?? e.id} className="hover:bg-white/[0.015] transition-colors">
-                        <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>ENT-{e.raceEntry?.id ?? e.id}</td>
-                        <td style={{ padding: "0.75rem 1rem" }}>
-                          <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.horse?.name}</div>
-                          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Rating: {e.horse?.currentRating}</div>
-                        </td>
-                        <td style={{ padding: "0.75rem 1rem", fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>{e.jockey?.name}</td>
-                        <td style={{ padding: "0.75rem 1rem" }}>
-                          <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.meeting?.name}</div>
-                          <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginTop: "2px" }}>Race #{e.race?.id}</div>
-                        </td>
-                        <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>
-                          {e.prediction != null ? `${(e.prediction * 100).toFixed(1)}%` : "N/A"}
-                        </td>
-                        <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
-                          <div style={{ display: "inline-flex", gap: "0.5rem" }}>
-                            <button onClick={() => handleEntryReject(e.raceEntry?.id ?? e.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
-                            <button onClick={() => handleEntryApprove(e.raceEntry?.id ?? e.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    ) : paginatedEntries.map((e: any) => {
+                      const entryId = e.entry?.id ?? e.raceEntry?.id ?? e.id;
+                      const jockeyName = e.jockey?.fullName || e.jockey?.username || e.entry?.jockeyName || (e.entry?.jockeyId ? `Jockey #${e.entry.jockeyId}` : "Unassigned");
+                      const meetingName = e.meeting?.name || (e.race?.raceMeetingId ? `Meeting #${e.race.raceMeetingId}` : "Race Meeting");
+                      const pred = e.predictionScore != null ? `${e.predictionScore}%` : (e.prediction != null ? `${(e.prediction * 100).toFixed(1)}%` : "N/A");
+
+                      return (
+                        <tr key={entryId} className="hover:bg-white/[0.015] transition-colors">
+                          <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>ENT-{entryId}</td>
+                          <td style={{ padding: "0.75rem 1rem" }}>
+                            <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.horse?.name ?? e.entry?.horseName ?? "Horse"}</div>
+                            <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Rating: {e.horse?.currentRating ?? "—"}</div>
+                          </td>
+                          <td style={{ padding: "0.75rem 1rem", fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>{jockeyName}</td>
+                          <td style={{ padding: "0.75rem 1rem" }}>
+                            <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{meetingName}</div>
+                            <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", marginTop: "2px" }}>Race #{e.race?.id ?? e.entry?.raceId}</div>
+                          </td>
+                          <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>
+                            {pred}
+                          </td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
+                            <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                              <button onClick={() => handleEntryReject(entryId)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
+                              <button onClick={() => handleEntryApprove(entryId)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+
                   </tbody>
                 </table>
                 {!loading && pendingEntries.length > 0 && (

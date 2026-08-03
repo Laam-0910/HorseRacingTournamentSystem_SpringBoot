@@ -18,10 +18,11 @@ import ProfileModal from "./components/ProfileModal";
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import ViewLive from "./components/ViewLive";
 import UserWalletView from "./components/UserWalletView";
+import NotificationCenterView from "./components/NotificationCenterView";
 import { Pagination } from "../common/Pagination";
 
 // Định nghĩa các Tab giao diện khả dụng trong Dashboard của Jockey
-type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "live" | "wallet" | "profile";
+type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "live" | "wallet" | "profile" | "notifications";
 
 // Mã màu xanh đặc trưng làm giao diện chủ đạo cho kỵ sĩ Jockey
 const ROLE_COLOR = "#3b82c4";
@@ -30,11 +31,12 @@ const ROLE_COLOR = "#3b82c4";
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: $t("Jockey Hub", (localStorage.getItem('app-lang') || 'en')),          view: "hub"         },
   { index: "02", icon: "wallet",           label: $t("Wallet & Transactions", (localStorage.getItem('app-lang') || 'en')), view: "wallet"      },
-  { index: "03", icon: "flag",             label: $t("My Mounts", (localStorage.getItem('app-lang') || 'en')),           view: "mounts"      },
-  { index: "04", icon: "calendar",         label: $t("Race Calendar", (localStorage.getItem('app-lang') || 'en')),       view: "calendar"    },
-  { index: "05", icon: "mail",             label: $t("Invitations", (localStorage.getItem('app-lang') || 'en')),         view: "invitations" },
-  { index: "06", icon: "alert-triangle",   label: $t("Rule Violations", (localStorage.getItem('app-lang') || 'en')),     view: "violations"  },
-  { index: "07", icon: "tv",               label: $t("Live Stream Arena", (localStorage.getItem('app-lang') || 'en')),   view: "live"        },
+  { index: "03", icon: "bell",             label: $t("Notifications", (localStorage.getItem('app-lang') || 'en')),     view: "notifications"},
+  { index: "04", icon: "flag",             label: $t("My Mounts", (localStorage.getItem('app-lang') || 'en')),           view: "mounts"      },
+  { index: "05", icon: "calendar",         label: $t("Race Calendar", (localStorage.getItem('app-lang') || 'en')),       view: "calendar"    },
+  { index: "06", icon: "mail",             label: $t("Invitations", (localStorage.getItem('app-lang') || 'en')),         view: "invitations" },
+  { index: "07", icon: "alert-triangle",   label: $t("Rule Violations", (localStorage.getItem('app-lang') || 'en')),     view: "violations"  },
+  { index: "08", icon: "tv",               label: $t("Live Stream Arena", (localStorage.getItem('app-lang') || 'en')),   view: "live"        },
 ];
 
 // ── Sub-views (Các Component hiển thị giao diện con) ──────────────────────────
@@ -124,7 +126,7 @@ function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; me
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
       {/* Khối Thẻ Thống kê hiệu suất & Ví Tiền */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "1rem" }}>
-        <StatsCard label="💰 Wallet Balance" value={`$${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`} color="#fbbf24" />
+        <StatsCard label="💰 Wallet Balance" value={`${walletBal.toLocaleString('en-US')} VND`} color="#fbbf24" />
         <StatsCard label={$t("Total Rides", (localStorage.getItem('app-lang') || 'en'))}     value={dashboard?.jockeyStats?.totalRaces} />
         <StatsCard label={$t("Wins (1st)", (localStorage.getItem('app-lang') || 'en'))}      value={dashboard?.jockeyStats?.totalWins}   color="#4ade80" />
         <StatsCard label={$t("Top 3 Finishes", (localStorage.getItem('app-lang') || 'en'))}  value={dashboard?.jockeyStats?.top3}   color={ROLE_COLOR} />
@@ -144,22 +146,22 @@ function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; me
           <div style={{ textAlign: "right" }}>
             <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>Available Wallet</span>
             <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fbbf24", fontFamily: "monospace" }}>
-              ${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {walletBal.toLocaleString('en-US')} VND
             </div>
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", borderTop: "1px solid rgba(251, 191, 36, 0.15)", paddingTop: "0.75rem" }}>
           <div style={{ fontSize: "0.75rem" }}>
             <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏆 Prize Money Share:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Jockey receives <strong>20%</strong> of place prize money (1st: 50%, 2nd: 30%, 3rd: 20%).</p>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Jockey receives agreed prize share percentage of place prize money won in official races.</p>
           </div>
           <div style={{ fontSize: "0.75rem" }}>
             <span style={{ color: "#fbbf24", fontWeight: 600 }}>🏇 Jockey Hire Fee:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}><strong>+$500.00</strong> credited directly to your wallet upon accepting race invitation.</p>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Mount hire fee specified per invitation is credited directly to your wallet upon accepting.</p>
           </div>
           <div style={{ fontSize: "0.75rem" }}>
-            <span style={{ color: "#fbbf24", fontWeight: 600 }}>🤝 Referral Bonus:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}><strong>5% commission</strong> credited for accepted invitation referrals.</p>
+            <span style={{ color: "#4ade80", fontWeight: 600 }}>🏇 Jockey Hire Fee:</span>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Mount hire fee (500,000 VNĐ) is credited directly to your wallet upon accepting an invitation.</p>
           </div>
         </div>
       </div>
@@ -188,7 +190,7 @@ function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; me
                       <span>📅 {formatDate(m.startDate || m.date)}</span>
                     </div>
                     <div style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", background: "rgba(52,211,153,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(52,211,153,0.2)" }}>
-                      🎟️ <strong>Race Meeting Registration Fee:</strong> <span style={{ color: "#4ade80", fontWeight: "bold" }}>FREE ($0 - Jockey)</span>
+                      🎟️ <strong>Race Meeting Registration Fee:</strong> <span style={{ color: "#4ade80", fontWeight: "bold" }}>FREE (0 VNĐ - Jockey)</span>
                     </div>
                     {/* Hiển thị nút đăng ký hoặc dòng trạng thái đã đăng ký */}
                     {isReg && regStatus === "REJECTED" ? (
@@ -648,7 +650,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
 
                   <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem" }}>
                     <span style={{ color: "#a0a0a0" }}>{$t("Prize Share Offered:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#fbbf24", fontFamily: "monospace", fontSize: "0.85rem" }}>{inv.jockeyPrizePercentage ?? 20}%</strong></span>
-                    <span style={{ color: "#a0a0a0" }}>{$t("Hire Fee:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#4ade80", fontFamily: "monospace" }}>${inv.hireFee ?? 500}</strong></span>
+                    <span style={{ color: "#a0a0a0" }}>{$t("Hire Fee:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#4ade80", fontFamily: "monospace" }}>+{Number(inv.hireFee ?? 500).toLocaleString('en-US')} VNĐ</strong></span>
                   </div>
 
                   <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.7rem" }}>
@@ -677,13 +679,8 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                 )}
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.375rem" }}>
                   <div style={{ fontSize: "0.75rem", color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", border: "1px solid rgba(251,191,36,0.2)" }}>
-                    🤝 <strong>Jockey Hire Fee:</strong> ${Number(inv.hireFee || 500).toLocaleString('en-US')}
+                    🤝 <strong>Jockey Hire Fee:</strong> {Number(inv.hireFee || 500000).toLocaleString('en-US')} VNĐ
                   </div>
-                  {inv.commissionAmount && (
-                    <div style={{ fontSize: "0.75rem", color: "#4ade80", fontFamily: "monospace", background: "rgba(16,185,129,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", border: "1px solid rgba(16,185,129,0.2)" }}>
-                      💰 <strong>Invitation Commission:</strong> ${Number(inv.commissionAmount).toLocaleString('en-US')} ({inv.commissionRate || 5}%)
-                    </div>
-                  )}
                 </div>
                 <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.25rem" }}>
                   <strong>{t.status}:</strong> {inv.status}
@@ -1193,6 +1190,7 @@ export default function Jockey() {
       case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} onViewProfile={setSelectedProfileId} />;
       case "live":        return <ViewLive />;
       case "wallet":      return <UserWalletView user={user} roleLabel="Jockey" roleColor="#3b82c4" />;
+      case "notifications": return <NotificationCenterView userId={user?.id} />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;
       default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} />;
     }

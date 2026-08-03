@@ -6,6 +6,7 @@ import com.horseracing.backend.entity.WalletTransaction;
 import com.horseracing.backend.repository.LivestreamSubscriptionRepository;
 import com.horseracing.backend.repository.UserRepository;
 import com.horseracing.backend.repository.WalletTransactionRepository;
+import com.horseracing.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,6 +27,7 @@ public class LivestreamSubscriptionController {
     private final LivestreamSubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
     private final WalletTransactionRepository walletTransactionRepository;
+    private final NotificationService notificationService;
 
     private static final BigDecimal BASE_MEETING_PRICE = new BigDecimal("15000");
     private static final BigDecimal BASE_SEASON_PRICE = new BigDecimal("79000");
@@ -190,6 +191,9 @@ public class LivestreamSubscriptionController {
             sub.setPaymentMethod(payMethod);
 
             subscriptionRepository.save(sub);
+
+            // Gửi thông báo đến Spectator đã đăng ký mua thẻ xem live thành công
+            notificationService.notifySpectatorOnTicketPurchase(userId, packageType, amount);
 
             // Log purchase transaction for Spectator user
             WalletTransaction userTx = new WalletTransaction();
