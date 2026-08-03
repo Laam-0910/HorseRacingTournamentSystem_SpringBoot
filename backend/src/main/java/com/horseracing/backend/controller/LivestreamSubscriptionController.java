@@ -1,0 +1,184 @@
+package com.horseracing.backend.controller;
+
+import com.horseracing.backend.entity.LivestreamSubscription;
+import com.horseracing.backend.entity.User;
+import com.horseracing.backend.entity.WalletTransaction;
+import com.horseracing.backend.repository.LivestreamSubscriptionRepository;
+import com.horseracing.backend.repository.UserRepository;
+import com.horseracing.backend.repository.WalletTransactionRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/public/livestream")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+public class LivestreamSubscriptionController {
+
+    private final LivestreamSubscriptionRepository subscriptionRepository;
+    private final UserRepository userRepository;
+    private final WalletTransactionRepository walletTransactionRepository;
+
+    private static final BigDecimal BASE_MEETING_PRICE = new BigDecimal("15000");
+    private static final BigDecimal BASE_SEASON_PRICE = new BigDecimal("79000");
+
+    /**
+     * Check if a spectator has active access to watch a livestream for a given meeting/season
+     */
+    @GetMapping("/access")
+    public ResponseEntity<?> checkAccess(
+            @RequestParam(required = false) Integer userId,
+            @RequestParam(required = false) Integer meetingId,
+            @RequestParam(required = false) Integer seasonId) {
+        
+        if (userId == null) {
+            return ResponseEntity.ok(Map.of("hasAccess", false, "reason", "UNAUTHENTICATED"));
+        }
+
+        List<LivestreamSubscription> userSubs = subscriptionRepository.findByUserId(userId);
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+
+        boolean hasAccess = userSubs.stream().anyMatch(sub -> {
+            if (sub.getExpiresAt() != null && sub.getExpiresAt().before(now)) {
+                return false;
+            }
+            if ("SEASON".equalsIgnoreCase(sub.getPackageType())) {
+                return seasonId == null || seasonId.equals(sub.getSeasonId());
+            }
+            if ("RACEMEETING".equalsIgnoreCase(sub.getPackageType())) {
+                return meetingId == null || meetingId.equals(sub.getRaceMeetingId());
+            }
+            return false;
+        });
+
+        return ResponseEntity.ok(Map.of("hasAccess", hasAccess));
+    }
+
+    /**
+     * Get dynamic pricing quote for a user (calculates prorated upgrades or renewal discounts)
+     */
+    @GetMapping("/quote")
+    public ResponseEntity<?> getQuote(
+            @RequestParam Integer userId,
+            @RequestParam String packageType,
+            @RequestParam(required = false) Integer seasonId,
+            @RequestParam(required = false) Integer raceMeetingId) {
+
+        List<LivestreamSubscription> userSubs = subscriptionRepository.findByUserId(userId);
+
+        if ("RACEMEETING".equalsIgnoreCase(packageType)) {
+            return ResponseEntity.ok(Map.of(
+                    "packageType", "RACEMEETING",
+                    "originalPrice", BASE_MEETING_PRICE,
+                    "finalPrice", BASE_MEETING_PRICE,
+                    "discountApplied", BigDecimal.ZERO,
+                    "description", "Pay-Per-View Pass for 1 Race Meeting (15,000 VND)"
+            ));
+        }
+
+        if ("SEASON".equalsIgnoreCase(packageType)) {
+            // Calculate total paid for meeting passes in this season
+            BigDecimal paidForMeetings = userSubs.stream()
+                    .filter(s -> "RACEMEETING".equalsIgnoreCase(s.getPackageType()) &&
+                            (seasonId == null || seasonId.equals(s.getSeasonId())))
+                    .map(LivestreamSubscription::getPricePaid)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // Check if user owned a season pass for a previous season (loyalty discount 15%)
+            boolean isRenewal = userSubs.stream()
+                    .anyMatch(s -> "SEASON".equalsIgnoreCase(s.getPackageType()) &&
+                            (seasonId == null || !seasonId.equals(s.getSeasonId())));
+
+            BigDecimal finalPrice = BASE_SEASON_PRICE;
+            BigDecimal discountApplied = BigDecimal.ZERO;
+            String note = "Full Season Pass";
+
+            if (paidForMeetings.compareTo(BigDecimal.ZERO) > 0) {
+                // Prorated upgrade: subtract paid meeting passes
+                discountApplied = paidForMeetings;
+                finalPrice = BASE_SEASON_PRICE.subtract(paidForMeetings);
+                if (finalPrice.compareTo(new BigDecimal("10000")) < 0) {
+                    finalPrice = new BigDecimal("10000"); // minimum 10k VND
+                }
+                note = "Prorated Upgrade to Season Pass (Credit applied: " + paidForMeetings + " VND)";
+            } else if (isRenewal) {
+                // Loyalty 15% discount
+                discountApplied = BASE_SEASON_PRICE.multiply(new BigDecimal("0.15")).setScale(0, RoundingMode.HALF_UP);
+                finalPrice = BASE_SEASON_PRICE.subtract(discountApplied);
+                note = "Loyalty Renewal 15% Discount Applied";
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "packageType", "SEASON",
+                    "originalPrice", BASE_SEASON_PRICE,
+                    "finalPrice", finalPrice,
+                    "discountApplied", discountApplied,
+                    "description", note
+            ));
+        }
+
+        return ResponseEntity.badRequest().body(Map.of("error", "Invalid package type"));
+    }
+
+    /**
+     * Purchase / Activate a livestream subscription package via VietQR confirmation
+     */
+    @PostMapping("/purchase")
+    public ResponseEntity<?> purchaseSubscription(@RequestBody Map<String, Object> body) {
+        try {
+            Integer userId = Integer.parseInt(body.get("userId").toString());
+            String packageType = body.get("packageType").toString();
+            Integer seasonId = body.get("seasonId") != null ? Integer.parseInt(body.get("seasonId").toString()) : null;
+            Integer raceMeetingId = body.get("raceMeetingId") != null ? Integer.parseInt(body.get("raceMeetingId").toString()) : null;
+            BigDecimal amount = new BigDecimal(body.get("amount").toString());
+
+            LivestreamSubscription sub = new LivestreamSubscription();
+            sub.setUserId(userId);
+            sub.setPackageType(packageType.toUpperCase());
+            sub.setSeasonId(seasonId);
+            sub.setRaceMeetingId(raceMeetingId);
+            sub.setPricePaid(amount);
+            sub.setPurchaseTime(new Timestamp(System.currentTimeMillis()));
+
+            // Season passes expire in 1 year (365 days), Meeting passes expire in 3 days
+            long expiryMillis = "SEASON".equalsIgnoreCase(packageType)
+                    ? System.currentTimeMillis() + 365L * 24 * 3600 * 1000
+                    : System.currentTimeMillis() + 3L * 24 * 3600 * 1000;
+            sub.setExpiresAt(new Timestamp(expiryMillis));
+            sub.setPaymentMethod("VIETQR");
+
+            subscriptionRepository.save(sub);
+
+            // Increment Admin wallet balance & log transaction
+            userRepository.findAll().stream()
+                    .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
+                    .findFirst()
+                    .ifPresent(admin -> {
+                        BigDecimal curBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
+                        admin.setWalletBalance(curBal.add(amount));
+                        userRepository.save(admin);
+
+                        WalletTransaction tx = new WalletTransaction();
+                        tx.setUserId(admin.getId());
+                        tx.setAmount(amount);
+                        tx.setTransactionType("LIVESTREAM_REVENUE");
+                        tx.setDescription("Livestream PPV subscription revenue from User #" + userId + " (" + packageType.toUpperCase() + ")");
+                        if (raceMeetingId != null) tx.setRaceMeetingId(raceMeetingId);
+                        tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                        walletTransactionRepository.save(tx);
+                    });
+
+            return ResponseEntity.ok(Map.of("success", true, "subscription", sub));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+}

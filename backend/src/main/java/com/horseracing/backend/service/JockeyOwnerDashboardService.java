@@ -195,21 +195,10 @@ public class JockeyOwnerDashboardService {
         response.put("jockeyStats", stats);
         response.put("notifications", notificationList);
 
-        // Đồng bộ số dư ví khả dụng của Kỵ sĩ theo sổ cái giao dịch: Base ($15,000.00) + Sum(WalletTransaction)
+        // Đồng bộ số dư ví khả dụng của Kỵ sĩ từ CSDL
         userRepository.findById(jockeyId).ifPresent(u -> {
-            BigDecimal baseBal = new BigDecimal("15000.00");
-            List<WalletTransaction> txs = walletTransactionRepository.findByUserIdOrderByCreatedAtDesc(jockeyId);
-            BigDecimal netTx = txs.stream()
-                    .map(WalletTransaction::getAmount)
-                    .filter(Objects::nonNull)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal calcBal = baseBal.add(netTx);
-            if (calcBal.compareTo(BigDecimal.ZERO) < 0) calcBal = BigDecimal.ZERO;
-            if (u.getWalletBalance() == null || u.getWalletBalance().compareTo(calcBal) != 0) {
-                u.setWalletBalance(calcBal);
-                userRepository.save(u);
-            }
-            response.put("walletBalance", calcBal);
+            BigDecimal curBal = u.getWalletBalance() != null ? u.getWalletBalance() : BigDecimal.ZERO;
+            response.put("walletBalance", curBal);
         });
         return response; // Trả về thông số Dashboard Nài ngựa
     }
@@ -557,21 +546,10 @@ public class JockeyOwnerDashboardService {
         response.put("bookedHorsesMap", bookedHorsesMap);
         response.put("notifications", notificationList);
 
-        // Đồng bộ số dư ví khả dụng theo sổ cái giao dịch
+        // Đồng bộ số dư ví khả dụng của Owner từ CSDL
         userRepository.findById(ownerId).ifPresent(u -> {
-            BigDecimal baseBal = new BigDecimal("60000.00");
-            List<WalletTransaction> txs = walletTransactionRepository.findByUserIdOrderByCreatedAtDesc(ownerId);
-            BigDecimal netTx = txs.stream()
-                    .map(WalletTransaction::getAmount)
-                    .filter(Objects::nonNull)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-            BigDecimal calcBal = baseBal.add(netTx);
-            if (calcBal.compareTo(BigDecimal.ZERO) < 0) calcBal = BigDecimal.ZERO;
-            if (u.getWalletBalance() == null || u.getWalletBalance().compareTo(calcBal) != 0) {
-                u.setWalletBalance(calcBal);
-                userRepository.save(u);
-            }
-            response.put("walletBalance", calcBal);
+            BigDecimal curBal = u.getWalletBalance() != null ? u.getWalletBalance() : BigDecimal.ZERO;
+            response.put("walletBalance", curBal);
         });
         return response; // Trả về kết quả tổng hợp cho Owner Dashboard
     }

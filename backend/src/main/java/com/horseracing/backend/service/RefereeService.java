@@ -12,6 +12,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.horseracing.backend.entity.WalletTransaction;
+import com.horseracing.backend.repository.WalletTransactionRepository;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +28,7 @@ public class RefereeService {
     private final ViolationMapper violationMapper;
     private final RaceRefereeRepository raceRefereeRepository;
     private final RaceMeetingRepository raceMeetingRepository;
+    private final WalletTransactionRepository walletTransactionRepository;
 
     @Transactional
     public void preRaceCheck(Integer raceId, List<Map<String, Object>> entriesData) {
@@ -147,6 +150,9 @@ public class RefereeService {
         }
 
         Violation savedViolation = violationRepository.save(violation); // Lưu bản ghi vi phạm vào cơ sở dữ liệu
+
+        // Tự động trừ tiền phạt vào ví của Kỵ sĩ/Chủ sở hữu vi phạm
+        applyFineToUserWallet(savedViolation.getJockeyId(), savedViolation.getPenalty(), savedViolation.getDescription());
 
         // Trigger STEWARDS_INQUIRY if the race is RUNNING or FINISHED
         if (dto.getRaceId() != null) { // Kiểm tra nếu có raceId
@@ -332,6 +338,9 @@ public class RefereeService {
         violation.setStatus("CONFIRMED"); // Đổi trạng thái biên bản vi phạm sang CONFIRMED
         violationRepository.save(violation); // Lưu thay đổi biên bản vi phạm vào DB
 
+        // Tự động trừ tiền phạt vào ví người vi phạm khi biên bản được xác nhận
+        applyFineToUserWallet(violation.getJockeyId(), violation.getPenalty(), violation.getDescription());
+
         // If no more PENDING violations for this race, reset race to FINISHED
         Integer raceId = violation.getRaceId(); // Lấy mã trận đua liên quan
         if (raceId != null) {
@@ -456,6 +465,41 @@ public class RefereeService {
                 entry.setStatus("RUNNING"); // Đổi trạng thái lượt thi đấu trở lại RUNNING
                 raceEntryRepository.save(entry); // Lưu lượt thi đấu vào DB
             }
+        }
+    }
+
+    private void applyFineToUserWallet(Integer userId, String penaltyStr, String description) {
+        if (userId == null || penaltyStr == null) return;
+        java.math.BigDecimal fineAmount = java.math.BigDecimal.ZERO;
+        java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+(\\.\\d+)?)").matcher(penaltyStr);
+        if (m.find()) {
+            try {
+                fineAmount = new java.math.BigDecimal(m.group(1));
+            } catch (Exception e) {}
+        }
+        if (fineAmount.compareTo(java.math.BigDecimal.ZERO) <= 0) {
+            if (penaltyStr.toUpperCase().contains("FINE") || penaltyStr.toUpperCase().contains("PHẠT")) {
+                fineAmount = new java.math.BigDecimal("50.00");
+            }
+        }
+
+        if (fineAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
+            final java.math.BigDecimal fine = fineAmount;
+            userRepository.findById(userId).ifPresent(user -> {
+                java.math.BigDecimal curBal = user.getWalletBalance() != null ? user.getWalletBalance() : java.math.BigDecimal.ZERO;
+                java.math.BigDecimal newBal = curBal.subtract(fine);
+                if (newBal.compareTo(java.math.BigDecimal.ZERO) < 0) newBal = java.math.BigDecimal.ZERO;
+                user.setWalletBalance(newBal);
+                userRepository.save(user);
+
+                WalletTransaction tx = new WalletTransaction();
+                tx.setUserId(userId);
+                tx.setAmount(fine.negate());
+                tx.setTransactionType("REFEREE_FINE");
+                tx.setDescription("Referee Violation Fine: " + (description != null ? description : "Violation") + " (" + penaltyStr + ")");
+                tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                walletTransactionRepository.save(tx);
+            });
         }
     }
 }

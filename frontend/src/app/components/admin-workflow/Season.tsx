@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
 import { Pagination } from "../common/Pagination";
+import SeasonRulesEdit from "./SeasonRulesEdit";
 
 // Cấu trúc thuộc tính truyền vào component InlineDatePicker
 interface InlineDatePickerProps {
@@ -182,8 +183,9 @@ export default function Season() {
   const [classRuleMethod, setClassRuleMethod] = useState<"AUTOMATIC" | "MANUAL">("AUTOMATIC"); // Lựa chọn phương thức phân hạng
   const [manualRules, setManualRules] = useState(DEFAULT_TEMPLATE_RULES.map(r => ({ ...r }))); // Bộ luật nhập thủ công
 
-  // --- Các State phục vụ hộp thoại Gia hạn Mùa giải ---
+  // --- Các State phục vụ hộp thoại Gia hạn Mùa giải & Edit Rules ---
   const [extendingSeason, setExtendingSeason] = useState<any | null>(null); // Lưu thông tin mùa giải đang gia hạn
+  const [editingRulesSeason, setEditingRulesSeason] = useState<any | null>(null); // Season object currently editing class rules
   const [extendStartDateInput, setExtendStartDateInput] = useState("");
   const [extendDateInput, setExtendDateInput] = useState("");
   const [extendError, setExtendError] = useState("");
@@ -637,12 +639,32 @@ export default function Season() {
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition hover:brightness-90"
                           style={{ background: "rgba(201,162,39,0.10)", color: "#c9a227", border: "1px solid rgba(201,162,39,0.30)" }}
                         >{$t("Extend", (localStorage.getItem('app-lang') || 'en'))}</button>
+                        <button
+                          onClick={e => { e.stopPropagation(); setEditingRulesSeason(season); }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition hover:brightness-90"
+                          style={{ background: "rgba(52,211,153,0.10)", color: "#34d399", border: "1px solid rgba(52,211,153,0.30)" }}
+                        >⚙ Edit Rules</button>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+
+            {/* Modal Edit Class Rules */}
+            {editingRulesSeason && (
+              <SeasonRulesEdit
+                seasonId={editingRulesSeason.id}
+                seasonName={editingRulesSeason.name}
+                onClose={() => setEditingRulesSeason(null)}
+                onSaved={() => {
+                  fetchSeasons();
+                  if (selectedSeasonId === editingRulesSeason.id) {
+                    fetchRules(editingRulesSeason.id);
+                  }
+                }}
+              />
+            )}
             <Pagination
               currentPage={validPage}
               totalItems={totalItems}

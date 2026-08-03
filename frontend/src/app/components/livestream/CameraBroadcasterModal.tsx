@@ -141,13 +141,11 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
       // Xóa interval cũ nếu có để tránh trùng lặp phát frame
       if (intervalRef.current) clearInterval(intervalRef.current);
 
-      // Cấu hình kích thước & tần số khung hình thích ứng thiết bị:
-      // Mobile: 800x450, ~13 FPS, 0.65 JPEG Quality (Hardware Encoded)
-      // Laptop: 720x405, ~15 FPS, 0.60 JPEG Quality (Low-Latency CPU Profile)
-      const targetWidth = isMobileDevice ? 800 : 720;
-      const targetHeight = isMobileDevice ? 450 : 405;
-      const intervalMs = isMobileDevice ? 75 : 65; // Laptop slice interval siêu tốc 65ms
-      const jpegQuality = isMobileDevice ? 0.65 : 0.60;
+      // Ultra Low-Latency Stream Profile (Optimized for <1s Delay on Mobile & Laptops)
+      const targetWidth = 640;
+      const targetHeight = 360;
+      const intervalMs = 120; // ~8 FPS eliminates buffer queue & TCP latency
+      const jpegQuality = 0.45;
 
       intervalRef.current = setInterval(() => {
         if (videoRef.current && ctx && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
