@@ -153,6 +153,129 @@ public class NotificationService {
         }
     }
 
+    /**
+     * Send notification to Jockey when Horse Owner sends a new race invitation.
+     */
+    public void notifyJockeyOnNewInvitation(RaceInvitation invite) {
+        try {
+            if (invite.getJockeyId() == null) return;
+            Optional<Horse> horseOpt = horseRepository.findById(invite.getHorseId());
+            Optional<User> jockeyOpt = userRepository.findById(invite.getJockeyId());
+
+            if (horseOpt.isEmpty() || jockeyOpt.isEmpty()) return;
+
+            Horse horse = horseOpt.get();
+            Optional<User> ownerOpt = userRepository.findById(horse.getOwnerId());
+            String ownerName = ownerOpt.map(u -> u.getFullName() != null && !u.getFullName().isBlank() ? u.getFullName() : u.getUsername()).orElse("Horse Owner");
+            String raceMeetingDetails = getRaceMeetingDetails(invite.getRaceId());
+            String hireFeeStr = invite.getHireFee() != null ? String.format("%,.0f VND", invite.getHireFee()) : "Standard Fee";
+
+            String message = String.format(
+                "Horse Owner %s has invited you to ride Horse '%s' in %s (Hire Fee: %s).",
+                ownerName, horse.getName(), raceMeetingDetails, hireFeeStr
+            );
+
+            saveNotification(invite.getJockeyId(), "New Race Invitation", message);
+        } catch (Exception e) {
+            System.err.println("Failed to dispatch new invitation notification to jockey: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Send notification to Owner and Jockey when Official Race Results are confirmed by Steward.
+     */
+    public void notifyPartiesOnOfficialResults(Integer raceId, Integer ownerId, Integer jockeyId, String horseName, int finishPosition, java.math.BigDecimal ownerPrize, java.math.BigDecimal jockeyTotalEarned) {
+        try {
+            String raceMeetingDetails = getRaceMeetingDetails(raceId);
+
+            if (ownerId != null) {
+                String prizeStr = ownerPrize != null && ownerPrize.compareTo(java.math.BigDecimal.ZERO) > 0
+                        ? String.format(" Earned Prize: %,.0f VND.", ownerPrize)
+                        : "";
+                String message = String.format(
+                    "Official Results for Horse '%s' in %s: Finished Position #%d.%s",
+                    horseName, raceMeetingDetails, finishPosition, prizeStr
+                );
+                saveNotification(ownerId, "Official Race Results", message);
+            }
+
+            if (jockeyId != null) {
+                String earnedStr = jockeyTotalEarned != null && jockeyTotalEarned.compareTo(java.math.BigDecimal.ZERO) > 0
+                        ? String.format(" Total Earned (Prize + Hire Fee): %,.0f VND.", jockeyTotalEarned)
+                        : "";
+                String message = String.format(
+                    "Official Results for %s with Horse '%s': Finished Position #%d.%s",
+                    raceMeetingDetails, horseName, finishPosition, earnedStr
+                );
+                saveNotification(jockeyId, "Official Race Results", message);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to dispatch official results notification: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Send notification to User when Admin approves (PROCESSED) or rejects a Cash-Out Withdrawal Request.
+     */
+    public void notifyUserOnWithdrawalStatus(Integer userId, java.math.BigDecimal amount, boolean processed, String note) {
+        try {
+            if (userId == null) return;
+            String amountStr = String.format("%,.0f VND", amount);
+            String title = processed ? "Withdrawal Processed" : "Withdrawal Rejected";
+            String message = processed
+                ? String.format("Your cash-out withdrawal request of %s has been APPROVED & processed by Admin. Money transferred to your bank account.", amountStr)
+                : String.format("Your cash-out withdrawal request of %s was REJECTED by Admin. Reason: %s", amountStr, note != null && !note.isBlank() ? note : "Admin decision.");
+
+            saveNotification(userId, title, message);
+        } catch (Exception e) {
+            System.err.println("Failed to dispatch withdrawal status notification: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Send notification to Spectator when purchasing a HD Livestream Ticket / Season Pass.
+     */
+    public void notifySpectatorOnTicketPurchase(Integer userId, String packageType, java.math.BigDecimal pricePaid) {
+        try {
+            if (userId == null) return;
+            String priceStr = pricePaid != null ? String.format("%,.0f VND", pricePaid) : "";
+            String message = String.format(
+                "Payment successful! You have unlocked HD Livestream %s Pass (%s). Enjoy watching live races!",
+                packageType.toUpperCase(), priceStr
+            );
+            saveNotification(userId, "Livestream Pass Activated", message);
+        } catch (Exception e) {
+            System.err.println("Failed to dispatch ticket purchase notification: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Send notification to Owner and Jockey when a Race is CANCELLED by Admin.
+     */
+    public void notifyPartiesOnRaceCancelled(Integer raceId, Integer ownerId, Integer jockeyId, String horseName) {
+        try {
+            String raceMeetingDetails = getRaceMeetingDetails(raceId);
+
+            if (ownerId != null) {
+                String message = String.format(
+                    "Race %s for Horse '%s' has been CANCELLED by Admin. Any escrowed hire fees have been refunded to your wallet.",
+                    raceMeetingDetails, horseName
+                );
+                saveNotification(ownerId, "Race Cancelled", message);
+            }
+
+            if (jockeyId != null) {
+                String message = String.format(
+                    "Race %s for Horse '%s' has been CANCELLED by Admin.",
+                    raceMeetingDetails, horseName
+                );
+                saveNotification(jockeyId, "Race Cancelled", message);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to dispatch race cancelled notification: " + e.getMessage());
+        }
+    }
+
     public List<Notification> getUserNotifications(Integer userId) {
         return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId);
     }

@@ -479,6 +479,8 @@ export default function RefereeHub() {
   const [violRunner, setViolRunner] = useState("");
   const [violDesc, setViolDesc] = useState("");
   const [violPenalty, setViolPenalty] = useState("");
+  const [fineTarget, setFineTarget] = useState<"jockey" | "owner">("jockey");
+  const [fineAmount, setFineAmount] = useState<string>("500");
   const [isSevereDq, setIsSevereDq] = useState(false);
 
   // Notification Toast State (replacing raw window.alert popups)
@@ -701,8 +703,15 @@ export default function RefereeHub() {
     e.preventDefault();
     if (!selectedRace || !violRunner) return;
     const [horseId, jockeyId] = violRunner.split("-").map(Number);
-    // Nếu chọn loại trực tiếp ngay lập tức, gán hình phạt là DISQUALIFIED
-    const finalPenalty = isSevereDq ? `DISQUALIFIED` : violPenalty;
+
+    let finalPenalty = isSevereDq ? "DISQUALIFIED (DQ)" : "OFFICIAL_WARNING";
+    if (fineAmount && Number(fineAmount) > 0) {
+      const formattedFine = (fineTarget === "owner" ? "Owner Fine $" : "Fine $") + Number(fineAmount).toFixed(2);
+      finalPenalty = isSevereDq ? `${formattedFine} + DISQUALIFIED (DQ)` : formattedFine;
+    } else if (violPenalty.trim()) {
+      finalPenalty = isSevereDq ? `${violPenalty.trim()} + DISQUALIFIED (DQ)` : violPenalty.trim();
+    }
+
     try {
       await api.post("/referee/violations", {
         raceId: selectedRace.id,
@@ -713,10 +722,12 @@ export default function RefereeHub() {
         penalty: finalPenalty,
         status: "PENDING",
       });
-      alert(isSevereDq ? "Violation logged and competitor DISQUALIFIED immediately!" : "Violation logged successfully.");
+      notify(isSevereDq ? "Violation logged and runner DISQUALIFIED immediately!" : "Violation logged & fine assessed successfully.", "success");
       setShowViolModal(false);
       setViolDesc("");
       setViolPenalty("");
+      setFineAmount("500");
+      setFineTarget("jockey");
       setIsSevereDq(false);
       // Reload live supervise data
       handleStartSupervise(selectedRace);
@@ -1621,32 +1632,52 @@ export default function RefereeHub() {
               <form onSubmit={handleSaveViolation} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Runner (Horse / Jockey)</label>
-                  <select value={violRunner} onChange={e => setViolRunner(e.target.value)} required style={{ width: "100%", padding: "0.5rem", outline: "none" }}>
+                  <select value={violRunner} onChange={e => setViolRunner(e.target.value)} required style={{ width: "100%", padding: "0.5rem", outline: "none", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: "0.375rem" }}>
                     <option value="">-- Select Runner --</option>
                     {sortedEntries.map(item => (
                       <option key={item.entry.id} value={`${item.horse.id}-${item.jockey.id}`}>
-                        {item.horse?.name} ({item.jockey?.username})
+                        {item.horse?.name} (Jockey: {item.jockey?.username})
                       </option>
                     ))}
                   </select>
                 </div>
+
                 <div>
                   <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Violation Description</label>
-                  <textarea value={violDesc} onChange={e => setViolDesc(e.target.value)} required placeholder="Describe what happened..." style={{ width: "100%", padding: "0.5rem", height: 80, resize: "none", outline: "none" }} />
+                  <textarea value={violDesc} onChange={e => setViolDesc(e.target.value)} required placeholder="Describe violation incident (e.g. Careless riding, interference, whip misuse)..." style={{ width: "100%", padding: "0.5rem", height: 75, resize: "none", outline: "none", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", borderRadius: "0.375rem" }} />
                 </div>
-                <div>
-                  <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Assessed Penalty</label>
-                  <input type="text" value={isSevereDq ? "DISQUALIFIED (DQ)" : violPenalty} disabled={isSevereDq} onChange={e => setViolPenalty(e.target.value)} required={!isSevereDq} placeholder="e.g. Fine $500..." style={{ width: "100%", padding: "0.5rem", outline: "none", opacity: isSevereDq ? 0.5 : 1 }} />
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                  <div>
+                    <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Fine Target Role</label>
+                    <select value={fineTarget} onChange={e => setFineTarget(e.target.value as any)} style={{ width: "100%", padding: "0.5rem", outline: "none", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#fbbf24", fontWeight: "bold", borderRadius: "0.375rem" }}>
+                      <option value="jockey">🏇 Jockey Wallet</option>
+                      <option value="owner">🏢 Horse Owner Wallet</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Fine Amount ($)</label>
+                    <input type="number" min="0" step="50" value={fineAmount} onChange={e => setFineAmount(e.target.value)} placeholder="500" style={{ width: "100%", padding: "0.5rem", outline: "none", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#4ade80", fontWeight: "bold", borderRadius: "0.375rem", fontFamily: "monospace" }} />
+                  </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+
+                {violRunner && fineAmount && Number(fineAmount) > 0 && (
+                  <div style={{ fontSize: "10px", color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.08)", padding: "0.5rem 0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(251,191,36,0.2)" }}>
+                    💳 <strong>Financial Deduction Preview:</strong><br />
+                    ${Number(fineAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })} will be automatically deducted from {fineTarget === "jockey" ? `Jockey ${sortedEntries.find(i => `${i.horse.id}-${i.jockey.id}` === violRunner)?.jockey?.username}'s wallet` : `Horse Owner's wallet`}.
+                  </div>
+                )}
+
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", background: "rgba(239,68,68,0.08)", padding: "0.5rem", borderRadius: "0.375rem", border: "1px solid rgba(239,68,68,0.2)" }}>
                   <input type="checkbox" id="severeDq" checked={isSevereDq} onChange={e => setIsSevereDq(e.target.checked)} style={{ width: 16, height: 16, cursor: "pointer" }} />
-                  <label htmlFor="severeDq" style={{ fontSize: "11px", color: "#f87171", fontWeight: "bold", cursor: "pointer" }}>
-                    Severe rules violation (Disqualify runner from the race immediately)
+                  <label htmlFor="severeDq" style={{ fontSize: "11px", color: "#ef4444", fontWeight: "bold", cursor: "pointer" }}>
+                    Severe violation (Disqualify runner DQ immediately)
                   </label>
                 </div>
-                <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
+
+                <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "0.25rem" }}>
                   <button type="button" onClick={() => { setShowViolModal(false); setIsSevereDq(false); }} style={{ padding: "0.5rem 1rem", background: "#1f1f22", border: "1px solid #2d2d30", color: "#a0a0a0", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>Cancel</button>
-                  <button type="submit" style={{ padding: "0.5rem 1rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>Save Violation</button>
+                  <button type="submit" style={{ padding: "0.5rem 1rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>⚖️ Confirm & Assess Fine</button>
                 </div>
               </form>
             </div>

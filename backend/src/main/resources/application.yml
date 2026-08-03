@@ -24,3 +24,9 @@ ai:
   service:
     url: ${AI_SERVICE_URL:http://localhost:5000}
     start-local: ${AI_SERVICE_START_LOCAL:true}
+
+payment:
+  bank:
+    mode: ${PAYMENT_BANK_MODE:MOCK} # MOCK = Dev/Testing Auto-Simulation | LIVE = Strict Production Real Bank Webhook
+    webhook-secret: ${SEPAY_WEBHOOK_SECRET:ANTIGRAVITY_BANK_WEBHOOK_SECRET_2026}
+

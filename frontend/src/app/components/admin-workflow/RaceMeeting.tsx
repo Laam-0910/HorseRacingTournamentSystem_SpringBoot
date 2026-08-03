@@ -218,14 +218,14 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
 
       // Check duplicate Race Meeting name in the same Season (client-side pre-check)
       const targetSeasonId = parseInt(seasonId);
-      const normalizedNewName = name.trim().toLowerCase();
-      const duplicateMeeting = meetings.find(m =>
-        m.seasonId === targetSeasonId &&
-        m.name?.trim().toLowerCase() === normalizedNewName &&
+      const normName = name.trim().replace(/\s+/g, " ").toLowerCase();
+      const isDuplicate = meetings.some(m =>
         (!editingMeeting || m.id !== editingMeeting.id) &&
-        m.status !== 'CANCELLED'
+        m.name && m.name.trim().replace(/\s+/g, " ").toLowerCase() === normName &&
+        (m.status !== "CANCELLED") &&
+        (!targetSeasonId || !m.seasonId || m.seasonId === targetSeasonId)
       );
-      if (duplicateMeeting) {
+      if (isDuplicate) {
         setError(`A Race Meeting named "${name.trim()}" already exists in this Season. Meeting names must be unique within a Season.`);
         return;
       }
@@ -234,34 +234,39 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
         name,
         startDate: formatDateTime(date),
         venue,
-        seasonId: targetSeasonId,
+        seasonId: targetSeasonId || selectedSeason,
         totalBudget: budgetValue,
         ticketPrice: ticketValue,
       };
 
-      if (editingMeeting) {
-        await api.post(`/races/meetings/${editingMeeting.id}`, payload);
-        setSuccess("Race meeting updated successfully.");
-        setEditingMeeting(null);
-      } else {
-        await api.post("/races/meetings", payload);
-        setSuccess("Race meeting created successfully.");
-      }
+      try {
+        if (editingMeeting) {
+          await api.post(`/races/meetings/${editingMeeting.id}`, payload);
+          setSuccess("Race meeting updated successfully.");
+          setEditingMeeting(null);
+        } else {
+          await api.post("/races/meetings", payload);
+          setSuccess("Race meeting created successfully.");
+        }
 
-      // Làm sạch Form và tải lại danh sách mới
-      setName("");
-      setDate("");
-      setVenue("");
-      setTotalBudget("");
-      setTicketPrice("");
-      fetchData();
-    } catch (err: any) {
-      if (err.message?.includes("DUPLICATE_MEETING_NAME")) {
-        const mName = err.message.split("DUPLICATE_MEETING_NAME:")[1] || name;
-        setError(`A Race Meeting named "${mName.trim()}" already exists in this Season. Meeting names must be unique within a Season.`);
-      } else {
-        setError(getErrMsg(err, "Failed to save meeting."));
+        // Làm sạch Form và tải lại danh sách mới
+        setName("");
+        setDate("");
+        setVenue("");
+        setTotalBudget("");
+        setTicketPrice("");
+        fetchData();
+      } catch (err: any) {
+        if (err.message?.includes("DUPLICATE_MEETING_NAME") || err.message?.toLowerCase().includes("already exists")) {
+          const rawMsg = err.message || "";
+          const mName = rawMsg.includes("DUPLICATE_MEETING_NAME:") ? rawMsg.split("DUPLICATE_MEETING_NAME:")[1] : name;
+          setError(`A Race Meeting named "${mName.trim()}" already exists in this Season. Meeting names must be unique within a Season.`);
+        } else {
+          setError(getErrMsg(err, "Failed to save meeting."));
+        }
       }
+    } catch (err: any) {
+      setError(getErrMsg(err, "Failed to process meeting data."));
     }
   };
 

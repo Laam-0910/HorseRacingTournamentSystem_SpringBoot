@@ -549,15 +549,18 @@ public class RaceService {
     }
 
     private void validateUniqueMeetingNameInSeason(String name, Integer seasonId, Integer excludeMeetingId) {
-        if (name == null || name.trim().isEmpty() || seasonId == null) return;
-        String normalizedName = name.trim().toLowerCase();
+        if (name == null || name.trim().isEmpty()) return;
+        String normalizedName = name.trim().replaceAll("\\s+", " ").toLowerCase();
         List<RaceMeeting> existingMeetings = raceMeetingRepository.findAll();
         for (RaceMeeting m : existingMeetings) {
             if (excludeMeetingId != null && m.getId().equals(excludeMeetingId)) continue;
             if ("CANCELLED".equalsIgnoreCase(m.getStatus())) continue;
-            if (seasonId.equals(m.getSeasonId()) && m.getName() != null) {
-                if (m.getName().trim().toLowerCase().equals(normalizedName)) {
-                    throw new IllegalArgumentException("DUPLICATE_MEETING_NAME:" + name.trim());
+            if (m.getName() != null) {
+                String existingNorm = m.getName().trim().replaceAll("\\s+", " ").toLowerCase();
+                if (existingNorm.equals(normalizedName)) {
+                    if (seasonId == null || m.getSeasonId() == null || seasonId.equals(m.getSeasonId())) {
+                        throw new IllegalArgumentException("DUPLICATE_MEETING_NAME: A Race Meeting named '" + name.trim() + "' already exists. Meeting names must be unique within a Season.");
+                    }
                 }
             }
         }

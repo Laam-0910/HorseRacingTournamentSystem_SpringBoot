@@ -90,7 +90,7 @@ public class LivestreamSubscriptionController {
                     "originalPrice", BASE_MEETING_PRICE,
                     "finalPrice", BASE_MEETING_PRICE,
                     "discountApplied", BigDecimal.ZERO,
-                    "description", "Pay-Per-View Pass for 1 Race Meeting (15,000 VND)"
+                    "description", "Pay-Per-View Pass for 1 Race Meeting (15,000 VNĐ)"
             ));
         }
 
@@ -109,16 +109,16 @@ public class LivestreamSubscriptionController {
 
             BigDecimal finalPrice = BASE_SEASON_PRICE;
             BigDecimal discountApplied = BigDecimal.ZERO;
-            String note = "Full Season Pass";
+            String note = "Full Season Pass (79,000 VNĐ)";
 
             if (paidForMeetings.compareTo(BigDecimal.ZERO) > 0) {
                 // Prorated upgrade: subtract paid meeting passes
                 discountApplied = paidForMeetings;
                 finalPrice = BASE_SEASON_PRICE.subtract(paidForMeetings);
                 if (finalPrice.compareTo(new BigDecimal("10000")) < 0) {
-                    finalPrice = new BigDecimal("10000"); // minimum 10k VND
+                    finalPrice = new BigDecimal("10000"); // minimum 10,000 VNĐ
                 }
-                note = "Prorated Upgrade to Season Pass (Credit applied: " + paidForMeetings + " VND)";
+                note = "Prorated Upgrade to Season Pass (Credit applied: " + String.format("%,.0f", paidForMeetings) + " VNĐ)";
             } else if (isRenewal) {
                 // Loyalty 15% discount
                 discountApplied = BASE_SEASON_PRICE.multiply(new BigDecimal("0.15")).setScale(0, RoundingMode.HALF_UP);
@@ -139,7 +139,7 @@ public class LivestreamSubscriptionController {
     }
 
     /**
-     * Purchase / Activate a livestream subscription package via VietQR confirmation
+     * Purchase / Activate a livestream subscription package via VietQR or Wallet balance
      */
     @PostMapping("/purchase")
     public ResponseEntity<?> purchaseSubscription(@RequestBody Map<String, Object> body) {
@@ -149,6 +149,30 @@ public class LivestreamSubscriptionController {
             Integer seasonId = body.get("seasonId") != null ? Integer.parseInt(body.get("seasonId").toString()) : null;
             Integer raceMeetingId = body.get("raceMeetingId") != null ? Integer.parseInt(body.get("raceMeetingId").toString()) : null;
             BigDecimal amount = new BigDecimal(body.get("amount").toString());
+            String payMethod = body.get("paymentMethod") != null ? body.get("paymentMethod").toString() : "VIETQR";
+
+            User spectator = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
+            // If paying via wallet, verify sufficient balance & deduct
+            if ("WALLET".equalsIgnoreCase(payMethod)) {
+                BigDecimal bal = spectator.getWalletBalance() != null ? spectator.getWalletBalance() : BigDecimal.ZERO;
+                if (bal.compareTo(amount) < 0) {
+                    return ResponseEntity.badRequest().body(Map.of("success", false, "error", String.format("Insufficient wallet balance ($%,.2f available, $%,.2f required). Please top up your wallet via VietQR.", bal, amount)));
+                }
+                spectator.setWalletBalance(bal.subtract(amount));
+                spectator.setBalance(bal.subtract(amount));
+                userRepository.save(spectator);
+
+                WalletTransaction txUser = new WalletTransaction();
+                txUser.setUserId(spectator.getId());
+                txUser.setAmount(amount.negate());
+                txUser.setTransactionType("LIVESTREAM_TICKET_PAYMENT");
+                txUser.setDescription("HD Livestream " + packageType.toUpperCase() + " Pass payment");
+                if (raceMeetingId != null) txUser.setRaceMeetingId(raceMeetingId);
+                txUser.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                walletTransactionRepository.save(txUser);
+            }
 
             LivestreamSubscription sub = new LivestreamSubscription();
             sub.setUserId(userId);
@@ -161,9 +185,9 @@ public class LivestreamSubscriptionController {
             // Season passes expire in 1 year (365 days), Meeting passes expire in 3 days
             long expiryMillis = "SEASON".equalsIgnoreCase(packageType)
                     ? System.currentTimeMillis() + 365L * 24 * 3600 * 1000
-                    : System.currentTimeMillis() + 3L * 24 * 3600 * 1000;
+            : System.currentTimeMillis() + 3L * 24 * 3600 * 1000;
             sub.setExpiresAt(new Timestamp(expiryMillis));
-            sub.setPaymentMethod("VIETQR");
+            sub.setPaymentMethod(payMethod);
 
             subscriptionRepository.save(sub);
 
@@ -199,7 +223,7 @@ public class LivestreamSubscriptionController {
                         walletTransactionRepository.save(tx);
                     });
 
-            return ResponseEntity.ok(Map.of("success", true, "subscription", sub));
+            return ResponseEntity.ok(Map.of("success", true, "subscription", sub, "newWalletBalance", spectator.getWalletBalance()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }

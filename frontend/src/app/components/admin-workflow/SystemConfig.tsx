@@ -10,6 +10,11 @@ const CONFIG_DESC_MAP: Record<string, string> = {
   MAX_OVERWEIGHT_ALLOWED: "Maximum overweight allowed for jockeys (kg)",
   SEX_ALLOWANCE: "Sex weight allowance for female horses (Fillies/Mares) (kg)",
   DEFAULT_JOCKEY_HIRE_FEE: "Default hire fee paid by horse owner to jockey per accepted mount ($100 - $10,000)",
+  MIN_WITHDRAWAL_AMOUNT: "Minimum withdrawal amount for users (Horse Owner / Jockey / Spectator) in VNĐ (e.g. 50000)",
+  PAYMENT_GATEWAY_MODE: "Payment Gateway Mode: 'MOCK' (Virtual Money Demo) or 'LIVE' (Real Money Gateway)",
+  PAYOS_CLIENT_ID: "PayOS Payment Gateway Client ID (for LIVE real money mode)",
+  PAYOS_API_KEY: "PayOS Payment Gateway API Key (for LIVE real money mode)",
+  PAYOS_CHECKSUM_KEY: "PayOS Payment Gateway Checksum Key (for LIVE real money mode)",
 };
 
 /**
@@ -108,7 +113,17 @@ export default function SystemConfig() {
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
             {/* Lặp qua danh sách cấu hình kéo về để sinh trường nhập liệu tương ứng */}
             <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              {configs.map((c) => (
+              {configs
+                .filter((c) => {
+                  const isLiveMode = (formValues["PAYMENT_GATEWAY_MODE"] || "MOCK").toUpperCase() === "LIVE";
+                  const isPayOSKey = ["PAYOS_CLIENT_ID", "PAYOS_API_KEY", "PAYOS_CHECKSUM_KEY"].includes(c.configKey);
+                  // Chỉ hiển thị 3 dòng PayOS API Key khi PAYMENT_GATEWAY_MODE được chọn là LIVE
+                  if (isPayOSKey && !isLiveMode) {
+                    return false;
+                  }
+                  return true;
+                })
+                .map((c) => (
                 <div key={c.configKey} className="grid grid-cols-1 md:grid-cols-12 md:items-center" style={{ gap: "0.5rem", padding: "0.75rem", background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.03)", borderRadius: "0.5rem" }}>
                   {/* Cột trái: Nhãn cấu hình + Mô tả ý nghĩa tham số */}
                   <div className="md:col-span-5" style={{ display: "flex", alignItems: "start", gap: "0.5rem" }}>
@@ -124,15 +139,42 @@ export default function SystemConfig() {
                       </p>
                     </div>
                   </div>
-                  {/* Cột phải: Ô input nhập giá trị cấu hình */}
+                  {/* Cột phải: Ô input hoặc Dropdown nhập giá trị cấu hình */}
                   <div className="md:col-span-7">
-                    <input
-                      type="text"
-                      required
-                      value={formValues[c.configKey] || ""}
-                      onChange={(e) => handleChange(c.configKey, e.target.value)}
-                      style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }}
-                    />
+                    {c.configKey === "PAYMENT_GATEWAY_MODE" ? (
+                      <select
+                        value={formValues[c.configKey] || "MOCK"}
+                        onChange={(e) => handleChange(c.configKey, e.target.value)}
+                        style={{
+                          width: "100%",
+                          padding: "0.625rem",
+                          background: "rgba(255,255,255,0.06)",
+                          border: "1px solid rgba(201,162,39,0.3)",
+                          borderRadius: "0.5rem",
+                          color: formValues[c.configKey] === "LIVE" ? "#34d399" : "#c9a227",
+                          fontSize: "0.75rem",
+                          fontFamily: "monospace",
+                          fontWeight: "bold",
+                          outline: "none",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <option value="MOCK" style={{ background: "#151310", color: "#f4f2ec" }}>
+                          MOCK — Virtual Money Demo Mode (No Real Money API Required)
+                        </option>
+                        <option value="LIVE" style={{ background: "#151310", color: "#34d399" }}>
+                          LIVE — Real Money Payment Gateway (PayOS VietQR Live Bank Account)
+                        </option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        required
+                        value={formValues[c.configKey] || ""}
+                        onChange={(e) => handleChange(c.configKey, e.target.value)}
+                        style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }}
+                      />
+                    )}
                   </div>
                 </div>
               ))}

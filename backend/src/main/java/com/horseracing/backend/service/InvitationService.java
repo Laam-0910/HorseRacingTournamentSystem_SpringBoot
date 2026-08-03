@@ -169,13 +169,9 @@ public class InvitationService {
                 .orElseThrow(() -> new IllegalArgumentException("HORSE_NOT_APPROVED"));
 
         // 7. Kiểm tra phần trăm ăn chia giải thưởng cho Nài ngựa (20% - 50%)
-        BigDecimal pct = dto.getJockeyPrizePercentage();
-        if (pct == null) {
-            pct = new BigDecimal("20.00");
-        } else {
-            if (pct.compareTo(new BigDecimal("20.00")) < 0 || pct.compareTo(new BigDecimal("50.00")) > 0) {
-                throw new IllegalArgumentException("Jockey prize share percentage must be between 20% and 50%.");
-            }
+        BigDecimal pct = dto.getJockeyPrizePercentage() != null ? dto.getJockeyPrizePercentage() : new BigDecimal("20.00");
+        if (pct.compareTo(new BigDecimal("20.00")) < 0 || pct.compareTo(new BigDecimal("50.00")) > 0) {
+            throw new IllegalArgumentException("Jockey prize share percentage must be between 20% and 50%.");
         }
 
         RaceInvitation invite = invitationMapper.toEntity(dto); // Ánh xạ DTO sang Entity
@@ -200,6 +196,9 @@ public class InvitationService {
         invite.setPayoutStatus("PENDING");
 
         RaceInvitation savedInvite = invitationRepository.save(invite); // Lưu lời mời vào DB
+
+        // Gửi thông báo tới nài ngựa (Jockey) về lời mời mới
+        notificationService.notifyJockeyOnNewInvitation(savedInvite);
 
         Map<Integer, User> userEntityMap = userRepository.findAll().stream()
                 .collect(Collectors.toMap(User::getId, u -> u, (u1, u2) -> u1));
@@ -295,7 +294,8 @@ public class InvitationService {
         entry.setPrizeMoney(BigDecimal.ZERO);
         entry.setRatingAdjustment(0);
         entry.setHandicapWeight(BigDecimal.ZERO);
-        entry.setJockeyPrizePercentage(invite.getJockeyPrizePercentage() != null ? invite.getJockeyPrizePercentage() : new BigDecimal("20.00"));
+        BigDecimal finalPct = invite.getJockeyPrizePercentage() != null ? invite.getJockeyPrizePercentage() : new BigDecimal("20.00");
+        entry.setJockeyPrizePercentage(finalPct);
 
         raceEntryRepository.save(entry);
 
