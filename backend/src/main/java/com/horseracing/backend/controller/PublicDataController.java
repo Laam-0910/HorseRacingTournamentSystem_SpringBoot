@@ -48,6 +48,12 @@ public class PublicDataController {
     @Autowired
     private WalletTransactionRepository walletTransactionRepository;
 
+    @Autowired
+    private WithdrawalRequestRepository withdrawalRequestRepository;
+
+    @Autowired
+    private SystemConfigRepository systemConfigRepository;
+
     // Lấy danh sách Trọng tài được phân công theo từng cuộc đua (Công khai)
     @GetMapping("/races/referees")
     public ResponseEntity<?> getPublicRaceReferees() {
@@ -527,6 +533,11 @@ public class PublicDataController {
         }
     }
 
+    /**
+     * POST /api/public/wallet/withdraw
+     * Tạo yêu cầu rút tiền (PENDING) thay vì trừ ví ngay lập tức.
+     * Tiền chỉ bị trừ khi Admin mark as PROCESSED sau khi đã chuyển khoản thật.
+     */
     @PostMapping("/wallet/withdraw")
     public ResponseEntity<?> selfWithdrawWallet(@RequestBody Map<String, Object> request) {
         try {
@@ -540,37 +551,66 @@ public class PublicDataController {
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
                 return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Withdrawal amount must be greater than 0"));
             }
+
+            // Read minimum withdrawal from SystemConfig (default 50,000 VNĐ)
+            BigDecimal minWithdrawal = systemConfigRepository.findById("MIN_WITHDRAWAL_AMOUNT")
+                    .map(c -> { try { return new BigDecimal(c.getConfigValue()); } catch (Exception ex) { return new BigDecimal("50000"); } })
+                    .orElse(new BigDecimal("50000"));
+            if (amount.compareTo(minWithdrawal) < 0) {
+                return ResponseEntity.badRequest().body(Map.of("success", false,
+                        "error", "Minimum withdrawal amount is " + String.format("%,.0f", minWithdrawal) + " VND"));
+            }
+
+            // Kiểm tra số dư hiện tại có đủ không
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
             BigDecimal current = user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO;
             if (amount.compareTo(current) > 0) {
-                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Insufficient funds in wallet. Available: $" + current));
+                return ResponseEntity.badRequest().body(Map.of("success", false,
+                        "error", "Insufficient funds in wallet. Available: " + String.format("%,.0f", current) + " VND"));
             }
-            user.setWalletBalance(current.subtract(amount));
-            user.setBalance(current.subtract(amount));
-            userRepository.save(user);
 
+            // Lấy bank details từ request body
             String bankName = request.get("bankName") != null ? request.get("bankName").toString() : "Bank Transfer";
             String accountNumber = request.get("accountNumber") != null ? request.get("accountNumber").toString() : "";
             String accountHolder = request.get("accountHolder") != null ? request.get("accountHolder").toString() : "";
             String notes = request.get("notes") != null ? request.get("notes").toString() : "";
 
-            StringBuilder desc = new StringBuilder("Cash-out payout via ").append(bankName);
-            if (!accountNumber.isBlank()) desc.append(" | Acc: ").append(accountNumber);
-            if (!accountHolder.isBlank()) desc.append(" (Holder: ").append(accountHolder.toUpperCase()).append(")");
-            if (!notes.isBlank()) desc.append(" | Note: ").append(notes);
+            // Tạo WithdrawalRequest với status = PENDING (KHÔNG trừ ví ngay)
+            WithdrawalRequest wr = new WithdrawalRequest();
+            wr.setUserId(userId);
+            wr.setAmount(amount);
+            wr.setBankName(bankName);
+            wr.setAccountNumber(accountNumber);
+            wr.setAccountHolder(accountHolder.toUpperCase());
+            wr.setNotes(notes);
+            wr.setStatus("PENDING");
+            wr.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            withdrawalRequestRepository.save(wr);
 
-            WalletTransaction tx = new WalletTransaction();
-            tx.setUserId(userId);
-            tx.setAmount(amount.negate());
-            tx.setTransactionType("WITHDRAWAL");
-            tx.setDescription(desc.toString());
-            tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-            walletTransactionRepository.save(tx);
-
-            return ResponseEntity.ok(Map.of("success", true, "message", "Withdrawal successful", "newBalance", user.getWalletBalance()));
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Withdrawal request submitted successfully. Your request is pending admin review. Estimated processing time: 1-3 business days.",
+                "requestId", wr.getId(),
+                "status", "PENDING",
+                "currentBalance", current
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    /**
+     * GET /api/public/wallet/withdrawal-requests/{userId}
+     * Lấy danh sách tất cả withdrawal requests của một user (để hiển thị trên UI).
+     */
+    @GetMapping("/wallet/withdrawal-requests/{userId}")
+    public ResponseEntity<?> getUserWithdrawalRequests(@PathVariable Integer userId) {
+        try {
+            List<WithdrawalRequest> requests = withdrawalRequestRepository.findByUserIdOrderByCreatedAtDesc(userId);
+            return ResponseEntity.ok(requests);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 }

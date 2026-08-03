@@ -23,6 +23,7 @@ public class ProcessResultsService {
     private final AdminUserService adminUserService; // Dịch vụ quản lý thanh toán & ví Admin
     private final WalletTransactionRepository walletTransactionRepository; // Kho lưu trữ giao dịch ví tiền
     private final RaceInvitationRepository invitationRepository; // Kho dữ liệu lời mời thi đấu
+    private final NotificationService notificationService; // Dịch vụ thông báo
 
     @Transactional // Đảm bảo toàn bộ quá trình cập nhật kết quả trận đua được thực thi trong một Transaction
     public void confirmResults(Integer raceId, String stewardReport, List<Map<String, Object>> entriesResults) {
@@ -353,6 +354,27 @@ public class ProcessResultsService {
 
                 // Lưu bản ghi lượt thi đấu đã hoàn tất cập nhật vào CSDL
                 raceEntryRepository.save(entry);
+
+                // Gửi thông báo tới Chủ ngựa và Nài ngựa về kết quả chính thức & tiền thưởng
+                try {
+                    Horse h = horseRepository.findById(entry.getHorseId()).orElse(null);
+                    String hName = h != null ? h.getName() : "Horse";
+                    Integer ownerId = h != null ? h.getOwnerId() : null;
+                    BigDecimal ownerPrize = entry.getPrizeMoney() != null ? entry.getPrizeMoney() : BigDecimal.ZERO;
+                    if (entry.getJockeyPrizePercentage() != null) {
+                        BigDecimal jockeyRatio = entry.getJockeyPrizePercentage().divide(new BigDecimal("100"), 4, java.math.RoundingMode.HALF_UP);
+                        BigDecimal jockeyShare = ownerPrize.multiply(jockeyRatio).setScale(2, java.math.RoundingMode.HALF_UP);
+                        ownerPrize = ownerPrize.subtract(jockeyShare);
+                    }
+                    BigDecimal jockeyTotalEarned = entry.getPrizeMoney() != null ? entry.getPrizeMoney().subtract(ownerPrize) : BigDecimal.ZERO;
+                    int fPos = entry.getFinalPosition() != null ? entry.getFinalPosition() : 0;
+
+                    notificationService.notifyPartiesOnOfficialResults(
+                        race.getId(), ownerId, entry.getJockeyId(), hName, fPos, ownerPrize, jockeyTotalEarned
+                    );
+                } catch (Exception ex) {
+                    System.err.println("Failed to send official result notification: " + ex.getMessage());
+                }
             }
         }
 

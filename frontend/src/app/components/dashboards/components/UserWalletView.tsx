@@ -25,6 +25,8 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const [gatewayMode, setGatewayMode] = useState<"MOCK" | "LIVE">("MOCK");
+  const [minWithdrawal, setMinWithdrawal] = useState(50000);
+  const [withdrawalRequests, setWithdrawalRequests] = useState<any[]>([]);
 
   const [amountInput, setAmountInput] = useState("");
   const [bankName, setBankName] = useState("Vietcombank");
@@ -41,8 +43,12 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
     setLoading(true);
     setError("");
     try {
-      const res = await api.get<any>(`/admin/users/${user.id}/wallet`);
-      setWalletData(res);
+      const [walletRes, wrRes] = await Promise.all([
+        api.get<any>(`/admin/users/${user.id}/wallet`),
+        api.get<any[]>(`/public/wallet/withdrawal-requests/${user.id}`).catch(() => [])
+      ]);
+      setWalletData(walletRes);
+      setWithdrawalRequests(Array.isArray(wrRes) ? wrRes : []);
     } catch (err: any) {
       setError(getErrMsg(err, "Failed to load wallet data."));
     } finally {
@@ -56,6 +62,10 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
       const modeConfig = configs.find(c => c.configKey === "PAYMENT_GATEWAY_MODE");
       if (modeConfig && modeConfig.configValue?.toUpperCase() === "LIVE") {
         setGatewayMode("LIVE");
+      }
+      const minWd = configs.find(c => c.configKey === "MIN_WITHDRAWAL_AMOUNT");
+      if (minWd && !isNaN(Number(minWd.configValue))) {
+        setMinWithdrawal(Number(minWd.configValue));
       }
     }).catch(() => {});
   }, [user?.id]);
@@ -101,6 +111,14 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
       setError("Please enter a valid amount greater than 0.");
       return;
     }
+    if (val < minWithdrawal) {
+      setError(`Minimum withdrawal amount is ${minWithdrawal.toLocaleString('en-US')} VNĐ.`);
+      return;
+    }
+    if (val > walletBalance) {
+      setError(`Insufficient funds. Your available balance is ${walletBalance.toLocaleString('en-US')} VNĐ.`);
+      return;
+    }
     if (!accountNumber.trim() || !accountHolder.trim()) {
       setError("Bank Account Number and Account Holder Name are required for cash-out payout.");
       return;
@@ -119,16 +137,15 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
         notes: notes.trim()
       });
       if (res.success) {
-        setSuccessMsg(`Successfully requested cash-out withdrawal of $${val.toLocaleString('en-US', { minimumFractionDigits: 2 })} to ${bankName} (${accountNumber.trim()})!`);
+        setSuccessMsg(`Withdrawal request for ${val.toLocaleString('en-US')} VND submitted to ${bankName} (${accountNumber.trim()}). Estimated processing: 1-3 business days.`);
         setShowWithdrawModal(false);
         setAmountInput("");
         setAccountNumber("");
         setAccountHolder("");
         setNotes("");
-        if (user) user.walletBalance = res.newBalance;
         fetchWalletData();
       } else {
-        setError(res.error || "Withdrawal failed.");
+        setError(res.error || "Withdrawal request failed.");
       }
     } catch (err: any) {
       setError(getErrMsg(err, "Failed to withdraw cash."));
@@ -196,7 +213,7 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
           <div className="bg-black/40 border border-white/10 p-5 rounded-2xl min-w-[16rem] text-right">
             <span className="text-xs text-white/50 block uppercase">Current Available Balance</span>
             <div className="text-3xl font-extrabold mt-1" style={{ color: roleColor }}>
-              ${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {walletBalance.toLocaleString('en-US')} <span className="text-lg font-bold">VNĐ</span>
             </div>
             <span className="text-[10px] text-emerald-400 font-bold block mt-1">
               ✓ Account Active
@@ -246,7 +263,7 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
 
             <form onSubmit={handleDepositPrompt} className="space-y-4">
               <div>
-                <label className="text-xs text-white/60 block mb-1.5 uppercase font-bold">Deposit Amount ($USD)</label>
+                <label className="text-xs text-white/60 block mb-1.5 uppercase font-bold">Deposit Amount (VNĐ)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -260,8 +277,8 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-[11px] text-white/60 space-y-1">
-                <div className="flex justify-between"><span>Current Balance:</span> <span className="text-white font-bold">${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
-                <div className="flex justify-between"><span>Estimated Balance:</span> <span className="text-emerald-400 font-bold">${(walletBalance + (Number(amountInput) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
+                <div className="flex justify-between"><span>Current Balance:</span> <span className="text-white font-bold">{walletBalance.toLocaleString('en-US')} VNĐ</span></div>
+                <div className="flex justify-between"><span>Estimated Balance:</span> <span className="text-emerald-400 font-bold">{(walletBalance + (Number(amountInput) || 0)).toLocaleString('en-US')} VNĐ</span></div>
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -297,18 +314,19 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
 
             <form onSubmit={handleWithdraw} className="space-y-3">
               <div>
-                <label className="text-xs text-white/60 block mb-1 uppercase font-bold">Withdrawal Amount ($USD)</label>
+                <label className="text-xs text-white/60 block mb-1 uppercase font-bold">Withdrawal Amount (VNĐ)</label>
                 <input
                   type="number"
-                  step="0.01"
-                  min="1"
+                  step="1"
+                  min={minWithdrawal}
                   max={walletBalance}
                   required
                   value={amountInput}
                   onChange={(e) => setAmountInput(e.target.value)}
-                  placeholder={`Max: $${walletBalance.toLocaleString()}`}
+                  placeholder={`Min: ${minWithdrawal.toLocaleString('en-US')} VNĐ`}
                   className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-mono"
                 />
+                <p className="text-[10px] text-amber-400/80 font-mono mt-1">⚠ Minimum withdrawal: {minWithdrawal.toLocaleString('en-US')} VNĐ &nbsp;|&nbsp; Available: {walletBalance.toLocaleString('en-US')} VNĐ</p>
               </div>
 
               <div>
@@ -367,8 +385,8 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-[10px] text-white/60 space-y-0.5">
-                <div className="flex justify-between"><span>Available Balance:</span> <span className="text-white font-bold">${walletBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
-                <div className="flex justify-between"><span>Remaining Balance:</span> <span className="text-amber-400 font-bold">${Math.max(0, walletBalance - (Number(amountInput) || 0)).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span></div>
+                <div className="flex justify-between"><span>Available Balance:</span> <span className="text-white font-bold">{walletBalance.toLocaleString('en-US')} VNĐ</span></div>
+                <div className="flex justify-between"><span>Remaining Balance:</span> <span className="text-amber-400 font-bold">{Math.max(0, walletBalance - (Number(amountInput) || 0)).toLocaleString('en-US')} VNĐ</span></div>
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -406,6 +424,58 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
         loading={submitting}
       />
 
+      {/* Withdrawal Requests History */}
+      {withdrawalRequests.length > 0 && (
+        <div className="bg-white/[0.015] border border-amber-500/20 rounded-2xl p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-base font-bold text-white font-serif flex items-center gap-2">
+              <span>💸 Withdrawal Requests</span>
+            </h3>
+            <span className="text-xs font-mono text-white/50 bg-white/5 px-3 py-1 rounded-full border border-white/10">
+              {withdrawalRequests.filter(r => r.status === 'PENDING').length} Pending
+            </span>
+          </div>
+
+          <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-[10px] font-mono text-amber-300/80">
+            ℹ️ Withdrawal requests are manually processed by admin within 1-3 business days. Your wallet balance will be deducted once the transfer is confirmed.
+          </div>
+
+          <div className="border border-white/10 rounded-xl overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs font-mono">
+              <thead>
+                <tr className="bg-black/60 text-white/50 border-b border-white/10 uppercase text-[10px]">
+                  <th className="px-3 py-2">ID</th>
+                  <th className="px-3 py-2">Amount (VND)</th>
+                  <th className="px-3 py-2">Bank / Account</th>
+                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2">Submitted</th>
+                  <th className="px-3 py-2">Note</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {withdrawalRequests.map((wr: any) => (
+                  <tr key={wr.id} className="hover:bg-white/[0.02] transition">
+                    <td className="px-3 py-2 text-white/40">#WR-{wr.id}</td>
+                    <td className="px-3 py-2 font-bold text-amber-300">{Number(wr.amount).toLocaleString('en-US')} VND</td>
+                    <td className="px-3 py-2 text-white/70">
+                      {wr.bankName}<br/>
+                      <span className="text-white/40 text-[10px]">{wr.accountNumber} · {wr.accountHolder}</span>
+                    </td>
+                    <td className="px-3 py-2">
+                      {wr.status === 'PENDING' && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">⏳ PENDING</span>}
+                      {wr.status === 'PROCESSED' && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">✅ PROCESSED</span>}
+                      {wr.status === 'REJECTED' && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">❌ REJECTED</span>}
+                    </td>
+                    <td className="px-3 py-2 text-white/40 text-[10px]">{formatDate(wr.createdAt)}</td>
+                    <td className="px-3 py-2 text-white/50 text-[10px] max-w-[120px] truncate">{wr.processedNote || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Transaction History Log Table */}
       <div className="bg-white/[0.015] border border-white/10 rounded-2xl p-5 space-y-4">
         <div className="flex items-center justify-between">
@@ -431,7 +501,7 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
                   <tr className="bg-black/60 text-white/50 border-b border-white/10 uppercase text-[10px]">
                     <th className="px-4 py-3">TX ID</th>
                     <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Amount ($USD)</th>
+                    <th className="px-4 py-3">Amount (VNĐ)</th>
                     <th className="px-4 py-3">Description</th>
                     <th className="px-4 py-3">Date & Time</th>
                   </tr>

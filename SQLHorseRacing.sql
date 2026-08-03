@@ -449,5 +449,61 @@ INSERT INTO Violation (race_id, horse_id, jockey_id, referee_id, description, pe
 (1, 3, 7, 10, 'Jockey cut off lane at turn 2', 'Fine $500');
 GO
 
+-- ============================================================
+-- WithdrawalRequest Table
+-- Lưu trữ yêu cầu rút tiền của người dùng (Owner/Jockey/Spectator)
+-- Flow: User tạo request (PENDING) → Admin duyệt + chuyển khoản thật
+--       → Admin mark PROCESSED → Hệ thống trừ ví user
+-- Tiền KHÔNG bị trừ ngay khi tạo request, chỉ trừ khi PROCESSED
+-- ============================================================
+CREATE TABLE WithdrawalRequest (
+    id               INT IDENTITY(1,1) PRIMARY KEY,
+    user_id          INT NOT NULL,
+    amount           DECIMAL(18,2) NOT NULL,
+    bank_name        NVARCHAR(100) NULL,
+    account_number   NVARCHAR(50)  NULL,
+    account_holder   NVARCHAR(200) NULL,
+    notes            NVARCHAR(500) NULL,
+
+    -- PENDING   = Chờ Admin xử lý (ví chưa bị trừ)
+    -- PROCESSED = Admin đã chuyển khoản + hệ thống đã trừ ví
+    -- REJECTED  = Admin từ chối (ví không bị trừ)
+    status           VARCHAR(20)   NOT NULL DEFAULT 'PENDING',
+
+    processed_note   NVARCHAR(500) NULL,    -- Ghi chú của Admin khi duyệt/từ chối
+    processed_by     INT           NULL,    -- ID Admin đã xử lý
+    created_at       DATETIME      NOT NULL DEFAULT GETDATE(),
+    processed_at     DATETIME      NULL
+);
+GO
+
+-- Index tăng tốc query theo status và user_id
+CREATE INDEX IX_WithdrawalRequest_Status   ON WithdrawalRequest(status);
+CREATE INDEX IX_WithdrawalRequest_UserId   ON WithdrawalRequest(user_id);
+CREATE INDEX IX_WithdrawalRequest_Created  ON WithdrawalRequest(created_at DESC);
+GO
+
+-- FK: user_id → [User].id
+ALTER TABLE WithdrawalRequest
+    ADD CONSTRAINT FK_WithdrawalRequest_User
+    FOREIGN KEY (user_id) REFERENCES [User](id) ON DELETE CASCADE;
+GO
+
+-- ============================================================
+-- SystemConfig — Thêm MIN_WITHDRAWAL_AMOUNT nếu chưa có
+-- Giá trị mặc định: 50,000 VND (số nguyên, không có thập phân)
+-- ============================================================
+IF NOT EXISTS (SELECT 1 FROM SystemConfig WHERE config_key = 'MIN_WITHDRAWAL_AMOUNT')
+BEGIN
+    INSERT INTO SystemConfig (config_key, config_value, description)
+    VALUES (
+        'MIN_WITHDRAWAL_AMOUNT',
+        '50000',
+        'Minimum withdrawal amount for users (Horse Owner / Jockey / Spectator) in VND. Default: 50000'
+    );
+END
+GO
+
 PRINT 'HorseRacingDB created successfully with 100% complete schema & updated balances.';
+PRINT 'WithdrawalRequest table created. MIN_WITHDRAWAL_AMOUNT config seeded.';
 GO

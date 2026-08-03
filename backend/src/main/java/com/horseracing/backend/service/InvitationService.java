@@ -197,6 +197,9 @@ public class InvitationService {
 
         RaceInvitation savedInvite = invitationRepository.save(invite); // Lưu lời mời vào DB
 
+        // Gửi thông báo tới nài ngựa (Jockey) về lời mời mới
+        notificationService.notifyJockeyOnNewInvitation(savedInvite);
+
         Map<Integer, User> userEntityMap = userRepository.findAll().stream()
                 .collect(Collectors.toMap(User::getId, u -> u, (u1, u2) -> u1));
         User owner = userEntityMap.get(savedInvite.getOwnerId());

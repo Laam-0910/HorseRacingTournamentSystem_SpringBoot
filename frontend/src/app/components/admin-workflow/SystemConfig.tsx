@@ -10,6 +10,7 @@ const CONFIG_DESC_MAP: Record<string, string> = {
   MAX_OVERWEIGHT_ALLOWED: "Maximum overweight allowed for jockeys (kg)",
   SEX_ALLOWANCE: "Sex weight allowance for female horses (Fillies/Mares) (kg)",
   DEFAULT_JOCKEY_HIRE_FEE: "Default hire fee paid by horse owner to jockey per accepted mount ($100 - $10,000)",
+  MIN_WITHDRAWAL_AMOUNT: "Minimum withdrawal amount for users (Horse Owner / Jockey / Spectator) in VNĐ (e.g. 50000)",
   PAYMENT_GATEWAY_MODE: "Payment Gateway Mode: 'MOCK' (Virtual Money Demo) or 'LIVE' (Real Money Gateway)",
   PAYOS_CLIENT_ID: "PayOS Payment Gateway Client ID (for LIVE real money mode)",
   PAYOS_API_KEY: "PayOS Payment Gateway API Key (for LIVE real money mode)",

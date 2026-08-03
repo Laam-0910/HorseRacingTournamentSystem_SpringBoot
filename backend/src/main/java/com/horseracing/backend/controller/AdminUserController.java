@@ -1,6 +1,12 @@
 package com.horseracing.backend.controller;
 
 import com.horseracing.backend.dto.*;
+import com.horseracing.backend.entity.WalletTransaction;
+import com.horseracing.backend.entity.WithdrawalRequest;
+import com.horseracing.backend.entity.User;
+import com.horseracing.backend.repository.WithdrawalRequestRepository;
+import com.horseracing.backend.repository.UserRepository;
+import com.horseracing.backend.repository.WalletTransactionRepository;
 import com.horseracing.backend.service.AdminUserService;
 import com.horseracing.backend.service.RaceService;
 import com.horseracing.backend.service.SystemConfigService;
@@ -9,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +40,9 @@ public class AdminUserController {
     private final UserService userService;
     private final SystemConfigService systemConfigService;
     private final RaceService raceService;
+    private final WithdrawalRequestRepository withdrawalRequestRepository;
+    private final UserRepository userRepository;
+    private final WalletTransactionRepository walletTransactionRepository;
 
     // --- Quản lý Tài khoản (User Management) ---
     
@@ -449,6 +459,154 @@ public class AdminUserController {
     public ResponseEntity<?> getUserWalletInfo(@PathVariable Integer userId) {
         try {
             return ResponseEntity.ok(adminUserService.getUserWalletInfo(userId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // --- Quản lý Withdrawal Requests (User Cash-Out Payout) ---
+
+    /**
+     * GET /api/admin/withdrawal-requests
+     * Lấy danh sách tất cả withdrawal requests, có thể filter theo status.
+     * Admin dùng để xem và xử lý các yêu cầu rút tiền của người dùng.
+     */
+    @GetMapping("/withdrawal-requests")
+    public ResponseEntity<?> listWithdrawalRequests(
+            @RequestParam(defaultValue = "PENDING") String status) {
+        try {
+            List<WithdrawalRequest> list = "ALL".equalsIgnoreCase(status)
+                    ? withdrawalRequestRepository.findAllByOrderByCreatedAtDesc()
+                    : withdrawalRequestRepository.findByStatusOrderByCreatedAtDesc(status.toUpperCase());
+
+            // Enrich với thông tin user (username, fullName, role)
+            List<Map<String, Object>> enriched = list.stream().map(wr -> {
+                Map<String, Object> row = new java.util.LinkedHashMap<>();
+                row.put("id", wr.getId());
+                row.put("userId", wr.getUserId());
+                row.put("amount", wr.getAmount());
+                row.put("bankName", wr.getBankName());
+                row.put("accountNumber", wr.getAccountNumber());
+                row.put("accountHolder", wr.getAccountHolder());
+                row.put("notes", wr.getNotes());
+                row.put("status", wr.getStatus());
+                row.put("processedNote", wr.getProcessedNote());
+                row.put("processedBy", wr.getProcessedBy());
+                row.put("createdAt", wr.getCreatedAt());
+                row.put("processedAt", wr.getProcessedAt());
+                userRepository.findById(wr.getUserId()).ifPresent(u -> {
+                    row.put("username", u.getUsername());
+                    row.put("fullName", u.getFullName());
+                    row.put("userBalance", u.getWalletBalance());
+                });
+                return row;
+            }).toList();
+
+            return ResponseEntity.ok(enriched);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /api/admin/withdrawal-requests/{id}/process
+     * Admin đã chuyển khoản thật → Mark PROCESSED → Hệ thống trừ ví user + ghi log WITHDRAWAL.
+     */
+    @PostMapping("/withdrawal-requests/{id}/process")
+    public ResponseEntity<?> processWithdrawalRequest(
+            @PathVariable Integer id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            WithdrawalRequest wr = withdrawalRequestRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Withdrawal request not found: " + id));
+
+            if (!"PENDING".equals(wr.getStatus())) {
+                return ResponseEntity.badRequest().body(Map.of("error",
+                        "Request is already " + wr.getStatus() + " and cannot be processed again."));
+            }
+
+            // Trừ ví người dùng
+            User user = userRepository.findById(wr.getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + wr.getUserId()));
+            BigDecimal current = user.getWalletBalance() != null ? user.getWalletBalance() : BigDecimal.ZERO;
+            if (wr.getAmount().compareTo(current) > 0) {
+                return ResponseEntity.badRequest().body(Map.of("error",
+                        "User's current balance (" + String.format("%,.0f", current) + " VND) is insufficient for this withdrawal of "
+                        + String.format("%,.0f", wr.getAmount()) + " VND. User may have already spent funds."));
+            }
+            user.setWalletBalance(current.subtract(wr.getAmount()));
+            userRepository.save(user);
+
+            // Ghi log WITHDRAWAL transaction
+            String desc = "Cash-out payout via " + wr.getBankName()
+                    + " | Acc: " + wr.getAccountNumber()
+                    + " (Holder: " + wr.getAccountHolder() + ")"
+                    + (wr.getNotes() != null && !wr.getNotes().isBlank() ? " | Note: " + wr.getNotes() : "")
+                    + " [Admin Processed - WR#" + id + "]";
+            WalletTransaction tx = new WalletTransaction();
+            tx.setUserId(wr.getUserId());
+            tx.setAmount(wr.getAmount().negate());
+            tx.setTransactionType("WITHDRAWAL");
+            tx.setDescription(desc);
+            tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            walletTransactionRepository.save(tx);
+
+            // Update request status
+            String processedNote = body != null && body.get("note") != null ? body.get("note").toString() : "Processed by admin.";
+            Integer adminId = body != null && body.get("adminId") != null ? Integer.parseInt(body.get("adminId").toString()) : null;
+            wr.setStatus("PROCESSED");
+            wr.setProcessedNote(processedNote);
+            wr.setProcessedBy(adminId);
+            wr.setProcessedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            withdrawalRequestRepository.save(wr);
+
+            // Gửi thông báo tới người dùng về yêu cầu rút tiền thành công
+            notificationService.notifyUserOnWithdrawalStatus(wr.getUserId(), wr.getAmount(), true, processedNote);
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Withdrawal request #" + id + " has been processed. "
+                    + String.format("%,.0f", wr.getAmount()) + " VND deducted from user wallet.",
+                "newUserBalance", user.getWalletBalance()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /api/admin/withdrawal-requests/{id}/reject
+     * Admin từ chối yêu cầu rút tiền — tiền KHÔNG bị trừ.
+     */
+    @PostMapping("/withdrawal-requests/{id}/reject")
+    public ResponseEntity<?> rejectWithdrawalRequest(
+            @PathVariable Integer id,
+            @RequestBody(required = false) Map<String, Object> body) {
+        try {
+            WithdrawalRequest wr = withdrawalRequestRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Withdrawal request not found: " + id));
+
+            if (!"PENDING".equals(wr.getStatus())) {
+                return ResponseEntity.badRequest().body(Map.of("error",
+                        "Request is already " + wr.getStatus() + " and cannot be rejected again."));
+            }
+
+            String rejectNote = body != null && body.get("note") != null ? body.get("note").toString() : "Rejected by admin.";
+            Integer adminId = body != null && body.get("adminId") != null ? Integer.parseInt(body.get("adminId").toString()) : null;
+            wr.setStatus("REJECTED");
+            wr.setProcessedNote(rejectNote);
+            wr.setProcessedBy(adminId);
+            wr.setProcessedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            withdrawalRequestRepository.save(wr);
+
+            // Gửi thông báo tới người dùng về việc bị từ chối rút tiền
+            notificationService.notifyUserOnWithdrawalStatus(wr.getUserId(), wr.getAmount(), false, rejectNote);
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Withdrawal request #" + id + " has been rejected. User wallet was NOT deducted.",
+                "rejectNote", rejectNote
+            ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

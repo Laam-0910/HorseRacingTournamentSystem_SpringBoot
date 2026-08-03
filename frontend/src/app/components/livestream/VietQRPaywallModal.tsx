@@ -22,11 +22,26 @@ export default function VietQRPaywallModal({
   const [quote, setQuote] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
+  const [payingViaWallet, setPayingViaWallet] = useState(false);
+  const [walletBal, setWalletBal] = useState<number>(0);
   const [error, setError] = useState("");
 
   const bankName = "TPB";
   const accountNumber = "08410092005";
   const accountHolder = "HORSE RACING ORG";
+
+  useEffect(() => {
+    if (userId) {
+      api.get<any>(`/public/users/${userId}`)
+        .then(res => {
+          const u = res.user || res;
+          if (u.walletBalance !== undefined && u.walletBalance !== null) {
+            setWalletBal(Number(u.walletBalance));
+          }
+        })
+        .catch(() => {});
+    }
+  }, [userId]);
 
   // Fetch dynamic quote when package selection changes
   useEffect(() => {
@@ -38,7 +53,15 @@ export default function VietQRPaywallModal({
       .finally(() => setLoading(false));
   }, [selectedPackage, userId, seasonId, raceMeetingId]);
 
-  // Auto-polling check access & simulated QR scan auto-activation every 3 seconds
+  const [isMockMode, setIsMockMode] = useState<boolean>(true);
+
+  useEffect(() => {
+    api.get<any>("/public/wallet/webhook/mode")
+      .then(res => setIsMockMode(!!res.isMock))
+      .catch(() => setIsMockMode(true));
+  }, []);
+
+  // Auto-polling check access & simulated QR scan auto-activation every 3.5 seconds
   useEffect(() => {
     let isCancelled = false;
     const interval = setInterval(async () => {
@@ -51,14 +74,15 @@ export default function VietQRPaywallModal({
           return;
         }
 
-        // Auto trigger purchase simulation on QR detection
-        if (quote && !purchasing && !isCancelled) {
+        // Auto trigger purchase simulation ONLY if system is in MOCK mode
+        if (isMockMode && quote && !purchasing && !payingViaWallet && !isCancelled) {
           const res = await api.post<any>("/public/livestream/purchase", {
             userId,
             packageType: selectedPackage,
             seasonId,
             raceMeetingId: selectedPackage === "RACEMEETING" ? raceMeetingId : null,
             amount: quote.finalPrice,
+            paymentMethod: "VIETQR"
           });
           if (res.success && !isCancelled) {
             onSuccess();
@@ -73,11 +97,33 @@ export default function VietQRPaywallModal({
       isCancelled = true;
       clearInterval(interval);
     };
-  }, [userId, seasonId, raceMeetingId, selectedPackage, quote, purchasing, onSuccess]);
+  }, [userId, seasonId, raceMeetingId, selectedPackage, quote, purchasing, payingViaWallet, isMockMode, onSuccess]);
 
-  const finalAmount = quote ? quote.finalPrice : selectedPackage === "RACEMEETING" ? 15000 : 79000;
+  const finalAmount = quote ? Number(quote.finalPrice) : selectedPackage === "RACEMEETING" ? 15000 : 79000;
   const transferContent = `PPV_${userId}_${selectedPackage}_${raceMeetingId || seasonId || 1}`;
   const qrImageUrl = `https://img.vietqr.io/image/${bankName}-${accountNumber}-compact2.jpg?amount=${finalAmount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountHolder)}`;
+
+  const handlePayViaWallet = async () => {
+    setPayingViaWallet(true);
+    setError("");
+    try {
+      const res = await api.post<any>("/public/livestream/purchase", {
+        userId,
+        packageType: selectedPackage,
+        seasonId,
+        raceMeetingId: selectedPackage === "RACEMEETING" ? raceMeetingId : null,
+        amount: finalAmount,
+        paymentMethod: "WALLET",
+      });
+      if (res.success) {
+        onSuccess();
+      }
+    } catch (err: any) {
+      setError(getErrMsg(err, "Wallet payment failed. Please check your balance or top up via VietQR."));
+    } finally {
+      setPayingViaWallet(false);
+    }
+  };
 
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60000, padding: "1rem" }}>
@@ -90,7 +136,7 @@ export default function VietQRPaywallModal({
               Unlock HD Livestream Access
             </h3>
             <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
-              Scan VietQR to watch live races in high definition.
+              Pay via your available wallet balance or scan VietQR code.
             </p>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "1.25rem" }}>✕</button>
@@ -123,7 +169,7 @@ export default function VietQRPaywallModal({
               >
                 <div style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>RaceMeeting Pass</div>
                 <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#c9a227", fontFamily: "monospace", marginTop: "4px" }}>
-                  {selectedPackage === "RACEMEETING" && quote ? `${Number(quote.finalPrice).toLocaleString()} VND` : "15,000 VND"}
+                  {finalAmount.toLocaleString('en-US')} VNĐ
                 </div>
                 <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "4px" }}>
                   24h access for {raceMeetingName || "this event"}
@@ -147,7 +193,7 @@ export default function VietQRPaywallModal({
                   <span style={{ fontSize: "8px", background: "#10b981", color: "#000", padding: "1px 4px", borderRadius: "2px", fontWeight: "bold" }}>BEST VALUE</span>
                 </div>
                 <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#34d399", fontFamily: "monospace", marginTop: "4px" }}>
-                  {selectedPackage === "SEASON" && quote ? `${Number(quote.finalPrice).toLocaleString()} VND` : "79,000 VND"}
+                  79,000 VNĐ
                 </div>
                 <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "4px" }}>
                   {selectedPackage === "SEASON" && quote?.discountApplied > 0 ? quote?.description : "Unlimited access to all meetings"}
@@ -156,7 +202,34 @@ export default function VietQRPaywallModal({
             </div>
           </div>
 
-          {/* VietQR Scanner Area */}
+          {/* Option A: Direct Wallet Deduction Button */}
+          <div style={{ background: "rgba(201,162,39,0.08)", padding: "1rem", borderRadius: "0.75rem", border: "1px solid rgba(201,162,39,0.25)" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+              <span style={{ fontSize: "11px", color: "#a0a0a0", fontFamily: "monospace" }}>Your Available Wallet:</span>
+              <strong style={{ fontSize: "1rem", color: "#fbbf24", fontFamily: "monospace" }}>{walletBal.toLocaleString('en-US')} VNĐ</strong>
+            </div>
+            <button
+              onClick={handlePayViaWallet}
+              disabled={payingViaWallet || walletBal < finalAmount}
+              style={{
+                width: "100%",
+                padding: "0.625rem",
+                background: walletBal >= finalAmount ? "linear-gradient(45deg, #c9a227, #f3d06c)" : "#27272a",
+                color: walletBal >= finalAmount ? "#000" : "#71717a",
+                border: "none",
+                borderRadius: "0.5rem",
+                fontSize: "12px",
+                fontFamily: "monospace",
+                fontWeight: 700,
+                cursor: walletBal >= finalAmount ? "pointer" : "not-allowed",
+                transition: "all 0.2s"
+              }}
+            >
+              {payingViaWallet ? "Processing Wallet Deduction..." : walletBal >= finalAmount ? `⚡ Pay ${finalAmount.toLocaleString('en-US')} VNĐ via Available Wallet` : `🔒 Insufficient Balance (${walletBal.toLocaleString('en-US')} VNĐ available)`}
+            </button>
+          </div>
+
+          {/* Option B: VietQR Scanner Area */}
           <div style={{ display: "grid", gridTemplateColumns: "130px 1fr", gap: "1.25rem", background: "rgba(0,0,0,0.4)", padding: "1rem", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.06)", alignItems: "center" }}>
             <div style={{ textAlign: "center" }}>
               <img
@@ -164,43 +237,24 @@ export default function VietQRPaywallModal({
                 alt="VietQR Code"
                 style={{ width: "120px", height: "120px", borderRadius: "0.5rem", border: "2px solid #fff", background: "#fff" }}
               />
-              <span style={{ fontSize: "9px", color: "#a0a0a0", fontFamily: "monospace", display: "block", marginTop: "4px" }}>Scan via Banking App</span>
+              <span style={{ fontSize: "9px", color: "#a0a0a0", fontFamily: "monospace", display: "block", marginTop: "4px" }}>Or Scan via Banking App</span>
             </div>
 
             <div style={{ fontSize: "11px", color: "#a0a0a0", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
               <div>Bank: <strong style={{ color: "#fff" }}>{bankName}</strong></div>
               <div>Account: <strong style={{ color: "#c9a227", fontFamily: "monospace" }}>{accountNumber}</strong></div>
               <div>Holder: <strong style={{ color: "#fff" }}>{accountHolder}</strong></div>
-              <div>Amount: <strong style={{ color: "#34d399", fontFamily: "monospace", fontSize: "14px" }}>{Number(finalAmount).toLocaleString()} VND</strong></div>
+              <div>Ticket Price: <strong style={{ color: "#34d399", fontFamily: "monospace", fontSize: "14px" }}>{finalAmount.toLocaleString('en-US')} VNĐ</strong></div>
               <div>Transfer Content: <strong style={{ color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "2px 6px", borderRadius: "4px", display: "inline-block" }}>{transferContent}</strong></div>
-              <div style={{ marginTop: "4px", color: "#10b981", fontSize: "10px", display: "flex", alignItems: "center", gap: "4px" }}>
-                <span style={{ display: "inline-block", width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", animation: "pulse 1.5s infinite" }}></span>
-                Auto-detecting payment, please scan...
-              </div>
             </div>
           </div>
+        </div>
 
-          {/* Action Buttons: Only Cancel */}
-          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "flex-end", marginTop: "0.5rem" }}>
-            <button
-              type="button"
-              onClick={onClose}
-              style={{
-                width: "100%",
-                padding: "0.75rem 1.25rem",
-                background: "#1f1f22",
-                border: "1px solid #2d2d30",
-                color: "#a0a0a0",
-                borderRadius: "0.5rem",
-                fontSize: "13px",
-                fontFamily: "monospace",
-                cursor: "pointer",
-                fontWeight: "bold"
-              }}
-            >
-              Cancel
-            </button>
-          </div>
+        {/* Modal Footer */}
+        <div style={{ padding: "1rem 1.5rem", background: "rgba(0,0,0,0.3)", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "flex-end" }}>
+          <button onClick={onClose} style={{ padding: "0.5rem 1.25rem", background: "#27272a", border: "1px solid #3f3f46", color: "#fff", borderRadius: "0.375rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}>
+            Close
+          </button>
         </div>
       </div>
     </div>

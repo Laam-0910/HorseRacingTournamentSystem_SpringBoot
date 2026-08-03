@@ -4,13 +4,14 @@ import { api } from "../../../lib/api";
 import DashboardLayout, { Icon } from "../layout/DashboardLayout";
 import ProfileTab from "./components/ProfileTab";
 import ViewLive from "./components/ViewLive";
+import UserWalletView from "./components/UserWalletView";
 import ProfileModal from "./components/ProfileModal";
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
 import { formatDate, parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
 import { $t } from '@/lib/i18n';
 
-type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "profile";
+type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "wallet" | "profile";
 
 const ROLE_COLOR = "#ef4444";
 
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
   { index: "05", icon: "activity",         label: $t("Horses", (localStorage.getItem('app-lang') || 'en')),     view: "horses"       },
   { index: "06", icon: "bar-chart-3",      label: $t("Statistics", (localStorage.getItem('app-lang') || 'en')), view: "stats"        },
   { index: "07", icon: "mail",             label: $t("AI Assistant", (localStorage.getItem('app-lang') || 'en')), view: "ai-assistant" },
+  { index: "08", icon: "credit-card",      label: $t("Wallet & Deposit", (localStorage.getItem('app-lang') || 'en')), view: "wallet" },
 ];
 
 interface ChatMessage {
@@ -1285,6 +1287,9 @@ export default function Spectator() {
             </form>
           </div>
         );
+
+      case "wallet":
+        return <UserWalletView user={user} roleColor={ROLE_COLOR} roleLabel="Spectator" />;
 
       case "profile":
         return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Spectator" />;

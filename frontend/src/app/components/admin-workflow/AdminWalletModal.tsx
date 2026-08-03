@@ -38,12 +38,22 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
   const [showQrModal, setShowQrModal] = useState(false);
   const [gatewayMode, setGatewayMode] = useState<"MOCK" | "LIVE">("MOCK");
 
+  // Withdrawal Requests Management
+  const [withdrawalRequests, setWithdrawalRequests] = useState<any[]>([]);
+  const [wrFilter, setWrFilter] = useState<"PENDING" | "ALL">("PENDING");
+  const [processingWrId, setProcessingWrId] = useState<number | null>(null);
+  const [rejectNoteMap, setRejectNoteMap] = useState<Record<number, string>>({});
+
   const fetchWallet = async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await api.get<any>("/admin/wallet");
-      setWalletData(res);
+      const [walletRes, wrRes] = await Promise.all([
+        api.get<any>("/admin/wallet"),
+        api.get<any[]>(`/admin/withdrawal-requests?status=${wrFilter}`).catch(() => [])
+      ]);
+      setWalletData(walletRes);
+      setWithdrawalRequests(Array.isArray(wrRes) ? wrRes : []);
       if (onBalanceUpdated) onBalanceUpdated();
     } catch (err: any) {
       setError(getErrMsg(err, "Failed to load Admin wallet info."));
@@ -126,6 +136,37 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
     }
   };
 
+  const handleProcessWithdrawal = async (wrId: number) => {
+    if (!window.confirm(`Confirm: Have you already transferred the funds to the user's bank account? Clicking OK will deduct the amount from their wallet.`)) return;
+    setProcessingWrId(wrId);
+    setError(""); setSuccess("");
+    try {
+      const res = await api.post<any>(`/admin/withdrawal-requests/${wrId}/process`, { note: "Processed and transferred by admin." });
+      setSuccess(res.message || `Withdrawal request #${wrId} processed successfully.`);
+      fetchWallet();
+    } catch (err: any) {
+      setError(getErrMsg(err, "Failed to process withdrawal request."));
+    } finally {
+      setProcessingWrId(null);
+    }
+  };
+
+  const handleRejectWithdrawal = async (wrId: number) => {
+    const note = (rejectNoteMap[wrId] || "").trim() || "Rejected by admin.";
+    if (!window.confirm(`Reject withdrawal request #${wrId}? Reason: "${note}". User wallet will NOT be deducted.`)) return;
+    setProcessingWrId(wrId);
+    setError(""); setSuccess("");
+    try {
+      const res = await api.post<any>(`/admin/withdrawal-requests/${wrId}/reject`, { note });
+      setSuccess(res.message || `Withdrawal request #${wrId} rejected.`);
+      fetchWallet();
+    } catch (err: any) {
+      setError(getErrMsg(err, "Failed to reject withdrawal request."));
+    } finally {
+      setProcessingWrId(null);
+    }
+  };
+
   const getTxBadge = (type: string) => {
     switch (type) {
       case "ADMIN_TOPUP":
@@ -182,7 +223,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
           <div>
             <span className="text-xs font-mono text-white/50 block">Available Admin Wallet Balance:</span>
             <div className="text-3xl font-extrabold text-amber-400 font-mono mt-1">
-              ${Number(walletData?.walletBalance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              {Number(walletData?.walletBalance || 0).toLocaleString('en-US')} <span className="text-xl font-bold">VNĐ</span>
             </div>
             <p className="text-[11px] text-white/40 font-mono mt-1">
               * Funding source for Race Meeting total budget allocations (`totalBudget`) and settled ticket revenue.
@@ -222,7 +263,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
                 required
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Enter top-up amount ($USD)..."
+                placeholder="Enter top-up amount (VNĐ)..."
                 className="flex-1 px-4 py-2 bg-black/50 border border-white/10 rounded-xl text-white text-xs font-mono focus:border-emerald-400 focus:outline-none"
               />
               <button
@@ -248,7 +289,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] font-mono text-white/50 block mb-1">Withdrawal Amount ($USD)</label>
+                <label className="text-[10px] font-mono text-white/50 block mb-1">Withdrawal Amount (VNĐ)</label>
                 <input
                   type="number"
                   min="1"
@@ -327,6 +368,100 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
           </form>
         )}
 
+        {/* Admin Pending Withdrawal Requests Panel */}
+        <div className="space-y-3 border border-amber-500/20 bg-amber-500/5 rounded-2xl p-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h4 className="text-sm font-bold text-amber-400 font-serif flex items-center gap-2">
+              <span>💸 User Withdrawal Requests</span>
+              {withdrawalRequests.filter(r => r.status === 'PENDING').length > 0 && (
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-black">
+                  {withdrawalRequests.filter(r => r.status === 'PENDING').length} Pending
+                </span>
+              )}
+            </h4>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setWrFilter(wrFilter === 'PENDING' ? 'ALL' : 'PENDING'); setTimeout(fetchWallet, 50); }}
+                className="px-3 py-1 text-[10px] font-mono rounded-lg border border-white/15 text-white/60 hover:bg-white/10 transition"
+              >
+                {wrFilter === 'PENDING' ? 'Show All' : 'Show Pending Only'}
+              </button>
+              <button onClick={fetchWallet} className="px-3 py-1 text-[10px] font-mono rounded-lg border border-white/15 text-white/60 hover:bg-white/10 transition">🔄 Refresh</button>
+            </div>
+          </div>
+
+          {withdrawalRequests.length === 0 ? (
+            <div className="text-center py-6 text-white/40 text-xs font-mono">No withdrawal requests found.</div>
+          ) : (
+            <div className="border border-white/10 rounded-xl overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs font-mono">
+                <thead>
+                  <tr className="bg-black/60 text-white/50 border-b border-white/10 uppercase text-[10px]">
+                    <th className="px-3 py-2">ID</th>
+                    <th className="px-3 py-2">User</th>
+                    <th className="px-3 py-2">Amount (VND)</th>
+                    <th className="px-3 py-2">Bank / Account</th>
+                    <th className="px-3 py-2">Status</th>
+                    <th className="px-3 py-2">Submitted</th>
+                    <th className="px-3 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {withdrawalRequests.map((wr: any) => (
+                    <tr key={wr.id} className="hover:bg-white/[0.02] transition align-top">
+                      <td className="px-3 py-2 text-white/40">#WR-{wr.id}</td>
+                      <td className="px-3 py-2 text-white/80">
+                        {wr.username}<br/>
+                        <span className="text-white/40 text-[10px]">{wr.fullName}</span>
+                      </td>
+                      <td className="px-3 py-2 font-bold text-amber-300">{Number(wr.amount).toLocaleString('en-US')} VND</td>
+                      <td className="px-3 py-2 text-white/70">
+                        {wr.bankName}<br/>
+                        <span className="text-white/40 text-[10px]">{wr.accountNumber}</span><br/>
+                        <span className="text-white/40 text-[10px]">{wr.accountHolder}</span>
+                      </td>
+                      <td className="px-3 py-2">
+                        {wr.status === 'PENDING' && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">⏳ PENDING</span>}
+                        {wr.status === 'PROCESSED' && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">✅ PROCESSED</span>}
+                        {wr.status === 'REJECTED' && <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">❌ REJECTED</span>}
+                        {wr.processedNote && <div className="text-[9px] text-white/40 mt-1 max-w-[100px] truncate">{wr.processedNote}</div>}
+                      </td>
+                      <td className="px-3 py-2 text-white/40 text-[10px]">{formatDate(wr.createdAt)}</td>
+                      <td className="px-3 py-2">
+                        {wr.status === 'PENDING' && (
+                          <div className="flex flex-col gap-1.5">
+                            <button
+                              onClick={() => handleProcessWithdrawal(wr.id)}
+                              disabled={processingWrId === wr.id}
+                              className="px-2 py-1 bg-emerald-500/20 hover:bg-emerald-500/40 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold rounded-lg transition disabled:opacity-50 whitespace-nowrap"
+                            >
+                              {processingWrId === wr.id ? '...' : '✅ Mark Processed'}
+                            </button>
+                            <input
+                              type="text"
+                              placeholder="Reject reason..."
+                              value={rejectNoteMap[wr.id] || ''}
+                              onChange={e => setRejectNoteMap(m => ({ ...m, [wr.id]: e.target.value }))}
+                              className="px-2 py-1 bg-black/50 border border-white/10 rounded-lg text-white text-[10px] font-mono focus:outline-none focus:border-rose-400 w-full"
+                            />
+                            <button
+                              onClick={() => handleRejectWithdrawal(wr.id)}
+                              disabled={processingWrId === wr.id}
+                              className="px-2 py-1 bg-rose-500/20 hover:bg-rose-500/40 border border-rose-500/30 text-rose-300 text-[10px] font-bold rounded-lg transition disabled:opacity-50 whitespace-nowrap"
+                            >
+                              {processingWrId === wr.id ? '...' : '❌ Reject'}
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
         {/* Transaction History Log Table */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -360,7 +495,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
                       <tr className="bg-black/60 text-white/50 border-b border-white/10 uppercase text-[10px]">
                         <th className="px-4 py-3">TX ID</th>
                         <th className="px-4 py-3">Transaction Type</th>
-                        <th className="px-4 py-3">Amount ($USD)</th>
+                        <th className="px-4 py-3">Amount (VNĐ)</th>
                         <th className="px-4 py-3">Description / Notes</th>
                         <th className="px-4 py-3">Date & Time</th>
                       </tr>
@@ -374,7 +509,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
                             <td className="px-4 py-3 text-white/40">#TX-{tx.id}</td>
                             <td className="px-4 py-3">{getTxBadge(tx.transactionType)}</td>
                             <td className={`px-4 py-3 font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              {isPositive ? `+${amt.toLocaleString('en-US')}` : `${amt.toLocaleString('en-US')}`}
+                              {isPositive ? `+${amt.toLocaleString('en-US')} VNĐ` : `${amt.toLocaleString('en-US')} VNĐ`}
                             </td>
                             <td className="px-4 py-3 text-white/80 max-w-xs truncate">{tx.description}</td>
                             <td className="px-4 py-3 text-white/40">{formatDate(tx.createdAt)}</td>
