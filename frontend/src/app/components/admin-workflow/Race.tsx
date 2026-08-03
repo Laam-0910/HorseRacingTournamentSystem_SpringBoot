@@ -195,6 +195,18 @@ export default function Race() {
       }
     }
 
+    // Kiểm tra trùng Class Level trong cùng Race Meeting (client-side pre-check)
+    const selectedMeetingId = parseInt(meetingId);
+    const duplicateClass = races.find(
+      r => r.raceMeetingId === selectedMeetingId &&
+           r.classLevel?.toLowerCase() === classLevel.toLowerCase() &&
+           r.status !== 'CANCELLED'
+    );
+    if (duplicateClass) {
+      setError(`A race with "${classLevel}" already exists in this meeting. Each class can only appear once per meeting.`);
+      return;
+    }
+
     try {
       const res = await api.post<any>("/races", {
         raceMeetingId: parseInt(meetingId),
@@ -224,6 +236,10 @@ export default function Race() {
       // Báo lỗi trùng lặp thời gian trong cùng buổi hội đua
       if (err.message?.includes("DUPLICATE_RACE_TIME")) {
         setError("Another race is already scheduled at this exact time for this meeting.");
+      } else if (err.message?.includes("DUPLICATE_CLASS_LEVEL")) {
+        // Trích xuất tên class từ thông báo lỗi backend
+        const cls = err.message.split("DUPLICATE_CLASS_LEVEL:")[1] || classLevel;
+        setError(`A race with "${cls.trim()}" already exists in this meeting. Each class can only appear once per meeting.`);
       } else {
         setError(getErrMsg(err, "Failed to create race."));
       }
@@ -448,12 +464,36 @@ export default function Race() {
                   required 
                   style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(201,162,39,0.22)", color: "#f4f2ec", borderRadius: "0.5rem", fontSize: "0.75rem", outline: "none" }}
                 >
-                  <option value="Class 1" style={{ background: "#12141a", color: "#fff" }}>Class 1 (Rating 95+)</option>
-                  <option value="Class 2" style={{ background: "#12141a", color: "#fff" }}>Class 2 (Rating 80-94)</option>
-                  <option value="Class 3" style={{ background: "#12141a", color: "#fff" }}>Class 3 (Rating 60-79)</option>
-                  <option value="Class 4" style={{ background: "#12141a", color: "#fff" }}>Class 4 (Rating 40-59)</option>
-                  <option value="Class 5" style={{ background: "#12141a", color: "#fff" }}>Class 5 (Rating 0-39)</option>
+                  {[
+                    { value: "Class 1", label: "Class 1 (Rating 95+)" },
+                    { value: "Class 2", label: "Class 2 (Rating 80-94)" },
+                    { value: "Class 3", label: "Class 3 (Rating 60-79)" },
+                    { value: "Class 4", label: "Class 4 (Rating 40-59)" },
+                    { value: "Class 5", label: "Class 5 (Rating 0-39)" },
+                  ].map(cls => {
+                    // Kiểm tra class này đã tồn tại trong meeting đang chọn chưa
+                    const isUsed = !!meetingId && races.some(
+                      r => r.raceMeetingId === parseInt(meetingId) &&
+                           r.classLevel?.toLowerCase() === cls.value.toLowerCase() &&
+                           r.status !== 'CANCELLED'
+                    );
+                    return (
+                      <option
+                        key={cls.value}
+                        value={cls.value}
+                        disabled={isUsed}
+                        style={{ background: "#12141a", color: isUsed ? "#555" : "#fff" }}
+                      >
+                        {isUsed ? `❌ ${cls.label} (already scheduled)` : cls.label}
+                      </option>
+                    );
+                  })}
                 </select>
+                {meetingId && races.some(r => r.raceMeetingId === parseInt(meetingId) && r.classLevel?.toLowerCase() === classLevel.toLowerCase() && r.status !== 'CANCELLED') && (
+                  <div style={{ fontSize: "9px", color: "#f87171", fontFamily: "monospace", marginTop: "3px" }}>
+                    ⚠️ "{classLevel}" is already scheduled for this meeting. Please choose a different class.
+                  </div>
+                )}
               </div>
 
               <div>
