@@ -5,21 +5,13 @@ import { parseSafeDate } from "../../utils/dateTimeHelper";
 import { Pagination } from "../common/Pagination";
 
 /**
- * Component RegistrationProcessing - Phân hệ Xử lý đơn đăng ký của hệ thống dành cho Admin.
- * Quản lý và phê duyệt (Approve/Reject) 5 loại đơn đăng ký đang chờ duyệt từ chủ ngựa/kỵ sĩ:
- * 1. Đăng ký lượt chạy cuộc đua (Race Entries) đi kèm dự đoán tỉ lệ thắng AI (AI Win Chance).
- * 2. Đăng ký chiến mã tham gia buổi hội đua (Horse Meeting Registrations).
- * 3. Đăng ký chủ ngựa tham gia buổi hội đua (Owner Meeting Registrations).
- * 4. Đăng ký kỵ sĩ tham gia buổi hội đua (Jockey Meeting Registrations).
- * 5. Khai báo ngựa mới vào chuồng hệ thống (System Horse Approvals).
  */
 export default function RegistrationProcessing() {
-  // Các state lưu trữ danh sách đơn đăng ký chờ duyệt theo từng loại
-  const [pendingEntries, setPendingEntries] = useState<any[]>([]); // Lượt chạy cuộc đua
-  const [pendingHorseRegs, setPendingHorseRegs] = useState<any[]>([]); // Ngựa tham gia hội đua
-  const [pendingJockeyRegs, setPendingJockeyRegs] = useState<any[]>([]); // Kỵ sĩ tham gia hội đua
-  const [pendingOwnerRegs, setPendingOwnerRegs] = useState<any[]>([]); // Chủ ngựa tham gia hội đua
-  const [pendingSystemHorses, setPendingSystemHorses] = useState<any[]>([]); // Khai báo ngựa mới
+  const [pendingEntries, setPendingEntries] = useState<any[]>([]);
+  const [pendingHorseRegs, setPendingHorseRegs] = useState<any[]>([]);
+  const [pendingJockeyRegs, setPendingJockeyRegs] = useState<any[]>([]);
+  const [pendingOwnerRegs, setPendingOwnerRegs] = useState<any[]>([]);
+  const [pendingSystemHorses, setPendingSystemHorses] = useState<any[]>([]);
 
   // Pagination states
   const [pageEntries, setPageEntries] = useState(1);
@@ -34,21 +26,17 @@ export default function RegistrationProcessing() {
   const [pageJockey, setPageJockey] = useState(1);
   const [pageSizeJockey, setPageSizeJockey] = useState(5);
 
-  // Các state lưu số liệu thống kê tổng hợp đơn
   const [awaitingDecisionCount, setAwaitingDecisionCount] = useState(0);
   const [approvedCount, setApprovedCount] = useState(0);
   const [rejectedCount, setRejectedCount] = useState(0);
   
-  // Trạng thái chờ và thông báo
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // State lưu trữ người đăng ký đang được xem thông tin chi tiết
   const [viewingRegistrant, setViewingRegistrant] = useState<any | null>(null);
 
 
-  // Tiện ích format ngày giờ thô thành dd-MM-yyyy
   const formatSimpleDate = (dateStr: string) => {
     if (!dateStr) return "";
     const d = parseSafeDate(dateStr);
@@ -59,7 +47,6 @@ export default function RegistrationProcessing() {
     return `${day}-${month}-${year}`;
   };
 
-  // Tải toàn bộ đơn đăng ký chờ duyệt từ endpoint /admin/pending-registrations
   const fetchData = async () => {
     setLoading(true);
     setError("");
@@ -80,12 +67,10 @@ export default function RegistrationProcessing() {
     }
   };
 
-  // Tải dữ liệu khi khởi chạy component
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Trạng thái Responsive Mobile
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -94,18 +79,16 @@ export default function RegistrationProcessing() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Tiện ích hiển thị thông báo thành công và tự xóa sau 4 giây
   const showSuccess = (msg: string) => {
     setSuccess(msg);
     setTimeout(() => setSuccess(""), 4000);
   };
 
-  // --- 1. Xử lý Đăng ký Lượt chạy cuộc đua (Race Entries) ---
   const handleEntryApprove = async (id: number) => {
     try {
       await api.post(`/admin/entries/${id}/approve`);
       showSuccess(`Approved race entry #${id}`);
-      fetchData(); // Tải lại để đồng bộ số lượng
+      fetchData();
     } catch (err: any) {
       alert(getErrMsg(err, "Approve failed: "));
     }
@@ -121,7 +104,6 @@ export default function RegistrationProcessing() {
     }
   };
 
-  // --- 2. Xử lý Đăng ký Chiến mã tham gia Hội đua (Horse Meeting Regs) ---
   const handleHorseRegApprove = async (id: number) => {
     try {
       await api.post(`/admin/horse-reg/${id}/approve`);
@@ -142,7 +124,6 @@ export default function RegistrationProcessing() {
     }
   };
 
-  // --- 3. Xử lý Đăng ký Kỵ sĩ tham gia Hội đua (Jockey Meeting Regs) ---
   const handleJockeyRegApprove = async (id: number) => {
     try {
       await api.post(`/admin/jockey-reg/${id}/approve`);
@@ -163,7 +144,6 @@ export default function RegistrationProcessing() {
     }
   };
 
-  // --- 3.5. Xử lý Đăng ký Chủ ngựa tham gia Hội đua (Owner Meeting Regs) ---
   const handleOwnerRegApprove = async (id: number) => {
     try {
       await api.post(`/admin/owner-reg/${id}/approve`);
@@ -184,7 +164,6 @@ export default function RegistrationProcessing() {
     }
   };
 
-  // --- 4. Xử lý Khai báo Ngựa mới vào hệ thống (System Horse Approvals) ---
   const handleSystemHorseApprove = async (id: number) => {
     try {
       await api.post(`/admin/system-horse/${id}/approve`);
@@ -207,21 +186,17 @@ export default function RegistrationProcessing() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Các Thẻ Thống kê Tổng quan (Overview Cards) */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
-        {/* Số đơn chờ duyệt */}
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(201,162,39,0.14)", padding: "1.25rem" }}>
           <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>{$t("Awaiting Decision", (localStorage.getItem('app-lang') || 'en'))}</p>
           <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#c9a227" }}>{awaitingDecisionCount}</h3>
           <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>{$t("pending review", (localStorage.getItem('app-lang') || 'en'))}</p>
         </div>
-        {/* Số đơn đã duyệt */}
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(74,157,111,0.14)", padding: "1.25rem" }}>
           <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>{$t("Approved", (localStorage.getItem('app-lang') || 'en'))}</p>
           <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#4ade80" }}>{approvedCount}</h3>
           <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>{$t("cleared to race", (localStorage.getItem('app-lang') || 'en'))}</p>
         </div>
-        {/* Số đơn từ chối */}
         <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.5)", borderColor: "rgba(239,68,68,0.14)", padding: "1.25rem" }}>
           <p style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.4)", marginBottom: "0.5rem" }}>{$t("Rejected", (localStorage.getItem('app-lang') || 'en'))}</p>
           <h3 style={{ fontSize: "1.75rem", fontWeight: "bold", fontFamily: "monospace", color: "#f87171" }}>{rejectedCount}</h3>
@@ -229,21 +204,18 @@ export default function RegistrationProcessing() {
         </div>
       </div>
 
-      {/* Banner báo lỗi */}
       {error && (
         <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "13px" }}>
           ⚠️ {error}
         </div>
       )}
 
-      {/* Banner báo thành công */}
       {success && (
         <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "13px" }}>
           ✓ {success}
         </div>
       )}
 
-      {/* 1. KHỐI ĐƠN: ĐĂNG KÝ LƯỢT CHẠY CUỘC ĐUA (Pending Race Entries) */}
       {(() => {
         const totalItems = pendingEntries.length;
         const totalPages = Math.max(1, Math.ceil(totalItems / pageSizeEntries));
@@ -258,7 +230,6 @@ export default function RegistrationProcessing() {
               <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Race meeting entry submissions awaiting steward approval", (localStorage.getItem('app-lang') || 'en'))}</p>
             </div>
             {isMobile ? (
-              // Bố cục di động
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
                 {loading ? (
                   <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</div>
@@ -362,7 +333,6 @@ export default function RegistrationProcessing() {
         );
       })()}
 
-      {/* 2. KHỐI ĐƠN: ĐĂNG KÝ CHIẾN MÃ THAM GIA HỘI ĐUA (Pending Horse Meeting Registrations) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Horse Meeting Registrations", (localStorage.getItem('app-lang') || 'en'))}</h4>
@@ -432,7 +402,6 @@ export default function RegistrationProcessing() {
         )}
       </div>
 
-      {/* 2.5. KHỐI ĐƠN: ĐĂNG KÝ CHỦ NGỰA THAM GIA HỘI ĐUA (Pending Owner Meeting Registrations) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Owner Meeting Registrations", (localStorage.getItem('app-lang') || 'en'))}</h4>
@@ -459,7 +428,7 @@ export default function RegistrationProcessing() {
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Email: {e.owner?.email}</div>
                 </div>
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#f4f2ec', marginBottom: '0.25rem' }}>{e.meeting?.name}</div>
-                <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#34d399', marginBottom: '0.25rem' }}>🎟️ Ticket: {Number(e.ticketPrice || e.meeting?.ticketPrice || 0).toLocaleString('en-US')} VNĐ (✓ Paid)</div>
+                <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#34d399', marginBottom: '0.25rem' }}>🎟️ Ticket: {Number(e.ticketPrice || e.meeting?.ticketPrice || 0).toLocaleString('en-US')} VND (✓ Paid)</div>
                 <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>Submitted: {e.registration?.registeredAt}</div>
               </div>
             ))}
@@ -488,7 +457,7 @@ export default function RegistrationProcessing() {
                     </td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{e.meeting?.name}</td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace" }}>
-                      <span style={{ color: '#34d399', fontWeight: 'bold' }}>🎟️ {Number(e.ticketPrice || e.meeting?.ticketPrice || 0).toLocaleString('en-US')} VNĐ</span>
+                      <span style={{ color: '#34d399', fontWeight: 'bold' }}>🎟️ {Number(e.ticketPrice || e.meeting?.ticketPrice || 0).toLocaleString('en-US')} VND</span>
                       <div style={{ fontSize: '9px', color: '#4ade80' }}>✓ Paid from Wallet</div>
                     </td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{e.registration?.registeredAt}</td>
@@ -507,7 +476,6 @@ export default function RegistrationProcessing() {
         )}
       </div>
 
-      {/* 3. KHỐI ĐƠN: ĐĂNG KÝ KỴ SĨ THAM GIA HỘI ĐUA (Pending Jockey Meeting Registrations) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Jockey Meeting Registrations", (localStorage.getItem('app-lang') || 'en'))}</h4>
@@ -534,7 +502,7 @@ export default function RegistrationProcessing() {
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Base weight: {e.jockey?.weight} kg</div>
                 </div>
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#f4f2ec', marginBottom: '0.25rem' }}>{e.meeting?.name}</div>
-                <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#38bdf8', marginBottom: '0.25rem' }}>🎟️ Fee: FREE (0 VNĐ - Free for Jockey)</div>
+                <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#38bdf8', marginBottom: '0.25rem' }}>🎟️ Fee: FREE (0 VND - Free for Jockey)</div>
                 <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>Submitted: {e.registration?.registeredAt}</div>
               </div>
             ))}
@@ -563,7 +531,7 @@ export default function RegistrationProcessing() {
                     </td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{e.meeting?.name}</td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace" }}>
-                      <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>🎟️ FREE (0 VNĐ)</span>
+                      <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>🎟️ FREE (0 VND)</span>
                       <div style={{ fontSize: '9px', color: '#38bdf8' }}>✓ Exempt (Free for Jockey)</div>
                     </td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{e.registration?.registeredAt}</td>
@@ -582,7 +550,6 @@ export default function RegistrationProcessing() {
         )}
       </div>
 
-      {/* 4. KHỐI ĐƠN: ĐĂNG KÝ KHAI BÁO NGỰA MỚI (Pending System Horse Approvals) */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending System Horse Approvals", (localStorage.getItem('app-lang') || 'en'))}</h4>
@@ -649,7 +616,6 @@ export default function RegistrationProcessing() {
         )}
       </div>
 
-      {/* Modal Xem thông tin chi tiết người đăng ký (Requirement #8) */}
       {viewingRegistrant && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
           <div className="bg-[#181613] border border-sky-500/30 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5">
@@ -685,8 +651,8 @@ export default function RegistrationProcessing() {
                 <span className="text-white/50">Ticket Price:</span>
                 <span className={`font-bold ${viewingRegistrant.role === 'Jockey' ? 'text-sky-400' : 'text-emerald-400'}`}>
                   {viewingRegistrant.role === 'Jockey'
-                    ? 'FREE (0 VNĐ - Jockey)'
-                    : `${Number(viewingRegistrant.ticketPrice || viewingRegistrant.meeting?.ticketPrice || 0).toLocaleString('en-US')} VNĐ`}
+                    ? 'FREE (0 VND - Jockey)'
+                    : `${Number(viewingRegistrant.ticketPrice || viewingRegistrant.meeting?.ticketPrice || 0).toLocaleString('en-US')} VND`}
                 </span>
               </div>
               <div className="flex justify-between bg-white/[0.03] p-2.5 rounded-lg border border-white/5">

@@ -370,7 +370,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                 onClick={() => { setPreselectedPkg("SEASON"); isManualPaywallOpenRef.current = true; setShowPaywallModal(true); }}
                 style={{ padding: "0.45rem 0.85rem", background: "linear-gradient(135deg, #c9a227 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", fontSize: "11px", borderRadius: "0.5rem", border: "none", cursor: "pointer", fontFamily: "monospace" }}
               >
-                ⚡ Upgrade to Season Pass (64,000 VNĐ)
+                ⚡ Upgrade to Season Pass (64,000 VND)
               </button>
             )}
             <button

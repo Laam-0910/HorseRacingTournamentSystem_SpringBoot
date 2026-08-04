@@ -2,29 +2,26 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 
-// Khai báo kiểu dữ liệu cho một mục điều hướng (Navigation Item) trên Sidebar
 interface NavItem {
-  index: string;       // Thứ tự hiển thị, ví dụ: "01", "02"...
-  icon: string;        // Tên của icon tương ứng trong bản đồ ICONS
-  label: string;       // Nhãn hiển thị gốc (tiếng Anh)
-  view: string;        // Tên định danh view (dùng để chuyển đổi tab nội dung)
-  badge?: number;      // Số thông báo hiển thị góc mục điều hướng (nếu có)
+  index: string;
+  icon: string;
+  label: string;
+  view: string;
+  badge?: number;
 }
 
-// Khai báo kiểu dữ liệu cho các Props nhận vào của DashboardLayout
 interface DashboardLayoutProps {
-  roleLabel: string;                    // Nhãn vai trò người dùng (ví dụ: "Admin", "Jockey"...)
-  roleColor: string;                    // Mã màu đặc trưng cho vai trò đó (dùng làm viền/text highlight)
-  activeLabel: string;                  // Nhãn của view đang kích hoạt để hiển thị trên topbar
-  currentView: string;                  // Tên view hiện tại
-  navItems: NavItem[];                 // Danh sách các mục điều hướng trên sidebar
-  onViewChange: (view: string) => void; // Callback kích hoạt khi người dùng chọn tab mới
-  children: React.ReactNode;            // Nội dung chính của trang dashboard sẽ được lồng vào
-  successMsg?: string;                  // Banner thông báo thành công (nếu có)
-  errorMsg?: string;                    // Banner thông báo lỗi (nếu có)
+  roleLabel: string;
+  roleColor: string;
+  activeLabel: string;
+  currentView: string;
+  navItems: NavItem[];
+  onViewChange: (view: string) => void;
+  children: React.ReactNode;
+  successMsg?: string;
+  errorMsg?: string;
 }
 
-// Bản đồ chứa các thẻ SVG tương ứng với tên icon từ thư viện Lucide (phục vụ việc tương thích CDN không cần install trọn bộ Lucide)
 const ICONS: Record<string, JSX.Element> = {
   "layout-dashboard": <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>,
   "layers": <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>,
@@ -57,14 +54,10 @@ const ICONS: Record<string, JSX.Element> = {
 };
 
 /**
- * Component hiển thị Icon SVG theo tên được truyền vào.
- * @param name Tên của Icon khớp với khóa trong object `ICONS`
- * @param size Kích thước icon (mặc định là 14px)
- * @param color Màu sắc icon (mặc định kế thừa 'currentColor')
  */
 function Icon({ name, size = 14, color }: { name: string; size?: number; color?: string }) {
   const icon = ICONS[name];
-  if (!icon) return null; // Nếu không tìm thấy icon tương ứng thì không render gì cả
+  if (!icon) return null;
   return (
     <span style={{ display: 'inline-flex', width: size, height: size, color: color || 'currentColor', flexShrink: 0 }}>
       {icon}
@@ -73,28 +66,20 @@ function Icon({ name, size = 14, color }: { name: string; size?: number; color?:
 }
 
 /**
- * Hàm dịch thuật nhãn hiển thị dựa trên ngôn ngữ được người dùng lựa chọn (vi, en, zh, ja).
- * @param label Nhãn gốc bằng tiếng Anh cần dịch
- * @param lang Mã ngôn ngữ hiện tại của app ('vi', 'en', 'zh', 'ja')
  */
 const translateLabel = (label: string, lang: string = 'en'): string => {
   const dict: Record<string, Record<string, string>> = {
     "Incidents": { en: "Incidents" },
     "Duties": { en: "Duties" }
   };
-  // Tìm khóa trong từ điển không phân biệt chữ hoa/chữ thường
   const key = Object.keys(dict).find(k => k.toLowerCase() === label.toLowerCase());
   if (key) {
-    // Trả về bản dịch tương ứng theo ngôn ngữ, mặc định là tiếng Anh nếu không có bản dịch
     return dict[key][lang] || dict[key]["en"] || label;
   }
   return label;
 };
 
 /**
- * Component bố cục chính (Layout) của các trang Dashboard.
- * Quản lý Sidebar đóng/mở, chuyển ngôn ngữ toàn hệ thống, trạng thái tài khoản,
- * phản hồi kích thước mobile và hiển thị các banner thông báo chung.
  */
 import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
 
@@ -109,22 +94,17 @@ export default function DashboardLayout({
   successMsg,
   errorMsg,
 }: DashboardLayoutProps) {
-  // Lấy dữ liệu user và hàm đăng xuất từ AuthContext
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
-  // Trạng thái thu gọn (collapsed) của Sidebar, được khởi tạo từ localStorage
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem('sidebar-pinned') === 'false';
   });
   
-  // Trạng thái rê chuột hover lên sidebar thu gọn để tự động nở rộng tạm thời
   const [hovering, setHovering] = useState(false);
-  // State lưu trữ ngày hiện tại định dạng chuỗi theo ngôn ngữ
   const [today, setToday] = useState('');
   const [lang] = useState('en');
 
-  // Quản lý luồng phát máy quay toàn cục (Không bị ngắt khi đổi tab/trang)
   const [globalBroadcasterRace, setGlobalBroadcasterRace] = useState<any | null>(null);
 
   useEffect(() => {
@@ -137,49 +117,41 @@ export default function DashboardLayout({
     return () => window.removeEventListener("OPEN_BROADCASTER", handleOpenGlobalBroadcaster);
   }, []);
   
-  // Trạng thái phát hiện giao diện đang hiển thị trên Mobile (<1024px)
   const [isMobile, setIsMobile] = useState(false);
-  // Trạng thái hiển thị Drawer menu trên Mobile
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Effect cập nhật chuỗi hiển thị ngày hôm nay
   useEffect(() => {
     const d = new Date();
     setToday(d.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }));
   }, []);
 
-  // Effect phát hiện thay đổi kích thước cửa sổ để chuyển sang chế độ Mobile
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;
       setIsMobile(mobile);
       if (!mobile) {
-        setMobileMenuOpen(false); // Đóng menu mobile nếu màn hình chuyển lại sang Desktop
+        setMobileMenuOpen(false);
       }
     };
-    handleResize(); // Chạy khởi tạo lúc mount component
+    handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Hàm toggle trạng thái Sidebar và lưu cài đặt này vào local storage
   const toggleSidebar = () => {
     const next = !collapsed;
     setCollapsed(next);
     localStorage.setItem('sidebar-pinned', next ? 'false' : 'true');
   };
 
-  // Hàm xử lý khi click chọn mục menu trên sidebar
   const handleNavClick = (view: string) => {
-    onViewChange(view); // Gọi hàm chuyển đổi view ở component cha
+    onViewChange(view);
     if (isMobile) {
-      setMobileMenuOpen(false); // Tự động đóng menu trượt nếu đang ở mobile
+      setMobileMenuOpen(false);
     }
   };
 
-  // Sidebar được nở rộng hoàn toàn khi: không bị collapsed HOẶC đang hover chuột lên sidebar
   const sidebarExpanded = !collapsed || hovering;
-  // Lấy 2 chữ cái đầu của tên hiển thị để làm ảnh đại diện fallback nếu không có avatar
   const initials = ((user?.fullName || user?.username) || 'U').substring(0, 2).toUpperCase();
 
   return (
@@ -187,7 +159,6 @@ export default function DashboardLayout({
       className="flex h-screen w-full overflow-hidden"
       style={{ display: 'flex', height: '100vh', width: '100%', overflow: 'hidden', background: 'var(--background)', color: 'var(--foreground)', '--role-color': roleColor } as React.CSSProperties}
     >
-      {/* Phông nền đen mờ (Backdrop) phủ lên màn hình khi mở Sidebar ở Mobile */}
       {isMobile && mobileMenuOpen && (
         <div
           style={{
@@ -198,11 +169,10 @@ export default function DashboardLayout({
             zIndex: 45,
             transition: 'opacity 0.3s ease',
           }}
-          onClick={() => setMobileMenuOpen(false)} // Click vào phông nền sẽ đóng menu
+          onClick={() => setMobileMenuOpen(false)}
         />
       )}
 
-      {/* Sidebar Wrapper - Thanh điều hướng bên trái */}
       <aside
         style={isMobile ? {
           position: 'fixed',
@@ -221,8 +191,8 @@ export default function DashboardLayout({
           zIndex: 40,
           position: 'relative',
         }}
-        onMouseEnter={() => !isMobile && collapsed && setHovering(true)} // Hover nở rộng sidebar
-        onMouseLeave={() => !isMobile && setHovering(false)} // Rời chuột thu hẹp sidebar
+        onMouseEnter={() => !isMobile && collapsed && setHovering(true)}
+        onMouseLeave={() => !isMobile && setHovering(false)}
       >
         <div
           id="sidebar"
@@ -238,15 +208,12 @@ export default function DashboardLayout({
             boxShadow: (!isMobile && collapsed && hovering) ? '10px 0 30px rgba(0,0,0,0.65)' : 'none',
           }}
         >
-          {/* Logo Phần đầu Sidebar */}
           <div style={{ padding: '1.25rem', borderBottom: '1px solid var(--sidebar-border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                {/* Icon cup vàng đặc trưng */}
                 <div style={{ width: 40, height: 40, borderRadius: '0.375rem', background: '#c9a227', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: '#0e0c09' }}>
                   <Icon name="trophy" size={20} />
                 </div>
-                {/* Hiển thị thương hiệu nếu sidebar đang nở rộng */}
                 {(isMobile || sidebarExpanded) && (
                   <div className="sidebar-text">
                     <h1 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: '0.9rem', color: 'var(--foreground)', lineHeight: 1.2 }}>HorseRace</h1>
@@ -254,7 +221,6 @@ export default function DashboardLayout({
                   </div>
                 )}
               </div>
-              {/* Nút đóng/thu gọn sidebar */}
               {isMobile ? (
                 <button
                   onClick={() => setMobileMenuOpen(false)}
@@ -275,10 +241,9 @@ export default function DashboardLayout({
             </div>
           </div>
 
-          {/* Phần Avatar & Tên tài khoản người dùng */}
           <div 
             onClick={() => handleNavClick('profile')}
-            title={lang === "vi" ? "Đến Trang cá nhân & 2FA" : lang === "zh" ? "前往个人中心 with 双重认证" : lang === "ja" ? "プロフィールと2FAへ" : "Go to Profile & 2FA"}
+            title={lang === "vi" ? "Go to Profile & 2FA" : lang === "zh" ? "前往个人中心 with 双重认证" : lang === "ja" ? "プロフィールと2FAへ" : "Go to Profile & 2FA"}
             style={{ 
               padding: '1rem 1.25rem', 
               borderBottom: '1px solid var(--sidebar-border)', 
@@ -290,7 +255,6 @@ export default function DashboardLayout({
             }}
             className="hover:bg-white/[0.04]"
           >
-            {/* Vòng tròn ảnh đại diện hiển thị theo mã màu vai trò */}
             <div style={{ 
               width: 36, height: 36, 
               borderRadius: '50%', 
@@ -306,7 +270,6 @@ export default function DashboardLayout({
                 initials
               )}
             </div>
-            {/* Tên và chức vụ của người dùng */}
             {(isMobile || sidebarExpanded) && (
               <div style={{ overflow: 'hidden', flex: 1 }} className="sidebar-text">
                 <p style={{ fontSize: '0.85rem', fontWeight: 500, color: 'var(--foreground)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.fullName || user?.username}</p>
@@ -315,11 +278,10 @@ export default function DashboardLayout({
             )}
           </div>
 
-          {/* Danh sách các nút menu Điều hướng chính (Navigation Links) */}
           <nav style={{ flex: 1, padding: '0.75rem', overflowY: 'auto' }} className="scrollbar-hide">
             {(isMobile || sidebarExpanded) && (
               <p style={{ fontSize: '0.6rem', fontFamily: 'monospace', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0 0.75rem', marginBottom: '0.5rem' }}>
-                {lang === "vi" ? "Tiến trình" : lang === "zh" ? "工作流" : lang === "ja" ? "ワークフロー" : "Workflow"}
+                {lang === "vi" ? "Workflow" : lang === "zh" ? "工作流" : lang === "ja" ? "ワークフロー" : "Workflow"}
               </p>
             )}
             {navItems.map((item) => {
@@ -348,24 +310,20 @@ export default function DashboardLayout({
                     transition: 'all 0.25s',
                   }}
                 >
-                  {/* Nếu sidebar bị thu gọn, chỉ hiển thị số thứ tự menu "01", "02"... */}
                   {!(isMobile || sidebarExpanded) ? (
                     <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', fontWeight: 700, color: isActive ? roleColor : 'rgba(255,255,255,0.4)', width: '100%', textAlign: 'center' }}>
                       {item.index}
                     </span>
                   ) : (
                     <>
-                      {/* Hiển thị số thứ tự menu nhỏ bên trái nhãn tên */}
                       <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', width: 20, textAlign: 'right', flexShrink: 0, color: isActive ? roleColor : 'rgba(255,255,255,0.25)' }}>
                         {item.index}
                       </span>
-                      {/* Nhãn chữ được dịch thuật */}
                       <span style={{ flex: 1, fontSize: '0.75rem', color: isActive ? roleColor : 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="sidebar-text">
                         {translateLabel(item.label)}
                       </span>
                     </>
                   )}
-                  {/* Hiển thị huy hiệu số thông báo màu vai trò nếu badge > 0 */}
                   {(isMobile || sidebarExpanded) && item.badge !== undefined && item.badge !== null && item.badge > 0 && (
                     <span style={{ background: roleColor, color: '#0b0d11', fontSize: '0.5rem', fontFamily: 'monospace', fontWeight: 700, padding: '0.125rem 0.375rem', borderRadius: '9999px' }}>
                       {item.badge}
@@ -376,34 +334,28 @@ export default function DashboardLayout({
             })}
           </nav>
 
-          {/* Phần chân Sidebar chứa nút Về trang chủ và Đăng xuất */}
           <div style={{ borderTop: '1px solid var(--sidebar-border)', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}>
-            {/* Nút quay về Trang chủ công khai */}
             <button
               onClick={() => navigate('/')}
               style={{ display: 'flex', alignItems: 'center', gap: (isMobile || sidebarExpanded) ? '0.75rem' : 0, justifyContent: (isMobile || sidebarExpanded) ? 'flex-start' : 'center', width: 'calc(100% - 1.5rem)', margin: '0 0.75rem', padding: '0.625rem 0.75rem', borderRadius: '0.25rem', background: 'transparent', border: 'none', color: 'var(--muted-foreground)', fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
             >
               <Icon name="home" size={16} />
-              {(isMobile || sidebarExpanded) && <span className="sidebar-text">{lang === "vi" ? "Về trang chủ" : lang === "zh" ? "返回首页" : lang === "ja" ? "ホームに戻る" : "Back to Home"}</span>}
+              {(isMobile || sidebarExpanded) && <span className="sidebar-text">{lang === "vi" ? "Back to Home" : lang === "zh" ? "返回首页" : lang === "ja" ? "ホームに戻る" : "Back to Home"}</span>}
             </button>
-            {/* Nút Đăng xuất khỏi hệ thống */}
             <button
               onClick={() => { logout(); navigate('/login'); }}
               style={{ display: 'flex', alignItems: 'center', gap: (isMobile || sidebarExpanded) ? '0.75rem' : 0, justifyContent: (isMobile || sidebarExpanded) ? 'flex-start' : 'center', width: 'calc(100% - 1.5rem)', margin: '0 0.75rem 0.5rem', padding: '0.625rem 0.75rem', borderRadius: '0.25rem', background: 'transparent', border: 'none', color: 'var(--muted-foreground)', fontSize: '0.875rem', cursor: 'pointer', transition: 'all 0.2s' }}
             >
               <Icon name="log-out" size={16} />
-              {(isMobile || sidebarExpanded) && <span className="sidebar-text">{lang === "vi" ? "Đăng xuất" : lang === "zh" ? "退出登录" : lang === "ja" ? "ログアウト" : "Sign out"}</span>}
+              {(isMobile || sidebarExpanded) && <span className="sidebar-text">{lang === "vi" ? "Sign out" : lang === "zh" ? "退出登录" : lang === "ja" ? "ログアウト" : "Sign out"}</span>}
             </button>
           </div>
         </div>
       </aside>
 
-      {/* Main Content Area - Vùng nội dung chính bên phải */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        {/* Topbar - Thanh tiêu đề trên cùng */}
         <header style={{ height: '3.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 1.5rem', background: 'rgba(21,19,16,0.4)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            {/* Nút Hamburger để mở sidebar trên thiết bị di động */}
             {isMobile && (
               <button
                 onClick={() => setMobileMenuOpen(true)}
@@ -422,40 +374,32 @@ export default function DashboardLayout({
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
               </button>
             )}
-            {/* Tiêu đề của View đang active */}
             <h2 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: '0.9rem', color: 'var(--foreground)' }}>{translateLabel(activeLabel)}</h2>
-            {/* Badge hiển thị Vai trò hiện tại của tài khoản */}
             <span style={{ fontSize: '0.6rem', fontFamily: 'monospace', textTransform: 'uppercase', letterSpacing: '0.1em', padding: '0.125rem 0.5rem', borderRadius: '0.25rem', background: `${roleColor}22`, color: roleColor }}>
               {translateLabel(roleLabel)}
             </span>
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            {/* Hiển thị ngày hôm nay trên Desktop */}
             {!isMobile && <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>{today}</span>}
           </div>
         </header>
 
-        {/* Khung cuộn chứa nội dung các view chức năng */}
         <div style={{ flex: 1, overflowY: 'auto', padding: isMobile ? '1rem' : '1.5rem' }} className="scrollbar-hide">
-          {/* Banner thông báo thành công */}
           {successMsg && (
             <div style={{ marginBottom: '1rem', padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(74,157,111,0.1)', border: '1px solid rgba(74,157,111,0.2)', color: '#4a9d6f', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
               <Icon name="check-circle" size={16} /> {successMsg}
             </div>
           )}
-          {/* Banner thông báo lỗi */}
           {errorMsg && (
             <div style={{ marginBottom: '1rem', padding: '0.75rem', borderRadius: '0.5rem', background: 'rgba(192,57,43,0.1)', border: '1px solid rgba(192,57,43,0.2)', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
               <Icon name="alert-circle" size={16} /> {errorMsg}
             </div>
           )}
 
-          {/* Render các component con (view được hiển thị) kèm hiệu ứng CSS animate-in */}
           <div className="animate-in">{children}</div>
         </div>
 
-        {/* Modal/Widget Máy quay phát sóng toàn cục - Luôn giữ nguyên khi chuyển tab/trang */}
         {globalBroadcasterRace && (
           <CameraBroadcasterModal
             raceId={globalBroadcasterRace.id}

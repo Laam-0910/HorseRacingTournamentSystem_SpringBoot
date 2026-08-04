@@ -7,15 +7,12 @@ interface Props {
   roleLabel: string;
 }
 
-// ── Component hiển thị Tab Hồ sơ cá nhân ──────────────────────────────
 export default function ProfileTab({ roleColor, roleLabel }: Props) {
-  const { user, setUser } = useAuth(); // Quản lý thông tin đăng nhập
+  const { user, setUser } = useAuth();
   
-  // State phục vụ việc responsive
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   
-  // Lắng nghe kích thước màn hình
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -26,17 +23,15 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
   
-  // Khởi tạo các state thông tin cá nhân
-  const [fullName, setFullName] = useState(user?.fullName || user?.username || ""); // Họ và tên
-  const [email, setEmail] = useState(user?.email || ""); // Địa chỉ Email
-  const [weight, setWeight] = useState(user?.weight?.toString() || ""); // Cân nặng
-  const [biography, setBiography] = useState(user?.biography || ""); // Tiểu sử
-  const [avatar, setAvatar] = useState(user?.avatar || ""); // Ảnh đại diện
-  const [profileLoading, setProfileLoading] = useState(false); // Trạng thái đang tải
-  const [profileMsg, setProfileMsg] = useState(""); // Thông báo cập nhật thành công
-  const [profileErr, setProfileErr] = useState(""); // Thông báo cập nhật lỗi
+  const [fullName, setFullName] = useState(user?.fullName || user?.username || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [weight, setWeight] = useState(user?.weight?.toString() || "");
+  const [biography, setBiography] = useState(user?.biography || "");
+  const [avatar, setAvatar] = useState(user?.avatar || "");
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileMsg, setProfileMsg] = useState("");
+  const [profileErr, setProfileErr] = useState("");
 
-  // State cho tính năng OTP/2FA
   const [otpEnabled, setOtpEnabled] = useState<boolean>(user?.requireOtp ?? false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMsg, setOtpMsg] = useState("");
@@ -195,10 +190,10 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "1px", fontFamily: "'Outfit', 'Inter', sans-serif"
   };
 
-  const displayRoleLabel = roleLabel === "Horse Owner" || roleLabel === "Chủ ngựa" ? "HORSE OWNER" 
-    : roleLabel === "Jockey" || roleLabel === "Nài ngựa" ? "JOCKEY" 
-    : roleLabel === "Admin" || roleLabel === "Quản trị viên" ? "ADMIN"
-    : roleLabel === "Referee" || roleLabel === "Trọng tài" ? "REFEREE"
+  const displayRoleLabel = roleLabel === "Horse Owner" || roleLabel === "Horse Owner" ? "HORSE OWNER" 
+    : roleLabel === "Jockey" || roleLabel === "Jockey" ? "JOCKEY" 
+    : roleLabel === "Admin" || roleLabel === "Admin" ? "ADMIN"
+    : roleLabel === "Referee" || roleLabel === "Referee" ? "REFEREE"
     : roleLabel.toUpperCase();
 
   return (
@@ -485,10 +480,25 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                    </div>
                  </div>
                  
-                 {/* Toggle Switch */}
-                 <div onClick={toggleOtp} style={{ width: 60, height: 34, borderRadius: 17, background: otpEnabled ? "#10b981" : "rgba(0,0,0,0.6)", border: `2px solid ${otpEnabled ? "#10b981" : "rgba(255,255,255,0.2)"}`, cursor: "pointer", position: "relative", transition: "all 0.3s" }}>
-                    <div style={{ position: "absolute", top: 2, left: otpEnabled ? 28 : 2, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 0.3s cubic-bezier(0.4, 0, 0.2, 1)", boxShadow: "0 2px 5px rgba(0,0,0,0.3)" }} />
-                 </div>
+                  {/* Uiverse Infinity Path Toggle Switch */}
+                  <div className="uiverse-switch-container">
+                    <input 
+                      id="check-2fa" 
+                      type="checkbox" 
+                      checked={otpEnabled} 
+                      onChange={toggleOtp} 
+                    />
+                    <label className="uiverse-infinity-switch" htmlFor="check-2fa">
+                      <svg viewBox="0 0 212.4992 84.4688" overflow="visible">
+                        <path
+                          pathLength="360"
+                          fill="none"
+                          stroke="currentColor"
+                          d="M 42.2496 0 A 42.24 42.24 90 0 0 0 42.2496 A 42.24 42.24 90 0 0 42.2496 84.4688 A 42.24 42.24 90 0 0 84.4992 42.2496 A 42.24 42.24 90 0 0 42.2496 0 A 42.24 42.24 90 0 0 0 42.2496 A 42.24 42.24 90 0 0 42.2496 84.4688 L 170.2496 84.4688 A 42.24 42.24 90 0 0 212.4992 42.2496 A 42.24 42.24 90 0 0 170.2496 0 A 42.24 42.24 90 0 0 128 42.2496 A 42.24 42.24 90 0 0 170.2496 84.4688 A 42.24 42.24 90 0 0 212.4992 42.2496 A 42.24 42.24 90 0 0 170.2496 0 L 42.2496 0"
+                        ></path>
+                      </svg>
+                    </label>
+                  </div>
                </div>
                
                <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: 0 }}>

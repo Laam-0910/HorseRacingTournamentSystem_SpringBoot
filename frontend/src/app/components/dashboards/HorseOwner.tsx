@@ -1,18 +1,11 @@
 import { Pagination } from "../common/Pagination";
 import { useState, useEffect } from "react";
-// Import hook useAuth từ ngữ cảnh AuthContext
 import { useAuth } from "../../../context/AuthContext";
-// Import api client và hàm lấy thông báo lỗi getErrMsg
 import { api, getErrMsg } from "../../../lib/api";
-// Import các hàm hỗ trợ định dạng ngày giờ và hạng đấu
 import { parseSafeDate, formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
-// Import khung bố cục DashboardLayout
 import DashboardLayout from "../layout/DashboardLayout";
-// Import ProfileTab hiển thị thông tin cá nhân
 import ProfileTab from "./components/ProfileTab";
-// Import ProfileModal hiển thị popup thông tin người dùng
 import ProfileModal from "./components/ProfileModal";
-// Import HorsePerformanceModal hiển thị thông số thành tích ngựa
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import ViewLive from "./components/ViewLive";
 import UserWalletView from "./components/UserWalletView";
@@ -272,7 +265,7 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
       {dashboard && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: "1rem" }}>
           {[
-            { label: "💰 Wallet Balance", value: `${walletBal.toLocaleString('en-US')} VNĐ`, color: "#fbbf24" },
+            { label: "💰 Wallet Balance", value: `${walletBal.toLocaleString('en-US')} VND`, color: "#fbbf24" },
             { label: "Total Horses",          value: dashboard.totalHorses ?? 0,           color: ROLE_COLOR },
             { label: "Stable Avg Rank",       value: dashboard.averagePlace ? Number(dashboard.averagePlace).toFixed(1) : "N/A" },
             { label: "Races Completed",       value: dashboard.racesCompleted ?? 0,         color: "#c9a227" },
@@ -1184,7 +1177,6 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
           <span><strong style={{ color: "rgba(201,162,39,0.8)" }}>Close:</strong> {formatDate(race.registrationEndTime)}</span>
         </div>
 
-        {/* Trọng tài phân công cho trận đua */}
         {assignedReferees.length > 0 && (
           <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: "0.4rem" }}>
             <span style={{ color: "#c9a227", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "4px" }}>

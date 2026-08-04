@@ -6,7 +6,6 @@ import ProfileModal from "../dashboards/components/ProfileModal";
 import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
 import { Pagination } from "../common/Pagination";
 
-// Cấu trúc đối tượng Ngày hội đua
 interface Meeting {
   id: number;
   name: string;
@@ -15,7 +14,6 @@ interface Meeting {
   totalBudget: number;
 }
 
-// Cấu trúc đối tượng người dùng (được lọc vai trò Trọng tài)
 interface User {
   id: number;
   username: string;
@@ -26,7 +24,6 @@ interface User {
   avatar?: string;
 }
 
-// Cấu trúc đối tượng cuộc đua
 interface Race {
   id: number;
   raceMeetingId: number;
@@ -47,14 +44,8 @@ interface Race {
 }
 
 /**
- * Component Race - Phân hệ Thiết lập và Lên lịch cuộc đua (Race Scheduler) dành cho Admin.
- * - Cho phép tạo cuộc đua mới thuộc một Ngày hội đua (Race Meeting).
- * - Kiểm tra ràng buộc ngày bắt đầu trùng khớp ngày hội đua, kiểm tra trùng lặp giờ chạy.
- * - Cho phép chỉnh sửa lịch trình, phân công trọng tài giám sát (Assign/Remove Referee).
- * - Quản lý link phát trực tiếp khi cuộc đua chính thức chạy (RUNNING).
  */
 export default function Race() {
-  // Trạng thái Responsive Mobile
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => {
@@ -65,23 +56,19 @@ export default function Race() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // State lưu ID người dùng cần xem Profile modal
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
   const [broadcasterRace, setBroadcasterRace] = useState<any | null>(null);
 
-  // Các state lưu trữ dữ liệu từ API
-  const [meetings, setMeetings] = useState<Meeting[]>([]); // Danh sách ngày hội đua
-  const [races, setRaces] = useState<Race[]>([]); // Danh sách các cuộc đua trong hệ thống
-  const [referees, setReferees] = useState<User[]>([]); // Danh sách tài khoản trọng tài (roleId=5)
-  const [refereesMap, setRefereesMap] = useState<Record<number, User[]>>({}); // Bản đồ trọng tài được phân công theo raceId
+  const [meetings, setMeetings] = useState<Meeting[]>([]);
+  const [races, setRaces] = useState<Race[]>([]);
+  const [referees, setReferees] = useState<User[]>([]);
+  const [refereesMap, setRefereesMap] = useState<Record<number, User[]>>({});
   
-  // Trạng thái chờ và thông báo
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [editError, setEditError] = useState("");
 
-  // --- Các State phục vụ Biểu mẫu Tạo mới cuộc đua ---
   const [meetingId, setMeetingId] = useState("");
   const [classLevel, setClassLevel] = useState("Class 1");
   const [trackType, setTrackType] = useState("Turf");
@@ -93,7 +80,6 @@ export default function Race() {
   const [minEntries, setMinEntries] = useState("3");
   const [purse, setPurse] = useState("");
 
-  // --- Các State phục vụ Modal Chỉnh sửa cuộc đua ---
   const [editingRace, setEditingRace] = useState<Race | null>(null);
   const [editStartTime, setEditStartTime] = useState("");
   const [editRegStartTime, setEditRegStartTime] = useState("");
@@ -104,9 +90,7 @@ export default function Race() {
   const [editMaxEntries, setEditMaxEntries] = useState("12");
   const [editMinEntries, setEditMinEntries] = useState("3");
 
-  // State lưu tạm link livestream youtube của từng trận đang RUNNING
   const [liveUrls, setLiveUrls] = useState<Record<number, string>>({});
-  // Trọng tài được chọn để phân công theo từng cuộc đua
   const [assignRefSelection, setAssignRefSelection] = useState<Record<number, string>>({});
 
   const [page, setPage] = useState(1);
@@ -134,15 +118,14 @@ export default function Race() {
     }
   }, [meetingId, meetings]);
 
-  // Hàm tải đồng bộ dữ liệu cuộc đua, hội đua, trọng tài và bản đồ phân công trọng tài
   const fetchData = async () => {
     setLoading(true);
     try {
       const [meetingsData, racesData, usersData, refsMapData] = await Promise.all([
         api.get<Meeting[]>("/public/meetings").catch(() => []),
         api.get<Race[]>("/races").catch(() => []),
-        api.get<User[]>("/public/users?roleId=5").catch(() => []), // Tải trọng tài
-        api.get<Record<number, User[]>>("/admin/races/referees").catch(() => ({})), // Tải ánh xạ phân công trọng tài
+        api.get<User[]>("/public/users?roleId=5").catch(() => []),
+        api.get<Record<number, User[]>>("/admin/races/referees").catch(() => ({})),
         api.get<any[]>("/system/configs").catch(() => []),
       ]);
       setMeetings(meetingsData);
@@ -174,12 +157,10 @@ export default function Race() {
     }
   };
 
-  // Kéo dữ liệu khi mount component
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Xử lý khi Admin chọn Ngày hội đua trong Select box: Tự động điền ngày giờ bắt đầu mặc định
   const handleSelectMeeting = (idStr: string) => {
     setMeetingId(idStr);
     if (!idStr) {
@@ -192,12 +173,11 @@ export default function Race() {
       if (dt) {
         const pad = (n: number) => String(n).padStart(2, "0");
         const dateStr = `${pad(dt.getDate())}-${pad(dt.getMonth() + 1)}-${dt.getFullYear()}`;
-        setStartTime(`${dateStr} 13:00:00`); // Mặc định mở màn lúc 13h chiều cùng ngày
+        setStartTime(`${dateStr} 13:00:00`);
       }
     }
   };
 
-  // Xử lý tạo cuộc đua mới
   const handleCreateRace = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -219,7 +199,6 @@ export default function Race() {
       return;
     }
 
-    // Ràng buộc thời gian cuộc đua: Phải diễn ra trong đúng ngày tổ chức Ngày hội đua
     const selectedMeeting = meetings.find(m => m.id === parseInt(meetingId));
     if (selectedMeeting) {
       const meetDate = parseSafeDate(selectedMeeting.startDate);
@@ -236,7 +215,6 @@ export default function Race() {
       }
     }
 
-    // Kiểm tra trùng Class Level trong cùng Race Meeting (client-side pre-check)
     const selectedMeetingId = parseInt(meetingId);
     const duplicateClass = races.find(
       r => r.raceMeetingId === selectedMeetingId &&
@@ -248,7 +226,6 @@ export default function Race() {
       return;
     }
 
-    // Kiểm tra giới hạn Purse theo Quy định Season Class Rules
     const currentRule = seasonRules.find(r => r.classLevel?.toLowerCase() === classLevel.toLowerCase());
     if (currentRule) {
       const purseVal = parseFloat(purse);
@@ -256,11 +233,11 @@ export default function Race() {
         const minP = Number(currentRule.minPrize || 0);
         const maxP = Number(currentRule.maxPrize || 0);
         if (currentRule.minPrize != null && purseVal < minP) {
-          setError(`Race purse (${Math.round(purseVal).toLocaleString()} VNĐ) is below the minimum allowed for ${classLevel} (${Math.round(minP).toLocaleString()} VNĐ). Please enter a purse between ${Math.round(minP).toLocaleString()} VNĐ and ${Math.round(maxP).toLocaleString()} VNĐ.`);
+          setError(`Race purse (${Math.round(purseVal).toLocaleString()} VND) is below the minimum allowed for ${classLevel} (${Math.round(minP).toLocaleString()} VND). Please enter a purse between ${Math.round(minP).toLocaleString()} VND and ${Math.round(maxP).toLocaleString()} VND.`);
           return;
         }
         if (currentRule.maxPrize != null && purseVal > maxP) {
-          setError(`Race purse (${Math.round(purseVal).toLocaleString()} VNĐ) exceeds the maximum allowed for ${classLevel} (${Math.round(maxP).toLocaleString()} VNĐ). Please enter a purse between ${Math.round(minP).toLocaleString()} VNĐ and ${Math.round(maxP).toLocaleString()} VNĐ.`);
+          setError(`Race purse (${Math.round(purseVal).toLocaleString()} VND) exceeds the maximum allowed for ${classLevel} (${Math.round(maxP).toLocaleString()} VND). Please enter a purse between ${Math.round(minP).toLocaleString()} VND and ${Math.round(maxP).toLocaleString()} VND.`);
           return;
         }
       }
@@ -281,7 +258,6 @@ export default function Race() {
       });
       if (res.success) {
         setSuccess("Race created successfully.");
-        // reset biểu mẫu
         setMeetingId("");
         setStartTime("");
         setRegStartTime("");
@@ -292,11 +268,9 @@ export default function Race() {
         throw new Error(res.error || "Failed to create race.");
       }
     } catch (err: any) {
-      // Báo lỗi trùng lặp thời gian trong cùng buổi hội đua
       if (err.message?.includes("DUPLICATE_RACE_TIME")) {
         setError("Another race is already scheduled at this exact time for this meeting.");
       } else if (err.message?.includes("DUPLICATE_CLASS_LEVEL")) {
-        // Trích xuất tên class từ thông báo lỗi backend
         const cls = err.message.split("DUPLICATE_CLASS_LEVEL:")[1] || classLevel;
         setError(`A race with "${cls.trim()}" already exists in this meeting. Each class can only appear once per meeting.`);
       } else {
@@ -305,7 +279,6 @@ export default function Race() {
     }
   };
 
-  // Mở hộp thoại chỉnh sửa thông tin lịch trình cuộc đua
   const handleOpenEdit = (race: Race) => {
     setError("");
     setSuccess("");
@@ -321,7 +294,6 @@ export default function Race() {
     setEditMaxEntries(race.maxEntries.toString());
   };
 
-  // Lưu thông tin chỉnh sửa lịch trình
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingRace) return;
@@ -367,11 +339,11 @@ export default function Race() {
         const minP = Number(currentRule.minPrize || 0);
         const maxP = Number(currentRule.maxPrize || 0);
         if (currentRule.minPrize != null && purseVal < minP) {
-          setEditError(`Race purse (${Math.round(purseVal).toLocaleString()} VNĐ) is below the minimum allowed for ${editingRace.classLevel} (${Math.round(minP).toLocaleString()} VNĐ). Please enter a purse between ${Math.round(minP).toLocaleString()} VNĐ and ${Math.round(maxP).toLocaleString()} VNĐ.`);
+          setEditError(`Race purse (${Math.round(purseVal).toLocaleString()} VND) is below the minimum allowed for ${editingRace.classLevel} (${Math.round(minP).toLocaleString()} VND). Please enter a purse between ${Math.round(minP).toLocaleString()} VND and ${Math.round(maxP).toLocaleString()} VND.`);
           return;
         }
         if (currentRule.maxPrize != null && purseVal > maxP) {
-          setEditError(`Race purse (${Math.round(purseVal).toLocaleString()} VNĐ) exceeds the maximum allowed for ${editingRace.classLevel} (${Math.round(maxP).toLocaleString()} VNĐ). Please enter a purse between ${Math.round(minP).toLocaleString()} VNĐ and ${Math.round(maxP).toLocaleString()} VNĐ.`);
+          setEditError(`Race purse (${Math.round(purseVal).toLocaleString()} VND) exceeds the maximum allowed for ${editingRace.classLevel} (${Math.round(maxP).toLocaleString()} VND). Please enter a purse between ${Math.round(minP).toLocaleString()} VND and ${Math.round(maxP).toLocaleString()} VND.`);
           return;
         }
       }
@@ -404,7 +376,6 @@ export default function Race() {
     }
   };
 
-  // Bật chế độ livestream cho trận đua
   const handleGoLive = async (raceId: number) => {
     const url = (liveUrls[raceId] || "").trim();
     if (!url) return;
@@ -458,7 +429,6 @@ export default function Race() {
     }
   };
 
-  // Phân công trọng tài (Assign Referee)
   const handleAssignReferee = async (raceId: number) => {
     const refId = assignRefSelection[raceId];
     if (!refId) return;
@@ -481,7 +451,6 @@ export default function Race() {
     }
   };
 
-  // Gỡ bỏ phân công trọng tài (Remove Referee)
   const handleRemoveReferee = async (raceId: number, refId: number) => {
     const race = races.find(r => r.id === raceId);
     if (race && ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED", "RACE_EVENT_ENDED"].includes(race.status?.toUpperCase())) {
@@ -501,7 +470,6 @@ export default function Race() {
     }
   };
 
-  // Hàm chuyển đổi nhãn trạng thái và trả về Badge màu tương ứng
   const statusBadge = (status: string) => {
     const s = (status ?? "").toUpperCase();
     const cfg: Record<string, { bg: string; color: string; label: string }> = {
@@ -526,7 +494,6 @@ export default function Race() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* KHỐI 1: TẠO MỚI CUỘC ĐUA (Create New Race) */}
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)", position: "relative", zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)" }}>
           <div>
@@ -572,7 +539,6 @@ export default function Race() {
                     { value: "Class 4", label: "Class 4 (Rating 40-59)" },
                     { value: "Class 5", label: "Class 5 (Rating 0-39)" },
                   ].map(cls => {
-                    // Kiểm tra class này đã tồn tại trong meeting đang chọn chưa
                     const isUsed = !!meetingId && races.some(
                       r => r.raceMeetingId === parseInt(meetingId) &&
                            r.classLevel?.toLowerCase() === cls.value.toLowerCase() &&
@@ -599,7 +565,7 @@ export default function Race() {
 
               <div>
                 <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.5rem", color: "#fbbf24" }}>
-                  Total Prize Money / Purse (VNĐ)
+                  Total Prize Money / Purse (VND)
                 </label>
                 {(() => {
                   const rule = seasonRules.find(r => r.classLevel?.toLowerCase() === classLevel.toLowerCase());
@@ -691,14 +657,12 @@ export default function Race() {
         </div>
       </div>
 
-      {/* KHỐI 2: CƠ SỞ DỮ LIỆU CUỘC ĐUA (Races Database) */}
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)", position: "relative", zIndex: 1 }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)" }}>
           <p style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.875rem", color: "#f4f2ec" }}>Races Database</p>
           <p style={{ fontSize: "10px", fontFamily: "monospace", marginTop: "2px", color: "rgba(255,255,255,0.4)" }}>List of all scheduled races across active meetings</p>
         </div>
         {isMobile ? (
-          // Bố cục dạng thẻ xếp dọc trên Mobile
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem", padding: "1rem" }}>
             {loading ? (
               <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace", textAlign: "center", padding: "2rem" }}>Loading races database...</p>
@@ -739,7 +703,6 @@ export default function Race() {
                     </div>
                   </div>
 
-                  {/* Phân công trọng tài trên Mobile */}
                   <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", display: "flex", flexDirection: "column", gap: "4px" }}>
                     <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "10px", display: "block" }}>Referees Assigned ({assigned.length})</span>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
@@ -898,9 +861,9 @@ export default function Race() {
                         <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontSize: "12px", fontFamily: "monospace", color: "#c9a227", fontWeight: 600 }}>{formatClassLevel(race.classLevel)}</span></td>
                         
                         <td style={{ padding: "0.75rem 0.75rem" }}>
-                          <div style={{ fontSize: "11px", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace" }}>{totalPurse.toLocaleString('en-US')} VNĐ</div>
+                          <div style={{ fontSize: "11px", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace" }}>{totalPurse.toLocaleString('en-US')} VND</div>
                           <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.5)", fontFamily: "monospace", marginTop: "2px" }}>
-                            🥇 {prizeShares.p1Pct}%: {p1.toLocaleString('en-US')} VNĐ | 🥈 {prizeShares.p2Pct}%: {p2.toLocaleString('en-US')} VNĐ | 🥉 {prizeShares.p3Pct}%: {p3.toLocaleString('en-US')} VNĐ
+                            🥇 {prizeShares.p1Pct}%: {p1.toLocaleString('en-US')} VND | 🥈 {prizeShares.p2Pct}%: {p2.toLocaleString('en-US')} VND | 🥉 {prizeShares.p3Pct}%: {p3.toLocaleString('en-US')} VND
                           </div>
                         </td>
                         <td style={{ padding: "0.75rem 0.75rem", fontSize: "12px", fontFamily: "monospace", color: "rgba(255,255,255,0.6)" }}>{race.trackType}</td>
@@ -991,7 +954,6 @@ export default function Race() {
         </div>
       </div>
 
-      {/* MODAL CHỈNH SỬA LỊCH TRÌNH CUỘC ĐUA (Edit Modal) */}
       {editingRace && (
         <div style={{ position: "fixed", inset: 0, zIndex: 99, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "32rem", position: "relative" }}>
@@ -1023,7 +985,7 @@ export default function Race() {
                   <input type="number" value={editDistance} onChange={e => setEditDistance(e.target.value)} required style={inputStyle} />
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, color: "#fbbf24" }}>Total Purse / Prize Money (VNĐ)</label>
+                  <label style={{ ...labelStyle, color: "#fbbf24" }}>Total Purse / Prize Money (VND)</label>
                   <input type="number" min="0" step="any" value={editPurse} onChange={e => setEditPurse(e.target.value)} required style={{ ...inputStyle, borderColor: "rgba(251,191,36,0.3)", color: "#fbbf24", fontWeight: "bold" }} />
                 </div>
                 <div>
@@ -1052,12 +1014,10 @@ export default function Race() {
         </div>
       )}
 
-      {/* Modal xem thông tin Hồ sơ cá nhân của Trọng tài */}
       {selectedProfileId !== null && (
         <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
       )}
 
-      {/* Modal Phát Livestream bằng Camera Điện thoại / WebCam */}
       {broadcasterRace && (
         <CameraBroadcasterModal
           raceId={broadcasterRace.id}

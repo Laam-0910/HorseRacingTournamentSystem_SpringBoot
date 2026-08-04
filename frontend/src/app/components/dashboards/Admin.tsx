@@ -6,7 +6,6 @@ import DashboardLayout from "../layout/DashboardLayout";
 import { api } from "../../../lib/api";
 import ProfileTab from "./components/ProfileTab";
 
-// ===== Import các tiểu phân hệ (workflow) dành riêng cho vai trò Admin =====
 import Users from "../admin-workflow/Users";
 import Horses from "../admin-workflow/Horses";
 import SystemConfig from "../admin-workflow/SystemConfig";
@@ -22,7 +21,6 @@ import AdminHorseRetirement from "../admin-workflow/AdminHorseRetirement";
 import AdminWalletModal from "../admin-workflow/AdminWalletModal";
 import NotificationCenterView from "./components/NotificationCenterView";
 
-// Định nghĩa tập hợp các View con có sẵn trong bảng điều khiển Admin
 type AdminTab =
   | "welcome"
   | "season"
@@ -41,10 +39,8 @@ type AdminTab =
   | "profile"
   | "notifications";
 
-// Mã màu vàng gold chủ đạo cho trang điều khiển Admin
 const ROLE_COLOR = "#c9a227";
 
-// Cấu hình danh mục sidebar của Admin
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: $t("Dashboard Overview", (localStorage.getItem('app-lang') || 'en')),        view: "welcome"       },
   { index: "02", icon: "wallet",           label: $t("Admin Wallet & Capital", (localStorage.getItem('app-lang') || 'en')),     view: "wallet"        },
@@ -64,14 +60,11 @@ const NAV_ITEMS = [
 ];
 
 /**
- * Component AdminWelcome - Màn hình chào mừng và tổng quan số liệu thống kê hệ thống dành cho Admin.
- * Hiển thị số lượng mùa giải, ngày hội đua, tài khoản, lượt duyệt đăng ký tồn đọng và menu thao tác nhanh.
  */
 function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any) => void; onOpenWallet?: () => void }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   
-  // Trạng thái kiểm tra màn hình thiết bị di động (<768px)
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => {
@@ -82,10 +75,8 @@ function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // State lưu trữ các số liệu tổng quan hệ thống lấy về từ API
   const [stats, setStats] = useState({ seasons: 0, meetings: 0, races: 0, users: 0, pending: 0, activeSeason: "None" });
 
-  // effect gọi API lấy dữ liệu thống kê tổng quan khi component vừa mount
   useEffect(() => {
     api.get<any>("/admin/stats/overview").then(d => {
       setStats({
@@ -102,7 +93,6 @@ function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any
   return (
     <div style={{ maxWidth: "56rem", margin: "0 auto", padding: "0.5rem 0", display: "flex", flexDirection: "column", gap: "2rem" }}>
 
-      {/* Thẻ kính chào mừng (Welcome Glass Card) */}
       <div style={{
         background: "linear-gradient(135deg, rgba(20,24,38,0.7), rgba(11,13,20,0.8))",
         border: "1px solid rgba(201,162,39,0.16)",
@@ -118,11 +108,9 @@ function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any
         justifyContent: "space-between",
         gap: "1.5rem",
       }}>
-        {/* Bong bóng trang trí */}
         <div style={{ position: "absolute", right: "-5rem", top: "-5rem", width: "12rem", height: "12rem", borderRadius: "50%", background: "rgba(201,162,39,0.05)", filter: "blur(3rem)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", left: "-5rem", bottom: "-5rem", width: "12rem", height: "12rem", borderRadius: "50%", background: "rgba(96,165,250,0.05)", filter: "blur(3rem)", pointerEvents: "none" }} />
 
-        {/* Khối bên trái: Lời giới thiệu tổng quan */}
         <div style={{ flex: 1, minWidth: "16rem" }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.25rem 0.75rem", borderRadius: "9999px", fontSize: "0.6rem", fontFamily: "monospace", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "#c9a227", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.25)" }}>
             👑 ADMINISTRATIVE OVERVIEW
@@ -135,7 +123,6 @@ function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any
           </p>
         </div>
 
-        {/* Khối bên phải: Trạng thái hệ thống & thông số mùa hiện tại */}
         <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: "0.75rem", padding: "1rem", minWidth: "13rem", fontFamily: "monospace", fontSize: "0.7rem", color: "rgba(161,161,170,0.8)", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: "0.5rem", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
             <span>{$t("System Status", (localStorage.getItem('app-lang') || 'en'))}</span>
@@ -174,7 +161,6 @@ function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any
         </div>
       </div>
 
-      {/* Grid thống kê (Seasons, Meetings, Lượt đua, Người dùng) */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: "1rem" }}>
         {[
           { label: $t("Seasons", (localStorage.getItem('app-lang') || 'en')),     value: stats.seasons,  gold: true  },
@@ -192,7 +178,6 @@ function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any
             transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
             cursor: "default",
           }}
-          // Hiệu ứng hover nhè nhẹ
           onMouseEnter={e => {
             (e.currentTarget as HTMLElement).style.background = "rgba(201,162,39,0.02)";
             (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,162,39,0.25)";
@@ -209,7 +194,6 @@ function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any
         ))}
       </div>
 
-      {/* Menu thao tác nhanh cho Admin (Quick Navigation) */}
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.15em", color: "#c9a227", paddingLeft: "0.25rem", marginBottom: "1rem" }}>
           {$t("System Operations Quick Navigation", (localStorage.getItem('app-lang') || 'en'))}
@@ -241,7 +225,6 @@ function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any
                 transition: "all 0.3s cubic-bezier(0.4,0,0.2,1)",
                 width: "100%",
               }}
-              // Hiệu ứng hover nổi của thẻ nhanh
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.background = "rgba(201,162,39,0.03)";
                 (e.currentTarget as HTMLElement).style.borderColor = "rgba(201,162,39,0.35)";
@@ -255,15 +238,12 @@ function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any
                 (e.currentTarget as HTMLElement).style.boxShadow = "none";
               }}
             >
-              {/* Vùng chứa Icon của nút nhanh */}
               <div style={{ padding: "0.625rem", borderRadius: "0.5rem", background: "rgba(39,39,42,0.8)", border: "1px solid rgba(63,63,70,1)", color: "#c9a227", flexShrink: 0, position: "relative", fontSize: "1.125rem" }}>
                 {item.icon}
-                {/* Dấu chấm nhấp nháy chỉ báo có duyệt đăng ký tồn đọng */}
                 {item.pending && (
                   <span style={{ position: "absolute", top: "-0.25rem", right: "-0.25rem", width: 10, height: 10, borderRadius: "50%", background: "#c9a227", animation: "pulse 2s infinite" }} />
                 )}
               </div>
-              {/* Thông tin mô tả công việc */}
               <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                 <h4 style={{ fontSize: "0.65rem", fontFamily: "monospace", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#e4e4e7" }}>{item.title}</h4>
                 <p style={{ fontSize: "0.7rem", color: "rgba(161,161,170,0.75)", lineHeight: 1.6 }}>{item.desc}</p>
@@ -277,34 +257,26 @@ function AdminWelcome({ onViewChange, onOpenWallet }: { onViewChange: (view: any
 }
 
 /**
- * Component chính Admin - Khởi dựng trang quản trị viên cao cấp.
- * Lồng ghép dữ liệu sidebar định nghĩa sẵn vào DashboardLayout và hiển thị động
- * các tiểu phân hệ quản lý thông qua State `activeTab`.
  */
 export default function Admin() {
   const { user } = useAuth();
   
-  // State quản lý Tab hiện tại của Admin, được đọc từ tham số Query "?tab=" trong URL nếu có
   const [activeTab, setActiveTab] = useState<AdminTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as AdminTab) || "welcome";
   });
-  // Banner thông báo
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [showWalletModal, setShowWalletModal] = useState(false);
 
-  // Tìm nhãn tương ứng của view đang hiển thị phục vụ tiêu đề trên topbar
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Overview";
 
-  // Hàm kích hoạt thay đổi tab hiển thị và reset các thông báo banner
   const handleViewChange = (view: string) => {
     setActiveTab(view as AdminTab);
     setSuccessMsg("");
     setErrorMsg("");
   };
 
-  // Hàm chuyển đổi nội dung render dựa trên tab đang được kích hoạt
   const renderContent = () => {
     switch (activeTab) {
       case "welcome":       return <AdminWelcome onViewChange={setActiveTab} onOpenWallet={() => setShowWalletModal(true)} />;
@@ -328,7 +300,6 @@ export default function Admin() {
   };
 
   return (
-    // DashboardLayout lo phần khung bao ngoài (sidebar + topbar)
     <DashboardLayout
       roleLabel="Admin"
       roleColor={ROLE_COLOR}
@@ -339,7 +310,6 @@ export default function Admin() {
       successMsg={successMsg}
       errorMsg={errorMsg}
     >
-      {/* Phân hệ nội dung cụ thể được lồng vào vị trí children */}
       {renderContent()}
 
       {showWalletModal && (

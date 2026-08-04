@@ -135,7 +135,7 @@ export default function VietQRModal({
           <div className="flex justify-between items-center pb-2 border-b border-white/5">
             <span className="text-white/50">Deposit Amount:</span>
             <span className="font-bold text-emerald-400 text-sm">
-              {Math.round(amount).toLocaleString("en-US")} VNĐ
+              {Math.round(amount).toLocaleString("en-US")} VND
             </span>
           </div>
 

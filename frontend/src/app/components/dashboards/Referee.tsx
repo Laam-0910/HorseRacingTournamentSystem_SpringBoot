@@ -9,13 +9,10 @@ import ProfileTab from "./components/ProfileTab";
 import LiveSettings from "../admin-workflow/LiveSettings";
 import NotificationCenterView from "./components/NotificationCenterView";
 
-// Định nghĩa tập hợp các Tab giao diện khả dụng trong Dashboard của Trọng tài
 type RefereeTab = "hub" | "incidents" | "duties" | "live" | "profile" | "notifications";
 
-// Mã màu tím đặc trưng làm giao diện chủ đạo cho trọng tài Referee
 const ROLE_COLOR = "#8b5cf6";
 
-// Từ điển tiếng Anh hỗ trợ tiêu đề
 const TRANSLATIONS: Record<string, Record<string, string>> = {
   en: {
     refereeHub: "Referee Hub",
@@ -25,19 +22,14 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 };
 
 /**
- * Component Referee - Bảng điều khiển chính của Trọng tài (Referee).
- * Quản lý lịch phân công nhiệm vụ giám sát trận đấu, ghi nhận các sự cố/vi phạm luật
- * của ngựa đua và kỵ sĩ ngay trên sân đấu, và cập nhật thông tin cá nhân.
  */
 export default function Referee() {
   const { user } = useAuth();
   
-  // State quản lý Tab hiển thị đang hoạt động, mặc định là "hub"
   const [activeTab, setActiveTab] = useState<RefereeTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as RefereeTab) || "hub";
   });
-  // Banner thông điệp
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -55,14 +47,12 @@ export default function Referee() {
   // Active label for current view
   const activeLabel = navItems.find(n => n.view === activeTab)?.label ?? $t("Referee Dashboard");
 
-  // Xử lý đổi view và làm sạch các banner cũ
   const handleViewChange = (view: string) => {
     setActiveTab(view as RefereeTab);
     setSuccessMsg("");
     setErrorMsg("");
   };
 
-  // Hàm chuyển đổi nội dung render dựa trên tab đang hoạt động
   const renderContent = () => {
     switch (activeTab) {
       case "hub":           return <RefereeHub />;
@@ -76,7 +66,6 @@ export default function Referee() {
   };
 
   return (
-    // DashboardLayout lo khung bọc ngoài và thanh điều hướng sidebar
     <DashboardLayout
       roleLabel="Referee"
       roleColor={ROLE_COLOR}
@@ -87,7 +76,6 @@ export default function Referee() {
       successMsg={successMsg}
       errorMsg={errorMsg}
     >
-      {/* Phân hệ giao diện Referee cụ thể được lồng vào */}
       {renderContent()}
     </DashboardLayout>
   );

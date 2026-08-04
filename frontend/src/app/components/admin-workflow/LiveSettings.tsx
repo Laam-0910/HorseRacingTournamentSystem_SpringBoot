@@ -4,12 +4,8 @@ import { api, getErrMsg } from "../../../lib/api";
 import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
 
 /**
- * Component LiveSettings - Phân hệ Camera Live Setting dành cho Admin.
- * Cho phép Admin phát livestream trực tiếp từ Camera thiết bị / WebCam
- * cho các trận đấu đang diễn ra (RUNNING).
  */
 export default function LiveSettings() {
-  // Trạng thái Responsive Mobile
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -18,19 +14,16 @@ export default function LiveSettings() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Các state quản lý dữ liệu giải đua
-  const [meetings, setMeetings] = useState<any[]>([]); // Danh sách ngày hội đua
-  const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null); // Ngày hội đua đang chọn
-  const [races, setRaces] = useState<any[]>([]); // Danh sách cuộc đua
+  const [meetings, setMeetings] = useState<any[]>([]);
+  const [selectedMeetingId, setSelectedMeetingId] = useState<number | null>(null);
+  const [races, setRaces] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Cấu hình chất lượng Camera Stream (FPS, Resolution, Compression)
   const [camRes, setCamRes] = useState(() => localStorage.getItem("cam_res") || "480p");
   const [camFps, setCamFps] = useState(() => localStorage.getItem("cam_fps") || "15");
   const [camQuality, setCamQuality] = useState(() => localStorage.getItem("cam_quality") || "0.5");
 
-  // Tải danh sách ngày hội đua
   const fetchMeetings = async () => {
     setLoading(true);
     setError("");
@@ -47,7 +40,6 @@ export default function LiveSettings() {
     }
   };
 
-  // Tải danh sách các trận đấu đua thuộc một ngày hội đua
   const fetchRaces = async (meetingId: number) => {
     try {
       const data = await api.get<any[]>(`/public/races?meetingId=${meetingId}`);
@@ -69,14 +61,12 @@ export default function LiveSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Banner thông báo lỗi */}
       {error && (
         <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
           {error}
         </div>
       )}
 
-      {/* Dòng điều hướng chọn Ngày hội đua */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
@@ -186,7 +176,6 @@ export default function LiveSettings() {
         );
       })()}
 
-      {/* Khu vực bảng hoặc danh sách cuộc đua */}
       <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden">
         {loading ? (
           <p className="p-6 text-sm text-white/40 text-center">{$t("Loading races...", (localStorage.getItem('app-lang') || 'en'))}</p>
@@ -202,7 +191,6 @@ export default function LiveSettings() {
             ));
 
             return isMobile ? (
-              // Layout thẻ cho thiết bị di động
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
                 {races.map((r) => (
                   <div key={r.id} style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "0.75rem", padding: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -223,7 +211,6 @@ export default function LiveSettings() {
                 ))}
               </div>
             ) : (
-              // Bố cục Bảng trên Desktop
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-[#151310] text-xs font-semibold text-white/60 uppercase tracking-wider border-b border-white/5">

@@ -2,10 +2,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../context/AuthContext";
 
 /**
- * Component Header - Đầu trang (Header) dùng chung của hệ thống.
- * - Chứa Logo, thanh điều hướng nhanh (Fixtures, Live, AI Assistant).
- * - Kiểm tra phiên đăng nhập của người dùng để hiển thị nút đăng nhập/đăng ký hoặc thông tin tài khoản hiện tại.
- * - Điều hướng đúng về trang Dashboard riêng biệt dựa theo roleId của tài khoản (Admin: 1, Owner: 2, Jockey: 3, Referee: 5, Spectator: 6).
  */
 export default function Header() {
   const { user, logout } = useAuth();
@@ -13,7 +9,6 @@ export default function Header() {
 
   return (
     <header className="bg-[#151310]/80 border-b border-white/10 px-6 py-4 flex items-center justify-between backdrop-blur-xl sticky top-0 z-40">
-      {/* Vùng Logo và nhãn hiệu, click để quay về trang chủ */}
       <div className="flex items-center space-x-3 cursor-pointer" onClick={() => navigate("/")}>
         <div className="h-9 w-9 flex items-center justify-center rounded-xl bg-amber-500 text-black font-bold font-serif text-lg shadow-lg">
           🏇
@@ -21,22 +16,18 @@ export default function Header() {
         <span className="font-black text-sm tracking-widest text-white">HORSERACING</span>
       </div>
 
-      {/* Thanh Menu điều hướng nhanh trên máy tính */}
       <nav className="hidden md:flex items-center space-x-6 text-xs font-semibold text-white/60">
         <button onClick={() => navigate("/")} className="hover:text-white transition">Fixtures</button>
         <button onClick={() => navigate("/")} className="hover:text-white transition">Live Streaming</button>
         <button onClick={() => navigate("/chatbot")} className="hover:text-white transition">AI Assistant</button>
       </nav>
 
-      {/* Vùng quản lý phiên đăng nhập người dùng */}
       <div className="flex items-center space-x-4">
         {user ? (
-          // Đã đăng nhập: hiển thị lời chào và nút truy cập Dashboard + Đăng xuất
           <div className="flex items-center space-x-3">
             <span className="text-xs text-white/80">Hello, <strong className="text-white">{user.username}</strong></span>
             <button
               onClick={() => {
-                // Điều hướng dựa vào phân quyền tài khoản
                 if (user.roleId === 1) navigate("/dashboard/admin");
                 else if (user.roleId === 2) navigate("/dashboard/owner");
                 else if (user.roleId === 3) navigate("/dashboard/jockey");
@@ -58,7 +49,6 @@ export default function Header() {
             </button>
           </div>
         ) : (
-          // Chưa đăng nhập: hiển thị nút Đăng nhập / Đăng ký tài khoản mới
           <div className="space-x-2">
             <button onClick={() => navigate("/login")} className="text-xs font-bold text-white/80 hover:text-white px-3 py-1.5">
               Sign In

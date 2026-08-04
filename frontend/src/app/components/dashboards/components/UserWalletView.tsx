@@ -97,7 +97,7 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
     try {
       const res = await api.post<any>("/public/wallet/deposit", { userId: user.id, amount: val });
       if (res.success) {
-        setSuccessMsg(`Successfully deposited ${Math.round(val).toLocaleString('en-US')} VNĐ into your wallet via VietQR!`);
+        setSuccessMsg(`Successfully deposited ${Math.round(val).toLocaleString('en-US')} VND into your wallet via VietQR!`);
         setShowQrModal(false);
         setAmountInput("");
         if (user) user.walletBalance = res.newBalance;
@@ -120,11 +120,11 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
       return;
     }
     if (val < minWithdrawal) {
-      setError(`Minimum withdrawal amount is ${minWithdrawal.toLocaleString('en-US')} VNĐ.`);
+      setError(`Minimum withdrawal amount is ${minWithdrawal.toLocaleString('en-US')} VND.`);
       return;
     }
     if (val > walletBalance) {
-      setError(`Insufficient funds. Your available balance is ${walletBalance.toLocaleString('en-US')} VNĐ.`);
+      setError(`Insufficient funds. Your available balance is ${walletBalance.toLocaleString('en-US')} VND.`);
       return;
     }
     if (!accountNumber.trim() || !accountHolder.trim()) {
@@ -145,7 +145,7 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
         notes: notes.trim()
       });
       if (res.success) {
-        setSuccessMsg(res.message || `Withdrawal of ${val.toLocaleString('en-US')} VNĐ submitted successfully.`);
+        setSuccessMsg(res.message || `Withdrawal of ${val.toLocaleString('en-US')} VND submitted successfully.`);
         setShowWithdrawModal(false);
         setAmountInput("");
         setAccountNumber("");
@@ -218,14 +218,25 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
         </div>
 
         <div className="flex flex-col items-end gap-3 font-mono">
-          <div className="bg-black/40 border border-white/10 p-5 rounded-2xl min-w-[16rem] text-right">
-            <span className="text-xs text-white/50 block uppercase">Current Available Balance</span>
-            <div className="text-3xl font-extrabold mt-1" style={{ color: roleColor }}>
-              {walletBalance.toLocaleString('en-US')} <span className="text-lg font-bold">VNĐ</span>
+          <div className="uiverse-credit-card">
+            <div className="flex items-center justify-between">
+              <div className="uiverse-card-chip"></div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full" style={{ color: roleColor, background: `${roleColor}20`, border: `1px solid ${roleColor}40` }}>
+                {roleLabel} VIP
+              </span>
             </div>
-            <span className="text-[10px] text-emerald-400 font-bold block mt-1">
-              ✓ Account Active
-            </span>
+            <div>
+              <span className="text-[10px] text-white/50 uppercase tracking-widest font-mono block">Current Balance</span>
+              <div className="text-2xl font-extrabold font-mono mt-0.5" style={{ color: roleColor, textShadow: `0 0 15px ${roleColor}50` }}>
+                {walletBalance.toLocaleString('en-US')} <span className="text-sm font-bold text-white/80">VND</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center text-[10px] font-mono text-white/50 border-t border-white/10 pt-2">
+              <span>ID: {user?.id ? `HR-${String(user.id).padStart(5, '0')}` : 'HR-00001'}</span>
+              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Active
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -271,7 +282,7 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
 
             <form onSubmit={handleDepositPrompt} className="space-y-4">
               <div>
-                <label className="text-xs text-white/60 block mb-1.5 uppercase font-bold">Deposit Amount (VNĐ)</label>
+                <label className="text-xs text-white/60 block mb-1.5 uppercase font-bold">Deposit Amount (VND)</label>
                 <input
                   type="number"
                   step="0.01"
@@ -285,8 +296,8 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-[11px] text-white/60 space-y-1">
-                <div className="flex justify-between"><span>Current Balance:</span> <span className="text-white font-bold">{walletBalance.toLocaleString('en-US')} VNĐ</span></div>
-                <div className="flex justify-between"><span>Estimated Balance:</span> <span className="text-emerald-400 font-bold">{(walletBalance + (Number(amountInput) || 0)).toLocaleString('en-US')} VNĐ</span></div>
+                <div className="flex justify-between"><span>Current Balance:</span> <span className="text-white font-bold">{walletBalance.toLocaleString('en-US')} VND</span></div>
+                <div className="flex justify-between"><span>Estimated Balance:</span> <span className="text-emerald-400 font-bold">{(walletBalance + (Number(amountInput) || 0)).toLocaleString('en-US')} VND</span></div>
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -322,7 +333,7 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
 
             <form onSubmit={handleWithdraw} className="space-y-3">
               <div>
-                <label className="text-xs text-white/60 block mb-1 uppercase font-bold">Withdrawal Amount (VNĐ)</label>
+                <label className="text-xs text-white/60 block mb-1 uppercase font-bold">Withdrawal Amount (VND)</label>
                 <input
                   type="number"
                   step="1"
@@ -331,10 +342,10 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
                   required
                   value={amountInput}
                   onChange={(e) => setAmountInput(e.target.value)}
-                  placeholder={`Min: ${minWithdrawal.toLocaleString('en-US')} VNĐ`}
+                  placeholder={`Min: ${minWithdrawal.toLocaleString('en-US')} VND`}
                   className="w-full bg-black/50 border border-white/15 rounded-xl px-4 py-2.5 text-white text-xs focus:outline-none focus:border-rose-500 font-mono"
                 />
-                <p className="text-[10px] text-amber-400/80 font-mono mt-1">⚠ Minimum withdrawal: {minWithdrawal.toLocaleString('en-US')} VNĐ &nbsp;|&nbsp; Available: {walletBalance.toLocaleString('en-US')} VNĐ</p>
+                <p className="text-[10px] text-amber-400/80 font-mono mt-1">⚠ Minimum withdrawal: {minWithdrawal.toLocaleString('en-US')} VND &nbsp;|&nbsp; Available: {walletBalance.toLocaleString('en-US')} VND</p>
               </div>
 
               <div>
@@ -393,8 +404,8 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-xl p-2.5 text-[10px] text-white/60 space-y-0.5">
-                <div className="flex justify-between"><span>Available Balance:</span> <span className="text-white font-bold">{walletBalance.toLocaleString('en-US')} VNĐ</span></div>
-                <div className="flex justify-between"><span>Remaining Balance:</span> <span className="text-amber-400 font-bold">{Math.max(0, walletBalance - (Number(amountInput) || 0)).toLocaleString('en-US')} VNĐ</span></div>
+                <div className="flex justify-between"><span>Available Balance:</span> <span className="text-white font-bold">{walletBalance.toLocaleString('en-US')} VND</span></div>
+                <div className="flex justify-between"><span>Remaining Balance:</span> <span className="text-amber-400 font-bold">{Math.max(0, walletBalance - (Number(amountInput) || 0)).toLocaleString('en-US')} VND</span></div>
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -515,7 +526,7 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
                   <tr className="bg-black/60 text-white/50 border-b border-white/10 uppercase text-[10px]">
                     <th className="px-4 py-3">TX ID</th>
                     <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Amount (VNĐ)</th>
+                    <th className="px-4 py-3">Amount (VND)</th>
                     <th className="px-4 py-3">Description</th>
                     <th className="px-4 py-3">Date & Time</th>
                   </tr>

@@ -5,72 +5,58 @@ import { api, getErrMsg } from "../../../lib/api";
 import { parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
 import { PaginationControls } from "./PaginationControls";
 
-// Cấu trúc thuộc tính truyền vào component InlineDatePicker
 interface InlineDatePickerProps {
-  label: string; // Nhãn của ô nhập ngày
-  value: string; // Giá trị định dạng: dd-MM-yyyy
-  onChange: (val: string) => void; // Hàm callback khi chọn ngày mới
+  label: string;
+  value: string;
+  onChange: (val: string) => void;
 }
 
 /**
- * Component InlineDatePicker - Bộ chọn ngày tùy biến gắn trực tiếp trên giao diện.
- * Cho phép người dùng chuyển đổi qua lại giữa các tháng, năm và nhấp chọn ngày mong muốn,
- * sau đó trả về chuỗi định dạng dd-MM-yyyy.
  */
 function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
-  // Trạng thái đóng/mở của bảng chọn ngày
   const [isOpen, setIsOpen] = useState(false);
-  // Tháng và năm hiện tại đang hiển thị trên giao diện chọn ngày
   const [currentDate, setCurrentDate] = useState(() => {
     const today = new Date();
     return { month: today.getMonth(), year: today.getFullYear() };
   });
 
-  // Tách giá trị ngày, tháng, năm từ chuỗi định dạng dd-MM-yyyy
   const datePattern = /^(\d{2})-(\d{2})-(\d{4})$/;
   const match = value.match(datePattern);
   const selectedDay = match ? parseInt(match[1]) : null;
   const selectedMonth = match ? parseInt(match[2]) - 1 : null;
   const selectedYear = match ? parseInt(match[3]) : null;
 
-  // Cập nhật tháng và năm hiển thị khớp với ngày đã chọn trước đó mỗi khi mở hộp chọn
   useEffect(() => {
     if (isOpen && selectedMonth !== null && selectedYear !== null) {
       setCurrentDate({ month: selectedMonth, year: selectedYear });
     }
   }, [isOpen, selectedMonth, selectedYear]);
 
-  // Tính số lượng ngày trong tháng và thứ của ngày đầu tiên trong tháng
   const daysInMonth = new Date(currentDate.year, currentDate.month + 1, 0).getDate();
   let firstDay = new Date(currentDate.year, currentDate.month, 1).getDay();
-  firstDay = firstDay === 0 ? 6 : firstDay - 1; // Quy đổi chủ nhật thành 6, các thứ khác lùi 1 đơn vị
+  firstDay = firstDay === 0 ? 6 : firstDay - 1;
 
-  // Mảng tên tháng viết tắt bằng tiếng Anh
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  // Chuyển sang tháng trước
   const handlePrevMonth = () => {
     setCurrentDate(prev =>
       prev.month === 0 ? { month: 11, year: prev.year - 1 } : { month: prev.month - 1, year: prev.year }
     );
   };
 
-  // Chuyển sang tháng tiếp theo
   const handleNextMonth = () => {
     setCurrentDate(prev =>
       prev.month === 11 ? { month: 0, year: prev.year + 1 } : { month: prev.month + 1, year: prev.year }
     );
   };
 
-  // Khi chọn một ngày cụ thể trên lịch
   const handleSelectDay = (day: number) => {
     const formattedDay = String(day).padStart(2, "0");
     const formattedMonth = String(currentDate.month + 1).padStart(2, "0");
-    onChange(`${formattedDay}-${formattedMonth}-${currentDate.year}`); // Kích hoạt callback
-    setIsOpen(false); // Đóng lịch chọn
+    onChange(`${formattedDay}-${formattedMonth}-${currentDate.year}`);
+    setIsOpen(false);
   };
 
-  // Tạo mảng danh sách ngày và ô trống đầu tuần
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
   const blanksArray = Array.from({ length: firstDay }, (_, i) => i);
 
@@ -98,17 +84,13 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
         </button>
       </div>
 
-      {/* Giao diện Lịch thả xuống (Dropdown Calendar) */}
       {isOpen && (
         <>
-          {/* Lớp phủ màn hình để đóng lịch khi bấm ra ngoài */}
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
           <div className="absolute top-[110%] left-0 w-64 bg-[#100f0c] border border-[#2a2825] rounded-xl p-3.5 shadow-2xl z-50 space-y-3 select-none">
-            {/* Bộ điều hướng tháng/năm */}
             <div className="flex items-center justify-between text-xs font-mono">
               <button type="button" onClick={handlePrevMonth} className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition">◀</button>
               <div className="flex items-center gap-1">
-                {/* Dropdown chọn tháng */}
                 <select
                   value={currentDate.month}
                   onChange={(e) => setCurrentDate(prev => ({ ...prev, month: parseInt(e.target.value) }))}
@@ -121,7 +103,6 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
                     </option>
                   ))}
                 </select>
-                {/* Dropdown chọn năm (giới hạn trong khoảng 25 năm trước đến nay) */}
                 <select
                   value={currentDate.year}
                   onChange={(e) => setCurrentDate(prev => ({ ...prev, year: parseInt(e.target.value) }))}
@@ -137,11 +118,9 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
               </div>
               <button type="button" onClick={handleNextMonth} className="text-white/60 hover:text-amber-500 p-1 rounded hover:bg-white/5 transition">▶</button>
             </div>
-            {/* Tiêu đề các thứ trong tuần */}
             <div className="grid grid-cols-7 text-center text-[9px] font-semibold text-white/40 uppercase font-mono">
               {["Mo","Tu","We","Th","Fr","Sa","Su"].map(d => <span key={d}>{d}</span>)}
             </div>
-            {/* Các ô ngày trên lịch */}
             <div className="grid grid-cols-7 gap-1">
               {blanksArray.map(b => <div key={`blank-${b}`} className="h-7 w-7"></div>)}
               {daysArray.map(day => {
@@ -168,13 +147,8 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
 }
 
 /**
- * Component Horses - Danh mục quản lý ngựa đua dành cho Admin.
- * Cho phép tìm kiếm ngựa đua, xem danh sách ngựa chạy và lọc trạng thái.
- * Admin có quyền chỉnh sửa thông tin chi tiết ngựa đua (Tên, Giới tính, Rating, Trạng thái, Ảnh đại diện, Mô tả)
- * thông qua một hộp thoại (Modal Edit) sử dụng React Portal.
  */
 export default function Horses() {
-  // Trạng thái Responsive Mobile
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -183,16 +157,14 @@ export default function Horses() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Danh sách ngựa đua và bộ lọc tìm kiếm
   const [horses, setHorses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [searchQuery, setSearchQuery] = useState(""); // Từ khóa tìm kiếm (tên, giống ngựa, mã chủ ngựa)
-  const [filterStatus, setFilterStatus] = useState("ALL"); // Bộ lọc trạng thái ngựa
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("ALL");
 
-  // --- Các State phục vụ chỉnh sửa chi tiết ngựa đua (Edit Modal) ---
-  const [editingHorse, setEditingHorse] = useState<any | null>(null); // Lưu ngựa đua đang được chọn chỉnh sửa
+  const [editingHorse, setEditingHorse] = useState<any | null>(null);
   const [editName, setEditName] = useState("");
   const [editBreed, setEditBreed] = useState("");
   const [editDob, setEditDob] = useState("");
@@ -202,7 +174,6 @@ export default function Horses() {
   const [editAvatar, setEditAvatar] = useState("");
   const [editDescription, setEditDescription] = useState("");
 
-  // Tải danh sách toàn bộ ngựa đua từ hệ thống
   const fetchData = async () => {
     setLoading(true);
     setError("");
@@ -216,23 +187,19 @@ export default function Horses() {
     }
   };
 
-  // Tải dữ liệu ngựa khi component mount
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Tiện ích hiển thị thông báo thành công tự tắt sau 4 giây
   const showSuccess = (msg: string) => {
     setSuccess(msg);
     setTimeout(() => setSuccess(""), 4000);
   };
 
-  // Xử lý tải ảnh đại diện lên và chuyển đổi sang định dạng chuỗi Base64
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setError("");
     const file = e.target.files?.[0];
     if (file) {
-      // Giới hạn kích thước ảnh đại diện tối đa là 1.5MB để tránh quá tải payload cơ sở dữ liệu
       if (file.size > 1.5 * 1024 * 1024) {
         setError("Avatar image size must be less than 1.5MB");
         return;
@@ -247,7 +214,6 @@ export default function Horses() {
     }
   };
 
-  // Mở hộp thoại chỉnh sửa ngựa đua và điền dữ liệu sẵn có vào form
   const handleOpenEdit = (h: any) => {
     setEditingHorse(h);
     setEditName(h.name || "");
@@ -261,10 +227,6 @@ export default function Horses() {
   };
 
   /**
-   * Ràng buộc nghiệp vụ y tế & phân hạng theo độ tuổi (Age) và giới tính (Sex) của ngựa đua:
-   * - Colt (Ngựa đực chưa thiến) và Filly (Ngựa cái) bắt buộc phải dưới 4 tuổi.
-   * - Horse (Ngựa đực chưa thiến trưởng thành) và Mare (Ngựa cái trưởng thành) bắt buộc từ 4 tuổi trở lên.
-   * - Gelding (Ngựa đực thiến) không có giới hạn tuổi này.
    */
   const validateAgeAndSex = (dobStr: string, sexVal: string): boolean => {
     if (!dobStr || !sexVal) return true;
@@ -277,7 +239,6 @@ export default function Horses() {
     const birthDate = new Date(year, month, day);
     const today = new Date();
     
-    // Tính số tuổi chính xác
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
@@ -306,11 +267,9 @@ export default function Horses() {
     return true;
   };
 
-  // Gửi thông tin ngựa đua đã chỉnh sửa lên máy chủ
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingHorse) return;
-    // Ràng buộc tuổi tác và giới tính trước khi lưu
     if (!validateAgeAndSex(editDob, editSex)) return;
     setError("");
     setSuccess("");
@@ -329,14 +288,13 @@ export default function Horses() {
 
       await api.put(`/horses/${editingHorse.id}`, body);
       showSuccess(`Horse "${editName}" updated successfully.`);
-      setEditingHorse(null); // Đóng Modal
-      fetchData(); // Tải lại danh sách cập nhật
+      setEditingHorse(null);
+      fetchData();
     } catch (err: any) {
       setError(getErrMsg(err, "Failed to update horse."));
     }
   };
 
-  // Lọc danh sách ngựa theo từ khóa tìm kiếm và trạng thái hoạt động
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -367,21 +325,18 @@ export default function Horses() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Khối Banner báo lỗi */}
       {error && (
         <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs font-mono text-red-400">
           ⚠️ {error}
         </div>
       )}
       
-      {/* Khối Banner báo thành công */}
       {success && (
         <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-mono text-emerald-400">
           ✓ {success}
         </div>
       )}
 
-      {/* Header và Bộ lọc tìm kiếm */}
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
         <div>
           <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec" }}>{$t("Horse Registry Directory", (localStorage.getItem('app-lang') || 'en'))}</h3>
@@ -389,7 +344,6 @@ export default function Horses() {
         </div>
 
         <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          {/* Ô tìm kiếm ngựa */}
           <input
             type="text"
             placeholder={$t("Search horse name or breed...", (localStorage.getItem('app-lang') || 'en'))}
@@ -398,7 +352,6 @@ export default function Horses() {
             style={{ ...inputStyle, width: "14rem" }}
           />
 
-          {/* Ô chọn bộ lọc trạng thái */}
           <select
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
@@ -416,10 +369,8 @@ export default function Horses() {
         </div>
       </div>
 
-      {/* Bảng danh sách Ngựa đua */}
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
         {isMobile ? (
-          // Thiết kế giao diện Mobile: Các Thẻ ngựa chạy dọc
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
               <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading horses data...", (localStorage.getItem('app-lang') || 'en'))}</div>
@@ -472,7 +423,6 @@ export default function Horses() {
             )}
           </div>
         ) : (
-          // Thiết kế giao diện Desktop: Bảng phân cột
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
               <thead>
@@ -539,7 +489,6 @@ export default function Horses() {
         />
       </div>
 
-      {/* Hộp thoại chỉnh sửa chi tiết ngựa (Modal Edit) - Render ra ngoài document.body thông qua React Portal */}
       {editingHorse && createPortal(
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.22)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "28rem", position: "relative", maxHeight: "90vh", overflowY: "auto" }}>
@@ -571,7 +520,6 @@ export default function Horses() {
                     <option value="Mare">{$t("Mare", (localStorage.getItem('app-lang') || 'en'))}</option>
                   </select>
                 </div>
-                {/* Bộ chọn ngày InlineDatePicker */}
                 <InlineDatePicker label={$t("Date of Birth", (localStorage.getItem('app-lang') || 'en'))} value={editDob} onChange={setEditDob} />
               </div>
 
@@ -604,7 +552,6 @@ export default function Horses() {
                 <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} style={{ ...inputStyle, height: "4.5rem", resize: "none" }} />
               </div>
               
-              {/* Xem trước ảnh đại diện Base64 */}
               {editAvatar && (
                 <div>
                   <label style={labelStyle}>{$t("Photo Preview", (localStorage.getItem('app-lang') || 'en'))}</label>
@@ -625,7 +572,6 @@ export default function Horses() {
   );
 }
 
-// Các định nghĩa Style phụ
 const labelStyle: React.CSSProperties = {
   display: "block",
   fontSize: "9px",

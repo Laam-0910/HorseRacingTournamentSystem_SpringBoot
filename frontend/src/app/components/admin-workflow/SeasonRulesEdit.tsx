@@ -28,7 +28,6 @@ export default function SeasonRulesEdit({ seasonId, seasonName, onClose, onSaved
     api.get<any[]>(`/races/seasons/${seasonId}/rules`)
       .then(data => {
         if (Array.isArray(data) && data.length > 0) {
-          // Auto-upgrade legacy unscaled values (< 10,000) to VNĐ scale (* 1000)
           const sanitized = data.map((r: any) => ({
             ...r,
             minPrize: r.minPrize != null && r.minPrize < 10000000 ? r.minPrize * 1000 : r.minPrize,
