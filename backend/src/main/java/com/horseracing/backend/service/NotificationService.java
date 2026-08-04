@@ -80,6 +80,13 @@ public class NotificationService {
     }
 
     /**
+     * Public wrapper to create a generic notification for any user
+     */
+    public void createNotification(Integer userId, String title, String message) {
+        saveNotification(userId, title, message);
+    }
+
+    /**
      * Send notification to Horse Owner when a Jockey accepts or rejects a race invitation.
      */
     public void notifyOwnerOnInvitationResponse(RaceInvitation invite, boolean accepted) {

@@ -1033,6 +1033,70 @@ public class AdminUserService {
         }
     }
 
+    // Đóng sự kiện trận đua sau khi kết quả chính thức (OFFICIAL → RACE_EVENT_ENDED)
+    // Giải phóng Ngựa và Nài khỏi ràng buộc trận đua
+    @Transactional
+    public void closeRace(Integer raceId) {
+        Race race = raceRepository.findById(raceId)
+                .orElseThrow(() -> new IllegalArgumentException("Race not found with id: " + raceId));
+
+        // Chỉ cho phép đóng khi đang ở trạng thái OFFICIAL
+        if (!"OFFICIAL".equalsIgnoreCase(race.getStatus())) {
+            throw new IllegalStateException("Race can only be closed when it is in OFFICIAL status. Current status: " + race.getStatus());
+        }
+
+        // Chuyển trạng thái trận đua sang RACE_EVENT_ENDED
+        race.setStatus("RACE_EVENT_ENDED");
+        raceRepository.save(race);
+
+        // Giải phóng các lượt tham gia sang FINISHED để ngựa & nài được tự do
+        List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
+        for (RaceEntry entry : entries) {
+            // Chỉ cập nhật những entry chưa bị REJECTED/DISQUALIFIED
+            String st = entry.getStatus();
+            if (!"REJECTED".equalsIgnoreCase(st) && !"DISQUALIFIED".equalsIgnoreCase(st)) {
+                if (!"FINISHED".equalsIgnoreCase(st)) {
+                    entry.setStatus("FINISHED");
+                    raceEntryRepository.save(entry);
+                }
+            }
+
+            // Gửi thông báo hoàn tất sự kiện tới Chủ ngựa & Nài ngựa
+            try {
+                Horse h = horseRepository.findById(entry.getHorseId()).orElse(null);
+                Integer ownerId = h != null ? h.getOwnerId() : null;
+                String horseName = h != null ? h.getName() : "Horse";
+                if (ownerId != null) {
+                    notificationService.createNotification(ownerId,
+                        "Race Event Closed",
+                        "Race #" + raceId + " has been officially closed. Horse '" + horseName + "' is now free.");
+                }
+                if (entry.getJockeyId() != null) {
+                    notificationService.createNotification(entry.getJockeyId(),
+                        "Race Event Closed",
+                        "Race #" + raceId + " has been officially closed. You are now free for new race assignments.");
+                }
+            } catch (Exception ex) {
+                System.err.println("Failed to send race closed notification: " + ex.getMessage());
+            }
+        }
+
+        // Kiểm tra nếu tất cả trận đua trong Buổi đua đã đóng sự kiện (RACE_EVENT_ENDED/CANCELLED) -> Hoàn tất Buổi đua (ENDED)
+        if (race.getRaceMeetingId() != null) {
+            List<Race> meetingRaces = raceRepository.findByRaceMeetingId(race.getRaceMeetingId());
+            boolean allEnded = meetingRaces.stream().allMatch(r -> 
+                "RACE_EVENT_ENDED".equalsIgnoreCase(r.getStatus()) || 
+                "CANCELLED".equalsIgnoreCase(r.getStatus())
+            );
+            if (allEnded) {
+                raceMeetingRepository.findById(race.getRaceMeetingId()).ifPresent(m -> {
+                    m.setStatus("ENDED");
+                    raceMeetingRepository.save(m);
+                });
+            }
+        }
+    }
+
     @Transactional(readOnly = true)
     public Map<String, Object> getUserDetailsCategorized(Integer userId) {
         User user = userRepository.findById(userId)
@@ -1201,7 +1265,11 @@ public class AdminUserService {
                 .orElseThrow(() -> new IllegalArgumentException("Race meeting not found with id: " + meetingId));
 
         if (Boolean.TRUE.equals(meeting.getTicketSettled())) {
-            throw new IllegalArgumentException("Ticket revenue for this meeting has already been settled to Admin wallet.");
+            Map<String, Object> res = new HashMap<>();
+            res.put("success", true);
+            res.put("settledAmount", BigDecimal.ZERO);
+            res.put("message", "Ticket revenue for this meeting has already been settled to Admin wallet.");
+            return res;
         }
 
         BigDecimal ticketPrice = meeting.getTicketPrice() != null ? meeting.getTicketPrice() : BigDecimal.ZERO;
@@ -1231,7 +1299,6 @@ public class AdminUserService {
         }
 
         meeting.setTicketSettled(true);
-        meeting.setStatus("ENDED");
         raceMeetingRepository.save(meeting);
 
         Map<String, Object> res = new HashMap<>();
@@ -1266,31 +1333,39 @@ public class AdminUserService {
         BigDecimal budget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
 
         if ("INACTIVE".equalsIgnoreCase(nextStatus) && !"INACTIVE".equalsIgnoreCase(prevStatus)) {
-            // Khi deactive -> Hoàn tiền ngân sách giải đấu ($totalBudget) về cho Admin Wallet và đặt totalBudget của RaceMeeting = 0
-            BigDecimal curBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
-            if (curBudget.compareTo(BigDecimal.ZERO) > 0) {
-                meeting.setLastAllocatedBudget(curBudget); // Lưu lại mốc ngân sách để khôi phục khi Re-active
+            // Khi deactive -> Chỉ hoàn phần tiền ngân sách CHƯA SỬ DỤNG (chưa trao giải) về Ví Admin
+            List<Race> mRacesForBudget = raceRepository.findByRaceMeetingId(meeting.getId());
+            BigDecimal totalAwardedPurses = mRacesForBudget.stream()
+                    .map(r -> raceEntryRepository.findByRaceId(r.getId()))
+                    .flatMap(List::stream)
+                    .map(e -> e.getPrizeMoney() != null ? e.getPrizeMoney() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal curTotalBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+            BigDecimal unspentBudgetToRefund = curTotalBudget.subtract(totalAwardedPurses);
+            if (unspentBudgetToRefund.compareTo(BigDecimal.ZERO) < 0) {
+                unspentBudgetToRefund = BigDecimal.ZERO;
             }
 
-            BigDecimal budgetToRefund = meeting.getLastAllocatedBudget() != null ? meeting.getLastAllocatedBudget() : curBudget;
+            meeting.setLastAllocatedBudget(unspentBudgetToRefund); // Lưu lại đúng số tiền ngân sách chưa dùng để khôi phục khi Re-active
 
-            if (admin != null && budgetToRefund.compareTo(BigDecimal.ZERO) > 0) {
+            if (admin != null && unspentBudgetToRefund.compareTo(BigDecimal.ZERO) > 0) {
                 BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
-                admin.setWalletBalance(adminBal.add(budgetToRefund));
+                admin.setWalletBalance(adminBal.add(unspentBudgetToRefund));
                 userRepository.save(admin);
 
                 WalletTransaction tx = new WalletTransaction();
                 tx.setUserId(admin.getId());
-                tx.setAmount(budgetToRefund);
+                tx.setAmount(unspentBudgetToRefund);
                 tx.setTransactionType("MEETING_BUDGET_REFUND");
-                tx.setDescription("Budget refund to Admin Wallet due to Deactivation of Race Meeting '" + meeting.getName() + "'");
+                tx.setDescription("Unspent budget refund (" + unspentBudgetToRefund + " VNĐ) to Admin Wallet due to Deactivation of Race Meeting '" + meeting.getName() + "'");
                 tx.setRaceMeetingId(meeting.getId());
                 tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                 walletTransactionRepository.save(tx);
             }
 
-            // Đặt totalBudget của RaceMeeting về 0 khi Deactive
-            meeting.setTotalBudget(BigDecimal.ZERO);
+            // Đặt totalBudget của RaceMeeting bằng đúng số tiền đã chi trả thưởng thực tế
+            meeting.setTotalBudget(totalAwardedPurses);
 
             // Hoàn tiền vé đăng ký cho Horse Owner từ Escrow Vault & reset lượt đăng ký
             BigDecimal ticketPrice = meeting.getTicketPrice() != null ? meeting.getTicketPrice() : BigDecimal.ZERO;
@@ -1318,33 +1393,23 @@ public class AdminUserService {
                 }
             }
 
-            // Hoàn lại tiền cọc thuê nài (Hire Fee) cho Owner và thu hồi từ Jockey (nếu đã thanh toán) khi Deactive RaceMeeting
+            // Hoàn lại tiền cọc thuê nài (Hire Fee) cho Owner đối với các TRẬN CHƯA THI ĐẤU khi Deactive RaceMeeting
             List<Race> mRaces = raceRepository.findByRaceMeetingId(meeting.getId());
             for (Race r : mRaces) {
+                boolean isRaceFinished = "OFFICIAL".equalsIgnoreCase(r.getStatus()) || 
+                                         "RACE_EVENT_ENDED".equalsIgnoreCase(r.getStatus()) || 
+                                         "FINISHED".equalsIgnoreCase(r.getStatus());
+                if (isRaceFinished) {
+                    continue; // Trận đua đã hoàn thành thi đấu -> Giữ nguyên tiền thuê Nài (Jockey Hire Fee) cho Nài ngựa, không thu hồi!
+                }
+
                 List<RaceInvitation> invs = invitationRepository.findByRaceId(r.getId());
                 for (RaceInvitation inv : invs) {
                     if (!"REFUNDED".equalsIgnoreCase(inv.getPayoutStatus()) && inv.getOwnerId() != null) {
                         BigDecimal hireFee = inv.getHireFee() != null ? inv.getHireFee() : new BigDecimal("500.00");
                         boolean wasHeldOrPaid = "HELD".equalsIgnoreCase(inv.getPayoutStatus()) || "PAID".equalsIgnoreCase(inv.getPayoutStatus());
                         if (hireFee.compareTo(BigDecimal.ZERO) > 0 && wasHeldOrPaid) {
-                            // Nếu đã thanh toán cho Jockey (PAID), thu hồi tiền từ ví Jockey
-                            if ("PAID".equalsIgnoreCase(inv.getPayoutStatus()) && inv.getJockeyId() != null) {
-                                userRepository.findById(inv.getJockeyId()).ifPresent(jockey -> {
-                                    BigDecimal jBal = jockey.getWalletBalance() != null ? jockey.getWalletBalance() : BigDecimal.ZERO;
-                                    jockey.setWalletBalance(jBal.subtract(hireFee));
-                                    userRepository.save(jockey);
-
-                                    WalletTransaction txClawback = new WalletTransaction();
-                                    txClawback.setUserId(jockey.getId());
-                                    txClawback.setAmount(hireFee.negate());
-                                    txClawback.setTransactionType("JOCKEY_HIRE_CLAWBACK");
-                                    txClawback.setDescription("Jockey hire fee clawback due to Race Meeting Deactivation (" + meeting.getName() + ")");
-                                    txClawback.setRaceMeetingId(meeting.getId());
-                                    txClawback.setCreatedAt(new Timestamp(System.currentTimeMillis()));
-                                    walletTransactionRepository.save(txClawback);
-                                });
-                            }
-                            // Hoàn lại 100% tiền cọc thuê nài về ví của Owner nếu tiền thực sự đã được trừ (HELD/PAID)
+                            // Hoàn lại 100% tiền cọc thuê nài về ví của Owner đối với trận chưa đua
                             userRepository.findById(inv.getOwnerId()).ifPresent(owner -> {
                                 BigDecimal ownerBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
                                 owner.setWalletBalance(ownerBal.add(hireFee));
@@ -1367,7 +1432,7 @@ public class AdminUserService {
                 }
             }
 
-            // Reset danh sách đăng ký kỵ sĩ, chiến mã và các lượt đua RaceEntry về REJECTED để làm lại từ đầu
+            // Reset danh sách đăng ký kỵ sĩ, chiến mã và các lượt đua chưa thi đấu
             List<JockeyRaceMeetingRegistration> jockeyRegs = jockeyRegRepository.findByRaceMeetingId(meeting.getId());
             for (JockeyRaceMeetingRegistration jReg : jockeyRegs) {
                 jReg.setStatus("REJECTED");
@@ -1379,30 +1444,32 @@ public class AdminUserService {
                 horseRegRepository.save(hReg);
             }
             for (Race r : mRaces) {
-                if (!"FINISHED".equalsIgnoreCase(r.getStatus())) {
+                boolean isRaceFinished = "OFFICIAL".equalsIgnoreCase(r.getStatus()) || 
+                                         "RACE_EVENT_ENDED".equalsIgnoreCase(r.getStatus()) || 
+                                         "FINISHED".equalsIgnoreCase(r.getStatus());
+                if (!isRaceFinished) {
                     r.setStatus("DECLARATION_OPEN");
                     raceRepository.save(r);
-                }
-                List<RaceEntry> entries = raceEntryRepository.findByRaceId(r.getId());
-                for (RaceEntry entry : entries) {
-                    if (!"FINISHED".equalsIgnoreCase(entry.getStatus())) {
-                        entry.setStatus("REJECTED");
-                        entry.setGateNumber(0);
-                        entry.setCarriedWeight(BigDecimal.ZERO);
-                        entry.setHandicapWeight(BigDecimal.ZERO);
-                        raceEntryRepository.save(entry);
+                    List<RaceEntry> entries = raceEntryRepository.findByRaceId(r.getId());
+                    for (RaceEntry entry : entries) {
+                        if (!"FINISHED".equalsIgnoreCase(entry.getStatus()) && !"OFFICIAL".equalsIgnoreCase(entry.getStatus())) {
+                            entry.setStatus("REJECTED");
+                            entry.setGateNumber(0);
+                            entry.setCarriedWeight(BigDecimal.ZERO);
+                            entry.setHandicapWeight(BigDecimal.ZERO);
+                            raceEntryRepository.save(entry);
+                        }
                     }
                 }
             }
-        } else if ("ACTIVE".equalsIgnoreCase(nextStatus) && "INACTIVE".equalsIgnoreCase(prevStatus)) {
-            // Khi active trở lại -> Trừ tiền từ Admin Wallet cấp lại ngân sách ($lastAllocatedBudget) cho Race Meeting
-            BigDecimal budgetToRestore = meeting.getLastAllocatedBudget() != null ? meeting.getLastAllocatedBudget() : meeting.getTotalBudget();
-            if (budgetToRestore == null) budgetToRestore = BigDecimal.ZERO;
+        } else if ("ACTIVE".equalsIgnoreCase(nextStatus) && ("INACTIVE".equalsIgnoreCase(prevStatus) || "ENDED".equalsIgnoreCase(prevStatus))) {
+            // Khi active trở lại -> Trừ tiền từ Admin Wallet cấp lại phần ngân sách chưa dùng ($lastAllocatedBudget) cho Race Meeting
+            BigDecimal budgetToRestore = meeting.getLastAllocatedBudget() != null ? meeting.getLastAllocatedBudget() : BigDecimal.ZERO;
 
             if (admin != null && budgetToRestore.compareTo(BigDecimal.ZERO) > 0) {
                 BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
                 if (adminBal.compareTo(budgetToRestore) < 0) {
-                    throw new IllegalArgumentException("Admin wallet balance (" + adminBal + " VNĐ) is insufficient to re-allocate budget (" + budgetToRestore + " VNĐ) for Race Meeting.");
+                    throw new IllegalArgumentException(String.format("Admin wallet balance (%,.0f VNĐ) is insufficient to re-allocate unspent budget (%,.0f VNĐ) for Race Meeting.", adminBal, budgetToRestore));
                 }
                 admin.setWalletBalance(adminBal.subtract(budgetToRestore));
                 userRepository.save(admin);
@@ -1411,13 +1478,28 @@ public class AdminUserService {
                 tx.setUserId(admin.getId());
                 tx.setAmount(budgetToRestore.negate());
                 tx.setTransactionType("MEETING_BUDGET_ALLOCATION");
-                tx.setDescription("Re-allocated total budget for Race Meeting: " + meeting.getName());
+                tx.setDescription("Re-allocated unspent budget (" + budgetToRestore + " VNĐ) for Race Meeting: " + meeting.getName());
                 tx.setRaceMeetingId(meeting.getId());
                 tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                 walletTransactionRepository.save(tx);
             }
-            // Khôi phục ngân sách cho RaceMeeting
-            meeting.setTotalBudget(budgetToRestore);
+            // Khôi phục ngân sách cho RaceMeeting = số tiền đã chi trả thưởng thực tế + ngân sách khôi phục
+            BigDecimal totalAwardedPurses = raceRepository.findByRaceMeetingId(meeting.getId()).stream()
+                    .map(r -> raceEntryRepository.findByRaceId(r.getId()))
+                    .flatMap(List::stream)
+                    .map(e -> e.getPrizeMoney() != null ? e.getPrizeMoney() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            meeting.setTotalBudget(totalAwardedPurses.add(budgetToRestore));
+            meeting.setLastAllocatedBudget(BigDecimal.ZERO);
+
+            // Dọn dẹp trạng thái đăng ký REJECTED cũ do deactive gây ra để các Chủ ngựa/Nài ngựa thấy lại sự kiện trên Calendar & Dashboard
+            List<OwnerRaceMeetingRegistration> staleOwnerRegs = ownerRegRepository.findByRaceMeetingId(meeting.getId());
+            for (OwnerRaceMeetingRegistration oReg : staleOwnerRegs) {
+                if ("REJECTED".equalsIgnoreCase(oReg.getStatus())) {
+                    ownerRegRepository.delete(oReg);
+                }
+            }
         }
 
         meeting.setStatus(nextStatus);

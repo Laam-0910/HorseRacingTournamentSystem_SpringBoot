@@ -366,6 +366,17 @@ public class AdminUserController {
         }
     }
 
+    // Đóng sự kiện trận đua sau kết quả chính thức (OFFICIAL → RACE_EVENT_ENDED), giải phóng ngựa & nài
+    @PostMapping("/races/{raceId}/close")
+        public ResponseEntity<?> closeRace(@PathVariable Integer raceId) {
+        try {
+            adminUserService.closeRace(raceId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Race event closed successfully. Horses and jockeys have been released."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
     // Nạp tiền hoặc cài đặt số dư ví của người dùng
     @PostMapping("/users/{userId}/deposit")
     public ResponseEntity<?> depositUserWallet(@PathVariable Integer userId, @RequestBody Map<String, Object> request) {
