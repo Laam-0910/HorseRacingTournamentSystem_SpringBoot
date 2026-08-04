@@ -540,23 +540,23 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
               };
 
               return (
-                <div key={s.id} className="uiverse-cyber-card bg-[#181613] rounded-2xl p-7 transition-all border border-[#2a2825] shadow-lg relative overflow-hidden group">
-                  <div className="card-glare"></div>
-                  <div className="scan-line"></div>
-                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150"></div>
-                  <div className="flex justify-between items-start mb-5 relative z-10">
+                <div key={s.id} className="glow-cyber-card rounded-2xl p-7 transition-all duration-300 border border-[#c9a227]/30 shadow-xl relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-5 relative z-10 w-full">
                     <h4 className="font-bold text-2xl text-white group-hover:text-[#c9a227] transition-colors drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{s.name}</h4>
-                    <span className="text-[0.65rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">{"Active"}</span>
+                    <span className="text-[0.65rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/40 shadow-[0_0_15px_rgba(74,222,128,0.25)] flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping inline-block"></span>
+                      ACTIVE
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between text-sm text-gray-300 font-mono relative z-10 bg-[#0e0c09]/50 p-3 rounded-xl border border-white/5">
+                  <div className="flex items-center justify-between text-sm text-gray-300 font-mono relative z-10 bg-[#14120f]/80 p-3.5 rounded-xl border border-white/5 w-full">
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 mb-1">Start Date</span>
-                      <span className="opacity-90 font-semibold">{formatSeasonDate(s.startDate)}</span>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Start Date</span>
+                      <span className="opacity-90 font-semibold text-white">{formatSeasonDate(s.startDate)}</span>
                     </div>
-                    <span className="text-[#c9a227]/50 font-sans px-2 text-xl">→</span>
+                    <span className="text-[#c9a227] font-sans px-2 text-xl font-bold">→</span>
                     <div className="flex flex-col text-right">
-                      <span className="text-xs text-gray-500 mb-1">{"End Date"}</span>
-                      <span className="opacity-90 font-semibold">{formatSeasonDate(s.endDate)}</span>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">End Date</span>
+                      <span className="opacity-90 font-semibold text-white">{formatSeasonDate(s.endDate)}</span>
                     </div>
                   </div>
                 </div>
@@ -590,24 +590,21 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
               const { date, time } = formatDateTime(m.startDate);
 
               return (
-                <div key={m.id} className="uiverse-cyber-card bg-[#181613] rounded-2xl p-7 transition-all border border-[#2a2825] shadow-lg relative overflow-hidden group">
-                  <div className="card-glare"></div>
-                  <div className="scan-line"></div>
-                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-gradient-to-tr from-blue-500 to-transparent opacity-10 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150"></div>
-                  <h4 className="font-bold text-2xl text-white mb-6 group-hover:text-blue-400 transition-colors relative z-10 drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
-                  <div className="space-y-3 relative z-10">
-                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#0e0c09]/50 px-4 py-2.5 rounded-xl border border-white/5">
+                <div key={m.id} className="glow-cyber-card rounded-2xl p-7 transition-all duration-300 border border-[#c9a227]/30 shadow-xl relative overflow-hidden group">
+                  <h4 className="font-bold text-2xl text-white mb-5 group-hover:text-[#c9a227] transition-colors relative z-10 drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
+                  <div className="space-y-2.5 relative z-10 w-full">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-4 py-2.5 rounded-xl border border-white/5">
                       <span className="text-blue-400 text-lg">📍</span> 
-                      <span className="truncate font-medium">{m.venue}</span>
+                      <span className="truncate font-medium text-white">{m.venue}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#0e0c09]/50 px-4 py-2.5 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-4 py-2.5 rounded-xl border border-white/5">
                       <span className="text-[#c9a227] text-lg">📅</span> 
-                      <span className="font-medium">{date}</span>
+                      <span className="font-medium text-white">{date}</span>
                     </div>
                     {time && (
-                      <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#0e0c09]/50 px-4 py-2.5 rounded-xl border border-white/5">
+                      <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-4 py-2.5 rounded-xl border border-white/5">
                         <span className="text-[#c9a227] text-lg">🕒</span> 
-                        <span className="font-medium">{time}</span>
+                        <span className="font-medium text-white">{time}</span>
                       </div>
                     )}
                   </div>

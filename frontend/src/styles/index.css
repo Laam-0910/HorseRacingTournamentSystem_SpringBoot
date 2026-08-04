@@ -710,17 +710,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   box-shadow: inset 0 0 15px rgba(201, 162, 39, 0.06);
 }
 
-/* Content layer z-index guarantee (excluding absolute overlays) */
-.card > *:not(.card-glare):not(.scan-line):not(.gradient-overlay),
-.glow-cyber-card > *:not(.card-glare):not(.scan-line):not(.gradient-overlay),
-.uiverse-cyber-card > *:not(.card-glare):not(.scan-line):not(.gradient-overlay) {
+/* Content layer z-index guarantee (excluding all absolute elements) */
+.card > *:not([class*="absolute"]),
+.glow-cyber-card > *:not([class*="absolute"]),
+.uiverse-cyber-card > *:not([class*="absolute"]) {
   position: relative;
   z-index: 2;
 }
 
-.card-glare,
-.scan-line,
-.gradient-overlay {
+[class*="absolute"] {
   position: absolute !important;
 }
 
