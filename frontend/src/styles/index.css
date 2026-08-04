@@ -1264,4 +1264,156 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   50% { opacity: 1; transform: scale(1.02); }
 }
 
+/* =============================================
+   UIVERSE ANIMATED BUTTON & TAB BUTTONS 
+   (From Uiverse.io by gharsh11032000)
+   ============================================= */
+.animated-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 24px;
+  border: 2px solid #c9a227;
+  font-size: 14px;
+  background-color: transparent;
+  border-radius: 100px;
+  font-weight: 600;
+  color: #f3d06c;
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.25);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button svg {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  fill: #f3d06c;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .arr-1 {
+  right: 12px;
+}
+
+.animated-button .arr-2 {
+  left: -25%;
+}
+
+.animated-button .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #c9a227 0%, #f3d06c 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-10px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button:hover {
+  box-shadow: 0 0 20px rgba(201, 162, 39, 0.5);
+  color: #0e0c09;
+  border-radius: 12px;
+}
+
+.animated-button:hover .arr-1 {
+  right: -25%;
+}
+
+.animated-button:hover .arr-2 {
+  left: 12px;
+}
+
+.animated-button:hover .text {
+  transform: translateX(10px);
+}
+
+.animated-button:hover svg {
+  fill: #0e0c09;
+}
+
+.animated-button:active {
+  scale: 0.95;
+  box-shadow: 0 0 0 4px #c9a227;
+}
+
+.animated-button:hover .circle {
+  width: 240px;
+  height: 240px;
+  opacity: 1;
+}
+
+/* Tab Bar Navigation Variant (Uiverse Animated Circle) */
+.uiverse-tab-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  font-size: 13px;
+  background: rgba(20, 18, 15, 0.7);
+  border-radius: 12px;
+  font-weight: 600;
+  color: #d1d5db;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.uiverse-tab-btn .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(135deg, #c9a227 0%, #f3d06c 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+}
+
+.uiverse-tab-btn .tab-text {
+  position: relative;
+  z-index: 2;
+  transition: all 0.4s ease;
+}
+
+.uiverse-tab-btn:hover {
+  border-color: #c9a227;
+  color: #0e0c09;
+  box-shadow: 0 0 15px rgba(201, 162, 39, 0.4);
+}
+
+.uiverse-tab-btn:hover .circle {
+  width: 200px;
+  height: 200px;
+  opacity: 1;
+}
+
+.uiverse-tab-btn.active {
+  background: linear-gradient(135deg, #c9a227 0%, #e6c153 100%);
+  color: #0e0c09;
+  border-color: #f3d06c;
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(201, 162, 39, 0.5);
+}
+
 

@@ -2641,34 +2641,17 @@ export default function Landing() {
 
             {/* Scrollable Nav Items */}
             {!isMobile && (
-              <div className="scrollbar-hide" style={{ display: "flex", alignItems: "center", gap: "0.6rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "2rem" }}>
+              <div className="scrollbar-hide" style={{ display: "flex", alignItems: "center", gap: "0.5rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "1.5rem" }}>
                 {SUB_NAV.map(n => {
                   const active = view === n.key;
                   return (
                     <button
                       key={n.key}
-                      className="landing-nav-btn uiverse-hover-btn"
-                      onClick={() => {
-                        setView(n.key);
-                      }}
-                      style={{
-                        padding: "0.4rem 0.65rem",
-                        borderRadius: "0.375rem",
-                        fontSize: "0.825rem",
-                        fontFamily: "sans-serif",
-                        cursor: "pointer",
-                        border: active ? "1px solid rgba(201,162,39,0.5)" : "1px solid transparent",
-                        background: active ? "rgba(201,162,39,0.12)" : "transparent",
-                        color: active ? "#c9a227" : "#a0a0a0",
-                        fontWeight: active ? 600 : 500,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.375rem",
-                        transition: "all 0.2s",
-                        flexShrink: 0,
-                      }}
+                      className={`uiverse-tab-btn ${active ? "active" : ""}`}
+                      onClick={() => setView(n.key)}
                     >
-                      {n.label}
+                      <span className="circle"></span>
+                      <span className="tab-text">{n.label}</span>
                     </button>
                   );
                 })}
