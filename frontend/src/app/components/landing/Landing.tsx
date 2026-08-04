@@ -868,7 +868,7 @@ function LandingBettingContainer({ user, navigate, races }: { user: any; navigat
       <div style={{ background: "linear-gradient(135deg, rgba(201,162,39,0.12) 0%, rgba(20,20,20,0.9) 100%)", border: "1px solid rgba(201,162,39,0.3)", padding: "1.5rem", borderRadius: "1rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
         <div>
           <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#f4f2ec" }}>Real-Time Race Odds & AI Win Probability</h3>
-          <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginTop: "0.2rem" }}>Calculated live using horse rating power curves with 10% house margin overround.</p>
+          <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginTop: "0.2rem", fontStyle: "italic" }}>"In gambling, those who don't play are the winners, but those who don't play will never win."</p>
         </div>
         <button onClick={handleBetNow} style={{ padding: "0.75rem 1.5rem", background: "linear-gradient(45deg, #c9a227, #f3d06c)", color: "#110f0e", border: "none", borderRadius: "0.5rem", fontWeight: 800, cursor: "pointer", fontFamily: "monospace" }}>
           💥 PLACE BETS IN DASHBOARD →
