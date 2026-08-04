@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 public class RaceDTO {
     private Integer id;
     private Integer raceMeetingId;
+    private Integer seasonId;         // ID mùa giải chứa ngày hội đua này
     private String raceMeetingName; // Tên Ngày hội đua bổ trợ
     
     @JsonFormat(pattern = "dd-MM-yyyy HH:mm:ss", timezone = "GMT+7")

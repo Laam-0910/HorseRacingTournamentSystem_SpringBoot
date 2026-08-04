@@ -1,5 +1,0 @@
-flask
-flask-cors
-pyodbc
-pandas
-scikit-learn

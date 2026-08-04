@@ -7,13 +7,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class RaceMapper {
 
-    public RaceDTO toDTO(Race race, String meetingName) {
+    public RaceDTO toDTO(Race race, String meetingName, Integer seasonId) {
         if (race == null) {
             return null;
         }
         return RaceDTO.builder()
                 .id(race.getId())
                 .raceMeetingId(race.getRaceMeetingId())
+                .seasonId(seasonId)
                 .raceMeetingName(meetingName)
                 .startTime(race.getStartTime())
                 .registrationStartTime(race.getRegistrationStartTime())
@@ -37,8 +38,12 @@ public class RaceMapper {
                 .build();
     }
 
+    public RaceDTO toDTO(Race race, String meetingName) {
+        return toDTO(race, meetingName, null);
+    }
+
     public RaceDTO toDTO(Race race) {
-        return toDTO(race, null);
+        return toDTO(race, null, null);
     }
 
     public Race toEntity(RaceDTO dto) {

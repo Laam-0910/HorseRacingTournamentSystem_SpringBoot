@@ -538,6 +538,9 @@ public class RaceService {
         Map<Integer, String> seasonStatusMap = seasonRepository.findAll().stream()
                 .collect(Collectors.toMap(Season::getId, s -> s.getStatus() != null ? s.getStatus() : "ACTIVE"));
 
+        Map<Integer, Integer> meetingSeasonMap = meetingEntityMap.entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getSeasonId()));
+
         return raceRepository.findAll().stream()
                 .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus())) // Loại bỏ hoàn toàn các trận đua đã bị CANCELLED
                 .filter(r -> {
@@ -555,7 +558,7 @@ public class RaceService {
                           || "STEWARDS_INQUIRY".equalsIgnoreCase(r.getStatus()) 
                           || "WEBCAM".equalsIgnoreCase(r.getStreamMode()) 
                           || (r.getYoutubeLiveUrl() != null && !r.getYoutubeLiveUrl().trim().isEmpty()))
-                .map(r -> raceMapper.toDTO(r, meetingMap.get(r.getRaceMeetingId())))
+                .map(r -> raceMapper.toDTO(r, meetingMap.get(r.getRaceMeetingId()), meetingSeasonMap.get(r.getRaceMeetingId())))
                 .collect(Collectors.toList());
     }
 

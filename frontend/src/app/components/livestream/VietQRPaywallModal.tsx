@@ -20,7 +20,18 @@ export default function VietQRPaywallModal({
   onSuccess,
   onClose,
 }: VietQRPaywallModalProps) {
-  const [selectedPackage, setSelectedPackage] = useState<"RACEMEETING" | "SEASON">(initialPackage || "RACEMEETING");
+  const hasRaceMeeting = !!raceMeetingId;
+  const [selectedPackage, setSelectedPackage] = useState<"RACEMEETING" | "SEASON">(() => {
+    if (!hasRaceMeeting) return "SEASON";
+    return initialPackage || "RACEMEETING";
+  });
+
+  useEffect(() => {
+    if (!hasRaceMeeting && selectedPackage !== "SEASON") {
+      setSelectedPackage("SEASON");
+    }
+  }, [hasRaceMeeting, selectedPackage]);
+
   const [quote, setQuote] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
@@ -172,10 +183,10 @@ export default function VietQRPaywallModal({
         <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(201,162,39,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <h3 style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#f4f2ec", fontFamily: "'Roboto Slab', serif" }}>
-              Unlock HD Livestream Access
+              Unlock / Extend HD Livestream Access
             </h3>
             <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
-              Pay via your available wallet balance or scan VietQR code.
+              Pay via your available wallet balance or scan VietQR code to unlock or extend access time.
             </p>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "1.25rem" }}>✕</button>
@@ -184,7 +195,7 @@ export default function VietQRPaywallModal({
         <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
           {paymentSuccess && (
             <div style={{ padding: "1rem", borderRadius: "0.5rem", background: "rgba(16,185,129,0.2)", border: "1px solid #10b981", color: "#34d399", fontSize: "13px", fontWeight: "bold", textAlign: "center", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
-              <span>🎉</span> Payment Received & Verified! HD Stream Unlocked. Closing window...
+              <span>🎉</span> Payment Received & Verified! HD Stream Unlocked / Extended. Closing window...
             </div>
           )}
 
@@ -199,29 +210,31 @@ export default function VietQRPaywallModal({
             <label style={{ display: "block", fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#c9a227", marginBottom: "0.5rem" }}>
               Select Viewing Package
             </label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
-              {/* Option 1: RaceMeeting Pass */}
-              <div
-                onClick={() => setSelectedPackage("RACEMEETING")}
-                style={{
-                  padding: "0.875rem",
-                  borderRadius: "0.75rem",
-                  border: selectedPackage === "RACEMEETING" ? "2px solid #c9a227" : "1px solid rgba(255,255,255,0.1)",
-                  background: selectedPackage === "RACEMEETING" ? "rgba(201,162,39,0.12)" : "rgba(255,255,255,0.02)",
-                  cursor: "pointer",
-                  transition: "all 0.2s"
-                }}
-              >
-                <div style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>RaceMeeting Pass</div>
-                <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#c9a227", fontFamily: "monospace", marginTop: "4px" }}>
-                  {finalAmount.toLocaleString('en-US')} VND
+            <div style={{ display: "grid", gridTemplateColumns: hasRaceMeeting ? "1fr 1fr" : "1fr", gap: "0.75rem" }}>
+              {/* Option 1: RaceMeeting Pass (Shown when a specific Race Meeting exists) */}
+              {hasRaceMeeting && (
+                <div
+                  onClick={() => setSelectedPackage("RACEMEETING")}
+                  style={{
+                    padding: "0.875rem",
+                    borderRadius: "0.75rem",
+                    border: selectedPackage === "RACEMEETING" ? "2px solid #c9a227" : "1px solid rgba(255,255,255,0.1)",
+                    background: selectedPackage === "RACEMEETING" ? "rgba(201,162,39,0.12)" : "rgba(255,255,255,0.02)",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                >
+                  <div style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>RaceMeeting Pass</div>
+                  <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#c9a227", fontFamily: "monospace", marginTop: "4px" }}>
+                    15,000 VNĐ
+                  </div>
+                  <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "4px" }}>
+                    24h access for {raceMeetingName || "this event"}
+                  </div>
                 </div>
-                <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "4px" }}>
-                  24h access for {raceMeetingName || "this event"}
-                </div>
-              </div>
+              )}
 
-              {/* Option 2: Season Pass */}
+              {/* Option 2: Season Pass (Always available) */}
               <div
                 onClick={() => setSelectedPackage("SEASON")}
                 style={{
@@ -238,10 +251,10 @@ export default function VietQRPaywallModal({
                   <span style={{ fontSize: "8px", background: "#10b981", color: "#000", padding: "1px 4px", borderRadius: "2px", fontWeight: "bold" }}>BEST VALUE</span>
                 </div>
                 <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#34d399", fontFamily: "monospace", marginTop: "4px" }}>
-                  79,000 VND
+                  {quote ? Number(quote.finalPrice).toLocaleString('en-US') : "79,000"} VNĐ
                 </div>
                 <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "4px" }}>
-                  {selectedPackage === "SEASON" && quote?.discountApplied > 0 ? quote?.description : "Unlimited access to all meetings"}
+                  {selectedPackage === "SEASON" && quote?.discountApplied > 0 ? quote?.description : "Full Season Access Pass (Unlimited HD stream live streaming for all events)"}
                 </div>
               </div>
             </div>

@@ -53,7 +53,7 @@ public class LivestreamSubscriptionController {
                 return false;
             }
             if ("SEASON".equalsIgnoreCase(sub.getPackageType())) {
-                return seasonId != null && seasonId.equals(sub.getSeasonId());
+                return seasonId == null || sub.getSeasonId() == null || seasonId.equals(sub.getSeasonId());
             }
             if ("RACEMEETING".equalsIgnoreCase(sub.getPackageType())) {
                 return meetingId != null && meetingId.equals(sub.getRaceMeetingId());
@@ -191,7 +191,7 @@ public class LivestreamSubscriptionController {
                     .filter(s -> {
                         if (s.getExpiresAt() == null || s.getExpiresAt().before(new Timestamp(System.currentTimeMillis()))) return false;
                         if ("SEASON".equalsIgnoreCase(packageType) && "SEASON".equalsIgnoreCase(s.getPackageType())) {
-                            return seasonId == null || seasonId.equals(s.getSeasonId());
+                            return seasonId == null || s.getSeasonId() == null || seasonId.equals(s.getSeasonId());
                         }
                         if ("RACEMEETING".equalsIgnoreCase(packageType) && "RACEMEETING".equalsIgnoreCase(s.getPackageType())) {
                             return raceMeetingId == null || raceMeetingId.equals(s.getRaceMeetingId());

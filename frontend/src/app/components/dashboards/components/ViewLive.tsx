@@ -16,6 +16,7 @@ interface Race {
   streamMode?: string;
   meetingName: string;
   raceMeetingId?: number;
+  seasonId?: number;
 }
 
 interface ViewLiveProps {
@@ -122,7 +123,8 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
       return;
     }
 
-    api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${meetingId}`)
+    const seasonId = selectedRace.seasonId;
+    api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${meetingId}${seasonId ? `&seasonId=${seasonId}` : ""}`)
       .then(res => {
         const access = Boolean(res && res.hasAccess);
         setHasAccess(access);
@@ -584,7 +586,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
             {showPaywallModal && user && (
               <VietQRPaywallModal
                 userId={user.id}
-                seasonId={null}
+                seasonId={selectedRace?.seasonId ?? null}
                 raceMeetingId={selectedRace.raceMeetingId}
                 raceMeetingName={selectedRace.meetingName}
                 initialPackage={preselectedPkg}
@@ -593,7 +595,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                   setShowPaywallModal(false);
                   isManualPaywallOpenRef.current = false;
                   if (user && selectedRace) {
-                    api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${selectedRace.raceMeetingId || ""}`)
+                    api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${selectedRace.raceMeetingId || ""}${(selectedRace as any).seasonId ? `&seasonId=${(selectedRace as any).seasonId}` : ""}`)
                       .then(res => {
                         setHasAccess(res.hasAccess);
                         setSubInfo(res);
