@@ -270,8 +270,8 @@ export default function Livestream() {
               <span>🎭</span>
               <span>{isTheaterMode ? $t("Default", (localStorage.getItem('app-lang') || 'en')) : $t("Theater", (localStorage.getItem('app-lang') || 'en'))}</span>
             </button>
-            <div className="flex items-center space-x-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 px-3 py-1 rounded-full text-xs font-semibold uppercase animate-pulse">
-              <span className="h-2 w-2 rounded-full bg-rose-500"></span>
+            <div className="uiverse-live-badge">
+              <span className="dot"></span>
               <span>{$t("LIVE", (localStorage.getItem('app-lang') || 'en'))}</span>
             </div>
           </div>

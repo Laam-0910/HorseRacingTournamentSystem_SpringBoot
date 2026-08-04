@@ -480,10 +480,25 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                    </div>
                  </div>
                  
-                 {/* Toggle Switch */}
-                 <div onClick={toggleOtp} style={{ width: 60, height: 34, borderRadius: 17, background: otpEnabled ? "#10b981" : "rgba(0,0,0,0.6)", border: `2px solid ${otpEnabled ? "#10b981" : "rgba(255,255,255,0.2)"}`, cursor: "pointer", position: "relative", transition: "all 0.3s" }}>
-                    <div style={{ position: "absolute", top: 2, left: otpEnabled ? 28 : 2, width: 26, height: 26, borderRadius: "50%", background: "#fff", transition: "left 0.3s cubic-bezier(0.4, 0, 0.2, 1)", boxShadow: "0 2px 5px rgba(0,0,0,0.3)" }} />
-                 </div>
+                  {/* Uiverse Infinity Path Toggle Switch */}
+                  <div className="uiverse-switch-container">
+                    <input 
+                      id="check-2fa" 
+                      type="checkbox" 
+                      checked={otpEnabled} 
+                      onChange={toggleOtp} 
+                    />
+                    <label className="uiverse-infinity-switch" htmlFor="check-2fa">
+                      <svg viewBox="0 0 212.4992 84.4688" overflow="visible">
+                        <path
+                          pathLength="360"
+                          fill="none"
+                          stroke="currentColor"
+                          d="M 42.2496 0 A 42.24 42.24 90 0 0 0 42.2496 A 42.24 42.24 90 0 0 42.2496 84.4688 A 42.24 42.24 90 0 0 84.4992 42.2496 A 42.24 42.24 90 0 0 42.2496 0 A 42.24 42.24 90 0 0 0 42.2496 A 42.24 42.24 90 0 0 42.2496 84.4688 L 170.2496 84.4688 A 42.24 42.24 90 0 0 212.4992 42.2496 A 42.24 42.24 90 0 0 170.2496 0 A 42.24 42.24 90 0 0 128 42.2496 A 42.24 42.24 90 0 0 170.2496 84.4688 A 42.24 42.24 90 0 0 212.4992 42.2496 A 42.24 42.24 90 0 0 170.2496 0 L 42.2496 0"
+                        ></path>
+                      </svg>
+                    </label>
+                  </div>
                </div>
                
                <p style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: 0 }}>

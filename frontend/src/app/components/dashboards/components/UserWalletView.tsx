@@ -218,14 +218,25 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
         </div>
 
         <div className="flex flex-col items-end gap-3 font-mono">
-          <div className="bg-black/40 border border-white/10 p-5 rounded-2xl min-w-[16rem] text-right">
-            <span className="text-xs text-white/50 block uppercase">Current Available Balance</span>
-            <div className="text-3xl font-extrabold mt-1" style={{ color: roleColor }}>
-              {walletBalance.toLocaleString('en-US')} <span className="text-lg font-bold">VND</span>
+          <div className="uiverse-credit-card">
+            <div className="flex items-center justify-between">
+              <div className="uiverse-card-chip"></div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full" style={{ color: roleColor, background: `${roleColor}20`, border: `1px solid ${roleColor}40` }}>
+                {roleLabel} VIP
+              </span>
             </div>
-            <span className="text-[10px] text-emerald-400 font-bold block mt-1">
-              ✓ Account Active
-            </span>
+            <div>
+              <span className="text-[10px] text-white/50 uppercase tracking-widest font-mono block">Current Balance</span>
+              <div className="text-2xl font-extrabold font-mono mt-0.5" style={{ color: roleColor, textShadow: `0 0 15px ${roleColor}50` }}>
+                {walletBalance.toLocaleString('en-US')} <span className="text-sm font-bold text-white/80">VND</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center text-[10px] font-mono text-white/50 border-t border-white/10 pt-2">
+              <span>ID: {user?.id ? `HR-${String(user.id).padStart(5, '0')}` : 'HR-00001'}</span>
+              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Active
+              </span>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">

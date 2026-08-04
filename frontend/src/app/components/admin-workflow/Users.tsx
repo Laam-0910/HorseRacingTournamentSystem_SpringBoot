@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { api, getErrMsg } from "../../../lib/api";
 import { PaginationControls } from "./PaginationControls";
+import CyberLoader from "../common/CyberLoader";
 
 /**
  */
@@ -345,7 +346,7 @@ export default function Users() {
         {isMobile ? (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
             {loading ? (
-              <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</div>
+              <CyberLoader text="Loading Users Database..." />
             ) : paginatedUsers.length === 0 ? (
               <div style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No matching users found.", (localStorage.getItem('app-lang') || 'en'))}</div>
             ) : paginatedUsers.map((u) => (
@@ -536,7 +537,7 @@ export default function Users() {
             {/* Tab Content Body */}
             <div style={{ padding: "1.5rem", overflowY: "auto", flex: 1, fontSize: "0.85rem", color: "#e2e8f0" }}>
               {detailsLoading ? (
-                <div style={{ textAlign: "center", padding: "3rem", color: "rgba(255,255,255,0.4)", fontFamily: "monospace" }}>Loading user details...</div>
+                <CyberLoader text="Loading User Details..." />
               ) : userDetailsData ? (
                 <>
                   {activeDetailsTab === "general" && (

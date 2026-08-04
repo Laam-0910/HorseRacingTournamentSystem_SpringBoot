@@ -989,4 +989,235 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   }
 }
 
+/* =============================================
+   UIVERSE METALLIC CYBER CREDIT CARD
+   ============================================= */
+.uiverse-credit-card {
+  position: relative;
+  width: 100%;
+  max-width: 380px;
+  min-height: 190px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #1f1c18 0%, #0e0c0a 50%, #2a2419 100%);
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(201, 162, 39, 0.15);
+  padding: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.4s ease;
+}
+
+.uiverse-credit-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(201, 162, 39, 0.3);
+  border-color: rgba(201, 162, 39, 0.7);
+}
+
+.uiverse-credit-card::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.uiverse-card-chip {
+  width: 44px;
+  height: 32px;
+  background: linear-gradient(135deg, #e6c153 0%, #b8860b 100%);
+  border-radius: 6px;
+  position: relative;
+  border: 1px solid #ffe89e;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+.uiverse-card-chip::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+/* =============================================
+   UIVERSE NEON LIVE BADGE & PULSE UTILITIES
+   ============================================= */
+.uiverse-live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.uiverse-live-badge .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+  animation: livePulse 1.2s infinite ease-in-out;
+}
+
+@keyframes livePulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1.4);
+    opacity: 0.4;
+    box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+}
+
+/* =============================================
+   UIVERSE INFINITY PATH SWITCH TOGGLE (2FA)
+   ============================================= */
+.uiverse-switch-container {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+}
+
+.uiverse-switch-container input[type="checkbox"] {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.uiverse-infinity-switch {
+  --a: 0.5s ease-out;
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  height: 2.2em;
+  border-radius: 2em;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.15);
+  aspect-ratio: 212.4992/84.4688;
+  background-color: #2a2825;
+  transition: all 0.4s ease;
+}
+
+.uiverse-infinity-switch svg {
+  height: 100%;
+}
+
+.uiverse-infinity-switch svg path {
+  color: #c9a227;
+  stroke-width: 18;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 136 224;
+  transition: all var(--a), 0s transform;
+  transform-origin: center;
+}
+
+.uiverse-switch-container input[type="checkbox"]:checked ~ .uiverse-infinity-switch {
+  background-color: #10b981;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), 0 0 0 2px rgba(16, 185, 129, 0.6);
+}
+
+.uiverse-switch-container input[type="checkbox"]:checked ~ .uiverse-infinity-switch svg path {
+  color: #ffffff;
+  stroke-dashoffset: 180;
+  transform: scaleY(-1);
+}
+
+/* =============================================
+   UIVERSE CYBERPUNK GLOWING SPINNER / LOADER
+   ============================================= */
+.cyber-loader {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 30px;
+}
+
+.cyber-spinner {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  position: relative;
+  animation: cyberRotate 1.2s linear infinite;
+  box-shadow: 0 0 20px rgba(201, 162, 39, 0.2);
+}
+
+.cyber-spinner::before,
+.cyber-spinner::after {
+  content: "";
+  box-sizing: border-box;
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3.5px solid transparent;
+}
+
+.cyber-spinner::before {
+  border-top-color: #c9a227;
+  border-right-color: #c9a227;
+  animation: cyberSpinOuter 1.4s ease-in-out infinite;
+}
+
+.cyber-spinner::after {
+  border-bottom-color: #ffe89e;
+  border-left-color: #ffe89e;
+  animation: cyberSpinInner 0.9s ease-in-out infinite reverse;
+}
+
+@keyframes cyberRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes cyberSpinOuter {
+  0% { transform: rotate(0deg); }
+  50% { transform: rotate(180deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes cyberSpinInner {
+  0% { transform: rotate(0deg) scale(0.85); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(0.85); }
+}
+
+.cyber-loader-text {
+  font-family: monospace;
+  font-size: 0.75rem;
+  color: #c9a227;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-weight: 700;
+  animation: cyberPulseText 1.4s ease-in-out infinite;
+}
+
+@keyframes cyberPulseText {
+  0%, 100% { opacity: 0.35; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.02); }
+}
+
 
