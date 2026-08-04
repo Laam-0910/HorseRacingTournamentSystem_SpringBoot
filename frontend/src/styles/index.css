@@ -1466,4 +1466,96 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   box-shadow: 0 0 18px rgba(201, 162, 39, 0.2);
 }
 
+/* =============================================
+   UIVERSE GLITCH SEARCH INPUT (From Uiverse.io by 0xnihilism)
+   ============================================= */
+.uiverse-glitch-container {
+  position: relative;
+  width: 100%;
+  max-width: 36rem;
+  display: flex;
+  align-items: center;
+}
+
+.uiverse-glitch-input {
+  width: 100%;
+  height: 42px;
+  padding: 8px 36px 8px 38px;
+  font-size: 14px;
+  font-family: "Courier New", monospace;
+  color: #f3d06c;
+  background-color: #0e0c09;
+  border: 2px solid #c9a227;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: 4px 4px 0 #c9a227;
+}
+
+.uiverse-glitch-input::placeholder {
+  color: #888888;
+}
+
+.uiverse-glitch-input:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #c9a227;
+}
+
+.uiverse-glitch-input:focus {
+  background-color: #010101;
+  color: #ffffff;
+  border-color: #f3d06c;
+  animation: inputShake 0.5s ease-in-out;
+  box-shadow: 6px 6px 0 #f3d06c;
+}
+
+.uiverse-glitch-input:focus::placeholder {
+  color: #ffffff;
+}
+
+@keyframes inputShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px) rotate(-2deg); }
+  50% { transform: translateX(4px) rotate(2deg); }
+  75% { transform: translateX(-4px) rotate(-2deg); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes inputGlitch {
+  0% { transform: none; opacity: 1; }
+  7% { transform: skew(-0.5deg, -0.9deg); opacity: 0.85; }
+  10% { transform: none; opacity: 1; }
+  27% { transform: none; opacity: 1; }
+  30% { transform: skew(0.8deg, -0.1deg); opacity: 0.85; }
+  35% { transform: none; opacity: 1; }
+  52% { transform: none; opacity: 1; }
+  55% { transform: skew(-1deg, 0.2deg); opacity: 0.85; }
+  75% { transform: skew(0.4deg, 1deg); opacity: 0.85; }
+  100% { transform: none; opacity: 1; }
+}
+
+.uiverse-glitch-input:not(:placeholder-shown) {
+  animation: inputGlitch 1.2s linear infinite;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.uiverse-glitch-container::after {
+  content: "|";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #c9a227;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 16px;
+  animation: inputBlink 0.7s step-end infinite;
+  pointer-events: none;
+}
+
+@keyframes inputBlink {
+  50% { opacity: 0; }
+}
+
 

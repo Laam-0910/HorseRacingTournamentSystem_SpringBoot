@@ -2098,10 +2098,13 @@ export default function Landing() {
             </a>
           </div>
 
-          {/* Search Bar */}
-          <div style={{ flex: isMobile ? "none" : 1, width: "100%", maxWidth: isMobile ? "100%" : "36rem", position: "relative", marginLeft: isMobile ? "0" : "2rem" }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" strokeWidth="2" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          {/* Search Bar (Uiverse 0xnihilism Glitch Cyberpunk Input) */}
+          <div className="uiverse-glitch-container" style={{ flex: isMobile ? "none" : 1, marginLeft: isMobile ? "0" : "1.5rem" }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a227" strokeWidth="2.5" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", zIndex: 3, pointerEvents: "none" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input
+              className="uiverse-glitch-input"
+              type="text"
+              placeholder="Search horses, jockeys, owners..."
               value={searchQuery}
               onChange={e => {
                 const val = e.target.value;
@@ -2117,13 +2120,11 @@ export default function Landing() {
                   setView("search");
                 }
               }}
-
-              style={{ width: "100%", paddingLeft: "2.5rem", paddingRight: "1.75rem", paddingTop: "0.5rem", paddingBottom: "0.5rem", fontSize: "0.85rem", background: "#111111", borderRadius: "0.5rem", color: "#f0f0f0", border: "1px solid #1f1f1f", outline: "none" }}
             />
             {searchQuery && (
               <button 
                 onClick={() => { setSearchQuery(""); setView("home"); }}
-                style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "12px" }}
+                style={{ position: "absolute", right: "28px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#c9a227", cursor: "pointer", fontSize: "14px", zIndex: 4, fontWeight: "bold" }}
               >
                 ✕
               </button>
