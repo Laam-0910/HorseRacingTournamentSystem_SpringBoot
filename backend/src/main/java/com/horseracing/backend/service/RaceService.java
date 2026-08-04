@@ -307,7 +307,7 @@ public class RaceService {
         if (admin != null) {
             BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
             if (adminBal.compareTo(budget) < 0) {
-                throw new IllegalArgumentException("Admin wallet balance ($" + adminBal + ") is insufficient to fund meeting budget ($" + budget + "). Please top up Admin wallet.");
+                throw new IllegalArgumentException("Admin wallet balance (" + adminBal + " VNĐ) is insufficient to fund meeting budget (" + budget + " VNĐ). Please top up Admin wallet.");
             }
             admin.setWalletBalance(adminBal.subtract(budget));
             userRepository.save(admin);
@@ -349,7 +349,7 @@ public class RaceService {
             if (admin != null) {
                 BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
                 if (budgetDiff.compareTo(BigDecimal.ZERO) > 0 && adminBal.compareTo(budgetDiff) < 0) {
-                    throw new IllegalArgumentException("Admin wallet balance ($" + adminBal + ") is insufficient to increase meeting budget by $" + budgetDiff);
+                    throw new IllegalArgumentException("Admin wallet balance (" + adminBal + " VNĐ) is insufficient to increase meeting budget by " + budgetDiff + " VNĐ");
                 }
                 admin.setWalletBalance(adminBal.subtract(budgetDiff));
                 userRepository.save(admin);

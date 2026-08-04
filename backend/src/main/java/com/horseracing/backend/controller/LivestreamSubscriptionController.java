@@ -160,7 +160,7 @@ public class LivestreamSubscriptionController {
             if ("WALLET".equalsIgnoreCase(payMethod)) {
                 BigDecimal bal = spectator.getWalletBalance() != null ? spectator.getWalletBalance() : BigDecimal.ZERO;
                 if (bal.compareTo(amount) < 0) {
-                    return ResponseEntity.badRequest().body(Map.of("success", false, "error", String.format("Insufficient wallet balance ($%,.2f available, $%,.2f required). Please top up your wallet via VietQR.", bal, amount)));
+                    return ResponseEntity.badRequest().body(Map.of("success", false, "error", String.format("Insufficient wallet balance (%,.2f VNĐ available, %,.2f VNĐ required). Please top up your wallet via VietQR.", bal, amount)));
                 }
                 spectator.setWalletBalance(bal.subtract(amount));
                 spectator.setBalance(bal.subtract(amount));

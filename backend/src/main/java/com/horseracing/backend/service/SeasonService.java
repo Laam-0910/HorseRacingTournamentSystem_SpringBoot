@@ -390,10 +390,10 @@ public class SeasonService {
             }
 
             if (minPrize == null || minPrize.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException(String.format("Minimum prize money for %s must be greater than $0.00.", rule.getClassLevel()));
+                throw new IllegalArgumentException(String.format("Minimum prize money for %s must be greater than 0.00 VNĐ.", rule.getClassLevel()));
             }
             if (maxPrize == null || maxPrize.compareTo(minPrize) <= 0) {
-                throw new IllegalArgumentException(String.format("Maximum prize money ($%,.2f) must be strictly greater than minimum prize money ($%,.2f) for %s.",
+                throw new IllegalArgumentException(String.format("Maximum prize money (%,.2f VNĐ) must be strictly greater than minimum prize money (%,.2f VNĐ) for %s.",
                         maxPrize != null ? maxPrize : BigDecimal.ZERO, minPrize, rule.getClassLevel()));
             }
 
@@ -427,18 +427,18 @@ public class SeasonService {
                 if (higher.getMinPrize() != null && lower.getMaxPrize() != null) {
                     if (lower.getMaxPrize().compareTo(higher.getMinPrize()) >= 0) {
                         throw new IllegalArgumentException(String.format(
-                                "Class %d maximum prize ($%,.2f) must be strictly smaller than Class %d minimum prize ($%,.2f). Lower classes must have smaller maximum prizes than higher class minimum prizes.",
+                                "Class %d maximum prize (%,.2f VNĐ) must be strictly smaller than Class %d minimum prize (%,.2f VNĐ). Lower classes must have smaller maximum prizes than higher class minimum prizes.",
                                 i + 1, lower.getMaxPrize(), i, higher.getMinPrize()));
                     }
                 }
             }
         }
 
-        // Check against Race Meeting min budget limit ($10,000,000)
-        BigDecimal maxAllowedSum = new BigDecimal("10000000.00");
+        // Check against Race Meeting min budget limit (10,000,000,000 VNĐ)
+        BigDecimal maxAllowedSum = new BigDecimal("10000000000.00");
         if (totalMinPrizeSum.compareTo(maxAllowedSum) > 0) {
             throw new IllegalArgumentException(String.format(
-                    "Total minimum prizes for all classes ($%,.2f) exceeds the minimum Race Meeting budget limit ($%,.2f).",
+                    "Total minimum prizes for all classes (%,.2f VNĐ) exceeds the minimum Race Meeting budget limit (%,.2f VNĐ).",
                     totalMinPrizeSum, maxAllowedSum));
         }
     }

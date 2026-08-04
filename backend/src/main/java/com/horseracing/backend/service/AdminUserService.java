@@ -1157,7 +1157,7 @@ public class AdminUserService {
 
         BigDecimal curBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
         if (curBal.compareTo(amount) < 0) {
-            throw new IllegalArgumentException("Insufficient Admin wallet balance ($" + curBal + ") for withdrawal of $" + amount);
+            throw new IllegalArgumentException("Insufficient Admin wallet balance (" + curBal + " VNĐ) for withdrawal of " + amount + " VNĐ");
         }
 
         BigDecimal newBal = curBal.subtract(amount);
@@ -1387,7 +1387,7 @@ public class AdminUserService {
             if (admin != null && budgetToRestore.compareTo(BigDecimal.ZERO) > 0) {
                 BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
                 if (adminBal.compareTo(budgetToRestore) < 0) {
-                    throw new IllegalArgumentException("Admin wallet balance ($" + adminBal + ") is insufficient to re-allocate budget ($" + budgetToRestore + ") for Race Meeting.");
+                    throw new IllegalArgumentException("Admin wallet balance (" + adminBal + " VNĐ) is insufficient to re-allocate budget (" + budgetToRestore + " VNĐ) for Race Meeting.");
                 }
                 admin.setWalletBalance(adminBal.subtract(budgetToRestore));
                 userRepository.save(admin);

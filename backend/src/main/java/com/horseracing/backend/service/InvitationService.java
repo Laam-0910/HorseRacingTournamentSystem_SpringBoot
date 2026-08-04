@@ -242,7 +242,7 @@ public class InvitationService {
                     .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
             BigDecimal ownerBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
             if (ownerBal.compareTo(hireFee) < 0) {
-                throw new IllegalArgumentException(String.format("Owner has insufficient wallet balance ($%,.2f available, $%,.2f required for hire fee).", ownerBal, hireFee));
+                throw new IllegalArgumentException(String.format("Owner has insufficient wallet balance (%,.2f VNĐ available, %,.2f VNĐ required for hire fee).", ownerBal, hireFee));
             }
             owner.setWalletBalance(ownerBal.subtract(hireFee));
             userRepository.save(owner);
@@ -372,7 +372,7 @@ public class InvitationService {
                                 .orElseThrow(() -> new IllegalArgumentException("Owner not found"));
                         BigDecimal ownerBal = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
                         if (ownerBal.compareTo(hireFee) < 0) {
-                            throw new IllegalArgumentException(String.format("Owner has insufficient wallet balance ($%,.2f available, $%,.2f required to resubmit).", ownerBal, hireFee));
+                            throw new IllegalArgumentException(String.format("Owner has insufficient wallet balance (%,.2f VNĐ available, %,.2f VNĐ required to resubmit).", ownerBal, hireFee));
                         }
                         owner.setWalletBalance(ownerBal.subtract(hireFee));
                         userRepository.save(owner);
