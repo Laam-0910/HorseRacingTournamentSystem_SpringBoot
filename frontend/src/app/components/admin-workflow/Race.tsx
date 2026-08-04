@@ -398,6 +398,23 @@ export default function Race() {
     }
   };
 
+  // Đóng trận đua sau khi OFFICIAL → RACE_EVENT_ENDED (giải phóng ngựa & nài)
+  const handleCloseRace = async (raceId: number) => {
+    if (!window.confirm("Close this race event? This will release all horses and jockeys and mark the race as RACE_EVENT_ENDED.")) return;
+    setError("");
+    setSuccess("");
+    try {
+      const res = await api.post<any>(`/admin/races/${raceId}/close`);
+      if (res.success) {
+        setSuccess(`Race #${raceId} event closed. Horses and jockeys have been released.`);
+        fetchData();
+      }
+    } catch (err: any) {
+      setError(getErrMsg(err, "Failed to close race event."));
+    }
+  };
+
+  // Tắt livestream
   const handleEndLive = async (raceId: number) => {
     setError("");
     setSuccess("");
@@ -416,7 +433,7 @@ export default function Race() {
     const refId = assignRefSelection[raceId];
     if (!refId) return;
     const race = races.find(r => r.id === raceId);
-    if (race && ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase())) {
+    if (race && ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED", "RACE_EVENT_ENDED"].includes(race.status?.toUpperCase())) {
       alert("Race is in progress or completed, cannot assign referee.");
       return;
     }
@@ -436,7 +453,7 @@ export default function Race() {
 
   const handleRemoveReferee = async (raceId: number, refId: number) => {
     const race = races.find(r => r.id === raceId);
-    if (race && ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase())) {
+    if (race && ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED", "RACE_EVENT_ENDED"].includes(race.status?.toUpperCase())) {
       alert("Race is in progress or completed, cannot remove referee.");
       return;
     }
@@ -461,6 +478,8 @@ export default function Race() {
       DECLARATION_CLOSED: { bg: "rgba(59,130,246,0.1)",  color: "#3b82f6", label: "Scheduled" },
       RUNNING:            { bg: "rgba(245,158,11,0.1)",  color: "#fbbf24", label: "Running" },
       OFFICIAL:           { bg: "rgba(16,185,129,0.1)",  color: "#34d399", label: "Official" },
+      FINISHED:           { bg: "rgba(16,185,129,0.1)",  color: "#34d399", label: "Finished" },
+      RACE_EVENT_ENDED:   { bg: "rgba(16,185,129,0.1)",  color: "#34d399", label: "Event Ended" },
       CANCELLED:          { bg: "rgba(239,91,91,0.1)",   color: "#ef5b5b", label: "Cancelled" },
     };
     const c = cfg[s] ?? { bg: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", label: status };
@@ -651,8 +670,8 @@ export default function Race() {
               <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", fontFamily: "monospace", textAlign: "center", padding: "2rem" }}>No races found.</p>
             ) : races.map(race => {
               const assigned = refereesMap[race.id] || [];
-              const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
-              const isRefLocked = ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+              const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED", "RACE_EVENT_ENDED"].includes(race.status?.toUpperCase());
+              const isRefLocked = ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED", "RACE_EVENT_ENDED"].includes(race.status?.toUpperCase());
               const meetingName = meetingMap.get(race.raceMeetingId) || race.raceMeetingName;
 
               return (
@@ -726,7 +745,24 @@ export default function Race() {
 
 
 
-                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.75rem", display: "flex", justifyContent: "flex-end" }}>
+                  <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.75rem", display: "flex", justifyContent: "flex-end", gap: "0.5rem", flexWrap: "wrap" }}>
+                    {race.status?.toUpperCase() === "OFFICIAL" && (
+                      <button
+                        onClick={() => handleCloseRace(race.id)}
+                        style={{
+                          padding: "0.5rem 1rem",
+                          borderRadius: "0.375rem",
+                          background: "rgba(16,185,129,0.15)",
+                          color: "#34d399",
+                          border: "1px solid rgba(16,185,129,0.35)",
+                          fontFamily: "monospace",
+                          fontSize: "11px",
+                          fontWeight: "bold",
+                          cursor: "pointer"
+                        }}
+                        title="Close race event and release horses & jockeys"
+                      >🏁 Close Race Event</button>
+                    )}
                     <button
                       disabled={isCompleted}
                       onClick={() => handleOpenEdit(race)}
@@ -771,8 +807,8 @@ export default function Race() {
 
                   return paginatedRaces.map(race => {
                     const assigned = refereesMap[race.id] || [];
-                    const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
-                    const isRefLocked = ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status?.toUpperCase());
+                    const isCompleted = ["OFFICIAL", "FINISHED", "CANCELLED", "RACE_EVENT_ENDED"].includes(race.status?.toUpperCase());
+                    const isRefLocked = ["RUNNING", "STEWARDS_INQUIRY", "STOPPED", "OFFICIAL", "FINISHED", "CANCELLED", "RACE_EVENT_ENDED"].includes(race.status?.toUpperCase());
 
                     const totalPurse = Number(race.purse || 0);
                     const p1 = totalPurse * prizeShares.s1;
@@ -784,21 +820,41 @@ export default function Race() {
                         <td style={{ padding: "0.75rem 0.75rem" }}><span style={{ fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>R-{race.id}</span></td>
                         
                         <td style={{ padding: "0.75rem 0.75rem", textAlign: "center" }}>
-                          <button
-                            disabled={isCompleted}
-                            onClick={() => handleOpenEdit(race)}
-                            style={{
-                              padding: "0.375rem 0.75rem",
-                              borderRadius: "0.25rem",
-                              background: isCompleted ? "rgba(255,255,255,0.05)" : "#c9a227",
-                              color: isCompleted ? "rgba(255,255,255,0.2)" : "#0c0a09",
-                              border: "none",
-                              fontFamily: "monospace",
-                              fontSize: "10px",
-                              fontWeight: "bold",
-                              cursor: isCompleted ? "not-allowed" : "pointer"
-                            }}
-                          >Edit</button>
+                          <div style={{ display: "inline-flex", gap: "0.375rem", flexWrap: "wrap", justifyContent: "center" }}>
+                            {race.status?.toUpperCase() === "OFFICIAL" && (
+                              <button
+                                onClick={() => handleCloseRace(race.id)}
+                                style={{
+                                  padding: "0.375rem 0.6rem",
+                                  borderRadius: "0.25rem",
+                                  background: "rgba(16,185,129,0.15)",
+                                  color: "#34d399",
+                                  border: "1px solid rgba(16,185,129,0.35)",
+                                  fontFamily: "monospace",
+                                  fontSize: "10px",
+                                  fontWeight: "bold",
+                                  cursor: "pointer",
+                                  whiteSpace: "nowrap"
+                                }}
+                                title="Close race event and release horses & jockeys"
+                              >🏁 Close</button>
+                            )}
+                            <button
+                              disabled={isCompleted}
+                              onClick={() => handleOpenEdit(race)}
+                              style={{
+                                padding: "0.375rem 0.75rem",
+                                borderRadius: "0.25rem",
+                                background: isCompleted ? "rgba(255,255,255,0.05)" : "#c9a227",
+                                color: isCompleted ? "rgba(255,255,255,0.2)" : "#0c0a09",
+                                border: "none",
+                                fontFamily: "monospace",
+                                fontSize: "10px",
+                                fontWeight: "bold",
+                                cursor: isCompleted ? "not-allowed" : "pointer"
+                              }}
+                            >Edit</button>
+                          </div>
                         </td>
 
                         <td style={{ padding: "0.75rem 0.75rem" }}><p style={{ fontSize: "12px", color: "#f4f2ec" }}>{meetingMap.get(race.raceMeetingId) || race.raceMeetingName}</p></td>

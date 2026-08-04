@@ -388,7 +388,7 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                                   return (
                                     <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
                                       <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
-                                      {h.name} (Rating: {h.currentRating})
+                                      {h.name} (Rating: {h.currentRating ?? 0})
                                     </label>
                                   );
                                 })}
@@ -457,12 +457,12 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                         )}
                         {unregHorses.length > 0 && (
                           <div>
-                            <p style={labelStyle}>Register Additional Horses:</p>
+                            <p style={labelStyle}>{regHorses.length > 0 ? "Register Additional Horses:" : "Select Horses to Register:"}</p>
                             <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
                               {unregHorses.map((h: any) => (
                                 <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
                                   <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
-                                  {h.name} (Rating: {h.currentRating})
+                                  {h.name} (Rating: {h.currentRating ?? 0})
                                 </label>
                               ))}
                             </div>
@@ -471,12 +471,15 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                               disabled={sel.length === 0}
                               style={{ width: "100%", marginTop: "0.5rem", padding: "0.4rem", background: sel.length > 0 ? "rgba(74,157,111,0.2)" : "rgba(255,255,255,0.05)", color: sel.length > 0 ? ROLE_COLOR : "#a0a0a0", border: `1px solid ${sel.length > 0 ? "rgba(74,157,111,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: sel.length > 0 ? "pointer" : "not-allowed" }}
                             >
-                              Submit Additional Horses ({sel.length})
+                              {regHorses.length > 0 ? `Submit Additional Horses (${sel.length})` : `Register ${sel.length} Selected Horse(s)`}
                             </button>
                           </div>
                         )}
                         {unregHorses.length === 0 && regHorses.length > 0 && (
                           <p style={{ fontSize: "0.65rem", color: ROLE_COLOR, fontStyle: "italic", fontFamily: "monospace" }}>✓ All stable horses registered</p>
+                        )}
+                        {unregHorses.length === 0 && regHorses.length === 0 && (
+                          <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No active horses available in stable to register.</p>
                         )}
                       </div>
                     )}
@@ -994,13 +997,9 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
-  const filteredMeetings = (seasonFilter
+  const filteredMeetings = seasonFilter
     ? meetings.filter(m => String(m.seasonId) === seasonFilter)
-    : meetings).filter(m => {
-      const regStatus = dashboard?.regStatuses?.[m.id];
-      // Do NOT show meetings in Calendar if registration was REJECTED or DECLINED
-      return regStatus !== "REJECTED" && regStatus !== "DECLINED";
-    });
+    : meetings;
 
   const totalItems = filteredMeetings.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));

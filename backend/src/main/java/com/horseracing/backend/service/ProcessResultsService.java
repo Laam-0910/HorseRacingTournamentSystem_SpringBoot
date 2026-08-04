@@ -421,8 +421,7 @@ public class ProcessResultsService {
                     RaceMeeting meeting = meetingOpt.get();
                     List<Race> meetingRaces = raceRepository.findByRaceMeetingId(meeting.getId());
                     boolean allFinished = meetingRaces.stream().allMatch(r -> 
-                        "OFFICIAL".equalsIgnoreCase(r.getStatus()) || 
-                        "FINISHED".equalsIgnoreCase(r.getStatus()) || 
+                        "RACE_EVENT_ENDED".equalsIgnoreCase(r.getStatus()) || 
                         "CANCELLED".equalsIgnoreCase(r.getStatus())
                     );
 
@@ -437,7 +436,7 @@ public class ProcessResultsService {
                                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                         BigDecimal unspentBudget = allocatedBudget.subtract(totalAwardedPurses);
-                        if (unspentBudget.compareTo(BigDecimal.ZERO) > 0) {
+                        if (unspentBudget.compareTo(BigDecimal.ZERO) > 0 && !"ENDED".equalsIgnoreCase(meeting.getStatus())) {
                             // Tìm tài khoản Admin để hoàn lại số tiền dư
                             List<User> admins = userRepository.findAll().stream()
                                     .filter(u -> (u.getRoleId() != null && u.getRoleId() == 1) || "admin_root".equalsIgnoreCase(u.getUsername()))
@@ -458,6 +457,8 @@ public class ProcessResultsService {
                                 txRefund.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                                 walletTransactionRepository.save(txRefund);
                             }
+                            // Giảm totalBudget của RaceMeeting bằng đúng số tiền đã chi trả thực tế để không bị trùng ngân sách
+                            meeting.setTotalBudget(totalAwardedPurses);
                         }
                         meeting.setStatus("ENDED");
                         raceMeetingRepository.save(meeting);

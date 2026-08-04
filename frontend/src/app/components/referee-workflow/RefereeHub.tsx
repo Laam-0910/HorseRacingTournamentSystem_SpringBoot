@@ -2015,9 +2015,9 @@ export default function RefereeHub() {
             {isMobile ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", padding: "1rem" }}>
                 {paginatedRaces.map((race: any) => {
-                  const isPending = !["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status ?? "");
+                  const isPending = !["OFFICIAL", "RACE_EVENT_ENDED", "FINISHED", "CANCELLED"].includes(race.status ?? "");
                   const isRunning = race.status === "RUNNING";
-                  const isOfficial = race.status === "OFFICIAL";
+                  const isOfficial = race.status === "OFFICIAL" || race.status === "RACE_EVENT_ENDED";
                   const isStewardsInquiry = race.status === "STEWARDS_INQUIRY";
 
                   return (
@@ -2127,9 +2127,9 @@ export default function RefereeHub() {
                         </td>
                       </tr>
                     ) : paginatedRaces.map((race: any) => {
-                      const isPending = !["OFFICIAL", "FINISHED", "CANCELLED"].includes(race.status ?? "");
+                      const isPending = !["OFFICIAL", "RACE_EVENT_ENDED", "FINISHED", "CANCELLED"].includes(race.status ?? "");
                       const isRunning = race.status === "RUNNING";
-                      const isOfficial = race.status === "OFFICIAL";
+                      const isOfficial = race.status === "OFFICIAL" || race.status === "RACE_EVENT_ENDED";
                       const isStewardsInquiry = race.status === "STEWARDS_INQUIRY";
 
                       return (

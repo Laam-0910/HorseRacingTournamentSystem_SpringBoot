@@ -2,16 +2,10 @@ package com.horseracing.backend.service;
 
 import com.horseracing.backend.dto.RaceDTO;
 import com.horseracing.backend.dto.RaceMeetingDTO;
-import com.horseracing.backend.entity.Race;
-import com.horseracing.backend.entity.RaceMeeting;
-import com.horseracing.backend.entity.Season;
-import com.horseracing.backend.entity.SeasonClassRule;
+import com.horseracing.backend.entity.*;
 import com.horseracing.backend.mapper.RaceMapper;
 import com.horseracing.backend.mapper.RaceMeetingMapper;
-import com.horseracing.backend.repository.RaceMeetingRepository;
-import com.horseracing.backend.repository.RaceRepository;
-import com.horseracing.backend.repository.SeasonClassRuleRepository;
-import com.horseracing.backend.repository.SeasonRepository;
+import com.horseracing.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,13 +27,14 @@ public class RaceService {
     private final RaceMeetingRepository raceMeetingRepository;
     private final SeasonRepository seasonRepository;
     private final SeasonClassRuleRepository seasonClassRuleRepository;
+    private final RaceEntryRepository raceEntryRepository;
     private final RaceMapper raceMapper;
     private final RaceMeetingMapper raceMeetingMapper;
-    private final com.horseracing.backend.repository.UserRepository userRepository;
-    private final com.horseracing.backend.repository.WalletTransactionRepository walletTransactionRepository;
-    private final com.horseracing.backend.repository.OwnerRaceMeetingRegistrationRepository ownerRegRepository;
-    private final com.horseracing.backend.repository.RaceInvitationRepository raceInvitationRepository;
-    private final com.horseracing.backend.repository.SystemConfigRepository systemConfigRepository;
+    private final UserRepository userRepository;
+    private final WalletTransactionRepository walletTransactionRepository;
+    private final OwnerRaceMeetingRegistrationRepository ownerRegRepository;
+    private final RaceInvitationRepository raceInvitationRepository;
+    private final SystemConfigRepository systemConfigRepository;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -151,6 +146,16 @@ public class RaceService {
         validateClassPurseHierarchy(race.getRaceMeetingId(), race.getClassLevel(), race.getPurse(), null); // Kiểm tra thứ tự tiền thưởng theo hạng: Class 1 > 2 > 3 > 4 > 5
         race.updatePrizeDistribution(); // Tự động tính toán phân chia tiền thưởng (Top 1: 50%, Top 2: 30%, Top 3: 20%)
         Race savedRace = raceRepository.save(race); // Lưu đối tượng trận đua vào cơ sở dữ liệu
+
+        // Nếu Buổi đua đang ở trạng thái ENDED mà Admin thêm trận đua mới -> Tự động khôi phục Buổi đua về ACTIVE
+        if (savedRace.getRaceMeetingId() != null) {
+            raceMeetingRepository.findById(savedRace.getRaceMeetingId()).ifPresent(m -> {
+                if ("ENDED".equalsIgnoreCase(m.getStatus())) {
+                    m.setStatus("ACTIVE");
+                    raceMeetingRepository.save(m);
+                }
+            });
+        }
 
         String meetingName = raceMeetingRepository.findById(savedRace.getRaceMeetingId()) // Tìm Tên Ngày hội đua để map vào DTO trả về
                 .map(RaceMeeting::getName) // Lấy tên Ngày hội đua
@@ -388,21 +393,33 @@ public class RaceService {
         // A. Hoàn tiền ngân sách giải đua về lại Ví Admin (Chỉ hoàn nếu buổi đua đang ACTIVE và có totalBudget > 0)
         // Nếu buổi đua đang INACTIVE, ngân sách đã được hoàn về Ví Admin lúc deactive rồi nên không hoàn lần 2.
         if ("ACTIVE".equalsIgnoreCase(meeting.getStatus())) {
-            BigDecimal budget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+            List<Race> mRaces = raceRepository.findByRaceMeetingId(id);
+            BigDecimal totalAwardedPurses = mRaces.stream()
+                    .map(r -> raceEntryRepository.findByRaceId(r.getId()))
+                    .flatMap(List::stream)
+                    .map(e -> e.getPrizeMoney() != null ? e.getPrizeMoney() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal currentTotalBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
+            BigDecimal unspentBudgetToRefund = currentTotalBudget.subtract(totalAwardedPurses);
+            if (unspentBudgetToRefund.compareTo(BigDecimal.ZERO) < 0) {
+                unspentBudgetToRefund = BigDecimal.ZERO;
+            }
+
             com.horseracing.backend.entity.User admin = userRepository.findAll().stream()
                     .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
                     .findFirst().orElse(null);
 
-            if (admin != null && budget.compareTo(BigDecimal.ZERO) > 0) {
+            if (admin != null && unspentBudgetToRefund.compareTo(BigDecimal.ZERO) > 0) {
                 BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
-                admin.setWalletBalance(adminBal.add(budget));
+                admin.setWalletBalance(adminBal.add(unspentBudgetToRefund));
                 userRepository.save(admin);
 
                 com.horseracing.backend.entity.WalletTransaction tx = new com.horseracing.backend.entity.WalletTransaction();
                 tx.setUserId(admin.getId());
-                tx.setAmount(budget);
+                tx.setAmount(unspentBudgetToRefund);
                 tx.setTransactionType("MEETING_BUDGET_REFUND");
-                tx.setDescription("Refund allocated budget due to deletion of active Race Meeting: " + meeting.getName());
+                tx.setDescription("Refund unspent budget (" + unspentBudgetToRefund + " VNĐ) due to deletion of active Race Meeting: " + meeting.getName());
                 tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                 walletTransactionRepository.save(tx);
             }
@@ -637,13 +654,38 @@ public class RaceService {
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             BigDecimal newTotal = allocatedPurses.add(newPurse);
             if (newTotal.compareTo(totalBudget) > 0) {
-                BigDecimal availableBudget = totalBudget.subtract(allocatedPurses);
-                if (availableBudget.compareTo(BigDecimal.ZERO) < 0) {
-                    availableBudget = BigDecimal.ZERO;
+                BigDecimal neededTopUp = newTotal.subtract(totalBudget);
+                // Tìm tài khoản Admin
+                User admin = userRepository.findAll().stream()
+                        .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
+                        .findFirst().orElse(null);
+                BigDecimal adminBal = admin != null && admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
+
+                if (admin != null && adminBal.compareTo(neededTopUp) >= 0) {
+                    // Tự động trích từ Ví Admin để nạp bổ sung ngân sách giải đấu
+                    admin.setWalletBalance(adminBal.subtract(neededTopUp));
+                    userRepository.save(admin);
+
+                    meeting.setTotalBudget(meeting.getTotalBudget() != null ? meeting.getTotalBudget().add(neededTopUp) : neededTopUp);
+                    raceMeetingRepository.save(meeting);
+
+                    WalletTransaction tx = new WalletTransaction();
+                    tx.setUserId(admin.getId());
+                    tx.setAmount(neededTopUp.negate());
+                    tx.setTransactionType("MEETING_BUDGET_TOPUP");
+                    tx.setDescription("Additional budget top-up (" + neededTopUp + " VNĐ) from Admin Wallet for new Race in Meeting '" + meeting.getName() + "'");
+                    tx.setRaceMeetingId(meeting.getId());
+                    tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                    walletTransactionRepository.save(tx);
+                } else {
+                    BigDecimal availableBudget = totalBudget.subtract(allocatedPurses);
+                    if (availableBudget.compareTo(BigDecimal.ZERO) < 0) {
+                        availableBudget = BigDecimal.ZERO;
+                    }
+                    throw new IllegalArgumentException(String.format(
+                            "Race purse (%,.0f VNĐ) exceeds remaining Race Meeting budget (%,.0f VNĐ). Admin wallet balance (%,.0f VNĐ) is insufficient to cover the shortfall of %,.0f VNĐ.",
+                            newPurse, availableBudget, adminBal, neededTopUp));
                 }
-                throw new IllegalArgumentException(String.format(
-                        "Race purse (%,.0f VNĐ) exceeds remaining Race Meeting budget (%,.0f VNĐ). Total allocated would be %,.0f / %,.0f VNĐ.",
-                        newPurse, availableBudget, newTotal, totalBudget));
             }
         }
     }

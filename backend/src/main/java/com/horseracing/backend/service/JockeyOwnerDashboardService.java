@@ -302,12 +302,15 @@ public class JockeyOwnerDashboardService {
             List<HorseDTO> unregHorsesList = new ArrayList<>();
 
             for (Horse horse : activeHorses) {
-                Optional<HorseRaceMeetingRegistration> hRegOpt = horseRegRepository.findByRaceMeetingIdAndHorseId(meeting.getId(), horse.getId());
-                if (hRegOpt.isPresent()) {
+                List<HorseRaceMeetingRegistration> hRegs = horseRegRepository.findByHorseId(horse.getId()).stream()
+                        .filter(r -> r.getRaceMeetingId() != null && r.getRaceMeetingId().equals(meeting.getId()))
+                        .toList();
+                if (!hRegs.isEmpty()) {
+                    HorseRaceMeetingRegistration latestReg = hRegs.get(hRegs.size() - 1);
                     Map<String, Object> hRegMap = new HashMap<>();
                     hRegMap.put("horse", horseMapper.toDTO(horse, null));
-                    hRegMap.put("status", hRegOpt.get().getStatus() != null ? hRegOpt.get().getStatus().trim() : null);
-                    hRegMap.put("regId", hRegOpt.get().getId());
+                    hRegMap.put("status", latestReg.getStatus() != null ? latestReg.getStatus().trim() : null);
+                    hRegMap.put("regId", latestReg.getId());
                     regHorsesList.add(hRegMap); // Thêm vào danh sách ngựa đã đăng ký
                 } else {
                     unregHorsesList.add(horseMapper.toDTO(horse, null)); // Thêm vào danh sách ngựa chưa đăng ký
@@ -323,19 +326,19 @@ public class JockeyOwnerDashboardService {
         for (RaceMeeting meeting : meetings) {
             // Lấy danh sách ngựa đã được duyệt cho Ngày hội đua này thuộc sở hữu của chủ
             List<HorseRaceMeetingRegistration> approvedHorseRegs = horseRegRepository.findAll().stream()
-                    .filter(r -> r.getRaceMeetingId().equals(meeting.getId()) && "APPROVED".equalsIgnoreCase(r.getStatus()))
+                    .filter(r -> r.getRaceMeetingId() != null && r.getRaceMeetingId().equals(meeting.getId()) && r.getStatus() != null && "APPROVED".equalsIgnoreCase(r.getStatus().trim()))
                     .toList();
             List<HorseDTO> hList = new ArrayList<>();
             for (HorseRaceMeetingRegistration reg : approvedHorseRegs) {
                 horseRepository.findById(reg.getHorseId())
-                        .filter(h -> h.getOwnerId() != null && h.getOwnerId().equals(ownerId) && !"RETIRED".equalsIgnoreCase(h.getStatus()))
+                        .filter(h -> h.getOwnerId() != null && h.getOwnerId().equals(ownerId) && (h.getStatus() == null || !"RETIRED".equalsIgnoreCase(h.getStatus().trim())))
                         .ifPresent(h -> hList.add(horseMapper.toDTO(h, null)));
             }
             meetingHorses.put(meeting.getId(), hList);
 
             // Lấy danh sách nài ngựa đã được duyệt cho Ngày hội đua này
             List<JockeyRaceMeetingRegistration> approvedJockeyRegs = jockeyRegRepository.findAll().stream()
-                    .filter(r -> r.getRaceMeetingId().equals(meeting.getId()) && "APPROVED".equalsIgnoreCase(r.getStatus()))
+                    .filter(r -> r.getRaceMeetingId() != null && r.getRaceMeetingId().equals(meeting.getId()) && r.getStatus() != null && "APPROVED".equalsIgnoreCase(r.getStatus().trim()))
                     .toList();
             List<UserDTO> jList = new ArrayList<>();
             for (JockeyRaceMeetingRegistration reg : approvedJockeyRegs) {
@@ -349,69 +352,80 @@ public class JockeyOwnerDashboardService {
         List<Race> allRaces = raceRepository.findAll();
         Map<Integer, Race> allRacesMap = allRaces.stream().collect(Collectors.toMap(Race::getId, r -> r));
 
+        // Trạng thái lượt thi đấu được coi là đang hoạt động (chưa hoàn thành hay hủy)
+        Set<String> activeEntryStatuses = Set.of("PENDING_ADMIN", "APPROVED", "RUNNING", "STEWARDS_INQUIRY", "STOPPED", "CONFIRMED");
+
         Map<Integer, List<RaceEntry>> activeEntriesByRace = allEntries.stream()
-                .filter(e -> !"REJECTED".equalsIgnoreCase(e.getStatus()) && e.getJockeyId() != null)
+                .filter(e -> e.getStatus() != null && activeEntryStatuses.contains(e.getStatus().trim().toUpperCase()) && e.getJockeyId() != null)
                 .collect(Collectors.groupingBy(RaceEntry::getRaceId));
 
         Map<Integer, List<RaceEntry>> approvedEntriesByJockey = allEntries.stream()
-                .filter(e -> ("APPROVED".equalsIgnoreCase(e.getStatus()) || "CONFIRMED".equalsIgnoreCase(e.getStatus())) && e.getJockeyId() != null)
+                .filter(e -> e.getStatus() != null && ("APPROVED".equalsIgnoreCase(e.getStatus().trim()) || "CONFIRMED".equalsIgnoreCase(e.getStatus().trim())) && e.getJockeyId() != null)
                 .collect(Collectors.groupingBy(RaceEntry::getJockeyId));
 
         Map<Integer, List<RaceEntry>> activeEntriesByRaceForHorse = allEntries.stream()
-                .filter(e -> !"REJECTED".equalsIgnoreCase(e.getStatus()) && e.getHorseId() != null)
+                .filter(e -> e.getStatus() != null && activeEntryStatuses.contains(e.getStatus().trim().toUpperCase()) && e.getHorseId() != null)
                 .collect(Collectors.groupingBy(RaceEntry::getRaceId));
 
         Map<Integer, List<RaceEntry>> approvedEntriesByHorse = allEntries.stream()
-                .filter(e -> ("APPROVED".equalsIgnoreCase(e.getStatus()) || "CONFIRMED".equalsIgnoreCase(e.getStatus())) && e.getHorseId() != null)
+                .filter(e -> e.getStatus() != null && ("APPROVED".equalsIgnoreCase(e.getStatus().trim()) || "CONFIRMED".equalsIgnoreCase(e.getStatus().trim())) && e.getHorseId() != null)
                 .collect(Collectors.groupingBy(RaceEntry::getHorseId));
 
         Map<Integer, List<Integer>> bookedJockeysMap = new HashMap<>();
         Map<Integer, List<Integer>> bookedHorsesMap = new HashMap<>();
 
+        Set<String> finishedRaceStatuses = Set.of("FINISHED", "OFFICIAL", "RACE_EVENT_ENDED", "CANCELLED");
+
         for (Race race : allRaces) {
             Set<Integer> bookedJockeyIds = new HashSet<>();
             Set<Integer> bookedHorseIds = new HashSet<>();
 
-            // 1. Nài ngựa đã có lượt tham gia hoạt động trong trận đua này
-            List<RaceEntry> raceEntries = activeEntriesByRace.getOrDefault(race.getId(), Collections.emptyList());
-            for (RaceEntry entry : raceEntries) {
-                bookedJockeyIds.add(entry.getJockeyId());
-            }
+            String raceSt = race.getStatus() != null ? race.getStatus().trim().toUpperCase() : "";
+            // Nếu trận đua đã kết thúc/hủy, không khóa nài và ngựa nữa
+            if (!finishedRaceStatuses.contains(raceSt)) {
+                // 1. Nài ngựa đã có lượt tham gia hoạt động trong trận đua này
+                List<RaceEntry> raceEntries = activeEntriesByRace.getOrDefault(race.getId(), Collections.emptyList());
+                for (RaceEntry entry : raceEntries) {
+                    bookedJockeyIds.add(entry.getJockeyId());
+                }
 
-            // 2. Nài ngựa đã được phê duyệt thi đấu ở trận đua khác trùng giờ
-            if (race.getStartTime() != null) {
-                for (Map.Entry<Integer, List<RaceEntry>> entry : approvedEntriesByJockey.entrySet()) {
-                    Integer jockeyId = entry.getKey();
-                    for (RaceEntry e : entry.getValue()) {
-                        if (!e.getRaceId().equals(race.getId())) {
-                            Race otherRace = allRacesMap.get(e.getRaceId());
-                            if (otherRace != null && otherRace.getStartTime() != null &&
-                                    otherRace.getStartTime().equals(race.getStartTime())) {
-                                bookedJockeyIds.add(jockeyId);
-                                break;
+                // 2. Nài ngựa đã được phê duyệt thi đấu ở trận đua khác trùng giờ
+                if (race.getStartTime() != null) {
+                    for (Map.Entry<Integer, List<RaceEntry>> entry : approvedEntriesByJockey.entrySet()) {
+                        Integer jockeyId = entry.getKey();
+                        for (RaceEntry e : entry.getValue()) {
+                            if (!e.getRaceId().equals(race.getId())) {
+                                Race otherRace = allRacesMap.get(e.getRaceId());
+                                if (otherRace != null && otherRace.getStartTime() != null &&
+                                        otherRace.getStartTime().equals(race.getStartTime()) &&
+                                        !finishedRaceStatuses.contains(otherRace.getStatus() != null ? otherRace.getStatus().trim().toUpperCase() : "")) {
+                                    bookedJockeyIds.add(jockeyId);
+                                    break;
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            // 3. Ngựa đã có lượt tham gia hoạt động trong trận đua này
-            List<RaceEntry> horseRaceEntries = activeEntriesByRaceForHorse.getOrDefault(race.getId(), Collections.emptyList());
-            for (RaceEntry entry : horseRaceEntries) {
-                bookedHorseIds.add(entry.getHorseId());
-            }
+                // 3. Ngựa đã có lượt tham gia hoạt động trong trận đua này
+                List<RaceEntry> horseRaceEntries = activeEntriesByRaceForHorse.getOrDefault(race.getId(), Collections.emptyList());
+                for (RaceEntry entry : horseRaceEntries) {
+                    bookedHorseIds.add(entry.getHorseId());
+                }
 
-            // 4. Ngựa đã được phê duyệt thi đấu ở trận đua khác trùng giờ
-            if (race.getStartTime() != null) {
-                for (Map.Entry<Integer, List<RaceEntry>> entry : approvedEntriesByHorse.entrySet()) {
-                    Integer horseId = entry.getKey();
-                    for (RaceEntry e : entry.getValue()) {
-                        if (!e.getRaceId().equals(race.getId())) {
-                            Race otherRace = allRacesMap.get(e.getRaceId());
-                            if (otherRace != null && otherRace.getStartTime() != null &&
-                                    otherRace.getStartTime().equals(race.getStartTime())) {
-                                bookedHorseIds.add(horseId);
-                                break;
+                // 4. Ngựa đã được phê duyệt thi đấu ở trận đua khác trùng giờ
+                if (race.getStartTime() != null) {
+                    for (Map.Entry<Integer, List<RaceEntry>> entry : approvedEntriesByHorse.entrySet()) {
+                        Integer horseId = entry.getKey();
+                        for (RaceEntry e : entry.getValue()) {
+                            if (!e.getRaceId().equals(race.getId())) {
+                                Race otherRace = allRacesMap.get(e.getRaceId());
+                                if (otherRace != null && otherRace.getStartTime() != null &&
+                                        otherRace.getStartTime().equals(race.getStartTime()) &&
+                                        !finishedRaceStatuses.contains(otherRace.getStatus() != null ? otherRace.getStatus().trim().toUpperCase() : "")) {
+                                    bookedHorseIds.add(horseId);
+                                    break;
+                                }
                             }
                         }
                     }
