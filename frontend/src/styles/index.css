@@ -644,60 +644,99 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* =============================================
-   UIVERSE 3D CYBER CARD EFFECT
+   UIVERSE ROTATING GRADIENT GLOW CARD EFFECT
    ============================================= */
+.card,
+.glow-cyber-card,
 .uiverse-cyber-card {
   position: relative;
-  border-radius: 1rem;
-  background: linear-gradient(135deg, #181613 0%, #100e0c 100%);
-  border: 1px solid rgba(201, 162, 39, 0.2);
+  display: flex;
+  flex-direction: column;
+  background: #07182e;
   overflow: hidden;
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-              border-color 0.4s ease, 
-              box-shadow 0.4s ease !important;
-  transform-style: preserve-3d;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
+.card:hover,
+.glow-cyber-card:hover,
 .uiverse-cyber-card:hover {
-  transform: translateY(-8px) rotateX(3deg) rotateY(-3deg) scale(1.015) !important;
-  border-color: rgba(201, 162, 39, 0.6) !important;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 30px rgba(201, 162, 39, 0.3) !important;
+  transform: translateY(-6px) scale(1.015);
+  box-shadow: 0 25px 50px rgba(0, 195, 255, 0.25);
 }
 
-/* Corner tech elements */
-.uiverse-cyber-card::before,
-.uiverse-cyber-card::after {
-  content: '';
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(201, 162, 39, 0.3);
-  transition: all 0.3s ease;
-  pointer-events: none;
-  z-index: 5;
+.card p,
+.glow-cyber-card p,
+.uiverse-cyber-card p {
+  z-index: 2;
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
 }
 
+/* Rotating background with gradient and glow */
+.card::before,
+.glow-cyber-card::before,
 .uiverse-cyber-card::before {
-  top: 8px;
-  left: 8px;
-  border-right: 0;
-  border-bottom: 0;
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    #00c3ff 0%,
+    #7b2ff7 25%,
+    #00f2c3 55%,
+    #ffe600 85%,
+    #00c3ff 100%
+  );
+  animation: rotateAnim 5s linear infinite;
+  filter: blur(10px) brightness(1.2);
+  z-index: 0;
 }
 
+/* Inner mask */
+.card::after,
+.glow-cyber-card::after,
 .uiverse-cyber-card::after {
-  bottom: 8px;
-  right: 8px;
-  border-left: 0;
-  border-top: 0;
+  content: "";
+  position: absolute;
+  inset: 4px;
+  background: #07182e;
+  border-radius: 16px;
+  z-index: 1;
+  box-shadow: inset 0 0 20px rgba(0, 183, 255, 0.1);
 }
 
-.uiverse-cyber-card:hover::before,
-.uiverse-cyber-card:hover::after {
-  border-color: rgba(201, 162, 39, 0.9);
-  box-shadow: 0 0 10px rgba(201, 162, 39, 0.6);
-  width: 18px;
-  height: 18px;
+/* Content layer z-index guarantee */
+.card > *,
+.glow-cyber-card > *,
+.uiverse-cyber-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* Optional radial gradient overlay */
+.card .gradient-overlay,
+.glow-cyber-card .gradient-overlay,
+.uiverse-cyber-card .gradient-overlay {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, transparent 40%, #07182e 80%);
+  z-index: 1;
+}
+
+/* Rotating animation */
+@keyframes rotateAnim {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Glare Overlay */
