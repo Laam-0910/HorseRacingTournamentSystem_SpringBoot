@@ -710,12 +710,18 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   box-shadow: inset 0 0 15px rgba(201, 162, 39, 0.06);
 }
 
-/* Content layer z-index guarantee */
-.card > *,
-.glow-cyber-card > *,
-.uiverse-cyber-card > * {
+/* Content layer z-index guarantee (excluding absolute overlays) */
+.card > *:not(.card-glare):not(.scan-line):not(.gradient-overlay),
+.glow-cyber-card > *:not(.card-glare):not(.scan-line):not(.gradient-overlay),
+.uiverse-cyber-card > *:not(.card-glare):not(.scan-line):not(.gradient-overlay) {
   position: relative;
   z-index: 2;
+}
+
+.card-glare,
+.scan-line,
+.gradient-overlay {
+  position: absolute !important;
 }
 
 /* Optional radial gradient overlay */
