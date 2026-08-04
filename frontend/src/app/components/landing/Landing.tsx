@@ -13,32 +13,19 @@ import HorseRacingSimulator from "./HorseRacingSimulator";
 
 
 // ─────────────────────────────────────────────
-// Types (Khai báo các kiểu dữ liệu sử dụng trong Trang chủ Landing)
 // ─────────────────────────────────────────────
-// Định nghĩa các view con (SubView) có thể chuyển đổi trên thanh điều hướng công khai
 type SubView = "home" | "live" | "racecard" | "results" | "fixtures" | "statistics" | "horses" | "jockeys_owners" | "incident" | "about" | "search";
 
-// Interface Season đại diện cho một Mùa giải đua ngựa
 interface Season { id: number; name: string; startDate: string; endDate: string; status?: string; }
-// Interface Meeting đại diện cho một Ngày hội đua (chứa nhiều trận đấu)
 interface Meeting { id: number; name: string; venue: string; startDate: string; totalBudget: number; }
-// Interface Horse đại diện cho thông tin Ngựa đua
 interface Horse { id: number; name: string; age: number; breed: string; ownerName: string; rating: number; wins: number; races: number; }
-// Interface Jockey đại diện cho thông tin Kỵ sĩ/Nài ngựa
 interface Jockey { id: number; name: string; wins: number; races: number; winRate: number; }
-// Interface Result đại diện cho kết quả của một Trận đua
 interface Result { id: number; raceName: string; meetingName: string; date: string; entries: ResultEntry[]; }
-// Interface ResultEntry đại diện cho thứ tự về đích và phần thưởng của từng cặp ngựa-nài trong trận đấu
 interface ResultEntry { position: number; horseName: string; jockeyName: string; finishTime: string; prize: number; }
-// Interface Fixture đại diện cho lịch trình thi đấu sắp tới
 interface Fixture { id: number; name: string; venue: string; date: string; numRaces: number; status: string; }
-// Interface Stat đại diện cho thống kê hiệu suất (tỷ lệ thắng, tiền thưởng) của nài và ngựa
 interface Stat { jockeyName: string; horseName: string; wins: number; races: number; winRate: number; top3Rate: number; earnings: number; }
-// Interface Incident đại diện cho báo cáo vi phạm/sự cố của trọng tài trong trận đấu
 interface Incident { id: number; raceName: string; date: string; horseName: string; jockeyName: string; type: string; description: string; penalty: string; }
-// Interface RacecardEntry đại diện cho danh sách đăng ký tham gia của ngựa và kỵ sĩ trong bảng đua
 interface RacecardEntry { position: number; horseName: string; jockeyName: string; ownerName: string; age: number; weight: string; rating: number; }
-// Interface Racecard chứa thông tin cấu hình trận đấu và danh sách ngựa tham gia
 interface Racecard { id: number; name: string; class: string; distance: string; going: string; prize: number; entries: RacecardEntry[]; }
 
 const TRANSLATIONS: Record<string, any> = {
@@ -86,9 +73,7 @@ const TRANSLATIONS: Record<string, any> = {
 };
 
 // ─────────────────────────────────────────────
-// Chatbot - Trợ lý ảo Chatbot AI dưới dạng bóng nổi (Floating Bubble)
 // ─────────────────────────────────────────────
-// Bản dịch đa ngôn ngữ cho giao diện Chatbot AI bóng nổi
 const CHAT_LANG: Record<string, any> = {
   vi: { label: "HorseRaceManagementSystem AI", placeholder: "Ask a question...", typing: "Analyzing...", welcome: "Hello! Ask me about horses, jockeys, races, or predictions.", error: "Error: ", noconn: "Cannot connect to AI server.", quick: ["Top Rating","Predict Race","Best Jockey","Season"], quickQ: ["Which horse has the highest rating?","Predict the latest race result","Which jockey has the best top-3 rate?","Current season summary"] },
   en: { label: "HorseRaceManagementSystem AI", placeholder: "Ask a question...", typing: "Analyzing...", welcome: "Hello! Ask me about horses, jockeys, races, or predictions.", error: "Error: ", noconn: "Cannot connect to AI server.", quick: ["Top Rating","Predict Race","Best Jockey","Season"], quickQ: ["Which horse has the highest rating?","Predict the latest race result","Which jockey has the best top-3 rate?","Current season summary"] },
@@ -97,12 +82,9 @@ const CHAT_LANG: Record<string, any> = {
 };
 
 /**
- * Component ChatBot - Bong bóng chat nhỏ nổi ở góc phải màn hình của Trang chủ Landing
  */
 function ChatBot({ lang, setLang }: { lang: string; setLang: (l: string) => void }) {
-  // Trạng thái đóng/mở khung chat
   const [open, setOpen] = useState(false);
-  // Danh sách các tin nhắn trao đổi
   const [messages, setMessages] = useState([{ id: "welcome", type: "bot", text: CHAT_LANG.en.welcome }]);
   const [input, setInput] = useState("");
   const [waiting, setWaiting] = useState(false);
@@ -657,7 +639,7 @@ function GenericTableView({ title, data, columns, onRowClick }: { title: string;
   const formatValue = (cKey: string, val: any) => {
     if (val === null || val === undefined) return "-";
     if (cKey === "totalBudget" && typeof val === "number") {
-      return `${val.toLocaleString()} VNĐ`;
+      return `${val.toLocaleString()} VND`;
     }
     if (cKey === "startDate" || cKey === "date" || cKey.toLowerCase().includes("date")) {
       return formatDate(val);
@@ -823,29 +805,20 @@ function AboutView({ t }: { t: any }) {
 }
 
 // ─────────────────────────────────────────────
-// MAIN LANDING COMPONENT - Component trang chủ Landing Page chính của ứng dụng
 // ─────────────────────────────────────────────
 /**
- * Component Landing - Quản lý cấu trúc header/footer công khai,
- * thanh tìm kiếm toàn hệ thống, các thông báo động và chuyển đổi
- * hiển thị giữa các sub-view (Trực tiếp, Lịch thi đấu, Thống kê, v.v.).
  */
 export default function Landing() {
-  // Lấy user đăng nhập hiện tại và hàm đăng xuất từ AuthContext
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   
-  // State quản lý View hiện tại đang được hiển thị ở vùng nội dung (mặc định: "home")
   const [view, setView] = useState<SubView>("home");
-  // Từ khóa tìm kiếm toàn cục nhập từ Header
   const [searchQuery, setSearchQuery] = useState("");
   
-  // Các state quản lý ẩn/hiện dropdown UI
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showDashboardMenu, setShowDashboardMenu] = useState(false);
   
-  // State quản lý ngôn ngữ hiển thị và hàm đồng bộ reload trang khi đổi ngôn ngữ
   const [lang, setLangRaw] = useState(() => localStorage.getItem('app-lang') || 'en');
   const setLang = (code: string) => { 
     setLangRaw(code); 
@@ -856,7 +829,6 @@ export default function Landing() {
   const t = TRANSLATIONS.en;
   const langLabel = lang.toUpperCase();
 
-  // Kiểm tra độ rộng màn hình để tối ưu hiển thị menu trên mobile (<768px)
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const handleResize = () => {
@@ -945,7 +917,6 @@ export default function Landing() {
     const list: any[] = [];
     const lang = localStorage.getItem("app-lang") || "en";
 
-    // Tải danh sách thông báo động từ Dashboard (Chủ ngựa & Nài ngựa)
     if (dashboardNotifs.length > 0) {
       dashboardNotifs.forEach((n: any) => {
         let icon = "🔔";
@@ -1080,7 +1051,7 @@ export default function Landing() {
           bg: "rgba(96,165,250,0.1)",
           title: "Upcoming Event",
           desc: lang === "vi"
-            ? `Đăng ký ngựa của bạn cho sự kiện ${upcomingMeeting.name} tại ${upcomingMeeting.venue}.`
+            ? `Register your horse for event ${upcomingMeeting.name} at ${upcomingMeeting.venue}.`
             : `Register your horses for ${upcomingMeeting.name} at ${upcomingMeeting.venue}.`,
           time: formatDate(upcomingMeeting.startDate)
         });
@@ -1099,7 +1070,7 @@ export default function Landing() {
           bg: "rgba(239,68,68,0.1)",
           title: "You have a violation report",
           desc: lang === "vi"
-            ? `Bạn bị báo cáo vi phạm: ${latestJockeyViol.violation?.description || "Vi phạm luật thi đấu"}`
+            ? `You were reported for violation: ${latestJockeyViol.violation?.description || "Rules Violation"}`
             : `You have been reported for: ${latestJockeyViol.violation?.description || "Rule violation"}`,
           time: "Alert"
         });
@@ -1125,7 +1096,7 @@ export default function Landing() {
           bg: "rgba(96,165,250,0.1)",
           title: "Upcoming Event",
           desc: lang === "vi"
-            ? `Buổi đua ${upcomingMeeting.name} sắp diễn ra. Hãy kiểm tra các lượt đăng ký cưỡi ngựa.`
+            ? `Race meeting ${upcomingMeeting.name} is upcoming. Please check mount registrations.`
             : `Meeting ${upcomingMeeting.name} starts soon. Check available rides.`,
           time: formatDate(upcomingMeeting.startDate)
         });
@@ -1144,7 +1115,7 @@ export default function Landing() {
           bg: "rgba(56,189,248,0.1)",
           title: "Race Assignment",
           desc: lang === "vi"
-            ? `Bạn được phân công làm trọng tài cho ${assignedRaces.length} lượt đua sắp tới.`
+            ? `You are assigned as referee for ${assignedRaces.length} upcoming races.`
             : `You are assigned as referee for ${assignedRaces.length} upcoming races.`,
           time: "Referee Assignment"
         });

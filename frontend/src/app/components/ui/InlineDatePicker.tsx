@@ -1,17 +1,14 @@
 import { useState, useRef, useEffect } from "react";
 
-// Định nghĩa Props đầu vào cho bộ chọn ngày
 interface Props {
-  value: string; // Chuỗi giá trị ngày, định dạng: "dd-MM-yyyy"
-  onChange: (val: string) => void; // Hàm callback kích hoạt khi thay đổi ngày
-  placeholder?: string; // Gợi ý nhập liệu
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
 }
 
-// Mảng hiển thị các thứ và tháng trong năm
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-// Hàm chuyển đổi chuỗi ngày định dạng dd-MM-yyyy sang đối tượng Date của Javascript
 function parseDMY(val: string): Date | null {
   const m = val.match(/^(\d{2})-(\d{2})-(\d{4})$/);
   if (!m) return null;
@@ -20,29 +17,21 @@ function parseDMY(val: string): Date | null {
   return d;
 }
 
-// Tiện ích đệm thêm số 0 ở trước nếu số nhỏ hơn 10 (ví dụ: 9 -> "09")
 function fmt2(n: number) { return String(n).padStart(2, "0"); }
 
-// Hàm chuyển đổi đối tượng Date sang chuỗi dd-MM-yyyy để đẩy lên form
 function toDMY(d: Date) {
   return `${fmt2(d.getDate())}-${fmt2(d.getMonth() + 1)}-${d.getFullYear()}`;
 }
 
 /**
- * Component InlineDatePicker - Bộ chọn ngày (DatePicker) tùy biến giao diện phẳng, mượt mà.
- * - Hiển thị ô nhập ngày đi kèm nút bấm hiển thị lịch thả xuống.
- * - Hỗ trợ lắng nghe click bên ngoài để tự động đóng lịch popup.
- * - Cho phép di chuyển nhanh giữa các tháng/năm bằng dropdown select hoặc nút điều hướng.
- * - Cung cấp phím tắt "Today" để chọn nhanh ngày hiện tại.
  */
 export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM-yyyy" }: Props) {
   const parsed = parseDMY(value);
   const today = new Date();
-  const [open, setOpen] = useState(false); // Trạng thái đóng/mở lịch popup
-  const [view, setView] = useState<Date>(parsed ?? today); // Tháng/năm hiện tại đang xem trên lịch
-  const ref = useRef<HTMLDivElement>(null); // Trỏ đến container chính để bắt click bên ngoài
+  const [open, setOpen] = useState(false);
+  const [view, setView] = useState<Date>(parsed ?? today);
+  const ref = useRef<HTMLDivElement>(null);
 
-  // Effect: Đóng popup chọn ngày khi người dùng click chuột ra ngoài vùng lịch chọn
   useEffect(() => {
     function handler(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -51,32 +40,22 @@ export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Xác định thứ của ngày đầu tiên trong tháng (0: Chủ Nhật, 1: Thứ Hai,...)
-  // Đồng thời đổi mốc từ Chủ Nhật làm đầu sang Thứ Hai làm đầu nếu cần thiết
   const firstDay = new Date(view.getFullYear(), view.getMonth(), 1).getDay();
-  // Xác định tổng số ngày trong tháng đang xem
   const daysInMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
 
-  // Tạo mảng các ô lịch (grid cells)
   const cells: (number | null)[] = [];
-  // Thêm các ô trống (null) tượng trưng cho những ngày trống ở đầu tuần
   for (let i = 0; i < firstDay; i++) cells.push(null);
-  // Điền các ngày từ ngày 1 đến ngày cuối tháng
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
 
-  // Chọn ngày thi đấu cụ thể, kích hoạt onChange để truyền giá trị lên cha
   const select = (day: number) => {
     const picked = new Date(view.getFullYear(), view.getMonth(), day);
     onChange(toDMY(picked));
-    setOpen(false); // Đóng lịch
+    setOpen(false);
   };
 
-  // Xem tháng trước đó
   const prevMonth = () => setView(new Date(view.getFullYear(), view.getMonth() - 1, 1));
-  // Xem tháng tiếp theo
   const nextMonth = () => setView(new Date(view.getFullYear(), view.getMonth() + 1, 1));
 
-  // Kiểm tra xem ô ngày đó có trùng với ngày đang được chọn (active) hay không
   const isSelected = (day: number) => {
     if (!parsed) return false;
     return parsed.getFullYear() === view.getFullYear() &&
@@ -84,7 +63,6 @@ export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM
       parsed.getDate() === day;
   };
 
-  // Kiểm tra xem ô ngày đó có phải là ngày hôm nay (today) hay không
   const isToday = (day: number) =>
     today.getFullYear() === view.getFullYear() &&
     today.getMonth() === view.getMonth() &&
@@ -92,7 +70,6 @@ export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM
 
   return (
     <div ref={ref} style={{ position: "relative", width: "100%" }}>
-      {/* Vùng nhập liệu và nút bấm */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
         <input
           type="text"
@@ -130,7 +107,6 @@ export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM
         </button>
       </div>
 
-      {/* Lịch thả xuống khi bấm mở (Calendar popup) */}
       {open && (
         <div style={{
           position: "absolute",
@@ -144,11 +120,9 @@ export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM
           minWidth: "240px",
           boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
         }}>
-          {/* Dòng chuyển hướng nhanh tháng/năm */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
             <button type="button" onClick={prevMonth} style={{ background: "none", border: "none", color: "#c9a227", cursor: "pointer", fontSize: "1rem", padding: "0.125rem 0.375rem" }}>‹</button>
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              {/* Menu dropdown chọn tháng */}
               <select
                 value={view.getMonth()}
                 onChange={(e) => setView(new Date(view.getFullYear(), parseInt(e.target.value), 1))}
@@ -173,7 +147,6 @@ export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM
                   </option>
                 ))}
               </select>
-              {/* Menu dropdown chọn năm */}
               <select
                 value={view.getFullYear()}
                 onChange={(e) => setView(new Date(parseInt(e.target.value), view.getMonth(), 1))}
@@ -201,14 +174,12 @@ export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM
             <button type="button" onClick={nextMonth} style={{ background: "none", border: "none", color: "#c9a227", cursor: "pointer", fontSize: "1rem", padding: "0.125rem 0.375rem" }}>›</button>
           </div>
 
-          {/* Dòng tiêu đề các thứ trong tuần */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px", marginBottom: "0.375rem" }}>
             {DAYS.map(d => (
               <div key={d} style={{ textAlign: "center", fontSize: "0.6rem", color: "rgba(255,255,255,0.35)", fontFamily: "monospace", fontWeight: 600, padding: "0.125rem 0" }}>{d}</div>
             ))}
           </div>
 
-          {/* Ô biểu diễn các ngày trong tháng */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "2px" }}>
             {cells.map((day, i) => (
               <div key={i}>
@@ -239,7 +210,6 @@ export default function InlineDatePicker({ value, onChange, placeholder = "dd-MM
             ))}
           </div>
 
-          {/* Phím tắt Chọn ngày hôm nay */}
           <div style={{ marginTop: "0.625rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.06)", textAlign: "center" }}>
             <button
               type="button"

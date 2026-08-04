@@ -41,16 +41,13 @@ const MODAL_TRANSLATIONS: Record<string, any> = {
 };
 
 
-// ── Component hiển thị Modal Thông tin người dùng ──────────────────────────
 export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
-  // State lưu thông tin hồ sơ
   const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true); // Trạng thái đang tải dữ liệu
-  const [error, setError] = useState(""); // Thông báo lỗi
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const st = MODAL_TRANSLATIONS.en;
 
-  // Gọi API lấy thông tin chi tiết hồ sơ khi userId thay đổi
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);

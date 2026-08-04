@@ -7,33 +7,27 @@ import { confirm } from "../../../lib/confirm";
 import { Pagination } from "../common/Pagination";
 
 /**
- * Component RaceMeeting - Phân hệ cấu hình Ngày hội đua (Race Meeting) dành cho Admin.
- * Cho phép xem danh sách, tạo mới, chỉnh sửa, xem chi tiết vé & người đăng ký, và xóa bỏ các Ngày hội đua ngựa.
  */
 export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => void }) {
-  // Các state lưu trữ dữ liệu kéo về từ API
-  const [meetings, setMeetings] = useState<any[]>([]); // Danh sách ngày hội đua
-  const [seasons, setSeasons] = useState<any[]>([]);   // Danh sách các mùa giải trong hệ thống
+  const [meetings, setMeetings] = useState<any[]>([]);
+  const [seasons, setSeasons] = useState<any[]>([]);
   const [adminWalletBal, setAdminWalletBal] = useState<number | null>(null);
 
   // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
 
-  // Các state lưu giá trị input phục vụ Form tạo mới/chỉnh sửa
-  const [name, setName] = useState(""); // Tên ngày hội đua
-  const [date, setDate] = useState(""); // Ngày tổ chức
-  const [venue, setVenue] = useState(""); // Địa điểm (Trường đua)
-  const [seasonId, setSeasonId] = useState(""); // ID mùa giải gắn kết
-  const [totalBudget, setTotalBudget] = useState(""); // Ngân sách tổng của Race Meeting
-  const [ticketPrice, setTicketPrice] = useState(""); // Giá vé tham gia ($USD)
+  const [name, setName] = useState("");
+  const [date, setDate] = useState("");
+  const [venue, setVenue] = useState("");
+  const [seasonId, setSeasonId] = useState("");
+  const [totalBudget, setTotalBudget] = useState("");
+  const [ticketPrice, setTicketPrice] = useState("");
 
-  // Trạng thái hệ thống
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   
-  // State lưu trữ dữ liệu ngày hội đua đang trong chế độ chỉnh sửa hoặc xem chi tiết
   const [editingMeeting, setEditingMeeting] = useState<any | null>(null);
   const [viewingMeeting, setViewingMeeting] = useState<any | null>(null);
   const [viewRegistrantsData, setViewRegistrantsData] = useState<any | null>(null);
@@ -50,7 +44,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
     }
   };
 
-  // Hàm tải danh sách ngày hội đua, mùa giải và Ví Admin từ API
   const fetchData = async () => {
     setLoading(true);
     setError("");
@@ -68,7 +61,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
         console.error("Failed to load admin wallet:", e);
       }
 
-      // Mặc định chọn mùa giải đầu tiên nếu chưa có mùa giải nào được chọn
       if (ss.length > 0 && !seasonId) {
         setSeasonId(ss[0].id.toString());
       }
@@ -79,7 +71,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
     }
   };
 
-  // Lắng nghe kích thước màn hình để tự động căn chỉnh responsive
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     handleResize();
@@ -87,12 +78,10 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Tải dữ liệu ban đầu khi mount component
   useEffect(() => {
     fetchData();
   }, []);
 
-  // Hàm lấy thông tin danh sách người đăng ký tham gia RaceMeeting để cập nhật liên tục (Real-time view)
   const fetchMeetingRegistrations = async (meetingId: number) => {
     setLoadingViewData(true);
     try {
@@ -111,7 +100,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
     }
   };
 
-  // Tự động tải lại thông tin người đăng ký mỗi 5 giây khi đang mở Modal xem thông tin (Requirement #7 - Cập nhật liên tục)
   useEffect(() => {
     let interval: any = null;
     if (viewingMeeting) {
@@ -127,7 +115,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
     };
   }, [viewingMeeting]);
 
-  // Kích hoạt chế độ chỉnh sửa ngày hội đua (Edit mode), chuyển dữ liệu cũ lên Form
   const handleEdit = (m: any) => {
     setEditingMeeting(m);
     setName(m.name || "");
@@ -140,7 +127,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
     setSuccess("");
   };
 
-  // Hủy bỏ chế độ chỉnh sửa, làm sạch Form
   const handleCancelEdit = () => {
     setEditingMeeting(null);
     setName("");
@@ -155,7 +141,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
     setSuccess("");
   };
 
-  // Xử lý xóa một Ngày hội đua bằng mã ID
   const handleDelete = async (id: number) => {
     if (!await confirm("Are you sure you want to delete this race meeting? This action cannot be undone.")) {
       return;
@@ -174,7 +159,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
     }
   };
 
-  // Xử lý gửi Form để lưu dữ liệu (Tạo mới hoặc Cập nhật)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -198,14 +182,13 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
         }
       }
 
-      // Validate budget: min 100,000,000 VNĐ và max 10,000,000,000 VNĐ
       const budgetValue = totalBudget ? parseFloat(totalBudget) : 0;
       if (budgetValue < 100000000) {
-        setError($t("Total budget must be at least 100,000,000 VNĐ."));
+        setError($t("Total budget must be at least 100,000,000 VND."));
         return;
       }
       if (budgetValue > 10000000000) {
-        setError($t("Total budget cannot exceed 10,000,000,000 VNĐ."));
+        setError($t("Total budget cannot exceed 10,000,000,000 VND."));
         return;
       }
 
@@ -249,7 +232,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
           setSuccess("Race meeting created successfully.");
         }
 
-        // Làm sạch Form và tải lại danh sách mới
         setName("");
         setDate("");
         setVenue("");
@@ -278,7 +260,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      {/* Cột hiển thị Danh sách các Ngày hội đua */}
       <div className="lg:col-span-2 space-y-4 order-last lg:order-first">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
@@ -288,7 +269,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
         {loading ? (
           <p className="text-sm text-white/40">{$t("Loading meetings...", (localStorage.getItem('app-lang') || 'en'))}</p>
         ) : isMobile ? (
-          /* Bố cục di động */
+          
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             {meetings.length === 0 ? (
               <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px", textAlign: "center", padding: "1rem" }}>{$t("No meetings found.", (localStorage.getItem('app-lang') || 'en'))}</p>
@@ -309,13 +290,12 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                           📍 {m.venue}
                         </div>
                         <div style={{ fontSize: "0.75rem", color: "#fbbf24", marginTop: "4px", fontFamily: "monospace", fontWeight: "bold" }}>
-                          💰 Budget: {Number(m.totalBudget || 0).toLocaleString('en-US')} VNĐ
+                          💰 Budget: {Number(m.totalBudget || 0).toLocaleString('en-US')} VND
                         </div>
                         <div style={{ fontSize: "0.75rem", color: "#34d399", marginTop: "2px", fontFamily: "monospace", fontWeight: "bold" }}>
-                          🎟️ Ticket Price: {Number(m.ticketPrice || 0).toLocaleString('en-US')} VNĐ
+                          🎟️ Ticket Price: {Number(m.ticketPrice || 0).toLocaleString('en-US')} VND
                         </div>
                       </div>
-                      {/* Nút Xem / Sửa / Xóa */}
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", flexShrink: 0 }}>
                         <button
                           onClick={() => setViewingMeeting(m)}
@@ -345,7 +325,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
             )}
           </div>
         ) : (
-          /* Bảng Desktop */
+          
           <div className="bg-white/[0.02] border border-white/10 rounded-2xl overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
@@ -387,8 +367,8 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                           {mStatus}
                         </span>
                       </td>
-                      <td className="px-5 py-4 font-mono font-bold text-amber-400">{Number(m.totalBudget || 0).toLocaleString('en-US')} VNĐ</td>
-                      <td className="px-5 py-4 font-mono font-bold text-emerald-400">{Number(m.ticketPrice || 0).toLocaleString('en-US')} VNĐ</td>
+                      <td className="px-5 py-4 font-mono font-bold text-amber-400">{Number(m.totalBudget || 0).toLocaleString('en-US')} VND</td>
+                      <td className="px-5 py-4 font-mono font-bold text-emerald-400">{Number(m.ticketPrice || 0).toLocaleString('en-US')} VND</td>
                       <td className="px-5 py-4 text-white/80">{formatDate(m.startDate || m.date)}</td>
                       <td className="px-5 py-4 text-white/60">📍 {m.venue}</td>
                       <td className="px-5 py-4 text-right space-x-2">
@@ -442,21 +422,18 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
         )}
       </div>
 
-      {/* Cột hiển thị Biểu mẫu Tạo mới / Cập nhật Ngày hội đua */}
       <div className="space-y-4 order-first lg:order-last">
         <h3 className="text-lg font-bold text-white flex items-center space-x-2">
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
           <span>{editingMeeting ? `${$t("Edit Meeting", (localStorage.getItem('app-lang') || 'en'))} #${editingMeeting.id}` : $t("Add New Meeting", (localStorage.getItem('app-lang') || 'en'))}</span>
         </h3>
 
-        {/* Banner thông báo lỗi */}
         {error && (
           <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
             {error}
           </div>
         )}
 
-        {/* Banner thông báo thành công */}
         {success && (
           <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-sm">
             {success}
@@ -464,7 +441,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
         )}
 
         <form onSubmit={handleSubmit} className="bg-white/[0.015] border border-white/10 rounded-2xl p-5 space-y-4">
-          {/* Nhập Tên buổi đua */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Meeting Name", (localStorage.getItem('app-lang') || 'en'))}</label>
             <input
@@ -477,7 +453,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
             />
           </div>
 
-          {/* Nhập Ngân sách tổng (Total Budget) */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Total Budget (VND)", (localStorage.getItem('app-lang') || 'en'))}</label>
@@ -486,7 +461,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                   onClick={() => onOpenWallet && onOpenWallet()}
                   className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 cursor-pointer hover:bg-amber-500/20 transition"
                 >
-                  🏦 Admin Wallet: {Number(adminWalletBal).toLocaleString('en-US')} VNĐ
+                  🏦 Admin Wallet: {Number(adminWalletBal).toLocaleString('en-US')} VND
                 </span>
               )}
             </div>
@@ -506,7 +481,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
             </p>
           </div>
 
-          {/* Nhập Giá vé bán tham gia Ngày hội đua (Ticket Price in $USD) - Locked on edit */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <label className="text-xs font-semibold text-amber-400 uppercase tracking-wider block flex items-center gap-1.5">
@@ -529,7 +503,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
               className={`w-full px-4 py-2.5 border rounded-xl text-xs font-mono font-bold ${
                 editingMeeting ? "bg-black/60 border-white/5 text-white/40 cursor-not-allowed" : "bg-black/40 border-amber-500/30 text-amber-300 focus:border-amber-400 focus:outline-none"
               }`}
-              placeholder={$t("Enter ticket price in VNĐ (e.g. 50,000, 100,000)", (localStorage.getItem('app-lang') || 'en'))}
+              placeholder={$t("Enter ticket price in VND (e.g. 50,000, 100,000)", (localStorage.getItem('app-lang') || 'en'))}
             />
             <p className="text-[10px] text-white/40 font-mono">
               {editingMeeting
@@ -538,7 +512,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
             </p>
           </div>
 
-          {/* Chọn ngày tổ chức */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Date", (localStorage.getItem('app-lang') || 'en'))}</label>
             <InlineDatePicker
@@ -547,7 +520,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
             />
           </div>
 
-          {/* Nhập địa điểm trường đua */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Venue", (localStorage.getItem('app-lang') || 'en'))}</label>
             <input
@@ -560,7 +532,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
             />
           </div>
 
-          {/* Chọn mùa giải tương ứng */}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Season Association", (localStorage.getItem('app-lang') || 'en'))}</label>
             <select
@@ -576,7 +547,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
             </select>
           </div>
 
-          {/* Nút gửi hoặc hủy */}
           <button
             type="submit"
             className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold rounded-xl transition"
@@ -593,7 +563,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
         </form>
       </div>
 
-      {/* MODAL VIEW THÔNG TIN RACE MEETING VÀ NGƯỜI ĐÃ TRẢ TIỀN VÉ (Requirements #2 & #7) */}
       {viewingMeeting && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
           <div className="bg-[#181613] border border-amber-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl space-y-6">
@@ -608,7 +577,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
               >✕</button>
             </div>
 
-            {/* Thông tin cấu hình Ngày hội đua (Tương tự lúc Add/Edit New Meeting) */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-xl text-xs font-mono">
               <div>
                 <span className="text-white/40 block text-[10px] uppercase">Meeting ID</span>
@@ -636,7 +604,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
               </div>
             </div>
 
-            {/* Danh sách người đăng ký đã trả tiền vé (Cập nhật liên tục Real-time) */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-bold text-white font-serif flex items-center gap-2">
@@ -677,7 +644,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                             </span>
                           ) : (
                             <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${r.paymentStatus === 'PAID' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
-                              {r.paymentStatus === 'PAID' ? `✓ Paid ${Number(r.ticketPrice || 0).toLocaleString('en-US')} VNĐ` : `✕ Refunded`}
+                              {r.paymentStatus === 'PAID' ? `✓ Paid ${Number(r.ticketPrice || 0).toLocaleString('en-US')} VND` : `✕ Refunded`}
                             </span>
                           )}
                           <div className="text-[10px] text-white/30 mt-1">Status: {r.status}</div>
@@ -719,7 +686,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                       </div>
                       <div className="text-right">
                         <span className={`font-bold block ${Number(tx.amount) >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                          {Number(tx.amount) >= 0 ? `+${Number(tx.amount).toLocaleString('en-US')} VNĐ` : `-${Math.abs(Number(tx.amount)).toLocaleString('en-US')} VNĐ`}
+                          {Number(tx.amount) >= 0 ? `+${Number(tx.amount).toLocaleString('en-US')} VND` : `-${Math.abs(Number(tx.amount)).toLocaleString('en-US')} VND`}
                         </span>
                         <span className="text-white/30 text-[9px] block">{formatDate(tx.createdAt)}</span>
                       </div>

@@ -7,20 +7,18 @@ import { $t } from '@/lib/i18n';
 import WebCamLiveViewer, { BroadcasterInfo } from "../livestream/WebCamLiveViewer";
 import HorseRacingSimulator from "./HorseRacingSimulator";
 
-// Khai báo kiểu dữ liệu cấu trúc cho một Trận Đấu (Race) trong livestream
 interface Race {
-  id: number;              // ID duy nhất của cuộc đua
-  classLevel: string;      // Phân hạng/Cấp độ cuộc đua (ví dụ: Class A, Class B)
-  status: string;          // Trạng thái hiện tại (ví dụ: RUNNING, STEWARDS_INQUIRY, OFFICIAL)
-  distanceMeters: number;  // Cự ly đường đua (mét)
-  trackType: string;       // Loại đường đua (Turf/Dirt...)
-  startTime: string;       // Giờ bắt đầu định dạng chuỗi
-  youtubeLiveUrl: string;  // Đường dẫn phát trực tiếp (YouTube hoặc tệp tin video .mp4)
-  streamMode?: string;     // YOUTUBE hoặc WEBCAM
-  meetingName: string;     // Tên ngày hội đua chứa cuộc đua này
+  id: number;
+  classLevel: string;
+  status: string;
+  distanceMeters: number;
+  trackType: string;       // Track Type (Turf/Dirt...)
+  startTime: string;
+  youtubeLiveUrl: string;
+  streamMode?: string;
+  meetingName: string;
 }
 
-// Từ điển dịch thuật tiếng Anh hỗ trợ giao diện livestream
 const TRANSLATIONS: Record<string, any> = {
   en: {
     home: "Home",
@@ -53,43 +51,29 @@ const TRANSLATIONS: Record<string, any> = {
 };
 
 /**
- * Component Livestream - Trang phát sóng trực tiếp các cuộc đua đang diễn ra.
- * Tích hợp trình phát video, danh sách kênh đua và khung trò chuyện trực tiếp qua WebSocket.
  */
 export default function Livestream() {
-  // Lấy ID cuộc đua từ đường dẫn URL nếu có (ví dụ: /livestream/12)
   const { raceId } = useParams<{ raceId?: string }>();
   const navigate = useNavigate();
-  // Lấy thông tin user hiện tại đang đăng nhập
   const { user } = useAuth();
 
   const t = TRANSLATIONS.en;
   
-  // State lưu danh sách các cuộc đua có luồng trực tiếp đang diễn ra
   const [liveRaces, setLiveRaces] = useState<Race[]>([]);
-  // State lưu cuộc đua hiện tại đang được người dùng chọn xem
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
-  // State lưu trạng thái đang tải dữ liệu ban đầu
   const [loading, setLoading] = useState(true);
 
-  // State quản lý danh sách Trọng tài phát máy quay và camera chọn xem
   const [broadcasterList, setBroadcasterList] = useState<BroadcasterInfo[]>([]);
   const [selectedBroadcasterId, setSelectedBroadcasterId] = useState<string | null>(null);
   
-  // State lưu danh sách các tin nhắn trong box chat trực tiếp
   const [chatMessages, setChatMessages] = useState<{ user: string; text: string; time: string }[]>([]);
-  // State lưu trữ nội dung tin nhắn chat mới đang viết trong ô nhập
   const [newMsg, setNewMsg] = useState("");
-  // Ref lưu đối tượng WebSocket kết nối tới chat server
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  // State lưu trạng thái kết nối WebSocket ('connecting' | 'connected' | 'disconnected')
   const [connectionState, setConnectionState] = useState<"connecting" | "connected" | "disconnected">("connecting");
-  // State lưu trạng thái giao diện có phóng to dạng rạp phim (theater mode) không
   const [isTheaterMode, setIsTheaterMode] = useState(false);
 
-  // Tạo hoặc lấy lại tên Guest ngẫu nhiên nếu người dùng chưa đăng nhập tài khoản
   const [username] = useState<string>(() => {
-    if (user?.username) return user.username; // Nếu đã đăng nhập, lấy username thật
+    if (user?.username) return user.username;
     const cached = sessionStorage.getItem("chat-guest-username");
     if (cached) return cached;
     const newGuest = `Guest_${Math.floor(1000 + Math.random() * 9000)}`;
@@ -97,17 +81,15 @@ export default function Livestream() {
     return newGuest;
   });
 
-  // Effect thiết lập các tin nhắn mồi (mock) ban đầu theo ngôn ngữ đã chọn
   useEffect(() => {
     setChatMessages([
-      { user: "RaceFan_99", text: $t("Khởi đầu ấn tượng quá! Ngựa số 3 đang bứt tốc!", (localStorage.getItem('app-lang') || 'en')), time: `1 ${$t("giây trước", (localStorage.getItem('app-lang') || 'en'))}` },
-      { user: "GoldenJockey", text: $t("Đường đua Turf hôm nay rất đẹp, chim ưng quá."), time: `45 ${$t("giây trước", (localStorage.getItem('app-lang') || 'en'))}` },
-      { user: "TurfKing", text: $t("Theo các bác ai sẽ về nhất vòng này?", (localStorage.getItem('app-lang') || 'en')), time: `2 ${$t("giây trước", (localStorage.getItem('app-lang') || 'en'))}` },
-      { user: "BetMaster", text: $t("Thunder King chạy khỏe quá, tạ gánh vừa khít."), time: `10 ${$t("giây trước", (localStorage.getItem('app-lang') || 'en'))}` },
+      { user: "RaceFan_99", text: $t("Impressive start! Horse #3 is sprinting ahead!", (localStorage.getItem('app-lang') || 'en')), time: `1 ${$t("seconds ago", (localStorage.getItem('app-lang') || 'en'))}` },
+      { user: "GoldenJockey", text: $t("The Turf track today looks great."), time: `45 ${$t("seconds ago", (localStorage.getItem('app-lang') || 'en'))}` },
+      { user: "TurfKing", text: $t("Who do you think will finish first this round?", (localStorage.getItem('app-lang') || 'en')), time: `2 ${$t("seconds ago", (localStorage.getItem('app-lang') || 'en'))}` },
+      { user: "BetMaster", text: $t("Thunder King is running strong today."), time: `10 ${$t("seconds ago", (localStorage.getItem('app-lang') || 'en'))}` },
     ]);
   }, []);
 
-  // Effect tải danh sách các trận đấu đang phát trực tiếp và tự động chạy lại sau mỗi 15 giây
   useEffect(() => {
     const fetchLiveRaces = async () => {
       try {
@@ -117,11 +99,9 @@ export default function Livestream() {
         
         if (activeRaces.length > 0) {
           if (raceId) {
-            // Nếu URL có tham số raceId, tìm cuộc đua khớp
             const found = activeRaces.find(r => r.id === parseInt(raceId));
             setSelectedRace(found || activeRaces[0]);
           } else {
-            // Ngược lại, mặc định chọn cuộc đua đầu tiên trong danh sách hoạt động
             setSelectedRace(activeRaces[0]);
           }
         } else {
@@ -130,16 +110,15 @@ export default function Livestream() {
       } catch (err) {
         console.error("Failed to fetch live streams", err);
       } finally {
-        setLoading(false); // Kết thúc tải dữ liệu
+        setLoading(false);
       }
     };
 
     fetchLiveRaces();
-    const interval = setInterval(fetchLiveRaces, 15000); // Polling định kỳ
-    return () => clearInterval(interval); // Dọn dẹp khi unmount
+    const interval = setInterval(fetchLiveRaces, 15000);
+    return () => clearInterval(interval);
   }, [raceId]);
 
-  // Effect quản lý vòng đời kết nối WebSocket chat cho trận đấu được chọn
   useEffect(() => {
     if (!selectedRace) {
       setSocket(null);
@@ -169,13 +148,11 @@ export default function Livestream() {
       })
       .catch(() => {});
 
-    // Hàm thiết lập kết nối WebSocket
     const connect = () => {
       const wsUrl = getWebSocketUrl(`/ws/chat/${selectedRace.id}`);
       
       ws = new WebSocket(wsUrl);
 
-      // Khi kết nối thành công
       ws.onopen = () => {
         console.log("WebSocket connected to race chat: " + selectedRace.id);
         if (isComponentMounted) {
@@ -183,7 +160,6 @@ export default function Livestream() {
         }
       };
 
-      // Nhận tin nhắn chat từ server WebSocket và đẩy vào danh sách hiển thị
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
@@ -206,7 +182,6 @@ export default function Livestream() {
         }
       };
 
-      // Khi kết nối bị đóng, tự động kích hoạt tính năng kết nối lại sau 3 giây
       ws.onclose = () => {
         console.log("WebSocket connection closed for race chat: " + selectedRace.id);
         if (isComponentMounted) {
@@ -215,7 +190,6 @@ export default function Livestream() {
         }
       };
 
-      // Xử lý khi kết nối socket gặp lỗi
       ws.onerror = (err) => {
         console.error("WebSocket chat connection error", err);
         if (isComponentMounted) {
@@ -227,20 +201,18 @@ export default function Livestream() {
       setSocket(ws);
     };
 
-    connect(); // Thực hiện kết nối khi mount hoặc đổi selectedRace.id
+    connect();
 
-    // Cleanup function để đóng kết nối socket cũ tránh rò rỉ bộ nhớ
     return () => {
       isComponentMounted = false;
       if (ws) {
-        ws.onclose = null; // Gỡ bỏ handler close để tránh lặp reconnect vô tận khi cố ý unmount
+        ws.onclose = null;
         ws.close();
       }
       clearTimeout(reconnectTimeout);
     };
   }, [selectedRace?.id]);
 
-  // Hàm xử lý gửi tin nhắn của kịch bản chat trực tiếp
   const handleSendChat = (e: React.FormEvent) => {
     e.preventDefault();
     const msgText = newMsg.trim();
@@ -253,18 +225,15 @@ export default function Livestream() {
       time
     };
     
-    // 1. Cập nhật giao diện lập tức tại client
     setChatMessages(prev => [...prev, payload]);
     setNewMsg("");
 
-    // 2. Gửi qua WebSocket nếu đã mở
     if (socket && socket.readyState === WebSocket.OPEN) {
       try {
         socket.send(JSON.stringify(payload));
       } catch (err) {}
     }
 
-    // 3. Gửi dự phòng qua REST API
     api.post("/public/chat/send", {
       raceId: selectedRace.id,
       user: username,
@@ -272,30 +241,26 @@ export default function Livestream() {
     }).catch(() => {});
   };
 
-  // Phân tích và chuyển đổi URL video YouTube hoặc video cục bộ để render
   const embedUrl = selectedRace ? getYouTubeEmbedUrl(selectedRace.youtubeLiveUrl) : null;
   const videoId = embedUrl ? embedUrl.split("/").pop()?.split("?")[0] : "";
   const iframeSrc = embedUrl ? (embedUrl.includes("youtube.com") ? `${embedUrl}?autoplay=1&mute=0&rel=0&modestbranding=1&playlist=${videoId}&loop=1` : embedUrl) : "";
 
   return (
     <div className="min-h-screen bg-[#0e0c09] text-[#f0f0f0] font-sans">
-      {/* Header - Thanh công cụ đầu trang */}
       <header className="border-b border-[#2a2825] bg-[#100f0c] px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center space-x-4">
-          {/* Nút quay về trang chủ */}
           <button 
             onClick={() => navigate("/")} 
             className="text-amber-500 hover:text-amber-400 font-mono text-sm flex items-center space-x-1 transition"
           >
-            <span>←</span> <span>{$t("Trang chủ", (localStorage.getItem('app-lang') || 'en'))}</span>
+            <span>←</span> <span>{$t("Home", (localStorage.getItem('app-lang') || 'en'))}</span>
           </button>
           <div className="h-4 w-[1px] bg-[#2a2825]"></div>
           <h1 className="text-lg font-bold text-white tracking-wide font-serif">
-            🔴 {$t("Đấu Trường Livestream", (localStorage.getItem('app-lang') || 'en'))}
+            🔴 {$t("Livestream Arena", (localStorage.getItem('app-lang') || 'en'))}
           </h1>
         </div>
         
-        {/* Các nút chuyển đổi chế độ xem rạp phim và nhãn "ĐANG PHÁT" */}
         {selectedRace && (
           <div className="flex items-center space-x-3">
             <button
@@ -303,17 +268,16 @@ export default function Livestream() {
               className="bg-[#151310] hover:bg-[#1a1815] border border-[#2a2825] hover:border-amber-500/30 text-white text-xs font-mono px-3.5 py-1.5 rounded-xl transition flex items-center space-x-1.5"
             >
               <span>🎭</span>
-              <span>{isTheaterMode ? $t("Mặc định", (localStorage.getItem('app-lang') || 'en')) : $t("Rạp phim", (localStorage.getItem('app-lang') || 'en'))}</span>
+              <span>{isTheaterMode ? $t("Default", (localStorage.getItem('app-lang') || 'en')) : $t("Theater", (localStorage.getItem('app-lang') || 'en'))}</span>
             </button>
             <div className="flex items-center space-x-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 px-3 py-1 rounded-full text-xs font-semibold uppercase animate-pulse">
               <span className="h-2 w-2 rounded-full bg-rose-500"></span>
-              <span>{$t("ĐANG PHÁT", (localStorage.getItem('app-lang') || 'en'))}</span>
+              <span>{$t("LIVE", (localStorage.getItem('app-lang') || 'en'))}</span>
             </div>
           </div>
         )}
       </header>
 
-      {/* Banner cảnh báo nhấp nháy màu đỏ khi trận đấu đang bị trọng tài điều tra (Inquiry) */}
       {selectedRace && selectedRace.status === "STEWARDS_INQUIRY" && (
         <div 
           className="bg-rose-950/40 border-b border-rose-500/30 px-6 py-3 flex items-center justify-center space-x-3 text-rose-500 font-bold uppercase tracking-wider text-sm text-center animate-pulse"
@@ -321,18 +285,15 @@ export default function Livestream() {
         >
           <span className="text-xl">⚠️</span>
           <span>
-            {$t("Stewards' Inquiry - Trận đấu đang được Trọng tài thẩm vấn vi phạm (Kết quả chưa chính thức)", (localStorage.getItem('app-lang') || 'en'))}
+            {$t("Stewards' Inquiry - Race under inquiry by Referees (Results Unofficial)", (localStorage.getItem('app-lang') || 'en'))}
           </span>
         </div>
       )}
 
-      {/* Vùng bố cục giao diện chính */}
       <main className={`max-w-7xl mx-auto p-4 md:p-6 gap-6 ${isTheaterMode ? "flex flex-col" : "grid grid-cols-1 lg:grid-cols-3"}`}>
         
-        {/* Cột chính bên trái: Trình phát video livestream */}
         <div className={`${isTheaterMode ? "w-full" : "lg:col-span-2"} space-y-6`}>
           {loading ? (
-            // Vòng quay đang tải
             <div className="flex flex-col items-center justify-center h-[450px] bg-[#151310] border border-[#2a2825] rounded-2xl">
               <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-amber-500 mb-4"></div>
               <p className="text-white/60 font-mono text-sm">{$t("Loading livestream data...", (localStorage.getItem('app-lang') || 'en'))}</p>
@@ -423,7 +384,6 @@ export default function Livestream() {
                 </div>
               </div>
 
-              {/* Hộp hiển thị Thông tin Chi tiết Trận đấu */}
               <div className="bg-[#151310] border border-[#2a2825] p-5 rounded-2xl space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="text-xl font-bold text-white font-serif">
@@ -434,52 +394,48 @@ export default function Livestream() {
                   </span>
                 </div>
                 
-                {/* Thông số kỹ thuật của đường đua */}
                 <div className="grid grid-cols-3 gap-4 pt-3 border-t border-[#2a2825] text-xs md:text-sm font-mono text-white/60">
                   <div>
-                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{$t("Cự ly đua", (localStorage.getItem('app-lang') || 'en'))}</span>
+                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{$t("Race Distance", (localStorage.getItem('app-lang') || 'en'))}</span>
                     <span className="text-white font-semibold">{selectedRace.distanceMeters} Meters</span>
                   </div>
                   <div>
-                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{$t("Loại đường đua", (localStorage.getItem('app-lang') || 'en'))}</span>
+                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{$t("Track Type", (localStorage.getItem('app-lang') || 'en'))}</span>
                     <span className="text-white font-semibold">{selectedRace.trackType}</span>
                   </div>
                   <div>
-                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{$t("Thời gian bắt đầu", (localStorage.getItem('app-lang') || 'en'))}</span>
+                    <span className="block text-white/40 text-[10px] uppercase tracking-wider mb-1">{$t("Start Time", (localStorage.getItem('app-lang') || 'en'))}</span>
                     <span className="text-white font-semibold">{selectedRace.startTime}</span>
                   </div>
                 </div>
               </div>
             </div>
           ) : (
-            // Khung hiển thị lỗi khi không tìm thấy luồng trực tiếp
             <div className="flex flex-col items-center justify-center h-[450px] bg-[#151310] border border-[#2a2825] rounded-2xl p-6 text-center space-y-4">
               <div className="text-4xl">📺</div>
-              <h3 className="text-lg font-bold text-white font-serif">{$t("Không có livestream trực tiếp nào", (localStorage.getItem('app-lang') || 'en'))}</h3>
+              <h3 className="text-lg font-bold text-white font-serif">{$t("No Live Stream Available", (localStorage.getItem('app-lang') || 'en'))}</h3>
               <p className="text-white/60 text-sm max-w-md font-sans leading-relaxed">
-                {$t("Hiện tại không có trận đấu nào đang chạy hoặc Admin chưa thiết lập đường link phát trực tiếp. Vui lòng quay lại sau!", (localStorage.getItem('app-lang') || 'en'))}
+                {$t("Currently no live race is running or admin has not set up live stream link. Please check back later!", (localStorage.getItem('app-lang') || 'en'))}
               </p>
               <button 
                 onClick={() => navigate("/")}
                 className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-[#0e0c09] font-bold text-xs rounded-xl transition font-mono uppercase tracking-wider"
               >
-                {$t("Về Trang chủ", (localStorage.getItem('app-lang') || 'en'))}
+                {$t("Back to Home", (localStorage.getItem('app-lang') || 'en'))}
               </button>
             </div>
           )}
         </div>
 
-        {/* Cột bên phải: Chuyển đổi kênh livestream và Khung Live Chat */}
         <div className={isTheaterMode ? "grid grid-cols-1 md:grid-cols-2 gap-6 w-full" : "space-y-6 flex flex-col h-auto"}>
           
-          {/* Thư mục danh sách các luồng đang phát (Kênh livestream khác) */}
           {liveRaces.length > 0 && (
             <div className="bg-[#151310] border border-[#2a2825] rounded-2xl p-4 flex flex-col space-y-3">
               <div>
                 <h3 className="text-xs font-mono font-bold text-amber-500 uppercase tracking-wider">
-                  {$t("Danh Sách Livestream", (localStorage.getItem('app-lang') || 'en'))}
+                  {$t("Livestream List", (localStorage.getItem('app-lang') || 'en'))}
                 </h3>
-                <p className="text-[10px] text-white/40 font-mono mt-0.5">{$t("Chọn trận đấu để chuyển đổi luồng phát", (localStorage.getItem('app-lang') || 'en'))}</p>
+                <p className="text-[10px] text-white/40 font-mono mt-0.5">{$t("Select a race to switch stream", (localStorage.getItem('app-lang') || 'en'))}</p>
               </div>
               
               <div className="space-y-2 max-h-[180px] overflow-y-auto scrollbar-hide">
@@ -508,7 +464,7 @@ export default function Livestream() {
                           ? "bg-amber-500/20 text-amber-400" 
                           : "bg-rose-500/15 text-rose-400 animate-pulse"
                       }`}>
-                        {isCurrent ? $t("ĐANG XEM", (localStorage.getItem('app-lang') || 'en')) : $t("XEM NGAY", (localStorage.getItem('app-lang') || 'en'))}
+                        {isCurrent ? $t("WATCHING NOW", (localStorage.getItem('app-lang') || 'en')) : $t("XEM NGAY", (localStorage.getItem('app-lang') || 'en'))}
                       </span>
                     </button>
                   );
@@ -517,17 +473,15 @@ export default function Livestream() {
             </div>
           )}
 
-          {/* Hộp thoại trò chuyện trực tiếp (Live Chat Widget) */}
           <div className="flex flex-col h-[350px] lg:h-[350px] bg-[#151310] border border-[#2a2825] rounded-2xl overflow-hidden flex-1">
             <div className="px-4 py-3 border-b border-[#2a2825] bg-[#1a1815] flex items-center justify-between">
               <h3 className="text-xs font-mono font-bold text-amber-500 uppercase tracking-wider">
-                {$t("Trò chuyện trực tiếp", (localStorage.getItem('app-lang') || 'en'))}
+                {$t("Live Chat", (localStorage.getItem('app-lang') || 'en'))}
               </h3>
-              {/* Badge chỉ định trạng thái kết nối socket thực tế */}
               {connectionState === "connected" ? (
                 <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-mono uppercase flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  {$t("Trực tuyến", (localStorage.getItem('app-lang') || 'en'))}
+                  {$t("Online", (localStorage.getItem('app-lang') || 'en'))}
                 </span>
               ) : connectionState === "connecting" ? (
                 <span className="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[10px] font-mono uppercase flex items-center gap-1.5">
@@ -542,7 +496,6 @@ export default function Livestream() {
               )}
             </div>
 
-            {/* Vùng cuộn hiển thị tin nhắn chat */}
             <div className="flex-1 p-3 overflow-y-auto space-y-3.5 scrollbar-hide">
               {chatMessages.map((msg, idx) => (
                 <div key={idx} className="text-xs space-y-1">
@@ -559,20 +512,19 @@ export default function Livestream() {
               ))}
             </div>
 
-            {/* Form gửi tin nhắn chat */}
             <form onSubmit={handleSendChat} className="p-2 border-t border-[#2a2825] bg-[#1a1815] flex gap-2">
               <input
                 type="text"
                 value={newMsg}
                 onChange={e => setNewMsg(e.target.value)}
-                placeholder={$t("Nhập tin nhắn...", (localStorage.getItem('app-lang') || 'en'))}
+                placeholder={$t("Type a message...", (localStorage.getItem('app-lang') || 'en'))}
                 className="flex-1 bg-[#0e0c09] border border-[#2a2825] focus:border-amber-500/50 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none placeholder-white/30"
               />
               <button
                 type="submit"
                 className="bg-amber-500 hover:bg-amber-400 text-[#0e0c09] font-bold text-xs px-3 rounded-lg transition font-mono"
               >
-                {$t("GỬI", (localStorage.getItem('app-lang') || 'en'))}
+                {$t("SEND", (localStorage.getItem('app-lang') || 'en'))}
               </button>
             </form>
           </div>

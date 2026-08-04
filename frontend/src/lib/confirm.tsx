@@ -2,20 +2,13 @@ import ReactDOM from "react-dom/client";
 import { $t } from "./i18n";
 
 /**
- * Hàm confirm tùy biến (Custom Confirm Dialog) - Thay thế cho window.confirm mặc định của trình duyệt.
- * - Trả về một Promise chứa giá trị boolean (true/false) tương tự hàm mặc định.
- * - Tạo động một phần tử <div> trong body để vẽ (render) giao diện hộp thoại xác nhận.
- * - Sử dụng giao diện tối đồng bộ, có hiệu ứng backdrop-blur và hỗ trợ đa ngôn ngữ.
- * - Tự động dọn dẹp (unmount và remove phần tử DOM) sau khi người dùng lựa chọn bấm Đồng ý/Hủy.
  */
 export function confirm(message: string): Promise<boolean> {
   return new Promise((resolve) => {
-    // Tạo động container trong tài liệu HTML
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = ReactDOM.createRoot(container);
 
-    // Hàm dọn dẹp DOM và trả về kết quả lựa chọn của người dùng thông qua resolve của Promise
     const cleanup = (value: boolean) => {
       root.unmount();
       container.remove();
@@ -24,7 +17,6 @@ export function confirm(message: string): Promise<boolean> {
 
     const lang = localStorage.getItem("app-lang") || "en";
 
-    // Tiến hành vẽ giao diện Confirm Dialog tùy biến
     root.render(
       <div style={{
         position: "fixed",
@@ -47,7 +39,6 @@ export function confirm(message: string): Promise<boolean> {
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
           position: "relative"
         }}>
-          {/* Dòng tiêu đề hộp thoại */}
           <div style={{
             display: "flex",
             alignItems: "center",
@@ -76,11 +67,10 @@ export function confirm(message: string): Promise<boolean> {
               color: "#f4f2ec",
               margin: 0
             }}>
-              {$t("Xác nhận")}
+              {$t("Confirm")}
             </h4>
           </div>
 
-          {/* Nội dung thông điệp cần hỏi */}
           <p style={{
             fontSize: "0.8rem",
             color: "rgba(255,255,255,0.7)",
@@ -91,7 +81,6 @@ export function confirm(message: string): Promise<boolean> {
             {$t(message)}
           </p>
 
-          {/* Các nút hành động (Hủy / Đồng ý) */}
           <div style={{
             display: "flex",
             justifyContent: "flex-end",
@@ -99,7 +88,6 @@ export function confirm(message: string): Promise<boolean> {
             borderTop: "1px solid rgba(201,162,39,0.1)",
             paddingTop: "1rem"
           }}>
-            {/* Nút Hủy (Không đồng ý) */}
             <button
               onClick={() => cleanup(false)}
               style={{
@@ -120,9 +108,8 @@ export function confirm(message: string): Promise<boolean> {
                 e.currentTarget.style.background = "#1f1f22";
               }}
             >
-              {$t("Hủy")}
+              {$t("Cancel")}
             </button>
-            {/* Nút Đồng ý */}
             <button
               onClick={() => cleanup(true)}
               style={{
@@ -144,7 +131,7 @@ export function confirm(message: string): Promise<boolean> {
                 e.currentTarget.style.filter = "none";
               }}
             >
-              {$t("Đồng ý")}
+              {$t("Agree")}
             </button>
           </div>
         </div>
@@ -154,8 +141,6 @@ export function confirm(message: string): Promise<boolean> {
 }
 
 /**
- * Hàm alert tùy biến (Custom Alert Dialog) - Thay thế cho window.alert mặc định của trình duyệt.
- * Không hiển thị "localhost:5173 cho biết", đồng bộ giao diện Dark Mode cao cấp.
  */
 export function showAlert(message: string): Promise<void> {
   return new Promise((resolve) => {
@@ -193,7 +178,6 @@ export function showAlert(message: string): Promise<void> {
           boxShadow: "0 25px 50px -12px rgba(0,0,0,0.5)",
           position: "relative"
         }}>
-          {/* Tiêu đề */}
           <div style={{
             display: "flex",
             alignItems: "center",
@@ -222,11 +206,10 @@ export function showAlert(message: string): Promise<void> {
               color: "#f4f2ec",
               margin: 0
             }}>
-              {$t("Thông báo")}
+              {$t("Notification")}
             </h4>
           </div>
 
-          {/* Nội dung thông báo */}
           <p style={{
             fontSize: "0.825rem",
             color: "rgba(255,255,255,0.85)",
@@ -236,7 +219,6 @@ export function showAlert(message: string): Promise<void> {
             {$t(message)}
           </p>
 
-          {/* Nút OK */}
           <div style={{
             display: "flex",
             justifyContent: "flex-end",
@@ -266,7 +248,6 @@ export function showAlert(message: string): Promise<void> {
   });
 }
 
-// Tự động ghi đè window.alert mặc định bằng custom showAlert
 if (typeof window !== "undefined") {
   window.alert = (msg?: any) => {
     if (msg !== undefined && msg !== null) {

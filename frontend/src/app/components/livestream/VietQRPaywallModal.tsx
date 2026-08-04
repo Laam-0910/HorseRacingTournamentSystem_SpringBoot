@@ -214,7 +214,7 @@ export default function VietQRPaywallModal({
               >
                 <div style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>RaceMeeting Pass</div>
                 <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#c9a227", fontFamily: "monospace", marginTop: "4px" }}>
-                  {finalAmount.toLocaleString('en-US')} VNĐ
+                  {finalAmount.toLocaleString('en-US')} VND
                 </div>
                 <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "4px" }}>
                   24h access for {raceMeetingName || "this event"}
@@ -238,7 +238,7 @@ export default function VietQRPaywallModal({
                   <span style={{ fontSize: "8px", background: "#10b981", color: "#000", padding: "1px 4px", borderRadius: "2px", fontWeight: "bold" }}>BEST VALUE</span>
                 </div>
                 <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#34d399", fontFamily: "monospace", marginTop: "4px" }}>
-                  79,000 VNĐ
+                  79,000 VND
                 </div>
                 <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "4px" }}>
                   {selectedPackage === "SEASON" && quote?.discountApplied > 0 ? quote?.description : "Unlimited access to all meetings"}
@@ -251,7 +251,7 @@ export default function VietQRPaywallModal({
           <div style={{ background: "rgba(201,162,39,0.08)", padding: "1rem", borderRadius: "0.75rem", border: "1px solid rgba(201,162,39,0.25)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
               <span style={{ fontSize: "11px", color: "#a0a0a0", fontFamily: "monospace" }}>Your Available Wallet:</span>
-              <strong style={{ fontSize: "1rem", color: "#fbbf24", fontFamily: "monospace" }}>{walletBal.toLocaleString('en-US')} VNĐ</strong>
+              <strong style={{ fontSize: "1rem", color: "#fbbf24", fontFamily: "monospace" }}>{walletBal.toLocaleString('en-US')} VND</strong>
             </div>
             <button
               onClick={handlePayViaWallet}
@@ -270,7 +270,7 @@ export default function VietQRPaywallModal({
                 transition: "all 0.2s"
               }}
             >
-              {payingViaWallet ? "Processing Wallet Deduction..." : walletBal >= finalAmount ? `⚡ Pay ${finalAmount.toLocaleString('en-US')} VNĐ via Available Wallet` : `🔒 Insufficient Balance (${walletBal.toLocaleString('en-US')} VNĐ available)`}
+              {payingViaWallet ? "Processing Wallet Deduction..." : walletBal >= finalAmount ? `⚡ Pay ${finalAmount.toLocaleString('en-US')} VND via Available Wallet` : `🔒 Insufficient Balance (${walletBal.toLocaleString('en-US')} VND available)`}
             </button>
           </div>
 
@@ -293,7 +293,7 @@ export default function VietQRPaywallModal({
               <div>Bank: <strong style={{ color: "#fff" }}>{bankName}</strong></div>
               <div>Account: <strong style={{ color: "#c9a227", fontFamily: "monospace" }}>{accountNumber}</strong></div>
               <div>Holder: <strong style={{ color: "#fff" }}>{accountHolder}</strong></div>
-              <div>Ticket Price: <strong style={{ color: "#34d399", fontFamily: "monospace", fontSize: "14px" }}>{finalAmount.toLocaleString('en-US')} VNĐ</strong></div>
+              <div>Ticket Price: <strong style={{ color: "#34d399", fontFamily: "monospace", fontSize: "14px" }}>{finalAmount.toLocaleString('en-US')} VND</strong></div>
               <div>Transfer Content: <strong style={{ color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "2px 6px", borderRadius: "4px", display: "inline-block" }}>{transferContent}</strong></div>
               {isMockMode && (
                 <button

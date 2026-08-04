@@ -69,7 +69,6 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
 
   useEffect(() => {
     fetchWallet();
-    // Tải cấu hình mode Payment Gateway từ backend
     api.get<any[]>("/admin/configs").then(configs => {
       const modeConfig = configs.find(c => c.configKey === "PAYMENT_GATEWAY_MODE");
       if (modeConfig && modeConfig.configValue?.toUpperCase() === "LIVE") {
@@ -87,7 +86,6 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
       setError("Please enter a valid amount greater than 0.");
       return;
     }
-    // Mở Modal Quét Mã QR VietQR
     setShowQrModal(true);
   };
 
@@ -228,7 +226,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
           <div>
             <span className="text-xs font-mono text-white/50 block">Available Admin Wallet Balance:</span>
             <div className="text-3xl font-extrabold text-amber-400 font-mono mt-1">
-              {Number(walletData?.walletBalance || 0).toLocaleString('en-US')} <span className="text-xl font-bold">VNĐ</span>
+              {Number(walletData?.walletBalance || 0).toLocaleString('en-US')} <span className="text-xl font-bold">VND</span>
             </div>
             <p className="text-[11px] text-white/40 font-mono mt-1">
               * Funding source for Race Meeting total budget allocations (`totalBudget`) and settled ticket revenue.
@@ -268,7 +266,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
                 required
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Enter top-up amount (VNĐ)..."
+                placeholder="Enter top-up amount (VND)..."
                 className="flex-1 px-4 py-2 bg-black/50 border border-white/10 rounded-xl text-white text-xs font-mono focus:border-emerald-400 focus:outline-none"
               />
               <button
@@ -294,7 +292,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] font-mono text-white/50 block mb-1">Withdrawal Amount (VNĐ)</label>
+                <label className="text-[10px] font-mono text-white/50 block mb-1">Withdrawal Amount (VND)</label>
                 <input
                   type="number"
                   min="1"
@@ -500,7 +498,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
                       <tr className="bg-black/60 text-white/50 border-b border-white/10 uppercase text-[10px]">
                         <th className="px-4 py-3">TX ID</th>
                         <th className="px-4 py-3">Transaction Type</th>
-                        <th className="px-4 py-3">Amount (VNĐ)</th>
+                        <th className="px-4 py-3">Amount (VND)</th>
                         <th className="px-4 py-3">Description / Notes</th>
                         <th className="px-4 py-3">Date & Time</th>
                       </tr>
@@ -514,7 +512,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
                             <td className="px-4 py-3 text-white/40">#TX-{tx.id}</td>
                             <td className="px-4 py-3">{getTxBadge(tx.transactionType)}</td>
                             <td className={`px-4 py-3 font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              {isPositive ? `+${amt.toLocaleString('en-US')} VNĐ` : `${amt.toLocaleString('en-US')} VNĐ`}
+                              {isPositive ? `+${amt.toLocaleString('en-US')} VND` : `${amt.toLocaleString('en-US')} VND`}
                             </td>
                             <td className="px-4 py-3 text-white/80">
                               <div className="max-w-[250px] whitespace-normal break-words leading-snug" title={tx.description}>{tx.description}</div>
@@ -548,7 +546,6 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
           </div>
         )}
 
-        {/* Modal Quét Mã QR VietQR Chuyển Khoản Nạp Tiền */}
         <VietQRModal
           isOpen={showQrModal}
           onClose={() => setShowQrModal(false)}

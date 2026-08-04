@@ -115,10 +115,8 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
   const isEncodingFrameRef = useRef<boolean>(false); // Lock flag to prevent concurrent overlapping toBlob calls on mobile
   const frameSeqRef = useRef<number>(0); // Monotonic frame sequence counter
 
-  // Tự động nhận diện thiết bị (Mobile Device vs Laptop / Desktop)
   const isMobileDevice = typeof window !== "undefined" && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window));
 
-  // Khởi tạo Camera với dự phòng
   const startCamera = async (mode: "environment" | "user") => {
     try {
       if (stream) {
@@ -237,7 +235,6 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     return () => clearInterval(checkStatusTimer);
   }, [isLive, raceId]);
 
-  // Chuyển đổi Camera Trước / Sau
   const toggleFacingMode = () => {
     const nextMode = facingMode === "environment" ? "user" : "environment";
     setFacingMode(nextMode);
@@ -260,7 +257,6 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     }
   }, [stream]);
 
-  // Khởi chạy Interval gửi Frame WebSocket theo FPS, Resolution & JPEG Quality
   const startStreamInterval = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
 
@@ -337,7 +333,6 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     }, intervalMs);
   };
 
-  // Cập nhật cấu hình Stream trực tiếp khi người dùng thay đổi FPS / Resolution
   useEffect(() => {
     localStorage.setItem("cam_res", resolution);
     localStorage.setItem("cam_fps", String(targetFps));
@@ -348,7 +343,6 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     }
   }, [resolution, targetFps, jpegQuality]);
 
-  // Bắt đầu Go Live
   const handleStartLive = async () => {
     try {
       await api.post(`/races/${raceId}`, { streamMode: "WEBCAM" });
@@ -364,7 +358,6 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     }
   };
 
-  // Dừng Go Live
   const handleStopLive = async () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     setIsLive(false);
@@ -655,7 +648,6 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
                 </div>
               )}
 
-              {/* Badge Trạng thái LIVE & Quality Indicator */}
               {isLive && (
                 <div style={{ position: "absolute", top: 12, left: 12, display: "flex", gap: "6px" }}>
                   <div style={{ background: "#ef4444", color: "#fff", padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "bold", display: "flex", alignItems: "center", gap: "6px", boxShadow: "0 0 10px rgba(239,68,68,0.5)" }}>
@@ -668,7 +660,6 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
                 </div>
               )}
 
-              {/* Nút lật camera trước / sau */}
               <button
                 onClick={toggleFacingMode}
                 style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(0,0,0,0.6)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "50%", width: 38, height: 38, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.1rem" }}
@@ -696,7 +687,6 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
               </div>
             </div>
 
-            {/* Nút điều khiển Live */}
             <div style={{ display: "flex", gap: "0.75rem" }}>
               {!isLive ? (
                 <button

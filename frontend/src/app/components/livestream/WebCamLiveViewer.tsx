@@ -201,7 +201,6 @@ export default function WebCamLiveViewer({ raceId, selectedBroadcasterId, onBroa
         </div>
       )}
 
-      {/* Badge Trạng thái phát trực tiếp */}
       {hasFrame && (
         <div className="absolute top-4 left-4 bg-rose-600/90 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center space-x-2 backdrop-blur-md shadow-lg animate-pulse">
           <span className="w-2 h-2 rounded-full bg-white"></span>

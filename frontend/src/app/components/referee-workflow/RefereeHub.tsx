@@ -1,14 +1,8 @@
-// Import các hook useState, useEffect, useRef từ React
 import { useState, useEffect, useRef } from "react";
-// Import createPortal từ react-dom để render modal portal
 import { createPortal } from "react-dom";
-// Import hook useAuth từ ngữ cảnh AuthContext
 import { useAuth } from "../../../context/AuthContext";
-// Import api client và hàm lấy thông báo lỗi getErrMsg
 import { api, getErrMsg } from "../../../lib/api";
-// Import hàm confirm để hiển thị thoại xác nhận
 import { confirm } from "../../../lib/confirm";
-// Import các hàm hỗ trợ định dạng ngày giờ và hạng đấu
 import { formatDateTime, formatClassLevel } from "../../utils/dateTimeHelper";
 import { getYouTubeEmbedUrl } from "../../../lib/utils";
 import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
@@ -42,7 +36,6 @@ const translateSex = (sex: string, lang?: string) => {
 };
 
 
-// Bản dịch Anh hóa nhãn hiển thị cho từng trạng thái trận đấu
 const statusLabels: Record<string, string> = {
   SCHEDULED:          "Scheduled",
   DECLARATION_OPEN:   "Declaration Open",
@@ -182,9 +175,8 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
   }
 };
 
-// ── Component Trung tâm quản lý nghiệp vụ trọng tài (RefereeHub) ────────────────
 export default function RefereeHub() {
-  const { user } = useAuth(); // Lấy dữ liệu người dùng (Trọng tài)
+  const { user } = useAuth();
   
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -196,12 +188,11 @@ export default function RefereeHub() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Lấy ngôn ngữ cấu hình từ localStorage
   const t = TRANSLATIONS.en;
 
-  const [assignedRaces, setAssignedRaces] = useState<any[]>([]); // Danh sách các trận được phân công
-  const [completedCount, setCompletedCount] = useState(0); // Số lượng trận đã hoàn thành
-  const [pendingCount, setPendingCount] = useState(0); // Số lượng trận đang chờ xử lý
+  const [assignedRaces, setAssignedRaces] = useState<any[]>([]);
+  const [completedCount, setCompletedCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [assignedPage, setAssignedPage] = useState(1);
   const [assignedPageSize, setAssignedPageSize] = useState(5);
@@ -209,7 +200,7 @@ export default function RefereeHub() {
   // Sub-view state
   const [activeView, setActiveView] = useState<"list" | "check" | "supervise" | "confirm">("list");
   const [selectedRace, setSelectedRace] = useState<any | null>(null);
-  const [broadcasterRace, setBroadcasterRace] = useState<any | null>(null); // Trận đua đang phát bằng Camera
+  const [broadcasterRace, setBroadcasterRace] = useState<any | null>(null);
   const [raceEntries, setRaceEntries] = useState<any[]>([]);
   const [violations, setViolations] = useState<any[]>([]);
 
@@ -327,7 +318,6 @@ export default function RefereeHub() {
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-            {/* Nút Đánh dấu vi phạm nhanh ngay trên màn hình giám sát */}
             <button
               type="button"
               onClick={() => setShowViolModal(true)}
@@ -368,15 +358,12 @@ export default function RefereeHub() {
           </div>
         </div>
 
-        {/* Video / Simulation Screen Body - 100% Khung phát WebCam máy quay của các Trọng tài (KHÔNG DÙNG YOUTUBE) */}
         <div style={{ height: sizeHeight, background: "#000", position: "relative", overflow: "hidden" }}>
-          {/* Thanh chọn góc quay chéo nhau giữa các Trọng tài */}
           {(() => {
             const myBroadcasterPrefix = user?.id ? `user_${user.id}_` : null;
 
             return (
               <>
-                {/* Camera cross-view tabs - hiển thị tất cả các máy quay của Trọng tài */}
                 {broadcasterList.length > 0 && (
                   <div style={{ display: "flex", gap: "4px", padding: "4px 8px", background: "rgba(0,0,0,0.65)", position: "absolute", top: 0, left: 0, right: 0, zIndex: 20, flexWrap: "wrap", borderBottom: "1px solid rgba(255,255,255,0.1)", alignItems: "center" }}>
                     <span style={{ fontSize: "9px", color: "#a0a0a0", fontFamily: "monospace" }}>📡 Referee Cams ({broadcasterList.length}):</span>
@@ -409,7 +396,6 @@ export default function RefereeHub() {
                   </div>
                 )}
 
-                {/* Viewer - phát tất cả các luồng camera trọng tài */}
                 <WebCamLiveViewer
                   raceId={selectedRace.id}
                   selectedBroadcasterId={selectedBroadcasterId}
@@ -509,7 +495,6 @@ export default function RefereeHub() {
   const [reportModalRaceId, setReportModalRaceId] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null);
 
-  // Tải dữ liệu bảng điều khiển (Dashboard) của trọng tài: gồm danh sách trận đấu được giao, số lượng đã hoàn thành, số lượng đang chờ.
   const fetchDashboard = () => {
     if (!user) return;
     setLoading(true);
@@ -523,35 +508,27 @@ export default function RefereeHub() {
       .finally(() => setLoading(false));
   };
 
-  // Tải lại bảng điều khiển mỗi khi người dùng đăng nhập/thay đổi tài khoản trọng tài
   useEffect(() => {
     fetchDashboard();
   }, [user]);
 
-  // Kích hoạt giao diện Kiểm duyệt tiền trận đấu (Pre-Race Check) cho cuộc đua được chọn
   const handleStartCheck = async (race: any) => {
     setSelectedRace(race);
     setLoading(true);
     try {
-      // Tự động gọi API tính toán lại mốc Handicap & Carried Weight chuẩn trước khi mở giao diện kiểm tra cân
       await api.post(`/admin/races/${race.id}/recalculate-weights`).catch(() => {});
 
-      // Lấy danh sách lượt chạy đã đăng ký cho cuộc đua
       const data = await api.get<any[]>(`/public/results?raceId=${race.id}`);
       setRaceEntries(data || []);
       
-      // Khởi tạo trạng thái cân nặng đo được và trạng thái kiểm duyệt y tế
       const wMap: Record<number, string> = {};
       const vMap: Record<number, string> = {};
       data.forEach((item: any) => {
-        // Mặc định gán cân nặng mang theo quy định của ban tổ chức (carriedWeight)
         wMap[item.entry.id] = (item.entry.carriedWeight || item.jockey?.weight || 52.0).toString();
-        // Mặc định trạng thái y tế là Đạt kiểm duyệt (CLEARED)
         vMap[item.entry.id] = "CLEARED";
       });
       setWeighedWeights(wMap);
       setVetChecks(vMap);
-      // Chuyển chế độ xem sang biểu mẫu kiểm duyệt tiền trận
       setActiveView("check");
     } catch (err) {
       alert("Failed to load race entries.");
@@ -560,30 +537,26 @@ export default function RefereeHub() {
     }
   };
 
-  // Xác nhận hoàn thành Pre-Check (Kiểm duyệt an toàn & Cân nặng Weigh-out trước trận đấu)
   const handleConfirmCheck = async () => {
     if (!selectedRace) return;
     setLoading(true);
     try {
 
-      // 1. Kiểm tra số lượng chiến mã thực tế tham gia (loại bỏ các ngựa bị SCRATCH)
       const activeCount = raceEntries.filter(item => vetChecks[item.entry.id] !== "SCRATCH").length;
       const minEntries = selectedRace.minEntries || 3;
-      // Trả lỗi nếu không đủ số lượng ngựa chạy tối thiểu
       if (activeCount < minEntries) {
         alert('Cannot confirm pre-check. Active entries count (' + activeCount + ') is below the minimum required (' + minEntries + ') for this race.');
         setLoading(false);
         return;
       }
       
-      // 2. Kiểm duyệt cân nặng Weigh-out của từng nài ngựa
       for (const item of raceEntries) {
         const entryId = item.entry.id;
         const isScratched = vetChecks[entryId] === "SCRATCH";
-        if (isScratched) continue; // Bỏ qua ngựa bị loại vì lý do y tế
+        if (isScratched) continue;
 
-        const reqWeight = item.entry.carriedWeight || 52.0; // Cân nặng yêu cầu của ban tổ chức
-        const weighed = parseFloat(weighedWeights[entryId]); // Cân nặng đo thực tế
+        const reqWeight = item.entry.carriedWeight || 52.0;
+        const weighed = parseFloat(weighedWeights[entryId]);
         if (isNaN(weighed)) {
           alert(`Please enter a valid weight for horse "${item.horse?.name}".`);
           setLoading(false);
@@ -591,13 +564,11 @@ export default function RefereeHub() {
         }
 
         const diff = weighed - reqWeight;
-        // Trả lỗi nếu thiếu cân so với yêu cầu
         if (diff < 0) {
           alert(`Cannot confirm pre-check. Horse "${item.horse?.name}" is underweight (weighed ${weighed} kg, required ${reqWeight} kg). Jockey must add lead weights to match required weight, or horse must be scratched.`);
           setLoading(false);
           return;
         }
-        // Trả lỗi nếu quá cân vượt giới hạn an toàn cho phép là +1.0kg
         if (diff > 1.0) {
           notify(`Cannot confirm pre-check. Horse "${item.horse?.name}" is too overweight (+${diff.toFixed(1)} kg, limit is +1.0 kg). Jockey weight must be corrected, or horse must be scratched.`, "error");
           setLoading(false);
@@ -605,13 +576,11 @@ export default function RefereeHub() {
         }
       }
 
-      // Xây dựng danh sách kỵ sĩ - chiến mã sẵn sàng gửi lên máy chủ
       const payloadEntries = raceEntries.map((item: any) => ({
         entryId: item.entry.id,
         weighOutWeight: parseFloat(weighedWeights[item.entry.id]),
         status: vetChecks[item.entry.id] === "SCRATCH" ? "REJECTED" : "APPROVED",
       }));
-      // Gửi yêu cầu hoàn thành pre-check lên API
       await api.post("/referee/pre-check", {
         raceId: selectedRace.id,
         entries: payloadEntries,
@@ -626,13 +595,11 @@ export default function RefereeHub() {
     }
   };
 
-  // Trọng tài ra lệnh Bắt đầu trận đấu (Mở cổng xuất phát)
   const handleStartRace = async (race: any) => {
     setLoading(true);
     try {
       await api.post(`/referee/races/${race.id}/start`);
       notify("Race started successfully. Now monitoring live!", "success");
-      // Chuyển thẳng sang phân hệ Giám sát trực tiếp (Live Supervision)
       handleStartSupervise({ ...race, status: "RUNNING" });
     } catch (err: any) {
       notify(getErrMsg(err, "Failed to start race: "), "error");
@@ -640,11 +607,9 @@ export default function RefereeHub() {
     }
   };
 
-  // Kích hoạt giao diện Giám sát trực tiếp (Live Supervision)
   const handleStartSupervise = async (race: any) => {
     setLoading(true);
     try {
-      // Gọi đồng thời thông tin kết quả thi đấu, danh sách vi phạm và thông tin trận đua để làm giàu giao diện
       const [entriesData, violationsData, allRacesData] = await Promise.all([
         api.get<any[]>(`/public/results?raceId=${race.id}`),
         api.get<any[]>(`/public/violations?raceId=${race.id}`).catch(() => []),
@@ -713,7 +678,6 @@ export default function RefereeHub() {
     }
   };
 
-  // Gửi sự cố / vi phạm luật đua (Rules Violation) của nài/ngựa lên API
   const handleSaveViolation = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRace || !violRunner) return;
@@ -722,7 +686,7 @@ export default function RefereeHub() {
     let finalPenalty = isSevereDq ? "DISQUALIFIED (DQ)" : "OFFICIAL_WARNING";
     if (fineAmount && Number(fineAmount) > 0) {
       const fineVal = Math.round(Number(fineAmount));
-      const formattedFine = (fineTarget === "owner" ? "Owner Fine " : "Fine ") + fineVal + " VNĐ";
+      const formattedFine = (fineTarget === "owner" ? "Owner Fine " : "Fine ") + fineVal + " VND";
       finalPenalty = isSevereDq ? `${formattedFine} + DISQUALIFIED (DQ)` : formattedFine;
     } else if (violPenalty.trim()) {
       finalPenalty = isSevereDq ? `${violPenalty.trim()} + DISQUALIFIED (DQ)` : violPenalty.trim();
@@ -752,7 +716,6 @@ export default function RefereeHub() {
     }
   };
 
-  // Trọng tài ra lệnh dừng khẩn cấp trận đấu (Dừng hẳn và hủy cuộc đua, chuyển trạng thái sang CANCELLED)
   const handleStopRace = async (stewardReport: string) => {
     if (!selectedRace) return;
     setLoading(true);
@@ -768,7 +731,6 @@ export default function RefereeHub() {
     }
   };
 
-  // Trọng tài ra lệnh tạm hoãn cuộc đua (Tạm hoãn và chuyển trạng thái sang STOPPED)
   const handleSuspendRace = async (stewardReport: string) => {
     if (!selectedRace) return;
     setLoading(true);
@@ -781,14 +743,12 @@ export default function RefereeHub() {
         setCompletedCount(dashboardRes.completedCount || 0);
         setPendingCount(dashboardRes.pendingCount || 0);
         const updatedRace = (dashboardRes.assignedRaces || []).find((r: any) => r.id === selectedRace.id);
-        // Tải lại view giám sát với trạng thái STOPPED mới
         if (updatedRace) {
           handleStartSupervise(updatedRace);
         } else {
           fetchDashboard();
         }
       } else {
-        // Nếu không có user.id, chỉ cập nhật lại selectedRace status cục bộ rồi reload
         setSelectedRace((prev: any) => prev ? { ...prev, status: "STOPPED" } : prev);
         setLoading(false);
       }
@@ -798,7 +758,6 @@ export default function RefereeHub() {
     }
   };
 
-  // Trọng tài ra lệnh khôi phục cuộc đua (Tiếp tục chạy lại và chuyển trạng thái sang RUNNING)
   const handleResumeRace = async () => {
     if (!selectedRace || !user) return;
     setLoading(true);
@@ -821,7 +780,6 @@ export default function RefereeHub() {
     }
   };
 
-  // Kích hoạt giao diện Nhập kết quả chung cuộc (Confirm Results View)
   const handleStartConfirmResults = () => {
     if (!selectedRace) return;
     const posMap: Record<number, string> = {};
@@ -829,14 +787,12 @@ export default function RefereeHub() {
     const wMap: Record<number, string> = {};
     const dqMap: Record<number, boolean> = {};
 
-    // 1. Quét danh sách vi phạm để tìm ra những chiến mã bị phạt truất quyền thi đấu (DISQUALIFIED)
     const dqHorseIds = new Set<number>(
       violations
         .filter((v: any) => v.violation?.penalty === "DISQUALIFIED")
         .map((v: any) => v.horseId)
     );
 
-    // 2. Khởi tạo giá trị ban đầu cho các ô nhập thứ hạng, thời gian và cân nặng sau đua (Weigh-In)
     raceEntries.forEach((item: any) => {
       const isAlreadyDq =
         item.entry.status === "DISQUALIFIED" ||
@@ -851,30 +807,25 @@ export default function RefereeHub() {
     setWeighInWeights(wMap);
     setDisqualifiedList(dqMap);
     setStewardReport("");
-    // Chuyển sang biểu mẫu Nhập kết quả chung cuộc
     setActiveView("confirm");
   };
 
-  // Xác nhận và phê duyệt công bố Kết quả chính thức cho cuộc đua
   const handleConfirmResults = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRace) return;
     setLoading(true);
     try {
       
-      // 1. Ràng buộc biểu thức thời gian và thứ hạng của các chiến mã đạt chuẩn (không bị DQ)
       for (const item of raceEntries) {
         const entryId = item.entry.id;
         const isDq = disqualifiedList[entryId] || item.entry.status === "DISQUALIFIED";
         if (!isDq) {
           const time = finishTimes[entryId];
-          // Trả lỗi nếu để trống thời gian chạy của ngựa về đích
           if (!time || !time.trim()) {
             notify("Please enter finishing time for horse \"" + (item.horse ? item.horse.name : "") + "\" or mark as DQ.", "error");
             setLoading(false);
             return;
           }
-          // Yêu cầu nhập đúng định dạng mm:ss hoặc mm:ss.ms (số giây từ 00 đến 59)
           if (!/^\d+:[0-5]\d(\.\d{1,3})?$/.test(time.trim())) {
             notify(`Finishing time for horse "${item.horse?.name}" is invalid (${time}). Seconds must be between 00 and 59 (e.g. 1:48.35 or 1:05).`, "error");
             setLoading(false);
@@ -895,7 +846,6 @@ export default function RefereeHub() {
         }
       }
 
-      // Xây dựng payload để đẩy lên máy chủ
       const resultsPayload = raceEntries.map((item: any) => {
         const entryId = item.entry.id;
         const isDq = disqualifiedList[entryId];
@@ -907,7 +857,6 @@ export default function RefereeHub() {
         };
       });
 
-      // POST kết quả chung cuộc và báo cáo của Trọng tài (Steward Report)
       await api.post("/referee/results", {
         raceId: selectedRace.id,
         stewardReport,
@@ -945,7 +894,6 @@ export default function RefereeHub() {
 
   const renderGlobalModals = () => (
     <>
-      {/* Modal nhập lý do Steward's Report khi Tạm hoãn hoặc Dừng khẩn cấp */}
       {reasonModal && createPortal(
         <div style={{ position: "fixed", inset: 0, zIndex: 100000, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem" }}>
           <div style={{ background: "#12141a", border: "1px solid rgba(201,162,39,0.3)", borderRadius: "0.75rem", padding: "1.5rem", width: "100%", maxWidth: "28rem" }}>
@@ -1672,7 +1620,7 @@ export default function RefereeHub() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Fine Amount (VNĐ)</label>
+                    <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Fine Amount (VND)</label>
                     <input type="number" min="0" step="any" value={fineAmount} onChange={e => setFineAmount(e.target.value)} placeholder="50000" style={{ width: "100%", padding: "0.5rem", outline: "none", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#4ade80", fontWeight: "bold", borderRadius: "0.375rem", fontFamily: "monospace" }} />
                   </div>
                 </div>
@@ -1680,7 +1628,7 @@ export default function RefereeHub() {
                 {violRunner && fineAmount && Number(fineAmount) > 0 && (
                   <div style={{ fontSize: "10px", color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.08)", padding: "0.5rem 0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(251,191,36,0.2)" }}>
                     💳 <strong>Financial Deduction Preview:</strong><br />
-                    {Math.round(Number(fineAmount)).toLocaleString('en-US')} VNĐ will be automatically deducted from {fineTarget === "jockey" ? `Jockey ${sortedEntries.find(i => `${i.horse.id}-${i.jockey.id}` === violRunner)?.jockey?.username}'s wallet` : `Horse Owner's wallet`}.
+                    {Math.round(Number(fineAmount)).toLocaleString('en-US')} VND will be automatically deducted from {fineTarget === "jockey" ? `Jockey ${sortedEntries.find(i => `${i.horse.id}-${i.jockey.id}` === violRunner)?.jockey?.username}'s wallet` : `Horse Owner's wallet`}.
                   </div>
                 )}
 

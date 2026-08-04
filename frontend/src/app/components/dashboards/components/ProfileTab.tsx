@@ -7,15 +7,12 @@ interface Props {
   roleLabel: string;
 }
 
-// ── Component hiển thị Tab Hồ sơ cá nhân ──────────────────────────────
 export default function ProfileTab({ roleColor, roleLabel }: Props) {
-  const { user, setUser } = useAuth(); // Quản lý thông tin đăng nhập
+  const { user, setUser } = useAuth();
   
-  // State phục vụ việc responsive
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
   
-  // Lắng nghe kích thước màn hình
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -26,17 +23,15 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
   
-  // Khởi tạo các state thông tin cá nhân
-  const [fullName, setFullName] = useState(user?.fullName || user?.username || ""); // Họ và tên
-  const [email, setEmail] = useState(user?.email || ""); // Địa chỉ Email
-  const [weight, setWeight] = useState(user?.weight?.toString() || ""); // Cân nặng
-  const [biography, setBiography] = useState(user?.biography || ""); // Tiểu sử
-  const [avatar, setAvatar] = useState(user?.avatar || ""); // Ảnh đại diện
-  const [profileLoading, setProfileLoading] = useState(false); // Trạng thái đang tải
-  const [profileMsg, setProfileMsg] = useState(""); // Thông báo cập nhật thành công
-  const [profileErr, setProfileErr] = useState(""); // Thông báo cập nhật lỗi
+  const [fullName, setFullName] = useState(user?.fullName || user?.username || "");
+  const [email, setEmail] = useState(user?.email || "");
+  const [weight, setWeight] = useState(user?.weight?.toString() || "");
+  const [biography, setBiography] = useState(user?.biography || "");
+  const [avatar, setAvatar] = useState(user?.avatar || "");
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [profileMsg, setProfileMsg] = useState("");
+  const [profileErr, setProfileErr] = useState("");
 
-  // State cho tính năng OTP/2FA
   const [otpEnabled, setOtpEnabled] = useState<boolean>(user?.requireOtp ?? false);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMsg, setOtpMsg] = useState("");
@@ -195,10 +190,10 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     marginBottom: "0.5rem", textTransform: "uppercase", letterSpacing: "1px", fontFamily: "'Outfit', 'Inter', sans-serif"
   };
 
-  const displayRoleLabel = roleLabel === "Horse Owner" || roleLabel === "Chủ ngựa" ? "HORSE OWNER" 
-    : roleLabel === "Jockey" || roleLabel === "Nài ngựa" ? "JOCKEY" 
-    : roleLabel === "Admin" || roleLabel === "Quản trị viên" ? "ADMIN"
-    : roleLabel === "Referee" || roleLabel === "Trọng tài" ? "REFEREE"
+  const displayRoleLabel = roleLabel === "Horse Owner" || roleLabel === "Horse Owner" ? "HORSE OWNER" 
+    : roleLabel === "Jockey" || roleLabel === "Jockey" ? "JOCKEY" 
+    : roleLabel === "Admin" || roleLabel === "Admin" ? "ADMIN"
+    : roleLabel === "Referee" || roleLabel === "Referee" ? "REFEREE"
     : roleLabel.toUpperCase();
 
   return (

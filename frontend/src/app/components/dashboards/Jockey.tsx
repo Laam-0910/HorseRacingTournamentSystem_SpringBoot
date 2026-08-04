@@ -1,20 +1,11 @@
-// Import các hook useState và useEffect từ React
 import { useState, useEffect } from "react";
-// Import các hàm hỗ trợ định dạng ngày tháng
 import { parseSafeDate, formatDateTime, formatDate } from "../../utils/dateTimeHelper";
-// Import hook useAuth từ ngữ cảnh AuthContext
 import { useAuth } from "../../../context/AuthContext";
-// Import api client và hàm lấy thông báo lỗi getErrMsg
 import { api, getErrMsg } from "../../../lib/api";
-// Import hàm đa ngôn ngữ $t
 import { $t } from "../../../lib/i18n";
-// Import khung bố cục DashboardLayout
 import DashboardLayout from "../layout/DashboardLayout";
-// Import ProfileTab hiển thị thông tin cá nhân
 import ProfileTab from "./components/ProfileTab";
-// Import ProfileModal hiển thị popup thông tin người dùng
 import ProfileModal from "./components/ProfileModal";
-// Import HorsePerformanceModal hiển thị thông số thành tích ngựa
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import ViewLive from "./components/ViewLive";
 import UserWalletView from "./components/UserWalletView";
@@ -22,13 +13,10 @@ import NotificationCenterView from "./components/NotificationCenterView";
 import { Pagination } from "../common/Pagination";
 import ActionModal, { ActionModalState } from "../common/ActionModal";
 
-// Định nghĩa các Tab giao diện khả dụng trong Dashboard của Jockey
 type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "live" | "wallet" | "profile" | "notifications";
 
-// Mã màu xanh đặc trưng làm giao diện chủ đạo cho kỵ sĩ Jockey
 const ROLE_COLOR = "#3b82c4";
 
-// Cấu hình các nút điều hướng sidebar dành cho Jockey
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: $t("Jockey Hub", (localStorage.getItem('app-lang') || 'en')),          view: "hub"         },
   { index: "02", icon: "wallet",           label: $t("Wallet & Transactions", (localStorage.getItem('app-lang') || 'en')), view: "wallet"      },
@@ -40,10 +28,8 @@ const NAV_ITEMS = [
   { index: "08", icon: "tv",               label: $t("Live Stream Arena", (localStorage.getItem('app-lang') || 'en')),   view: "live"        },
 ];
 
-// ── Sub-views (Các Component hiển thị giao diện con) ──────────────────────────
 
 /**
- * Component StatsCard - Thẻ thống kê số lượng đơn giản
  */
 function StatsCard({ label, value, color }: { label: string; value: any; color?: string }) {
   return (
@@ -55,7 +41,6 @@ function StatsCard({ label, value, color }: { label: string; value: any; color?:
 }
 
 /**
- * Component StatusBadge - Huy hiệu hiển thị trạng thái phê duyệt (Đã duyệt, Từ chối, Đang chờ...)
  */
 function StatusBadge({ status }: { status: string }) {
   const s = status?.toUpperCase() ?? "PENDING";
@@ -108,9 +93,6 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 /**
- * Component HubView - Tab Tổng quan chính của Jockey.
- * Hiển thị số liệu hiệu suất thi đấu cá nhân (số lượt cưỡi, số trận thắng, top 3, tỉ lệ thắng)
- * và danh sách đăng ký tham gia các Ngày hội đua sắp tới.
  */
 function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void; user: any; onSwitchTab?: (tab: string) => void }) {
   const walletBal = user?.walletBalance !== undefined && user?.walletBalance !== null ? Number(user.walletBalance) : 0;
@@ -125,7 +107,6 @@ function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashb
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {/* Khối Thẻ Thống kê hiệu suất & Ví Tiền */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "1rem" }}>
         <StatsCard label="💰 Wallet Balance" value={`${walletBal.toLocaleString('en-US')} VND`} color="#fbbf24" />
         <StatsCard label={$t("Total Rides", (localStorage.getItem('app-lang') || 'en'))}     value={dashboard?.jockeyStats?.totalRaces} />
@@ -173,12 +154,11 @@ function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashb
           </div>
           <div style={{ fontSize: "0.75rem" }}>
             <span style={{ color: "#4ade80", fontWeight: 600 }}>🏇 Jockey Hire Fee:</span>
-            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Mount hire fee (500,000 VNĐ) is credited directly to your wallet upon accepting an invitation.</p>
+            <p style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.7rem", marginTop: "2px" }}>Mount hire fee (500,000 VND) is credited directly to your wallet upon accepting an invitation.</p>
           </div>
         </div>
       </div>
 
-      {/* Danh sách ngày hội đua đang mở đăng ký */}
       <div>
         <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>{$t("Available Race Meetings", (localStorage.getItem('app-lang') || 'en'))}</h3>
         <p style={{ fontSize: "0.75rem", color: "#a0a0a0", marginBottom: "1rem" }}>{$t("Register for race meetings to make yourself available for stable hire invitations.", (localStorage.getItem('app-lang') || 'en'))}</p>
@@ -202,9 +182,8 @@ function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashb
                       <span>📅 {formatDate(m.startDate || m.date)}</span>
                     </div>
                     <div style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", background: "rgba(52,211,153,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(52,211,153,0.2)" }}>
-                      🎟️ <strong>Race Meeting Registration Fee:</strong> <span style={{ color: "#4ade80", fontWeight: "bold" }}>FREE (0 VNĐ - Jockey)</span>
+                      🎟️ <strong>Race Meeting Registration Fee:</strong> <span style={{ color: "#4ade80", fontWeight: "bold" }}>FREE (0 VND - Jockey)</span>
                     </div>
-                    {/* Hiển thị nút đăng ký hoặc dòng trạng thái đã đăng ký */}
                     {isReg && regStatus === "REJECTED" ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                         <p style={{ fontSize: "0.65rem", color: "#ef4444", fontFamily: "monospace", fontStyle: "italic" }}>
@@ -250,8 +229,6 @@ function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashb
 }
 
 /**
- * Component MountsView - Quản lý hiển thị lịch trình các lượt cưỡi ngựa của Jockey.
- * Hiển thị mã lượt đua, chiến mã sẽ điều khiển, số cổng xuất phát và cân nặng mang theo.
  */
 function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: boolean; onViewHorse: (horse: { id: number; name: string }) => void }) {
   const [isMobile, setIsMobile] = useState(false);
@@ -276,7 +253,6 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
   const startIndex = (validPage - 1) * pageSize;
   const paginatedMounts = mounts.slice(startIndex, startIndex + pageSize);
 
-  // Hiển thị bố cục dạng thẻ (card) trên Mobile
   if (isMobile) {
     return (
       <div>
@@ -341,7 +317,6 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
     );
   }
 
-  // Hiển thị bố cục dạng Bảng (table) trên màn hình lớn Desktop
   return (
     <div>
       <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "1rem" }}>{title}</h3>
@@ -363,7 +338,6 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
               <tr key={i} style={{ borderBottom: "1px solid rgba(42,40,37,0.5)" }}>
                 <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", color: "#a0a0a0" }}>#{m.raceId}</td>
                 <td style={{ padding: "0.75rem 1rem", fontWeight: 700, color: "#f4f2ec" }}>
-                  {/* Click mở modal thông tin chi tiết của Horse */}
                   <button
                     type="button"
                     onClick={() => onViewHorse({ id: m.horseId, name: m.horseName || `Horse #${m.horseId}` })}
@@ -406,8 +380,6 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
 }
 
 /**
- * Component InvitationsView - Danh sách các Lời mời thuê nài ngựa từ phía các Chủ chuồng.
- * Hỗ trợ Jockey chấp nhận (Accept) hoặc từ chối (Reject) các lời mời này.
  */
 function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onViewHorse, refereesMap }: { 
   invitations: any[]; 
@@ -423,7 +395,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
   const [currentPage, setCurrentPage] = useState<number>(1);
   const pageSize = 8;
 
-  // Helper xác định trạng thái thực tế của bản ghi
   const getItemStatus = (inv: any) => {
     if (inv.status === "PENDING") return "PENDING";
     if (inv.status === "REJECTED") return "REJECTED";
@@ -438,7 +409,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
     return inv.status ? inv.status.toUpperCase() : "OTHER";
   };
 
-  // Tính số lượng từng trạng thái
   const counts = {
     ALL: invitations.length,
     PENDING: invitations.filter(i => getItemStatus(i) === "PENDING").length,
@@ -448,9 +418,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
     FINISHED: invitations.filter(i => getItemStatus(i) === "FINISHED" || getItemStatus(i) === "OFFICIAL").length,
   };
 
-  // Filter dữ liệu theo trạng thái và từ khóa tìm kiếm (tên giải đấu, chủ ngựa, tên ngựa, venue...)
   const filteredList = invitations.filter((inv: any) => {
-    // 1. Kiểm tra bộ lọc trạng thái
     const st = getItemStatus(inv);
     let matchesStatus = true;
     if (filter === "PENDING") matchesStatus = st === "PENDING";
@@ -461,7 +429,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
 
     if (!matchesStatus) return false;
 
-    // 2. Kiểm tra tìm kiếm theo từ khóa
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
     const meetingMatch = (inv.meetingName || "").toLowerCase().includes(q);
@@ -474,7 +441,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
     return meetingMatch || ownerMatch || horseMatch || venueMatch || classMatch || idMatch;
   });
 
-  // Phân trang
   const totalPages = Math.max(1, Math.ceil(filteredList.length / pageSize));
   const pageIndex = Math.min(currentPage, totalPages);
   const startIndex = (pageIndex - 1) * pageSize;
@@ -488,22 +454,22 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
   const t = {
     title: $t("Jockey Ride Invitations & Applications", (localStorage.getItem('app-lang') || 'en')),
     subTitle: $t("Manage incoming ride offers from stable owners and track your accepted race registration status.", (localStorage.getItem('app-lang') || 'en')),
-    noOffers: lang === "vi" ? "Không tìm thấy lời mời hoặc đơn đăng ký phù hợp với bộ lọc." : "No invitations found matching the selected filter.",
+    noOffers: lang === "vi" ? "No invitations or entries found matching the selected filter." : "No invitations found matching the selected filter.",
     offerFrom: $t("Offer from Stable Owner ", (localStorage.getItem('app-lang') || 'en')),
     horse: $t("Horse", (localStorage.getItem('app-lang') || 'en')),
     status: $t("Status", (localStorage.getItem('app-lang') || 'en')),
-    entryStatus: lang === "vi" ? "Trạng thái đơn:" : "Entry Status:",
+    entryStatus: lang === "vi" ? "Entry Status:" : "Entry Status:",
     accept: $t("Accept Offer", (localStorage.getItem('app-lang') || 'en')),
     reject: $t("Reject", (localStorage.getItem('app-lang') || 'en')),
   };
 
   const filterTabs = [
-    { key: "ALL", label: lang === "vi" ? `Tất cả (${counts.ALL})` : `All (${counts.ALL})` },
-    { key: "PENDING", label: lang === "vi" ? `Lời mời đang chờ (${counts.PENDING})` : `Pending (${counts.PENDING})` },
-    { key: "PENDING_ADMIN", label: lang === "vi" ? `Chờ Admin duyệt (${counts.PENDING_ADMIN})` : `Pending Admin (${counts.PENDING_ADMIN})` },
-    { key: "APPROVED", label: lang === "vi" ? `Đã duyệt (${counts.APPROVED})` : `Approved (${counts.APPROVED})` },
-    { key: "REJECTED", label: lang === "vi" ? `Từ chối (${counts.REJECTED})` : `Rejected (${counts.REJECTED})` },
-    { key: "FINISHED", label: lang === "vi" ? `Đã đua xong (${counts.FINISHED})` : `Finished (${counts.FINISHED})` },
+    { key: "ALL", label: `All (${counts.ALL})` },
+    { key: "PENDING", label: `Pending (${counts.PENDING})` },
+    { key: "PENDING_ADMIN", label: `Pending Admin (${counts.PENDING_ADMIN})` },
+    { key: "APPROVED", label: `Approved (${counts.APPROVED})` },
+    { key: "REJECTED", label: `Rejected (${counts.REJECTED})` },
+    { key: "FINISHED", label: `Finished (${counts.FINISHED})` },
   ];
 
   return (
@@ -513,12 +479,10 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
         <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>{t.subTitle}</p>
       </div>
 
-      {/* Thanh tìm kiếm và Bộ lọc trạng thái (Search & Filter Bar) */}
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "0.75rem" }}>
-        {/* Bộ lọc trạng thái trỏ xuống (Dropdown Filter) */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <span style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", fontWeight: 700 }}>
-            {lang === "vi" ? "Bộ lọc:" : "Filter:"}
+            {lang === "vi" ? "Filter:" : "Filter:"}
           </span>
           <select
             value={filter}
@@ -544,7 +508,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
           </select>
         </div>
 
-        {/* Ô tìm kiếm tên giải đấu (Spring Grand Prix 2026...), tên chủ ngựa, tên ngựa */}
         <div style={{ position: "relative", minWidth: "260px", flex: "1", maxWidth: "340px" }}>
           <input
             type="text"
@@ -604,7 +567,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                         )}
                       </div>
                       <div>
-                        {/* Tên chủ chuồng click để xem Profile */}
                         <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec", margin: 0, fontSize: "0.95rem" }}>
                           {t.offerFrom}{" "}
                           <button 
@@ -615,7 +577,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                             {inv.ownerFullName || inv.ownerName || `#${inv.ownerId}`}
                           </button>
                         </h4>
-                        {/* Ngựa được mời điều khiển click để xem chi tiết thông số */}
                         <p style={{ fontSize: "0.8rem", color: "#f4f2ec", margin: "2px 0 0 0" }}>
                           <strong>{t.horse}:</strong>{" "}
                           <button 
@@ -642,10 +603,9 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                     </p>
                   )}
                   <p style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", fontWeight: 700, marginTop: "0.25rem" }}>
-                    💰 {lang === "vi" ? "Tỷ lệ chia thưởng được hưởng:" : "Offered Prize Share:"} {inv.jockeyPrizePercentage ?? 20}%
+                    💰 {lang === "vi" ? "Offered Prize Share:" : "Offered Prize Share:"} {inv.jockeyPrizePercentage ?? 20}%
                   </p>
 
-                  {/* Trọng tài phân công cho trận đua */}
                   {refereesMap && refereesMap[inv.raceId] && refereesMap[inv.raceId].length > 0 && (
                     <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: "0.4rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                       <span style={{ color: "#c9a227", fontWeight: 700 }}>⚖️ {$t("Assigned Referee:", (localStorage.getItem('app-lang') || 'en'))}</span>
@@ -662,7 +622,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
 
                   <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem" }}>
                     <span style={{ color: "#a0a0a0" }}>{$t("Prize Share Offered:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#fbbf24", fontFamily: "monospace", fontSize: "0.85rem" }}>{inv.jockeyPrizePercentage ?? 20}%</strong></span>
-                    <span style={{ color: "#a0a0a0" }}>{$t("Hire Fee:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#4ade80", fontFamily: "monospace" }}>+{Number(inv.hireFee ?? 500).toLocaleString('en-US')} VNĐ</strong></span>
+                    <span style={{ color: "#a0a0a0" }}>{$t("Hire Fee:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#4ade80", fontFamily: "monospace" }}>+{Number(inv.hireFee ?? 500).toLocaleString('en-US')} VND</strong></span>
                   </div>
 
                   <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.7rem" }}>
@@ -673,7 +633,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                   </div>
                 </div>
 
-                {/* Nút chấp nhận hoặc từ chối lời mời nếu đang ở trạng thái PENDING */}
                 {isPending ? (
                   <div style={{ display: "flex", gap: "0.5rem" }}>
                     <button onClick={() => onAccept(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.accept}</button>
@@ -691,7 +650,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                 )}
                 <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.375rem" }}>
                   <div style={{ fontSize: "0.75rem", color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", border: "1px solid rgba(251,191,36,0.2)" }}>
-                    🤝 <strong>Jockey Hire Fee:</strong> {Number(inv.hireFee || 500000).toLocaleString('en-US')} VNĐ
+                    🤝 <strong>Jockey Hire Fee:</strong> {Number(inv.hireFee || 500000).toLocaleString('en-US')} VND
                   </div>
                 </div>
                 <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.25rem" }}>
@@ -703,12 +662,11 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
         </div>
       )}
 
-      {/* Thanh phân trang (Pagination controls) */}
       {filteredList.length > 0 && (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.08)", marginTop: "0.5rem", flexWrap: "wrap", gap: "0.75rem" }}>
           <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace" }}>
             {lang === "vi" 
-              ? `Hiển thị ${startIndex + 1} - ${Math.min(startIndex + pageSize, filteredList.length)} trong tổng số ${filteredList.length} kết quả`
+              ? `Showing ${startIndex + 1} - ${Math.min(startIndex + pageSize, filteredList.length)} of ${filteredList.length} results`
               : `Showing ${startIndex + 1} - ${Math.min(startIndex + pageSize, filteredList.length)} of ${filteredList.length} items`}
           </div>
 
@@ -728,7 +686,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                 fontWeight: 700
               }}
             >
-              ‹ {lang === "vi" ? "Trước" : "Prev"}
+              ‹ {lang === "vi" ? "Prev" : "Prev"}
             </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
@@ -777,7 +735,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
 }
 
 /**
- * Component hiển thị thông tin từng dòng cuộc đua (RaceRow) để hiển thị danh sách ngựa đã duyệt
  */
 function RaceRow({ race, refereesMap }: { race: any; refereesMap?: Record<number, any[]> }) {
   const [expanded, setExpanded] = useState(false);
@@ -789,7 +746,6 @@ function RaceRow({ race, refereesMap }: { race: any; refereesMap?: Record<number
       setLoading(true);
       api.get<any[]>(`/public/results?raceId=${race.id}`)
         .then(data => {
-          // Hiển thị các lượt đăng ký hợp lệ (APPROVED, RUNNING, FINISHED, STOPPED, OFFICIAL)
           const approved = data.filter((e: any) => e.entry?.status && e.entry?.status !== "REJECTED" && e.entry?.status !== "PENDING_ADMIN");
           setEntries(approved);
         })
@@ -868,7 +824,6 @@ function RaceRow({ race, refereesMap }: { race: any; refereesMap?: Record<number
 }
 
 /**
- * Component CalendarView - Biểu diễn lịch thi đấu công khai cho Jockey theo dõi
  */
 function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; allRaces: any[]; refereesMap?: Record<number, any[]> }) {
   const [page, setPage] = useState(1);
@@ -892,7 +847,6 @@ function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; al
 
             return (
               <div key={i} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.01)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>
-                {/* Tiêu đề Ngày hội đua */}
                 <div style={{ background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", padding: "1rem 1.25rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}>
                   <div>
                     <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
@@ -901,7 +855,6 @@ function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; al
                   <span style={{ fontSize: "0.6rem", fontFamily: "monospace", textTransform: "uppercase", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", background: `rgba(59,130,196,0.1)`, color: ROLE_COLOR }}>{ $t(m.status ?? "UPCOMING", (localStorage.getItem('app-lang') || 'en')) }</span>
                 </div>
 
-                {/* Danh sách các cuộc đua thuộc Ngày hội đua đó */}
                 <div style={{ padding: "0.75rem 1.25rem" }}>
                   {meetingRaces.length === 0 ? (
                     <p style={{ fontSize: "0.75rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace", padding: "0.5rem 0" }}>{$t("No races scheduled for this meeting.", (localStorage.getItem('app-lang') || 'en'))}</p>
@@ -929,8 +882,6 @@ function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; al
 }
 
 /**
- * Component ViolationsView - Khung quản lý hồ sơ vi phạm luật thi đấu của kỵ sĩ do trọng tài báo cáo.
- * Yêu cầu Jockey bấm "Acknowledge" (Xác nhận lỗi) để hoàn tất quy trình vi phạm.
  */
 export function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violations: any[]; onAcknowledge: (id: number) => void; onViewProfile?: (id: number) => void }) {
   const [isMobile, setIsMobile] = useState(false);
@@ -1087,36 +1038,29 @@ export function ViolationsView({ violations, onAcknowledge, onViewProfile }: { v
 
 // ── Main Component ────────────────────────────────────────────────────────────
 /**
- * Component Jockey - Bảng điều khiển chính của Nài Ngựa (Jockey).
- * Quản lý lịch trình cưỡi ngựa, chấp nhận/từ chối lời mời từ các chủ ngựa,
- * xác nhận vi phạm luật thi đấu và cập nhật thông tin kỵ sĩ cá nhân.
  */
 export default function Jockey() {
   const { user, setUser } = useAuth();
-  // State quản lý Modal xem hồ sơ cá nhân và Modal xem chỉ số ngựa
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
   const [selectedHorse, setSelectedHorse] = useState<{ id: number; name: string } | null>(null);
   
-  // Tab đang hoạt động, mặc định là "hub"
   const [activeTab, setActiveTab] = useState<JockeyTab>(() => {
     const tabParam = new URLSearchParams(window.location.search).get("tab");
     return (tabParam as JockeyTab) || "hub";
   });
   
-  // Các state lưu trữ dữ liệu API
-  const [dashboard, setDashboard] = useState<any>(null);      // Chỉ số hiệu suất tổng hợp
-  const [mounts, setMounts] = useState<any[]>([]);            // Lịch trình các lượt cưỡi ngựa
-  const [invitations, setInvitations] = useState<any[]>([]);  // Lời mời đang chờ từ chủ ngựa
-  const [meetings, setMeetings] = useState<any[]>([]);        // Thông tin các ngày hội đua
-  const [violations, setViolations] = useState<any[]>([]);    // Sự cố vi phạm luật bị ghi nhận
-  const [allRaces, setAllRaces] = useState<any[]>([]);        // Lịch đua chung hệ thống
-  const [refereesMap, setRefereesMap] = useState<Record<number, any[]>>({}); // Trọng tài được phân công
+  const [dashboard, setDashboard] = useState<any>(null);
+  const [mounts, setMounts] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<any[]>([]);
+  const [meetings, setMeetings] = useState<any[]>([]);
+  const [violations, setViolations] = useState<any[]>([]);
+  const [allRaces, setAllRaces] = useState<any[]>([]);
+  const [refereesMap, setRefereesMap] = useState<Record<number, any[]>>({});
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [actionModal, setActionModal] = useState<ActionModalState>({ isOpen: false, type: "success", title: "", message: "" });
 
-  // Tải đồng bộ dữ liệu của Jockey từ API backend
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
@@ -1150,7 +1094,6 @@ export default function Jockey() {
     fetchData(); 
   }, [user]);
 
-  // Hàm xử lý chấp thuận lời mời thuê cưỡi ngựa từ Chủ ngựa
   const handleAcceptInvite = async (id: number) => {
     try {
       await api.post(`/invitations/${id}/accept`);
@@ -1174,7 +1117,6 @@ export default function Jockey() {
     }
   };
 
-  // Hàm xử lý từ chối lời mời thuê cưỡi ngựa
   const handleRejectInvite = async (id: number) => {
     try {
       await api.post(`/invitations/${id}/reject`);
@@ -1198,7 +1140,6 @@ export default function Jockey() {
     }
   };
 
-  // Đăng ký tham gia Ngày hội đua đua ngựa
   const handleRegisterMeeting = async (meetingId: number) => {
     if (!user) return;
     try {
@@ -1208,7 +1149,6 @@ export default function Jockey() {
     } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to register for meeting.")); }
   };
 
-  // Xác nhận lỗi vi phạm quy chế thi đấu do Trọng tài ghi nhận
   const handleAcknowledgeViolation = async (violationId: number) => {
     try {
       await api.post(`/jockey/violations/${violationId}/confirm`);
@@ -1221,7 +1161,6 @@ export default function Jockey() {
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
   const pendingViolations = violations.filter(v => v.status === "PENDING").length;
 
-  // Lồng ghép thêm badge đếm số lượng thông báo đang chờ ở các mục sidebar tương ứng
   const navItemsWithBadge = NAV_ITEMS.map(n => {
     if (n.view === "invitations") return { ...n, badge: pendingInvitations };
     if (n.view === "violations") return { ...n, badge: pendingViolations };
@@ -1258,7 +1197,6 @@ export default function Jockey() {
         {renderContent()}
       </DashboardLayout>
       
-      {/* Các Modal phụ trợ xem thông tin Profile hoặc Ngựa */}
       {selectedProfileId !== null && (
         <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
       )}
