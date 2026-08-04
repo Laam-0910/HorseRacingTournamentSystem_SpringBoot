@@ -973,21 +973,6 @@ export default function Season() {
           </div>
         </div>
       )}
-
-      {/* Modal Edit Class Rules */}
-      {editingRulesSeason && (
-        <SeasonRulesEdit
-          seasonId={editingRulesSeason.id}
-          seasonName={editingRulesSeason.name}
-          onClose={() => setEditingRulesSeason(null)}
-          onSaved={() => {
-            fetchSeasons();
-            if (selectedSeasonId === editingRulesSeason.id) {
-              fetchRules(editingRulesSeason.id);
-            }
-          }}
-        />
-      )}
     </div>
   );
 }
