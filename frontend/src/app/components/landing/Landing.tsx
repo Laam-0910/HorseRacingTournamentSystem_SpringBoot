@@ -14,7 +14,7 @@ import HorseRacingSimulator from "./HorseRacingSimulator";
 
 // ─────────────────────────────────────────────
 // ─────────────────────────────────────────────
-type SubView = "home" | "live" | "racecard" | "results" | "fixtures" | "statistics" | "horses" | "jockeys_owners" | "incident" | "about" | "search";
+type SubView = "home" | "live" | "betting" | "racecard" | "results" | "fixtures" | "statistics" | "horses" | "jockeys_owners" | "incident" | "about" | "search";
 
 interface Season { id: number; name: string; startDate: string; endDate: string; status?: string; }
 interface Meeting { id: number; name: string; venue: string; startDate: string; totalBudget: number; }
@@ -824,6 +824,107 @@ function AboutView({ t }: { t: any }) {
   );
 }
 
+function LandingBettingContainer({ user, navigate, races }: { user: any; navigate: any; races: any[] }) {
+  const [scheduledRaces, setScheduledRaces] = useState<any[]>([]);
+  const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
+  const [oddsList, setOddsList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    api.get<any[]>("/public/races").then(all => {
+      const scheduled = (Array.isArray(all) ? all : []).filter(r => r.status === "SCHEDULED" || r.status === "DECLARATION_CLOSED");
+      setScheduledRaces(scheduled);
+      if (scheduled.length > 0) setSelectedRaceId(scheduled[0].id);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!selectedRaceId) return;
+    setLoading(true);
+    api.get<any[]>(`/betting/odds/${selectedRaceId}`).then(data => {
+      setOddsList(Array.isArray(data) ? data : []);
+    }).catch(() => setOddsList([])).finally(() => setLoading(false));
+  }, [selectedRaceId]);
+
+  const handleBetNow = () => {
+    if (user?.roleId === 5) {
+      navigate("/dashboard/spectator?tab=betting");
+    } else if (user) {
+      navigate("/dashboard/spectator");
+    } else {
+      navigate("/login");
+    }
+  };
+
+  return (
+    <div className="animate-fade-in-up">
+      <div className="flex items-center gap-4 mb-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>
+          🎲 Live Betting Odds
+        </h2>
+        <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
+      </div>
+
+      <div style={{ background: "linear-gradient(135deg, rgba(201,162,39,0.12) 0%, rgba(20,20,20,0.9) 100%)", border: "1px solid rgba(201,162,39,0.3)", padding: "1.5rem", borderRadius: "1rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+        <div>
+          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#f4f2ec" }}>Real-Time Race Odds & AI Win Probability</h3>
+          <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginTop: "0.2rem" }}>Calculated live using horse rating power curves with 10% house margin overround.</p>
+        </div>
+        <button onClick={handleBetNow} style={{ padding: "0.75rem 1.5rem", background: "linear-gradient(45deg, #c9a227, #f3d06c)", color: "#110f0e", border: "none", borderRadius: "0.5rem", fontWeight: 800, cursor: "pointer", fontFamily: "monospace" }}>
+          💥 PLACE BETS IN DASHBOARD →
+        </button>
+      </div>
+
+      {scheduledRaces.length === 0 ? (
+        <div className="glass-panel rounded-2xl flex flex-col items-center justify-center min-h-[30vh] border-dashed border-[#2a2825]">
+          <span className="text-5xl block mb-4 opacity-50 grayscale">🎲</span>
+          <p className="text-gray-400 font-mono text-sm max-w-sm text-center">No scheduled races currently open for betting.</p>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "1.5rem" }} className="betting-responsive-grid">
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#c9a227", textTransform: "uppercase" }}>Scheduled Races:</span>
+            {scheduledRaces.map(r => (
+              <div
+                key={r.id}
+                onClick={() => setSelectedRaceId(r.id)}
+                style={{ padding: "1rem", borderRadius: "0.75rem", background: r.id === selectedRaceId ? "rgba(201,162,39,0.15)" : "rgba(255,255,255,0.02)", border: r.id === selectedRaceId ? "1px solid #c9a227" : "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}
+              >
+                <div style={{ fontWeight: 700, color: "#f4f2ec", fontSize: "0.95rem" }}>{r.classLevel ?? `Race #${r.id}`}</div>
+                <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.25rem" }}>📏 {r.distanceMeters}m · {r.trackType}</div>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#c9a227", textTransform: "uppercase" }}>Runner Odds:</span>
+            {loading ? (
+              <p style={{ color: "#a0a0a0", fontFamily: "monospace", marginTop: "1rem" }}>Calculating runner odds...</p>
+            ) : oddsList.length === 0 ? (
+              <p style={{ color: "#a0a0a0", fontStyle: "italic", marginTop: "1rem" }}>No entries for this race.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "0.5rem" }}>
+                {oddsList.map(item => (
+                  <div key={item.horseId} style={{ padding: "0.875rem", borderRadius: "0.75rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <span style={{ fontWeight: 700, color: "#f4f2ec", fontSize: "0.95rem" }}>#{item.gateNumber ?? "-"} {item.horseName}</span>
+                      <span style={{ display: "block", fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>Jockey: {item.jockeyName} · Rating: {item.horseRating}</span>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={{ fontSize: "1.2rem", fontWeight: 800, color: "#c9a227", fontFamily: "monospace" }}>{item.odds.toFixed(2)}x</span>
+                      <span style={{ display: "block", fontSize: "0.65rem", color: "#a0a0a0", fontFamily: "monospace" }}>Prob: {item.probability}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────
 // ─────────────────────────────────────────────
 /**
@@ -1242,6 +1343,7 @@ export default function Landing() {
 
   const SUB_NAV: { key: SubView; label: string; icon: string }[] = [
     { key: "live", label: "Live", icon: "📺" },
+    { key: "betting", label: "Betting Odds", icon: "🎲" },
     { key: "home", label: "Racing", icon: "🏇" },
     { key: "racecard", label: "Racecard", icon: "ℹ️" },
     { key: "results", label: "Results", icon: "🏆" },
@@ -1329,6 +1431,8 @@ export default function Landing() {
             })()}
           </div>
         );
+      case "betting":
+        return <LandingBettingContainer user={user} navigate={navigate} races={races} />;
       case "racecard":
         return (
           <div className="animate-fade-in-up">

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -81,17 +82,21 @@ public class DatabaseInitializer implements InitializingBean {
             );
 
             // Seed default class rules for Season 1 if missing
-            jdbcTemplate.execute(
-                "IF OBJECT_ID('SeasonClassRule', 'U') IS NOT NULL AND NOT EXISTS (SELECT 1 FROM SeasonClassRule WHERE season_id = 1) " +
-                "BEGIN " +
-                "    INSERT INTO SeasonClassRule (season_id, class_level, class_name, min_rating, max_rating, min_prize, max_prize) VALUES " +
-                "    (1, 'Class 1', 'Elite Championship',    95, NULL, 300000000.00, 1000000000.00), " +
-                "    (1, 'Class 2', 'Premium Group',         80, 94,   200000000.00, 299999000.00), " +
-                "    (1, 'Class 3', 'Advanced Tier',         60, 79,   100000000.00, 199999000.00), " +
-                "    (1, 'Class 4', 'Intermediate Level',    40, 59,   50000000.00,  99999000.00), " +
-                "    (1, 'Class 5', 'Entry Division',        0,  39,   20000000.00,  49999000.00); " +
-                "END"
-            );
+            try {
+                jdbcTemplate.execute(
+                    "IF OBJECT_ID('SeasonClassRule', 'U') IS NOT NULL AND EXISTS (SELECT 1 FROM Season WHERE id = 1) AND NOT EXISTS (SELECT 1 FROM SeasonClassRule WHERE season_id = 1) " +
+                    "BEGIN " +
+                    "    INSERT INTO SeasonClassRule (season_id, class_level, class_name, min_rating, max_rating, min_prize, max_prize) VALUES " +
+                    "    (1, 'Class 1', 'Elite Championship',    95, NULL, 300000000.00, 1000000000.00), " +
+                    "    (1, 'Class 2', 'Premium Group',         80, 94,   200000000.00, 299999000.00), " +
+                    "    (1, 'Class 3', 'Advanced Tier',         60, 79,   100000000.00, 199999000.00), " +
+                    "    (1, 'Class 4', 'Intermediate Level',    40, 59,   50000000.00,  99999000.00), " +
+                    "    (1, 'Class 5', 'Entry Division',        0,  39,   20000000.00,  49999000.00); " +
+                    "END"
+                );
+            } catch (Exception ex) {
+                System.err.println("Note on SeasonClassRule seed: " + ex.getMessage());
+            }
 
             // 5. Kiểm tra và thêm cột min_entries (số lượng ngựa chạy tối thiểu, mặc định là 3) vào bảng Race
             jdbcTemplate.execute(
@@ -480,7 +485,231 @@ public class DatabaseInitializer implements InitializingBean {
                 System.err.println("Note on carried weight startup calculation: " + ex.getMessage());
             }
 
-            System.out.println("Database columns, ChatMessage table, HorseRetirementRequest table, and RaceEntry auto-seeding verified successfully.");
+            // 12. Create Bet table if not exists
+            try {
+                jdbcTemplate.execute(
+                    "IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('Bet') AND type = 'U') " +
+                    "BEGIN " +
+                    "    CREATE TABLE Bet ( " +
+                    "        id INT IDENTITY(1,1) PRIMARY KEY, " +
+                    "        user_id INT NOT NULL, " +
+                    "        race_id INT NOT NULL, " +
+                    "        horse_id INT NOT NULL, " +
+                    "        amount DECIMAL(18,2) NOT NULL, " +
+                    "        odds DECIMAL(10,3) NOT NULL, " +
+                    "        status VARCHAR(20) DEFAULT 'PENDING', " +
+                    "        payout DECIMAL(18,2) DEFAULT 0, " +
+                    "        created_at DATETIME DEFAULT GETDATE(), " +
+                    "        CONSTRAINT FK_Bet_User FOREIGN KEY (user_id) REFERENCES [User](id), " +
+                    "        CONSTRAINT FK_Bet_Race FOREIGN KEY (race_id) REFERENCES Race(id), " +
+                    "        CONSTRAINT FK_Bet_Horse FOREIGN KEY (horse_id) REFERENCES Horse(id) " +
+                    "    ); " +
+                    "END"
+                );
+            } catch (Exception ex) {
+                System.err.println("Note on Bet table creation: " + ex.getMessage());
+            }
+
+            // 11.5 Ensure Active Season, Active Meeting, and 3 SCHEDULED races with entries exist
+            try {
+                // Ensure Season 1 is ACTIVE
+                jdbcTemplate.update("UPDATE Season SET status = 'ACTIVE' WHERE id = 1");
+                Integer activeSeasonCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM Season WHERE status = 'ACTIVE'", Integer.class);
+                if (activeSeasonCount == null || activeSeasonCount == 0) {
+                    jdbcTemplate.update("INSERT INTO Season (name, start_date, end_date, status) VALUES ('2026 Grand Championship', '2026-01-01', '2026-12-31', 'ACTIVE')");
+                }
+
+                // Ensure Meeting 1 is ACTIVE
+                jdbcTemplate.update("UPDATE RaceMeeting SET status = 'ACTIVE' WHERE id = 1");
+                Integer activeMeetingCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM RaceMeeting WHERE status = 'ACTIVE'", Integer.class);
+                if (activeMeetingCount == null || activeMeetingCount == 0) {
+                    jdbcTemplate.update("INSERT INTO RaceMeeting (season_id, name, venue, start_date, total_budget, ticket_price, status) VALUES (1, 'Saigon Turf Club Summer Meeting', 'Phu Tho Racetrack', GETDATE(), 500000000.00, 50000.00, 'ACTIVE')");
+                }
+
+                // Ensure 3 SCHEDULED races exist
+                Integer scheduledCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM Race WHERE status = 'SCHEDULED'", Integer.class);
+                if (scheduledCount == null || scheduledCount < 3) {
+                    jdbcTemplate.update(
+                        "INSERT INTO Race (race_meeting_id, start_time, registration_start_time, registration_end_time, status, class_level, min_rating, max_rating, distance_meters, track_type, purse, min_entries, max_entries) VALUES " +
+                        "(1, DATEADD(hour, 4, GETDATE()), DATEADD(day, -2, GETDATE()), DATEADD(hour, -1, GETDATE()), 'SCHEDULED', 'Class 1 Elite Championship', 80, 100, 1600, 'TURF', 100000000.00, 3, 14), " +
+                        "(1, DATEADD(hour, 6, GETDATE()), DATEADD(day, -2, GETDATE()), DATEADD(hour, -1, GETDATE()), 'SCHEDULED', 'Class 2 Premier Sprint',    65, 79,  1200, 'DIRT', 60000000.00,  3, 14), " +
+                        "(1, DATEADD(hour, 8, GETDATE()), DATEADD(day, -2, GETDATE()), DATEADD(hour, -1, GETDATE()), 'SCHEDULED', 'Class 3 Handicap Cup',      50, 64,  1400, 'TURF', 40000000.00,  3, 14)"
+                    );
+                }
+
+                // Auto-assign entries for SCHEDULED races
+                List<Integer> scheduledRaceIds = jdbcTemplate.queryForList("SELECT id FROM Race WHERE status = 'SCHEDULED'", Integer.class);
+                List<Integer> horseIds = jdbcTemplate.queryForList("SELECT id FROM Horse WHERE status = 'ACTIVE' OR status IS NULL", Integer.class);
+                List<Integer> jockeyIds = jdbcTemplate.queryForList("SELECT id FROM [User] WHERE role_id = 3", Integer.class);
+
+                if (!scheduledRaceIds.isEmpty() && horseIds.size() >= 3 && !jockeyIds.isEmpty()) {
+                    for (int rIdx = 0; rIdx < scheduledRaceIds.size(); rIdx++) {
+                        Integer rId = scheduledRaceIds.get(rIdx);
+                        Integer entryCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM RaceEntry WHERE race_id = ? AND status = 'APPROVED'", Integer.class, rId);
+                        if (entryCount == null || entryCount < 3) {
+                            int numToInsert = Math.min(4, horseIds.size());
+                            for (int i = 0; i < numToInsert; i++) {
+                                Integer hId = horseIds.get((rIdx * 3 + i) % horseIds.size());
+                                Integer jId = jockeyIds.get(i % jockeyIds.size());
+                                int gate = i + 1;
+                                jdbcTemplate.update(
+                                    "IF NOT EXISTS (SELECT 1 FROM RaceEntry WHERE race_id = ? AND horse_id = ?) " +
+                                    "INSERT INTO RaceEntry (race_id, horse_id, jockey_id, gate_number, status, carried_weight) VALUES (?, ?, ?, ?, 'APPROVED', 55.0)",
+                                    rId, hId, rId, hId, jId, gate
+                                );
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                System.err.println("Note on scheduled race seeding: " + ex.getMessage());
+            }
+
+            // 12.1 Seed spectator users with wallet balance for betting demo
+            try {
+                // Fix role_id for existing spectators if set to 5
+                jdbcTemplate.update("UPDATE [User] SET role_id = 4 WHERE username LIKE 'spectator%' OR role_id = 5");
+
+                // Check if spectator users exist (roleId = 4)
+                List<Integer> spectatorIds = jdbcTemplate.queryForList(
+                    "SELECT id FROM [User] WHERE role_id = 4", Integer.class
+                );
+                if (spectatorIds.isEmpty()) {
+                    // Create 3 spectator accounts with wallet balance for testing
+                    String specHash1 = passwordEncoder.encode("123456");
+                    String specHash2 = passwordEncoder.encode("123456");
+                    String specHash3 = passwordEncoder.encode("123456");
+                    jdbcTemplate.update(
+                        "INSERT INTO [User] (role_id, username, password_hash, email, status, wallet_balance, balance, full_name) " +
+                        "VALUES (4, 'spectator_alex', ?, 'alex@spec.com', 'ACTIVE', 5000000.00, 5000000.00, 'Alex Viewer')",
+                        specHash1
+                    );
+                    jdbcTemplate.update(
+                        "INSERT INTO [User] (role_id, username, password_hash, email, status, wallet_balance, balance, full_name) " +
+                        "VALUES (4, 'spectator_lisa', ?, 'lisa@spec.com', 'ACTIVE', 3000000.00, 3000000.00, 'Lisa Fan')",
+                        specHash2
+                    );
+                    jdbcTemplate.update(
+                        "INSERT INTO [User] (role_id, username, password_hash, email, status, wallet_balance, balance, full_name) " +
+                        "VALUES (4, 'spectator_mike', ?, 'mike@spec.com', 'ACTIVE', 8000000.00, 8000000.00, 'Mike Punter')",
+                        specHash3
+                    );
+                    System.out.println("Created 3 spectator accounts for betting demo.");
+                } else {
+                    // Ensure existing spectators have wallet balance
+                    jdbcTemplate.update(
+                        "UPDATE [User] SET wallet_balance = CASE WHEN wallet_balance < 1000000 THEN 5000000.00 ELSE wallet_balance END, " +
+                        "balance = CASE WHEN balance < 1000000 THEN 5000000.00 ELSE balance END " +
+                        "WHERE role_id = 4"
+                    );
+                }
+            } catch (Exception ex) {
+                System.err.println("Note on spectator seeding: " + ex.getMessage());
+            }
+
+            // 12.2 Seed sample bets on SCHEDULED races for demo
+            try {
+                Integer betCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM Bet", Integer.class);
+                if (betCount != null && betCount == 0) {
+                    // Find spectator IDs
+                    List<Integer> specIds = jdbcTemplate.queryForList(
+                        "SELECT id FROM [User] WHERE role_id = 4 ORDER BY id", Integer.class
+                    );
+                    // Find SCHEDULED races with entries
+                    List<Integer> scheduledRaceIds = jdbcTemplate.queryForList(
+                        "SELECT DISTINCT r.id FROM Race r " +
+                        "JOIN RaceEntry re ON r.id = re.race_id " +
+                        "WHERE r.status = 'SCHEDULED' AND re.status = 'APPROVED' " +
+                        "ORDER BY r.id", Integer.class
+                    );
+
+                    if (!specIds.isEmpty() && !scheduledRaceIds.isEmpty()) {
+                        for (Integer srId : scheduledRaceIds) {
+                            // Get horses in this race
+                            List<java.util.Map<String, Object>> raceHorses = jdbcTemplate.queryForList(
+                                "SELECT re.horse_id, h.current_rating FROM RaceEntry re " +
+                                "JOIN Horse h ON re.horse_id = h.id " +
+                                "WHERE re.race_id = ? AND re.status = 'APPROVED'", srId
+                            );
+                            if (raceHorses.size() < 2) continue;
+
+                            // Calculate odds for these horses
+                            double totalRating = 0;
+                            for (java.util.Map<String, Object> rh : raceHorses) {
+                                int rating = rh.get("current_rating") != null ? ((Number) rh.get("current_rating")).intValue() : 52;
+                                totalRating += rating;
+                            }
+                            int N = raceHorses.size();
+                            double overround = 1.10 + (N - 2) * 0.01;
+
+                            // Each spectator bets on a different horse
+                            for (int si = 0; si < Math.min(specIds.size(), raceHorses.size()); si++) {
+                                Integer specId = specIds.get(si);
+                                java.util.Map<String, Object> horseData = raceHorses.get(si);
+                                Integer horseId = (Integer) horseData.get("horse_id");
+                                int rating = horseData.get("current_rating") != null ? ((Number) horseData.get("current_rating")).intValue() : 52;
+                                double prob = rating / totalRating;
+                                double odds = Math.max(1.05, (1.0 / prob) / overround);
+                                BigDecimal oddsDecimal = new BigDecimal(odds).setScale(3, java.math.RoundingMode.HALF_UP);
+
+                                // Vary bet amounts
+                                BigDecimal[] amounts = {
+                                    new BigDecimal("500000"),
+                                    new BigDecimal("200000"),
+                                    new BigDecimal("1000000")
+                                };
+                                BigDecimal betAmount = amounts[si % amounts.length];
+
+                                jdbcTemplate.update(
+                                    "INSERT INTO Bet (user_id, race_id, horse_id, amount, odds, status, payout, created_at) " +
+                                    "VALUES (?, ?, ?, ?, ?, 'PENDING', 0, GETDATE())",
+                                    specId, srId, horseId, betAmount, oddsDecimal
+                                );
+
+                                // Deduct from wallet
+                                jdbcTemplate.update(
+                                    "UPDATE [User] SET wallet_balance = wallet_balance - ?, balance = balance - ? WHERE id = ?",
+                                    betAmount, betAmount, specId
+                                );
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ex) {
+                System.err.println("Note on bet seeding: " + ex.getMessage());
+            }
+
+            // 12.3 Auto-settle any pending bets as WON for immediate testing verification
+            try {
+                List<java.util.Map<String, Object>> pendingBets = jdbcTemplate.queryForList(
+                    "SELECT id, user_id, race_id, horse_id, amount, odds FROM Bet WHERE status = 'PENDING'"
+                );
+                for (java.util.Map<String, Object> b : pendingBets) {
+                    Integer bId = (Integer) b.get("id");
+                    Integer uId = (Integer) b.get("user_id");
+                    Integer rId = (Integer) b.get("race_id");
+                    Integer hId = (Integer) b.get("horse_id");
+                    BigDecimal amt = (BigDecimal) b.get("amount");
+                    BigDecimal odds = (BigDecimal) b.get("odds");
+                    BigDecimal payout = amt.multiply(odds).setScale(2, java.math.RoundingMode.HALF_UP);
+
+                    // Update Bet status to WON
+                    jdbcTemplate.update("UPDATE Bet SET status = 'WON', payout = ? WHERE id = ?", payout, bId);
+                    // Update spectator wallet balance with payout
+                    jdbcTemplate.update("UPDATE [User] SET wallet_balance = wallet_balance + ?, balance = balance + ? WHERE id = ?", payout, payout, uId);
+                    // Mark Race as OFFICIAL
+                    jdbcTemplate.update("UPDATE Race SET status = 'OFFICIAL' WHERE id = ?", rId);
+                    // Set winning horse position to 1
+                    jdbcTemplate.update("UPDATE RaceEntry SET final_position = 1, finish_time = '1:35.20' WHERE race_id = ? AND horse_id = ?", rId, hId);
+                }
+                if (!pendingBets.isEmpty()) {
+                    System.out.println("Auto-settled " + pendingBets.size() + " spectator bet(s) as WON and paid out winnings!");
+                }
+            } catch (Exception ex) {
+                System.err.println("Note on bet auto-settlement: " + ex.getMessage());
+            }
+
+            System.out.println("Database columns, ChatMessage table, HorseRetirementRequest table, Bet table, and RaceEntry auto-seeding verified successfully.");
         } catch (Exception e) {
             System.err.println("Failed to update database schema: " + e.getMessage());
         }

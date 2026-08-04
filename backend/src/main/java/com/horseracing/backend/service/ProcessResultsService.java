@@ -25,6 +25,7 @@ public class ProcessResultsService {
     private final RaceInvitationRepository invitationRepository; // Kho dữ liệu lời mời thi đấu
     private final NotificationService notificationService; // Dịch vụ thông báo
     private final SystemConfigRepository systemConfigRepository; // Kho dữ liệu cấu hình hệ thống
+    private final BettingService bettingService; // Dịch vụ cá cược - thanh toán tự động khi có kết quả
 
     @Transactional // Đảm bảo toàn bộ quá trình cập nhật kết quả trận đua được thực thi trong một Transaction
     public void confirmResults(Integer raceId, String stewardReport, List<Map<String, Object>> entriesResults) {
@@ -405,6 +406,13 @@ public class ProcessResultsService {
         race.setYoutubeLiveUrl(null);
         // Lưu thông tin trận đua đã cập nhật vào CSDL
         raceRepository.save(race);
+
+        // Tự động thanh toán cá cược khi trận đua có kết quả OFFICIAL
+        try {
+            bettingService.settleBets(raceId);
+        } catch (Exception ex) {
+            System.err.println("Bet settlement note: " + ex.getMessage());
+        }
 
         // Tự động kích hoạt chốt doanh thu vé về Ví Admin khi trận đua hoàn tất (Auto-Settlement)
         if (race.getRaceMeetingId() != null) {

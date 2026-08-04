@@ -1,5 +1,5 @@
-// Flag to toggle starry background UI effect (Set to false locally, toggle to true before pushing to GitHub)
-const ENABLE_STARRY_BACKGROUND = false;
+// Flag to toggle starry background UI effect
+const ENABLE_STARRY_BACKGROUND = true;
 
 export default function StarryBackground() {
   if (!ENABLE_STARRY_BACKGROUND) return null;

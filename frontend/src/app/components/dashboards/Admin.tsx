@@ -19,6 +19,7 @@ import Race from "../admin-workflow/Race";
 import Results from "../admin-workflow/Results";
 import AdminHorseRetirement from "../admin-workflow/AdminHorseRetirement";
 import AdminWalletModal from "../admin-workflow/AdminWalletModal";
+import AdminBettingStats from "../admin-workflow/AdminBettingStats";
 import NotificationCenterView from "./components/NotificationCenterView";
 
 type AdminTab =
@@ -30,6 +31,7 @@ type AdminTab =
   | "racecard"
   | "schedule"
   | "results"
+  | "betting-stats"
   | "users"
   | "horses"
   | "config"
@@ -44,19 +46,20 @@ const ROLE_COLOR = "#c9a227";
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: $t("Dashboard Overview", (localStorage.getItem('app-lang') || 'en')),        view: "welcome"       },
   { index: "02", icon: "wallet",           label: $t("Admin Wallet & Capital", (localStorage.getItem('app-lang') || 'en')),     view: "wallet"        },
-  { index: "03", icon: "bell",             label: $t("Notifications", (localStorage.getItem('app-lang') || 'en')),             view: "notifications" },
-  { index: "04", icon: "layers",           label: $t("Season Initialization", (localStorage.getItem('app-lang') || 'en')),     view: "season"        },
-  { index: "05", icon: "calendar",         label: $t("Race Meeting Management", (localStorage.getItem('app-lang') || 'en')),   view: "race-meeting"  },
-  { index: "06", icon: "flag",             label: $t("Race Configuration", (localStorage.getItem('app-lang') || 'en')),        view: "race"          },
-  { index: "07", icon: "file-check",       label: $t("Registration Processing", (localStorage.getItem('app-lang') || 'en')),   view: "processing"    },
-  { index: "08", icon: "layout",           label: $t("Racecard Management", (localStorage.getItem('app-lang') || 'en')),       view: "racecard"      },
-  { index: "09", icon: "clipboard-list",   label: $t("Race Day Schedule", (localStorage.getItem('app-lang') || 'en')),         view: "schedule"      },
-  { index: "10", icon: "award",            label: $t("Process Results & Close", (localStorage.getItem('app-lang') || 'en')),   view: "results"       },
-  { index: "11", icon: "user-cog",         label: $t("User & Role Management", (localStorage.getItem('app-lang') || 'en')),    view: "users"         },
-  { index: "12", icon: "flag",             label: $t("Horse Registry Directory", (localStorage.getItem('app-lang') || 'en')),  view: "horses"        },
-  { index: "13", icon: "settings",         label: $t("System Configuration", (localStorage.getItem('app-lang') || 'en')),      view: "config"        },
-  { index: "14", icon: "tv",               label: $t("Camera Live Setting", (localStorage.getItem('app-lang') || 'en')),       view: "live-settings" },
-  { index: "15", icon: "heart-off",        label: $t("Horse Retirement", (localStorage.getItem('app-lang') || 'en')),          view: "retirement"    },
+  { index: "03", icon: "bar-chart-2",      label: $t("Betting Financial Stats", (localStorage.getItem('app-lang') || 'en')),    view: "betting-stats" },
+  { index: "04", icon: "bell",             label: $t("Notifications", (localStorage.getItem('app-lang') || 'en')),             view: "notifications" },
+  { index: "05", icon: "layers",           label: $t("Season Initialization", (localStorage.getItem('app-lang') || 'en')),     view: "season"        },
+  { index: "06", icon: "calendar",         label: $t("Race Meeting Management", (localStorage.getItem('app-lang') || 'en')),   view: "race-meeting"  },
+  { index: "07", icon: "flag",             label: $t("Race Configuration", (localStorage.getItem('app-lang') || 'en')),        view: "race"          },
+  { index: "08", icon: "file-check",       label: $t("Registration Processing", (localStorage.getItem('app-lang') || 'en')),   view: "processing"    },
+  { index: "09", icon: "layout",           label: $t("Racecard Management", (localStorage.getItem('app-lang') || 'en')),       view: "racecard"      },
+  { index: "10", icon: "clipboard-list",   label: $t("Race Day Schedule", (localStorage.getItem('app-lang') || 'en')),         view: "schedule"      },
+  { index: "11", icon: "award",            label: $t("Process Results & Close", (localStorage.getItem('app-lang') || 'en')),   view: "results"       },
+  { index: "12", icon: "user-cog",         label: $t("User & Role Management", (localStorage.getItem('app-lang') || 'en')),    view: "users"         },
+  { index: "13", icon: "flag",             label: $t("Horse Registry Directory", (localStorage.getItem('app-lang') || 'en')),  view: "horses"        },
+  { index: "14", icon: "settings",         label: $t("System Configuration", (localStorage.getItem('app-lang') || 'en')),      view: "config"        },
+  { index: "15", icon: "tv",               label: $t("Camera Live Setting", (localStorage.getItem('app-lang') || 'en')),       view: "live-settings" },
+  { index: "16", icon: "heart-off",        label: $t("Horse Retirement", (localStorage.getItem('app-lang') || 'en')),          view: "retirement"    },
 ];
 
 /**
@@ -287,6 +290,7 @@ export default function Admin() {
       case "racecard":      return <Racecard />;
       case "schedule":      return <RaceDaySchedule />;
       case "results":       return <Results />;
+      case "betting-stats": return <AdminBettingStats />;
       case "users":         return <Users />;
       case "horses":        return <Horses />;
       case "config":        return <SystemConfig />;
