@@ -1,7 +1,8 @@
 import { getErrMsg } from "../../../lib/api";
 import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { authService } from "../../../services/authService";
+import StarryBackground from "../common/StarryBackground";
 
 /**
  */
@@ -11,9 +12,11 @@ export default function VerifyRegister() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const navigate = useNavigate();
   
   const otpTxId = searchParams.get("otpTxId");
+  const email = location.state?.email || "";
 
   useEffect(() => {
     if (!otpTxId) {
@@ -45,8 +48,9 @@ export default function VerifyRegister() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black/60 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-[#151310]/60 border border-white/5 p-8 rounded-2xl backdrop-blur-xl shadow-2xl">
+    <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }} className="flex items-center justify-center px-4 py-12">
+      <StarryBackground />
+      <div className="max-w-md w-full space-y-8 bg-[#151310]/80 border border-[#2a2825] p-8 rounded-2xl backdrop-blur-xl shadow-2xl relative z-10">
         <div>
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-amber-500/10 text-amber-500">
             <span className="text-2xl font-bold font-serif">📨</span>

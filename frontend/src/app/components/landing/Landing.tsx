@@ -509,10 +509,10 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
           )}
           
           <div className="flex flex-wrap justify-center gap-4">
-            <button onClick={onWatchLive} className="px-8 py-3 bg-[#c9a227] text-[#0e0c09] font-bold rounded-lg hover:bg-[#d6af35] transition-all uppercase tracking-wider text-sm shadow-[0_0_20px_rgba(201,162,39,0.3)]">
+            <button onClick={onWatchLive} className="uiverse-watch-live-btn">
               {t.watchLive}
             </button>
-            <button onClick={onViewRacecard} className="px-8 py-3 bg-black/60 backdrop-blur-md border border-[#2a2825] text-white font-medium rounded-lg hover:border-[#c9a227]/50 hover:bg-black/80 transition-all text-sm shadow-lg shadow-black/50">
+            <button onClick={onViewRacecard} className="uiverse-hover-btn px-8 py-3 bg-black/60 backdrop-blur-md border border-[#2a2825] text-white font-medium rounded-lg hover:border-[#c9a227]/50 hover:bg-black/80 transition-all text-sm shadow-lg shadow-black/50">
               {t.viewRacecard}
             </button>
           </div>
@@ -540,7 +540,9 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
               };
 
               return (
-                <div key={s.id} className="bg-[#181613] rounded-2xl p-7 hover:-translate-y-1 transition-transform border border-[#2a2825] hover:border-[#c9a227]/50 shadow-lg relative overflow-hidden group">
+                <div key={s.id} className="uiverse-cyber-card bg-[#181613] rounded-2xl p-7 transition-all border border-[#2a2825] shadow-lg relative overflow-hidden group">
+                  <div className="card-glare"></div>
+                  <div className="scan-line"></div>
                   <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150"></div>
                   <div className="flex justify-between items-start mb-5 relative z-10">
                     <h4 className="font-bold text-2xl text-white group-hover:text-[#c9a227] transition-colors drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{s.name}</h4>
@@ -588,7 +590,9 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
               const { date, time } = formatDateTime(m.startDate);
 
               return (
-                <div key={m.id} className="bg-[#181613] rounded-2xl p-7 hover:-translate-y-1 transition-transform border border-[#2a2825] hover:border-[#c9a227]/50 shadow-lg relative overflow-hidden group">
+                <div key={m.id} className="uiverse-cyber-card bg-[#181613] rounded-2xl p-7 transition-all border border-[#2a2825] shadow-lg relative overflow-hidden group">
+                  <div className="card-glare"></div>
+                  <div className="scan-line"></div>
                   <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-gradient-to-tr from-blue-500 to-transparent opacity-10 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150"></div>
                   <h4 className="font-bold text-2xl text-white mb-6 group-hover:text-blue-400 transition-colors relative z-10 drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
                   <div className="space-y-3 relative z-10">
@@ -714,20 +718,25 @@ function GenericTableView({ title, data, columns, onRowClick }: { title: string;
 
   return (
     <div className="animate-fade-in-up">
-      <h2 className="text-xl font-bold text-white tracking-wide uppercase drop-shadow-lg mb-6" style={{ fontFamily: "'Roboto Slab', serif" }}>{title}</h2>
+      <h2 className="text-xl font-bold text-white tracking-wide uppercase drop-shadow-lg mb-6 flex items-center gap-3" style={{ fontFamily: "'Roboto Slab', serif" }}>
+        <span className="w-2 h-6 bg-[#c9a227] rounded-full inline-block"></span>
+        {title}
+      </h2>
       {data.length === 0 ? (
         <div className="py-12 text-center glass-panel rounded-2xl border-dashed border-[#2a2825]">
           <p className="text-gray-500 font-mono text-sm">No data available.</p>
         </div>
       ) : (
         <>
-          <div className="glass-panel rounded-2xl overflow-hidden border border-[#2a2825]">
-            <div className="overflow-x-auto">
+          <div className="uiverse-cyber-card glass-panel rounded-2xl overflow-hidden border border-[#2a2825] transition-all duration-300 shadow-xl relative">
+            <div className="card-glare"></div>
+            <div className="scan-line"></div>
+            <div className="overflow-x-auto relative z-10">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="bg-[#1a1815]/80 border-b border-[#2a2825]">
+                  <tr className="bg-[#1a1815]/90 border-b border-[#2a2825]">
                     {columns.map(c => (
-                      <th key={c.key} className="py-4 px-6 text-xs font-mono text-[#c9a227] tracking-widest uppercase font-bold whitespace-nowrap">
+                      <th key={c.key} className="py-4 px-5 text-xs font-mono text-[#c9a227] tracking-widest uppercase font-bold whitespace-nowrap">
                         {c.label}
                       </th>
                     ))}
@@ -737,11 +746,20 @@ function GenericTableView({ title, data, columns, onRowClick }: { title: string;
                   {paginatedData.map((row, i) => (
                     <tr 
                       key={i} 
-                      className={`hover:bg-white/[0.02] transition-colors group ${onRowClick ? 'cursor-pointer' : ''}`}
+                      className={`hover:bg-[#c9a227]/[0.08] hover:shadow-[inset_0_0_15px_rgba(201,162,39,0.12)] transition-all duration-200 group ${onRowClick ? 'cursor-pointer' : ''}`}
                       onClick={() => onRowClick?.(row)}
                     >
                       {columns.map((c, colIdx) => (
-                        <td key={c.key} className={`py-4 px-6 text-sm ${colIdx === 1 ? 'font-bold text-[#c9a227] group-hover:underline' : colIdx === 0 ? 'font-bold text-white' : 'text-gray-300'}`}>
+                        <td 
+                          key={c.key} 
+                          className={`py-3.5 px-5 text-sm whitespace-nowrap ${
+                            colIdx === 1 
+                              ? 'font-bold text-[#c9a227] group-hover:text-[#ffe270] group-hover:translate-x-1 transition-all inline-flex items-center gap-1.5' 
+                              : colIdx === 0 
+                                ? 'font-bold text-gray-300 group-hover:text-white' 
+                                : 'text-gray-300'
+                          }`}
+                        >
                           {formatValue(c.key, row[c.key])}
                         </td>
                       ))}
@@ -793,10 +811,12 @@ function AboutView({ t }: { t: any }) {
           { icon: "📊", title: "Statistics", desc: "Win rates, prize money, performance analysis" },
           { icon: "⚠️", title: "Incident Reports", desc: "Track rule violations and penalties" },
         ].map((item, i) => (
-          <div key={i} className="glass-panel rounded-2xl p-6 hover-lift hover-glow transition-all group border border-[#2a2825]" style={{ animationDelay: `${i * 100}ms` }}>
-            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{item.icon}</div>
-            <h4 className="font-bold text-white text-lg mb-2" style={{ fontFamily: "'Roboto Slab', serif" }}>{item.title}</h4>
-            <p className="text-gray-400 text-sm font-light leading-relaxed">{item.desc}</p>
+          <div key={i} className="uiverse-cyber-card glass-panel rounded-2xl p-6 transition-all group border border-[#2a2825]" style={{ animationDelay: `${i * 100}ms` }}>
+            <div className="card-glare"></div>
+            <div className="scan-line"></div>
+            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 relative z-10">{item.icon}</div>
+            <h4 className="font-bold text-white text-lg mb-2 relative z-10" style={{ fontFamily: "'Roboto Slab', serif" }}>{item.title}</h4>
+            <p className="text-gray-400 text-sm font-light leading-relaxed relative z-10">{item.desc}</p>
           </div>
         ))}
       </div>
@@ -1726,7 +1746,9 @@ export default function Landing() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Top Horses */}
-              <div className="glass-panel rounded-2xl p-6 border border-[#2a2825] relative overflow-hidden">
+              <div className="uiverse-cyber-card glass-panel rounded-2xl p-6 border border-[#2a2825] relative overflow-hidden">
+                <div className="card-glare"></div>
+                <div className="scan-line"></div>
                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <span className="text-2xl">🐎</span>
@@ -1757,7 +1779,9 @@ export default function Landing() {
               </div>
 
               {/* Top Jockeys */}
-              <div className="glass-panel rounded-2xl p-6 border border-[#2a2825] relative overflow-hidden">
+              <div className="uiverse-cyber-card glass-panel rounded-2xl p-6 border border-[#2a2825] relative overflow-hidden">
+                <div className="card-glare"></div>
+                <div className="scan-line"></div>
                 <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-500 to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <span className="text-2xl">👤</span>
@@ -2142,15 +2166,34 @@ export default function Landing() {
                     <p style={{ fontSize: "0.85rem", color: "#f0f0f0", fontWeight: 600, fontFamily: "sans-serif" }}>{user.fullName || user.username}</p>
                     <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", color: "#c9a227", marginTop: "2px" }}>{getRoleLabel(user.roleId)}</p>
                   </div>
-                  <button onClick={() => { logout(); }} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem", paddingLeft: "1rem", borderLeft: "1px solid #2a2825", marginLeft: "0.25rem", fontFamily: "sans-serif" }}>{"Sign Out"}</button>
+                  <button onClick={() => { logout(); }} className="uiverse-hover-btn" style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem", paddingLeft: "1rem", borderLeft: "1px solid #2a2825", marginLeft: "0.25rem", fontFamily: "sans-serif" }}>{"Sign Out"}</button>
                 </div>
               ) : (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", paddingLeft: "0.75rem", borderLeft: "1px solid #2a2825" }}>
-                  <Link to="/login" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.375rem 0.75rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0e0c09", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <Link to="/login" className="uiverse-hover-btn" style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.375rem 0.75rem", borderRadius: "0.25rem", background: "#c9a227", color: "#0e0c09", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                     👤 {"Sign In"}
                   </Link>
-                  <Link to="/register" style={{ padding: "0.375rem 0.75rem", borderRadius: "0.25rem", border: "1px solid rgba(201,162,39,0.5)", color: "#c9a227", textDecoration: "none", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                  <Link to="/register" className="uiverse-styled-register-btn">
                     {"Register"}
+                    <div className="inner-button">
+                      <svg
+                        id="Arrow"
+                        viewBox="0 0 32 32"
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="icon"
+                      >
+                        <defs>
+                          <linearGradient y2="100%" x2="100%" y1="0%" x1="0%" id="iconGradient">
+                            <stop style={{ stopColor: "#FFFFFF", stopOpacity: 1 }} offset="0%"></stop>
+                            <stop style={{ stopColor: "#AAAAAA", stopOpacity: 1 }} offset="100%"></stop>
+                          </linearGradient>
+                        </defs>
+                        <path
+                          fill="url(#iconGradient)"
+                          d="M4 15a1 1 0 0 0 1 1h19.586l-4.292 4.292a1 1 0 0 0 1.414 1.414l6-6a.99.99 0 0 0 .292-.702V15c0-.13-.026-.26-.078-.382a.99.99 0 0 0-.216-.324l-6-6a1 1 0 0 0-1.414 1.414L24.586 14H5a1 1 0 0 0-1 1z"
+                        ></path>
+                      </svg>
+                    </div>
                   </Link>
                 </div>
               )}
@@ -2490,24 +2533,24 @@ export default function Landing() {
 
             {/* Scrollable Nav Items */}
             {!isMobile && (
-              <div className="scrollbar-hide" style={{ display: "flex", alignItems: "center", gap: "1.5rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "0.5rem" }}>
+              <div className="scrollbar-hide" style={{ display: "flex", alignItems: "center", gap: "0.6rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "2rem" }}>
                 {SUB_NAV.map(n => {
                   const active = view === n.key;
                   return (
                     <button
                       key={n.key}
-                      className="landing-nav-btn"
+                      className="landing-nav-btn uiverse-hover-btn"
                       onClick={() => {
                         setView(n.key);
                       }}
                       style={{
-                        padding: "0.4rem 0.8rem",
+                        padding: "0.4rem 0.65rem",
                         borderRadius: "0.375rem",
-                        fontSize: "0.85rem",
+                        fontSize: "0.825rem",
                         fontFamily: "sans-serif",
                         cursor: "pointer",
                         border: active ? "1px solid rgba(201,162,39,0.5)" : "1px solid transparent",
-                        background: active ? "rgba(201,162,39,0.06)" : "transparent",
+                        background: active ? "rgba(201,162,39,0.12)" : "transparent",
                         color: active ? "#c9a227" : "#a0a0a0",
                         fontWeight: active ? 600 : 500,
                         display: "flex",
