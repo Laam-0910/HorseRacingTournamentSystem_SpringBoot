@@ -725,33 +725,31 @@ function GenericTableView({ title, data, columns, onRowClick }: { title: string;
         </div>
       ) : (
         <>
-          <div className="uiverse-cyber-card glass-panel rounded-2xl overflow-hidden border border-[#2a2825] transition-all duration-300 shadow-xl relative">
-            <div className="card-glare"></div>
-            <div className="scan-line"></div>
-            <div className="overflow-x-auto relative z-10">
+          <div className="glow-cyber-card rounded-2xl overflow-hidden p-3 border border-[#c9a227]/30 transition-all duration-300 shadow-xl relative">
+            <div className="overflow-x-auto relative z-10 w-full rounded-xl">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="bg-[#1a1815]/90 border-b border-[#2a2825]">
+                  <tr className="bg-[#14120f] border-b border-white/10">
                     {columns.map(c => (
-                      <th key={c.key} className="py-4 px-5 text-xs font-mono text-[#c9a227] tracking-widest uppercase font-bold whitespace-nowrap">
+                      <th key={c.key} className="py-4 px-6 text-xs font-mono text-[#c9a227] tracking-widest uppercase font-bold whitespace-nowrap">
                         {c.label}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#2a2825]/50">
+                <tbody className="divide-y divide-white/5 bg-[#14120f]/60">
                   {paginatedData.map((row, i) => (
                     <tr 
                       key={i} 
-                      className={`hover:bg-[#c9a227]/[0.08] hover:shadow-[inset_0_0_15px_rgba(201,162,39,0.12)] transition-all duration-200 group ${onRowClick ? 'cursor-pointer' : ''}`}
+                      className={`hover:bg-[#c9a227]/[0.1] hover:shadow-[inset_0_0_15px_rgba(201,162,39,0.15)] transition-all duration-200 group ${onRowClick ? 'cursor-pointer' : ''}`}
                       onClick={() => onRowClick?.(row)}
                     >
                       {columns.map((c, colIdx) => (
                         <td 
                           key={c.key} 
-                          className={`py-3.5 px-5 text-sm whitespace-nowrap ${
+                          className={`py-4 px-6 text-sm whitespace-nowrap ${
                             colIdx === 1 
-                              ? 'font-bold text-[#c9a227] group-hover:text-[#ffe270] group-hover:translate-x-1 transition-all inline-flex items-center gap-1.5' 
+                              ? 'font-bold text-[#c9a227] group-hover:text-[#ffe270] group-hover:translate-x-1 transition-all' 
                               : colIdx === 0 
                                 ? 'font-bold text-gray-300 group-hover:text-white' 
                                 : 'text-gray-300'
