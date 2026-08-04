@@ -1455,7 +1455,7 @@ export default function Landing() {
                       setSelectedRaceId(null);
                       setSelectedRaceEntries([]);
                     }}
-                    className="w-full p-4 bg-[#1a1815]/80 border border-[#2a2825] rounded-xl text-white outline-none focus:border-[#c9a227] transition-colors"
+                    className="w-full p-4 bg-[#1a1815]/90 border border-[#c9a227]/30 rounded-xl text-white outline-none focus:border-[#c9a227] transition-colors"
                   >
                     <option value="">-- Choose Meeting --</option>
                     {meetings.map(m => (
@@ -1464,18 +1464,21 @@ export default function Landing() {
                   </select>
                 ) : (
                   <div className="flex flex-col gap-3">
-                    {meetings.map(m => (
-                      <button 
-                        key={m.id} 
-                        onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} 
-                        className={`w-full text-left p-4 rounded-xl transition-all ${selectedMeetingId === m.id ? 'glass-panel glowing-border !border-[#c9a227]/50 shadow-[0_0_15px_rgba(201,162,39,0.15)]' : 'bg-[#1a1815]/40 border border-[#2a2825] hover:bg-[#1a1815] hover:border-[#c9a227]/30 hover-lift'}`}
-                      >
-                        <strong className={`block text-[15px] ${selectedMeetingId === m.id ? 'text-gold-gradient' : 'text-gray-200'}`} style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</strong>
-                        <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-gray-500">
-                          <span className="text-blue-400">📍</span> {m.venue}
-                        </div>
-                      </button>
-                    ))}
+                    {meetings.map(m => {
+                      const isSelected = selectedMeetingId === m.id;
+                      return (
+                        <button 
+                          key={m.id} 
+                          onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} 
+                          className={`w-full text-left p-4 rounded-2xl transition-all duration-300 relative overflow-hidden ${isSelected ? 'glow-cyber-card border-2 border-[#c9a227] shadow-[0_0_20px_rgba(201,162,39,0.3)] scale-[1.02]' : 'glass-panel bg-[#1a1815]/60 border border-white/10 hover:border-[#c9a227]/40 hover:bg-[#1a1815]'}`}
+                        >
+                          <strong className={`block text-[15px] ${isSelected ? 'text-[#c9a227] font-extrabold' : 'text-gray-200'}`} style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</strong>
+                          <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-gray-400">
+                            <span className="text-[#c9a227]">📍</span> {m.venue}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1485,35 +1488,39 @@ export default function Landing() {
                 {selectedMeetingId ? (
                   <div className="animate-fade-in delay-100">
                     <div className="flex flex-wrap gap-3 mb-8">
-                      {meetingRaces.map(r => (
-                        <button 
-                          key={r.id} 
-                          onClick={() => setSelectedRaceId(r.id)} 
-                          className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all hover-lift ${selectedRaceId === r.id ? 'bg-gradient-to-r from-[#c9a227] to-[#e6c153] text-[#0e0c09] shadow-[0_0_15px_rgba(201,162,39,0.3)]' : 'glass-panel text-gray-300 hover:text-white hover:border-[#c9a227]/50'}`}
-                        >
-                          RACE {r.id} <span className="opacity-70 font-mono text-xs ml-1">({r.classLevel})</span>
-                        </button>
-                      ))}
+                      {meetingRaces.map(r => {
+                        const isSelected = selectedRaceId === r.id;
+                        return (
+                          <button 
+                            key={r.id} 
+                            onClick={() => setSelectedRaceId(r.id)} 
+                            className={`px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2 ${isSelected ? 'bg-gradient-to-r from-[#c9a227] via-[#f3d06c] to-[#c9a227] text-[#0e0c09] shadow-[0_0_20px_rgba(201,162,39,0.4)] scale-105 font-extrabold' : 'glass-panel text-gray-300 hover:text-white hover:border-[#c9a227]/50 border border-white/10'}`}
+                          >
+                            <span>🏁 RACE {r.id}</span>
+                            <span className={`font-mono text-xs px-2 py-0.5 rounded-full ${isSelected ? 'bg-black/20 text-[#0e0c09]' : 'bg-white/10 text-gray-400'}`}>
+                              {r.classLevel}
+                            </span>
+                          </button>
+                        );
+                      })}
                       {meetingRaces.length === 0 && <p className="text-gray-500 text-sm italic py-2">No races scheduled for this meeting.</p>}
                     </div>
 
                     {selectedRaceId && (
-                      <div className="glass-panel rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-5 rounded-bl-full pointer-events-none"></div>
-                        
+                      <div className="glow-cyber-card rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
                         <div className="flex items-center gap-3 mb-6 relative z-10">
-                          <span className="text-2xl">🐎</span>
+                          <span className="text-2xl">🏇</span>
                           <h4 className="font-bold text-xl text-white tracking-wide" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Runners & Riders"}</h4>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                           {selectedRaceEntries.map((e, idx) => (
-                            <div key={idx} className="bg-[#1a1815]/50 border border-white/5 rounded-xl p-4 flex items-center gap-4 hover-lift hover-glow transition-all group">
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1a1815] to-[#2a2825] border border-[#c9a227]/30 flex items-center justify-center font-mono font-bold text-[#c9a227] text-lg shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] flex-shrink-0 group-hover:scale-110 transition-transform">
-                                {e.entry?.gateNumber || idx + 1}
+                            <div key={idx} className="bg-[#14120f]/80 border border-white/10 rounded-xl p-4 flex items-center gap-4 hover:-translate-y-1 hover:border-[#c9a227]/50 transition-all group shadow-md">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2a2825] to-[#14120f] border border-[#c9a227]/40 flex items-center justify-center font-mono font-bold text-[#c9a227] text-lg shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] flex-shrink-0 group-hover:scale-110 transition-transform">
+                                #{e.entry?.gateNumber || idx + 1}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-bold text-white text-base truncate group-hover:text-gold-gradient transition-colors" style={{ fontFamily: "'Roboto Slab', serif" }}>
+                                <div className="font-bold text-white text-base truncate group-hover:text-[#c9a227] transition-colors" style={{ fontFamily: "'Roboto Slab', serif" }}>
                                   {e.horse?.name}
                                 </div>
                                 <div className="text-[11px] text-gray-400 mt-1 truncate">
@@ -1545,10 +1552,10 @@ export default function Landing() {
                     )}
                   </div>
                 ) : (
-                  <div className="glass-panel rounded-2xl flex items-center justify-center min-h-[40vh] border-dashed border-[#2a2825]">
-                    <div className="text-center">
-                      <span className="text-4xl block mb-4 opacity-30 animate-float">👆</span>
-                      <p className="text-gray-500 text-sm font-mono italic">Please select a race meeting from the sidebar.</p>
+                  <div className="glow-cyber-card rounded-2xl flex items-center justify-center min-h-[40vh] border-dashed border-[#2a2825]">
+                    <div className="text-center p-8">
+                      <span className="text-4xl block mb-4 opacity-50 animate-bounce">👆</span>
+                      <p className="text-gray-400 font-mono text-sm">Select a race meeting from the left menu to view racecard details.</p>
                     </div>
                   </div>
                 )}
@@ -1586,18 +1593,21 @@ export default function Landing() {
                   </select>
                 ) : (
                   <div className="flex flex-col gap-3">
-                    {meetings.map(m => (
-                      <button 
-                        key={m.id} 
-                        onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} 
-                        className={`w-full text-left p-4 rounded-xl transition-all ${selectedMeetingId === m.id ? 'glass-panel glowing-border !border-[#c9a227]/50 shadow-[0_0_15px_rgba(201,162,39,0.15)]' : 'bg-[#1a1815]/40 border border-[#2a2825] hover:bg-[#1a1815] hover:border-[#c9a227]/30 hover-lift'}`}
-                      >
-                        <strong className={`block text-[15px] ${selectedMeetingId === m.id ? 'text-gold-gradient' : 'text-gray-200'}`} style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</strong>
-                        <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-gray-500">
-                          <span className="text-blue-400">📍</span> {m.venue}
-                        </div>
-                      </button>
-                    ))}
+                    {meetings.map(m => {
+                      const isSelected = selectedMeetingId === m.id;
+                      return (
+                        <button 
+                          key={m.id} 
+                          onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} 
+                          className={`w-full text-left p-4 rounded-2xl transition-all duration-300 relative overflow-hidden ${isSelected ? 'glow-cyber-card border-2 border-[#c9a227] shadow-[0_0_20px_rgba(201,162,39,0.3)] scale-[1.02]' : 'glass-panel bg-[#1a1815]/60 border border-white/10 hover:border-[#c9a227]/40 hover:bg-[#1a1815]'}`}
+                        >
+                          <strong className={`block text-[15px] ${isSelected ? 'text-[#c9a227] font-extrabold' : 'text-gray-200'}`} style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</strong>
+                          <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-gray-400">
+                            <span className="text-[#c9a227]">📍</span> {m.venue}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1606,20 +1616,26 @@ export default function Landing() {
                 {selectedMeetingId ? (
                   <div className="animate-fade-in delay-100">
                     <div className="flex flex-wrap gap-3 mb-8">
-                      {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").map(r => (
-                        <button 
-                          key={r.id} 
-                          onClick={() => setSelectedRaceId(r.id)} 
-                          className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all hover-lift ${selectedRaceId === r.id ? 'bg-gradient-to-r from-[#c9a227] to-[#e6c153] text-[#0e0c09] shadow-[0_0_15px_rgba(201,162,39,0.3)]' : 'glass-panel text-gray-300 hover:text-white hover:border-[#c9a227]/50'}`}
-                        >
-                          RACE {r.id} <span className="opacity-70 font-mono text-xs ml-1">({r.classLevel})</span>
-                        </button>
-                      ))}
+                      {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").map(r => {
+                        const isSelected = selectedRaceId === r.id;
+                        return (
+                          <button 
+                            key={r.id} 
+                            onClick={() => setSelectedRaceId(r.id)} 
+                            className={`px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2 ${isSelected ? 'bg-gradient-to-r from-[#c9a227] via-[#f3d06c] to-[#c9a227] text-[#0e0c09] shadow-[0_0_20px_rgba(201,162,39,0.4)] scale-105 font-extrabold' : 'glass-panel text-gray-300 hover:text-white hover:border-[#c9a227]/50 border border-white/10'}`}
+                          >
+                            <span>🏆 RACE {r.id}</span>
+                            <span className={`font-mono text-xs px-2 py-0.5 rounded-full ${isSelected ? 'bg-black/20 text-[#0e0c09]' : 'bg-white/10 text-gray-400'}`}>
+                              {r.classLevel}
+                            </span>
+                          </button>
+                        );
+                      })}
                       {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").length === 0 && <p className="text-gray-500 text-sm italic py-2">No official finished results for this meeting yet.</p>}
                     </div>
                     
                     {selectedRaceId && (
-                      <div className="glass-panel rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
+                      <div className="glow-cyber-card rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
                         <div className="flex items-center gap-3 mb-8 relative z-10">
                           <span className="text-3xl drop-shadow-md">🏆</span>
                           <h4 className="font-bold text-2xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Final Standings"}</h4>
@@ -1796,19 +1812,18 @@ export default function Landing() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {meetings.map((m, idx) => (
-                <div key={m.id} className="glass-panel rounded-2xl p-6 hover-lift glowing-border relative overflow-hidden group border border-[#2a2825]" style={{ animationDelay: `${idx * 100}ms` }}>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 opacity-5 rounded-bl-full pointer-events-none"></div>
-                  <h4 className="font-bold text-xl text-white mb-4 group-hover:text-blue-400 transition-colors" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#1a1815]/50 px-3 py-2 rounded-xl border border-white/5">
-                      <span className="text-[#c9a227]">ID</span>
+                <div key={m.id} className="glow-cyber-card rounded-2xl p-6 relative overflow-hidden group border border-[#c9a227]/30 transition-all duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
+                  <h4 className="font-bold text-xl text-white mb-4 group-hover:text-[#c9a227] transition-colors" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
+                  <div className="space-y-2 relative z-10 w-full">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-3 py-2 rounded-xl border border-white/5">
+                      <span className="text-[#c9a227] font-bold">ID</span>
                       <span className="font-bold text-white">#{m.id}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#1a1815]/50 px-3 py-2 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-3 py-2 rounded-xl border border-white/5">
                       <span className="text-blue-400">📍</span>
                       <span className="truncate">{m.venue}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#1a1815]/50 px-3 py-2 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-3 py-2 rounded-xl border border-white/5">
                       <span className="text-[#c9a227]">📅</span>
                       <span>{formatDate(m.startDate)}</span>
                     </div>
@@ -1850,19 +1865,16 @@ export default function Landing() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Top Horses */}
-              <div className="uiverse-cyber-card glass-panel rounded-2xl p-6 border border-[#2a2825] relative overflow-hidden">
-                <div className="card-glare"></div>
-                <div className="scan-line"></div>
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
+              <div className="glow-cyber-card rounded-2xl p-6 relative overflow-hidden border border-[#c9a227]/30">
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <span className="text-2xl">🐎</span>
-                  <h4 className="font-bold text-xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Leading Horses (Top Rating)"}</h4>
+                  <h4 className="font-bold text-xl text-white tracking-wide text-[#c9a227]" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Leading Horses (Top Rating)"}</h4>
                 </div>
-                <div className="space-y-3 relative z-10">
+                <div className="space-y-3 relative z-10 w-full">
                   {topHorses.map((h, idx) => (
                     <div 
                       key={h.id} 
-                      className="flex items-center gap-4 p-3 rounded-xl bg-[#1a1815]/50 border border-white/5 hover:border-[#c9a227]/40 transition-colors cursor-pointer hover:bg-white/[0.02]"
+                      className="flex items-center gap-4 p-3 rounded-xl bg-[#14120f]/80 border border-white/5 hover:border-[#c9a227]/40 transition-colors cursor-pointer hover:bg-white/[0.04]"
                       onClick={() => { setSelectedHorseId(h.id); setSelectedHorseName(h.name); }}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx < 3 ? 'bg-[#c9a227]/20 text-[#c9a227] border border-[#c9a227]/50' : 'bg-[#2a2825] text-gray-400'}`}>
@@ -1883,10 +1895,7 @@ export default function Landing() {
               </div>
 
               {/* Top Jockeys */}
-              <div className="uiverse-cyber-card glass-panel rounded-2xl p-6 border border-[#2a2825] relative overflow-hidden">
-                <div className="card-glare"></div>
-                <div className="scan-line"></div>
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-500 to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
+              <div className="glow-cyber-card rounded-2xl p-6 relative overflow-hidden border border-[#c9a227]/30">
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <span className="text-2xl">👤</span>
                   <h4 className="font-bold text-xl text-white tracking-wide text-blue-400" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Leading Jockeys (Top-3)"}</h4>
