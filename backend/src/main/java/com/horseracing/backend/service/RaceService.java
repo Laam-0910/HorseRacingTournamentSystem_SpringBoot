@@ -279,15 +279,15 @@ public class RaceService {
         }
     }
 
-    private static final BigDecimal MIN_MEETING_BUDGET = new BigDecimal("10000000"); // 10 triệu
-    private static final BigDecimal MAX_MEETING_BUDGET = new BigDecimal("1000000000"); // 1 tỷ
+    private static final BigDecimal MIN_MEETING_BUDGET = new BigDecimal("100000000.00"); // 100 triệu VNĐ
+    private static final BigDecimal MAX_MEETING_BUDGET = new BigDecimal("10000000000.00"); // 10 tỷ VNĐ
 
     private void validateMeetingBudget(BigDecimal budget) {
         if (budget == null || budget.compareTo(MIN_MEETING_BUDGET) < 0) {
-            throw new IllegalArgumentException("Total budget must be at least 10,000,000.");
+            throw new IllegalArgumentException("Total budget must be at least 100,000,000 VNĐ.");
         }
         if (budget.compareTo(MAX_MEETING_BUDGET) > 0) {
-            throw new IllegalArgumentException("Total budget cannot exceed 1,000,000,000.");
+            throw new IllegalArgumentException("Total budget cannot exceed 10,000,000,000 VNĐ.");
         }
     }
 

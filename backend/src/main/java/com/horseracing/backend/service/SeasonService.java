@@ -311,11 +311,11 @@ public class SeasonService {
     public List<SeasonClassRuleDTO> getSeasonRules(Integer seasonId) {
         List<SeasonClassRule> rules = seasonClassRuleRepository.findBySeasonId(seasonId);
         if (rules.isEmpty() && seasonRepository.existsById(seasonId)) {
-            SeasonClassRule class1 = new SeasonClassRule(null, seasonId, "Class 1", "Elite Championship", 95, null, new BigDecimal("300000"), new BigDecimal("1000000"));
-            SeasonClassRule class2 = new SeasonClassRule(null, seasonId, "Class 2", "Premium Group", 80, 94, new BigDecimal("20000"), new BigDecimal("299999"));
-            SeasonClassRule class3 = new SeasonClassRule(null, seasonId, "Class 3", "Advanced Tier", 60, 79, new BigDecimal("100000"), new BigDecimal("199999"));
-            SeasonClassRule class4 = new SeasonClassRule(null, seasonId, "Class 4", "Intermediate Level", 40, 59, new BigDecimal("50000"), new BigDecimal("99999"));
-            SeasonClassRule class5 = new SeasonClassRule(null, seasonId, "Class 5", "Entry Division", 0, 39, new BigDecimal("20000"), new BigDecimal("49999"));
+            SeasonClassRule class1 = new SeasonClassRule(null, seasonId, "Class 1", "Elite Championship", 95, null, new BigDecimal("300000000"), new BigDecimal("1000000000"));
+            SeasonClassRule class2 = new SeasonClassRule(null, seasonId, "Class 2", "Premium Group", 80, 94, new BigDecimal("200000000"), new BigDecimal("299999000"));
+            SeasonClassRule class3 = new SeasonClassRule(null, seasonId, "Class 3", "Advanced Tier", 60, 79, new BigDecimal("100000000"), new BigDecimal("199999000"));
+            SeasonClassRule class4 = new SeasonClassRule(null, seasonId, "Class 4", "Intermediate Level", 40, 59, new BigDecimal("50000000"), new BigDecimal("99999000"));
+            SeasonClassRule class5 = new SeasonClassRule(null, seasonId, "Class 5", "Entry Division", 0, 39, new BigDecimal("20000000"), new BigDecimal("49999000"));
             rules = seasonClassRuleRepository.saveAll(List.of(class1, class2, class3, class4, class5));
         }
 

@@ -718,7 +718,7 @@ export default function Users() {
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
                   style={inputStyle}
-                  placeholder="Enter amount (e.g. 500)"
+                  placeholder="Enter amount in VNĐ (e.g. 50,000, 500,000)"
                 />
               </div>
 

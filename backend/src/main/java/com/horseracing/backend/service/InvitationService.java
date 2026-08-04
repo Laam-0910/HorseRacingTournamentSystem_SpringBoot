@@ -125,6 +125,9 @@ public class InvitationService {
         Integer raceId = dto.getRaceId(); // ID Trận đua
         Integer horseId = dto.getHorseId(); // ID Chiến mã
 
+        // 0. Kiểm tra trùng lịch thi đấu cùng ngày cùng giờ giữa các trận đua của Kỵ sĩ & Chiến mã
+        validateTimeConflict(jockeyId, horseId, raceId);
+
         // 1. Kiểm tra xem nài ngựa đã bận (chấp nhận suất cưỡi khác) trong trận đua này chưa
         List<RaceEntry> activeEntries = raceEntryRepository.findByRaceId(raceId);
         boolean isBooked = activeEntries.stream()
@@ -256,6 +259,9 @@ public class InvitationService {
             walletTransactionRepository.save(txOwner);
         }
 
+        // Kiểm tra trùng lịch thi đấu cùng ngày cùng giờ giữa các trận đua của Kỵ sĩ & Chiến mã
+        validateTimeConflict(invite.getJockeyId(), invite.getHorseId(), invite.getRaceId());
+
         // Kiểm tra xem nài ngựa đã có lượt đua hoạt động nào trong trận này chưa
         List<RaceEntry> activeEntries = raceEntryRepository.findByRaceId(invite.getRaceId());
         boolean isBooked = activeEntries.stream()
@@ -339,6 +345,9 @@ public class InvitationService {
         if (race.getRegistrationEndTime() != null && now.after(race.getRegistrationEndTime())) {
             throw new IllegalStateException("REGISTRATION_CLOSED");
         }
+
+        // Kiểm tra trùng lịch thi đấu cùng ngày cùng giờ giữa các trận đua của Kỵ sĩ & Chiến mã
+        validateTimeConflict(entry.getJockeyId(), entry.getHorseId(), entry.getRaceId());
 
         // Kiểm tra xem nài ngựa đã bận lượt đăng ký nào khác hoạt động trong trận đấu này chưa
         List<RaceEntry> activeEntries = raceEntryRepository.findByRaceId(entry.getRaceId());
@@ -449,11 +458,50 @@ public class InvitationService {
                 BigDecimal oWallet = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
                 owner.setWalletBalance(oWallet.add(hireFee));
                 userRepository.save(owner);
+
+                com.horseracing.backend.entity.WalletTransaction txOwner = new com.horseracing.backend.entity.WalletTransaction();
+                txOwner.setUserId(owner.getId());
+                txOwner.setAmount(hireFee);
+                txOwner.setTransactionType("HIRE_FEE_REFUND");
+                txOwner.setDescription("Jockey hire fee refund from Escrow Vault for withdrawn invitation #" + invite.getId());
+                txOwner.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                walletTransactionRepository.save(txOwner);
             }
             invite.setPayoutStatus("REFUNDED");
         }
 
         invite.setStatus("REJECTED"); // Cập nhật trạng thái lời mời rút lại sang REJECTED
         invitationRepository.save(invite); // Lưu lời mời vào CSDL
+    }
+
+    // Kiểm tra trùng lịch thi đấu cùng ngày cùng giờ của Kỵ sĩ và Chiến mã giữa các trận đua
+    private void validateTimeConflict(Integer jockeyId, Integer horseId, Integer raceId) {
+        com.horseracing.backend.entity.Race targetRace = raceRepository.findById(raceId).orElse(null);
+        if (targetRace == null || targetRace.getStartTime() == null) return;
+
+        Timestamp targetStart = targetRace.getStartTime();
+        java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+        String formattedTime = sdf.format(targetStart);
+
+        List<RaceEntry> allActiveEntries = raceEntryRepository.findAll().stream()
+                .filter(e -> !"REJECTED".equalsIgnoreCase(e.getStatus()))
+                .collect(Collectors.toList());
+
+        for (RaceEntry entry : allActiveEntries) {
+            if (entry.getRaceId().equals(raceId)) continue;
+
+            com.horseracing.backend.entity.Race otherRace = raceRepository.findById(entry.getRaceId()).orElse(null);
+            if (otherRace != null && otherRace.getStartTime() != null) {
+                long diffMs = Math.abs(otherRace.getStartTime().getTime() - targetStart.getTime());
+                if (diffMs < 600000) { // Cùng khung giờ (trong khoảng 10 phút)
+                    if (jockeyId != null && entry.getJockeyId().equals(jockeyId)) {
+                        throw new IllegalArgumentException("This jockey is already scheduled to ride in another race at the same time (" + formattedTime + " - Race #" + otherRace.getId() + ").");
+                    }
+                    if (horseId != null && entry.getHorseId().equals(horseId)) {
+                        throw new IllegalArgumentException("This horse is already scheduled to run in another race at the same time (" + formattedTime + " - Race #" + otherRace.getId() + ").");
+                    }
+                }
+            }
+        }
     }
 }

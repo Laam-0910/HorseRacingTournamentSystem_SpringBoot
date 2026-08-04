@@ -267,13 +267,19 @@ export default function Season() {
     setRulesSuccess("");
     try {
       const res = await api.get<any[]>(`/races/seasons/${seasonId}/rules`);
-      const rawData = (Array.isArray(res) && res.length > 0) ? res : DEFAULT_TEMPLATE_RULES.map(r => ({
-        classLevel: r.classLevelName,
-        minRating: r.minRating,
-        maxRating: r.maxRating,
-        minPrize: r.minPrize,
-        maxPrize: r.maxPrize
-      }));
+      const rawData = (Array.isArray(res) && res.length > 0)
+        ? res.map((r: any) => ({
+            ...r,
+            minPrize: r.minPrize != null && r.minPrize < 10000000 ? r.minPrize * 1000 : r.minPrize,
+            maxPrize: r.maxPrize != null && r.maxPrize < 10000000 ? r.maxPrize * 1000 : r.maxPrize,
+          }))
+        : DEFAULT_TEMPLATE_RULES.map(r => ({
+            classLevel: r.classLevelName,
+            minRating: r.minRating,
+            maxRating: r.maxRating,
+            minPrize: r.minPrize,
+            maxPrize: r.maxPrize
+          }));
       const data = deduplicateRulesList(rawData);
       setSeasonRules(data);
       setEditingRulesList(data.map((r: any) => ({ ...r })));
@@ -317,7 +323,7 @@ export default function Season() {
         const upperMin = parseFloat(upper.minPrize) || 0;
         const lowerMax = parseFloat(lower.maxPrize) || 0;
         if (lowerMax >= upperMin) {
-          setRulesError(`Class ${i + 1} maximum prize ($${lowerMax.toLocaleString()}) must be strictly smaller than Class ${i} minimum prize ($${upperMin.toLocaleString()}).`);
+          setRulesError(`Class ${i + 1} maximum prize (${lowerMax.toLocaleString()} VNĐ) must be strictly smaller than Class ${i} minimum prize (${upperMin.toLocaleString()} VNĐ).`);
           setRulesSaving(false);
           return;
         }

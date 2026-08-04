@@ -216,10 +216,10 @@ public class LivestreamSubscriptionController {
             // Gửi thông báo đến Spectator đã đăng ký mua thẻ xem live thành công
             notificationService.notifySpectatorOnTicketPurchase(userId, packageType, amount);
 
-            // Log purchase transaction for Spectator user
+            // Log purchase transaction for Spectator user (negative amount for expense)
             WalletTransaction userTx = new WalletTransaction();
             userTx.setUserId(userId);
-            userTx.setAmount(amount);
+            userTx.setAmount(amount.negate());
             userTx.setTransactionType("LIVESTREAM_PPV_PURCHASE");
             userTx.setDescription("Unlocked Livestream HD Access (" + packageType.toUpperCase() + " Pass via VietQR)");
             if (raceMeetingId != null) userTx.setRaceMeetingId(raceMeetingId);

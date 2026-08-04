@@ -464,6 +464,22 @@ public class DatabaseInitializer implements InitializingBean {
                 System.err.println("Note on wallet balance sync: " + ex.getMessage());
             }
 
+            // Recalculate weights for all active RaceEntry records on startup
+            try {
+                jdbcTemplate.update(
+                    "UPDATE re SET " +
+                    "re.handicap_weight = CASE WHEN (60.0 - (ISNULL(rmax.max_rating, 52) - ISNULL(h.current_rating, 52)) * 0.5) < 52.0 THEN 52.0 ELSE (60.0 - (ISNULL(rmax.max_rating, 52) - ISNULL(h.current_rating, 52)) * 0.5) END, " +
+                    "re.carried_weight = CASE WHEN CASE WHEN (60.0 - (ISNULL(rmax.max_rating, 52) - ISNULL(h.current_rating, 52)) * 0.5) < 52.0 THEN 52.0 ELSE (60.0 - (ISNULL(rmax.max_rating, 52) - ISNULL(h.current_rating, 52)) * 0.5) END > ISNULL(u.weight, 50.0) THEN CASE WHEN (60.0 - (ISNULL(rmax.max_rating, 52) - ISNULL(h.current_rating, 52)) * 0.5) < 52.0 THEN 52.0 ELSE (60.0 - (ISNULL(rmax.max_rating, 52) - ISNULL(h.current_rating, 52)) * 0.5) END ELSE ISNULL(u.weight, 50.0) END " +
+                    "FROM RaceEntry re " +
+                    "JOIN Horse h ON re.horse_id = h.id " +
+                    "LEFT JOIN [User] u ON re.jockey_id = u.id " +
+                    "JOIN (SELECT race_id, MAX(h2.current_rating) AS max_rating FROM RaceEntry re2 JOIN Horse h2 ON re2.horse_id = h2.id WHERE re2.status = 'APPROVED' GROUP BY race_id) rmax ON re.race_id = rmax.race_id " +
+                    "WHERE re.status = 'APPROVED'"
+                );
+            } catch (Exception ex) {
+                System.err.println("Note on carried weight startup calculation: " + ex.getMessage());
+            }
+
             System.out.println("Database columns, ChatMessage table, HorseRetirementRequest table, and RaceEntry auto-seeding verified successfully.");
         } catch (Exception e) {
             System.err.println("Failed to update database schema: " + e.getMessage());

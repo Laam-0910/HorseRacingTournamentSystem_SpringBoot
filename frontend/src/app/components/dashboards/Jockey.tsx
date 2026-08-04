@@ -20,6 +20,7 @@ import ViewLive from "./components/ViewLive";
 import UserWalletView from "./components/UserWalletView";
 import NotificationCenterView from "./components/NotificationCenterView";
 import { Pagination } from "../common/Pagination";
+import ActionModal, { ActionModalState } from "../common/ActionModal";
 
 // Định nghĩa các Tab giao diện khả dụng trong Dashboard của Jockey
 type JockeyTab = "hub" | "mounts" | "calendar" | "invitations" | "violations" | "live" | "wallet" | "profile" | "notifications";
@@ -111,7 +112,7 @@ function StatusBadge({ status }: { status: string }) {
  * Hiển thị số liệu hiệu suất thi đấu cá nhân (số lượt cưỡi, số trận thắng, top 3, tỉ lệ thắng)
  * và danh sách đăng ký tham gia các Ngày hội đua sắp tới.
  */
-function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void; user: any }) {
+function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void; user: any; onSwitchTab?: (tab: string) => void }) {
   const walletBal = user?.walletBalance !== undefined && user?.walletBalance !== null ? Number(user.walletBalance) : 0;
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(6);
@@ -143,11 +144,22 @@ function HubView({ dashboard, meetings, onRegister, user }: { dashboard: any; me
               <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.6)" }}>Current available balance & automatic financial earnings rules</p>
             </div>
           </div>
-          <div style={{ textAlign: "right" }}>
-            <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>Available Wallet</span>
-            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fbbf24", fontFamily: "monospace" }}>
-              {walletBal.toLocaleString('en-US')} VND
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ textAlign: "right" }}>
+              <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "#a0a0a0", textTransform: "uppercase" }}>Available Wallet</span>
+              <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fbbf24", fontFamily: "monospace" }}>
+                {walletBal.toLocaleString('en-US')} VND
+              </div>
             </div>
+            {onSwitchTab && (
+              <button
+                type="button"
+                onClick={() => onSwitchTab("wallet")}
+                style={{ padding: "0.5rem 1rem", borderRadius: "0.75rem", background: "#fbbf24", color: "#000", fontSize: "0.75rem", fontWeight: 700, fontFamily: "monospace", border: "none", cursor: "pointer", transition: "all 0.2s" }}
+              >
+                💳 Manage Wallet
+              </button>
+            )}
           </div>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem", borderTop: "1px solid rgba(251, 191, 36, 0.15)", paddingTop: "0.75rem" }}>
@@ -920,7 +932,7 @@ function CalendarView({ meetings, allRaces, refereesMap }: { meetings: any[]; al
  * Component ViolationsView - Khung quản lý hồ sơ vi phạm luật thi đấu của kỵ sĩ do trọng tài báo cáo.
  * Yêu cầu Jockey bấm "Acknowledge" (Xác nhận lỗi) để hoàn tất quy trình vi phạm.
  */
-function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violations: any[]; onAcknowledge: (id: number) => void; onViewProfile?: (id: number) => void }) {
+export function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violations: any[]; onAcknowledge: (id: number) => void; onViewProfile?: (id: number) => void }) {
   const [isMobile, setIsMobile] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(5);
@@ -1080,7 +1092,7 @@ function ViolationsView({ violations, onAcknowledge, onViewProfile }: { violatio
  * xác nhận vi phạm luật thi đấu và cập nhật thông tin kỵ sĩ cá nhân.
  */
 export default function Jockey() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   // State quản lý Modal xem hồ sơ cá nhân và Modal xem chỉ số ngựa
   const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
   const [selectedHorse, setSelectedHorse] = useState<{ id: number; name: string } | null>(null);
@@ -1102,13 +1114,14 @@ export default function Jockey() {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [actionModal, setActionModal] = useState<ActionModalState>({ isOpen: false, type: "success", title: "", message: "" });
 
   // Tải đồng bộ dữ liệu của Jockey từ API backend
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
     try {
-      const [stats, mountData, invites, allMeetings, viols, racesData, refsData] = await Promise.all([
+      const [stats, mountData, invites, allMeetings, viols, racesData, refsData, walletRes] = await Promise.all([
         api.get<any>(`/jockey/${user.id}/dashboard`).catch(() => null),
         api.get<any[]>(`/jockey/${user.id}/mounts`).catch(() => []),
         api.get<any[]>(`/invitations?jockeyId=${user.id}`).catch(() => []),
@@ -1116,8 +1129,12 @@ export default function Jockey() {
         api.get<any[]>(`/jockey/${user.id}/violations`).catch(() => []),
         api.get<any[]>("/public/races").catch(() => []),
         api.get<Record<number, any[]>>("/public/races/referees").catch(() => ({})),
+        api.get<any>(`/admin/users/${user.id}/wallet`).catch(() => null),
       ]);
       setDashboard(stats);
+      if (walletRes?.walletBalance !== undefined && user) {
+        setUser({ ...user, walletBalance: Number(walletRes.walletBalance) });
+      }
       setMounts(mountData);
       setInvitations(Array.isArray(invites) ? invites : []);
       setMeetings(Array.isArray(allMeetings) ? allMeetings : []);
@@ -1138,8 +1155,23 @@ export default function Jockey() {
     try {
       await api.post(`/invitations/${id}/accept`);
       setSuccessMsg("Invitation accepted and race entry created!");
+      setActionModal({
+        isOpen: true,
+        type: "success",
+        title: "Invitation Accepted Successfully!",
+        message: "You have accepted this mount invitation! Any conflicting invitations scheduled at the same date & time have been automatically rejected."
+      });
       fetchData();
-    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to accept invitation.")); }
+    } catch (err: any) {
+      const msg = getErrMsg(err, "Failed to accept invitation.");
+      setErrorMsg(msg);
+      setActionModal({
+        isOpen: true,
+        type: "error",
+        title: "Failed to Accept Invitation",
+        message: msg
+      });
+    }
   };
 
   // Hàm xử lý từ chối lời mời thuê cưỡi ngựa
@@ -1147,8 +1179,23 @@ export default function Jockey() {
     try {
       await api.post(`/invitations/${id}/reject`);
       setSuccessMsg("Invitation rejected.");
+      setActionModal({
+        isOpen: true,
+        type: "error",
+        title: "Invitation Rejected",
+        message: "You have rejected this mount invitation."
+      });
       fetchData();
-    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to reject invitation.")); }
+    } catch (err: any) {
+      const msg = getErrMsg(err, "Failed to reject invitation.");
+      setErrorMsg(msg);
+      setActionModal({
+        isOpen: true,
+        type: "error",
+        title: "Failed to Reject Invitation",
+        message: msg
+      });
+    }
   };
 
   // Đăng ký tham gia Ngày hội đua đua ngựa
@@ -1183,7 +1230,7 @@ export default function Jockey() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "hub":         return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} />;
+      case "hub":         return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} onSwitchTab={t => setActiveTab(t as JockeyTab)} />;
       case "mounts":      return <MountsView mounts={mounts} loading={loading} onViewHorse={setSelectedHorse} />;
       case "calendar":    return <CalendarView meetings={meetings} allRaces={allRaces} refereesMap={refereesMap} />;
       case "invitations": return <InvitationsView invitations={invitations} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} refereesMap={refereesMap} />;
@@ -1192,7 +1239,7 @@ export default function Jockey() {
       case "wallet":      return <UserWalletView user={user} roleLabel="Jockey" roleColor="#3b82c4" />;
       case "notifications": return <NotificationCenterView userId={user?.id} />;
       case "profile":     return <ProfileTab roleColor={ROLE_COLOR} roleLabel="Jockey" />;
-      default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} />;
+      default:            return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} onSwitchTab={t => setActiveTab(t as JockeyTab)} />;
     }
   };
 
@@ -1218,6 +1265,7 @@ export default function Jockey() {
       {selectedHorse !== null && (
         <HorsePerformanceModal horseId={selectedHorse.id} horseName={selectedHorse.name} onClose={() => setSelectedHorse(null)} />
       )}
+      <ActionModal modal={actionModal} onClose={() => setActionModal(prev => ({ ...prev, isOpen: false }))} />
     </>
   );
 }

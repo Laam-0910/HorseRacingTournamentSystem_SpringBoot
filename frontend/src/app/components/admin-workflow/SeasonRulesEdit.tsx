@@ -31,8 +31,8 @@ export default function SeasonRulesEdit({ seasonId, seasonName, onClose, onSaved
           // Auto-upgrade legacy unscaled values (< 10,000) to VNĐ scale (* 1000)
           const sanitized = data.map((r: any) => ({
             ...r,
-            minPrize: r.minPrize != null && r.minPrize < 10000 ? r.minPrize * 1000 : r.minPrize,
-            maxPrize: r.maxPrize != null && r.maxPrize < 10000 ? r.maxPrize * 1000 : r.maxPrize,
+            minPrize: r.minPrize != null && r.minPrize < 10000000 ? r.minPrize * 1000 : r.minPrize,
+            maxPrize: r.maxPrize != null && r.maxPrize < 10000000 ? r.maxPrize * 1000 : r.maxPrize,
           }));
           setRules(sanitized);
         } else {

@@ -4,6 +4,7 @@ import { formatDate } from "../../../utils/dateTimeHelper";
 import { $t } from "../../../../lib/i18n";
 import { Pagination } from "../../common/Pagination";
 import VietQRModal from "../../common/VietQRModal";
+import { useAuth } from "../../../../context/AuthContext";
 
 interface UserWalletViewProps {
   user: any;
@@ -15,7 +16,10 @@ interface UserWalletViewProps {
  * Component UserWalletView - Dedicated Wallet & Transaction History Dashboard View
  * for Horse Owner, Jockey, and other user roles.
  */
-export default function UserWalletView({ user, roleLabel = "User", roleColor = "#fbbf24" }: UserWalletViewProps) {
+export default function UserWalletView({ user: propUser, roleLabel = "User", roleColor = "#fbbf24" }: UserWalletViewProps) {
+  const { user: authUser, setUser } = useAuth();
+  const user = authUser || propUser;
+
   const [walletData, setWalletData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -40,24 +44,26 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
 
   const fetchWalletData = async () => {
     if (!user?.id) return;
-    setLoading(true);
-    setError("");
     try {
       const [walletRes, wrRes] = await Promise.all([
         api.get<any>(`/admin/users/${user.id}/wallet`),
         api.get<any[]>(`/public/wallet/withdrawal-requests/${user.id}`).catch(() => [])
       ]);
       setWalletData(walletRes);
+      if (walletRes?.walletBalance !== undefined && user) {
+        setUser({ ...user, walletBalance: Number(walletRes.walletBalance) });
+      }
       setWithdrawalRequests(Array.isArray(wrRes) ? wrRes : []);
     } catch (err: any) {
       setError(getErrMsg(err, "Failed to load wallet data."));
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchWalletData();
+    setLoading(true);
+    fetchWalletData().finally(() => setLoading(false));
+    const interval = setInterval(fetchWalletData, 5000);
+
     api.get<any[]>("/admin/configs").then(configs => {
       const modeConfig = configs.find(c => c.configKey === "PAYMENT_GATEWAY_MODE");
       if (modeConfig && modeConfig.configValue?.toUpperCase() === "LIVE") {
@@ -68,6 +74,8 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
         setMinWithdrawal(Number(minWd.configValue));
       }
     }).catch(() => {});
+
+    return () => clearInterval(interval);
   }, [user?.id]);
 
   const handleDepositPrompt = (e: React.FormEvent) => {
@@ -137,7 +145,7 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
         notes: notes.trim()
       });
       if (res.success) {
-        setSuccessMsg(`Withdrawal request for ${val.toLocaleString('en-US')} VND submitted to ${bankName} (${accountNumber.trim()}). Estimated processing: 1-3 business days.`);
+        setSuccessMsg(res.message || `Withdrawal of ${val.toLocaleString('en-US')} VNĐ submitted successfully.`);
         setShowWithdrawModal(false);
         setAmountInput("");
         setAccountNumber("");
@@ -154,9 +162,9 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
     }
   };
 
-  const walletBalance = user?.walletBalance !== undefined && user?.walletBalance !== null
-    ? Number(user.walletBalance)
-    : Number(walletData?.walletBalance || 0);
+  const walletBalance = walletData?.walletBalance !== undefined && walletData?.walletBalance !== null
+    ? Number(walletData.walletBalance)
+    : (user?.walletBalance !== undefined && user?.walletBalance !== null ? Number(user.walletBalance) : 0);
 
   const transactions = walletData?.transactions || [];
   const totalPages = Math.max(1, Math.ceil(transactions.length / pageSize));
@@ -436,9 +444,15 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
             </span>
           </div>
 
-          <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-[10px] font-mono text-amber-300/80">
-            ℹ️ Withdrawal requests are manually processed by admin within 1-3 business days. Your wallet balance will be deducted once the transfer is confirmed.
-          </div>
+          {gatewayMode === 'MOCK' ? (
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-[10px] font-mono text-emerald-300">
+              ⚡ Instant Auto-Disbursement Mode Active (MOCK Gateway): Withdrawals are transferred to your bank account immediately upon request.
+            </div>
+          ) : (
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-3 text-[10px] font-mono text-amber-300/80">
+              ℹ️ Live Banking Gateway Active: Withdrawal requests are reviewed & processed by admin within 1-3 business days.
+            </div>
+          )}
 
           <div className="border border-white/10 rounded-xl overflow-x-auto">
             <table className="w-full text-left border-collapse text-xs font-mono">
@@ -517,7 +531,9 @@ export default function UserWalletView({ user, roleLabel = "User", roleColor = "
                         <td className={`px-4 py-3 font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {isPositive ? `+${amt.toLocaleString('en-US')}` : `${amt.toLocaleString('en-US')}`}
                         </td>
-                        <td className="px-4 py-3 text-white/80 max-w-md break-words" title={tx.description}>{tx.description}</td>
+                        <td className="px-4 py-3 text-white/80">
+                          <div className="max-w-[280px] whitespace-normal break-words leading-snug" title={tx.description}>{tx.description}</div>
+                        </td>
                         <td className="px-4 py-3 text-white/40">{formatDate(tx.createdAt)}</td>
                       </tr>
                     );

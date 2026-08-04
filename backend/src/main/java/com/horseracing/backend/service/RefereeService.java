@@ -156,9 +156,6 @@ public class RefereeService {
 
         Violation savedViolation = violationRepository.save(violation); // Lưu bản ghi vi phạm vào cơ sở dữ liệu
 
-        // Tự động trừ tiền phạt vào ví của Kỵ sĩ/Chủ sở hữu vi phạm
-        applyFineToUserWallet(savedViolation.getJockeyId(), savedViolation.getPenalty(), savedViolation.getDescription());
-
         // Trigger STEWARDS_INQUIRY if the race is RUNNING or FINISHED
         if (dto.getRaceId() != null) { // Kiểm tra nếu có raceId
             Optional<Race> raceOpt = raceRepository.findById(dto.getRaceId()); // Tra cứu thông tin trận đua
@@ -314,24 +311,22 @@ public class RefereeService {
 
     @Transactional
     public void stopRace(Integer raceId, String stewardReport) {
-        Race race = raceRepository.findById(raceId) // Tra cứu trận đua theo raceId
-                .orElseThrow(() -> new IllegalArgumentException("Race not found")); // Ném ngoại lệ nếu không tìm thấy trận đua
-        // Chỉ cho phép dừng khẩn cấp khi trận đua đang RUNNING, STOPPED hoặc STEWARDS_INQUIRY
+        Race race = raceRepository.findById(raceId)
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
         if (!"RUNNING".equals(race.getStatus()) && !"STOPPED".equals(race.getStatus()) && !"STEWARDS_INQUIRY".equals(race.getStatus())) {
             throw new IllegalStateException("Race must be RUNNING, STOPPED or STEWARDS_INQUIRY to perform an emergency stop. Current status: " + race.getStatus());
         }
-        race.setStatus("CANCELLED"); // Đổi trạng thái trận đua sang CANCELLED (bị hủy)
-        race.setStewardReport(stewardReport); // Lưu lý do dừng khẩn cấp vào báo cáo trọng tài
-        race.setYoutubeLiveUrl(null); // Xóa URL livestream khi dừng khẩn cấp
-        raceRepository.save(race); // Lưu trận đua đã cập nhật vào DB
+        race.setStatus("CANCELLED");
+        race.setStewardReport(stewardReport);
+        race.setYoutubeLiveUrl(null);
+        raceRepository.save(race);
 
-        List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId); // Lấy danh sách lượt thi đấu của trận đua
-        for (RaceEntry entry : entries) { // Duyệt qua từng lượt thi đấu
-            // Chỉ hủy các entry chưa có kết quả cuối (DISQUALIFIED / FINISHED giữ nguyên)
+        List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
+        for (RaceEntry entry : entries) {
             String es = entry.getStatus();
             if ("APPROVED".equals(es) || "RUNNING".equals(es) || "STOPPED".equals(es) || "PENDING_ADMIN".equals(es)) {
-                entry.setStatus("REJECTED"); // Đổi trạng thái lượt thi đấu sang REJECTED
-                raceEntryRepository.save(entry); // Lưu lượt thi đấu đã cập nhật vào DB
+                entry.setStatus("REJECTED");
+                raceEntryRepository.save(entry);
             }
         }
     }
@@ -340,85 +335,16 @@ public class RefereeService {
     public void confirmViolation(Integer violationId) {
         Violation violation = violationRepository.findById(violationId)
                 .orElseThrow(() -> new IllegalArgumentException("Violation not found"));
+        if ("CONFIRMED".equalsIgnoreCase(violation.getStatus())) {
+            return; // Already confirmed, avoid duplicate fine deductions
+        }
         violation.setStatus("CONFIRMED");
         violationRepository.save(violation);
 
-        // Deduct Fine penalty from Jockey's or Horse Owner's wallet if penalty string contains a fine amount
-        if (violation.getPenalty() != null && violation.getPenalty().toLowerCase().contains("fine")) {
-            try {
-                String pen = violation.getPenalty();
-                java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("\\$?(\\d+(?:\\.\\d+)?)").matcher(pen);
-                if (matcher.find()) {
-                    BigDecimal fineAmount = new BigDecimal(matcher.group(1));
-                    if (fineAmount.compareTo(BigDecimal.ZERO) > 0) {
-                        boolean isOwnerFine = pen.toLowerCase().contains("owner");
-                        Integer targetUserId = null;
+        // Trừ tiền phạt vào ví của đúng đối tượng vi phạm (Chủ sở hữu hoặc Nài ngựa)
+        applyFineToTargetUser(violation);
 
-                        if (isOwnerFine && violation.getHorseId() != null) {
-                            Optional<Horse> hOpt = horseRepository.findById(violation.getHorseId());
-                            if (hOpt.isPresent()) {
-                                targetUserId = hOpt.get().getOwnerId();
-                            }
-                        }
-                        if (targetUserId == null) {
-                            targetUserId = violation.getJockeyId();
-                        }
-
-                        if (targetUserId != null) {
-                            Optional<User> uOpt = userRepository.findById(targetUserId);
-                            if (uOpt.isPresent()) {
-                                User targetUser = uOpt.get();
-                                BigDecimal cur = targetUser.getWalletBalance() != null ? targetUser.getWalletBalance() : BigDecimal.ZERO;
-                                BigDecimal newBal = cur.subtract(fineAmount);
-                                targetUser.setWalletBalance(newBal);
-                                targetUser.setBalance(newBal);
-                                userRepository.save(targetUser);
-
-                                WalletTransaction txFine = new WalletTransaction();
-                                txFine.setUserId(targetUser.getId());
-                                txFine.setAmount(fineAmount.negate());
-                                txFine.setTransactionType("VIOLATION_FINE");
-                                txFine.setDescription("Fine penalty deducted for race violation #" + violationId + ": " + violation.getDescription());
-                                txFine.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-                                walletTransactionRepository.save(txFine);
-
-                                // If wallet balance is negative (< 0), put upcoming un-run entries on SUSPENDED_DEFICIT hold (preserves invitation data)
-                                if (newBal.compareTo(BigDecimal.ZERO) < 0) {
-                                    if (targetUser.getRoleId() != null && targetUser.getRoleId() == 2) {
-                                        List<Horse> ownerHorses = horseRepository.findByOwnerId(targetUser.getId());
-                                        List<Integer> hIds = ownerHorses.stream().map(Horse::getId).collect(Collectors.toList());
-                                        if (!hIds.isEmpty()) {
-                                            List<RaceEntry> upcoming = raceEntryRepository.findAll().stream()
-                                                    .filter(e -> hIds.contains(e.getHorseId()) && ("PENDING_ADMIN".equalsIgnoreCase(e.getStatus()) || "APPROVED".equalsIgnoreCase(e.getStatus())))
-                                                    .collect(Collectors.toList());
-                                            for (RaceEntry e : upcoming) {
-                                                e.setStatus("SUSPENDED_DEFICIT");
-                                                raceEntryRepository.save(e);
-                                            }
-                                        }
-                                    } else {
-                                        List<RaceEntry> upcoming = raceEntryRepository.findByJockeyId(targetUser.getId());
-                                        for (RaceEntry e : upcoming) {
-                                            if ("PENDING_ADMIN".equalsIgnoreCase(e.getStatus()) || "APPROVED".equalsIgnoreCase(e.getStatus())) {
-                                                e.setStatus("SUSPENDED_DEFICIT");
-                                                raceEntryRepository.save(e);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (Exception ex) {
-                // Ignore parsing exception
-            }
-        }
-
-        // Tự động trừ tiền phạt vào ví người vi phạm khi biên bản được xác nhận
-        applyFineToUserWallet(violation.getJockeyId(), violation.getPenalty(), violation.getDescription());
-
-        // If no more PENDING violations for this race, reset race to FINISHED
+        // If no more PENDING violations for this race, reset race from STEWARDS_INQUIRY back to RUNNING (or FINISHED if times recorded)
         Integer raceId = violation.getRaceId();
         if (raceId != null) {
             List<Violation> remaining = violationRepository.findByRaceId(raceId);
@@ -429,7 +355,9 @@ public class RefereeService {
                 if (raceOpt.isPresent()) {
                     Race race = raceOpt.get();
                     if ("STEWARDS_INQUIRY".equals(race.getStatus())) {
-                        race.setStatus("FINISHED");
+                        boolean hasFinishTimes = raceEntryRepository.findByRaceId(raceId).stream()
+                                .anyMatch(e -> !"REJECTED".equalsIgnoreCase(e.getStatus()) && e.getFinishTime() != null && !e.getFinishTime().trim().isEmpty() && !"DQ".equalsIgnoreCase(e.getFinishTime().trim()));
+                        race.setStatus(hasFinishTimes ? "FINISHED" : "RUNNING");
                         raceRepository.save(race);
                     }
                 }
@@ -444,7 +372,7 @@ public class RefereeService {
         violation.setStatus("DISMISSED"); // Đổi trạng thái biên bản vi phạm sang DISMISSED (bác bỏ)
         violationRepository.save(violation); // Lưu thay đổi biên bản vi phạm vào DB
 
-        // If no more PENDING violations for this race, reset race from STEWARDS_INQUIRY back to FINISHED
+        // If no more PENDING violations for this race, reset race from STEWARDS_INQUIRY back to RUNNING (or FINISHED if times recorded)
         Integer raceId = violation.getRaceId(); // Lấy mã trận đua liên quan
         if (raceId != null) {
             List<Violation> remaining = violationRepository.findByRaceId(raceId); // Lấy các vi phạm thuộc trận đua
@@ -455,7 +383,9 @@ public class RefereeService {
                 if (raceOpt.isPresent()) {
                     Race race = raceOpt.get(); // Lấy đối tượng Race
                     if ("STEWARDS_INQUIRY".equals(race.getStatus())) { // Nếu trận đua đang tạm hoãn điều tra
-                        race.setStatus("FINISHED"); // Đổi trạng thái trận đua trở lại FINISHED
+                        boolean hasFinishTimes = raceEntryRepository.findByRaceId(raceId).stream()
+                                .anyMatch(e -> !"REJECTED".equalsIgnoreCase(e.getStatus()) && e.getFinishTime() != null && !e.getFinishTime().trim().isEmpty() && !"DQ".equalsIgnoreCase(e.getFinishTime().trim()));
+                        race.setStatus(hasFinishTimes ? "FINISHED" : "RUNNING"); // Đổi trạng thái trận đua trở lại RUNNING hoặc FINISHED
                         raceRepository.save(race); // Lưu trận đua vào cơ sở dữ liệu
                     }
                 }
@@ -545,8 +475,9 @@ public class RefereeService {
         }
     }
 
-    private void applyFineToUserWallet(Integer userId, String penaltyStr, String description) {
-        if (userId == null || penaltyStr == null) return;
+    private void applyFineToTargetUser(Violation violation) {
+        if (violation == null || violation.getPenalty() == null) return;
+        String penaltyStr = violation.getPenalty();
         java.math.BigDecimal fineAmount = java.math.BigDecimal.ZERO;
         String cleanPenalty = penaltyStr.replace(",", "");
         java.util.regex.Matcher m = java.util.regex.Pattern.compile("(\\d+(?:\\.\\d+)?)").matcher(cleanPenalty);
@@ -563,21 +494,38 @@ public class RefereeService {
 
         if (fineAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
             final java.math.BigDecimal fine = fineAmount;
-            userRepository.findById(userId).ifPresent(user -> {
-                java.math.BigDecimal curBal = user.getWalletBalance() != null ? user.getWalletBalance() : java.math.BigDecimal.ZERO;
-                java.math.BigDecimal newBal = curBal.subtract(fine);
-                user.setWalletBalance(newBal);
-                user.setBalance(newBal);
-                userRepository.save(user);
+            boolean isOwnerFine = penaltyStr.toLowerCase().contains("owner");
+            Integer targetUserId = null;
 
-                WalletTransaction tx = new WalletTransaction();
-                tx.setUserId(userId);
-                tx.setAmount(fine.negate());
-                tx.setTransactionType("REFEREE_FINE");
-                tx.setDescription("Referee Violation Fine: " + (description != null ? description : "Violation") + " (" + penaltyStr + ")");
-                tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-                walletTransactionRepository.save(tx);
-            });
+            if (isOwnerFine && violation.getHorseId() != null) {
+                Optional<Horse> hOpt = horseRepository.findById(violation.getHorseId());
+                if (hOpt.isPresent()) {
+                    targetUserId = hOpt.get().getOwnerId();
+                }
+            }
+            if (targetUserId == null) {
+                targetUserId = violation.getJockeyId();
+            }
+
+            if (targetUserId != null) {
+                final Integer finalUserId = targetUserId;
+                final boolean isOwner = isOwnerFine;
+                userRepository.findById(finalUserId).ifPresent(user -> {
+                    java.math.BigDecimal curBal = user.getWalletBalance() != null ? user.getWalletBalance() : java.math.BigDecimal.ZERO;
+                    java.math.BigDecimal newBal = curBal.subtract(fine);
+                    user.setWalletBalance(newBal);
+                    user.setBalance(newBal);
+                    userRepository.save(user);
+
+                    WalletTransaction tx = new WalletTransaction();
+                    tx.setUserId(finalUserId);
+                    tx.setAmount(fine.negate());
+                    tx.setTransactionType(isOwner ? "OWNER_FINE" : "REFEREE_FINE");
+                    tx.setDescription((isOwner ? "Owner Violation Fine: " : "Referee Violation Fine: ") + (violation.getDescription() != null ? violation.getDescription() : "Violation") + " (" + penaltyStr + ")");
+                    tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                    walletTransactionRepository.save(tx);
+                });
+            }
         }
     }
 }

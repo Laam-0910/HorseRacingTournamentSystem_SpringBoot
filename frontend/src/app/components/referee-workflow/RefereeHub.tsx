@@ -533,6 +533,9 @@ export default function RefereeHub() {
     setSelectedRace(race);
     setLoading(true);
     try {
+      // Tự động gọi API tính toán lại mốc Handicap & Carried Weight chuẩn trước khi mở giao diện kiểm tra cân
+      await api.post(`/admin/races/${race.id}/recalculate-weights`).catch(() => {});
+
       // Lấy danh sách lượt chạy đã đăng ký cho cuộc đua
       const data = await api.get<any[]>(`/public/results?raceId=${race.id}`);
       setRaceEntries(data || []);

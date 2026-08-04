@@ -28,6 +28,7 @@ public class HorseOwnerController {
     private final HorseService horseService; // Dịch vụ quản lý thông tin ngựa
     private final InvitationService invitationService; // Dịch vụ quản lý lời mời cưỡi ngựa
     private final JockeyOwnerDashboardService dashboardService; // Dịch vụ xử lý dữ liệu Dashboard kỵ sĩ/chủ ngựa
+    private final com.horseracing.backend.service.RefereeService refereeService; // Dịch vụ quản lý xử lý vi phạm
 
     // Lấy danh sách toàn bộ ngựa thuộc sở hữu của chủ ngựa theo ID chủ ngựa
     @GetMapping("/{id}/horses")
@@ -57,5 +58,22 @@ public class HorseOwnerController {
     @GetMapping("/{id}/results")
         public ResponseEntity<List<Map<String, Object>>> getOwnerResults(@PathVariable Integer id) {
         return ResponseEntity.ok(dashboardService.getOwnerResults(id)); // Trả về HTTP 200 kèm danh sách lịch sử kết quả thi đấu của các con ngựa thuộc chuồng
+    }
+
+    // Lấy danh sách vi phạm dành cho Chủ sở hữu ngựa
+    @GetMapping("/{id}/violations")
+    public ResponseEntity<List<Map<String, Object>>> getOwnerViolations(@PathVariable Integer id) {
+        return ResponseEntity.ok(dashboardService.getOwnerViolations(id));
+    }
+
+    // Chủ sở hữu ngựa xác nhận biên bản vi phạm
+    @PostMapping("/violations/{violationId}/confirm")
+    public ResponseEntity<?> confirmOwnerViolation(@PathVariable Integer violationId) {
+        try {
+            refereeService.confirmViolation(violationId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Owner violation acknowledged successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
     }
 }

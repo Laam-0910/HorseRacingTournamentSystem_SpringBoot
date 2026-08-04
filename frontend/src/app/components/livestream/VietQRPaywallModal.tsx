@@ -47,14 +47,22 @@ export default function VietQRPaywallModal({
 
   useEffect(() => {
     if (userId) {
-      api.get<any>(`/public/users/${userId}`)
+      api.get<any>(`/public/users/${userId}/profile`)
         .then(res => {
-          const u = res.user || res;
-          if (u.walletBalance !== undefined && u.walletBalance !== null) {
-            setWalletBal(Number(u.walletBalance));
+          const bal = res.walletBalance ?? res.balance;
+          if (bal !== undefined && bal !== null) {
+            setWalletBal(Number(bal));
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          api.get<any>(`/admin/users/${userId}/wallet`)
+            .then(res => {
+              if (res.walletBalance !== undefined) {
+                setWalletBal(Number(res.walletBalance));
+              }
+            })
+            .catch(() => {});
+        });
     }
   }, [userId]);
 
@@ -77,50 +85,57 @@ export default function VietQRPaywallModal({
       .catch(() => setIsMockMode(true));
   }, []);
 
-  // Auto-polling check access & simulated QR scan auto-activation every 2.5 seconds
+  // Auto-polling check access if user paid outside (or real webhook triggered)
   useEffect(() => {
     let isCancelled = false;
     const checkPayment = async () => {
+      // Only poll for external webhook completion if not already processing
+      if (paymentSuccess || purchasing || payingViaWallet) return;
       try {
         const accessRes = await api.get<any>(
           `/public/livestream/access?userId=${userId}${seasonId ? `&seasonId=${seasonId}` : ""}${raceMeetingId ? `&raceMeetingId=${raceMeetingId}` : ""}`
         );
-        if (accessRes.hasAccess && !isCancelled && !paymentSuccess) {
+        // Only trigger success if package matching selectedPackage was activated
+        if (accessRes.hasAccess && accessRes.packageType === selectedPackage && !isCancelled && !paymentSuccess) {
           setPaymentSuccess(true);
           setTimeout(() => {
             if (!isCancelled) onSuccess();
           }, 1200);
-          return;
         }
-
-        // Auto trigger purchase simulation ONLY if system is in MOCK mode
-        if (isMockMode && quote && !purchasing && !payingViaWallet && !isCancelled && !paymentSuccess) {
-          const res = await api.post<any>("/public/livestream/purchase", {
-            userId,
-            packageType: selectedPackage,
-            seasonId,
-            raceMeetingId: selectedPackage === "RACEMEETING" ? raceMeetingId : null,
-            amount: quote.finalPrice,
-            paymentMethod: "VIETQR"
-          });
-          if (res.success && !isCancelled && !paymentSuccess) {
-            setPaymentSuccess(true);
-            onSuccess();
-          }
-        }
-      } catch (err) {
-        // Silent poll error
-      }
+      } catch (err) {}
     };
 
-    checkPayment();
-    const interval = setInterval(checkPayment, 2500);
-
+    const interval = setInterval(checkPayment, 3000);
     return () => {
       isCancelled = true;
       clearInterval(interval);
     };
-  }, [userId, seasonId, raceMeetingId, selectedPackage, quote, purchasing, payingViaWallet, isMockMode, onSuccess, paymentSuccess]);
+  }, [userId, seasonId, raceMeetingId, selectedPackage, purchasing, payingViaWallet, onSuccess, paymentSuccess]);
+
+  const handleSimulateVietQRPay = async () => {
+    setPurchasing(true);
+    setError("");
+    try {
+      const res = await api.post<any>("/public/livestream/purchase", {
+        userId,
+        packageType: selectedPackage,
+        seasonId,
+        raceMeetingId: selectedPackage === "RACEMEETING" ? raceMeetingId : null,
+        amount: finalAmount,
+        paymentMethod: "VIETQR",
+      });
+      if (res.success) {
+        setPaymentSuccess(true);
+        setTimeout(() => {
+          onSuccess();
+        }, 1200);
+      }
+    } catch (err: any) {
+      setError(getErrMsg(err, "Payment processing failed. Please try again."));
+    } finally {
+      setPurchasing(false);
+    }
+  };
 
   const finalAmount = quote ? Number(quote.finalPrice) : selectedPackage === "RACEMEETING" ? 15000 : 79000;
   const transferContent = `PPV_${userId}_${selectedPackage}_${raceMeetingId || seasonId || 1}`;
@@ -280,6 +295,27 @@ export default function VietQRPaywallModal({
               <div>Holder: <strong style={{ color: "#fff" }}>{accountHolder}</strong></div>
               <div>Ticket Price: <strong style={{ color: "#34d399", fontFamily: "monospace", fontSize: "14px" }}>{finalAmount.toLocaleString('en-US')} VNĐ</strong></div>
               <div>Transfer Content: <strong style={{ color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "2px 6px", borderRadius: "4px", display: "inline-block" }}>{transferContent}</strong></div>
+              {isMockMode && (
+                <button
+                  onClick={handleSimulateVietQRPay}
+                  disabled={purchasing}
+                  style={{
+                    marginTop: "6px",
+                    padding: "0.45rem 0.75rem",
+                    background: "rgba(52,211,153,0.15)",
+                    border: "1px solid rgba(52,211,153,0.4)",
+                    color: "#34d399",
+                    borderRadius: "0.375rem",
+                    fontSize: "10.5px",
+                    fontFamily: "monospace",
+                    fontWeight: "bold",
+                    cursor: purchasing ? "not-allowed" : "pointer",
+                    textAlign: "center"
+                  }}
+                >
+                  {purchasing ? "Simulating VietQR Transfer..." : "⚡ Confirm & Simulate VietQR Payment (Mock)"}
+                </button>
+              )}
             </div>
           </div>
         </div>
