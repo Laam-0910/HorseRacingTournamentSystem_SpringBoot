@@ -17,6 +17,8 @@ import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import ViewLive from "./components/ViewLive";
 import UserWalletView from "./components/UserWalletView";
 import NotificationCenterView from "./components/NotificationCenterView";
+import ActionModal, { ActionModalState } from "../common/ActionModal";
+import { ViolationsView } from "./Jockey";
 
 interface InlineDatePickerProps {
   label: string;
@@ -158,7 +160,7 @@ function InlineDatePicker({ label, value, onChange }: InlineDatePickerProps) {
 }
 
 
-type OwnerTab = "hub" | "stable" | "calendar" | "invitations" | "results" | "live" | "wallet" | "profile" | "notifications";
+type OwnerTab = "hub" | "stable" | "calendar" | "invitations" | "results" | "violations" | "live" | "wallet" | "profile" | "notifications";
 
 const ROLE_COLOR = "#4a9d6f";
 
@@ -170,7 +172,8 @@ const NAV_ITEMS = [
   { index: "05", icon: "calendar",          label: "Race Calendar",      view: "calendar"    },
   { index: "06", icon: "mail",              label: "Invitations",        view: "invitations" },
   { index: "07", icon: "award",             label: "Stable Race History", view: "results"     },
-  { index: "08", icon: "tv",                label: "Live Stream Arena",  view: "live"        },
+  { index: "08", icon: "alert-triangle",   label: "Rule Violations",    view: "violations"  },
+  { index: "09", icon: "tv",                label: "Live Stream Arena",  view: "live"        },
 ];
 
 const inputStyle: React.CSSProperties = {
@@ -269,7 +272,7 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
       {dashboard && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: "1rem" }}>
           {[
-            { label: "💰 Wallet Balance", value: `$${walletBal.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, color: "#fbbf24" },
+            { label: "💰 Wallet Balance", value: `${walletBal.toLocaleString('en-US')} VNĐ`, color: "#fbbf24" },
             { label: "Total Horses",          value: dashboard.totalHorses ?? 0,           color: ROLE_COLOR },
             { label: "Stable Avg Rank",       value: dashboard.averagePlace ? Number(dashboard.averagePlace).toFixed(1) : "N/A" },
             { label: "Races Completed",       value: dashboard.racesCompleted ?? 0,         color: "#c9a227" },
@@ -359,12 +362,12 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                     <div style={{ fontSize: "0.75rem", color: "#fbbf24", fontFamily: "monospace", marginTop: "0.25rem", background: "rgba(251,191,36,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(251,191,36,0.2)" }}>
                       💰 <strong>Total Meeting Budget:</strong> {Number(m.totalBudget || m.total_budget || 500000).toLocaleString('en-US')} VND
                       <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>
-                        Place Prizes: 1st (50%), 2nd (30%), 3rd (20%) · 80% Owner / 20% Jockey split
+                        Place Prizes: 1st (50%), 2nd (30%), 3rd (20%)
                       </div>
                     </div>
 
                     <div style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", background: "rgba(52,211,153,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(52,211,153,0.2)" }}>
-                      🎟️ <strong>Race Meeting Registration Fee:</strong> ${Number(m.ticketPrice || m.ticket_price || 0).toLocaleString('en-US')}
+                      🎟️ <strong>Race Meeting Registration Fee:</strong> {Number(m.ticketPrice || m.ticket_price || 0).toLocaleString('en-US')} VND
                       <div style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>
                         Fee will be held in Escrow Vault upon registration. Refunded if rejected or meeting deactivated.
                       </div>
@@ -1712,15 +1715,17 @@ export default function HorseOwner() {
   const [allRaces, setAllRaces] = useState<any[]>([]);
   const [seasons, setSeasons] = useState<any[]>([]);
   const [results, setResults] = useState<any[]>([]);
+  const [violations, setViolations] = useState<any[]>([]);
   const [refereesMap, setRefereesMap] = useState<Record<number, any[]>>({});
   
   const [successMsg, setSuccessMsg] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [actionModal, setActionModal] = useState<ActionModalState>({ isOpen: false, type: "success", title: "", message: "" });
 
   const fetchData = async () => {
     if (!user) return;
     try {
-      const [stats, stableData, invites, allMeetings, ownerResults, allSeasonsData, racesData, refsData] = await Promise.all([
+      const [stats, stableData, invites, allMeetings, ownerResults, allSeasonsData, racesData, refsData, ownerViols] = await Promise.all([
         api.get<any>(`/owner/${user.id}/dashboard`).catch(() => null),
         api.get<any[]>(`/owner/${user.id}/stable`).catch(() => []),
         api.get<any[]>(`/owner/${user.id}/invitations`).catch(() => []),
@@ -1729,6 +1734,7 @@ export default function HorseOwner() {
         api.get<any[]>("/races/seasons").catch(() => []),
         api.get<any[]>("/races").catch(() => []),
         api.get<Record<number, any[]>>("/public/races/referees").catch(() => ({})),
+        api.get<any[]>(`/owner/${user.id}/violations`).catch(() => []),
       ]);
       setDashboard(stats);
       if (stats?.walletBalance !== undefined && user) {
@@ -1744,6 +1750,7 @@ export default function HorseOwner() {
       setSeasons(Array.isArray(allSeasonsData) ? allSeasonsData : []);
       setAllRaces(Array.isArray(racesData) ? racesData : []);
       setRefereesMap(refsData || {});
+      setViolations(Array.isArray(ownerViols) ? ownerViols : []);
     } catch (err: any) { 
       setErrorMsg(getErrMsg(err, "Failed to load owner data.")); 
     }
@@ -1752,6 +1759,26 @@ export default function HorseOwner() {
   useEffect(() => { 
     fetchData(); 
   }, [user]);
+
+  const handleAcknowledgeViolation = async (violationId: number) => {
+    try {
+      await api.post(`/owner/violations/${violationId}/confirm`);
+      setActionModal({
+        isOpen: true,
+        type: "success",
+        title: "Violation Acknowledged",
+        message: "You have acknowledged the violation record. Fine penalty (if applicable) processed successfully."
+      });
+      fetchData();
+    } catch (err: any) {
+      setActionModal({
+        isOpen: true,
+        type: "error",
+        title: "Acknowledgment Failed",
+        message: getErrMsg(err, "Failed to confirm violation.")
+      });
+    }
+  };
 
   const handleRegisterOwner = async (meetingId: number) => {
     if (!user) return;
@@ -1781,18 +1808,30 @@ export default function HorseOwner() {
       setErrorMsg(""); setSuccessMsg("");
       await api.post("/invitations", { ...form, ownerId: user.id, status: "PENDING", jockeyPrizePercentage: form.jockeyPrizePercentage ?? 20 });
       setSuccessMsg("Invitation sent to jockey.");
+      setActionModal({
+        isOpen: true,
+        type: "success",
+        title: "Invitation Sent Successfully!",
+        message: "Your mount invitation has been sent to the jockey. The hire fee has been reserved in Escrow Vault."
+      });
       fetchData();
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || getErrMsg(err, "");
+      let msg = getErrMsg(err) || "Failed to send invitation.";
+      const errMsg = err.response?.data?.error || msg;
       if (errMsg.includes("JOCKEY_NOT_APPROVED")) {
-        setErrorMsg("This jockey has not been approved for this race meeting yet.");
+        msg = "This jockey has not been approved for this race meeting yet.";
       } else if (errMsg.includes("HORSE_NOT_ACTIVE")) {
-        setErrorMsg("The selected horse is not active.");
+        msg = "The selected horse is not active.";
       } else if (errMsg.includes("HORSE_NOT_APPROVED")) {
-        setErrorMsg("The selected horse has not been approved for this race meeting yet.");
-      } else {
-        setErrorMsg(getErrMsg(err) || "Failed to send invitation.");
+        msg = "The selected horse has not been approved for this race meeting yet.";
       }
+      setErrorMsg(msg);
+      setActionModal({
+        isOpen: true,
+        type: "error",
+        title: "Failed to Send Invitation",
+        message: msg
+      });
     }
   };
 
@@ -1824,20 +1863,33 @@ export default function HorseOwner() {
       setErrorMsg(""); setSuccessMsg("");
       await api.post(`/invitations/${id}/withdraw?ownerId=${user.id}`);
       setSuccessMsg("Successfully withdrew invitation/entry.");
+      setActionModal({
+        isOpen: true,
+        type: "error",
+        title: "Invitation Withdrawn",
+        message: "The invitation has been withdrawn and the hire fee refunded to your wallet."
+      });
       fetchData();
     } catch (err: any) {
-      const errMsg = err.response?.data?.error || getErrMsg(err, "");
-      if (errMsg.includes("REGISTRATION_CLOSED")) {
-        setErrorMsg("Registration period for this race has closed.");
-      } else {
-        setErrorMsg(getErrMsg(err) || "Failed to withdraw registration.");
-      }
+      const msg = getErrMsg(err) || "Failed to withdraw registration.";
+      setErrorMsg(msg);
+      setActionModal({
+        isOpen: true,
+        type: "error",
+        title: "Failed to Withdraw Invitation",
+        message: msg
+      });
     }
   };
 
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
+  const pendingViolations = violations.filter(v => v.status === "PENDING").length;
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Owner Hub";
-  const navItemsWithBadge = NAV_ITEMS.map(n => n.view === "invitations" ? { ...n, badge: pendingInvitations } : n);
+  const navItemsWithBadge = NAV_ITEMS.map(n => {
+    if (n.view === "invitations") return { ...n, badge: pendingInvitations };
+    if (n.view === "violations") return { ...n, badge: pendingViolations };
+    return n;
+  });
 
   const renderContent = () => {
     switch (activeTab) {
@@ -1851,6 +1903,8 @@ export default function HorseOwner() {
         return <InvitationsView invitations={invitations} onViewProfile={setSelectedProfileId} onResubmit={handleResubmitEntry} onWithdraw={handleWithdrawInvitation} refereesMap={refereesMap} />;
       case "results":
         return <ResultsView results={results} />;
+      case "violations":
+        return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} onViewProfile={setSelectedProfileId} />;
       case "live":
         return <ViewLive />;
       case "wallet":
@@ -1881,6 +1935,7 @@ export default function HorseOwner() {
       {selectedProfileId !== null && (
         <ProfileModal userId={selectedProfileId} onClose={() => setSelectedProfileId(null)} />
       )}
+      <ActionModal modal={actionModal} onClose={() => setActionModal(prev => ({ ...prev, isOpen: false }))} />
     </>
   );
 }

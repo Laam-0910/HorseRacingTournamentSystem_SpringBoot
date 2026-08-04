@@ -459,7 +459,7 @@ export default function RegistrationProcessing() {
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Email: {e.owner?.email}</div>
                 </div>
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#f4f2ec', marginBottom: '0.25rem' }}>{e.meeting?.name}</div>
-                <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#34d399', marginBottom: '0.25rem' }}>🎟️ Ticket: ${Number(e.ticketPrice || e.meeting?.ticketPrice || 0).toLocaleString('en-US')} (✓ Paid)</div>
+                <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#34d399', marginBottom: '0.25rem' }}>🎟️ Ticket: {Number(e.ticketPrice || e.meeting?.ticketPrice || 0).toLocaleString('en-US')} VNĐ (✓ Paid)</div>
                 <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>Submitted: {e.registration?.registeredAt}</div>
               </div>
             ))}
@@ -488,7 +488,7 @@ export default function RegistrationProcessing() {
                     </td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{e.meeting?.name}</td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace" }}>
-                      <span style={{ color: '#34d399', fontWeight: 'bold' }}>🎟️ ${Number(e.ticketPrice || e.meeting?.ticketPrice || 0).toLocaleString('en-US')}</span>
+                      <span style={{ color: '#34d399', fontWeight: 'bold' }}>🎟️ {Number(e.ticketPrice || e.meeting?.ticketPrice || 0).toLocaleString('en-US')} VNĐ</span>
                       <div style={{ fontSize: '9px', color: '#4ade80' }}>✓ Paid from Wallet</div>
                     </td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{e.registration?.registeredAt}</td>
@@ -534,7 +534,7 @@ export default function RegistrationProcessing() {
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Base weight: {e.jockey?.weight} kg</div>
                 </div>
                 <div style={{ fontSize: '12px', fontWeight: 600, color: '#f4f2ec', marginBottom: '0.25rem' }}>{e.meeting?.name}</div>
-                <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#38bdf8', marginBottom: '0.25rem' }}>🎟️ Fee: FREE ($0 - Free for Jockey)</div>
+                <div style={{ fontSize: '10px', fontFamily: 'monospace', color: '#38bdf8', marginBottom: '0.25rem' }}>🎟️ Fee: FREE (0 VNĐ - Free for Jockey)</div>
                 <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>Submitted: {e.registration?.registeredAt}</div>
               </div>
             ))}
@@ -563,7 +563,7 @@ export default function RegistrationProcessing() {
                     </td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{e.meeting?.name}</td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace" }}>
-                      <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>🎟️ FREE ($0)</span>
+                      <span style={{ color: '#38bdf8', fontWeight: 'bold' }}>🎟️ FREE (0 VNĐ)</span>
                       <div style={{ fontSize: '9px', color: '#38bdf8' }}>✓ Exempt (Free for Jockey)</div>
                     </td>
                     <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{e.registration?.registeredAt}</td>
@@ -685,8 +685,8 @@ export default function RegistrationProcessing() {
                 <span className="text-white/50">Ticket Price:</span>
                 <span className={`font-bold ${viewingRegistrant.role === 'Jockey' ? 'text-sky-400' : 'text-emerald-400'}`}>
                   {viewingRegistrant.role === 'Jockey'
-                    ? 'FREE ($0 - Jockey)'
-                    : `$${Number(viewingRegistrant.ticketPrice || viewingRegistrant.meeting?.ticketPrice || 0).toLocaleString('en-US')}`}
+                    ? 'FREE (0 VNĐ - Jockey)'
+                    : `${Number(viewingRegistrant.ticketPrice || viewingRegistrant.meeting?.ticketPrice || 0).toLocaleString('en-US')} VNĐ`}
                 </span>
               </div>
               <div className="flex justify-between bg-white/[0.03] p-2.5 rounded-lg border border-white/5">

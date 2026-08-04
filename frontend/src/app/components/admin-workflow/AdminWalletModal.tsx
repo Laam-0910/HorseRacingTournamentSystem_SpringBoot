@@ -4,6 +4,7 @@ import { formatDate } from "../../utils/dateTimeHelper";
 import { $t } from "../../../lib/i18n";
 import { Pagination } from "../common/Pagination";
 import VietQRModal from "../common/VietQRModal";
+import { useAuth } from "../../../context/AuthContext";
 
 interface AdminWalletModalProps {
   onClose?: () => void;
@@ -17,6 +18,7 @@ interface AdminWalletModalProps {
  * and view complete transaction history logs.
  */
 export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = false }: AdminWalletModalProps) {
+  const { user, setUser } = useAuth();
   const [walletData, setWalletData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -53,6 +55,9 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
         api.get<any[]>(`/admin/withdrawal-requests?status=${wrFilter}`).catch(() => [])
       ]);
       setWalletData(walletRes);
+      if (walletRes?.walletBalance !== undefined && user) {
+        setUser({ ...user, walletBalance: Number(walletRes.walletBalance) });
+      }
       setWithdrawalRequests(Array.isArray(wrRes) ? wrRes : []);
       if (onBalanceUpdated) onBalanceUpdated();
     } catch (err: any) {
@@ -511,7 +516,9 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
                             <td className={`px-4 py-3 font-bold ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
                               {isPositive ? `+${amt.toLocaleString('en-US')} VNĐ` : `${amt.toLocaleString('en-US')} VNĐ`}
                             </td>
-                            <td className="px-4 py-3 text-white/80 max-w-xs truncate">{tx.description}</td>
+                            <td className="px-4 py-3 text-white/80">
+                              <div className="max-w-[250px] whitespace-normal break-words leading-snug" title={tx.description}>{tx.description}</div>
+                            </td>
                             <td className="px-4 py-3 text-white/40">{formatDate(tx.createdAt)}</td>
                           </tr>
                         );

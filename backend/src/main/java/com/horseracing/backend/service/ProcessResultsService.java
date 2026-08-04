@@ -453,7 +453,7 @@ public class ProcessResultsService {
                                 txRefund.setUserId(admin.getId());
                                 txRefund.setAmount(unspentBudget);
                                 txRefund.setTransactionType("ADMIN_BUDGET_REFUND");
-                                txRefund.setDescription("Unspent budget refund ($" + unspentBudget + ") for completed Race Meeting #" + meeting.getId() + " (" + meeting.getName() + ")");
+                                txRefund.setDescription("Unspent budget refund (" + unspentBudget + " VNĐ) for completed Race Meeting #" + meeting.getId() + " (" + meeting.getName() + ")");
                                 txRefund.setRaceMeetingId(meeting.getId());
                                 txRefund.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                                 walletTransactionRepository.save(txRefund);

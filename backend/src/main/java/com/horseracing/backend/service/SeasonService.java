@@ -311,11 +311,11 @@ public class SeasonService {
     public List<SeasonClassRuleDTO> getSeasonRules(Integer seasonId) {
         List<SeasonClassRule> rules = seasonClassRuleRepository.findBySeasonId(seasonId);
         if (rules.isEmpty() && seasonRepository.existsById(seasonId)) {
-            SeasonClassRule class1 = new SeasonClassRule(null, seasonId, "Class 1", "Elite Championship", 95, null, new BigDecimal("300000"), new BigDecimal("1000000"));
-            SeasonClassRule class2 = new SeasonClassRule(null, seasonId, "Class 2", "Premium Group", 80, 94, new BigDecimal("20000"), new BigDecimal("299999"));
-            SeasonClassRule class3 = new SeasonClassRule(null, seasonId, "Class 3", "Advanced Tier", 60, 79, new BigDecimal("100000"), new BigDecimal("199999"));
-            SeasonClassRule class4 = new SeasonClassRule(null, seasonId, "Class 4", "Intermediate Level", 40, 59, new BigDecimal("50000"), new BigDecimal("99999"));
-            SeasonClassRule class5 = new SeasonClassRule(null, seasonId, "Class 5", "Entry Division", 0, 39, new BigDecimal("20000"), new BigDecimal("49999"));
+            SeasonClassRule class1 = new SeasonClassRule(null, seasonId, "Class 1", "Elite Championship", 95, null, new BigDecimal("300000000"), new BigDecimal("1000000000"));
+            SeasonClassRule class2 = new SeasonClassRule(null, seasonId, "Class 2", "Premium Group", 80, 94, new BigDecimal("200000000"), new BigDecimal("299999000"));
+            SeasonClassRule class3 = new SeasonClassRule(null, seasonId, "Class 3", "Advanced Tier", 60, 79, new BigDecimal("100000000"), new BigDecimal("199999000"));
+            SeasonClassRule class4 = new SeasonClassRule(null, seasonId, "Class 4", "Intermediate Level", 40, 59, new BigDecimal("50000000"), new BigDecimal("99999000"));
+            SeasonClassRule class5 = new SeasonClassRule(null, seasonId, "Class 5", "Entry Division", 0, 39, new BigDecimal("20000000"), new BigDecimal("49999000"));
             rules = seasonClassRuleRepository.saveAll(List.of(class1, class2, class3, class4, class5));
         }
 
@@ -390,10 +390,10 @@ public class SeasonService {
             }
 
             if (minPrize == null || minPrize.compareTo(BigDecimal.ZERO) <= 0) {
-                throw new IllegalArgumentException(String.format("Minimum prize money for %s must be greater than $0.00.", rule.getClassLevel()));
+                throw new IllegalArgumentException(String.format("Minimum prize money for %s must be greater than 0.00 VNĐ.", rule.getClassLevel()));
             }
             if (maxPrize == null || maxPrize.compareTo(minPrize) <= 0) {
-                throw new IllegalArgumentException(String.format("Maximum prize money ($%,.2f) must be strictly greater than minimum prize money ($%,.2f) for %s.",
+                throw new IllegalArgumentException(String.format("Maximum prize money (%,.2f VNĐ) must be strictly greater than minimum prize money (%,.2f VNĐ) for %s.",
                         maxPrize != null ? maxPrize : BigDecimal.ZERO, minPrize, rule.getClassLevel()));
             }
 
@@ -427,18 +427,18 @@ public class SeasonService {
                 if (higher.getMinPrize() != null && lower.getMaxPrize() != null) {
                     if (lower.getMaxPrize().compareTo(higher.getMinPrize()) >= 0) {
                         throw new IllegalArgumentException(String.format(
-                                "Class %d maximum prize ($%,.2f) must be strictly smaller than Class %d minimum prize ($%,.2f). Lower classes must have smaller maximum prizes than higher class minimum prizes.",
+                                "Class %d maximum prize (%,.2f VNĐ) must be strictly smaller than Class %d minimum prize (%,.2f VNĐ). Lower classes must have smaller maximum prizes than higher class minimum prizes.",
                                 i + 1, lower.getMaxPrize(), i, higher.getMinPrize()));
                     }
                 }
             }
         }
 
-        // Check against Race Meeting min budget limit ($10,000,000)
-        BigDecimal maxAllowedSum = new BigDecimal("10000000.00");
+        // Check against Race Meeting min budget limit (10,000,000,000 VNĐ)
+        BigDecimal maxAllowedSum = new BigDecimal("10000000000.00");
         if (totalMinPrizeSum.compareTo(maxAllowedSum) > 0) {
             throw new IllegalArgumentException(String.format(
-                    "Total minimum prizes for all classes ($%,.2f) exceeds the minimum Race Meeting budget limit ($%,.2f).",
+                    "Total minimum prizes for all classes (%,.2f VNĐ) exceeds the minimum Race Meeting budget limit (%,.2f VNĐ).",
                     totalMinPrizeSum, maxAllowedSum));
         }
     }

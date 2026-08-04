@@ -160,7 +160,7 @@ public class LivestreamSubscriptionController {
             if ("WALLET".equalsIgnoreCase(payMethod)) {
                 BigDecimal bal = spectator.getWalletBalance() != null ? spectator.getWalletBalance() : BigDecimal.ZERO;
                 if (bal.compareTo(amount) < 0) {
-                    return ResponseEntity.badRequest().body(Map.of("success", false, "error", String.format("Insufficient wallet balance ($%,.2f available, $%,.2f required). Please top up your wallet via VietQR.", bal, amount)));
+                    return ResponseEntity.badRequest().body(Map.of("success", false, "error", String.format("Insufficient wallet balance (%,.2f VNĐ available, %,.2f VNĐ required). Please top up your wallet via VietQR.", bal, amount)));
                 }
                 spectator.setWalletBalance(bal.subtract(amount));
                 spectator.setBalance(bal.subtract(amount));
@@ -216,10 +216,10 @@ public class LivestreamSubscriptionController {
             // Gửi thông báo đến Spectator đã đăng ký mua thẻ xem live thành công
             notificationService.notifySpectatorOnTicketPurchase(userId, packageType, amount);
 
-            // Log purchase transaction for Spectator user
+            // Log purchase transaction for Spectator user (negative amount for expense)
             WalletTransaction userTx = new WalletTransaction();
             userTx.setUserId(userId);
-            userTx.setAmount(amount);
+            userTx.setAmount(amount.negate());
             userTx.setTransactionType("LIVESTREAM_PPV_PURCHASE");
             userTx.setDescription("Unlocked Livestream HD Access (" + packageType.toUpperCase() + " Pass via VietQR)");
             if (raceMeetingId != null) userTx.setRaceMeetingId(raceMeetingId);

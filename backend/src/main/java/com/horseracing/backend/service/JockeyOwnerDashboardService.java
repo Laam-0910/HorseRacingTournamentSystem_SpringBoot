@@ -621,7 +621,10 @@ public class JockeyOwnerDashboardService {
     // Tra cứu danh sách vi phạm (Violations) của Nài ngựa
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getJockeyViolations(Integer jockeyId) {
-        List<Violation> viols = violationRepository.findByJockeyId(jockeyId); // Lấy danh sách vi phạm của nài
+        // Chỉ lấy vi phạm của Nài ngựa (loại trừ các án phạt dành riêng cho Chủ ngựa)
+        List<Violation> viols = violationRepository.findByJockeyId(jockeyId).stream()
+                .filter(v -> v.getPenalty() == null || !v.getPenalty().toLowerCase().contains("owner"))
+                .collect(Collectors.toList());
         List<Map<String, Object>> resolved = new ArrayList<>();
 
         Map<Integer, User> userMap = userRepository.findAll().stream().collect(Collectors.toMap(User::getId, u -> u));
@@ -663,6 +666,64 @@ public class JockeyOwnerDashboardService {
         }
 
         return resolved; // Trả về danh sách vi phạm của nài
+    }
+
+    // Tra cứu danh sách vi phạm (Violations) dành riêng cho Chủ sở hữu Ngựa (Horse Owner)
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> getOwnerViolations(Integer ownerId) {
+        List<Horse> myHorses = horseRepository.findByOwnerId(ownerId);
+        List<Integer> horseIds = myHorses.stream().map(Horse::getId).collect(Collectors.toList());
+
+        if (horseIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        List<Violation> allViols = violationRepository.findAll();
+        List<Violation> ownerViols = allViols.stream()
+                .filter(v -> v.getHorseId() != null && horseIds.contains(v.getHorseId()))
+                .filter(v -> v.getPenalty() != null && v.getPenalty().toLowerCase().contains("owner"))
+                .collect(Collectors.toList());
+
+        Map<Integer, User> userMap = userRepository.findAll().stream().collect(Collectors.toMap(User::getId, u -> u));
+        Map<Integer, Horse> horseMap = horseRepository.findAll().stream().collect(Collectors.toMap(Horse::getId, h -> h));
+        Map<Integer, Race> raceMap = raceRepository.findAll().stream().collect(Collectors.toMap(Race::getId, r -> r));
+        Map<Integer, RaceMeeting> meetingMap = raceMeetingRepository.findAll().stream().collect(Collectors.toMap(RaceMeeting::getId, m -> m));
+
+        List<Map<String, Object>> resolved = new ArrayList<>();
+        for (Violation v : ownerViols) {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", v.getId());
+            map.put("description", v.getDescription());
+            map.put("penalty", v.getPenalty());
+            map.put("status", v.getStatus() != null ? v.getStatus().trim() : null);
+            map.put("type", "Owner Rule Violation");
+
+            Horse horse = horseMap.get(v.getHorseId());
+            map.put("horseName", horse != null ? horse.getName() : "Unknown Horse");
+
+            Race race = raceMap.get(v.getRaceId());
+            if (race != null) {
+                map.put("raceName", race.getClassLevel());
+                map.put("date", race.getStartTime() != null ? race.getStartTime().toString() : "N/A");
+                
+                RaceMeeting mt = meetingMap.get(race.getRaceMeetingId());
+                if (mt != null) {
+                    map.put("raceName", race.getClassLevel() + " at " + mt.getName());
+                }
+            } else {
+                map.put("raceName", "Unknown Race");
+                map.put("date", "N/A");
+            }
+
+            User ref = userMap.get(v.getRefereeId());
+            map.put("refereeName", ref != null ? (ref.getFullName() != null && !ref.getFullName().isBlank() ? ref.getFullName() : ref.getUsername()) : "System Referee");
+            map.put("refereeAvatar", ref != null ? ref.getAvatar() : null);
+            map.put("refereeId", v.getRefereeId());
+
+            resolved.add(map);
+        }
+
+        return resolved;
     }
 
     // Tra cứu danh sách kết quả thi đấu của toàn bộ ngựa thuộc sở hữu của Chủ

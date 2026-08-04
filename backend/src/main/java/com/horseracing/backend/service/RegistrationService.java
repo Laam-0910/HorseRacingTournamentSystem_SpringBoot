@@ -102,7 +102,7 @@ public class RegistrationService {
                 if (ticketPrice.compareTo(java.math.BigDecimal.ZERO) > 0) {
                     java.math.BigDecimal balance = owner.getWalletBalance() != null ? owner.getWalletBalance() : java.math.BigDecimal.ZERO;
                     if (balance.compareTo(ticketPrice) < 0) {
-                        throw new IllegalArgumentException("Insufficient wallet balance ($" + balance + ") to re-pay for meeting ticket ($" + ticketPrice + "). Please top up your wallet.");
+                        throw new IllegalArgumentException("Insufficient wallet balance (" + balance + " VNĐ) to re-pay for meeting ticket (" + ticketPrice + " VNĐ). Please top up your wallet.");
                     }
                     owner.setWalletBalance(balance.subtract(ticketPrice));
                     userRepository.save(owner);
@@ -139,7 +139,7 @@ public class RegistrationService {
         if (ticketPrice.compareTo(java.math.BigDecimal.ZERO) > 0) {
             java.math.BigDecimal balance = owner.getWalletBalance() != null ? owner.getWalletBalance() : java.math.BigDecimal.ZERO;
             if (balance.compareTo(ticketPrice) < 0) {
-                throw new IllegalArgumentException("Insufficient wallet balance ($" + balance + ") to pay for meeting ticket ($" + ticketPrice + "). Please top up your wallet.");
+                throw new IllegalArgumentException("Insufficient wallet balance (" + balance + " VNĐ) to pay for meeting ticket (" + ticketPrice + " VNĐ). Please top up your wallet.");
             }
             // Trừ tiền vé từ Ví HorseOwner
             owner.setWalletBalance(balance.subtract(ticketPrice));

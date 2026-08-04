@@ -378,7 +378,7 @@ public class AdminUserService {
                             .forEach(i -> {
                                 i.setStatus("REJECTED");
                                 // Nếu có tiền cọc bị hủy do trùng lặp, hoàn tiền về cho Owner
-                                BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500.00");
+                                BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500000.00");
                                 if ("HELD".equalsIgnoreCase(i.getPayoutStatus()) && hireFee.compareTo(BigDecimal.ZERO) > 0 && i.getOwnerId() != null) {
                                     Optional<User> ownerOpt = userRepository.findById(i.getOwnerId());
                                     if (ownerOpt.isPresent()) {
@@ -386,6 +386,14 @@ public class AdminUserService {
                                         BigDecimal oWallet = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
                                         owner.setWalletBalance(oWallet.add(hireFee));
                                         userRepository.save(owner);
+
+                                        WalletTransaction txOwner = new WalletTransaction();
+                                        txOwner.setUserId(owner.getId());
+                                        txOwner.setAmount(hireFee);
+                                        txOwner.setTransactionType("HIRE_FEE_REFUND");
+                                        txOwner.setDescription("Jockey hire fee refund from Escrow Vault for invitation #" + i.getId());
+                                        txOwner.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                                        walletTransactionRepository.save(txOwner);
                                     }
                                     i.setPayoutStatus("REFUNDED");
                                 }
@@ -418,8 +426,8 @@ public class AdminUserService {
                 .forEach(i -> {
                     i.setStatus("REJECTED"); // Đổi trạng thái lời mời thành REJECTED
 
-                    // Hoàn trả 100% tiền tạm giữ Escrow ($500) về cho ví Owner
-                    BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500.00");
+                    // Hoàn trả 100% tiền tạm giữ Escrow (500,000 VNĐ) về cho ví Owner
+                    BigDecimal hireFee = i.getHireFee() != null ? i.getHireFee() : new BigDecimal("500000.00");
                     if ("HELD".equalsIgnoreCase(i.getPayoutStatus()) && hireFee.compareTo(BigDecimal.ZERO) > 0 && i.getOwnerId() != null) {
                         Optional<User> ownerOpt = userRepository.findById(i.getOwnerId());
                         if (ownerOpt.isPresent()) {
@@ -427,6 +435,14 @@ public class AdminUserService {
                             BigDecimal oWallet = owner.getWalletBalance() != null ? owner.getWalletBalance() : BigDecimal.ZERO;
                             owner.setWalletBalance(oWallet.add(hireFee));
                             userRepository.save(owner);
+
+                            WalletTransaction txOwner = new WalletTransaction();
+                            txOwner.setUserId(owner.getId());
+                            txOwner.setAmount(hireFee);
+                            txOwner.setTransactionType("HIRE_FEE_REFUND");
+                            txOwner.setDescription("Jockey hire fee refund from Escrow Vault for invitation #" + i.getId() + " (Race Entry #" + id + " rejected by Steward)");
+                            txOwner.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+                            walletTransactionRepository.save(txOwner);
                         }
                         i.setPayoutStatus("REFUNDED");
                     }
@@ -725,7 +741,6 @@ public class AdminUserService {
 
         for (int i = 0; i < activeEntries.size(); i++) {
             RaceEntry entry = activeEntries.get(i);
-            entry.setStatus("APPROVED"); // Tự động duyệt trạng thái hợp lệ
             if (i < gates.size()) {
                 entry.setGateNumber(gates.get(i)); // Gán cổng ngẫu nhiên cho từng thí sinh
             } else {
@@ -761,10 +776,10 @@ public class AdminUserService {
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId); // Lấy danh sách lượt đua
         if (entries == null || entries.isEmpty()) return; // Bỏ qua nếu không có thí sinh
 
-        // 1. Tìm chỉ số Rating lớn nhất (R_max) trong số các ngựa tham gia
+        // 1. Tìm chỉ số Rating lớn nhất (R_max) trong số các ngựa tham gia đã được Admin phê duyệt (APPROVED)
         int rMax = -1;
         for (RaceEntry entry : entries) {
-            if ("APPROVED".equalsIgnoreCase(entry.getStatus()) || "PENDING_ADMIN".equalsIgnoreCase(entry.getStatus())) {
+            if ("APPROVED".equalsIgnoreCase(entry.getStatus())) {
                 Optional<Horse> horseOpt = horseRepository.findById(entry.getHorseId());
                 if (horseOpt.isPresent() && horseOpt.get().getCurrentRating() != null) {
                     if (horseOpt.get().getCurrentRating() > rMax) {
@@ -778,9 +793,9 @@ public class AdminUserService {
             rMax = 52; // Mặc định R_max là 52 nếu không tìm thấy
         }
 
-        // 2. Tính toán cân nặng cho từng chiến mã
+        // 2. Tính toán cân nặng cho từng chiến mã đã duyệt APPROVED
         for (RaceEntry entry : entries) {
-            if ("APPROVED".equalsIgnoreCase(entry.getStatus()) || "PENDING_ADMIN".equalsIgnoreCase(entry.getStatus())) {
+            if ("APPROVED".equalsIgnoreCase(entry.getStatus())) {
                 Optional<Horse> horseOpt = horseRepository.findById(entry.getHorseId()); // Lấy thông tin ngựa
                 Optional<User> jockeyOpt = userRepository.findById(entry.getJockeyId()); // Lấy thông tin nài
 
@@ -1157,7 +1172,7 @@ public class AdminUserService {
 
         BigDecimal curBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
         if (curBal.compareTo(amount) < 0) {
-            throw new IllegalArgumentException("Insufficient Admin wallet balance ($" + curBal + ") for withdrawal of $" + amount);
+            throw new IllegalArgumentException("Insufficient Admin wallet balance (" + curBal + " VNĐ) for withdrawal of " + amount + " VNĐ");
         }
 
         BigDecimal newBal = curBal.subtract(amount);
@@ -1387,7 +1402,7 @@ public class AdminUserService {
             if (admin != null && budgetToRestore.compareTo(BigDecimal.ZERO) > 0) {
                 BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
                 if (adminBal.compareTo(budgetToRestore) < 0) {
-                    throw new IllegalArgumentException("Admin wallet balance ($" + adminBal + ") is insufficient to re-allocate budget ($" + budgetToRestore + ") for Race Meeting.");
+                    throw new IllegalArgumentException("Admin wallet balance (" + adminBal + " VNĐ) is insufficient to re-allocate budget (" + budgetToRestore + " VNĐ) for Race Meeting.");
                 }
                 admin.setWalletBalance(adminBal.subtract(budgetToRestore));
                 userRepository.save(admin);

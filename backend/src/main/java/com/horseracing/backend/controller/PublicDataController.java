@@ -284,8 +284,9 @@ public class PublicDataController {
         response.put("email", user.getEmail());
         response.put("roleId", user.getRoleId());
         response.put("avatar", user.getAvatar());
-        response.put("biography", user.getBiography() != null ? user.getBiography() : "");
-        response.put("balance", user.getBalance() != null ? user.getBalance() : BigDecimal.ZERO);
+        BigDecimal userBal = user.getWalletBalance() != null ? user.getWalletBalance() : (user.getBalance() != null ? user.getBalance() : BigDecimal.ZERO);
+        response.put("balance", userBal);
+        response.put("walletBalance", userBal);
 
         if (user.getRoleId() == 1) {
             // Thống kê dành riêng cho Admin
@@ -547,6 +548,14 @@ public class PublicDataController {
             user.setWalletBalance(current.add(amount));
             user.setBalance(current.add(amount));
             userRepository.save(user);
+
+            WalletTransaction tx = new WalletTransaction();
+            tx.setUserId(user.getId());
+            tx.setAmount(amount);
+            tx.setTransactionType("DEPOSIT");
+            tx.setDescription("Wallet Top-up Deposit via VietQR Banking Gateway");
+            tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+            walletTransactionRepository.save(tx);
 
             // Auto-reactivate any SUSPENDED_DEFICIT entries if wallet balance is restored to >= 0
             if (user.getWalletBalance().compareTo(BigDecimal.ZERO) >= 0) {

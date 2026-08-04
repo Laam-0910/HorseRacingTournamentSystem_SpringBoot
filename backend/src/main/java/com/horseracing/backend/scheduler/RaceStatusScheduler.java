@@ -24,6 +24,7 @@ public class RaceStatusScheduler {
     private final RaceRepository raceRepository;
     private final RaceEntryRepository raceEntryRepository;
     private final RaceInvitationRepository raceInvitationRepository;
+    private final com.horseracing.backend.service.AdminUserService adminUserService;
 
     @Scheduled(fixedDelay = 30000) // Chạy định kỳ mỗi 30 giây (30000ms)
     @Transactional
@@ -37,6 +38,7 @@ public class RaceStatusScheduler {
 
         // Duyệt qua danh sách tất cả các trận đua
         for (Race race : races) {
+            adminUserService.autoCalculateWeights(race.getId());
             // Lấy trạng thái hiện tại của trận đua
             String status = race.getStatus();
             // Chỉ kiểm tra các trận đua đang ở trạng thái SCHEDULED, DECLARATION_OPEN hoặc DECLARATION_CLOSED

@@ -258,9 +258,16 @@ public class NotificationService {
             if (userId == null) return;
             String amountStr = String.format("%,.0f VND", amount);
             String title = processed ? "Withdrawal Processed" : "Withdrawal Rejected";
-            String message = processed
-                ? String.format("Your cash-out withdrawal request of %s has been APPROVED & processed by Admin. Money transferred to your bank account.", amountStr)
-                : String.format("Your cash-out withdrawal request of %s was REJECTED by Admin. Reason: %s", amountStr, note != null && !note.isBlank() ? note : "Admin decision.");
+            String message;
+            if (processed) {
+                if (note != null && note.toLowerCase().contains("auto-disbursement")) {
+                    message = String.format("Your cash-out withdrawal request of %s has been PROCESSED via instant automated banking payout. Money transferred to your bank account.", amountStr);
+                } else {
+                    message = String.format("Your cash-out withdrawal request of %s has been PROCESSED. Money transferred to your bank account.", amountStr);
+                }
+            } else {
+                message = String.format("Your cash-out withdrawal request of %s was REJECTED. Reason: %s", amountStr, note != null && !note.isBlank() ? note : "Decision updated.");
+            }
 
             saveNotification(userId, title, message);
         } catch (Exception e) {

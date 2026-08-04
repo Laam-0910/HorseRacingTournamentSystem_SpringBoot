@@ -657,7 +657,7 @@ function GenericTableView({ title, data, columns, onRowClick }: { title: string;
   const formatValue = (cKey: string, val: any) => {
     if (val === null || val === undefined) return "-";
     if (cKey === "totalBudget" && typeof val === "number") {
-      return `$${val.toLocaleString()}`;
+      return `${val.toLocaleString()} VNĐ`;
     }
     if (cKey === "startDate" || cKey === "date" || cKey.toLowerCase().includes("date")) {
       return formatDate(val);

@@ -198,14 +198,14 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
         }
       }
 
-      // Validate budget: min 10,000,000 và max 1,000,000,000
+      // Validate budget: min 100,000,000 VNĐ và max 10,000,000,000 VNĐ
       const budgetValue = totalBudget ? parseFloat(totalBudget) : 0;
-      if (budgetValue < 10000000) {
-        setError($t("Total budget must be at least 10,000,000."));
+      if (budgetValue < 100000000) {
+        setError($t("Total budget must be at least 100,000,000 VNĐ."));
         return;
       }
-      if (budgetValue > 1000000000) {
-        setError($t("Total budget cannot exceed 1,000,000,000."));
+      if (budgetValue > 10000000000) {
+        setError($t("Total budget cannot exceed 10,000,000,000 VNĐ."));
         return;
       }
 
@@ -492,14 +492,14 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
             </div>
             <input
               type="number"
-              min="10000000"
-              max="1000000000"
+              min="100000000"
+              max="10000000000"
               step="any"
               required
               value={totalBudget}
               onChange={(e) => setTotalBudget(e.target.value)}
               className="w-full px-4 py-2.5 bg-black/40 border border-white/5 rounded-xl text-white text-xs"
-              placeholder={$t("Min: 10,000,000 — Max: 1,000,000,000", (localStorage.getItem('app-lang') || 'en'))}
+              placeholder={$t("Min: 100,000,000 — Max: 10,000,000,000", (localStorage.getItem('app-lang') || 'en'))}
             />
             <p className="text-[10px] text-white/40 font-mono">
               * Budget will be allocated directly from Admin Wallet.
@@ -529,7 +529,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
               className={`w-full px-4 py-2.5 border rounded-xl text-xs font-mono font-bold ${
                 editingMeeting ? "bg-black/60 border-white/5 text-white/40 cursor-not-allowed" : "bg-black/40 border-amber-500/30 text-amber-300 focus:border-amber-400 focus:outline-none"
               }`}
-              placeholder={$t("Enter ticket price (e.g., 50, 100)", (localStorage.getItem('app-lang') || 'en'))}
+              placeholder={$t("Enter ticket price in VNĐ (e.g. 50,000, 100,000)", (localStorage.getItem('app-lang') || 'en'))}
             />
             <p className="text-[10px] text-white/40 font-mono">
               {editingMeeting
@@ -677,7 +677,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                             </span>
                           ) : (
                             <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold ${r.paymentStatus === 'PAID' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
-                              {r.paymentStatus === 'PAID' ? `✓ Paid $${Number(r.ticketPrice || 0).toLocaleString('en-US')}` : `✕ Refunded`}
+                              {r.paymentStatus === 'PAID' ? `✓ Paid ${Number(r.ticketPrice || 0).toLocaleString('en-US')} VNĐ` : `✕ Refunded`}
                             </span>
                           )}
                           <div className="text-[10px] text-white/30 mt-1">Status: {r.status}</div>
@@ -719,7 +719,7 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                       </div>
                       <div className="text-right">
                         <span className={`font-bold block ${Number(tx.amount) >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                          {Number(tx.amount) >= 0 ? `+$${Number(tx.amount).toLocaleString('en-US')}` : `-$${Math.abs(Number(tx.amount)).toLocaleString('en-US')}`}
+                          {Number(tx.amount) >= 0 ? `+${Number(tx.amount).toLocaleString('en-US')} VNĐ` : `-${Math.abs(Number(tx.amount)).toLocaleString('en-US')} VNĐ`}
                         </span>
                         <span className="text-white/30 text-[9px] block">{formatDate(tx.createdAt)}</span>
                       </div>
