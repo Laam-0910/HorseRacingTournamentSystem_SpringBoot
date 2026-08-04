@@ -104,14 +104,22 @@ public class BankWebhookController {
                 }
             }
 
-            // 2. Process Livestream Pass Purchase (Pattern: PPV_{userId}_{packageType}_{id})
+            // 2. Process Livestream Pass Purchase (Pattern: PPV_{userId}_{packageType}_{targetId}_{timestampRef})
             if (rawContent.contains("PPV_")) {
                 String[] parts = rawContent.split("_");
-                if (parts.length >= 3) {
+                if (parts.length >= 4) {
                     Integer userId = Integer.parseInt(parts[1]);
                     String packageType = parts[2];
-                    Integer refId = parts.length >= 4 ? Integer.parseInt(parts[3]) : null;
-                    return processLivestreamPurchase(userId, packageType, refId, amount, rawContent);
+                    Integer targetRefId = null;
+                    try { targetRefId = Integer.parseInt(parts[3]); } catch (Exception ignored) {}
+
+                    // Idempotent check: skip if this exact transfer content was already processed
+                    boolean alreadyProcessed = walletTransactionRepository.findAll().stream()
+                            .anyMatch(t -> t.getDescription() != null && t.getDescription().contains(rawContent));
+                    if (alreadyProcessed) {
+                        return ResponseEntity.ok(Map.of("success", true, "message", "Webhook already processed (idempotent skip): " + rawContent));
+                    }
+                    return processLivestreamPurchase(userId, packageType, targetRefId, amount, rawContent);
                 }
             }
 
@@ -139,10 +147,31 @@ public class BankWebhookController {
                     BigDecimal amount = new BigDecimal(amountObj.toString().trim());
                     String rawContent = contentObj.toString().trim().toUpperCase();
 
+                    // 1. Nạp ví: TOPUP_{userId}
                     if (rawContent.contains("TOPUP_")) {
                         Matcher matcher = Pattern.compile("TOPUP_(\\d+)").matcher(rawContent);
                         if (matcher.find()) {
                             processWalletDeposit(Integer.parseInt(matcher.group(1)), amount, rawContent);
+                        }
+                    }
+
+                    // 2. Mua gói xem Livestream: PPV_{userId}_{packageType}_{targetId}_{timestamp}
+                    if (rawContent.contains("PPV_")) {
+                        String[] parts = rawContent.split("_");
+                        if (parts.length >= 4) {
+                            try {
+                                Integer userId = Integer.parseInt(parts[1]);
+                                String packageType = parts[2];
+                                Integer targetRefId = null;
+                                try { targetRefId = Integer.parseInt(parts[3]); } catch (Exception ignored) {}
+
+                                // Idempotent: bỏ qua nếu đã xử lý
+                                boolean alreadyProcessed = walletTransactionRepository.findAll().stream()
+                                        .anyMatch(t -> t.getDescription() != null && t.getDescription().contains(rawContent));
+                                if (!alreadyProcessed) {
+                                    processLivestreamPurchase(userId, packageType, targetRefId, amount, rawContent);
+                                }
+                            } catch (Exception ignored) {}
                         }
                     }
                 }
@@ -216,10 +245,25 @@ public class BankWebhookController {
         sub.setPricePaid(amount);
         sub.setPurchaseTime(new Timestamp(System.currentTimeMillis()));
 
-        long expiryMillis = "SEASON".equalsIgnoreCase(packageType)
-                ? System.currentTimeMillis() + 365L * 24 * 3600 * 1000
-                : System.currentTimeMillis() + 3L * 24 * 3600 * 1000;
-        sub.setExpiresAt(new Timestamp(expiryMillis));
+        // Cumulative Extension Logic for Webhook Bank Payments:
+        long now = System.currentTimeMillis();
+        List<LivestreamSubscription> existingSubs = subscriptionRepository.findByUserId(userId);
+        long baseExpiryTime = existingSubs.stream()
+                .filter(s -> s.getExpiresAt() != null && s.getExpiresAt().getTime() > now)
+                .filter(s -> {
+                    if ("SEASON".equalsIgnoreCase(packageType)) return "SEASON".equalsIgnoreCase(s.getPackageType());
+                    if ("RACEMEETING".equalsIgnoreCase(packageType)) return "RACEMEETING".equalsIgnoreCase(s.getPackageType());
+                    return false;
+                })
+                .mapToLong(s -> s.getExpiresAt().getTime())
+                .max()
+                .orElse(now);
+
+        long durationMillis = "SEASON".equalsIgnoreCase(packageType)
+                ? 365L * 24 * 3600 * 1000L
+                : 30L * 24 * 3600 * 1000L;
+
+        sub.setExpiresAt(new Timestamp(baseExpiryTime + durationMillis));
         sub.setPaymentMethod("VIETQR_BANK_WEBHOOK");
         subscriptionRepository.save(sub);
 

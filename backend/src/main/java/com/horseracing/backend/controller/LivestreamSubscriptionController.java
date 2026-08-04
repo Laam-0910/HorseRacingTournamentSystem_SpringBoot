@@ -39,8 +39,11 @@ public class LivestreamSubscriptionController {
     public ResponseEntity<?> checkAccess(
             @RequestParam(required = false) Integer userId,
             @RequestParam(required = false) Integer meetingId,
+            @RequestParam(required = false) Integer raceMeetingId,
             @RequestParam(required = false) Integer seasonId) {
         
+        final Integer targetMeetingId = (meetingId != null) ? meetingId : raceMeetingId;
+
         if (userId == null) {
             return ResponseEntity.ok(Map.of("hasAccess", false, "reason", "UNAUTHENTICATED"));
         }
@@ -56,21 +59,32 @@ public class LivestreamSubscriptionController {
                 return seasonId == null || sub.getSeasonId() == null || seasonId.equals(sub.getSeasonId());
             }
             if ("RACEMEETING".equalsIgnoreCase(sub.getPackageType())) {
-                return meetingId != null && meetingId.equals(sub.getRaceMeetingId());
+                return targetMeetingId != null && targetMeetingId.equals(sub.getRaceMeetingId());
             }
             return false;
         });
 
-        Optional<LivestreamSubscription> activeSub = userSubs.stream().filter(sub -> {
-            if (sub.getExpiresAt() != null && sub.getExpiresAt().before(now)) return false;
-            return true;
-        }).findFirst();
+        // Priority: Prefer SEASON over RACEMEETING if user has both active
+        Optional<LivestreamSubscription> activeSub = userSubs.stream()
+                .filter(sub -> sub.getExpiresAt() == null || !sub.getExpiresAt().before(now))
+                .sorted((a, b) -> {
+                    // SEASON ranks higher than RACEMEETING
+                    int rankA = "SEASON".equalsIgnoreCase(a.getPackageType()) ? 0 : 1;
+                    int rankB = "SEASON".equalsIgnoreCase(b.getPackageType()) ? 0 : 1;
+                    if (rankA != rankB) return Integer.compare(rankA, rankB);
+                    // Among same type, prefer the one expiring latest
+                    long expA = a.getExpiresAt() != null ? a.getExpiresAt().getTime() : Long.MAX_VALUE;
+                    long expB = b.getExpiresAt() != null ? b.getExpiresAt().getTime() : Long.MAX_VALUE;
+                    return Long.compare(expB, expA);
+                })
+                .findFirst();
 
         Map<String, Object> resp = new java.util.HashMap<>();
         resp.put("hasAccess", hasAccess);
         resp.put("packageType", activeSub.map(LivestreamSubscription::getPackageType).orElse(null));
         resp.put("expiresAt", activeSub.map(s -> s.getExpiresAt() != null ? s.getExpiresAt().getTime() : 0L).orElse(0L));
-        resp.put("expiresAtFormatted", activeSub.map(s -> s.getExpiresAt() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(s.getExpiresAt()) : "").orElse(""));
+        resp.put("expiresAtFormatted", activeSub.map(s -> s.getExpiresAt() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(s.getExpiresAt()) : "").orElse(""));
+        resp.put("startDateFormatted", activeSub.map(s -> s.getPurchaseTime() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(s.getPurchaseTime()) : "").orElse(""));
         return ResponseEntity.ok(resp);
     }
 
@@ -82,7 +96,8 @@ public class LivestreamSubscriptionController {
             @RequestParam Integer userId,
             @RequestParam String packageType,
             @RequestParam(required = false) Integer seasonId,
-            @RequestParam(required = false) Integer raceMeetingId) {
+            @RequestParam(required = false) Integer raceMeetingId,
+            @RequestParam(required = false) Boolean isExtend) {
 
         List<LivestreamSubscription> userSubs = subscriptionRepository.findByUserId(userId);
 
@@ -92,12 +107,23 @@ public class LivestreamSubscriptionController {
                     "originalPrice", BASE_MEETING_PRICE,
                     "finalPrice", BASE_MEETING_PRICE,
                     "discountApplied", BigDecimal.ZERO,
-                    "description", "Pay-Per-View Pass for 1 Race Meeting (15,000 VNĐ)"
+                    "description", "Extend Monthly Pass (+30 Days for 15,000 VNĐ)"
             ));
         }
 
         if ("SEASON".equalsIgnoreCase(packageType)) {
-            // Calculate total paid for meeting passes in this season
+            // In Extend mode, keep exact fixed price (79,000 VNĐ) without prorated discounts
+            if (Boolean.TRUE.equals(isExtend)) {
+                return ResponseEntity.ok(Map.of(
+                        "packageType", "SEASON",
+                        "originalPrice", BASE_SEASON_PRICE,
+                        "finalPrice", BASE_SEASON_PRICE,
+                        "discountApplied", BigDecimal.ZERO,
+                        "description", "Extend Annual Pass (+365 Days for 79,000 VNĐ)"
+                ));
+            }
+
+            // Calculate total paid for meeting passes in this season for Upgrade mode
             BigDecimal paidForMeetings = userSubs.stream()
                     .filter(s -> "RACEMEETING".equalsIgnoreCase(s.getPackageType()) &&
                             (seasonId == null || seasonId.equals(s.getSeasonId())))
@@ -184,31 +210,31 @@ public class LivestreamSubscriptionController {
             sub.setPricePaid(amount);
             sub.setPurchaseTime(new Timestamp(System.currentTimeMillis()));
 
-            // Cumulative Renewal Extension: If user already has an active pass, extend from existing expiry date!
-            long currentBaseTime = System.currentTimeMillis();
+            // Cumulative Extension Logic:
+            // Find max existing expiresAt for the user for this package type
+            long now = System.currentTimeMillis();
             List<LivestreamSubscription> existingSubs = subscriptionRepository.findByUserId(userId);
-            Optional<LivestreamSubscription> activePass = existingSubs.stream()
+            long baseExpiryTime = existingSubs.stream()
+                    .filter(s -> s.getExpiresAt() != null && s.getExpiresAt().getTime() > now)
                     .filter(s -> {
-                        if (s.getExpiresAt() == null || s.getExpiresAt().before(new Timestamp(System.currentTimeMillis()))) return false;
-                        if ("SEASON".equalsIgnoreCase(packageType) && "SEASON".equalsIgnoreCase(s.getPackageType())) {
-                            return seasonId == null || s.getSeasonId() == null || seasonId.equals(s.getSeasonId());
+                        if ("SEASON".equalsIgnoreCase(packageType)) {
+                            return "SEASON".equalsIgnoreCase(s.getPackageType());
                         }
-                        if ("RACEMEETING".equalsIgnoreCase(packageType) && "RACEMEETING".equalsIgnoreCase(s.getPackageType())) {
-                            return raceMeetingId == null || raceMeetingId.equals(s.getRaceMeetingId());
+                        if ("RACEMEETING".equalsIgnoreCase(packageType)) {
+                            return "RACEMEETING".equalsIgnoreCase(s.getPackageType());
                         }
                         return false;
                     })
-                    .findFirst();
+                    .mapToLong(s -> s.getExpiresAt().getTime())
+                    .max()
+                    .orElse(now);
 
-            if (activePass.isPresent() && activePass.get().getExpiresAt() != null) {
-                currentBaseTime = activePass.get().getExpiresAt().getTime();
-            }
-
+            // Monthly Pass (RACEMEETING) = 30 days; Annual Pass (SEASON) = 365 days
             long durationMillis = "SEASON".equalsIgnoreCase(packageType)
-                    ? 365L * 24 * 3600 * 1000
-                    : 3L * 24 * 3600 * 1000;
+                    ? 365L * 24 * 3600 * 1000L
+                    : 30L * 24 * 3600 * 1000L;
 
-            sub.setExpiresAt(new Timestamp(currentBaseTime + durationMillis));
+            sub.setExpiresAt(new Timestamp(baseExpiryTime + durationMillis));
             sub.setPaymentMethod(payMethod);
 
             subscriptionRepository.save(sub);

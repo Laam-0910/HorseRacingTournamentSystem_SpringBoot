@@ -39,10 +39,53 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
   const isManualPaywallOpenRef = useRef(false);
   const [subInfo, setSubInfo] = useState<any>(null);
   const [preselectedPkg, setPreselectedPkg] = useState<"RACEMEETING" | "SEASON">("RACEMEETING");
+  const [isExtendModeModal, setIsExtendModeModal] = useState<boolean>(false);
   
   // State management for Referee / Camera broadcasters and selected camera
   const [broadcasterList, setBroadcasterList] = useState<BroadcasterInfo[]>([]);
   const [selectedBroadcasterId, setSelectedBroadcasterId] = useState<string | null>(null);
+
+  // State management for AI Win Probabilities
+  const [raceEntries, setRaceEntries] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!selectedRace?.id) {
+      setRaceEntries([]);
+      return;
+    }
+    api.get<any[]>(`/public/results?raceId=${selectedRace.id}`)
+      .then(data => {
+        if (Array.isArray(data)) setRaceEntries(data);
+      })
+      .catch(() => setRaceEntries([]));
+  }, [selectedRace?.id]);
+
+  const computedProbabilities = (() => {
+    if (!raceEntries.length) return [];
+    const scores = raceEntries.map(item => {
+      const h = item.horse || {};
+      const j = item.jockey || {};
+      const e = item.entry || {};
+      const rating = Number(h.currentRating || h.rating || 50);
+      const winRate = Number(h.winRate || 20);
+      const jockeyRating = Number(j.jockeyRating || j.rating || 60);
+      const rawScore = (rating * 0.5) + (winRate * 0.3) + (jockeyRating * 0.2);
+      return {
+        horseId: h.id || e.horseId,
+        horseName: h.name || `Horse #${e.horseId}`,
+        jockeyName: j.fullName || j.username || "Jockey",
+        gateNumber: e.gateNumber || 1,
+        rawScore,
+      };
+    });
+    const totalScore = scores.reduce((sum, s) => sum + s.rawScore, 0) || 1;
+    return scores
+      .map(s => ({
+        ...s,
+        probability: Math.round((s.rawScore / totalScore) * 100)
+      }))
+      .sort((a, b) => b.probability - a.probability);
+  })();
 
   // State management for Chat
   const [chatMessages, setChatMessages] = useState<{ user: string; text: string; time: string }[]>([]);
@@ -350,7 +393,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <span style={{ fontSize: "14px" }}>🟢</span>
               <span style={{ fontSize: "12.5px", fontWeight: "bold", color: "#34d399", fontFamily: "monospace" }}>
-                Active Pass: {subInfo?.packageType === "SEASON" ? "Season Live Pass (Full Season Access)" : "Meeting Live Pass (Day Access)"}
+                Active Pass: {subInfo?.packageType === "SEASON" ? "Annual Pass (365 Days)" : "Monthly Pass (30 Days)"}
               </span>
             </div>
             {subInfo?.expiresAt && (
@@ -369,15 +412,15 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
             {subInfo?.packageType !== "SEASON" && (
               <button
                 type="button"
-                onClick={() => { setPreselectedPkg("SEASON"); isManualPaywallOpenRef.current = true; setShowPaywallModal(true); }}
+                onClick={() => { setPreselectedPkg("SEASON"); setIsExtendModeModal(false); isManualPaywallOpenRef.current = true; setShowPaywallModal(true); }}
                 style={{ padding: "0.45rem 0.85rem", background: "linear-gradient(135deg, #c9a227 0%, #b8860b 100%)", color: "#000", fontWeight: "bold", fontSize: "11px", borderRadius: "0.5rem", border: "none", cursor: "pointer", fontFamily: "monospace" }}
               >
-                ⚡ Upgrade to Season Pass (64,000 VND)
+                ⚡ Upgrade to Annual Pass
               </button>
             )}
             <button
               type="button"
-              onClick={() => { setPreselectedPkg(subInfo?.packageType === "SEASON" ? "SEASON" : "RACEMEETING"); isManualPaywallOpenRef.current = true; setShowPaywallModal(true); }}
+              onClick={() => { setPreselectedPkg(subInfo?.packageType === "SEASON" ? "SEASON" : "RACEMEETING"); setIsExtendModeModal(true); isManualPaywallOpenRef.current = true; setShowPaywallModal(true); }}
               style={{ padding: "0.45rem 0.85rem", background: "rgba(52,211,153,0.15)", color: "#34d399", fontWeight: "bold", fontSize: "11px", borderRadius: "0.5rem", border: "1px solid rgba(52,211,153,0.3)", cursor: "pointer", fontFamily: "monospace" }}
             >
               🔄 Extend / Renew Pass (+ Extra Time)
@@ -557,10 +600,10 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                     PPV Pass Required
                   </h3>
                   <p style={{ fontSize: "12px", color: "#a0a0a0", maxWidth: "24rem", marginBottom: "1.25rem", lineHeight: 1.5 }}>
-                    Subscribe to a RaceMeeting Pass (15,000 VND) or Season Pass (79,000 VND) via VietQR to unlock HD live stream broadcasting.
+                    Subscribe to a Monthly Pass (15,000 VND) or Annual Pass (79,000 VND) via VietQR/Wallet to unlock HD live stream.
                   </p>
                   <button
-                    onClick={() => setShowPaywallModal(true)}
+                    onClick={() => { setIsExtendModeModal(false); setShowPaywallModal(true); }}
                     style={{
                       padding: "0.75rem 1.5rem",
                       background: "linear-gradient(135deg, #c9a227 0%, #a37f1c 100%)",
@@ -590,6 +633,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                 raceMeetingId={selectedRace.raceMeetingId}
                 raceMeetingName={selectedRace.meetingName}
                 initialPackage={preselectedPkg}
+                isExtendMode={isExtendModeModal}
                 onSuccess={() => {
                   setHasAccess(true);
                   setShowPaywallModal(false);
@@ -636,6 +680,49 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
                 </div>
               </div>
             </div>
+
+            {/* AI Real-time Win Probability Bar */}
+            {raceEntries.length > 0 && (
+              <div className="bg-gradient-to-br from-[#1c1914] to-[#12100d] border border-amber-500/30 p-5 rounded-2xl space-y-3 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🤖</span>
+                    <div>
+                      <h4 className="text-xs font-bold text-amber-400 font-mono uppercase tracking-wider">
+                        AI Win Probability Calculation
+                      </h4>
+                      <p className="text-[10px] text-white/50">
+                        Real-time win chance computed from horse rating, past win rate, and jockey form
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-mono bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-bold">
+                    LIVE AI PROBABILITY
+                  </span>
+                </div>
+
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  {computedProbabilities.map((item: any) => (
+                    <div key={item.horseId} className="space-y-1">
+                      <div className="flex justify-between items-center text-xs font-mono">
+                        <span className="text-white font-bold flex items-center gap-2">
+                          <span className="text-amber-400 text-[10px]">Gate #{item.gateNumber}</span>
+                          <span>🐴 {item.horseName}</span>
+                          <span className="text-white/40 text-[10px]">({item.jockeyName})</span>
+                        </span>
+                        <strong className="text-amber-400 font-bold">{item.probability}%</strong>
+                      </div>
+                      <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden border border-white/10">
+                        <div
+                          className="h-full bg-gradient-to-r from-amber-500 to-emerald-400 rounded-full transition-all duration-500"
+                          style={{ width: `${item.probability}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Sidebar (Switcher Directory + Chat) */}

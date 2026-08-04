@@ -460,6 +460,34 @@ BEGIN
 END
 GO
 
+-- ============================================================
+-- LivestreamSubscription — Bảng quản lý thẻ xem HD Livestream
+-- (Gói Tháng: RACEMEETING - 30 ngày, Gói Năm: SEASON - 365 ngày)
+-- ============================================================
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'LivestreamSubscription')
+BEGIN
+    CREATE TABLE LivestreamSubscription (
+        id                  INT IDENTITY(1,1) PRIMARY KEY,
+        user_id             INT NOT NULL,
+        package_type        VARCHAR(50) NOT NULL, -- 'RACEMEETING' hoặc 'SEASON'
+        season_id           INT NULL,
+        race_meeting_id     INT NULL,
+        price_paid          DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        discount_applied    DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        purchase_time       DATETIME NOT NULL DEFAULT GETDATE(),
+        expires_at          DATETIME NULL,
+        payment_method      VARCHAR(50) NOT NULL DEFAULT 'VIETQR'
+    );
+
+    CREATE INDEX IX_LivestreamSubscription_UserId ON LivestreamSubscription(user_id);
+    CREATE INDEX IX_LivestreamSubscription_ExpiresAt ON LivestreamSubscription(expires_at DESC);
+
+    ALTER TABLE LivestreamSubscription
+        ADD CONSTRAINT FK_LivestreamSubscription_User
+        FOREIGN KEY (user_id) REFERENCES [User](id) ON DELETE CASCADE;
+END
+GO
+
 PRINT 'HorseRacingDB created successfully with 100% complete schema & updated balances.';
-PRINT 'WithdrawalRequest table created. MIN_WITHDRAWAL_AMOUNT & AUTO_DISBURSEMENT_ENABLED configs seeded.';
+PRINT 'WithdrawalRequest & LivestreamSubscription tables created. System configs seeded.';
 GO

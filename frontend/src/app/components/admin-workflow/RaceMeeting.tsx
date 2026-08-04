@@ -596,11 +596,11 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
               </div>
               <div>
                 <span className="text-white/40 block text-[10px] uppercase">Total Budget</span>
-                <span className="text-amber-400 font-bold">${Number(viewingMeeting.totalBudget || 0).toLocaleString('en-US')}</span>
+                <span className="text-amber-400 font-bold">{Number(viewingMeeting.totalBudget || 0).toLocaleString('en-US')} VND</span>
               </div>
               <div>
                 <span className="text-amber-400 block text-[10px] uppercase">🎟️ Reg Fee</span>
-                <span className="text-emerald-400 font-bold">${Number(viewingMeeting.ticketPrice || 0).toLocaleString('en-US')}</span>
+                <span className="text-emerald-400 font-bold">{Number(viewingMeeting.ticketPrice || 0).toLocaleString('en-US')} VND</span>
               </div>
             </div>
 

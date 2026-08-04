@@ -366,6 +366,7 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                       </div>
                     </div>
 
+                    {/* Register button: only show when NOT registered (no entry at all) */}
                     {!isReg && (
                       <div>
                         {unregHorses.length === 0
@@ -402,6 +403,13 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                               </button>
                             </>
                           )}
+                      </div>
+                    )}
+
+                    {/* PENDING / APPROVED: show info badge, hide register button */}
+                    {isReg && (regStatus === "PENDING" || regStatus === "APPROVED") && (
+                      <div style={{ fontSize: "0.65rem", color: regStatus === "APPROVED" ? "#34d399" : "#fbbf24", fontFamily: "monospace", fontStyle: "italic", background: regStatus === "APPROVED" ? "rgba(52,211,153,0.08)" : "rgba(251,191,36,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: `1px solid ${regStatus === "APPROVED" ? "rgba(52,211,153,0.2)" : "rgba(251,191,36,0.2)"}` }}>
+                        {regStatus === "APPROVED" ? "✅ Registration approved. You are registered for this event." : "⏳ Registration is pending approval. You cannot register again until reviewed."}
                       </div>
                     )}
 
@@ -1263,6 +1271,7 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
 function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, refereesMap }: { invitations: any[]; onViewProfile: (id: number) => void; onResubmit: (entryId: number) => void; onWithdraw: (invitationId: number) => void; refereesMap?: Record<number, any[]> }) {
   const lang = localStorage.getItem("app-lang") || "en";
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACCEPTED" | "REJECTED" | "PENDING">("ALL");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isMobile, setIsMobile] = useState(false);
@@ -1274,6 +1283,12 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
   }, []);
 
   const filteredInvitations = invitations.filter((inv: any) => {
+    const st = (inv.status === "ACCEPTED" && inv.entryStatus) ? inv.entryStatus : inv.status;
+    if (statusFilter !== "ALL") {
+      if (statusFilter === "ACCEPTED" && inv.status !== "ACCEPTED") return false;
+      if (statusFilter === "REJECTED" && inv.status !== "REJECTED" && inv.entryStatus !== "REJECTED") return false;
+      if (statusFilter === "PENDING" && inv.status !== "PENDING" && inv.entryStatus !== "PENDING_ADMIN") return false;
+    }
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase().trim();
     const meetingMatch = (inv.meetingName || "").toLowerCase().includes(q);
@@ -1292,46 +1307,72 @@ function InvitationsView({ invitations, onViewProfile, onResubmit, onWithdraw, r
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: "1rem" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
         <div>
-          <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Sent Invitations</h3>
-          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Manage and track invitations sent to jockeys for various races.</p>
+          <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Sent Invitations & History</h3>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Track jockey invitation responses, mount hire fees, and admin approval records.</p>
         </div>
 
-        {/* Search Input */}
-        <div style={{ position: "relative", minWidth: "260px", flex: "1", maxWidth: "340px" }}>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(1);
-            }}
-            placeholder="Search meeting, owner, horse name..."
-            style={{
-              width: "100%",
-              padding: "0.45rem 0.75rem 0.45rem 2.2rem",
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.12)",
-              borderRadius: "0.375rem",
-              color: "#f4f2ec",
-              fontSize: "0.75rem",
-              fontFamily: "monospace",
-              outline: "none",
-              boxSizing: "border-box"
-            }}
-          />
-          <span style={{ position: "absolute", left: "0.7rem", top: "50%", transform: "translateY(-50%)", color: "#c9a227", fontSize: "0.85rem", pointerEvents: "none" }}>
-            🔍
-          </span>
-          {searchQuery && (
-            <button
-              onClick={() => { setSearchQuery(""); setPage(1); }}
-              style={{ position: "absolute", right: "0.6rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem" }}
-            >
-              ✕
-            </button>
-          )}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+          {/* Status Filter Pills */}
+          <div style={{ display: "flex", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.5rem", padding: "2px" }}>
+            {(["ALL", "ACCEPTED", "REJECTED", "PENDING"] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => { setStatusFilter(tab); setPage(1); }}
+                style={{
+                  padding: "0.3rem 0.6rem",
+                  fontSize: "11px",
+                  fontFamily: "monospace",
+                  fontWeight: statusFilter === tab ? "bold" : "normal",
+                  background: statusFilter === tab ? "#c9a227" : "transparent",
+                  color: statusFilter === tab ? "#000" : "rgba(255,255,255,0.7)",
+                  border: "none",
+                  borderRadius: "0.375rem",
+                  cursor: "pointer",
+                  transition: "all 0.2s"
+                }}
+              >
+                {tab === "ALL" ? "All" : tab === "ACCEPTED" ? "✓ Accepted" : tab === "REJECTED" ? "✕ Rejected" : "⏳ Pending"}
+              </button>
+            ))}
+          </div>
+
+          {/* Search Input */}
+          <div style={{ position: "relative", minWidth: "220px", maxWidth: "300px" }}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Search meeting, horse, jockey..."
+              style={{
+                width: "100%",
+                padding: "0.45rem 0.75rem 0.45rem 2.2rem",
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                borderRadius: "0.375rem",
+                color: "#f4f2ec",
+                fontSize: "0.75rem",
+                fontFamily: "monospace",
+                outline: "none",
+                boxSizing: "border-box"
+              }}
+            />
+            <span style={{ position: "absolute", left: "0.7rem", top: "50%", transform: "translateY(-50%)", color: "#c9a227", fontSize: "0.85rem", pointerEvents: "none" }}>
+              🔍
+            </span>
+            {searchQuery && (
+              <button
+                onClick={() => { setSearchQuery(""); setPage(1); }}
+                style={{ position: "absolute", right: "0.6rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "0.75rem" }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
       </div>
       {isMobile ? (

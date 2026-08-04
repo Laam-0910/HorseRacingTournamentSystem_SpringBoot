@@ -663,14 +663,14 @@ export default function RegistrationProcessing() {
                     : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20'
                 }`}>
                   {viewingRegistrant.role === 'Jockey'
-                    ? '✓ Exempt ($0 - Free for Jockey)'
+                    ? '✓ Exempt (0 VND - Free for Jockey)'
                     : '✓ Paid (Deducted from Wallet)'}
                 </span>
               </div>
               <div className="flex justify-between bg-white/[0.03] p-2.5 rounded-lg border border-white/5">
                 <span className="text-white/50">Current Wallet Balance:</span>
                 <span className="font-bold text-amber-300">
-                  ${Number((viewingRegistrant.role === 'Jockey' ? viewingRegistrant.jockey?.walletBalance : viewingRegistrant.owner?.walletBalance) || 0).toLocaleString('en-US')}
+                  {Number((viewingRegistrant.role === 'Jockey' ? viewingRegistrant.jockey?.walletBalance : viewingRegistrant.owner?.walletBalance) || 0).toLocaleString('en-US')} VND
                 </span>
               </div>
               <div className="flex justify-between bg-white/[0.03] p-2.5 rounded-lg border border-white/5">

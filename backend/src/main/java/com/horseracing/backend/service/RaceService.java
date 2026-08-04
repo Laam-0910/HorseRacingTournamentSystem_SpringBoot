@@ -208,15 +208,33 @@ public class RaceService {
                 }
             }
         }
-        if (body.get("youtubeLiveUrl") != null) { // Kiểm tra nếu có cập nhật đường dẫn phát trực tiếp
-            String liveUrl = (String) body.get("youtubeLiveUrl"); // Lấy chuỗi đường dẫn URL
-            validateLiveUrl(liveUrl); // Xác thực tính hợp lệ của link Livestream
-            race.setYoutubeLiveUrl(liveUrl); // Cập nhật link Livestream YouTube
+        if (body.get("status") != null) {
+            String newStatus = (String) body.get("status");
+            race.setStatus(newStatus);
+            if (java.util.Arrays.asList("FINISHED", "OFFICIAL", "COMPLETED", "RACE_EVENT_ENDED", "CANCELLED", "CLOSED").contains(newStatus.toUpperCase())) {
+                race.setStreamMode("NONE");
+                race.setYoutubeLiveUrl(null);
+            }
+        }
+        if (body.containsKey("youtubeLiveUrl")) { // Kiểm tra nếu có cập nhật đường dẫn phát trực tiếp
+            String liveUrl = (String) body.get("youtubeLiveUrl");
+            if (liveUrl == null || liveUrl.trim().isEmpty()) {
+                race.setYoutubeLiveUrl(null);
+                if (!"WEBCAM".equalsIgnoreCase(race.getStreamMode())) {
+                    race.setStreamMode("NONE");
+                }
+            } else {
+                validateLiveUrl(liveUrl);
+                race.setYoutubeLiveUrl(liveUrl);
+                if (race.getStreamMode() == null || "NONE".equalsIgnoreCase(race.getStreamMode())) {
+                    race.setStreamMode("YOUTUBE");
+                }
+            }
         }
         if (body.containsKey("streamMode")) { // Kiểm tra nếu có cập nhật chế độ stream
             String mode = (String) body.get("streamMode");
-            if ("YOUTUBE".equals(mode) || "WEBCAM".equals(mode)) {
-                race.setStreamMode(mode);
+            if ("YOUTUBE".equalsIgnoreCase(mode) || "WEBCAM".equalsIgnoreCase(mode) || "NONE".equalsIgnoreCase(mode)) {
+                race.setStreamMode(mode != null ? mode.toUpperCase() : "NONE");
             }
         }
         if (body.containsKey("stewardReport")) { // Kiểm tra nếu có cập nhật báo cáo trọng tài
@@ -542,8 +560,11 @@ public class RaceService {
                 .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getSeasonId()));
 
         return raceRepository.findAll().stream()
-                .filter(r -> !"CANCELLED".equalsIgnoreCase(r.getStatus())) // Loại bỏ hoàn toàn các trận đua đã bị CANCELLED
                 .filter(r -> {
+                    String status = r.getStatus() != null ? r.getStatus().trim().toUpperCase() : "";
+                    if (java.util.Arrays.asList("FINISHED", "OFFICIAL", "COMPLETED", "RACE_EVENT_ENDED", "CANCELLED", "CLOSED").contains(status)) {
+                        return false;
+                    }
                     RaceMeeting m = meetingEntityMap.get(r.getRaceMeetingId());
                     if (m == null || "INACTIVE".equalsIgnoreCase(m.getStatus()) || "CANCELLED".equalsIgnoreCase(m.getStatus())) {
                         return false;
@@ -552,12 +573,11 @@ public class RaceService {
                     if (sStatus == null || "CLOSED".equalsIgnoreCase(sStatus) || "INACTIVE".equalsIgnoreCase(sStatus) || "CANCELLED".equalsIgnoreCase(sStatus)) {
                         return false;
                     }
-                    return true;
-                })
-                .filter(r -> "RUNNING".equalsIgnoreCase(r.getStatus()) 
-                          || "STEWARDS_INQUIRY".equalsIgnoreCase(r.getStatus()) 
+                    return "RUNNING".equalsIgnoreCase(status) 
+                          || "STEWARDS_INQUIRY".equalsIgnoreCase(status) 
                           || "WEBCAM".equalsIgnoreCase(r.getStreamMode()) 
-                          || (r.getYoutubeLiveUrl() != null && !r.getYoutubeLiveUrl().trim().isEmpty()))
+                          || (r.getYoutubeLiveUrl() != null && !r.getYoutubeLiveUrl().trim().isEmpty());
+                })
                 .map(r -> raceMapper.toDTO(r, meetingMap.get(r.getRaceMeetingId()), meetingSeasonMap.get(r.getRaceMeetingId())))
                 .collect(Collectors.toList());
     }

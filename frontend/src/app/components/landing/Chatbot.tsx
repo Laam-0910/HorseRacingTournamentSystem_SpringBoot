@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, getErrMsg } from "../../../lib/api";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
+import { useAuth } from "../../../context/AuthContext";
 
 interface Message {
   sender: "user" | "bot";
@@ -12,6 +13,7 @@ interface Message {
 /**
  */
 export default function Chatbot() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
@@ -48,7 +50,16 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      const res = await api.post<any>("/ai/chat", { message: userMessage, lang: "en", sessionId });
+      const res = await api.post<any>("/ai/chat", {
+        message: userMessage,
+        lang: "en",
+        sessionId,
+        // Inject logged-in user context for AI personalization
+        userId: user?.id ?? null,
+        fullName: user?.fullName || user?.username || null,
+        roleName: (user as any)?.roleName || null,
+        walletBalance: (user as any)?.walletBalance ?? null,
+      });
       if (res.success && res.reply) {
         setMessages((prev) => [...prev, { sender: "bot", text: res.reply, isHtml: true }]);
       } else {

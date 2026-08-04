@@ -94,15 +94,23 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     };
   }, [isDragging]);
 
-  // Stream Resolution, FPS, and Graphics Quality Controls (Optimal default: 720p, 18 FPS, 0.60 Quality for crystal clear + zero lag)
+  const isMobileDevice = typeof window !== "undefined" && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window));
+
+  // Auto-config default settings based on device type (mobile vs laptop)
   const [resolution, setResolution] = useState<"360p" | "480p" | "720p" | "1080p">(() => {
-    return (localStorage.getItem("cam_res") as any) || "720p";
+    const saved = localStorage.getItem("cam_res");
+    if (saved) return saved as any;
+    return isMobileDevice ? "720p" : "480p"; // Laptop default: 480p for stability
   });
   const [targetFps, setTargetFps] = useState<number>(() => {
-    return parseInt(localStorage.getItem("cam_fps") || "18", 10);
+    const saved = localStorage.getItem("cam_fps");
+    if (saved) return parseInt(saved, 10);
+    return isMobileDevice ? 20 : 15; // Laptop default: 15fps to reduce lag
   });
   const [jpegQuality, setJpegQuality] = useState<number>(() => {
-    return parseFloat(localStorage.getItem("cam_quality") || "0.60");
+    const saved = localStorage.getItem("cam_quality");
+    if (saved) return parseFloat(saved);
+    return isMobileDevice ? 0.70 : 0.55; // Laptop default: lower quality for performance
   });
   const [showSettings, setShowSettings] = useState(false);
 
@@ -115,7 +123,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
   const isEncodingFrameRef = useRef<boolean>(false); // Lock flag to prevent concurrent overlapping toBlob calls on mobile
   const frameSeqRef = useRef<number>(0); // Monotonic frame sequence counter
 
-  const isMobileDevice = typeof window !== "undefined" && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window));
+
 
   const startCamera = async (mode: "environment" | "user") => {
     try {
@@ -203,7 +211,8 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (ws.readyState === WebSocket.OPEN) ws.close();
-      if (stream) stream.getTracks().forEach(t => t.stop());
+      // Use streamRef (not state) to avoid stale closure — releases hardware camera light
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
     };
   }, [raceId]);
 
@@ -364,7 +373,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "STREAM_STOPPED", raceId }));
     }
-    await api.post(`/races/${raceId}`, { streamMode: "YOUTUBE" });
+    await api.post(`/races/${raceId}`, { streamMode: "NONE" });
     onClose();
   };
 
@@ -376,14 +385,21 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "STREAM_STOPPED", raceId }));
     }
-    // 3. Stop all camera tracks (releases camera hardware light)
+    // 3. Stop all camera tracks using REF (avoids stale closure — ensures hardware camera light turns off)
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    // 4. Also stop state stream if different
     if (stream) {
       stream.getTracks().forEach(t => t.stop());
     }
-    // 4. Close WebSocket
+    // 5. Close WebSocket
     if (wsRef.current) {
       wsRef.current.close();
     }
+    // 6. Update backend streamMode to NONE so race is no longer marked as live webcam
+    api.post(`/races/${raceId}`, { streamMode: "NONE" }).catch(() => {});
     setIsLive(false);
     onClose();
   };

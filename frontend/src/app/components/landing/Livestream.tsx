@@ -62,9 +62,22 @@ export default function Livestream() {
   const [liveRaces, setLiveRaces] = useState<Race[]>([]);
   const [selectedRace, setSelectedRace] = useState<Race | null>(null);
   const [loading, setLoading] = useState(true);
+  const [raceEntries, setRaceEntries] = useState<any[]>([]);
 
   const [broadcasterList, setBroadcasterList] = useState<BroadcasterInfo[]>([]);
   const [selectedBroadcasterId, setSelectedBroadcasterId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedRace?.id) {
+      setRaceEntries([]);
+      return;
+    }
+    api.get<any[]>(`/public/results?raceId=${selectedRace.id}`)
+      .then(data => {
+        if (Array.isArray(data)) setRaceEntries(data);
+      })
+      .catch(() => setRaceEntries([]));
+  }, [selectedRace?.id]);
   
   const [chatMessages, setChatMessages] = useState<{ user: string; text: string; time: string }[]>([]);
   const [newMsg, setNewMsg] = useState("");
@@ -341,7 +354,7 @@ export default function Livestream() {
               )}
 
               {/* 2D JavaScript Simulation Model Demo */}
-              <HorseRacingSimulator />
+              <HorseRacingSimulator selectedRace={selectedRace} entries={raceEntries} />
 
               {/* Callout Box to Enter Dashboard to Watch Real Live Broadcast */}
               <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-emerald-500/10 border border-amber-500/30 rounded-2xl p-5 space-y-3 shadow-xl">

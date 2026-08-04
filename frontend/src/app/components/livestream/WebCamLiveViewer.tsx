@@ -186,7 +186,7 @@ export default function WebCamLiveViewer({ raceId, selectedBroadcasterId, onBroa
       <img
         ref={imgRef}
         alt="Live Stream"
-        className={`w-full h-full object-cover ${hasFrame ? "block" : "hidden"}`}
+        className={`w-full h-full object-contain ${hasFrame ? "block" : "hidden"}`}
       />
 
       {!hasFrame && (

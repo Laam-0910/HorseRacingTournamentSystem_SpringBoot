@@ -45,6 +45,19 @@ public class AIProxyController {
         HttpHeaders headers = new HttpHeaders();
         // Thiết lập loại dữ liệu gửi đi là JSON chuẩn (application/json)
         headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Inject user context into message as system prefix so Python AI knows who is asking
+        if (body.getUserId() != null) {
+            String userCtx = String.format(
+                "[USER_CONTEXT: userId=%d, name='%s', role='%s', walletBalance=%.0f VND] ",
+                body.getUserId(),
+                body.getFullName() != null ? body.getFullName() : "Unknown",
+                body.getRoleName() != null ? body.getRoleName() : "Unknown",
+                body.getWalletBalance() != null ? body.getWalletBalance() : 0.0
+            );
+            body.setMessage(userCtx + body.getMessage());
+        }
+
         // Đóng gói payload AiChatRequestDTO và HttpHeaders vào HttpEntity
         HttpEntity<AiChatRequestDTO> entity = new HttpEntity<>(body, headers);
 

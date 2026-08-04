@@ -196,13 +196,14 @@ function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashb
                           🔄 {$t("Register Again as Jockey", (localStorage.getItem('app-lang') || 'en'))}
                         </button>
                       </div>
+                    ) : isReg && regStatus === "PENDING" ? (
+                      <div style={{ fontSize: "0.65rem", color: "#fbbf24", fontFamily: "monospace", fontStyle: "italic", background: "rgba(251,191,36,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(251,191,36,0.2)" }}>
+                        ⏳ {$t("Registration is pending approval. You cannot register again until reviewed.", (localStorage.getItem('app-lang') || 'en'))}
+                      </div>
                     ) : isReg ? (
-                      <button
-                        disabled
-                        style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "not-allowed" }}
-                      >
-                        {$t("Already Registered", (localStorage.getItem('app-lang') || 'en'))}
-                      </button>
+                      <div style={{ fontSize: "0.65rem", color: "#34d399", fontFamily: "monospace", fontStyle: "italic", background: "rgba(52,211,153,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(52,211,153,0.2)" }}>
+                        ✅ {$t("Registration approved. You are registered for this event.", (localStorage.getItem('app-lang') || 'en'))}
+                      </div>
                     ) : (
                       <button
                         onClick={() => onRegister(m.id)}

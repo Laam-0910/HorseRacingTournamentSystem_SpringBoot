@@ -13,7 +13,15 @@ interface Horse {
   finishTime?: number;
 }
 
-const INITIAL_HORSES: Horse[] = [
+interface HorseRacingSimulatorProps {
+  selectedRace?: any | null;
+  entries?: any[];
+}
+
+const COLORS = ["#ef4444", "#f59e0b", "#3b82f6", "#8b5cf6", "#10b981", "#ec4899"];
+const RIDER_COLORS = ["#fef08a", "#000000", "#ffffff", "#f97316", "#ec4899", "#06b6d4"];
+
+const DEFAULT_HORSES: Horse[] = [
   { id: 1, name: "Thunder King", number: 1, color: "#ef4444", riderColor: "#fef08a", progress: 0, speed: 0.18, rank: 1, aiWinProb: 38 },
   { id: 2, name: "Golden Pegasus", number: 2, color: "#f59e0b", riderColor: "#000000", progress: 0, speed: 0.16, rank: 2, aiWinProb: 26 },
   { id: 3, name: "Silver Comet", number: 3, color: "#3b82f6", riderColor: "#ffffff", progress: 0, speed: 0.15, rank: 3, aiWinProb: 18 },
@@ -21,20 +29,70 @@ const INITIAL_HORSES: Horse[] = [
   { id: 5, name: "Emerald Warrior", number: 5, color: "#10b981", riderColor: "#ec4899", progress: 0, speed: 0.11, rank: 5, aiWinProb: 6 },
 ];
 
-export default function HorseRacingSimulator() {
+export default function HorseRacingSimulator({ selectedRace, entries }: HorseRacingSimulatorProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [horses, setHorses] = useState<Horse[]>(INITIAL_HORSES);
+  const [horses, setHorses] = useState<Horse[]>(DEFAULT_HORSES);
   const [isRunning, setIsRunning] = useState(true);
-  const [commentary, setCommentary] = useState("AI Analysis: Thunder King (38% Win Odds) taking early advantage out of gate #1!");
+  const [commentary, setCommentary] = useState("AI Model calculating race trajectory probabilities...");
   const [winner, setWinner] = useState<Horse | null>(null);
 
-  const horsesRef = useRef<Horse[]>(INITIAL_HORSES);
+  const horsesRef = useRef<Horse[]>(DEFAULT_HORSES);
   const animStepRef = useRef<number>(0);
   const frameRef = useRef<number>(0);
 
+  // Compute JS AI Model Win Probabilities based on Class Race entries
+  useEffect(() => {
+    if (entries && entries.length > 0) {
+      const scores = entries.map((item, idx) => {
+        const h = item.horse || {};
+        const j = item.jockey || {};
+        const e = item.entry || {};
+        const rating = Number(h.currentRating || h.rating || 50);
+        const winRate = Number(h.winRate || 20);
+        const jockeyRating = Number(j.jockeyRating || j.rating || 60);
+        const rawScore = (rating * 0.5) + (winRate * 0.3) + (jockeyRating * 0.2);
+        return {
+          id: h.id || e.id || idx + 1,
+          name: h.name || `Horse #${idx + 1}`,
+          number: e.gateNumber || idx + 1,
+          color: COLORS[idx % COLORS.length],
+          riderColor: RIDER_COLORS[idx % RIDER_COLORS.length],
+          progress: 0,
+          speed: 0.15,
+          rank: idx + 1,
+          rawScore,
+        };
+      });
+      const totalScore = scores.reduce((sum, s) => sum + s.rawScore, 0) || 1;
+      const initialized: Horse[] = scores.map(s => {
+        const aiWinProb = Math.round((s.rawScore / totalScore) * 100);
+        return {
+          id: s.id,
+          name: s.name,
+          number: s.number,
+          color: s.color,
+          riderColor: s.riderColor,
+          progress: 0,
+          speed: 0.10 + (aiWinProb / 100) * 0.12 + Math.random() * 0.04,
+          rank: s.number,
+          aiWinProb,
+        };
+      }).sort((a, b) => b.aiWinProb - a.aiWinProb);
+
+      horsesRef.current = initialized;
+      setHorses(initialized);
+      setWinner(null);
+      setIsRunning(true);
+      if (initialized[0]) {
+        setCommentary(`AI Analysis for ${selectedRace?.classLevel || "Live Race"}: ${initialized[0].name} (${initialized[0].aiWinProb}% AI Odds) leading initial predictions!`);
+      }
+    }
+  }, [selectedRace?.id, entries]);
+
   // Reset simulation based on AI odds
   const handleReset = () => {
-    const fresh = INITIAL_HORSES.map(h => ({
+    const baseList = (horsesRef.current && horsesRef.current.length > 0) ? horsesRef.current : DEFAULT_HORSES;
+    const fresh = baseList.map(h => ({
       ...h,
       progress: 0,
       speed: 0.10 + (h.aiWinProb / 100) * 0.12 + Math.random() * 0.05,
@@ -44,7 +102,7 @@ export default function HorseRacingSimulator() {
     setHorses(fresh);
     setWinner(null);
     setIsRunning(true);
-    setCommentary("AI Model re-simulating race trajectory based on updated statistical probabilities...");
+    setCommentary(`AI Model re-simulating race trajectory for ${selectedRace?.classLevel || "Class Race"} (${selectedRace?.meetingName || "Live Event"})...`);
   };
 
   useEffect(() => {
@@ -65,12 +123,13 @@ export default function HorseRacingSimulator() {
       ctx.fillRect(0, 0, width, height);
 
       // Track Lanes
+      const numLanes = horsesRef.current.length || 5;
       const trackTop = 50;
       const trackBottom = height - 40;
-      const laneHeight = (trackBottom - trackTop) / 5;
+      const laneHeight = (trackBottom - trackTop) / numLanes;
 
       // Draw Turf Grass Texture & Lanes
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < numLanes; i++) {
         const laneY = trackTop + i * laneHeight;
         ctx.fillStyle = i % 2 === 0 ? "#14381e" : "#112e19";
         ctx.fillRect(0, laneY, width, laneHeight);
@@ -164,7 +223,7 @@ export default function HorseRacingSimulator() {
       }
 
       // Check for Winner
-      if (raceFinishedCount === 5 && isRunning) {
+      if (raceFinishedCount === numLanes && isRunning) {
         setIsRunning(false);
         setWinner(sorted[0]);
       }
@@ -345,7 +404,14 @@ export default function HorseRacingSimulator() {
       </div>
 
       {/* AI Win Probability Leaderboard */}
-      <div className="grid grid-cols-5 gap-2 pt-1">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${horses.length || 5}, minmax(0, 1fr))`,
+          gap: "0.5rem",
+          paddingTop: "0.25rem"
+        }}
+      >
         {[...horses]
           .sort((a, b) => b.progress - a.progress)
           .map((h, i) => (
