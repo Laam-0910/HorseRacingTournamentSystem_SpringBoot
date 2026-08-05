@@ -77,7 +77,7 @@ export default function Results() {
       ]);
       setMeetings(meetingsData);
       
-      const ineligibleStatuses = ["SCHEDULED", "DECLARATION_OPEN", "DECLARATION_CLOSED", "RACE_ASSIGNED", "OFFICIAL", "CANCELLED"];
+      const ineligibleStatuses = ["SCHEDULED", "DECLARATION_OPEN", "DECLARATION_CLOSED", "RACE_ASSIGNED", "CANCELLED"];
       setRaces((racesData || []).filter(r => !ineligibleStatuses.includes(r.status)));
       setClassRules(rulesData);
     } catch (err: any) {
@@ -124,6 +124,26 @@ export default function Results() {
       setWeighInWeights(initialWeights);
     } catch (err: any) {
       setError(getErrMsg(err, "Failed to load race entries: "));
+    } finally {
+      setProcLoading(false);
+    }
+  };
+
+  const handleCloseRace = async (raceId: number) => {
+    if (!window.confirm("Close this OFFICIAL race? This will release all horses and jockeys from the event.")) return;
+    setError("");
+    setSuccess("");
+    setProcLoading(true);
+    try {
+      const res = await api.post<any>(`/admin/races/${raceId}/close`, {});
+      if (res?.success) {
+        setSuccess("Race closed successfully. Horses and jockeys have been released.");
+        fetchData();
+      } else {
+        throw new Error(res?.message || "Failed to close race.");
+      }
+    } catch (err: any) {
+      setError(getErrMsg(err, "Failed to close race."));
     } finally {
       setProcLoading(false);
     }
@@ -347,7 +367,11 @@ export default function Results() {
                     📅 {race.startTime}
                   </div>
                   <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
-                    <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>{$t("Process", (localStorage.getItem('app-lang') || 'en'))}</button>
+                    {race.status === "OFFICIAL" ? (
+                      <button onClick={() => handleCloseRace(race.id)} disabled={procLoading} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.15)", color: "#34d399", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: procLoading ? "not-allowed" : "pointer" }}>🏁 {$t("Close Race", (localStorage.getItem('app-lang') || 'en'))}</button>
+                    ) : (
+                      <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>{$t("Process", (localStorage.getItem('app-lang') || 'en'))}</button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -376,7 +400,11 @@ export default function Results() {
                         <span style={{ fontSize: "10px", fontWeight: "bold", color: "#c9a227", background: "rgba(201,162,39,0.15)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem" }}>{race.status}</span>
                       </td>
                       <td style={{ padding: "1rem" }}>
-                        <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>{$t("Process", (localStorage.getItem('app-lang') || 'en'))}</button>
+                        {race.status === "OFFICIAL" ? (
+                          <button onClick={() => handleCloseRace(race.id)} disabled={procLoading} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.15)", color: "#34d399", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: procLoading ? "not-allowed" : "pointer" }}>🏁 {$t("Close Race", (localStorage.getItem('app-lang') || 'en'))}</button>
+                        ) : (
+                          <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>{$t("Process", (localStorage.getItem('app-lang') || 'en'))}</button>
+                        )}
                       </td>
                     </tr>
                   ))}

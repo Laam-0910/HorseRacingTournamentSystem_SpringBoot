@@ -225,12 +225,13 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 // ── HubView ────────────────────────────────────────────────────────────────
-function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorses, user, onSwitchTab }: {
+function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorses, user, onSwitchTab, hasUnpaidFine }: {
   dashboard: any; meetings: any[]; stable: any[];
   onRegisterOwner: (id: number) => void;
   onRegisterHorses: (meetingId: number, horseIds: number[]) => Promise<void>;
   user: any;
   onSwitchTab?: (tab: OwnerTab) => void;
+  hasUnpaidFine?: boolean;
 }) {
   const [selectedHorses, setSelectedHorses] = useState<Record<number, number[]>>({});
   const [page, setPage] = useState(1);
@@ -262,6 +263,51 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {hasUnpaidFine && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "1rem",
+            padding: "1rem 1.25rem",
+            borderRadius: "0.75rem",
+            background: "linear-gradient(135deg, rgba(239,68,68,0.14) 0%, rgba(251,191,36,0.10) 100%)",
+            border: "1px solid rgba(239,68,68,0.4)",
+            boxShadow: "0 0 24px rgba(239,68,68,0.12)",
+          }}
+        >
+          <span style={{ fontSize: "1.75rem", lineHeight: 1, flexShrink: 0 }}>⚠️</span>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontWeight: 700, color: "#f87171", fontSize: "0.875rem", marginBottom: "0.25rem", fontFamily: "'Roboto Slab', serif" }}>
+              Outstanding Unpaid Fine — Action Required
+            </p>
+            <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
+              Your stable has one or more <strong style={{ color: "#fbbf24" }}>unpaid rule violations</strong>.
+              Horse registration may be restricted until fines are settled.
+              Please go to the <strong style={{ color: "#f87171" }}>Rule Violations</strong> tab to view and acknowledge your penalties.
+            </p>
+            {onSwitchTab && (
+              <button
+                onClick={() => onSwitchTab("violations")}
+                style={{
+                  marginTop: "0.6rem",
+                  padding: "0.4rem 1rem",
+                  borderRadius: "0.5rem",
+                  background: "rgba(239,68,68,0.2)",
+                  border: "1px solid rgba(239,68,68,0.5)",
+                  color: "#f87171",
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  fontFamily: "monospace",
+                  cursor: "pointer",
+                }}
+              >
+                🚨 View Rule Violations
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       {dashboard && (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px,1fr))", gap: "1rem" }}>
           {[
@@ -1953,6 +1999,7 @@ export default function HorseOwner() {
 
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
   const pendingViolations = violations.filter(v => v.status === "PENDING").length;
+  const hasUnpaidFine = violations.some(v => (v.fineStatus === "UNPAID" || !v.fineStatus) && v.status !== "DISMISSED");
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Owner Hub";
   const navItemsWithBadge = NAV_ITEMS.map(n => {
     if (n.view === "invitations") return { ...n, badge: pendingInvitations };
@@ -1963,7 +2010,7 @@ export default function HorseOwner() {
   const renderContent = () => {
     switch (activeTab) {
       case "hub":
-        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} user={user} onSwitchTab={setActiveTab} />;
+        return <HubView dashboard={dashboard} meetings={meetings} stable={stable} onRegisterOwner={handleRegisterOwner} onRegisterHorses={handleRegisterHorses} user={user} onSwitchTab={setActiveTab} hasUnpaidFine={hasUnpaidFine} />;
       case "stable":
         return <StableView stable={stable} onRefresh={fetchData} />;
       case "calendar":
