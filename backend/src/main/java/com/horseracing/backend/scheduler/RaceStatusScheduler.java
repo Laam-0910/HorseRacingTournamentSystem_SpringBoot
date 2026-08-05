@@ -38,7 +38,7 @@ public class RaceStatusScheduler {
 
         // Duyệt qua danh sách tất cả các trận đua
         for (Race race : races) {
-            adminUserService.autoCalculateWeights(race.getId());
+            adminUserService.autoCalculateWeights(race.getId(), false);
             // Lấy trạng thái hiện tại của trận đua
             String status = race.getStatus();
             // Chỉ kiểm tra các trận đua đang ở trạng thái SCHEDULED, DECLARATION_OPEN hoặc DECLARATION_CLOSED

@@ -1720,7 +1720,12 @@ export default function Landing() {
           </div>
         );
       case "statistics":
-        const topHorses = [...horses].sort((a,b) => (b.currentRating - a.currentRating)).slice(0, 10);
+        const getHorseRating = (h: any): number =>
+          Number(h.currentRating ?? h.current_rating ?? h.rating ?? 0) || 0;
+        const topHorses = [...horses]
+          .filter(h => getHorseRating(h) > 0)
+          .sort((a, b) => getHorseRating(b) - getHorseRating(a))
+          .slice(0, 10);
         const topJockeys = [...users]
           .filter(u => u.roleId === 3)
           .map(u => {
@@ -1770,7 +1775,7 @@ export default function Landing() {
                       </div>
                       <div className="text-right">
                         <div className="text-xs text-gray-500 uppercase tracking-wider mb-0.5">{"Rating"}</div>
-                        <div className="font-mono font-bold text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded border border-blue-500/20 inline-block">{h.currentRating}</div>
+                        <div className="font-mono font-bold text-blue-400 bg-blue-900/20 px-2 py-0.5 rounded border border-blue-500/20 inline-block">{getHorseRating(h)}</div>
                       </div>
                     </div>
                   ))}

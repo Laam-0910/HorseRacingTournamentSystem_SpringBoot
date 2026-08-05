@@ -62,20 +62,30 @@ public class JockeyOwnerDashboardService {
 
         // Tính toán các chỉ số thống kê (Stats)
         List<RaceEntry> entries = raceEntryRepository.findByJockeyId(jockeyId); // Lấy danh sách các lượt thi đấu của nài
-        int totalRaces = 0; // Biến đếm tổng số trận đã chạy
-        int totalWins = 0; // Biến đếm số lần về nhất (Top 1)
-        int top3 = 0; // Biến đếm số lần vào Top 3
+
+        // Lấy thống kê sự nghiệp từ CSDL (seeded base values)
+        User jockeyUser = userRepository.findById(jockeyId).orElse(null);
+        int baseRaces = (jockeyUser != null && jockeyUser.getTotalRacesParticipated() != null)
+                ? jockeyUser.getTotalRacesParticipated() : 0;
+        int baseTop3 = (jockeyUser != null && jockeyUser.getTotalTop3Finishes() != null)
+                ? jockeyUser.getTotalTop3Finishes() : 0;
+        // Ước tính tổng chiến thắng (35% top3 finishes) vì không có cột riêng
+        int baseWins = (int) Math.round(baseTop3 * 0.35);
+
+        int liveRaces = 0;  // Số trận đã chạy từ RaceEntry (live)
+        int liveWins = 0;   // Số lần về nhất từ RaceEntry (live)
+        int liveTop3 = 0;   // Số lần vào Top 3 từ RaceEntry (live)
         double earnings = 0.0; // Biến tổng tiền thưởng kiếm được (10% tổng tiền thưởng trận)
 
         for (RaceEntry e : entries) {
             if ("FINISHED".equalsIgnoreCase(e.getStatus())) { // Chỉ tính các lượt thi đấu đã kết thúc
-                totalRaces++;
+                liveRaces++;
                 if (e.getFinalPosition() != null) {
                     if (e.getFinalPosition() == 1) {
-                        totalWins++; // Tăng biến thắng
+                        liveWins++; // Tăng biến thắng
                     }
                     if (e.getFinalPosition() <= 3) {
-                        top3++; // Tăng biến top 3
+                        liveTop3++; // Tăng biến top 3
                     }
                 }
                 if (e.getPrizeMoney() != null) {
@@ -84,12 +94,18 @@ public class JockeyOwnerDashboardService {
             }
         }
 
+        // Kết hợp base (seeded) + live stats — tránh trùng lặp nếu base đã tính live
+        int totalRaces = Math.max(baseRaces, liveRaces);
+        int totalWins  = Math.max(baseWins,  liveWins);
+        int top3       = Math.max(baseTop3,  liveTop3);
+
         Map<String, Object> stats = new HashMap<>();
         stats.put("totalRaces", totalRaces); // Tổng số trận
         stats.put("totalWins", totalWins); // Số trận thắng
         stats.put("top3", top3); // Số trận Top 3
         stats.put("winRate", totalRaces > 0 ? ((double) totalWins / totalRaces) * 100 : 0.0); // Tỷ lệ thắng %
         stats.put("earnings", earnings); // Tổng tiền thưởng nhận được
+
 
         // Danh sách thông báo (Notifications)
         List<Map<String, Object>> notificationList = new ArrayList<>();

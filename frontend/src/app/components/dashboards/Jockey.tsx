@@ -107,6 +107,52 @@ function HubView({ dashboard, meetings, onRegister, user, onSwitchTab, hasUnpaid
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {hasUnpaidFine && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "1rem",
+            padding: "1rem 1.25rem",
+            borderRadius: "0.75rem",
+            background: "linear-gradient(135deg, rgba(239,68,68,0.14) 0%, rgba(251,191,36,0.10) 100%)",
+            border: "1px solid rgba(239,68,68,0.4)",
+            boxShadow: "0 0 24px rgba(239,68,68,0.12)",
+            animation: "pulse-border 2s ease-in-out infinite",
+          }}
+        >
+          <span style={{ fontSize: "1.75rem", lineHeight: 1, flexShrink: 0 }}>⚠️</span>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontWeight: 700, color: "#f87171", fontSize: "0.875rem", marginBottom: "0.25rem", fontFamily: "'Roboto Slab', serif" }}>
+              Outstanding Unpaid Fine — Action Required
+            </p>
+            <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.7)", lineHeight: 1.5 }}>
+              You have one or more <strong style={{ color: "#fbbf24" }}>unpaid rule violations</strong>. You cannot register for race meetings until all fines are settled.
+              Please go to the <strong style={{ color: "#f87171" }}>Rule Violations</strong> tab to view and pay your fines.
+            </p>
+            {onSwitchTab && (
+              <button
+                onClick={() => onSwitchTab("violations")}
+                style={{
+                  marginTop: "0.6rem",
+                  padding: "0.4rem 1rem",
+                  borderRadius: "0.5rem",
+                  background: "rgba(239,68,68,0.2)",
+                  border: "1px solid rgba(239,68,68,0.5)",
+                  color: "#f87171",
+                  fontSize: "0.7rem",
+                  fontWeight: 700,
+                  fontFamily: "monospace",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                🚨 View Rule Violations &amp; Pay Fine
+              </button>
+            )}
+          </div>
+        </div>
+      )}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: "1rem" }}>
         <StatsCard label="💰 Wallet Balance" value={`${walletBal.toLocaleString('en-US')} VND`} color="#fbbf24" />
         <StatsCard label={$t("Total Rides", (localStorage.getItem('app-lang') || 'en'))}     value={dashboard?.jockeyStats?.totalRaces} />
