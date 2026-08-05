@@ -72,7 +72,7 @@ public class InvitationService {
         java.util.List<RaceEntry> allEntries = raceEntryRepository.findAll(); // Lấy danh sách lượt thi đấu
 
         // Chuyển đổi từng bản ghi lời mời sang DTO kèm thông tin đính kèm
-        return invitations.stream()
+        List<RaceInvitationDTO> dtos = invitations.stream()
                 .map(i -> {
                     Horse horse = horseEntityMap.get(i.getHorseId()); // Lấy thông tin con ngựa
                     User owner = userEntityMap.get(i.getOwnerId()); // Lấy thông tin chủ sở hữu
@@ -113,9 +113,33 @@ public class InvitationService {
                         dto.setEntryStatus(matchingEntry.get().getStatus()); // Đính kèm trạng thái lượt thi đấu
                     }
                     
-                    return dto; // Trả về DTO hoàn chỉnh
+                    return dto;
                 })
                 .collect(Collectors.toList());
+
+        // Sắp xếp: ưu tiên các trạng thái PENDING và PENDING_ADMIN lên trước, sau đó là ID giảm dần (mới nhất lên trước)
+        dtos.sort((a, b) -> {
+            String statusA = a.getStatus();
+            if ("ACCEPTED".equalsIgnoreCase(statusA) && a.getEntryStatus() != null) {
+                statusA = a.getEntryStatus();
+            }
+            String statusB = b.getStatus();
+            if ("ACCEPTED".equalsIgnoreCase(statusB) && b.getEntryStatus() != null) {
+                statusB = b.getEntryStatus();
+            }
+
+            boolean isPriA = "PENDING".equalsIgnoreCase(statusA) || "PENDING_ADMIN".equalsIgnoreCase(statusA);
+            boolean isPriB = "PENDING".equalsIgnoreCase(statusB) || "PENDING_ADMIN".equalsIgnoreCase(statusB);
+
+            if (isPriA && !isPriB) return -1;
+            if (!isPriA && isPriB) return 1;
+
+            int idA = a.getId() != null ? a.getId() : 0;
+            int idB = b.getId() != null ? b.getId() : 0;
+            return Integer.compare(idB, idA);
+        });
+
+        return dtos;
     }
 
     // Chủ sở hữu gửi lời mời Nài ngựa điều khiển chiến mã trong trận đua

@@ -410,16 +410,26 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
     return inv.status ? inv.status.toUpperCase() : "OTHER";
   };
 
+  const sortedInvitations = [...invitations].sort((a, b) => {
+    const statusA = getItemStatus(a);
+    const statusB = getItemStatus(b);
+    const isPriA = statusA === "PENDING" || statusA === "PENDING_ADMIN";
+    const isPriB = statusB === "PENDING" || statusB === "PENDING_ADMIN";
+    if (isPriA && !isPriB) return -1;
+    if (!isPriA && isPriB) return 1;
+    return (b.id || 0) - (a.id || 0);
+  });
+
   const counts = {
-    ALL: invitations.length,
-    PENDING: invitations.filter(i => getItemStatus(i) === "PENDING").length,
-    PENDING_ADMIN: invitations.filter(i => getItemStatus(i) === "PENDING_ADMIN").length,
-    APPROVED: invitations.filter(i => getItemStatus(i) === "APPROVED" || getItemStatus(i) === "ACCEPTED").length,
-    REJECTED: invitations.filter(i => getItemStatus(i) === "REJECTED" || getItemStatus(i) === "ENTRY_REJECTED").length,
-    FINISHED: invitations.filter(i => getItemStatus(i) === "FINISHED" || getItemStatus(i) === "OFFICIAL").length,
+    ALL: sortedInvitations.length,
+    PENDING: sortedInvitations.filter(i => getItemStatus(i) === "PENDING").length,
+    PENDING_ADMIN: sortedInvitations.filter(i => getItemStatus(i) === "PENDING_ADMIN").length,
+    APPROVED: sortedInvitations.filter(i => getItemStatus(i) === "APPROVED" || getItemStatus(i) === "ACCEPTED").length,
+    REJECTED: sortedInvitations.filter(i => getItemStatus(i) === "REJECTED" || getItemStatus(i) === "ENTRY_REJECTED").length,
+    FINISHED: sortedInvitations.filter(i => getItemStatus(i) === "FINISHED" || getItemStatus(i) === "OFFICIAL").length,
   };
 
-  const filteredList = invitations.filter((inv: any) => {
+  const filteredList = sortedInvitations.filter((inv: any) => {
     const st = getItemStatus(inv);
     let matchesStatus = true;
     if (filter === "PENDING") matchesStatus = st === "PENDING";
