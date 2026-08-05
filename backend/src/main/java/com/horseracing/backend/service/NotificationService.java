@@ -87,6 +87,22 @@ public class NotificationService {
     }
 
     /**
+     * Send notification to all Admin users (roleId = 1).
+     */
+    public void notifyAllAdmins(String title, String message) {
+        try {
+            List<User> admins = userRepository.findAll().stream()
+                    .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
+                    .toList();
+            for (User admin : admins) {
+                saveNotification(admin.getId(), title, message);
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to dispatch admin notification: " + e.getMessage());
+        }
+    }
+
+    /**
      * Send notification to Horse Owner when a Jockey accepts or rejects a race invitation.
      */
     public void notifyOwnerOnInvitationResponse(RaceInvitation invite, boolean accepted) {
@@ -258,13 +274,18 @@ public class NotificationService {
     }
 
     /**
-     * Send notification to User when Admin approves (PROCESSED) or rejects a Cash-Out Withdrawal Request.
+     * Send notification to User when Admin approves (PROCESSED), rejects, or API fails a Cash-Out Withdrawal Request.
      */
     public void notifyUserOnWithdrawalStatus(Integer userId, java.math.BigDecimal amount, boolean processed, String note) {
         try {
             if (userId == null) return;
-            String amountStr = String.format("%,.0f VND", amount);
-            String title = processed ? "Withdrawal Processed" : "Withdrawal Rejected";
+            String amountStr = amount != null ? String.format("%,.0f VND", amount) : "0 VND";
+            boolean isApiFailure = note != null && (note.toLowerCase().contains("failed") || note.toLowerCase().contains("error"));
+            
+            String title = processed 
+                    ? "Withdrawal Processed" 
+                    : (isApiFailure ? "⚠️ Withdrawal Payout Failed" : "Withdrawal Rejected");
+            
             String message;
             if (processed) {
                 if (note != null && note.toLowerCase().contains("auto-disbursement")) {
@@ -273,12 +294,31 @@ public class NotificationService {
                     message = String.format("Your cash-out withdrawal request of %s has been PROCESSED. Money transferred to your bank account.", amountStr);
                 }
             } else {
-                message = String.format("Your cash-out withdrawal request of %s was REJECTED. Reason: %s", amountStr, note != null && !note.isBlank() ? note : "Decision updated.");
+                if (isApiFailure) {
+                    message = String.format("Automated banking payout of %s FAILED via API. Reason: %s. Your wallet balance has been restored.", amountStr, note);
+                } else {
+                    message = String.format("Your cash-out withdrawal request of %s was REJECTED. Reason: %s", amountStr, note != null && !note.isBlank() ? note : "Decision updated.");
+                }
             }
 
             saveNotification(userId, title, message);
         } catch (Exception e) {
             System.err.println("Failed to dispatch withdrawal status notification: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Send notification when VietQR / Bank deposit fails.
+     */
+    public void notifyUserOnDepositFailed(Integer userId, java.math.BigDecimal amount, String reason) {
+        try {
+            if (userId == null) return;
+            String amountStr = amount != null ? String.format("%,.0f VND", amount) : "0 VND";
+            String title = "⚠️ Wallet Deposit Failed";
+            String message = String.format("Your deposit of %s via VietQR failed. Reason: %s. Please check your bank transaction or try again.", amountStr, reason != null ? reason : "Bank Gateway Error");
+            saveNotification(userId, title, message);
+        } catch (Exception e) {
+            System.err.println("Failed to dispatch deposit failed notification: " + e.getMessage());
         }
     }
 

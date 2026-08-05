@@ -34,6 +34,8 @@ public class BankWebhookController {
     private final HorseRepository horseRepository;
     private final LivestreamSubscriptionRepository subscriptionRepository;
     private final SystemConfigRepository systemConfigRepository;
+    private final NotificationRepository notificationRepository;
+    private final com.horseracing.backend.service.NotificationService notificationService;
 
     @Value("${sepay.webhook.secret:ANTIGRAVITY_BANK_WEBHOOK_SECRET_2026}")
     private String webhookSecret;
@@ -198,6 +200,21 @@ public class BankWebhookController {
         tx.setDescription("Automated VietQR Bank Deposit via Realtime Webhook (" + rawContent + ")");
         tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
         walletTransactionRepository.save(tx);
+
+        try {
+            Notification notif = new Notification();
+            notif.setUserId(user.getId());
+            notif.setTitle("💰 Bank Webhook Deposit Received!");
+            notif.setMessage(String.format("Realtime bank transfer of %,.0f VNĐ received and credited to your wallet balance.", amount));
+            notif.setIsRead(false);
+            notif.setCreatedAt(new Timestamp(System.currentTimeMillis()));
+            notificationRepository.save(notif);
+
+            notificationService.notifyAllAdmins("💳 Realtime Bank Deposit Received", 
+                String.format("User %s (ID: #%d) completed a bank transfer of %,.0f VNĐ via webhook.", user.getUsername(), user.getId(), amount));
+        } catch (Exception ex) {
+            System.err.println("[WEBHOOK_NOTIF_ERROR] Failed to save deposit notification: " + ex.getMessage());
+        }
 
         // Auto-reactivate any SUSPENDED_DEFICIT entries if wallet balance is restored to >= 0
         if (user.getWalletBalance().compareTo(BigDecimal.ZERO) >= 0) {
