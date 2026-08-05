@@ -66,6 +66,7 @@ export default function Results() {
   const [weighInWeights, setWeighInWeights] = useState<Record<number, string>>({});
   const [stewardReport, setStewardReport] = useState("");
   const [procLoading, setProcLoading] = useState(false);
+  const [confirmCloseRaceId, setConfirmCloseRaceId] = useState<number | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -130,7 +131,6 @@ export default function Results() {
   };
 
   const handleCloseRace = async (raceId: number) => {
-    if (!window.confirm("Close this OFFICIAL race? This will release all horses and jockeys from the event.")) return;
     setError("");
     setSuccess("");
     setProcLoading(true);
@@ -368,7 +368,7 @@ export default function Results() {
                   </div>
                   <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "0.5rem", marginTop: "0.25rem" }}>
                     {race.status === "OFFICIAL" ? (
-                      <button onClick={() => handleCloseRace(race.id)} disabled={procLoading} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.15)", color: "#34d399", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: procLoading ? "not-allowed" : "pointer" }}>🏁 {$t("Close Race", (localStorage.getItem('app-lang') || 'en'))}</button>
+                      <button onClick={() => setConfirmCloseRaceId(race.id)} disabled={procLoading} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.15)", color: "#34d399", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: procLoading ? "not-allowed" : "pointer" }}>🏁 {$t("Close Race", (localStorage.getItem('app-lang') || 'en'))}</button>
                     ) : (
                       <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>{$t("Process", (localStorage.getItem('app-lang') || 'en'))}</button>
                     )}
@@ -401,7 +401,7 @@ export default function Results() {
                       </td>
                       <td style={{ padding: "1rem" }}>
                         {race.status === "OFFICIAL" ? (
-                          <button onClick={() => handleCloseRace(race.id)} disabled={procLoading} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.15)", color: "#34d399", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: procLoading ? "not-allowed" : "pointer" }}>🏁 {$t("Close Race", (localStorage.getItem('app-lang') || 'en'))}</button>
+                          <button onClick={() => setConfirmCloseRaceId(race.id)} disabled={procLoading} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(16,185,129,0.4)", background: "rgba(16,185,129,0.15)", color: "#34d399", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: procLoading ? "not-allowed" : "pointer" }}>🏁 {$t("Close Race", (localStorage.getItem('app-lang') || 'en'))}</button>
                         ) : (
                           <button onClick={() => handleStartProcess(race)} style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", border: "none", background: "#c9a227", color: "#0c0a09", fontSize: "11px", fontFamily: "monospace", fontWeight: "bold", cursor: "pointer" }}>{$t("Process", (localStorage.getItem('app-lang') || 'en'))}</button>
                         )}
@@ -431,6 +431,62 @@ export default function Results() {
           </div>
         )}
       </div>
+
+      {confirmCloseRaceId !== null && (
+        <div style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: "rgba(0, 0, 0, 0.75)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          backdropFilter: "blur(4px)"
+        }}>
+          <div style={{
+            background: "#181614",
+            border: "1px solid rgba(201,162,39,0.3)",
+            borderRadius: "1rem",
+            padding: "2rem",
+            maxWidth: "450px",
+            width: "90%",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)",
+            textAlign: "center"
+          }}>
+            <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🏁</div>
+            <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.75rem" }}>
+              {$t("Confirm Close Race", (localStorage.getItem('app-lang') || 'en'))}
+            </h3>
+            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.7)", marginBottom: "1.5rem", lineHeight: 1.6 }}>
+              {$t("Are you sure you want to close this OFFICIAL race? This will release all horses and jockeys from the event.", (localStorage.getItem('app-lang') || 'en'))}
+            </p>
+            <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
+              <button 
+                type="button" 
+                onClick={() => setConfirmCloseRaceId(null)}
+                style={{ padding: "0.5rem 1.25rem", background: "#2e2a24", border: "1px solid #423b32", color: "#dcd6cd", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace", cursor: "pointer", fontWeight: "bold" }}
+              >
+                {$t("Cancel", (localStorage.getItem('app-lang') || 'en'))}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => {
+                  if (confirmCloseRaceId !== null) {
+                    handleCloseRace(confirmCloseRaceId);
+                    setConfirmCloseRaceId(null);
+                  }
+                }}
+                style={{ padding: "0.5rem 1.25rem", background: "#10b981", color: "#fff", border: "none", borderRadius: "0.375rem", fontSize: "12px", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}
+              >
+                {$t("Close Race", (localStorage.getItem('app-lang') || 'en'))}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
