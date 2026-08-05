@@ -50,6 +50,9 @@ public class PublicDataController {
     private WalletTransactionRepository walletTransactionRepository;
 
     @Autowired
+    private NotificationRepository notificationRepository;
+
+    @Autowired
     private WithdrawalRequestRepository withdrawalRequestRepository;
 
     @Autowired
@@ -557,6 +560,23 @@ public class PublicDataController {
             tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
             walletTransactionRepository.save(tx);
 
+            // Gửi thông báo nạp tiền thành công cho User và tất cả Admin
+            try {
+                Notification notif = new Notification();
+                notif.setUserId(user.getId());
+                notif.setTitle("💰 Wallet Deposit Successful!");
+                notif.setMessage(String.format("Successfully deposited %,.0f VNĐ into your wallet via VietQR Banking Gateway.", amount));
+                notif.setIsRead(false);
+                notif.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                notificationRepository.save(notif);
+
+                // Gửi thông báo biến động nạp tiền cho Admin
+                notificationService.notifyAllAdmins("💳 User Wallet Deposit", 
+                    String.format("User %s (ID: #%d) deposited %,.0f VNĐ into their wallet balance.", user.getUsername(), user.getId(), amount));
+            } catch (Exception ex) {
+                System.err.println("[DEPOSIT_NOTIF_ERROR] Failed to save deposit notification: " + ex.getMessage());
+            }
+
             // Auto-reactivate any SUSPENDED_DEFICIT entries if wallet balance is restored to >= 0
             if (user.getWalletBalance().compareTo(BigDecimal.ZERO) >= 0) {
                 if (user.getRoleId() != null && user.getRoleId() == 2) {
@@ -675,8 +695,10 @@ public class PublicDataController {
                 tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                 walletTransactionRepository.save(tx);
 
-                // Gửi thông báo rút tiền thành công
+                // Gửi thông báo rút tiền thành công cho User và Admin
                 notificationService.notifyUserOnWithdrawalStatus(userId, amount, true, "Auto-disbursement payout via " + bankName);
+                notificationService.notifyAllAdmins("💸 User Cash-Out Processed", 
+                    String.format("User %s (ID: #%d) cashed out %,.0f VNĐ via automated API payout to %s.", user.getUsername(), userId, amount, bankName));
 
                 return ResponseEntity.ok(Map.of(
                     "success", true,
@@ -689,6 +711,21 @@ public class PublicDataController {
                 // 🟡 MANUAL APPROVAL FLOW (LIVE Mode với Auto Disbursement = FALSE): Giữ nguyên ví + Mark PENDING
                 wr.setStatus("PENDING");
                 withdrawalRequestRepository.save(wr);
+
+                try {
+                    Notification notif = new Notification();
+                    notif.setUserId(userId);
+                    notif.setTitle("💸 Withdrawal Request Submitted");
+                    notif.setMessage(String.format("Your cash-out request of %,.0f VNĐ via %s (Acc: %s) is pending Admin manual review.", amount, bankName, accountNumber));
+                    notif.setIsRead(false);
+                    notif.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                    notificationRepository.save(notif);
+
+                    notificationService.notifyAllAdmins("💸 Action Required: New Cash-Out Request", 
+                        String.format("User %s (ID: #%d) requested a cash-out payout of %,.0f VNĐ via %s (Acc: %s). Pending manual approval.", user.getUsername(), userId, amount, bankName, accountNumber));
+                } catch (Exception ex) {
+                    System.err.println("[WITHDRAWAL_NOTIF_ERROR] Failed to save pending withdrawal notification: " + ex.getMessage());
+                }
 
                 return ResponseEntity.ok(Map.of(
                     "success", true,

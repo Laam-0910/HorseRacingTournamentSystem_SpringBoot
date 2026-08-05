@@ -41,20 +41,15 @@ export default function VietQRModal({
       return;
     }
 
-    // Auto-detect bank payment webhook completion after 3 seconds & credit wallet automatically
-    const autoPayTimer = setTimeout(() => {
-      onConfirmSuccess();
-    }, 3000);
-
+    // Countdown 15-minute QR code expiration
     const timer = setInterval(() => {
       setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => {
-      clearTimeout(autoPayTimer);
       clearInterval(timer);
     };
-  }, [isOpen, onConfirmSuccess]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -154,20 +149,34 @@ export default function VietQRModal({
           </div>
         </div>
 
-        {/* Liveness Listener & Cancel Payment Button */}
+        {/* Liveness Listener & Confirm / Cancel Buttons */}
         <div className="space-y-3 pt-1">
-          <div className="flex items-center justify-center gap-2 text-[11px] font-mono text-emerald-400 bg-emerald-500/10 py-1.5 px-3 rounded-xl border border-emerald-500/20">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>Waiting for bank payment webhook... (Auto-crediting wallet)</span>
+          <div className="flex items-center justify-between text-[11px] font-mono text-emerald-400 bg-emerald-500/10 py-2 px-3 rounded-xl border border-emerald-500/20">
+            <span className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>
+                {gatewayMode === "LIVE" 
+                  ? "Listening for Realtime Bank Webhook (SePay / PayOS)..." 
+                  : "Review details & click Confirm Payment when done."}
+              </span>
+            </span>
           </div>
 
-          {/* Cancel Payment Button */}
-          <button
-            onClick={onClose}
-            className="w-full py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-xs rounded-2xl transition border border-rose-500/30 flex items-center justify-center gap-2 font-mono uppercase tracking-wider cursor-pointer"
-          >
-            <span>✕ Cancel Payment</span>
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={onClose}
+              className="py-2.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-bold text-xs rounded-xl transition border border-rose-500/30 flex items-center justify-center gap-1 font-mono uppercase tracking-wider cursor-pointer"
+            >
+              <span>✕ Cancel</span>
+            </button>
+            <button
+              onClick={onConfirmSuccess}
+              disabled={loading}
+              className="py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:brightness-110 text-black font-extrabold text-xs rounded-xl transition shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1 font-mono uppercase tracking-wider cursor-pointer"
+            >
+              <span>{loading ? "Processing..." : "✓ Confirm Payment"}</span>
+            </button>
+          </div>
         </div>
 
       </div>
