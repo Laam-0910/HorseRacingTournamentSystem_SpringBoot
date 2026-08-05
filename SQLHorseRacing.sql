@@ -59,6 +59,7 @@ CREATE TABLE [User] (
     biography                   NVARCHAR(MAX) NULL,             -- Personal biography / profile introduction
     wallet_balance              DECIMAL(18,2) NOT NULL DEFAULT 0.00, -- User wallet balance
     balance                     DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+    jockey_fee                  DECIMAL(12,2) NULL DEFAULT 500000.00, -- Jockey personal hire fee value
     CONSTRAINT CK_User_Status CHECK (status IN ('ACTIVE', 'INACTIVE'))
 );
 GO
@@ -227,7 +228,8 @@ CREATE TABLE Violation (
     referee_id  INT NOT NULL,
     description VARCHAR(500) NOT NULL,
     penalty     VARCHAR(200) NOT NULL,
-    status      VARCHAR(30) NOT NULL DEFAULT 'PENDING'
+    status      VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    fine_status VARCHAR(20) NOT NULL DEFAULT 'UNPAID'
 );
 GO
 

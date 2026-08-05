@@ -72,4 +72,7 @@ public class User implements Serializable {
 
     @Column(name = "biography", columnDefinition = "NVARCHAR(MAX)")
     private String biography;
+
+    @Column(name = "jockey_fee", precision = 12, scale = 2)
+    private BigDecimal jockeyFee = new BigDecimal("500000.00");
 }

@@ -94,7 +94,7 @@ function StatusBadge({ status }: { status: string }) {
 
 /**
  */
-function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void; user: any; onSwitchTab?: (tab: string) => void }) {
+function HubView({ dashboard, meetings, onRegister, user, onSwitchTab, hasUnpaidFine }: { dashboard: any; meetings: any[]; onRegister: (id: number) => void; user: any; onSwitchTab?: (tab: string) => void; hasUnpaidFine?: boolean }) {
   const walletBal = user?.walletBalance !== undefined && user?.walletBalance !== null ? Number(user.walletBalance) : 0;
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(6);
@@ -170,12 +170,21 @@ function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashb
               {paginatedMeetings.map((m: any) => {
                 const isReg = dashboard?.registeredMeetingIds?.includes(m.id);
                 const regStatus = dashboard?.regStatuses?.[m.id];
+                const isMeetingInactive = m.status === 'INACTIVE' || m.status === 'CANCELLED' || m.status === 'DEACTIVE';
+                const isSeasonInactive = m.seasonStatus === 'INACTIVE' || m.seasonStatus === 'CLOSED' || m.seasonStatus === 'CANCELLED' || m.seasonStatus === 'DEACTIVE';
+                const isLocked = isMeetingInactive || isSeasonInactive;
 
                 return (
                   <div key={m.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                       <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
-                      {isReg ? <StatusBadge status={regStatus ?? "APPROVED"} /> : <StatusBadge status="UNREGISTERED" />}
+                      {isLocked ? (
+                        <StatusBadge status="INACTIVE" />
+                      ) : isReg ? (
+                        <StatusBadge status={regStatus ?? "APPROVED"} />
+                      ) : (
+                        <StatusBadge status="UNREGISTERED" />
+                      )}
                     </div>
                     <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                       <span>📍 {m.venue}</span>
@@ -184,7 +193,12 @@ function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashb
                     <div style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", background: "rgba(52,211,153,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(52,211,153,0.2)" }}>
                       🎟️ <strong>Race Meeting Registration Fee:</strong> <span style={{ color: "#4ade80", fontWeight: "bold" }}>FREE (0 VND - Jockey)</span>
                     </div>
-                    {isReg && regStatus === "REJECTED" ? (
+                    {isLocked ? (
+                      <div style={{ fontSize: "0.65rem", color: "#f87171", fontFamily: "monospace", fontStyle: "italic", background: "rgba(239,68,68,0.1)", padding: "0.6rem 0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(239,68,68,0.25)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <span style={{ fontSize: "0.9rem" }}>🔒</span>
+                        <span>This Race Meeting or Season is currently deactivated/locked by Admin. Jockey registration is suspended until reactivated by Admin.</span>
+                      </div>
+                    ) : isReg && regStatus === "REJECTED" ? (
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
                         <p style={{ fontSize: "0.65rem", color: "#ef4444", fontFamily: "monospace", fontStyle: "italic" }}>
                           ⚠️ {$t("Your registration for this meeting was rejected. You can re-register again below.", (localStorage.getItem('app-lang') || 'en'))}
@@ -204,6 +218,13 @@ function HubView({ dashboard, meetings, onRegister, user, onSwitchTab }: { dashb
                       <div style={{ fontSize: "0.65rem", color: "#34d399", fontFamily: "monospace", fontStyle: "italic", background: "rgba(52,211,153,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: "1px solid rgba(52,211,153,0.2)" }}>
                         ✅ {$t("Registration approved. You are registered for this event.", (localStorage.getItem('app-lang') || 'en'))}
                       </div>
+                    ) : hasUnpaidFine ? (
+                      <button
+                        onClick={() => onSwitchTab && onSwitchTab('violations')}
+                        style={{ width: "100%", padding: "0.625rem", background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.4)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                      >
+                        🔒 Pay Fine First to Register
+                      </button>
                     ) : (
                       <button
                         onClick={() => onRegister(m.id)}
@@ -382,13 +403,15 @@ function MountsView({ mounts, loading, onViewHorse }: { mounts: any[]; loading: 
 
 /**
  */
-function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onViewHorse, refereesMap }: { 
+function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onViewHorse, refereesMap, hasUnpaidFine, onGoToViolations }: { 
   invitations: any[]; 
   onAccept: (id: number) => void; 
   onReject: (id: number) => void; 
   onViewProfile: (id: number) => void; 
   onViewHorse: (horse: { id: number; name: string }) => void;
   refereesMap?: Record<number, any[]>;
+  hasUnpaidFine?: boolean;
+  onGoToViolations?: () => void;
 }) {
   const lang = localStorage.getItem("app-lang") || "en";
   const [filter, setFilter] = useState<string>("ALL");
@@ -490,6 +513,20 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
         <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>{t.subTitle}</p>
       </div>
 
+      {hasUnpaidFine && (
+        <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", padding: "1rem 1.25rem", borderRadius: "0.85rem", color: "#f87171", fontSize: "12px", fontFamily: "monospace", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "16px" }}>🚨</span>
+            <span><strong>UNPAID RULE VIOLATIONS:</strong> You have unpaid rule violation fines. You are restricted from accepting invitations or joining race meetings until all fines are paid.</span>
+          </div>
+          {onGoToViolations && (
+            <button onClick={onGoToViolations} style={{ padding: "0.35rem 0.85rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.4rem", fontWeight: "bold", fontSize: "11px", cursor: "pointer" }}>
+              💳 Go to Pay Fines
+            </button>
+          )}
+        </div>
+      )}
+
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "0.75rem", borderBottom: "1px solid rgba(255,255,255,0.08)", paddingBottom: "0.75rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <span style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", fontWeight: 700 }}>
@@ -564,6 +601,7 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
           {paginatedList.map((inv: any) => {
             const isPending = inv.status === "PENDING";
             const displayStatus = getItemStatus(inv);
+            const hireFeeVal = Number(inv.hireFee ?? 500000);
 
             return (
               <div key={inv.id} className="rounded-xl border" style={{ background: "rgba(255,255,255,0.02)", borderColor: "rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "1rem" }}>
@@ -613,9 +651,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                       📍 {inv.venue} {inv.startTime ? `· 📅 ${formatDate(inv.startTime)}` : ''}
                     </p>
                   )}
-                  <p style={{ fontSize: "0.75rem", color: "#34d399", fontFamily: "monospace", fontWeight: 700, marginTop: "0.25rem" }}>
-                    💰 {lang === "vi" ? "Offered Prize Share:" : "Offered Prize Share:"} {inv.jockeyPrizePercentage ?? 20}%
-                  </p>
 
                   {refereesMap && refereesMap[inv.raceId] && refereesMap[inv.raceId].length > 0 && (
                     <div style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.04)", paddingTop: "0.4rem", display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
@@ -631,22 +666,21 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                     </div>
                   )}
 
-                  <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem" }}>
-                    <span style={{ color: "#a0a0a0" }}>{$t("Prize Share Offered:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#fbbf24", fontFamily: "monospace", fontSize: "0.85rem" }}>{inv.jockeyPrizePercentage ?? 20}%</strong></span>
-                    <span style={{ color: "#a0a0a0" }}>{$t("Hire Fee:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#4ade80", fontFamily: "monospace" }}>+{Number(inv.hireFee ?? 500).toLocaleString('en-US')} VND</strong></span>
-                  </div>
-
-                  <div style={{ marginTop: "0.5rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.05)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.7rem" }}>
-                    <span style={{ color: "#a0a0a0" }}>Invitation: <strong style={{ color: "#f4f2ec" }}>{inv.status}</strong></span>
-                    {inv.status === "ACCEPTED" && inv.entryStatus && (
-                      <span style={{ color: "#a0a0a0" }}>{t.entryStatus} <StatusBadge status={inv.entryStatus} /></span>
-                    )}
+                  <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.75rem", fontFamily: "monospace" }}>
+                    <span style={{ color: "#a0a0a0" }}>{$t("Prize Share Offered:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#fbbf24", fontSize: "0.85rem" }}>{inv.jockeyPrizePercentage ?? 20}%</strong></span>
+                    <span style={{ color: "#a0a0a0" }}>{$t("Hire Fee:", (localStorage.getItem('app-lang') || 'en'))} <strong style={{ color: "#4ade80", fontSize: "0.85rem" }}>{hireFeeVal.toLocaleString('en-US')} VND</strong></span>
                   </div>
                 </div>
 
                 {isPending ? (
                   <div style={{ display: "flex", gap: "0.5rem" }}>
-                    <button onClick={() => onAccept(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.accept}</button>
+                    {hasUnpaidFine ? (
+                      <button onClick={onGoToViolations} style={{ flex: 1, padding: "0.5rem", background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.4)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}>
+                        🔒 Pay Fine First to Accept
+                      </button>
+                    ) : (
+                      <button onClick={() => onAccept(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "#4ade80", color: "#0e0c09", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.accept}</button>
+                    )}
                     <button onClick={() => onReject(inv.id)} style={{ flex: 1, padding: "0.5rem", background: "rgba(192,57,43,0.1)", color: "#ef4444", border: "1px solid rgba(192,57,43,0.2)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.75rem", fontWeight: 700, cursor: "pointer" }}>{t.reject}</button>
                   </div>
                 ) : (
@@ -654,19 +688,6 @@ function InvitationsView({ invitations, onAccept, onReject, onViewProfile, onVie
                     {inv.status === "ACCEPTED" ? "✓ Accepted mount offer for this race" : "✕ Invitation declined"}
                   </div>
                 )}
-                {inv.venue && (
-                  <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.125rem" }}>
-                    📍 {inv.venue} · 📅 {formatDate(inv.startTime)}
-                  </p>
-                )}
-                <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.375rem" }}>
-                  <div style={{ fontSize: "0.75rem", color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "0.25rem 0.5rem", borderRadius: "0.25rem", border: "1px solid rgba(251,191,36,0.2)" }}>
-                    🤝 <strong>Jockey Hire Fee:</strong> {Number(inv.hireFee || 500000).toLocaleString('en-US')} VND
-                  </div>
-                </div>
-                <p style={{ fontSize: "0.7rem", color: "#a0a0a0", marginTop: "0.25rem" }}>
-                  <strong>{t.status}:</strong> {inv.status}
-                </p>
               </div>
             );
           })}
@@ -1019,14 +1040,18 @@ export function ViolationsView({ violations, onAcknowledge, onViewProfile }: { v
                     </button>
                   </td>
                   <td style={{ padding: "0.75rem 1rem", color: "#c9a227", fontSize: "0.8rem" }}>{v.penalty}</td>
-                  <td style={{ padding: "0.75rem 1rem", color: v.status === "CONFIRMED" ? "#4ade80" : "#f87171", fontFamily: "monospace", fontSize: "0.75rem" }}>
-                    {v.status === "CONFIRMED" ? $t("Acknowledged", (localStorage.getItem('app-lang') || 'en')) : $t("Pending Acknowledgment", (localStorage.getItem('app-lang') || 'en'))}
+                  <td style={{ padding: "0.75rem 1rem", color: (v.fineStatus === "PAID" || v.status === "CONFIRMED") ? "#4ade80" : "#f87171", fontFamily: "monospace", fontSize: "0.75rem" }}>
+                    {(v.fineStatus === "PAID" || v.status === "CONFIRMED") ? $t("PAID", (localStorage.getItem('app-lang') || 'en')) : $t("UNPAID", (localStorage.getItem('app-lang') || 'en'))}
                   </td>
                   <td style={{ padding: "0.75rem 1rem" }}>
-                    {v.status !== "CONFIRMED" && (
-                      <button onClick={() => onAcknowledge(v.id)} style={{ padding: "0.25rem 0.5rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.25rem", fontSize: "11px", fontWeight: "bold", cursor: "pointer" }}>
-                        Acknowledge
+                    {(v.fineStatus !== "PAID" && v.status !== "CONFIRMED") ? (
+                      <button onClick={() => onAcknowledge(v.id)} style={{ padding: "0.35rem 0.75rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.35rem", fontSize: "11px", fontWeight: "bold", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        💳 Pay Fine
                       </button>
+                    ) : (
+                      <span style={{ fontSize: "11px", color: "#4ade80", fontFamily: "monospace", fontWeight: "bold" }}>
+                        ✅ Fine Paid
+                      </span>
                     )}
                   </td>
                 </tr>
@@ -1160,17 +1185,34 @@ export default function Jockey() {
     } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to register for meeting.")); }
   };
 
+  const hasUnpaidFine = violations?.some((v: any) => (v.fineStatus === "UNPAID" || !v.fineStatus) && v.status !== "DISMISSED");
+
   const handleAcknowledgeViolation = async (violationId: number) => {
     try {
-      await api.post(`/jockey/violations/${violationId}/confirm`);
-      setSuccessMsg("Violation acknowledged successfully!");
+      const res = await api.post<any>(`/jockey/violations/${violationId}/pay`);
+      setSuccessMsg(res.message || "Violation fine paid successfully!");
+      setActionModal({
+        isOpen: true,
+        type: "success",
+        title: "Penalty Fine Paid!",
+        message: "Your violation fine has been paid successfully. You are now cleared to accept invitations and participate in race meetings."
+      });
       fetchData();
-    } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to acknowledge violation.")); }
+    } catch (err: any) {
+      const msg = getErrMsg(err, "Failed to pay violation fine.");
+      setErrorMsg(msg);
+      setActionModal({
+        isOpen: true,
+        type: "error",
+        title: "Fine Payment Failed",
+        message: msg
+      });
+    }
   };
 
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Jockey Hub";
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
-  const pendingViolations = violations.filter(v => v.status === "PENDING").length;
+  const pendingViolations = violations.filter(v => (v.fineStatus === "UNPAID" || !v.fineStatus) && v.status !== "DISMISSED").length;
 
   const navItemsWithBadge = NAV_ITEMS.map(n => {
     if (n.view === "invitations") return { ...n, badge: pendingInvitations };
@@ -1180,10 +1222,10 @@ export default function Jockey() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "hub":         return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} onSwitchTab={t => setActiveTab(t as JockeyTab)} />;
+      case "hub":         return <HubView dashboard={dashboard} meetings={meetings} onRegister={handleRegisterMeeting} user={user} onSwitchTab={t => setActiveTab(t as JockeyTab)} hasUnpaidFine={hasUnpaidFine} />;
       case "mounts":      return <MountsView mounts={mounts} loading={loading} onViewHorse={setSelectedHorse} />;
       case "calendar":    return <CalendarView meetings={meetings} allRaces={allRaces} refereesMap={refereesMap} />;
-      case "invitations": return <InvitationsView invitations={invitations} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} refereesMap={refereesMap} />;
+      case "invitations": return <InvitationsView invitations={invitations} onAccept={handleAcceptInvite} onReject={handleRejectInvite} onViewProfile={setSelectedProfileId} onViewHorse={setSelectedHorse} refereesMap={refereesMap} hasUnpaidFine={hasUnpaidFine} onGoToViolations={() => setActiveTab("violations")} />;
       case "violations":  return <ViolationsView violations={violations} onAcknowledge={handleAcknowledgeViolation} onViewProfile={setSelectedProfileId} />;
       case "live":        return <ViewLive />;
       case "wallet":      return <UserWalletView user={user} roleLabel="Jockey" roleColor="#3b82c4" />;

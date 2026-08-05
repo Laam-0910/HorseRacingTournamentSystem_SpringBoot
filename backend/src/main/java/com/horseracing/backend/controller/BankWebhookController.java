@@ -262,16 +262,11 @@ public class BankWebhookController {
         sub.setPricePaid(amount);
         sub.setPurchaseTime(new Timestamp(System.currentTimeMillis()));
 
-        // Cumulative Extension Logic for Webhook Bank Payments:
+        // Cumulative Extension & Upgrade Stacking Logic for Webhook Bank Payments:
         long now = System.currentTimeMillis();
         List<LivestreamSubscription> existingSubs = subscriptionRepository.findByUserId(userId);
         long baseExpiryTime = existingSubs.stream()
                 .filter(s -> s.getExpiresAt() != null && s.getExpiresAt().getTime() > now)
-                .filter(s -> {
-                    if ("SEASON".equalsIgnoreCase(packageType)) return "SEASON".equalsIgnoreCase(s.getPackageType());
-                    if ("RACEMEETING".equalsIgnoreCase(packageType)) return "RACEMEETING".equalsIgnoreCase(s.getPackageType());
-                    return false;
-                })
                 .mapToLong(s -> s.getExpiresAt().getTime())
                 .max()
                 .orElse(now);

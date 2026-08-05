@@ -361,6 +361,10 @@ public class RaceService {
         RaceMeeting meeting = raceMeetingRepository.findById(id) // Tìm Ngày hội đua theo ID
                 .orElseThrow(() -> new IllegalArgumentException("Race Meeting not found with id: " + id)); // Ném ngoại lệ nếu không tồn tại
 
+        if ("INACTIVE".equalsIgnoreCase(meeting.getStatus())) {
+            throw new IllegalArgumentException("Cannot edit an INACTIVE race meeting. Please reactivate the meeting before editing.");
+        }
+
         BigDecimal oldBudget = meeting.getTotalBudget() != null ? meeting.getTotalBudget() : BigDecimal.ZERO;
         BigDecimal newBudget = dto.getTotalBudget() != null ? dto.getTotalBudget() : oldBudget;
         BigDecimal budgetDiff = newBudget.subtract(oldBudget);
@@ -391,8 +395,8 @@ public class RaceService {
         meeting.setVenue(dto.getVenue()); // Cập nhật địa điểm tổ chức
         meeting.setStartDate(dto.getStartDate()); // Cập nhật ngày bắt đầu tổ chức
         meeting.setSeasonId(dto.getSeasonId()); // Cập nhật mã Mùa giải tham chiếu
-        if (dto.getTotalBudget() != null) { // Nếu có truyền vào tổng ngân sách mới
-            meeting.setTotalBudget(dto.getTotalBudget()); // Cập nhật tổng ngân sách giải thưởng
+        if (dto.getTotalBudget() != null) {
+            meeting.setTotalBudget(dto.getTotalBudget());
         }
         // Keep ticketPrice locked once created to preserve financial integrity for participants
         // Do not update meeting.setTicketPrice on edit

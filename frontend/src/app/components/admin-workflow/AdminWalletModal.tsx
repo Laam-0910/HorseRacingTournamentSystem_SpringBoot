@@ -82,8 +82,8 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
     setError("");
     setSuccess("");
     const val = parseFloat(amount);
-    if (isNaN(val) || val <= 0) {
-      setError("Please enter a valid amount greater than 0.");
+    if (isNaN(val) || val < 10000) {
+      setError("Top-up amount must be at least 10,000 VND.");
       return;
     }
     setShowQrModal(true);
@@ -249,6 +249,28 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
           </div>
         </div>
 
+        {/* System Treasury Breakdown Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono">
+          <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+            <span className="text-[10px] text-amber-400/80 uppercase font-bold block">🏦 Available Admin Wallet Balance</span>
+            <span className="text-base font-bold text-amber-300 mt-1 block">
+              {Number(walletData?.walletBalance || 0).toLocaleString('en-US')} VND
+            </span>
+          </div>
+          <div className="p-3.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+            <span className="text-[10px] text-blue-400/80 uppercase font-bold block">🏟️ Active Meetings Allocated Budget</span>
+            <span className="text-base font-bold text-blue-300 mt-1 block">
+              {Number(walletData?.allocatedBudgetSum || 0).toLocaleString('en-US')} VND
+            </span>
+          </div>
+          <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+            <span className="text-[10px] text-emerald-400/80 uppercase font-bold block">💎 Total System Treasury (Capital)</span>
+            <span className="text-base font-bold text-emerald-300 mt-1 block">
+              {Number(walletData?.totalCapital || (Number(walletData?.walletBalance || 0) + Number(walletData?.allocatedBudgetSum || 0))).toLocaleString('en-US')} VND
+            </span>
+          </div>
+        </div>
+
         {/* Top Up Form */}
         {activeAction === "topup" && (
           <form onSubmit={handleTopUpSubmit} className="bg-emerald-500/5 border border-emerald-500/20 p-4 rounded-xl space-y-3">
@@ -261,7 +283,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
             <div className="flex items-center gap-3">
               <input
                 type="number"
-                min="1"
+                min="10000"
                 step="any"
                 required
                 value={amount}

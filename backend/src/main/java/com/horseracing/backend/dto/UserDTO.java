@@ -41,4 +41,8 @@ public class UserDTO {
     private String biography;
 
     private BigDecimal walletBalance;
+
+    private BigDecimal jockeyFee;
+    private Boolean hasUnpaidFine;
+    private String fineStatus;
 }

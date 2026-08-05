@@ -101,21 +101,18 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
   };
 
   useEffect(() => {
-    let interval: any = null;
     if (viewingMeeting) {
       fetchMeetingRegistrations(viewingMeeting.id);
-      interval = setInterval(() => {
-        fetchMeetingRegistrations(viewingMeeting.id);
-      }, 5000);
     } else {
       setViewRegistrantsData(null);
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
   }, [viewingMeeting]);
 
   const handleEdit = (m: any) => {
+    if (m?.status === "INACTIVE") {
+      setError("Cannot edit an INACTIVE race meeting. Please reactivate the meeting first.");
+      return;
+    }
     setEditingMeeting(m);
     setName(m.name || "");
     setVenue(m.venue || "");
@@ -302,8 +299,10 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                           className="px-2.5 py-1 text-xs font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 rounded-md transition"
                         >👁️ {$t("View", (localStorage.getItem('app-lang') || 'en'))}</button>
                         <button
+                          disabled={m.status === "INACTIVE"}
                           onClick={() => handleEdit(m)}
-                          className="px-2.5 py-1 text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-md transition"
+                          className={`px-2.5 py-1 text-xs font-bold rounded-md transition ${m.status === "INACTIVE" ? "bg-white/5 text-white/20 cursor-not-allowed" : "bg-amber-500/10 hover:bg-amber-500/20 text-amber-500"}`}
+                          title={m.status === "INACTIVE" ? "Reactivate meeting to enable editing" : "Edit Meeting"}
                         >{$t("Edit", (localStorage.getItem('app-lang') || 'en'))}</button>
                         <button
                           onClick={() => handleDelete(m.id)}
@@ -395,8 +394,10 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
                               className="px-2.5 py-1 text-xs font-bold bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 rounded-md transition"
                             >👁️ {$t("View", (localStorage.getItem('app-lang') || 'en'))}</button>
                             <button
+                              disabled={m.status === "INACTIVE"}
                               onClick={() => handleEdit(m)}
-                              className="px-2.5 py-1 text-xs font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 rounded-md transition"
+                              className={`px-2.5 py-1 text-xs font-bold rounded-md transition ${m.status === "INACTIVE" ? "bg-white/5 text-white/20 cursor-not-allowed" : "bg-amber-500/10 hover:bg-amber-500/20 text-amber-500"}`}
+                              title={m.status === "INACTIVE" ? "Reactivate meeting to enable editing" : "Edit Meeting"}
                             >{$t("Edit", (localStorage.getItem('app-lang') || 'en'))}</button>
                             <button
                               onClick={() => handleDelete(m.id)}

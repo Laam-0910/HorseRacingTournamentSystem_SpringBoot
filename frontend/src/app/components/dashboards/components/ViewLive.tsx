@@ -66,10 +66,20 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
       const h = item.horse || {};
       const j = item.jockey || {};
       const e = item.entry || {};
-      const rating = Number(h.currentRating || h.rating || 50);
-      const winRate = Number(h.winRate || 20);
-      const jockeyRating = Number(j.jockeyRating || j.rating || 60);
-      const rawScore = (rating * 0.5) + (winRate * 0.3) + (jockeyRating * 0.2);
+      if (item.aiWinRate != null) {
+        return {
+          horseId: h.id || e.horseId,
+          horseName: h.name || `Horse #${e.horseId}`,
+          jockeyName: j.fullName || j.username || "Jockey",
+          gateNumber: e.gateNumber || 1,
+          probability: Number(item.aiWinRate),
+          rawScore: Number(item.predictionScore || 50)
+        };
+      }
+      const horseWinRate = (h.totalRaces && h.totalRaces > 0) ? ((h.totalWins || 0) / h.totalRaces) * 100 : Number(h.winRate || 20);
+      const jockeySkill = (j.totalRacesParticipated && j.totalRacesParticipated > 0) ? ((j.totalTop3Finishes || 0) / j.totalRacesParticipated) * 100 : Number(j.rating || 50);
+      const ratingScore = Number(h.currentRating || h.rating || 50);
+      const rawScore = (horseWinRate * 0.40) + (jockeySkill * 0.30) + (ratingScore * 0.30);
       return {
         horseId: h.id || e.horseId,
         horseName: h.name || `Horse #${e.horseId}`,
@@ -78,6 +88,9 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
         rawScore,
       };
     });
+    if (scores.length > 0 && (scores[0] as any).probability != null) {
+      return scores.sort((a, b) => (b as any).probability - (a as any).probability);
+    }
     const totalScore = scores.reduce((sum, s) => sum + s.rawScore, 0) || 1;
     return scores
       .map(s => ({
@@ -150,7 +163,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
 
   // Check subscription access for spectator role
   useEffect(() => {
-    if (!user || !selectedRace) return;
+    if (!user) return;
 
     if (!isSpectator) {
       setHasAccess(true); // Admins, Referees, Owners, Jockeys have free access
@@ -159,30 +172,33 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
       return;
     }
 
-    const meetingId = selectedRace.raceMeetingId;
-    if (!meetingId) {
-      setHasAccess(false);
-      setShowPaywallModal(true);
-      return;
-    }
+    const meetingId = selectedRace?.raceMeetingId;
+    const seasonId = selectedRace?.seasonId;
 
-    const seasonId = selectedRace.seasonId;
-    api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${meetingId}${seasonId ? `&seasonId=${seasonId}` : ""}`)
+    let url = `/public/livestream/access?userId=${user.id}`;
+    if (meetingId) url += `&meetingId=${meetingId}`;
+    if (seasonId) url += `&seasonId=${seasonId}`;
+
+    api.get<any>(url)
       .then(res => {
+        setSubInfo(res);
         const access = Boolean(res && res.hasAccess);
         setHasAccess(access);
-        setSubInfo(res);
-        if (access) {
-          if (!isManualPaywallOpenRef.current) {
-            setShowPaywallModal(false);
+        if (selectedRace) {
+          if (access) {
+            if (!isManualPaywallOpenRef.current) {
+              setShowPaywallModal(false);
+            }
+          } else {
+            setShowPaywallModal(true);
           }
-        } else {
-          setShowPaywallModal(true);
         }
       })
       .catch(() => {
         setHasAccess(false);
-        setShowPaywallModal(true);
+        if (selectedRace) {
+          setShowPaywallModal(true);
+        }
       });
   }, [user, isSpectator, selectedRace?.id, selectedRace?.raceMeetingId]);
 
@@ -346,7 +362,8 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
     }).catch(() => {});
   };
 
-  const embedUrl = selectedRace ? getYouTubeEmbedUrl(selectedRace.youtubeLiveUrl) : null;
+  const isRaceEnded = selectedRace ? ["FINISHED", "OFFICIAL", "CANCELLED", "STOPPED", "COMPLETED"].includes(selectedRace.status?.toUpperCase() || "") : false;
+  const embedUrl = selectedRace && !isRaceEnded ? getYouTubeEmbedUrl(selectedRace.youtubeLiveUrl) : null;
 
   return (
     <div className="space-y-6">
@@ -387,7 +404,7 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
       </div>
 
       {/* Spectator Active Subscription & Upgrade/Renew Action Bar */}
-      {isSpectator && hasAccess && (
+      {isSpectator && subInfo && subInfo.expiresAt && (typeof subInfo.expiresAt === "number" ? subInfo.expiresAt : new Date(subInfo.expiresAt).getTime()) > Date.now() && (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.25)", padding: "0.85rem 1.25rem", borderRadius: "0.85rem", flexWrap: "wrap", gap: "0.75rem", boxShadow: "0 4px 15px rgba(0,0,0,0.2)" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
@@ -480,114 +497,113 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
           {/* Player & Stats */}
           <div className={`${isTheaterMode ? "w-full" : "lg:col-span-2"} space-y-4`}>
             {/* Multi-Camera Angle Selector Tabs */}
-            <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
-              {broadcasterList.length > 0 ? (
-                broadcasterList.map((b) => {
-                  const isSelected = selectedRace?.streamMode !== "YOUTUBE" && (selectedBroadcasterId === b.id || (!selectedBroadcasterId && broadcasterList[broadcasterList.length - 1]?.id === b.id));
-                  return (
-                    <button
-                      key={b.id}
-                      onClick={() => {
-                        setSelectedBroadcasterId(b.id);
-                        setSelectedRace(prev => prev ? { ...prev, streamMode: "WEBCAM" } : prev);
-                      }}
-                      style={{
-                        padding: "0.4rem 0.85rem",
-                        fontSize: "11px",
-                        borderRadius: "0.5rem",
-                        fontWeight: "bold",
-                        background: isSelected ? "#ef4444" : "rgba(255,255,255,0.05)",
-                        color: "#fff",
-                        border: isSelected ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px"
-                      }}
-                    >
-                      <span>📱</span> Ref Cam {b.name}
-                    </button>
-                  );
-                })
-              ) : (
-                <button
-                  onClick={() => setSelectedRace(prev => prev ? { ...prev, streamMode: "WEBCAM" } : prev)}
-                  style={{
-                    padding: "0.4rem 0.85rem",
-                    fontSize: "11px",
-                    borderRadius: "0.5rem",
-                    fontWeight: "bold",
-                    background: selectedRace?.streamMode === "WEBCAM" ? "#ef4444" : "rgba(255,255,255,0.05)",
-                    color: "#fff",
-                    border: selectedRace?.streamMode === "WEBCAM" ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px"
-                  }}
-                >
-                  <span>📱</span> Referee Camera Angle (Awaiting Connection)
-                </button>
-              )}
+            {!isRaceEnded && (
+              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.5rem", flexWrap: "wrap" }}>
+                {broadcasterList.length > 0 && (
+                  broadcasterList.map((b) => {
+                    const isSelected = selectedRace?.streamMode !== "YOUTUBE" && (selectedBroadcasterId === b.id || (!selectedBroadcasterId && broadcasterList[broadcasterList.length - 1]?.id === b.id));
+                    return (
+                      <button
+                        key={b.id}
+                        onClick={() => {
+                          setSelectedBroadcasterId(b.id);
+                          setSelectedRace(prev => prev ? { ...prev, streamMode: "WEBCAM" } : prev);
+                        }}
+                        style={{
+                          padding: "0.4rem 0.85rem",
+                          fontSize: "11px",
+                          borderRadius: "0.5rem",
+                          fontWeight: "bold",
+                          background: isSelected ? "#ef4444" : "rgba(255,255,255,0.05)",
+                          color: "#fff",
+                          border: isSelected ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "4px"
+                        }}
+                      >
+                        <span>📱</span> Ref Cam {b.name}
+                      </button>
+                    );
+                  })
+                )}
 
-              {/* YouTube Button */}
-              {selectedRace?.youtubeLiveUrl && (
-                <button
-                  onClick={() => setSelectedRace(prev => prev ? { ...prev, streamMode: "YOUTUBE" } : prev)}
-                  style={{
-                    padding: "0.4rem 0.85rem",
-                    fontSize: "11px",
-                    borderRadius: "0.5rem",
-                    fontWeight: "bold",
-                    background: selectedRace?.streamMode === "YOUTUBE" ? "#ef4444" : "rgba(255,255,255,0.05)",
-                    color: "#fff",
-                    border: selectedRace?.streamMode === "YOUTUBE" ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px"
-                  }}
-                >
-                  <span>📺</span> Main YouTube Channel
-                </button>
-              )}
-            </div>
+                {/* YouTube Button */}
+                {selectedRace?.youtubeLiveUrl && (
+                  <button
+                    onClick={() => setSelectedRace(prev => prev ? { ...prev, streamMode: "YOUTUBE" } : prev)}
+                    style={{
+                      padding: "0.4rem 0.85rem",
+                      fontSize: "11px",
+                      borderRadius: "0.5rem",
+                      fontWeight: "bold",
+                      background: selectedRace?.streamMode === "YOUTUBE" ? "#ef4444" : "rgba(255,255,255,0.05)",
+                      color: "#fff",
+                      border: selectedRace?.streamMode === "YOUTUBE" ? "1px solid #ef4444" : "1px solid rgba(255,255,255,0.1)",
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                  >
+                    <span>📺</span> Main YouTube Channel
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Embedded Stream */}
             <div className="relative w-full pb-[56.25%] h-0 rounded-2xl overflow-hidden shadow-2xl border border-white/5 bg-black">
-              {/* Always mount WebCamLiveViewer so imgRef is ready, just hide when not in WEBCAM mode */}
-              <div style={{ display: selectedRace.streamMode !== "YOUTUBE" ? "block" : "none", position: "absolute", inset: 0 }}>
-                <WebCamLiveViewer
-                  raceId={selectedRace.id}
-                  selectedBroadcasterId={selectedBroadcasterId}
-                  onBroadcastersFound={list => setBroadcasterList(list)}
-                />
-              </div>
-              {selectedRace.streamMode === "YOUTUBE" && selectedRace.youtubeLiveUrl && (
-                (
-                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
-                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
-                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
-                  selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
-                  selectedRace.youtubeLiveUrl.toLowerCase().includes("/stream") ||
-                  selectedRace.youtubeLiveUrl.toLowerCase().includes(".mp4?")
-                ) ? (
-                  <video
-                    className="absolute top-0 left-0 w-full h-full border-none"
-                    src={selectedRace.youtubeLiveUrl}
-                    controls={hasAccess}
-                    autoPlay
-                    muted
-                  />
-                ) : (
-                  <iframe
-                    className="absolute top-0 left-0 w-full h-full border-none"
-                    src={embedUrl && embedUrl.includes("?") ? embedUrl : `${embedUrl}?autoplay=1&mute=1&rel=0`}
-                    title={selectedRace.classLevel}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  ></iframe>
-                )
+              {isRaceEnded ? (
+                <div style={{ position: "absolute", inset: 0, background: "#0a0908", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 12, padding: "1.5rem", textAlign: "center" }}>
+                  <div style={{ width: 56, height: 56, borderRadius: "50%", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5rem", marginBottom: "0.75rem" }}>
+                    🏁
+                  </div>
+                  <h3 style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#f4f2ec", fontFamily: "'Roboto Slab', serif", marginBottom: "0.25rem" }}>
+                    Race Has Concluded
+                  </h3>
+                  <p style={{ fontSize: "12px", color: "#a0a0a0", maxWidth: "24rem", lineHeight: 1.5 }}>
+                    The live stream and camera feeds for this race have automatically ended.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Always mount WebCamLiveViewer so imgRef is ready, just hide when not in WEBCAM mode */}
+                  <div style={{ display: selectedRace.streamMode !== "YOUTUBE" ? "block" : "none", position: "absolute", inset: 0 }}>
+                    <WebCamLiveViewer
+                      raceId={selectedRace.id}
+                      selectedBroadcasterId={selectedBroadcasterId}
+                      onBroadcastersFound={list => setBroadcasterList(list)}
+                    />
+                  </div>
+                  {selectedRace.streamMode === "YOUTUBE" && selectedRace.youtubeLiveUrl && (
+                    (
+                      selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".mp4") ||
+                      selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".webm") ||
+                      selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".ogg") ||
+                      selectedRace.youtubeLiveUrl.toLowerCase().endsWith(".m3u8") ||
+                      selectedRace.youtubeLiveUrl.toLowerCase().includes("/stream") ||
+                      selectedRace.youtubeLiveUrl.toLowerCase().includes(".mp4?")
+                    ) ? (
+                      <video
+                        className="absolute top-0 left-0 w-full h-full border-none"
+                        src={selectedRace.youtubeLiveUrl}
+                        controls={hasAccess}
+                        autoPlay
+                        muted
+                      />
+                    ) : (
+                      <iframe
+                        className="absolute top-0 left-0 w-full h-full border-none"
+                        src={embedUrl && embedUrl.includes("?") ? embedUrl : `${embedUrl}?autoplay=1&mute=1&rel=0`}
+                        title={selectedRace.classLevel}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowFullScreen
+                      ></iframe>
+                    )
+                  )}
+                </>
               )}
 
               {/* Paywall Locked Overlay */}

@@ -28,6 +28,8 @@ public class JockeyController {
     private final JockeyOwnerDashboardService dashboardService; // Dịch vụ tổng hợp dữ liệu Dashboard cho nài ngựa và chủ ngựa
     private final RefereeService refereeService; // Dịch vụ trọng tài (quản lý xử lý vi phạm)
 
+    private final com.horseracing.backend.repository.UserRepository userRepository;
+
     // Lấy danh sách toàn bộ lời mời cưỡi ngựa của kỵ sĩ hiện tại theo ID tài khoản
     @GetMapping("/{id}/invitations") // Tiếp nhận HTTP GET request gửi tới /api/jockey/{id}/invitations
         public ResponseEntity<List<RaceInvitationDTO>> getJockeyInvitations(@PathVariable Integer id) {
@@ -56,16 +58,45 @@ public class JockeyController {
         return ResponseEntity.ok(dashboardService.getJockeyViolations(id));
     }
 
-    // Kỵ sĩ ký xác nhận (Acknowledge) đã nắm được biên bản vi phạm luật thi đấu
+    // Kỵ sĩ cập nhật Giá Trị Bản Thân / Phí Thuê Nài (Jockey Fee)
+    @PostMapping("/{id}/fee")
+    public ResponseEntity<?> updateJockeyFee(@PathVariable Integer id, @RequestBody Map<String, Object> body) {
+        try {
+            java.math.BigDecimal fee = new java.math.BigDecimal(body.get("jockeyFee").toString());
+            if (fee.compareTo(java.math.BigDecimal.ZERO) < 0) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Jockey fee cannot be negative"));
+            }
+            com.horseracing.backend.entity.User jockey = userRepository.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Jockey not found"));
+            jockey.setJockeyFee(fee);
+            userRepository.save(jockey);
+            return ResponseEntity.ok(Map.of("success", true, "jockeyFee", fee));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    // Kỵ sĩ ký xác nhận hoặc thanh toán nộp phạt biên bản vi phạm
     @PostMapping("/violations/{violationId}/confirm") // Tiếp nhận HTTP POST request gửi tới /api/jockey/violations/{violationId}/confirm
-        public ResponseEntity<?> confirmViolation(@PathVariable Integer violationId) {
+    public ResponseEntity<?> confirmViolation(@PathVariable Integer violationId) {
         try {
             // Xác nhận biên bản vi phạm ở tầng nghiệp vụ trọng tài
             refereeService.confirmViolation(violationId);
             // Trả về phản hồi thành công xác nhận đã nhận biên bản vi phạm
-            return ResponseEntity.ok(Map.of("success", true, "message", "Violation acknowledged successfully"));
+            return ResponseEntity.ok(Map.of("success", true, "message", "Violation acknowledged and fine processed successfully"));
         } catch (Exception e) {
             // Phản hồi lỗi nếu vi phạm không tồn tại hoặc gặp lỗi xử lý
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
+
+    // Kỵ sĩ thực hiện nộp phạt trực tiếp cho vi phạm chưa nộp phạt
+    @PostMapping("/violations/{violationId}/pay")
+    public ResponseEntity<?> payViolationFine(@PathVariable Integer violationId) {
+        try {
+            refereeService.confirmViolation(violationId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Penalty fine paid successfully"));
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }

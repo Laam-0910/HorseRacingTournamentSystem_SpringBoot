@@ -32,6 +32,19 @@ public class UserService {
     private final RoleRepository roleRepository; // Kho lưu trữ vai trò
     private final UserMapper userMapper; // Bộ ánh xạ User sang DTO
     private final PasswordEncoder passwordEncoder; // Bộ mã hóa mật khẩu BCrypt
+    private final com.horseracing.backend.repository.ViolationRepository violationRepository;
+
+    private UserDTO enrichUserDTO(User user, String roleName) {
+        UserDTO dto = userMapper.toDTO(user, roleName);
+        if (dto != null && dto.getId() != null) {
+            List<com.horseracing.backend.entity.Violation> viols = violationRepository.findByJockeyId(dto.getId());
+            boolean hasUnpaid = viols != null && viols.stream()
+                    .anyMatch(v -> "UNPAID".equalsIgnoreCase(v.getFineStatus()) && !"DISMISSED".equalsIgnoreCase(v.getStatus()));
+            dto.setHasUnpaidFine(hasUnpaid);
+            dto.setFineStatus(hasUnpaid ? "UNPAID" : "PAID");
+        }
+        return dto;
+    }
 
     // Lấy toàn bộ danh sách người dùng đính kèm tên vai trò
     public List<UserDTO> getAllUsers() {
@@ -40,7 +53,7 @@ public class UserService {
                 .collect(Collectors.toMap(Role::getId, Role::getRoleName));
 
         return userRepository.findAll().stream()
-                .map(u -> userMapper.toDTO(u, roleMap.get(u.getRoleId())))
+                .map(u -> enrichUserDTO(u, roleMap.get(u.getRoleId())))
                 .collect(Collectors.collectingAndThen(Collectors.toList(), List::copyOf));
     }
 
@@ -50,7 +63,7 @@ public class UserService {
         Map<Integer, String> roleMap = roleRepository.findAll().stream()
                 .collect(Collectors.toMap(Role::getId, Role::getRoleName));
         return userRepository.findAll(pageable)
-                .map(u -> userMapper.toDTO(u, roleMap.get(u.getRoleId())));
+                .map(u -> enrichUserDTO(u, roleMap.get(u.getRoleId())));
     }
 
     // Lấy chi tiết tài khoản theo ID
@@ -60,7 +73,7 @@ public class UserService {
         String roleName = roleRepository.findById(user.getRoleId())
                 .map(Role::getRoleName)
                 .orElse(null);
-        return userMapper.toDTO(user, roleName);
+        return enrichUserDTO(user, roleName);
     }
 
     // Lọc danh sách người dùng theo vai trò

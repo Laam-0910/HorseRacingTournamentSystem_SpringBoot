@@ -37,6 +37,7 @@ public class AdminUserService {
     private final RegistrationMapper registrationMapper;
     private final UserMapper userMapper;
     private final NotificationService notificationService;
+    private final ViolationRepository violationRepository;
 
     @Transactional(readOnly = true)
     public Map<String, Object> getPendingRegistrations() {
@@ -321,21 +322,31 @@ public class AdminUserService {
         // Tìm lượt đăng ký theo ID trong CSDL
         RaceEntry entry = raceEntryRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Race entry not found"));
-        entry.setStatus("APPROVED"); // Cập nhật trạng thái sang APPROVED
-        raceEntryRepository.save(entry); // Lưu đối tượng đã duyệt vào DB
 
-        autoAssignGates(entry.getRaceId());
-        autoCalculateWeights(entry.getRaceId());
-        RaceEntry target = raceEntryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Race entry not found"));
+        List<RaceEntry> raceEntries = raceEntryRepository.findByRaceId(entry.getRaceId());
 
-        List<RaceEntry> raceEntries = raceEntryRepository.findByRaceId(target.getRaceId());
+        // 0. Verify that if an invitation exists for this horse, the Jockey has ACCEPTED it
+        if (entry.getHorseId() != null && entry.getRaceId() != null) {
+            List<com.horseracing.backend.entity.RaceInvitation> invites = invitationRepository.findByRaceId(entry.getRaceId());
+            boolean hasUnacceptedInvite = invites != null && invites.stream()
+                    .anyMatch(i -> entry.getHorseId().equals(i.getHorseId()) && "PENDING".equalsIgnoreCase(i.getStatus()));
+            if (hasUnacceptedInvite) {
+                throw new IllegalArgumentException("Cannot approve race entry: The Jockey has not accepted the invitation yet.");
+            }
+        }
 
-        // 1. Check if jockey already has an APPROVED entry in this race
-        if (target.getJockeyId() != null) {
+        // 1. Check if jockey already has an APPROVED entry in this race or unpaid fine
+        if (entry.getJockeyId() != null) {
+            List<Violation> jockeyViolations = violationRepository.findByJockeyId(entry.getJockeyId());
+            boolean hasUnpaidFine = jockeyViolations != null && jockeyViolations.stream()
+                    .anyMatch(v -> "UNPAID".equalsIgnoreCase(v.getFineStatus()) && !"DISMISSED".equalsIgnoreCase(v.getStatus()));
+            if (hasUnpaidFine) {
+                throw new IllegalArgumentException("Cannot approve race entry: Jockey has unpaid rule violation fines. Please ensure fine is paid before joining race meetings.");
+            }
+
             boolean jockeyAlreadyApproved = raceEntries.stream()
-                    .anyMatch(e -> !e.getId().equals(target.getId())
-                            && target.getJockeyId().equals(e.getJockeyId())
+                    .anyMatch(e -> !e.getId().equals(entry.getId())
+                            && entry.getJockeyId().equals(e.getJockeyId())
                             && "APPROVED".equalsIgnoreCase(e.getStatus()));
             if (jockeyAlreadyApproved) {
                 throw new IllegalArgumentException("This jockey has already been approved for another horse in this race.");
@@ -344,31 +355,32 @@ public class AdminUserService {
 
         // 2. Check if horse already has an APPROVED entry in this race
         boolean horseAlreadyApproved = raceEntries.stream()
-                .anyMatch(e -> !e.getId().equals(target.getId())
-                        && target.getHorseId().equals(e.getHorseId())
+                .anyMatch(e -> !e.getId().equals(entry.getId())
+                        && entry.getHorseId().equals(e.getHorseId())
                         && "APPROVED".equalsIgnoreCase(e.getStatus()));
         if (horseAlreadyApproved) {
             throw new IllegalArgumentException("This horse has already been approved to participate in this race.");
         }
 
-        // 3. Approve target entry
-        target.setStatus("APPROVED");
-        raceEntryRepository.save(target);
+        entry.setStatus("APPROVED"); // Cập nhật trạng thái sang APPROVED
+        raceEntryRepository.save(entry); // Lưu đối tượng đã duyệt vào DB
 
         // Đánh dấu tiền cọc thuê nài (Hire Fee) được giữ an toàn trong Escrow Vault chờ giải đấu hoàn tất
-        invitationRepository.findByJockeyIdAndRaceIdAndHorseId(target.getJockeyId(), target.getRaceId(), target.getHorseId())
-                .stream()
-                .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()))
-                .forEach(i -> {
-                    i.setPayoutStatus("HELD");
-                    invitationRepository.save(i);
-                });
+        if (entry.getJockeyId() != null && entry.getHorseId() != null) {
+            invitationRepository.findByJockeyIdAndRaceIdAndHorseId(entry.getJockeyId(), entry.getRaceId(), entry.getHorseId())
+                    .stream()
+                    .filter(i -> "ACCEPTED".equalsIgnoreCase(i.getStatus()))
+                    .forEach(i -> {
+                        i.setPayoutStatus("HELD");
+                        invitationRepository.save(i);
+                    });
+        }
 
         // 4. Auto-reject other pending entries for the same jockey or horse in this race
         for (RaceEntry other : raceEntries) {
-            if (!other.getId().equals(target.getId())) {
-                boolean sameJockey = target.getJockeyId() != null && target.getJockeyId().equals(other.getJockeyId());
-                boolean sameHorse = target.getHorseId().equals(other.getHorseId());
+            if (!other.getId().equals(entry.getId())) {
+                boolean sameJockey = entry.getJockeyId() != null && entry.getJockeyId().equals(other.getJockeyId());
+                boolean sameHorse = entry.getHorseId().equals(other.getHorseId());
                 if ((sameJockey || sameHorse) && !"REJECTED".equalsIgnoreCase(other.getStatus()) && !"APPROVED".equalsIgnoreCase(other.getStatus())) {
                     other.setStatus("REJECTED");
                     raceEntryRepository.save(other);
@@ -404,10 +416,10 @@ public class AdminUserService {
         }
 
         // 5. Send notification to Owner and Jockey
-        notificationService.notifyPartiesOnRaceEntryDecision(target, true);
+        notificationService.notifyPartiesOnRaceEntryDecision(entry, true);
 
-        autoAssignGates(target.getRaceId());
-        autoCalculateWeights(target.getRaceId());
+        autoAssignGates(entry.getRaceId(), false);
+        autoCalculateWeights(entry.getRaceId(), false);
     }
 
     // Từ chối lượt đăng ký thi đấu của ngựa/nài trong trận đua
@@ -461,6 +473,14 @@ public class AdminUserService {
     public void approveJockeyReg(Integer id) {
         JockeyRaceMeetingRegistration reg = jockeyRegRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Registration not found"));
+        if (reg.getJockeyId() != null) {
+            List<Violation> jockeyViolations = violationRepository.findByJockeyId(reg.getJockeyId());
+            boolean hasUnpaidFine = jockeyViolations != null && jockeyViolations.stream()
+                    .anyMatch(v -> "UNPAID".equalsIgnoreCase(v.getFineStatus()) && !"DISMISSED".equalsIgnoreCase(v.getStatus()));
+            if (hasUnpaidFine) {
+                throw new IllegalArgumentException("Cannot approve registration: Jockey has unpaid rule violation fines. Please pay the fine before participating in race meetings.");
+            }
+        }
         reg.setStatus("APPROVED");
         jockeyRegRepository.save(reg);
 
@@ -726,11 +746,34 @@ public class AdminUserService {
     // Tự động phân bổ cổng xuất phát (Gate Assignment) ngẫu nhiên cho các thí sinh đã duyệt
     @Transactional
     public void autoAssignGates(Integer raceId) {
+        autoAssignGates(raceId, true);
+    }
+
+    @Transactional
+    public void autoAssignGates(Integer raceId, boolean isManualAction) {
         if (raceId == null) return; // Nếu mã trận đua bị null thì kết thúc
+        Race race = raceRepository.findById(raceId).orElse(null);
+        int minEntries = (race != null && race.getMinEntries() != null && race.getMinEntries() > 0) ? race.getMinEntries() : 3;
+
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId); // Lấy danh sách thí sinh đăng ký
         List<RaceEntry> activeEntries = entries.stream()
-                .filter(e -> !"REJECTED".equalsIgnoreCase(e.getStatus()) && !"DISQUALIFIED".equalsIgnoreCase(e.getStatus()))
-                .toList(); // Lọc tất cả thí sinh hợp lệ
+                .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()))
+                .toList(); // Lọc tất cả thí sinh đã được phê duyệt chính thức (APPROVED)
+
+        if (activeEntries.size() < minEntries) {
+            if (isManualAction) {
+                throw new IllegalArgumentException(String.format("Cannot auto-assign gates: Race requires a minimum of %d approved entries, but currently only has %d approved entries.", minEntries, activeEntries.size()));
+            }
+            return; // Im lặng bỏ qua khi duyệt từng đơn lẻ
+        }
+
+        // Đặt số cổng 0 cho tất cả các bản ghi chưa được Admin phê duyệt (PENDING / REJECTED)
+        for (RaceEntry e : entries) {
+            if (!"APPROVED".equalsIgnoreCase(e.getStatus())) {
+                e.setGateNumber(0);
+                raceEntryRepository.save(e);
+            }
+        }
 
         int count = activeEntries.size(); // Số lượng thí sinh tham gia
         List<Integer> gates = new ArrayList<>(); // Khởi tạo danh sách vị trí cổng xuất phát
@@ -750,10 +793,10 @@ public class AdminUserService {
         }
 
         // Cập nhật trạng thái trận đua sang RACE_ASSIGNED nếu đăng ký đã đóng
-        raceRepository.findById(raceId).ifPresent(race -> {
-            if ("DECLARATION_CLOSED".equals(race.getStatus())) {
-                race.setStatus("RACE_ASSIGNED"); // Đổi trạng thái trận đua
-                raceRepository.save(race); // Lưu trận đua vào CSDL
+        raceRepository.findById(raceId).ifPresent(rObj -> {
+            if ("DECLARATION_CLOSED".equals(rObj.getStatus())) {
+                rObj.setStatus("RACE_ASSIGNED"); // Đổi trạng thái trận đua
+                raceRepository.save(rObj); // Lưu trận đua vào CSDL
             }
         });
     }
@@ -761,6 +804,11 @@ public class AdminUserService {
     // Tự động tính toán mốc cân nặng Handicap và Carried Weight theo thuật toán phân hạng
     @Transactional
     public void autoCalculateWeights(Integer raceId) {
+        autoCalculateWeights(raceId, true);
+    }
+
+    @Transactional
+    public void autoCalculateWeights(Integer raceId, boolean isManualAction) {
         if (raceId == null) return; // Bỏ qua nếu raceId rỗng
 
         // Tải các thông số cấu hình cân nặng từ CSDL
@@ -773,8 +821,22 @@ public class AdminUserService {
         double sexAllowance = systemConfigRepository.findById("SEX_ALLOWANCE")
                 .map(c -> Double.parseDouble(c.getConfigValue())).orElse(1.5);
 
+        Race race = raceRepository.findById(raceId).orElse(null);
+        int minEntries = (race != null && race.getMinEntries() != null && race.getMinEntries() > 0) ? race.getMinEntries() : 3;
+
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId); // Lấy danh sách lượt đua
         if (entries == null || entries.isEmpty()) return; // Bỏ qua nếu không có thí sinh
+
+        List<RaceEntry> activeEntries = entries.stream()
+                .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()))
+                .toList();
+
+        if (activeEntries.size() < minEntries) {
+            if (isManualAction) {
+                throw new IllegalArgumentException(String.format("Cannot calculate weights: Race requires a minimum of %d approved entries, but currently only has %d approved entries.", minEntries, activeEntries.size()));
+            }
+            return; // Im lặng bỏ qua khi duyệt từng đơn lẻ
+        }
 
         // 1. Tìm chỉ số Rating lớn nhất (R_max) trong số các ngựa tham gia đã được Admin phê duyệt (APPROVED)
         int rMax = -1;
@@ -838,6 +900,17 @@ public class AdminUserService {
     // Cập nhật thông tin thẻ đua (Racecard) từ Admin
     @Transactional
     public void updateRacecard(Integer raceId, List<Map<String, Object>> body) {
+        Race race = raceRepository.findById(raceId).orElse(null);
+        int minEntries = (race != null && race.getMinEntries() != null && race.getMinEntries() > 0) ? race.getMinEntries() : 3;
+
+        List<RaceEntry> currentAllEntries = raceEntryRepository.findByRaceId(raceId);
+        List<RaceEntry> approvedEntries = currentAllEntries.stream()
+                .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()))
+                .toList();
+
+        if (approvedEntries.size() < minEntries) {
+            throw new IllegalArgumentException(String.format("Cannot save racecard: Race requires a minimum of %d approved entries, but currently only has %d approved entries. Please approve more entries before saving.", minEntries, approvedEntries.size()));
+        }
         for (Map<String, Object> item : body) {
             Object idVal = item.get("entryId");
             if (idVal == null) {
@@ -874,8 +947,8 @@ public class AdminUserService {
         }
 
         // Đổi trạng thái trận đua sang RACE_ASSIGNED nếu tất cả đã được phân cổng đầy đủ
-        raceRepository.findById(raceId).ifPresent(race -> {
-            if ("DECLARATION_CLOSED".equals(race.getStatus())) {
+        raceRepository.findById(raceId).ifPresent(rObj -> {
+            if ("DECLARATION_CLOSED".equals(rObj.getStatus())) {
                 List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
                 boolean allAssigned = true;
                 for (RaceEntry entry : entries) {
@@ -885,8 +958,8 @@ public class AdminUserService {
                     }
                 }
                 if (allAssigned && !entries.isEmpty()) {
-                    race.setStatus("RACE_ASSIGNED"); // Cập nhật trạng thái trận đua
-                    raceRepository.save(race); // Lưu trận đua
+                    rObj.setStatus("RACE_ASSIGNED"); // Cập nhật trạng thái trận đua
+                    raceRepository.save(rObj); // Lưu trận đua
                 }
             }
         });
@@ -1165,10 +1238,19 @@ public class AdminUserService {
         BigDecimal balance = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;
         List<WalletTransaction> txs = walletTransactionRepository.findByUserIdOrderByCreatedAtDesc(admin.getId());
 
+        BigDecimal allocatedBudgetSum = raceMeetingRepository.findAll().stream()
+                .filter(m -> "ACTIVE".equalsIgnoreCase(m.getStatus()))
+                .map(m -> m.getTotalBudget() != null ? m.getTotalBudget() : BigDecimal.ZERO)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalCapital = balance.add(allocatedBudgetSum);
+
         Map<String, Object> res = new HashMap<>();
         res.put("adminId", admin.getId());
         res.put("username", admin.getUsername());
         res.put("walletBalance", balance);
+        res.put("allocatedBudgetSum", allocatedBudgetSum);
+        res.put("totalCapital", totalCapital);
         res.put("transactions", txs);
         return res;
     }
@@ -1193,8 +1275,8 @@ public class AdminUserService {
     // Nạp tiền vào Ví Admin (Admin Top-Up)
     @Transactional
     public Map<String, Object> topUpAdminWallet(BigDecimal amount) {
-        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Top-up amount must be greater than 0");
+        if (amount == null || amount.compareTo(new BigDecimal("10000")) < 0) {
+            throw new IllegalArgumentException("Top-up amount must be at least 10,000 VND");
         }
 
         User admin = userRepository.findAll().stream()

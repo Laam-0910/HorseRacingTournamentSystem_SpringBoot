@@ -26,6 +26,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const [fullName, setFullName] = useState(user?.fullName || user?.username || "");
   const [email, setEmail] = useState(user?.email || "");
   const [weight, setWeight] = useState(user?.weight?.toString() || "");
+  const [jockeyFee, setJockeyFee] = useState((user as any)?.jockeyFee?.toString() || "500000");
   const [biography, setBiography] = useState(user?.biography || "");
   const [avatar, setAvatar] = useState(user?.avatar || "");
   const [profileLoading, setProfileLoading] = useState(false);
@@ -80,11 +81,12 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     setProfileLoading(true);
     try {
       const parsedWeight = user?.roleId === 3 ? parseFloat(weight) || null : null;
+      const parsedFee = user?.roleId === 3 ? parseFloat(jockeyFee) || 500000 : null;
       const res = await api.post<any>("/auth/update-profile", {
-        id: user?.id, fullName: fullName.trim(), email: email.trim(), weight: parsedWeight, avatar: avatar || null, biography: biography.trim(), requireOtp: otpEnabled
+        id: user?.id, fullName: fullName.trim(), email: email.trim(), weight: parsedWeight, jockeyFee: parsedFee, avatar: avatar || null, biography: biography.trim(), requireOtp: otpEnabled
       });
       if (res.success && res.user) {
-        setUser({ ...user, fullName: res.user.fullName, email: res.user.email, weight: res.user.weight, avatar: res.user.avatar, biography: res.user.biography, requireOtp: res.user.requireOtp ?? otpEnabled } as any);
+        setUser({ ...user, fullName: res.user.fullName, email: res.user.email, weight: res.user.weight, jockeyFee: res.user.jockeyFee, avatar: res.user.avatar, biography: res.user.biography, requireOtp: res.user.requireOtp ?? otpEnabled } as any);
         setProfileMsg("✅ Profile saved successfully!");
         setTimeout(() => setProfileMsg(""), 3000);
       } else {
@@ -148,6 +150,7 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   };
 
   const toggleOtp = async () => {
+    if (otpLoading) return;
     setOtpLoading(true); setOtpMsg("");
     try {
       const next = !otpEnabled;
@@ -394,6 +397,22 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
 
                 {user?.roleId === 3 && (
                   <div>
+                    <label style={labelStyle}>Jockey Personal Hire Fee (VND)</label>
+                    <input 
+                      type="number" 
+                      step="10000"
+                      min="0"
+                      className="bento-input" 
+                      placeholder="500000" 
+                      value={jockeyFee} 
+                      onChange={e => setJockeyFee(e.target.value)} 
+                      style={inputStyle} 
+                    />
+                  </div>
+                )}
+
+                {user?.roleId === 3 && (
+                  <div>
                     <label style={labelStyle}>Biography</label>
                     <textarea 
                       className="bento-input" 
@@ -481,11 +500,12 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                  </div>
                  
                   {/* Uiverse Infinity Path Toggle Switch */}
-                  <div className="uiverse-switch-container">
+                  <div className="uiverse-switch-container" style={{ opacity: otpLoading ? 0.6 : 1, pointerEvents: otpLoading ? "none" : "auto", transition: "opacity 0.2s" }}>
                     <input 
                       id="check-2fa" 
                       type="checkbox" 
                       checked={otpEnabled} 
+                      disabled={otpLoading}
                       onChange={toggleOtp} 
                     />
                     <label className="uiverse-infinity-switch" htmlFor="check-2fa">

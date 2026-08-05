@@ -41,6 +41,9 @@ public class Violation implements Serializable {
     @Column(name = "status")
     private String status = "PENDING";
 
+    @Column(name = "fine_status")
+    private String fineStatus = "UNPAID";
+
 
 
 

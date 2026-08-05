@@ -364,6 +364,11 @@ export default function Users() {
                     <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: "rgba(201,162,39,0.1)", color: "#c9a227", border: "1px solid rgba(201,162,39,0.2)" }}>
                       {getRoleName(u.roleId)}
                     </span>
+                    {u.roleId === 3 && (
+                      <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: u.hasUnpaidFine ? "rgba(239,68,68,0.15)" : "rgba(16,185,129,0.15)", color: u.hasUnpaidFine ? "#f87171" : "#34d399", border: u.hasUnpaidFine ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(16,185,129,0.3)" }}>
+                        {u.hasUnpaidFine ? "🚨 Fine Unpaid (Blocked)" : "✅ Fine Paid"}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.75rem", justifyContent: "flex-end" }}>
@@ -405,9 +410,16 @@ export default function Users() {
                       </span>
                     </td>
                     <td style={{ padding: "0.75rem 1.5rem" }}>
-                      <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: "rgba(201,162,39,0.1)", color: "#c9a227", border: "1px solid rgba(201,162,39,0.2)" }}>
-                        {getRoleName(u.roleId)}
-                      </span>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem", alignItems: "center" }}>
+                        <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: "rgba(201,162,39,0.1)", color: "#c9a227", border: "1px solid rgba(201,162,39,0.2)" }}>
+                          {getRoleName(u.roleId)}
+                        </span>
+                        {u.roleId === 3 && (
+                          <span style={{ padding: "0.25rem 0.5rem", borderRadius: "0.25rem", fontSize: "10px", fontWeight: "bold", fontFamily: "monospace", background: u.hasUnpaidFine ? "rgba(239,68,68,0.15)" : "rgba(16,185,129,0.15)", color: u.hasUnpaidFine ? "#f87171" : "#34d399", border: u.hasUnpaidFine ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(16,185,129,0.3)" }}>
+                            {u.hasUnpaidFine ? "🚨 Fine Unpaid (Blocked)" : "✅ Fine Paid"}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td style={{ padding: "0.75rem 1.5rem", textAlign: "right" }}>
                       <div style={{ display: "inline-flex", gap: "0.5rem", alignItems: "center" }}>

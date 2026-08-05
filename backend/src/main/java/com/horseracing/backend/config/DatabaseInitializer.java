@@ -211,11 +211,25 @@ public class DatabaseInitializer implements InitializingBean {
                 "END"
             );
 
-            // 8.3 Thêm cột wallet_balance vào bảng [User]
+            // 8.3 Thêm cột wallet_balance, jockey_fee vào bảng [User]
             jdbcTemplate.execute(
                 "IF OBJECT_ID('[User]', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'wallet_balance') " +
                 "BEGIN " +
                 "    ALTER TABLE [User] ADD wallet_balance DECIMAL(18,2) NOT NULL DEFAULT 0.00; " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('[User]', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[User]') AND name = 'jockey_fee') " +
+                "BEGIN " +
+                "    ALTER TABLE [User] ADD jockey_fee DECIMAL(12,2) NULL DEFAULT 500000.00; " +
+                "END"
+            );
+
+            // 8.4 Thêm cột fine_status vào bảng [Violation]
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('[Violation]', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('[Violation]') AND name = 'fine_status') " +
+                "BEGIN " +
+                "    ALTER TABLE [Violation] ADD fine_status VARCHAR(20) NOT NULL DEFAULT 'UNPAID'; " +
                 "END"
             );
 
@@ -445,23 +459,11 @@ public class DatabaseInitializer implements InitializingBean {
                 System.err.println("Note on RaceEntry deduplication: " + ex.getMessage());
             }
 
-            // Sync specific base balances per user, plus sum of WalletTransactions
+            // Initialize base wallet balance for Admin if null or zero
             try {
-                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 60000.00, balance = 60000.00 WHERE username = 'owner_jackson'");
-                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 85000.00, balance = 85000.00 WHERE username = 'owner_miller'");
-                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 120000.00, balance = 120000.00 WHERE username = 'owner_chen'");
-                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 15000.00, balance = 15000.00 WHERE username = 'jockey_ryan'");
-                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 18500.00, balance = 18500.00 WHERE username = 'jockey_emma'");
-                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 22000.00, balance = 22000.00 WHERE username = 'jockey_carlos'");
-                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 12000.00, balance = 12000.00 WHERE username = 'jockey_naomi'");
-
-                jdbcTemplate.update(
-                    "UPDATE u SET u.wallet_balance = u.wallet_balance + ISNULL(txSum.total, 0), u.balance = u.balance + ISNULL(txSum.total, 0) " +
-                    "FROM [User] u " +
-                    "JOIN (SELECT user_id, SUM(amount) AS total FROM WalletTransaction GROUP BY user_id) txSum ON u.id = txSum.user_id"
-                );
+                jdbcTemplate.update("UPDATE [User] SET wallet_balance = 5000000000.00, balance = 5000000000.00 WHERE (role_id = 1 OR username = 'admin_root') AND (wallet_balance IS NULL OR wallet_balance <= 0)");
             } catch (Exception ex) {
-                System.err.println("Note on wallet balance sync: " + ex.getMessage());
+                System.err.println("Note on admin wallet balance sync: " + ex.getMessage());
             }
 
             // Recalculate weights for all active RaceEntry records on startup

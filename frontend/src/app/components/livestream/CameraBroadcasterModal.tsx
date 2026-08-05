@@ -132,22 +132,42 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
       }
       setError("");
       
+      const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       let mediaStream: MediaStream | null = null;
+
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-          mediaStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: { exact: mode } }
-          });
-        } catch (e1) {
+        if (!isMobileDevice) {
+          // Optimized high-performance Full HD resolution constraints for Laptop/Desktop Webcams
           try {
             mediaStream = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode: { ideal: mode } }
+              video: {
+                width: { ideal: 1920, max: 1920 },
+                height: { ideal: 1080, max: 1080 },
+                frameRate: { ideal: 30, max: 60 }
+              }
             });
-          } catch (e2) {
+          } catch (lapErr) {
+            console.warn("[Broadcaster] Laptop HD camera setup fallback:", lapErr);
+          }
+        }
+
+        if (!mediaStream) {
+          // Mobile & Fallback camera constraints (keep mobile behavior untouched)
+          try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+              video: { facingMode: { exact: mode } }
+            });
+          } catch (e1) {
             try {
-              mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
-            } catch (e3) {
-              console.warn("Camera fallback failed:", e3);
+              mediaStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: { ideal: mode } }
+              });
+            } catch (e2) {
+              try {
+                mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+              } catch (e3) {
+                console.warn("Camera fallback failed:", e3);
+              }
             }
           }
         }

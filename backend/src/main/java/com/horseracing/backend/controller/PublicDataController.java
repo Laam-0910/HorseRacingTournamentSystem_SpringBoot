@@ -164,35 +164,98 @@ public class PublicDataController {
     public ResponseEntity<?> getResults(@RequestParam Integer raceId) {
         List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
         
-        // Khử trùng lặp theo horseId và bỏ qua các bản ghi REJECTED
+        // Khử trùng lặp theo horseId và chỉ lấy các lượt đua hợp lệ (APPROVED, CONFIRMED, RUNNING, FINISHED, OFFICIAL, STEWARDS_INQUIRY, STOPPED, DISQUALIFIED)
         Map<Integer, RaceEntry> uniqueMap = new LinkedHashMap<>();
         for (RaceEntry entry : entries) {
-            if (!"REJECTED".equalsIgnoreCase(entry.getStatus())) {
+            String st = entry.getStatus() != null ? entry.getStatus().toUpperCase() : "";
+            if (!st.isEmpty() && !"REJECTED".equals(st) && !"PENDING".equals(st) && !"PENDING_ADMIN".equals(st) && !"SUSPENDED_DEFICIT".equals(st)) {
                 uniqueMap.putIfAbsent(entry.getHorseId(), entry);
             }
         }
 
         List<Map<String, Object>> results = new ArrayList<>();
+        double totalPredictionScore = 0.0;
+
         for (RaceEntry entry : uniqueMap.values()) {
             Map<String, Object> map = new HashMap<>();
             map.put("entry", entry);
             
             // Lấy thông tin chiến mã tham gia chạy
-            Optional<Horse> horse = horseRepository.findById(entry.getHorseId());
-            map.put("horse", horse.orElse(null));
+            Optional<Horse> horseOpt = horseRepository.findById(entry.getHorseId());
+            Horse horse = horseOpt.orElse(null);
+            map.put("horse", horse);
 
             // Lấy thông tin kỵ sĩ/nài ngựa điều khiển
-            Optional<User> jockey = userRepository.findById(entry.getJockeyId());
-            map.put("jockey", jockey.orElse(null));
+            Optional<User> jockeyOpt = userRepository.findById(entry.getJockeyId());
+            User jockey = jockeyOpt.orElse(null);
+            map.put("jockey", jockey);
 
             // Lấy thông tin chủ sở hữu của con ngựa này
-            if (horse.isPresent()) {
-                Optional<User> owner = userRepository.findById(horse.get().getOwnerId());
+            if (horse != null && horse.getOwnerId() != null) {
+                Optional<User> owner = userRepository.findById(horse.getOwnerId());
                 map.put("owner", owner.orElse(null));
             } else {
                 map.put("owner", null);
             }
+
+            // Unified AI Prediction Score Calculation (Identical to AdminUserService)
+            double horseWinRateScore = 0.0;
+            if (horse != null && horse.getTotalRaces() != null && horse.getTotalRaces() > 0) {
+                horseWinRateScore = ((double) (horse.getTotalWins() != null ? horse.getTotalWins() : 0) / horse.getTotalRaces()) * 100;
+            }
+
+            double jockeySkillScore = 0.0;
+            if (jockey != null && jockey.getTotalRacesParticipated() != null && jockey.getTotalRacesParticipated() > 0) {
+                jockeySkillScore = ((double) (jockey.getTotalTop3Finishes() != null ? jockey.getTotalTop3Finishes() : 0) / jockey.getTotalRacesParticipated()) * 100;
+            }
+
+            double classScore = 20.0;
+            if (horse != null && horse.getCurrentRating() != null) {
+                int rating = horse.getCurrentRating();
+                if (rating >= 95) classScore = 100.0;
+                else if (rating >= 80) classScore = 80.0;
+                else if (rating >= 60) classScore = 60.0;
+                else if (rating >= 40) classScore = 40.0;
+                else classScore = 20.0;
+            }
+
+            double recentFormScore = 0.0;
+            if (horse != null) {
+                List<RaceEntry> pastRaces = raceEntryRepository.findByHorseId(horse.getId());
+                int racesCount = 0;
+                double formPoints = 0;
+                if (pastRaces != null) {
+                    for (int i = pastRaces.size() - 1; i >= 0 && racesCount < 5; i--) {
+                        RaceEntry past = pastRaces.get(i);
+                        if (("COMPLETED".equalsIgnoreCase(past.getStatus()) || "FINISHED".equalsIgnoreCase(past.getStatus())) && past.getFinalPosition() != null) {
+                            int pos = past.getFinalPosition();
+                            if (pos == 1) formPoints += 10;
+                            else if (pos == 2) formPoints += 7;
+                            else if (pos == 3) formPoints += 5;
+                            else if (pos == 4) formPoints += 3;
+                            else if (pos == 5) formPoints += 1;
+                            racesCount++;
+                        }
+                    }
+                }
+                recentFormScore = (formPoints / 50.0) * 100;
+            }
+
+            double predictionScore = (horseWinRateScore * 0.40) +
+                                     (jockeySkillScore * 0.30) +
+                                     (classScore * 0.15) +
+                                     (recentFormScore * 0.15);
+
+            map.put("predictionScore", Math.round(predictionScore * 100.0) / 100.0);
+            totalPredictionScore += predictionScore;
             results.add(map);
+        }
+
+        final double finalTotal = totalPredictionScore > 0 ? totalPredictionScore : 1.0;
+        for (Map<String, Object> map : results) {
+            double pScore = map.get("predictionScore") != null ? (Double) map.get("predictionScore") : 0.0;
+            long aiWinRate = Math.round((pScore / finalTotal) * 100.0);
+            map.put("aiWinRate", aiWinRate);
         }
 
         // Sắp xếp thứ tự cán đích từ vị trí cao nhất (1st, 2nd, 3rd...) đến cuối
@@ -311,6 +374,7 @@ public class PublicDataController {
         } else if (user.getRoleId() == 3) {
             // Thống kê chi tiết dành cho kỵ sĩ/nài ngựa (Jockey)
             response.put("weight", user.getWeight());
+            response.put("jockeyFee", user.getJockeyFee() != null ? user.getJockeyFee() : new BigDecimal("500000.00"));
 
             List<RaceEntry> entries = raceEntryRepository.findByJockeyId(id);
             // Đếm số lượt cưỡi ngựa thi đấu thực tế

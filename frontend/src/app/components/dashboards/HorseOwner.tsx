@@ -340,12 +340,21 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                 const regHorses = dashboard?.meetingRegisteredHorses?.[m.id] || [];
                 const unregHorses = dashboard?.meetingUnregisteredHorses?.[m.id] || [];
                 const sel = selectedHorses[m.id] || [];
+                const isMeetingInactive = m.status === 'INACTIVE' || m.status === 'CANCELLED' || m.status === 'DEACTIVE';
+                const isSeasonInactive = m.seasonStatus === 'INACTIVE' || m.seasonStatus === 'CLOSED' || m.seasonStatus === 'CANCELLED' || m.seasonStatus === 'DEACTIVE';
+                const isLocked = isMeetingInactive || isSeasonInactive;
 
                 return (
                   <div key={m.id} className="rounded-xl" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
                       <h4 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, color: "#f4f2ec" }}>{m.name}</h4>
-                      {isReg ? <StatusBadge status={regStatus ?? "APPROVED"} /> : <StatusBadge status="UNREGISTERED" />}
+                      {isLocked ? (
+                        <StatusBadge status="INACTIVE" />
+                      ) : isReg ? (
+                        <StatusBadge status={regStatus ?? "APPROVED"} />
+                      ) : (
+                        <StatusBadge status="UNREGISTERED" />
+                      )}
                     </div>
                     <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
                       <span>📅 {formatDate(m.startDate || m.date)}</span>
@@ -366,130 +375,141 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                       </div>
                     </div>
 
-                    {/* Register button: only show when NOT registered (no entry at all) */}
-                    {!isReg && (
-                      <div>
-                        {unregHorses.length === 0
-                          ? (
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                              <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No unregistered horses available.</p>
-                              <button
-                                onClick={() => onRegisterOwner(m.id)}
-                                style={{ width: "100%", padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
-                              >
-                                Register for Event
-                              </button>
+                    {/* Locked Banner: Suspends all registration / re-registration when meeting or season is deactivated */}
+                    {isLocked ? (
+                      <div style={{ fontSize: "0.65rem", color: "#f87171", fontFamily: "monospace", fontStyle: "italic", background: "rgba(239,68,68,0.1)", padding: "0.6rem 0.75rem", borderRadius: "0.375rem", border: "1px solid rgba(239,68,68,0.25)", display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <span style={{ fontSize: "0.9rem" }}>🔒</span>
+                        <span>This Race Meeting or Season is currently deactivated/locked by Admin. Registration and re-registration are suspended until reactivated by Admin.</span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Register button: only show when NOT registered (no entry at all) */}
+                        {!isReg && (
+                          <div>
+                            {unregHorses.length === 0
+                              ? (
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                                  <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No unregistered horses available.</p>
+                                  <button
+                                    onClick={() => onRegisterOwner(m.id)}
+                                    style={{ width: "100%", padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                                  >
+                                    Register for Event
+                                  </button>
+                                </div>
+                              )
+                              : (
+                                <>
+                                  <p style={{ ...labelStyle, marginBottom: "0.375rem" }}>Select Horses to Register:</p>
+                                  <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
+                                    {unregHorses.map((h: any) => {
+                                      return (
+                                        <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
+                                          <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
+                                          {h.name} (Rating: {h.currentRating ?? 0})
+                                        </label>
+                                      );
+                                    })}
+                                  </div>
+                                  <button
+                                    onClick={() => sel.length ? handleBulkRegister(m.id) : onRegisterOwner(m.id)}
+                                    disabled={sel.length === 0 && unregHorses.length > 0}
+                                    style={{ width: "100%", marginTop: "0.5rem", padding: "0.5rem", background: sel.length > 0 ? ROLE_COLOR : "rgba(74,157,111,0.3)", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: sel.length > 0 ? "pointer" : "not-allowed" }}
+                                  >
+                                    {sel.length > 0 ? `Register ${sel.length} Horse(s)` : "Register for Event"}
+                                  </button>
+                                </>
+                              )}
+                          </div>
+                        )}
+
+                        {/* PENDING / APPROVED: show info badge, hide register button */}
+                        {isReg && (regStatus === "PENDING" || regStatus === "APPROVED") && (
+                          <div style={{ fontSize: "0.65rem", color: regStatus === "APPROVED" ? "#34d399" : "#fbbf24", fontFamily: "monospace", fontStyle: "italic", background: regStatus === "APPROVED" ? "rgba(52,211,153,0.08)" : "rgba(251,191,36,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: `1px solid ${regStatus === "APPROVED" ? "rgba(52,211,153,0.2)" : "rgba(251,191,36,0.2)"}` }}>
+                            {regStatus === "APPROVED" ? "✅ Registration approved. You are registered for this event." : "⏳ Registration is pending approval. You cannot register again until reviewed."}
+                          </div>
+                        )}
+
+                        {/* REJECTED: show Red Re-registration Box ONLY when meeting & season are ACTIVE */}
+                        {isReg && regStatus === "REJECTED" ? (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            <p style={{ fontSize: "0.65rem", color: "#ef4444", fontFamily: "monospace", fontStyle: "italic" }}>
+                              ⚠️ Your registration for this meeting was rejected. You can select horse(s) from your stable to re-register below:
+                            </p>
+                            
+                            {/* Horse Selection List for Re-Registration */}
+                            <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                              <p style={{ ...labelStyle, marginBottom: "0.25rem", color: "#f87171" }}>Select Horse(s) to Re-Register:</p>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "120px", overflowY: "auto", background: "rgba(0,0,0,0.3)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(239,68,68,0.2)" }}>
+                                {stable && stable.length > 0 ? (
+                                  stable.map((item: any) => {
+                                    const h = item.horse || item;
+                                    if (h.status === "RETIRED" || h.status === "REJECTED") return null;
+                                    return (
+                                      <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
+                                        <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: "#ef4444" }} />
+                                        <span>🐎 {h.name} (Rating: {h.currentRating ?? 0})</span>
+                                      </label>
+                                    );
+                                  })
+                                ) : (
+                                  <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic" }}>No active horses in stable.</p>
+                                )}
+                              </div>
                             </div>
-                          )
-                          : (
-                            <>
-                              <p style={{ ...labelStyle, marginBottom: "0.375rem" }}>Select Horses to Register:</p>
-                              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
-                                {unregHorses.map((h: any) => {
-                                  return (
+
+                            <button
+                              onClick={() => sel.length > 0 ? handleBulkRegister(m.id) : onRegisterOwner(m.id)}
+                              style={{ width: "100%", marginTop: "0.25rem", padding: "0.5rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem" }}
+                            >
+                              <span>🔄</span>
+                              <span>{sel.length > 0 ? `Re-Register ${sel.length} Selected Horse(s)` : "Re-Register for Event"}</span>
+                            </button>
+                          </div>
+                        ) : isReg && (
+                          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                            {regHorses.length > 0 && (
+                              <div>
+                                <p style={labelStyle}>Registered Horses:</p>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                                  {regHorses.map((rh: any) => (
+                                    <div key={rh.horse?.id ?? rh.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "0.375rem", padding: "0.375rem 0.5rem" }}>
+                                      <span style={{ fontSize: "0.75rem", color: "#f4f2ec", fontFamily: "monospace" }}>🐎 {rh.horse?.name ?? rh.name}</span>
+                                      <StatusBadge status={rh.status} />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {unregHorses.length > 0 && (
+                              <div>
+                                <p style={labelStyle}>{regHorses.length > 0 ? "Register Additional Horses:" : "Select Horses to Register:"}</p>
+                                <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
+                                  {unregHorses.map((h: any) => (
                                     <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
                                       <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
                                       {h.name} (Rating: {h.currentRating ?? 0})
                                     </label>
-                                  );
-                                })}
+                                  ))}
+                                </div>
+                                <button
+                                  onClick={() => handleBulkRegister(m.id)}
+                                  disabled={sel.length === 0}
+                                  style={{ width: "100%", marginTop: "0.5rem", padding: "0.4rem", background: sel.length > 0 ? "rgba(74,157,111,0.2)" : "rgba(255,255,255,0.05)", color: sel.length > 0 ? ROLE_COLOR : "#a0a0a0", border: `1px solid ${sel.length > 0 ? "rgba(74,157,111,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: sel.length > 0 ? "pointer" : "not-allowed" }}
+                                >
+                                  {regHorses.length > 0 ? `Submit Additional Horses (${sel.length})` : `Register ${sel.length} Selected Horse(s)`}
+                                </button>
                               </div>
-                              <button
-                                onClick={() => sel.length ? handleBulkRegister(m.id) : onRegisterOwner(m.id)}
-                                disabled={sel.length === 0 && unregHorses.length > 0}
-                                style={{ width: "100%", marginTop: "0.5rem", padding: "0.5rem", background: sel.length > 0 ? ROLE_COLOR : "rgba(74,157,111,0.3)", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: sel.length > 0 ? "pointer" : "not-allowed" }}
-                              >
-                                {sel.length > 0 ? `Register ${sel.length} Horse(s)` : "Register for Event"}
-                              </button>
-                            </>
-                          )}
-                      </div>
-                    )}
-
-                    {/* PENDING / APPROVED: show info badge, hide register button */}
-                    {isReg && (regStatus === "PENDING" || regStatus === "APPROVED") && (
-                      <div style={{ fontSize: "0.65rem", color: regStatus === "APPROVED" ? "#34d399" : "#fbbf24", fontFamily: "monospace", fontStyle: "italic", background: regStatus === "APPROVED" ? "rgba(52,211,153,0.08)" : "rgba(251,191,36,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: `1px solid ${regStatus === "APPROVED" ? "rgba(52,211,153,0.2)" : "rgba(251,191,36,0.2)"}` }}>
-                        {regStatus === "APPROVED" ? "✅ Registration approved. You are registered for this event." : "⏳ Registration is pending approval. You cannot register again until reviewed."}
-                      </div>
-                    )}
-
-                    {isReg && regStatus === "REJECTED" ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        <p style={{ fontSize: "0.65rem", color: "#ef4444", fontFamily: "monospace", fontStyle: "italic" }}>
-                          ⚠️ Your registration for this meeting was rejected. You can select horse(s) from your stable to re-register below:
-                        </p>
-                        
-                        {/* Horse Selection List for Re-Registration */}
-                        <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
-                          <p style={{ ...labelStyle, marginBottom: "0.25rem", color: "#f87171" }}>Select Horse(s) to Re-Register:</p>
-                          <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "120px", overflowY: "auto", background: "rgba(0,0,0,0.3)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(239,68,68,0.2)" }}>
-                            {stable && stable.length > 0 ? (
-                              stable.map((item: any) => {
-                                const h = item.horse || item;
-                                if (h.status === "RETIRED" || h.status === "REJECTED") return null;
-                                return (
-                                  <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
-                                    <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: "#ef4444" }} />
-                                    <span>🐎 {h.name} (Rating: {h.currentRating ?? 0})</span>
-                                  </label>
-                                );
-                              })
-                            ) : (
-                              <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic" }}>No active horses in stable.</p>
+                            )}
+                            {unregHorses.length === 0 && regHorses.length > 0 && (
+                              <p style={{ fontSize: "0.65rem", color: ROLE_COLOR, fontStyle: "italic", fontFamily: "monospace" }}>✓ All stable horses registered</p>
+                            )}
+                            {unregHorses.length === 0 && regHorses.length === 0 && (
+                              <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No active horses available in stable to register.</p>
                             )}
                           </div>
-                        </div>
-
-                        <button
-                          onClick={() => sel.length > 0 ? handleBulkRegister(m.id) : onRegisterOwner(m.id)}
-                          style={{ width: "100%", marginTop: "0.25rem", padding: "0.5rem", background: "#ef4444", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem" }}
-                        >
-                          <span>🔄</span>
-                          <span>{sel.length > 0 ? `Re-Register ${sel.length} Selected Horse(s)` : "Re-Register for Event"}</span>
-                        </button>
-                      </div>
-                    ) : isReg && (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        {regHorses.length > 0 && (
-                          <div>
-                            <p style={labelStyle}>Registered Horses:</p>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                              {regHorses.map((rh: any) => (
-                                <div key={rh.horse?.id ?? rh.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)", borderRadius: "0.375rem", padding: "0.375rem 0.5rem" }}>
-                                  <span style={{ fontSize: "0.75rem", color: "#f4f2ec", fontFamily: "monospace" }}>🐎 {rh.horse?.name ?? rh.name}</span>
-                                  <StatusBadge status={rh.status} />
-                                </div>
-                              ))}
-                            </div>
-                          </div>
                         )}
-                        {unregHorses.length > 0 && (
-                          <div>
-                            <p style={labelStyle}>{regHorses.length > 0 ? "Register Additional Horses:" : "Select Horses to Register:"}</p>
-                            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
-                              {unregHorses.map((h: any) => (
-                                <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
-                                  <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
-                                  {h.name} (Rating: {h.currentRating ?? 0})
-                                </label>
-                              ))}
-                            </div>
-                            <button
-                              onClick={() => handleBulkRegister(m.id)}
-                              disabled={sel.length === 0}
-                              style={{ width: "100%", marginTop: "0.5rem", padding: "0.4rem", background: sel.length > 0 ? "rgba(74,157,111,0.2)" : "rgba(255,255,255,0.05)", color: sel.length > 0 ? ROLE_COLOR : "#a0a0a0", border: `1px solid ${sel.length > 0 ? "rgba(74,157,111,0.3)" : "rgba(255,255,255,0.08)"}`, borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: sel.length > 0 ? "pointer" : "not-allowed" }}
-                            >
-                              {regHorses.length > 0 ? `Submit Additional Horses (${sel.length})` : `Register ${sel.length} Selected Horse(s)`}
-                            </button>
-                          </div>
-                        )}
-                        {unregHorses.length === 0 && regHorses.length > 0 && (
-                          <p style={{ fontSize: "0.65rem", color: ROLE_COLOR, fontStyle: "italic", fontFamily: "monospace" }}>✓ All stable horses registered</p>
-                        )}
-                        {unregHorses.length === 0 && regHorses.length === 0 && (
-                          <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No active horses available in stable to register.</p>
-                        )}
-                      </div>
+                      </>
                     )}
                   </div>
                 );
@@ -1221,14 +1241,31 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
               <div>
                 <label style={labelStyle}>Select Jockey</label>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                  <select value={jockeyId} onChange={e => setJockeyId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
-                    <option value="">-- Select Jockey --</option>
-                    {filteredJockeys.map((j: any) => <option key={j.id} value={j.id}>{j.fullName || j.username} ({j.weight}kg)</option>)}
-                  </select>
+                    <select value={jockeyId} onChange={e => setJockeyId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
+                      <option value="">-- Select Jockey --</option>
+                      {filteredJockeys.map((j: any) => <option key={j.id} value={j.id}>{j.fullName || j.username} ({j.weight || 0}kg — Fee: {Number(j.jockeyFee || 500000).toLocaleString('en-US')} VND)</option>)}
+                    </select>
                   {jockeyId && (
-                    <button type="button" onClick={() => onViewProfile(parseInt(jockeyId))} style={{ background: "none", border: "none", color: "#fbbf24", fontSize: "0.65rem", fontFamily: "monospace", textDecoration: "underline", cursor: "pointer", alignSelf: "flex-start", padding: 0 }}>
-                      🔍 View Jockey Profile
-                    </button>
+                    <>
+                      {(() => {
+                        const selJockey = filteredJockeys.find((j: any) => String(j.id) === String(jockeyId));
+                        const feeVal = Number(selJockey?.jockeyFee || 500000);
+                        return (
+                          <div style={{ marginTop: "0.25rem", padding: "0.5rem 0.75rem", borderRadius: "0.375rem", background: "rgba(201,162,39,0.12)", border: "1px solid rgba(201,162,39,0.3)", fontSize: "0.7rem", fontFamily: "monospace", color: "#fbbf24" }}>
+                            <div style={{ fontWeight: "bold", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                              <span>💵 Jockey Hire Fee:</span>
+                              <span style={{ color: "#4ade80", fontSize: "0.75rem", fontWeight: "bold" }}>{feeVal.toLocaleString('en-US')} VND</span>
+                            </div>
+                            <div style={{ fontSize: "0.6rem", color: "#a0a0a0", marginTop: "2px" }}>
+                              🔒 Escrow Vault: Deducted from owner wallet & held until race finish.
+                            </div>
+                          </div>
+                        );
+                      })()}
+                      <button type="button" onClick={() => onViewProfile(parseInt(jockeyId))} style={{ background: "none", border: "none", color: "#fbbf24", fontSize: "0.65rem", fontFamily: "monospace", textDecoration: "underline", cursor: "pointer", alignSelf: "flex-start", padding: 0, marginTop: "0.25rem" }}>
+                        🔍 View Jockey Profile
+                      </button>
+                    </>
                   )}
                 </div>
               </div>

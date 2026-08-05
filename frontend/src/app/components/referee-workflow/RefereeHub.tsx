@@ -478,7 +478,7 @@ export default function RefereeHub() {
   const [violDesc, setViolDesc] = useState("");
   const [violPenalty, setViolPenalty] = useState("");
   const [fineTarget, setFineTarget] = useState<"jockey" | "owner">("jockey");
-  const [fineAmount, setFineAmount] = useState<string>("500");
+  const [fineAmount, setFineAmount] = useState<string>("10000");
   const [isSevereDq, setIsSevereDq] = useState(false);
 
   // Notification Toast State (replacing raw window.alert popups)
@@ -685,7 +685,8 @@ export default function RefereeHub() {
 
     let finalPenalty = isSevereDq ? "DISQUALIFIED (DQ)" : "OFFICIAL_WARNING";
     if (fineAmount && Number(fineAmount) > 0) {
-      const fineVal = Math.round(Number(fineAmount));
+      const rawVal = Math.round(Number(fineAmount));
+      const fineVal = Math.max(10000, rawVal); // Minimum fine rule: 10,000 VND
       const formattedFine = (fineTarget === "owner" ? "Owner Fine " : "Fine ") + fineVal + " VND";
       finalPenalty = isSevereDq ? `${formattedFine} + DISQUALIFIED (DQ)` : formattedFine;
     } else if (violPenalty.trim()) {
@@ -706,7 +707,7 @@ export default function RefereeHub() {
       setShowViolModal(false);
       setViolDesc("");
       setViolPenalty("");
-      setFineAmount("50000");
+      setFineAmount("10000");
       setFineTarget("jockey");
       setIsSevereDq(false);
       // Reload live supervise data
@@ -1620,8 +1621,8 @@ export default function RefereeHub() {
                     </select>
                   </div>
                   <div>
-                    <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Fine Amount (VND)</label>
-                    <input type="number" min="0" step="any" value={fineAmount} onChange={e => setFineAmount(e.target.value)} placeholder="50000" style={{ width: "100%", padding: "0.5rem", outline: "none", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#4ade80", fontWeight: "bold", borderRadius: "0.375rem", fontFamily: "monospace" }} />
+                    <label style={{ display: "block", fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1rem", color: "#a0a0a0", marginBottom: "0.5rem" }}>Fine Amount (VND, Min 10,000)</label>
+                    <input type="number" min="10000" step="1000" value={fineAmount} onChange={e => setFineAmount(e.target.value)} placeholder="10000" style={{ width: "100%", padding: "0.5rem", outline: "none", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.1)", color: "#4ade80", fontWeight: "bold", borderRadius: "0.375rem", fontFamily: "monospace" }} />
                   </div>
                 </div>
 

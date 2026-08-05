@@ -358,6 +358,10 @@ public class AuthService {
             user.setBiography(dto.getBiography().trim());
         }
 
+        if (dto.getJockeyFee() != null && dto.getJockeyFee().compareTo(java.math.BigDecimal.ZERO) >= 0) {
+            user.setJockeyFee(dto.getJockeyFee());
+        }
+
         if (dto.getRequireOtp() != null) {
             user.setRequireOtp(dto.getRequireOtp());
         }

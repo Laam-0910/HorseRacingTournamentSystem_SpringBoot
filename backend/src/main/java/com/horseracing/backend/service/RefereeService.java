@@ -491,6 +491,10 @@ public class RefereeService {
                 fineAmount = new java.math.BigDecimal("50000");
             }
         }
+        // Enforce minimum fine of 10,000 VND for all recorded referee fines
+        if (fineAmount.compareTo(java.math.BigDecimal.ZERO) > 0 && fineAmount.compareTo(new java.math.BigDecimal("10000")) < 0) {
+            fineAmount = new java.math.BigDecimal("10000");
+        }
 
         if (fineAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
             final java.math.BigDecimal fine = fineAmount;
@@ -510,21 +514,30 @@ public class RefereeService {
             if (targetUserId != null) {
                 final Integer finalUserId = targetUserId;
                 final boolean isOwner = isOwnerFine;
-                userRepository.findById(finalUserId).ifPresent(user -> {
-                    java.math.BigDecimal curBal = user.getWalletBalance() != null ? user.getWalletBalance() : java.math.BigDecimal.ZERO;
-                    java.math.BigDecimal newBal = curBal.subtract(fine);
-                    user.setWalletBalance(newBal);
-                    user.setBalance(newBal);
-                    userRepository.save(user);
+                User user = userRepository.findById(finalUserId)
+                        .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-                    WalletTransaction tx = new WalletTransaction();
-                    tx.setUserId(finalUserId);
-                    tx.setAmount(fine.negate());
-                    tx.setTransactionType(isOwner ? "OWNER_FINE" : "REFEREE_FINE");
-                    tx.setDescription((isOwner ? "Owner Violation Fine: " : "Referee Violation Fine: ") + (violation.getDescription() != null ? violation.getDescription() : "Violation") + " (" + penaltyStr + ")");
-                    tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
-                    walletTransactionRepository.save(tx);
-                });
+                java.math.BigDecimal curBal = user.getWalletBalance() != null ? user.getWalletBalance() : java.math.BigDecimal.ZERO;
+                if (curBal.compareTo(fine) < 0) {
+                    throw new IllegalArgumentException(String.format("Insufficient wallet balance to pay penalty fine. Required: %,.0f VND, Available in wallet: %,.0f VND. Please top up your wallet.", fine.doubleValue(), curBal.doubleValue()));
+                }
+
+                java.math.BigDecimal newBal = curBal.subtract(fine);
+                user.setWalletBalance(newBal);
+                user.setBalance(newBal);
+                userRepository.save(user);
+
+                WalletTransaction tx = new WalletTransaction();
+                tx.setUserId(finalUserId);
+                tx.setAmount(fine.negate());
+                tx.setTransactionType(isOwner ? "OWNER_FINE" : "REFEREE_FINE");
+                tx.setDescription((isOwner ? "Owner Violation Fine: " : "Referee Violation Fine: ") + (violation.getDescription() != null ? violation.getDescription() : "Violation") + " (" + penaltyStr + ")");
+                tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
+                walletTransactionRepository.save(tx);
+
+                // Mark fine status as PAID when fine deduction is processed
+                violation.setFineStatus("PAID");
+                violationRepository.save(violation);
             }
         }
     }

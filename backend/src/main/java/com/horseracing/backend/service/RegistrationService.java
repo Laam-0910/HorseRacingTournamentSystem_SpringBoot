@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 /**
  * Lớp dịch vụ RegistrationService - Xử lý nghiệp vụ đăng ký tham gia Ngày hội đua (Race Meeting).
@@ -31,6 +32,7 @@ public class RegistrationService {
     private final UserRepository userRepository;
     private final HorseRepository horseRepository;
     private final WalletTransactionRepository walletTransactionRepository;
+    private final ViolationRepository violationRepository;
     private final RegistrationMapper registrationMapper; // Bộ ánh xạ thực thể đăng ký sang DTO
 
     private void validateMeetingForRegistration(RaceMeeting meeting) {
@@ -55,6 +57,13 @@ public class RegistrationService {
 
         User jockey = userRepository.findById(jockeyId)
                 .orElseThrow(() -> new IllegalArgumentException("Jockey user not found"));
+
+        List<Violation> jockeyViolations = violationRepository.findByJockeyId(jockeyId);
+        boolean hasUnpaidFine = jockeyViolations != null && jockeyViolations.stream()
+                .anyMatch(v -> "UNPAID".equalsIgnoreCase(v.getFineStatus()) && !"DISMISSED".equalsIgnoreCase(v.getStatus()));
+        if (hasUnpaidFine) {
+            throw new IllegalArgumentException("Cannot register for race meeting: Jockey has unpaid rule violation fines. Please pay all fines in Rule Violations tab before participating in race meetings.");
+        }
 
         java.util.Optional<JockeyRaceMeetingRegistration> existingOpt = jockeyRegRepository.findByRaceMeetingIdAndJockeyId(meetingId, jockeyId);
         if (existingOpt.isPresent()) {

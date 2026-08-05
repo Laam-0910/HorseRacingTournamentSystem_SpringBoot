@@ -44,6 +44,7 @@ public class InvitationService {
     private final NotificationService notificationService;
     private final SystemConfigRepository systemConfigRepository;
     private final com.horseracing.backend.repository.WalletTransactionRepository walletTransactionRepository;
+    private final com.horseracing.backend.repository.ViolationRepository violationRepository;
 
     // Lấy danh sách lời mời thi đấu lọc theo Nài ngựa (Jockey) hoặc Chủ sở hữu (Owner)
     public List<RaceInvitationDTO> getInvitations(Integer jockeyId, Integer ownerId) {
@@ -195,6 +196,14 @@ public class InvitationService {
                 .filter(reg -> "APPROVED".equalsIgnoreCase(reg.getStatus()))
                 .orElseThrow(() -> new IllegalArgumentException("HORSE_NOT_APPROVED"));
 
+        // Check if target Jockey has any unpaid rule violation fines
+        List<com.horseracing.backend.entity.Violation> jockeyViolations = violationRepository.findByJockeyId(dto.getJockeyId());
+        boolean hasUnpaidFine = jockeyViolations != null && jockeyViolations.stream()
+                .anyMatch(v -> "UNPAID".equalsIgnoreCase(v.getFineStatus()) && !"DISMISSED".equalsIgnoreCase(v.getStatus()));
+        if (hasUnpaidFine) {
+            throw new IllegalArgumentException("Cannot hire jockey: Jockey has unpaid rule violation fines. Please ensure fine is paid before joining race meetings.");
+        }
+
         // 7. Kiểm tra phần trăm ăn chia giải thưởng cho Nài ngựa (20% - 50%)
         BigDecimal pct = dto.getJockeyPrizePercentage() != null ? dto.getJockeyPrizePercentage() : new BigDecimal("20.00");
         if (pct.compareTo(new BigDecimal("20.00")) < 0 || pct.compareTo(new BigDecimal("50.00")) > 0) {
@@ -212,7 +221,13 @@ public class InvitationService {
                     try { return new BigDecimal(v); } catch (Exception e) { return new BigDecimal("500000.00"); }
                 })
                 .orElse(new BigDecimal("500000.00"));
-        invite.setHireFee(defaultHireFee);
+        
+        Optional<User> jockeyUserOpt = userRepository.findById(dto.getJockeyId());
+        BigDecimal customJockeyFee = (jockeyUserOpt.isPresent() && jockeyUserOpt.get().getJockeyFee() != null)
+                ? jockeyUserOpt.get().getJockeyFee()
+                : defaultHireFee;
+
+        invite.setHireFee(customJockeyFee);
         invite.setCommissionRate(BigDecimal.ZERO);
         invite.setCommissionAmount(BigDecimal.ZERO);
         invite.setPayoutStatus("PENDING");
@@ -250,6 +265,14 @@ public class InvitationService {
 
         if (!"PENDING".equals(invite.getStatus())) {
             throw new IllegalArgumentException("Invitation is not pending");
+        }
+
+        // Verify jockey has no unpaid violation fines
+        List<com.horseracing.backend.entity.Violation> jockeyViolations = violationRepository.findByJockeyId(invite.getJockeyId());
+        boolean hasUnpaidFine = jockeyViolations != null && jockeyViolations.stream()
+                .anyMatch(v -> "UNPAID".equalsIgnoreCase(v.getFineStatus()) && !"DISMISSED".equalsIgnoreCase(v.getStatus()));
+        if (hasUnpaidFine) {
+            throw new IllegalArgumentException("Cannot accept invitation: Jockey has unpaid rule violation fines. Please pay the fine before participating in race meetings.");
         }
 
         // Resolve Owner ID from Horse if ownerId on invitation is null

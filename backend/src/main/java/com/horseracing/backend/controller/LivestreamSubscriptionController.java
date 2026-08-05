@@ -64,15 +64,10 @@ public class LivestreamSubscriptionController {
             return false;
         });
 
-        // Priority: Prefer SEASON over RACEMEETING if user has both active
+        // Prefer active subscription expiring latest to correctly expose accumulated extension date
         Optional<LivestreamSubscription> activeSub = userSubs.stream()
                 .filter(sub -> sub.getExpiresAt() == null || !sub.getExpiresAt().before(now))
                 .sorted((a, b) -> {
-                    // SEASON ranks higher than RACEMEETING
-                    int rankA = "SEASON".equalsIgnoreCase(a.getPackageType()) ? 0 : 1;
-                    int rankB = "SEASON".equalsIgnoreCase(b.getPackageType()) ? 0 : 1;
-                    if (rankA != rankB) return Integer.compare(rankA, rankB);
-                    // Among same type, prefer the one expiring latest
                     long expA = a.getExpiresAt() != null ? a.getExpiresAt().getTime() : Long.MAX_VALUE;
                     long expB = b.getExpiresAt() != null ? b.getExpiresAt().getTime() : Long.MAX_VALUE;
                     return Long.compare(expB, expA);
@@ -210,21 +205,12 @@ public class LivestreamSubscriptionController {
             sub.setPricePaid(amount);
             sub.setPurchaseTime(new Timestamp(System.currentTimeMillis()));
 
-            // Cumulative Extension Logic:
-            // Find max existing expiresAt for the user for this package type
+            // Cumulative Extension & Upgrade Stacking Logic:
+            // Find max existing expiresAt across ALL active subscriptions of the user
             long now = System.currentTimeMillis();
             List<LivestreamSubscription> existingSubs = subscriptionRepository.findByUserId(userId);
             long baseExpiryTime = existingSubs.stream()
                     .filter(s -> s.getExpiresAt() != null && s.getExpiresAt().getTime() > now)
-                    .filter(s -> {
-                        if ("SEASON".equalsIgnoreCase(packageType)) {
-                            return "SEASON".equalsIgnoreCase(s.getPackageType());
-                        }
-                        if ("RACEMEETING".equalsIgnoreCase(packageType)) {
-                            return "RACEMEETING".equalsIgnoreCase(s.getPackageType());
-                        }
-                        return false;
-                    })
                     .mapToLong(s -> s.getExpiresAt().getTime())
                     .max()
                     .orElse(now);
