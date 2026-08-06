@@ -674,7 +674,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
 }
 
-/* Rotating background with vibrant multi-color gradient (Gold, Yellow, Cyan, Violet, Teal) */
+/* Rotating background with smooth Gold-Black gradient */
 .card::before,
 .glow-cyber-card::before,
 .uiverse-cyber-card::before {
@@ -687,14 +687,14 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   background: conic-gradient(
     from 0deg at 50% 50%,
     #c9a227 0%,
-    #ffe600 20%,
-    #00c3ff 40%,
-    #7b2ff7 60%,
-    #00f2c3 80%,
+    #14110b 20%,
+    #f3d06c 40%,
+    #090806 60%,
+    #997516 80%,
     #c9a227 100%
   );
-  animation: rotateAnim 4s linear infinite;
-  filter: blur(8px) brightness(1.2);
+  animation: rotateAnim 6s linear infinite;
+  filter: blur(6px) opacity(0.85);
   z-index: 0;
 }
 
