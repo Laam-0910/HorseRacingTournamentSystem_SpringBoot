@@ -8,24 +8,26 @@ import UserWalletView from "./components/UserWalletView";
 import ProfileModal from "./components/ProfileModal";
 import HorsePerformanceModal from "./components/HorsePerformanceModal";
 import NotificationCenterView from "./components/NotificationCenterView";
+import BettingView from "./components/BettingView";
 import { parseMarkdownToHtml } from "../../utils/markdownParser";
 import { formatDate, parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
 import { $t } from '@/lib/i18n';
 
-type SpectatorTab = "home" | "live" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "wallet" | "profile" | "notifications";
+type SpectatorTab = "home" | "live" | "betting" | "racecard" | "results" | "horses" | "stats" | "ai-assistant" | "wallet" | "profile" | "notifications";
 
 const ROLE_COLOR = "#ef4444";
 
 const NAV_ITEMS = [
   { index: "01", icon: "layout-dashboard", label: $t("Overview", (localStorage.getItem('app-lang') || 'en')),   view: "home"         },
   { index: "02", icon: "tv",               label: $t("Live Watch", (localStorage.getItem('app-lang') || 'en')), view: "live"         },
-  { index: "03", icon: "bell",             label: $t("Notifications", (localStorage.getItem('app-lang') || 'en')), view: "notifications"},
-  { index: "04", icon: "info",             label: $t("Racecard", (localStorage.getItem('app-lang') || 'en')),   view: "racecard"     },
-  { index: "05", icon: "award",            label: $t("Results", (localStorage.getItem('app-lang') || 'en')),    view: "results"      },
-  { index: "06", icon: "activity",         label: $t("Horses", (localStorage.getItem('app-lang') || 'en')),     view: "horses"       },
-  { index: "07", icon: "bar-chart-3",      label: $t("Statistics", (localStorage.getItem('app-lang') || 'en')), view: "stats"        },
-  { index: "08", icon: "mail",             label: $t("AI Assistant", (localStorage.getItem('app-lang') || 'en')), view: "ai-assistant" },
-  { index: "09", icon: "credit-card",      label: $t("Wallet & Deposit", (localStorage.getItem('app-lang') || 'en')), view: "wallet" },
+  { index: "03", icon: "dollar-sign",      label: $t("Race Betting", (localStorage.getItem('app-lang') || 'en')), view: "betting"    },
+  { index: "04", icon: "bell",             label: $t("Notifications", (localStorage.getItem('app-lang') || 'en')), view: "notifications"},
+  { index: "05", icon: "info",             label: $t("Racecard", (localStorage.getItem('app-lang') || 'en')),   view: "racecard"     },
+  { index: "06", icon: "award",            label: $t("Results", (localStorage.getItem('app-lang') || 'en')),    view: "results"      },
+  { index: "07", icon: "activity",         label: $t("Horses", (localStorage.getItem('app-lang') || 'en')),     view: "horses"       },
+  { index: "08", icon: "bar-chart-3",      label: $t("Statistics", (localStorage.getItem('app-lang') || 'en')), view: "stats"        },
+  { index: "09", icon: "mail",             label: $t("AI Assistant", (localStorage.getItem('app-lang') || 'en')), view: "ai-assistant" },
+  { index: "10", icon: "credit-card",      label: $t("Wallet & Deposit", (localStorage.getItem('app-lang') || 'en')), view: "wallet" },
 ];
 
 interface ChatMessage {
@@ -258,6 +260,9 @@ export default function Spectator() {
 
       case "live":
         return <ViewLive preselectedRaceId={selectedLiveRaceId} onClearPreselect={() => setSelectedLiveRaceId(null)} />;
+
+      case "betting":
+        return <BettingView />;
 
       case "racecard":
         return (

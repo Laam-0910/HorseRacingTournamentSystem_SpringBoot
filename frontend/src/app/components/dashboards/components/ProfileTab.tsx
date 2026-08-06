@@ -52,6 +52,26 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const [passMsg, setPassMsg] = useState("");
   const [passErr, setPassErr] = useState("");
 
+  const [spectatorBets, setSpectatorBets] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (user?.id && user?.roleId === 4) {
+      api.get<any[]>(`/betting/my-bets?userId=${user.id}`)
+        .then((res) => {
+          setSpectatorBets(Array.isArray(res) ? res : []);
+        })
+        .catch(() => {});
+    }
+  }, [user?.id, user?.roleId]);
+
+  const totalBetCount = spectatorBets.length;
+  const totalWagered = spectatorBets.reduce((acc, b) => acc + (Number(b.amount) || 0), 0);
+  const totalWinnings = spectatorBets
+    .filter((b) => b.status === "WON")
+    .reduce((acc, b) => acc + (Number(b.payout) || 0), 0);
+  const wonCount = spectatorBets.filter((b) => b.status === "WON").length;
+  const winRate = totalBetCount > 0 ? ((wonCount / totalBetCount) * 100).toFixed(1) : "0.0";
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -289,6 +309,61 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                  {displayRoleLabel}
                </span>
              </div>
+          </div>
+        )}
+
+        {/* FOR SPECTATOR: BETTING FINANCIAL & WALLET STATS BENTO */}
+        {user?.roleId === 4 && (
+          <div
+            style={{
+              ...bentoBoxStyle,
+              background: "linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(20, 20, 20, 0.7) 100%)",
+              borderColor: "rgba(239, 68, 68, 0.25)",
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)",
+              gap: "1.5rem",
+              padding: "1.75rem 2rem",
+            }}
+          >
+            {/* Wallet Balance */}
+            <div style={{ textAlign: "center" }}>
+              <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", display: "block", marginBottom: "0.4rem" }}>
+                💳 Wallet Balance
+              </span>
+              <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#4ade80", margin: 0, fontFamily: "monospace" }}>
+                {Number(user?.walletBalance ?? 0).toLocaleString("vi-VN")} VND
+              </h2>
+            </div>
+
+            {/* Total Bets Placed */}
+            <div style={{ textAlign: "center", borderLeft: isMobile ? "none" : "1px solid rgba(255,255,255,0.08)" }}>
+              <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", display: "block", marginBottom: "0.4rem" }}>
+                🎲 Total Bets Placed
+              </span>
+              <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#f4f2ec", margin: 0, fontFamily: "monospace" }}>
+                {totalBetCount} <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>slips</span>
+              </h2>
+            </div>
+
+            {/* Total Winnings */}
+            <div style={{ textAlign: "center", borderLeft: "1px solid rgba(255,255,255,0.08)" }}>
+              <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", display: "block", marginBottom: "0.4rem" }}>
+                🏆 Total Winning Payouts
+              </span>
+              <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#fbbf24", margin: 0, fontFamily: "monospace" }}>
+                {totalWinnings.toLocaleString("vi-VN")} VND
+              </h2>
+            </div>
+
+            {/* Win Rate */}
+            <div style={{ textAlign: "center", borderLeft: "1px solid rgba(255,255,255,0.08)" }}>
+              <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.5)", fontWeight: 600, letterSpacing: "1px", textTransform: "uppercase", display: "block", marginBottom: "0.4rem" }}>
+                📈 Win Ratio
+              </span>
+              <h2 style={{ fontSize: "1.6rem", fontWeight: 800, color: "#ef4444", margin: 0, fontFamily: "monospace" }}>
+                {winRate}% <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>({wonCount} won)</span>
+              </h2>
+            </div>
           </div>
         )}
 

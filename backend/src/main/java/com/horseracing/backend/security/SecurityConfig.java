@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/races/**").permitAll() // Cho phép xem các trận đua công khai
                 .requestMatchers("/ws/chat/**").permitAll() // Cho phép kết nối WebSocket phòng chat công khai
                 .requestMatchers("/ws/livestream/**").permitAll() // Cho phép kết nối WebSocket livestream công khai
+                .requestMatchers("/api/betting/**").permitAll() // Cho phép xem tỉ lệ cược và dữ liệu cá cược công khai
                 .anyRequest().authenticated() // Mọi yêu cầu API khác đều phải xác thực qua Token
             )
             // 5. Đăng ký bộ lọc JWT trước bộ lọc UsernamePasswordAuthenticationFilter

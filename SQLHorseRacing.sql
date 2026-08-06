@@ -290,6 +290,19 @@ CREATE TABLE WalletTransaction (
 );
 GO
 
+CREATE TABLE Bet (
+    id          INT IDENTITY(1,1) PRIMARY KEY,
+    user_id     INT NOT NULL,
+    race_id     INT NOT NULL,
+    horse_id    INT NOT NULL,
+    amount      DECIMAL(18,2) NOT NULL,
+    odds        DECIMAL(10,2) NOT NULL,
+    status      VARCHAR(30) NOT NULL DEFAULT 'PENDING',
+    payout      DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+    created_at  DATETIME DEFAULT GETDATE()
+);
+GO
+
 -- ==========================================
 -- FOREIGN KEY CONSTRAINTS
 -- ==========================================
@@ -333,6 +346,10 @@ ALTER TABLE notifications ADD CONSTRAINT FK_Notification_User FOREIGN KEY (user_
 ALTER TABLE HorseRetirementRequest ADD CONSTRAINT FK_Retire_Horse FOREIGN KEY (horse_id) REFERENCES Horse(id);
 ALTER TABLE HorseRetirementRequest ADD CONSTRAINT FK_Retire_Owner FOREIGN KEY (owner_id) REFERENCES [User](id);
 ALTER TABLE WalletTransaction ADD CONSTRAINT FK_WalletTx_Meeting FOREIGN KEY (race_meeting_id) REFERENCES RaceMeeting(id) ON DELETE SET NULL;
+
+ALTER TABLE Bet ADD CONSTRAINT FK_Bet_User FOREIGN KEY (user_id) REFERENCES [User](id);
+ALTER TABLE Bet ADD CONSTRAINT FK_Bet_Race FOREIGN KEY (race_id) REFERENCES Race(id);
+ALTER TABLE Bet ADD CONSTRAINT FK_Bet_Horse FOREIGN KEY (horse_id) REFERENCES Horse(id);
 GO
 
 -- ==========================================

@@ -290,42 +290,30 @@ export default function DashboardLayout({
                 <button
                   key={item.view}
                   onClick={() => handleNavClick(item.view)}
+                  className={`uiverse-sidebar-btn ${isActive ? "active" : ""}`}
                   style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
                     gap: (isMobile || sidebarExpanded) ? '0.625rem' : 0,
                     justifyContent: (isMobile || sidebarExpanded) ? 'flex-start' : 'center',
-                    padding: (isMobile || sidebarExpanded) ? '0.5rem 0.75rem' : '0.5rem 0',
-                    borderRadius: '0.5rem',
-                    marginBottom: '0.125rem',
-                    background: isActive ? `${roleColor}18` : 'transparent',
-                    borderLeft: isActive ? `2px solid ${roleColor}` : '2px solid transparent',
-                    cursor: 'pointer',
-                    border: 'none',
-                    borderLeftStyle: 'solid',
-                    borderLeftWidth: 2,
-                    borderLeftColor: isActive ? roleColor : 'transparent',
-                    textAlign: 'left',
-                    transition: 'all 0.25s',
+                    padding: (isMobile || sidebarExpanded) ? '0.55rem 0.75rem' : '0.55rem 0',
                   }}
                 >
+                  <span className="circle"></span>
                   {!(isMobile || sidebarExpanded) ? (
-                    <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', fontWeight: 700, color: isActive ? roleColor : 'rgba(255,255,255,0.4)', width: '100%', textAlign: 'center' }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', fontWeight: 700, color: isActive ? roleColor : 'rgba(255,255,255,0.4)', width: '100%', textAlign: 'center', position: 'relative', zIndex: 2 }}>
                       {item.index}
                     </span>
                   ) : (
                     <>
-                      <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', width: 20, textAlign: 'right', flexShrink: 0, color: isActive ? roleColor : 'rgba(255,255,255,0.25)' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', width: 20, textAlign: 'right', flexShrink: 0, color: isActive ? roleColor : 'rgba(255,255,255,0.35)', position: 'relative', zIndex: 2 }}>
                         {item.index}
                       </span>
-                      <span style={{ flex: 1, fontSize: '0.75rem', color: isActive ? roleColor : 'rgba(255,255,255,0.65)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} className="sidebar-text">
+                      <span style={{ flex: 1, fontSize: '0.75rem', color: isActive ? roleColor : 'rgba(255,255,255,0.75)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', position: 'relative', zIndex: 2 }} className="sidebar-text sidebar-text-content">
                         {translateLabel(item.label)}
                       </span>
                     </>
                   )}
                   {(isMobile || sidebarExpanded) && item.badge !== undefined && item.badge !== null && item.badge > 0 && (
-                    <span style={{ background: roleColor, color: '#0b0d11', fontSize: '0.5rem', fontFamily: 'monospace', fontWeight: 700, padding: '0.125rem 0.375rem', borderRadius: '9999px' }}>
+                    <span style={{ background: roleColor, color: '#0b0d11', fontSize: '0.5rem', fontFamily: 'monospace', fontWeight: 700, padding: '0.125rem 0.375rem', borderRadius: '9999px', position: 'relative', zIndex: 2 }}>
                       {item.badge}
                     </span>
                   )}

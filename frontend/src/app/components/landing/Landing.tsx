@@ -14,7 +14,7 @@ import HorseRacingSimulator from "./HorseRacingSimulator";
 
 // ─────────────────────────────────────────────
 // ─────────────────────────────────────────────
-type SubView = "home" | "live" | "racecard" | "results" | "fixtures" | "statistics" | "horses" | "jockeys_owners" | "incident" | "about" | "search";
+type SubView = "home" | "live" | "betting" | "racecard" | "results" | "fixtures" | "statistics" | "horses" | "jockeys_owners" | "incident" | "about" | "search";
 
 interface Season { id: number; name: string; startDate: string; endDate: string; status?: string; }
 interface Meeting { id: number; name: string; venue: string; startDate: string; totalBudget: number; }
@@ -540,23 +540,23 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
               };
 
               return (
-                <div key={s.id} className="uiverse-cyber-card bg-[#181613] rounded-2xl p-7 transition-all border border-[#2a2825] shadow-lg relative overflow-hidden group">
-                  <div className="card-glare"></div>
-                  <div className="scan-line"></div>
-                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150"></div>
-                  <div className="flex justify-between items-start mb-5 relative z-10">
+                <div key={s.id} className="glow-cyber-card rounded-2xl p-7 transition-all duration-300 border border-[#c9a227]/30 shadow-xl relative overflow-hidden group">
+                  <div className="flex justify-between items-start mb-5 relative z-10 w-full">
                     <h4 className="font-bold text-2xl text-white group-hover:text-[#c9a227] transition-colors drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{s.name}</h4>
-                    <span className="text-[0.65rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_15px_rgba(74,222,128,0.2)]">{"Active"}</span>
+                    <span className="text-[0.65rem] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-green-500/15 text-green-400 border border-green-500/40 shadow-[0_0_15px_rgba(74,222,128,0.25)] flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-ping inline-block"></span>
+                      ACTIVE
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between text-sm text-gray-300 font-mono relative z-10 bg-[#0e0c09]/50 p-3 rounded-xl border border-white/5">
+                  <div className="flex items-center justify-between text-sm text-gray-300 font-mono relative z-10 bg-[#14120f]/80 p-3.5 rounded-xl border border-white/5 w-full">
                     <div className="flex flex-col">
-                      <span className="text-xs text-gray-500 mb-1">Start Date</span>
-                      <span className="opacity-90 font-semibold">{formatSeasonDate(s.startDate)}</span>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Start Date</span>
+                      <span className="opacity-90 font-semibold text-white">{formatSeasonDate(s.startDate)}</span>
                     </div>
-                    <span className="text-[#c9a227]/50 font-sans px-2 text-xl">→</span>
+                    <span className="text-[#c9a227] font-sans px-2 text-xl font-bold">→</span>
                     <div className="flex flex-col text-right">
-                      <span className="text-xs text-gray-500 mb-1">{"End Date"}</span>
-                      <span className="opacity-90 font-semibold">{formatSeasonDate(s.endDate)}</span>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wider mb-1">End Date</span>
+                      <span className="opacity-90 font-semibold text-white">{formatSeasonDate(s.endDate)}</span>
                     </div>
                   </div>
                 </div>
@@ -590,24 +590,21 @@ function HomeView({ seasons, meetings, t, onWatchLive, onViewRacecard }: { seaso
               const { date, time } = formatDateTime(m.startDate);
 
               return (
-                <div key={m.id} className="uiverse-cyber-card bg-[#181613] rounded-2xl p-7 transition-all border border-[#2a2825] shadow-lg relative overflow-hidden group">
-                  <div className="card-glare"></div>
-                  <div className="scan-line"></div>
-                  <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-gradient-to-tr from-blue-500 to-transparent opacity-10 rounded-full blur-2xl transition-transform duration-700 group-hover:scale-150"></div>
-                  <h4 className="font-bold text-2xl text-white mb-6 group-hover:text-blue-400 transition-colors relative z-10 drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
-                  <div className="space-y-3 relative z-10">
-                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#0e0c09]/50 px-4 py-2.5 rounded-xl border border-white/5">
+                <div key={m.id} className="glow-cyber-card rounded-2xl p-7 transition-all duration-300 border border-[#c9a227]/30 shadow-xl relative overflow-hidden group">
+                  <h4 className="font-bold text-2xl text-white mb-5 group-hover:text-[#c9a227] transition-colors relative z-10 drop-shadow-md" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
+                  <div className="space-y-2.5 relative z-10 w-full">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-4 py-2.5 rounded-xl border border-white/5">
                       <span className="text-blue-400 text-lg">📍</span> 
-                      <span className="truncate font-medium">{m.venue}</span>
+                      <span className="truncate font-medium text-white">{m.venue}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#0e0c09]/50 px-4 py-2.5 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-4 py-2.5 rounded-xl border border-white/5">
                       <span className="text-[#c9a227] text-lg">📅</span> 
-                      <span className="font-medium">{date}</span>
+                      <span className="font-medium text-white">{date}</span>
                     </div>
                     {time && (
-                      <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#0e0c09]/50 px-4 py-2.5 rounded-xl border border-white/5">
+                      <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-4 py-2.5 rounded-xl border border-white/5">
                         <span className="text-[#c9a227] text-lg">🕒</span> 
-                        <span className="font-medium">{time}</span>
+                        <span className="font-medium text-white">{time}</span>
                       </div>
                     )}
                   </div>
@@ -728,33 +725,31 @@ function GenericTableView({ title, data, columns, onRowClick }: { title: string;
         </div>
       ) : (
         <>
-          <div className="uiverse-cyber-card glass-panel rounded-2xl overflow-hidden border border-[#2a2825] transition-all duration-300 shadow-xl relative">
-            <div className="card-glare"></div>
-            <div className="scan-line"></div>
-            <div className="overflow-x-auto relative z-10">
+          <div className="glow-cyber-card rounded-2xl overflow-hidden p-3 border border-[#c9a227]/30 transition-all duration-300 shadow-xl relative">
+            <div className="overflow-x-auto relative z-10 w-full rounded-xl">
               <table className="w-full border-collapse text-left">
                 <thead>
-                  <tr className="bg-[#1a1815]/90 border-b border-[#2a2825]">
+                  <tr className="bg-[#14120f] border-b border-white/10">
                     {columns.map(c => (
-                      <th key={c.key} className="py-4 px-5 text-xs font-mono text-[#c9a227] tracking-widest uppercase font-bold whitespace-nowrap">
+                      <th key={c.key} className="py-4 px-6 text-xs font-mono text-[#c9a227] tracking-widest uppercase font-bold whitespace-nowrap">
                         {c.label}
                       </th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#2a2825]/50">
+                <tbody className="divide-y divide-white/5 bg-[#14120f]/60">
                   {paginatedData.map((row, i) => (
                     <tr 
                       key={i} 
-                      className={`hover:bg-[#c9a227]/[0.08] hover:shadow-[inset_0_0_15px_rgba(201,162,39,0.12)] transition-all duration-200 group ${onRowClick ? 'cursor-pointer' : ''}`}
+                      className={`hover:bg-[#c9a227]/[0.1] hover:shadow-[inset_0_0_15px_rgba(201,162,39,0.15)] transition-all duration-200 group ${onRowClick ? 'cursor-pointer' : ''}`}
                       onClick={() => onRowClick?.(row)}
                     >
                       {columns.map((c, colIdx) => (
                         <td 
                           key={c.key} 
-                          className={`py-3.5 px-5 text-sm whitespace-nowrap ${
+                          className={`py-4 px-6 text-sm whitespace-nowrap ${
                             colIdx === 1 
-                              ? 'font-bold text-[#c9a227] group-hover:text-[#ffe270] group-hover:translate-x-1 transition-all inline-flex items-center gap-1.5' 
+                              ? 'font-bold text-[#c9a227] group-hover:text-[#ffe270] group-hover:translate-x-1 transition-all' 
                               : colIdx === 0 
                                 ? 'font-bold text-gray-300 group-hover:text-white' 
                                 : 'text-gray-300'
@@ -820,6 +815,107 @@ function AboutView({ t }: { t: any }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+function LandingBettingContainer({ user, navigate, races }: { user: any; navigate: any; races: any[] }) {
+  const [scheduledRaces, setScheduledRaces] = useState<any[]>([]);
+  const [selectedRaceId, setSelectedRaceId] = useState<number | null>(null);
+  const [oddsList, setOddsList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    api.get<any[]>("/public/races").then(all => {
+      const scheduled = (Array.isArray(all) ? all : []).filter(r => r.status === "SCHEDULED" || r.status === "DECLARATION_CLOSED");
+      setScheduledRaces(scheduled);
+      if (scheduled.length > 0) setSelectedRaceId(scheduled[0].id);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!selectedRaceId) return;
+    setLoading(true);
+    api.get<any[]>(`/betting/odds/${selectedRaceId}`).then(data => {
+      setOddsList(Array.isArray(data) ? data : []);
+    }).catch(() => setOddsList([])).finally(() => setLoading(false));
+  }, [selectedRaceId]);
+
+  const handleBetNow = () => {
+    if (user?.roleId === 5) {
+      navigate("/dashboard/spectator?tab=betting");
+    } else if (user) {
+      navigate("/dashboard/spectator");
+    } else {
+      navigate("/login");
+    }
+  };
+
+  return (
+    <div className="animate-fade-in-up">
+      <div className="flex items-center gap-4 mb-8">
+        <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide uppercase drop-shadow-lg" style={{ fontFamily: "'Roboto Slab', serif" }}>
+          🎲 Live Betting Odds
+        </h2>
+        <div className="h-[2px] flex-1 bg-gradient-to-r from-[#c9a227]/60 to-transparent"></div>
+      </div>
+
+      <div style={{ background: "linear-gradient(135deg, rgba(201,162,39,0.12) 0%, rgba(20,20,20,0.9) 100%)", border: "1px solid rgba(201,162,39,0.3)", padding: "1.5rem", borderRadius: "1rem", marginBottom: "1.5rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "1rem" }}>
+        <div>
+          <h3 style={{ fontSize: "1.2rem", fontWeight: 700, color: "#f4f2ec" }}>Real-Time Race Odds & AI Win Probability</h3>
+          <p style={{ color: "#a0a0a0", fontSize: "0.85rem", marginTop: "0.2rem", fontStyle: "italic" }}>"In gambling, those who don't play are the winners, but those who don't play will never win."</p>
+        </div>
+        <button onClick={handleBetNow} style={{ padding: "0.75rem 1.5rem", background: "linear-gradient(45deg, #c9a227, #f3d06c)", color: "#110f0e", border: "none", borderRadius: "0.5rem", fontWeight: 800, cursor: "pointer", fontFamily: "monospace" }}>
+          💥 PLACE BETS IN DASHBOARD →
+        </button>
+      </div>
+
+      {scheduledRaces.length === 0 ? (
+        <div className="glass-panel rounded-2xl flex flex-col items-center justify-center min-h-[30vh] border-dashed border-[#2a2825]">
+          <span className="text-5xl block mb-4 opacity-50 grayscale">🎲</span>
+          <p className="text-gray-400 font-mono text-sm max-w-sm text-center">No scheduled races currently open for betting.</p>
+        </div>
+      ) : (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "1.5rem" }} className="betting-responsive-grid">
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#c9a227", textTransform: "uppercase" }}>Scheduled Races:</span>
+            {scheduledRaces.map(r => (
+              <div
+                key={r.id}
+                onClick={() => setSelectedRaceId(r.id)}
+                style={{ padding: "1rem", borderRadius: "0.75rem", background: r.id === selectedRaceId ? "rgba(201,162,39,0.15)" : "rgba(255,255,255,0.02)", border: r.id === selectedRaceId ? "1px solid #c9a227" : "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}
+              >
+                <div style={{ fontWeight: 700, color: "#f4f2ec", fontSize: "0.95rem" }}>{r.classLevel ?? `Race #${r.id}`}</div>
+                <div style={{ fontSize: "0.75rem", color: "#a0a0a0", fontFamily: "monospace", marginTop: "0.25rem" }}>📏 {r.distanceMeters}m · {r.trackType}</div>
+              </div>
+            ))}
+          </div>
+
+          <div>
+            <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "#c9a227", textTransform: "uppercase" }}>Runner Odds:</span>
+            {loading ? (
+              <p style={{ color: "#a0a0a0", fontFamily: "monospace", marginTop: "1rem" }}>Calculating runner odds...</p>
+            ) : oddsList.length === 0 ? (
+              <p style={{ color: "#a0a0a0", fontStyle: "italic", marginTop: "1rem" }}>No entries for this race.</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginTop: "0.5rem" }}>
+                {oddsList.map(item => (
+                  <div key={item.horseId} style={{ padding: "0.875rem", borderRadius: "0.75rem", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <span style={{ fontWeight: 700, color: "#f4f2ec", fontSize: "0.95rem" }}>#{item.gateNumber ?? "-"} {item.horseName}</span>
+                      <span style={{ display: "block", fontSize: "0.7rem", color: "#a0a0a0", fontFamily: "monospace" }}>Jockey: {item.jockeyName} · Rating: {item.horseRating}</span>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <span style={{ fontSize: "1.2rem", fontWeight: 800, color: "#c9a227", fontFamily: "monospace" }}>{item.odds.toFixed(2)}x</span>
+                      <span style={{ display: "block", fontSize: "0.65rem", color: "#a0a0a0", fontFamily: "monospace" }}>Prob: {item.probability}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1242,6 +1338,7 @@ export default function Landing() {
 
   const SUB_NAV: { key: SubView; label: string; icon: string }[] = [
     { key: "live", label: "Live", icon: "📺" },
+    { key: "betting", label: "Betting Odds", icon: "🎲" },
     { key: "home", label: "Racing", icon: "🏇" },
     { key: "racecard", label: "Racecard", icon: "ℹ️" },
     { key: "results", label: "Results", icon: "🏆" },
@@ -1329,6 +1426,8 @@ export default function Landing() {
             })()}
           </div>
         );
+      case "betting":
+        return <LandingBettingContainer user={user} navigate={navigate} races={races} />;
       case "racecard":
         return (
           <div className="animate-fade-in-up">
@@ -1351,7 +1450,7 @@ export default function Landing() {
                       setSelectedRaceId(null);
                       setSelectedRaceEntries([]);
                     }}
-                    className="w-full p-4 bg-[#1a1815]/80 border border-[#2a2825] rounded-xl text-white outline-none focus:border-[#c9a227] transition-colors"
+                    className="w-full p-4 bg-[#1a1815]/90 border border-[#c9a227]/30 rounded-xl text-white outline-none focus:border-[#c9a227] transition-colors"
                   >
                     <option value="">-- Choose Meeting --</option>
                     {meetings.map(m => (
@@ -1360,18 +1459,21 @@ export default function Landing() {
                   </select>
                 ) : (
                   <div className="flex flex-col gap-3">
-                    {meetings.map(m => (
-                      <button 
-                        key={m.id} 
-                        onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} 
-                        className={`w-full text-left p-4 rounded-xl transition-all ${selectedMeetingId === m.id ? 'glass-panel glowing-border !border-[#c9a227]/50 shadow-[0_0_15px_rgba(201,162,39,0.15)]' : 'bg-[#1a1815]/40 border border-[#2a2825] hover:bg-[#1a1815] hover:border-[#c9a227]/30 hover-lift'}`}
-                      >
-                        <strong className={`block text-[15px] ${selectedMeetingId === m.id ? 'text-gold-gradient' : 'text-gray-200'}`} style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</strong>
-                        <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-gray-500">
-                          <span className="text-blue-400">📍</span> {m.venue}
-                        </div>
-                      </button>
-                    ))}
+                    {meetings.map(m => {
+                      const isSelected = selectedMeetingId === m.id;
+                      return (
+                        <button 
+                          key={m.id} 
+                          onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} 
+                          className={`w-full text-left p-4 rounded-2xl transition-all duration-300 relative overflow-hidden ${isSelected ? 'glow-cyber-card border-2 border-[#c9a227] shadow-[0_0_20px_rgba(201,162,39,0.3)] scale-[1.02]' : 'glass-panel bg-[#1a1815]/60 border border-white/10 hover:border-[#c9a227]/40 hover:bg-[#1a1815]'}`}
+                        >
+                          <strong className={`block text-[15px] ${isSelected ? 'text-[#c9a227] font-extrabold' : 'text-gray-200'}`} style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</strong>
+                          <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-gray-400">
+                            <span className="text-[#c9a227]">📍</span> {m.venue}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1381,35 +1483,39 @@ export default function Landing() {
                 {selectedMeetingId ? (
                   <div className="animate-fade-in delay-100">
                     <div className="flex flex-wrap gap-3 mb-8">
-                      {meetingRaces.map(r => (
-                        <button 
-                          key={r.id} 
-                          onClick={() => setSelectedRaceId(r.id)} 
-                          className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all hover-lift ${selectedRaceId === r.id ? 'bg-gradient-to-r from-[#c9a227] to-[#e6c153] text-[#0e0c09] shadow-[0_0_15px_rgba(201,162,39,0.3)]' : 'glass-panel text-gray-300 hover:text-white hover:border-[#c9a227]/50'}`}
-                        >
-                          RACE {r.id} <span className="opacity-70 font-mono text-xs ml-1">({r.classLevel})</span>
-                        </button>
-                      ))}
+                      {meetingRaces.map(r => {
+                        const isSelected = selectedRaceId === r.id;
+                        return (
+                          <button 
+                            key={r.id} 
+                            onClick={() => setSelectedRaceId(r.id)} 
+                            className={`px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2 ${isSelected ? 'bg-gradient-to-r from-[#c9a227] via-[#f3d06c] to-[#c9a227] text-[#0e0c09] shadow-[0_0_20px_rgba(201,162,39,0.4)] scale-105 font-extrabold' : 'glass-panel text-gray-300 hover:text-white hover:border-[#c9a227]/50 border border-white/10'}`}
+                          >
+                            <span>🏁 RACE {r.id}</span>
+                            <span className={`font-mono text-xs px-2 py-0.5 rounded-full ${isSelected ? 'bg-black/20 text-[#0e0c09]' : 'bg-white/10 text-gray-400'}`}>
+                              {r.classLevel}
+                            </span>
+                          </button>
+                        );
+                      })}
                       {meetingRaces.length === 0 && <p className="text-gray-500 text-sm italic py-2">No races scheduled for this meeting.</p>}
                     </div>
 
                     {selectedRaceId && (
-                      <div className="glass-panel rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-5 rounded-bl-full pointer-events-none"></div>
-                        
+                      <div className="glow-cyber-card rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
                         <div className="flex items-center gap-3 mb-6 relative z-10">
-                          <span className="text-2xl">🐎</span>
+                          <span className="text-2xl">🏇</span>
                           <h4 className="font-bold text-xl text-white tracking-wide" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Runners & Riders"}</h4>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
                           {selectedRaceEntries.map((e, idx) => (
-                            <div key={idx} className="bg-[#1a1815]/50 border border-white/5 rounded-xl p-4 flex items-center gap-4 hover-lift hover-glow transition-all group">
-                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#1a1815] to-[#2a2825] border border-[#c9a227]/30 flex items-center justify-center font-mono font-bold text-[#c9a227] text-lg shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] flex-shrink-0 group-hover:scale-110 transition-transform">
-                                {e.entry?.gateNumber || idx + 1}
+                            <div key={idx} className="bg-[#14120f]/80 border border-white/10 rounded-xl p-4 flex items-center gap-4 hover:-translate-y-1 hover:border-[#c9a227]/50 transition-all group shadow-md">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#2a2825] to-[#14120f] border border-[#c9a227]/40 flex items-center justify-center font-mono font-bold text-[#c9a227] text-lg shadow-[inset_0_2px_4px_rgba(0,0,0,0.6)] flex-shrink-0 group-hover:scale-110 transition-transform">
+                                #{e.entry?.gateNumber || idx + 1}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <div className="font-bold text-white text-base truncate group-hover:text-gold-gradient transition-colors" style={{ fontFamily: "'Roboto Slab', serif" }}>
+                                <div className="font-bold text-white text-base truncate group-hover:text-[#c9a227] transition-colors" style={{ fontFamily: "'Roboto Slab', serif" }}>
                                   {e.horse?.name}
                                 </div>
                                 <div className="text-[11px] text-gray-400 mt-1 truncate">
@@ -1441,10 +1547,10 @@ export default function Landing() {
                     )}
                   </div>
                 ) : (
-                  <div className="glass-panel rounded-2xl flex items-center justify-center min-h-[40vh] border-dashed border-[#2a2825]">
-                    <div className="text-center">
-                      <span className="text-4xl block mb-4 opacity-30 animate-float">👆</span>
-                      <p className="text-gray-500 text-sm font-mono italic">Please select a race meeting from the sidebar.</p>
+                  <div className="glow-cyber-card rounded-2xl flex items-center justify-center min-h-[40vh] border-dashed border-[#2a2825]">
+                    <div className="text-center p-8">
+                      <span className="text-4xl block mb-4 opacity-50 animate-bounce">👆</span>
+                      <p className="text-gray-400 font-mono text-sm">Select a race meeting from the left menu to view racecard details.</p>
                     </div>
                   </div>
                 )}
@@ -1482,18 +1588,21 @@ export default function Landing() {
                   </select>
                 ) : (
                   <div className="flex flex-col gap-3">
-                    {meetings.map(m => (
-                      <button 
-                        key={m.id} 
-                        onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} 
-                        className={`w-full text-left p-4 rounded-xl transition-all ${selectedMeetingId === m.id ? 'glass-panel glowing-border !border-[#c9a227]/50 shadow-[0_0_15px_rgba(201,162,39,0.15)]' : 'bg-[#1a1815]/40 border border-[#2a2825] hover:bg-[#1a1815] hover:border-[#c9a227]/30 hover-lift'}`}
-                      >
-                        <strong className={`block text-[15px] ${selectedMeetingId === m.id ? 'text-gold-gradient' : 'text-gray-200'}`} style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</strong>
-                        <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-gray-500">
-                          <span className="text-blue-400">📍</span> {m.venue}
-                        </div>
-                      </button>
-                    ))}
+                    {meetings.map(m => {
+                      const isSelected = selectedMeetingId === m.id;
+                      return (
+                        <button 
+                          key={m.id} 
+                          onClick={() => { setSelectedMeetingId(m.id); setSelectedRaceId(null); setSelectedRaceEntries([]); }} 
+                          className={`w-full text-left p-4 rounded-2xl transition-all duration-300 relative overflow-hidden ${isSelected ? 'glow-cyber-card border-2 border-[#c9a227] shadow-[0_0_20px_rgba(201,162,39,0.3)] scale-[1.02]' : 'glass-panel bg-[#1a1815]/60 border border-white/10 hover:border-[#c9a227]/40 hover:bg-[#1a1815]'}`}
+                        >
+                          <strong className={`block text-[15px] ${isSelected ? 'text-[#c9a227] font-extrabold' : 'text-gray-200'}`} style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</strong>
+                          <div className="flex items-center gap-2 mt-2 text-[11px] font-mono text-gray-400">
+                            <span className="text-[#c9a227]">📍</span> {m.venue}
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -1502,20 +1611,26 @@ export default function Landing() {
                 {selectedMeetingId ? (
                   <div className="animate-fade-in delay-100">
                     <div className="flex flex-wrap gap-3 mb-8">
-                      {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").map(r => (
-                        <button 
-                          key={r.id} 
-                          onClick={() => setSelectedRaceId(r.id)} 
-                          className={`px-5 py-2.5 rounded-lg font-bold text-sm transition-all hover-lift ${selectedRaceId === r.id ? 'bg-gradient-to-r from-[#c9a227] to-[#e6c153] text-[#0e0c09] shadow-[0_0_15px_rgba(201,162,39,0.3)]' : 'glass-panel text-gray-300 hover:text-white hover:border-[#c9a227]/50'}`}
-                        >
-                          RACE {r.id} <span className="opacity-70 font-mono text-xs ml-1">({r.classLevel})</span>
-                        </button>
-                      ))}
+                      {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").map(r => {
+                        const isSelected = selectedRaceId === r.id;
+                        return (
+                          <button 
+                            key={r.id} 
+                            onClick={() => setSelectedRaceId(r.id)} 
+                            className={`px-5 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center gap-2 ${isSelected ? 'bg-gradient-to-r from-[#c9a227] via-[#f3d06c] to-[#c9a227] text-[#0e0c09] shadow-[0_0_20px_rgba(201,162,39,0.4)] scale-105 font-extrabold' : 'glass-panel text-gray-300 hover:text-white hover:border-[#c9a227]/50 border border-white/10'}`}
+                          >
+                            <span>🏆 RACE {r.id}</span>
+                            <span className={`font-mono text-xs px-2 py-0.5 rounded-full ${isSelected ? 'bg-black/20 text-[#0e0c09]' : 'bg-white/10 text-gray-400'}`}>
+                              {r.classLevel}
+                            </span>
+                          </button>
+                        );
+                      })}
                       {meetingRaces.filter(r => r.status === "OFFICIAL" || r.status === "RACE_EVENT_ENDED").length === 0 && <p className="text-gray-500 text-sm italic py-2">No official finished results for this meeting yet.</p>}
                     </div>
                     
                     {selectedRaceId && (
-                      <div className="glass-panel rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
+                      <div className="glow-cyber-card rounded-2xl p-6 md:p-8 animate-fade-in-up delay-200 relative overflow-hidden">
                         <div className="flex items-center gap-3 mb-8 relative z-10">
                           <span className="text-3xl drop-shadow-md">🏆</span>
                           <h4 className="font-bold text-2xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Final Standings"}</h4>
@@ -1692,19 +1807,18 @@ export default function Landing() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {meetings.map((m, idx) => (
-                <div key={m.id} className="glass-panel rounded-2xl p-6 hover-lift glowing-border relative overflow-hidden group border border-[#2a2825]" style={{ animationDelay: `${idx * 100}ms` }}>
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 opacity-5 rounded-bl-full pointer-events-none"></div>
-                  <h4 className="font-bold text-xl text-white mb-4 group-hover:text-blue-400 transition-colors" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#1a1815]/50 px-3 py-2 rounded-xl border border-white/5">
-                      <span className="text-[#c9a227]">ID</span>
+                <div key={m.id} className="glow-cyber-card rounded-2xl p-6 relative overflow-hidden group border border-[#c9a227]/30 transition-all duration-300" style={{ animationDelay: `${idx * 100}ms` }}>
+                  <h4 className="font-bold text-xl text-white mb-4 group-hover:text-[#c9a227] transition-colors" style={{ fontFamily: "'Roboto Slab', serif" }}>{m.name}</h4>
+                  <div className="space-y-2 relative z-10 w-full">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-3 py-2 rounded-xl border border-white/5">
+                      <span className="text-[#c9a227] font-bold">ID</span>
                       <span className="font-bold text-white">#{m.id}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#1a1815]/50 px-3 py-2 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-3 py-2 rounded-xl border border-white/5">
                       <span className="text-blue-400">📍</span>
                       <span className="truncate">{m.venue}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#1a1815]/50 px-3 py-2 rounded-xl border border-white/5">
+                    <div className="flex items-center gap-3 text-sm text-gray-300 font-mono bg-[#14120f]/80 px-3 py-2 rounded-xl border border-white/5">
                       <span className="text-[#c9a227]">📅</span>
                       <span>{formatDate(m.startDate)}</span>
                     </div>
@@ -1751,19 +1865,16 @@ export default function Landing() {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Top Horses */}
-              <div className="uiverse-cyber-card glass-panel rounded-2xl p-6 border border-[#2a2825] relative overflow-hidden">
-                <div className="card-glare"></div>
-                <div className="scan-line"></div>
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-[#c9a227] to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
+              <div className="glow-cyber-card rounded-2xl p-6 relative overflow-hidden border border-[#c9a227]/30">
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <span className="text-2xl">🐎</span>
-                  <h4 className="font-bold text-xl text-white tracking-wide text-gold-gradient" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Leading Horses (Top Rating)"}</h4>
+                  <h4 className="font-bold text-xl text-white tracking-wide text-[#c9a227]" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Leading Horses (Top Rating)"}</h4>
                 </div>
-                <div className="space-y-3 relative z-10">
+                <div className="space-y-3 relative z-10 w-full">
                   {topHorses.map((h, idx) => (
                     <div 
                       key={h.id} 
-                      className="flex items-center gap-4 p-3 rounded-xl bg-[#1a1815]/50 border border-white/5 hover:border-[#c9a227]/40 transition-colors cursor-pointer hover:bg-white/[0.02]"
+                      className="flex items-center gap-4 p-3 rounded-xl bg-[#14120f]/80 border border-white/5 hover:border-[#c9a227]/40 transition-colors cursor-pointer hover:bg-white/[0.04]"
                       onClick={() => { setSelectedHorseId(h.id); setSelectedHorseName(h.name); }}
                     >
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${idx < 3 ? 'bg-[#c9a227]/20 text-[#c9a227] border border-[#c9a227]/50' : 'bg-[#2a2825] text-gray-400'}`}>
@@ -1784,10 +1895,7 @@ export default function Landing() {
               </div>
 
               {/* Top Jockeys */}
-              <div className="uiverse-cyber-card glass-panel rounded-2xl p-6 border border-[#2a2825] relative overflow-hidden">
-                <div className="card-glare"></div>
-                <div className="scan-line"></div>
-                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-500 to-transparent opacity-10 rounded-bl-full pointer-events-none"></div>
+              <div className="glow-cyber-card rounded-2xl p-6 relative overflow-hidden border border-[#c9a227]/30">
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <span className="text-2xl">👤</span>
                   <h4 className="font-bold text-xl text-white tracking-wide text-blue-400" style={{ fontFamily: "'Roboto Slab', serif" }}>{"Leading Jockeys (Top-3)"}</h4>
@@ -1995,10 +2103,13 @@ export default function Landing() {
             </a>
           </div>
 
-          {/* Search Bar */}
-          <div style={{ flex: isMobile ? "none" : 1, width: "100%", maxWidth: isMobile ? "100%" : "36rem", position: "relative", marginLeft: isMobile ? "0" : "2rem" }}>
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a0a0a0" strokeWidth="2" style={{ position: "absolute", left: "0.75rem", top: "50%", transform: "translateY(-50%)" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          {/* Search Bar (Uiverse 0xnihilism Glitch Cyberpunk Input) */}
+          <div className="uiverse-glitch-container" style={{ flex: isMobile ? "none" : 1, marginLeft: isMobile ? "0" : "1.5rem" }}>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c9a227" strokeWidth="2.5" style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", zIndex: 3, pointerEvents: "none" }}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input
+              className="uiverse-glitch-input"
+              type="text"
+              placeholder="Search horses, jockeys, owners..."
               value={searchQuery}
               onChange={e => {
                 const val = e.target.value;
@@ -2014,13 +2125,11 @@ export default function Landing() {
                   setView("search");
                 }
               }}
-
-              style={{ width: "100%", paddingLeft: "2.5rem", paddingRight: "1.75rem", paddingTop: "0.5rem", paddingBottom: "0.5rem", fontSize: "0.85rem", background: "#111111", borderRadius: "0.5rem", color: "#f0f0f0", border: "1px solid #1f1f1f", outline: "none" }}
             />
             {searchQuery && (
               <button 
                 onClick={() => { setSearchQuery(""); setView("home"); }}
-                style={{ position: "absolute", right: "0.75rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: "12px" }}
+                style={{ position: "absolute", right: "28px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", color: "#c9a227", cursor: "pointer", fontSize: "14px", zIndex: 4, fontWeight: "bold" }}
               >
                 ✕
               </button>
@@ -2538,34 +2647,17 @@ export default function Landing() {
 
             {/* Scrollable Nav Items */}
             {!isMobile && (
-              <div className="scrollbar-hide" style={{ display: "flex", alignItems: "center", gap: "0.6rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "2rem" }}>
+              <div className="scrollbar-hide" style={{ display: "flex", alignItems: "center", gap: "0.5rem", overflowX: "auto", whiteSpace: "nowrap", flex: 1, paddingRight: "1.5rem" }}>
                 {SUB_NAV.map(n => {
                   const active = view === n.key;
                   return (
                     <button
                       key={n.key}
-                      className="landing-nav-btn uiverse-hover-btn"
-                      onClick={() => {
-                        setView(n.key);
-                      }}
-                      style={{
-                        padding: "0.4rem 0.65rem",
-                        borderRadius: "0.375rem",
-                        fontSize: "0.825rem",
-                        fontFamily: "sans-serif",
-                        cursor: "pointer",
-                        border: active ? "1px solid rgba(201,162,39,0.5)" : "1px solid transparent",
-                        background: active ? "rgba(201,162,39,0.12)" : "transparent",
-                        color: active ? "#c9a227" : "#a0a0a0",
-                        fontWeight: active ? 600 : 500,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.375rem",
-                        transition: "all 0.2s",
-                        flexShrink: 0,
-                      }}
+                      className={`uiverse-tab-btn ${active ? "active" : ""}`}
+                      onClick={() => setView(n.key)}
                     >
-                      {n.label}
+                      <span className="circle"></span>
+                      <span className="tab-text">{n.label}</span>
                     </button>
                   );
                 })}

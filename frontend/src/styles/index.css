@@ -644,60 +644,104 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 /* =============================================
-   UIVERSE 3D CYBER CARD EFFECT
+   ELEGANT GOLD ROTATING GRADIENT CARD EFFECT
    ============================================= */
+.card,
+.glow-cyber-card,
 .uiverse-cyber-card {
   position: relative;
-  border-radius: 1rem;
-  background: linear-gradient(135deg, #181613 0%, #100e0c 100%);
-  border: 1px solid rgba(201, 162, 39, 0.2);
+  display: flex;
+  flex-direction: column;
+  background: #110f0d;
   overflow: hidden;
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-              border-color 0.4s ease, 
-              box-shadow 0.4s ease !important;
-  transform-style: preserve-3d;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
 }
 
+.card:hover,
+.glow-cyber-card:hover,
 .uiverse-cyber-card:hover {
-  transform: translateY(-8px) rotateX(3deg) rotateY(-3deg) scale(1.015) !important;
-  border-color: rgba(201, 162, 39, 0.6) !important;
-  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 30px rgba(201, 162, 39, 0.3) !important;
+  transform: translateY(-6px) scale(1.015);
+  box-shadow: 0 20px 45px rgba(201, 162, 39, 0.25);
 }
 
-/* Corner tech elements */
-.uiverse-cyber-card::before,
-.uiverse-cyber-card::after {
-  content: '';
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  border: 2px solid rgba(201, 162, 39, 0.3);
-  transition: all 0.3s ease;
-  pointer-events: none;
-  z-index: 5;
+.card p,
+.glow-cyber-card p,
+.uiverse-cyber-card p {
+  z-index: 2;
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
 }
 
+/* Rotating background with vibrant multi-color gradient (Gold, Yellow, Cyan, Violet, Teal) */
+.card::before,
+.glow-cyber-card::before,
 .uiverse-cyber-card::before {
-  top: 8px;
-  left: 8px;
-  border-right: 0;
-  border-bottom: 0;
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg at 50% 50%,
+    #c9a227 0%,
+    #ffe600 20%,
+    #00c3ff 40%,
+    #7b2ff7 60%,
+    #00f2c3 80%,
+    #c9a227 100%
+  );
+  animation: rotateAnim 4s linear infinite;
+  filter: blur(8px) brightness(1.2);
+  z-index: 0;
 }
 
+/* Inner mask matching app dark theme */
+.card::after,
+.glow-cyber-card::after,
 .uiverse-cyber-card::after {
-  bottom: 8px;
-  right: 8px;
-  border-left: 0;
-  border-top: 0;
+  content: "";
+  position: absolute;
+  inset: 3px;
+  background: linear-gradient(135deg, #161411 0%, #0d0b09 100%);
+  border-radius: 17px;
+  z-index: 1;
+  box-shadow: inset 0 0 15px rgba(201, 162, 39, 0.15);
 }
 
-.uiverse-cyber-card:hover::before,
-.uiverse-cyber-card:hover::after {
-  border-color: rgba(201, 162, 39, 0.9);
-  box-shadow: 0 0 10px rgba(201, 162, 39, 0.6);
-  width: 18px;
-  height: 18px;
+/* Content layer z-index guarantee (excluding all absolute elements) */
+.card > *:not([class*="absolute"]),
+.glow-cyber-card > *:not([class*="absolute"]),
+.uiverse-cyber-card > *:not([class*="absolute"]) {
+  position: relative;
+  z-index: 2;
+}
+
+[class*="absolute"] {
+  position: absolute !important;
+}
+
+/* Optional radial gradient overlay */
+.card .gradient-overlay,
+.glow-cyber-card .gradient-overlay,
+.uiverse-cyber-card .gradient-overlay {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle at center, transparent 40%, #0d0b09 80%);
+  z-index: 1;
+}
+
+/* Rotating animation */
+@keyframes rotateAnim {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Glare Overlay */
@@ -1218,6 +1262,300 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 @keyframes cyberPulseText {
   0%, 100% { opacity: 0.35; transform: scale(0.98); }
   50% { opacity: 1; transform: scale(1.02); }
+}
+
+/* =============================================
+   UIVERSE ANIMATED BUTTON & TAB BUTTONS 
+   (From Uiverse.io by gharsh11032000)
+   ============================================= */
+.animated-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 24px;
+  border: 2px solid #c9a227;
+  font-size: 14px;
+  background-color: transparent;
+  border-radius: 100px;
+  font-weight: 600;
+  color: #f3d06c;
+  box-shadow: 0 0 12px rgba(201, 162, 39, 0.25);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button svg {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  fill: #f3d06c;
+  z-index: 9;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .arr-1 {
+  right: 12px;
+}
+
+.animated-button .arr-2 {
+  left: -25%;
+}
+
+.animated-button .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #c9a227 0%, #f3d06c 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button .text {
+  position: relative;
+  z-index: 1;
+  transform: translateX(-10px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animated-button:hover {
+  box-shadow: 0 0 20px rgba(201, 162, 39, 0.5);
+  color: #0e0c09;
+  border-radius: 12px;
+}
+
+.animated-button:hover .arr-1 {
+  right: -25%;
+}
+
+.animated-button:hover .arr-2 {
+  left: 12px;
+}
+
+.animated-button:hover .text {
+  transform: translateX(10px);
+}
+
+.animated-button:hover svg {
+  fill: #0e0c09;
+}
+
+.animated-button:active {
+  scale: 0.95;
+  box-shadow: 0 0 0 4px #c9a227;
+}
+
+.animated-button:hover .circle {
+  width: 240px;
+  height: 240px;
+  opacity: 1;
+}
+
+/* Tab Bar Navigation Variant (Uiverse Animated Circle) */
+.uiverse-tab-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  font-size: 13px;
+  background: rgba(20, 18, 15, 0.7);
+  border-radius: 12px;
+  font-weight: 600;
+  color: #d1d5db;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.uiverse-tab-btn .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: linear-gradient(135deg, #c9a227 0%, #f3d06c 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+}
+
+.uiverse-tab-btn .tab-text {
+  position: relative;
+  z-index: 2;
+  transition: all 0.4s ease;
+}
+
+.uiverse-tab-btn:hover {
+  border-color: #c9a227;
+  color: #0e0c09;
+  box-shadow: 0 0 15px rgba(201, 162, 39, 0.4);
+}
+
+.uiverse-tab-btn:hover .circle {
+  width: 200px;
+  height: 200px;
+  opacity: 1;
+}
+
+.uiverse-tab-btn.active {
+  background: linear-gradient(135deg, #c9a227 0%, #e6c153 100%);
+  color: #0e0c09;
+  border-color: #f3d06c;
+  font-weight: 700;
+  box-shadow: 0 0 18px rgba(201, 162, 39, 0.5);
+}
+
+/* Sidebar Navigation Variant (Uiverse Animated Expanding Circle for Dashboards) */
+.uiverse-sidebar-btn {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.6rem 0.85rem;
+  border-radius: 0.6rem;
+  margin-bottom: 0.25rem;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  text-align: left;
+}
+
+.uiverse-sidebar-btn .circle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: linear-gradient(135deg, var(--role-color, #c9a227) 0%, #f3d06c 100%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
+}
+
+.uiverse-sidebar-btn:hover {
+  border-color: var(--role-color, #c9a227);
+  box-shadow: 0 0 15px rgba(201, 162, 39, 0.25);
+}
+
+.uiverse-sidebar-btn:hover .circle {
+  width: 340px;
+  height: 340px;
+  opacity: 0.22;
+}
+
+.uiverse-sidebar-btn.active {
+  background: linear-gradient(135deg, rgba(201, 162, 39, 0.18) 0%, rgba(243, 208, 108, 0.08) 100%);
+  border-left: 3px solid var(--role-color, #c9a227) !important;
+  border-color: rgba(201, 162, 39, 0.4);
+  box-shadow: 0 0 18px rgba(201, 162, 39, 0.2);
+}
+
+/* =============================================
+   UIVERSE GLITCH SEARCH INPUT (From Uiverse.io by 0xnihilism)
+   ============================================= */
+.uiverse-glitch-container {
+  position: relative;
+  width: 100%;
+  max-width: 36rem;
+  display: flex;
+  align-items: center;
+}
+
+.uiverse-glitch-input {
+  width: 100%;
+  height: 42px;
+  padding: 8px 36px 8px 38px;
+  font-size: 14px;
+  font-family: "Courier New", monospace;
+  color: #f3d06c;
+  background-color: #0e0c09;
+  border: 2px solid #c9a227;
+  border-radius: 8px;
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: 4px 4px 0 #c9a227;
+}
+
+.uiverse-glitch-input::placeholder {
+  color: #888888;
+}
+
+.uiverse-glitch-input:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 #c9a227;
+}
+
+.uiverse-glitch-input:focus {
+  background-color: #010101;
+  color: #ffffff;
+  border-color: #f3d06c;
+  animation: inputShake 0.5s ease-in-out;
+  box-shadow: 6px 6px 0 #f3d06c;
+}
+
+.uiverse-glitch-input:focus::placeholder {
+  color: #ffffff;
+}
+
+@keyframes inputShake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px) rotate(-2deg); }
+  50% { transform: translateX(4px) rotate(2deg); }
+  75% { transform: translateX(-4px) rotate(-2deg); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes inputGlitch {
+  0% { transform: none; opacity: 1; }
+  7% { transform: skew(-0.5deg, -0.9deg); opacity: 0.85; }
+  10% { transform: none; opacity: 1; }
+  27% { transform: none; opacity: 1; }
+  30% { transform: skew(0.8deg, -0.1deg); opacity: 0.85; }
+  35% { transform: none; opacity: 1; }
+  52% { transform: none; opacity: 1; }
+  55% { transform: skew(-1deg, 0.2deg); opacity: 0.85; }
+  75% { transform: skew(0.4deg, 1deg); opacity: 0.85; }
+  100% { transform: none; opacity: 1; }
+}
+
+.uiverse-glitch-input:not(:placeholder-shown) {
+  animation: inputGlitch 1.2s linear infinite;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.uiverse-glitch-container::after {
+  content: "|";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #c9a227;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 16px;
+  animation: inputBlink 0.7s step-end infinite;
+  pointer-events: none;
+}
+
+@keyframes inputBlink {
+  50% { opacity: 0; }
 }
 
 
