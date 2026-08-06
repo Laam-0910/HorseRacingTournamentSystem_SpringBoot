@@ -205,7 +205,7 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
     <div className="space-y-6 max-w-5xl mx-auto animate-fade-in">
       {/* Overview Banner */}
       <div
-        className="rounded-2xl p-6 relative overflow-hidden flex flex-wrap items-center justify-between gap-4 border"
+        className="rounded-2xl p-6 pt-10 pb-8 relative overflow-visible flex flex-wrap items-center justify-between gap-4 border"
         style={{
           background: "linear-gradient(135deg, rgba(20,24,38,0.7), rgba(11,13,20,0.8))",
           borderColor: `${roleColor}40`,
