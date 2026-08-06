@@ -276,9 +276,18 @@ export default function VietQRPaywallModal({
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Lock background body scrolling when modal is active so mouse wheel never scrolls background page!
+  useEffect(() => {
+    const originalStyle = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, []);
+
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(10px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60000, padding: "1rem" }}>
-      <div style={{ background: "#12100d", border: "1px solid rgba(201,162,39,0.35)", borderRadius: "1rem", width: "100%", maxWidth: "54rem", maxHeight: "92vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.7)", overflow: "hidden" }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 99999, padding: "1rem" }}>
+      <div style={{ background: "#12100d", border: "1px solid rgba(201,162,39,0.35)", borderRadius: "1rem", width: "100%", maxWidth: "56rem", maxHeight: "92vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.8)", overflow: "hidden" }}>
         
         {/* Modal Header */}
         <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(201,162,39,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
@@ -455,7 +464,7 @@ export default function VietQRPaywallModal({
               </div>
 
               {/* Column 2 / Method B: Scan VietQR Transfer */}
-              <div style={{ background: "rgba(0,0,0,0.4)", padding: "1.25rem", borderRadius: "0.85rem", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "0.75rem" }}>
+              <div style={{ background: "rgba(0,0,0,0.4)", padding: "1.25rem", borderRadius: "0.85rem", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "0.875rem" }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.75rem" }}>
                     <span style={{ fontSize: "1.25rem" }}>📲</span>
@@ -465,30 +474,34 @@ export default function VietQRPaywallModal({
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
-                    <div style={{ textAlign: "center", flexShrink: 0 }}>
+                  {/* Large Prominent VietQR Display */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "0.75rem", border: "1px solid rgba(201,162,39,0.25)", marginBottom: "0.75rem" }}>
+                    <div style={{ background: "#ffffff", padding: "10px", borderRadius: "0.75rem", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}>
                       <img
                         src={qrImageUrl}
                         alt="VietQR Code"
-                        style={{ width: "105px", height: "105px", borderRadius: "0.5rem", border: "2px solid #fff", background: "#fff" }}
+                        style={{ width: "180px", height: "180px", display: "block", borderRadius: "0.375rem" }}
                       />
-                      <span style={{ fontSize: "8px", color: "#a0a0a0", fontFamily: "monospace", display: "block", marginTop: "4px" }}>Scan Banking App</span>
                     </div>
-
-                    <div style={{ fontSize: "10px", color: "#a0a0a0", display: "flex", flexDirection: "column", gap: "3px", flexGrow: 1 }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "10px", fontFamily: "monospace", color: "#fbbf24", background: "rgba(251,191,36,0.1)", padding: "2px 6px", borderRadius: "4px", border: "1px solid rgba(251,191,36,0.2)" }}>
-                        <span>⏱️ Expires in:</span>
-                        <strong style={{ color: "#fcd34d" }}>{formattedTime}</strong>
-                      </div>
-                      <div>Bank: <strong style={{ color: "#fff" }}>{bankName}</strong></div>
-                      <div>Account: <strong style={{ color: "#c9a227", fontFamily: "monospace" }}>{accountNumber}</strong></div>
-                      <div>Holder: <strong style={{ color: "#fff" }}>{accountHolder}</strong></div>
-                      <div>Content: <strong style={{ color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "1px 4px", borderRadius: "3px", wordBreak: "break-all" }}>{transferContent}</strong></div>
-                    </div>
+                    <span style={{ fontSize: "10px", color: "#fbbf24", fontFamily: "monospace", fontWeight: 600, marginTop: "8px" }}>
+                      📱 Scan with Banking App
+                    </span>
                   </div>
 
-                  <div style={{ marginTop: "0.75rem", padding: "0.35rem 0.5rem", background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)", color: "#34d399", borderRadius: "0.375rem", fontSize: "9px", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span>🟢</span> Realtime Bank Webhook Listener Active
+                  {/* Bank Transfer Details */}
+                  <div style={{ fontSize: "10px", color: "#a0a0a0", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.3)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.05)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "10px", fontFamily: "monospace", color: "#fbbf24", background: "rgba(251,191,36,0.1)", padding: "3px 6px", borderRadius: "4px", border: "1px solid rgba(251,191,36,0.2)", marginBottom: "2px" }}>
+                      <span>⏱️ Expires in:</span>
+                      <strong style={{ color: "#fcd34d", fontSize: "11px" }}>{formattedTime}</strong>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Bank:</span> <strong style={{ color: "#fff" }}>{bankName}</strong></div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Account:</span> <strong style={{ color: "#c9a227", fontFamily: "monospace" }}>{accountNumber}</strong></div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Holder:</span> <strong style={{ color: "#fff" }}>{accountHolder}</strong></div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Content:</span> <strong style={{ color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "1px 5px", borderRadius: "3px", wordBreak: "break-all" }}>{transferContent}</strong></div>
+                  </div>
+
+                  <div style={{ marginTop: "0.6rem", padding: "0.35rem 0.5rem", background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)", color: "#34d399", borderRadius: "0.375rem", fontSize: "9px", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <span>🟢</span> Realtime Bank Webhook Active
                   </div>
                 </div>
 
