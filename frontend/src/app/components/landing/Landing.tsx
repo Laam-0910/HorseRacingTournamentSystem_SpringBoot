@@ -2142,20 +2142,18 @@ export default function Landing() {
               {/* Auth Controls */}
               {user ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "1rem" }}>
-                  {/* Uiverse.io (icochran10) Interactive Expanding Notification Accordion */}
+                  {/* Uiverse.io (icochran10) Notification Button & Downward Unfolding Accordion */}
                   <div className="relative z-50">
-                    {/* Backdrop when opened to allow click-outside-to-close */}
+                    {/* Backdrop when opened */}
                     {showNotifications && (
                       <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
                     )}
 
-                    <div className={`group overflow-hidden rounded-xl border border-amber-500/30 bg-[#181613]/95 backdrop-blur-md transition-all duration-500 shadow-2xl shadow-black/90 ${
-                      showNotifications ? "w-80 border-amber-500/60" : "w-11 hover:w-64 hover:border-amber-500/60"
-                    }`}>
-                      {/* Trigger Button: Hover expands horizontally, Click toggles vertical accordion */}
+                    {/* Button: Stays in navbar flow, expands horizontally on hover */}
+                    <div className="group w-11 hover:w-64 overflow-hidden rounded-xl border border-amber-500/30 bg-[#181613]/90 backdrop-blur-md transition-all duration-500 shadow-lg hover:border-amber-500/60">
                       <button
                         onClick={() => setShowNotifications(v => !v)}
-                        className="peer flex w-full cursor-pointer items-center gap-2.5 px-2.5 py-1.5 text-left text-amber-400 transition-all active:scale-95"
+                        className="flex w-full cursor-pointer items-center gap-2.5 px-2.5 py-1.5 text-left text-amber-400 transition-all active:scale-95"
                       >
                         <div className="rounded-lg border border-amber-500/40 bg-amber-500/20 p-1 relative flex-shrink-0">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -2172,51 +2170,53 @@ export default function Landing() {
                           </span>
                         </div>
                       </button>
+                    </div>
 
-                      {/* Uiverse 0fr -> 1fr Grid Rows Accordion Drawer when clicked (showNotifications === true) */}
-                      <div
-                        className={`grid overflow-hidden transition-all duration-500 ${
-                          showNotifications ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                        }`}
-                      >
-                        <div className="overflow-hidden">
-                          <div className="p-3 pt-1 border-t border-white/10 max-h-64 overflow-y-auto space-y-2 font-mono">
-                            <div className="flex items-center justify-between pb-1 border-b border-white/5">
-                              <span className="text-[10px] text-amber-400/80 font-bold uppercase">Recent Alerts</span>
-                              {unreadNotifCount > 0 && (
-                                <button
-                                  onClick={handleMarkAllNotifsRead}
-                                  className="text-[10px] text-amber-400 hover:underline cursor-pointer"
-                                >
-                                  Mark all read
-                                </button>
-                              )}
-                            </div>
-
-                            {dbNotifications.length === 0 ? (
-                              <div className="py-3 text-center text-xs text-white/40 italic">
-                                No notifications yet.
-                              </div>
-                            ) : (
-                              dbNotifications.map((noti) => (
-                                <div
-                                  key={noti.id}
-                                  onClick={() => handleMarkNotifRead(noti.id)}
-                                  className={`p-2 rounded-lg text-xs transition cursor-pointer ${
-                                    noti.isRead ? "bg-white/5 opacity-60" : "bg-amber-500/10 border-l-2 border-amber-500"
-                                  }`}
-                                >
-                                  <div className="flex items-center justify-between gap-1">
-                                    <span className="font-bold text-amber-200 text-xs truncate">
-                                      {noti.title || "Notification"}
-                                    </span>
-                                    <span className="text-[9px] text-white/40">{formatDate(noti.createdAt)}</span>
-                                  </div>
-                                  <p className="text-[10px] text-white/70 mt-1 line-clamp-2">{noti.message}</p>
-                                </div>
-                              ))
+                    {/* Downward Unfolding Accordion Drawer: Positioned ABSOLUTE top-[125%] right-0 */}
+                    <div
+                      className={`absolute right-0 top-[125%] w-80 rounded-xl border border-amber-500/40 bg-[#181613] shadow-2xl shadow-black/95 z-50 grid overflow-hidden transition-all duration-500 ${
+                        showNotifications ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
+                      }`}
+                    >
+                      <div className="overflow-hidden">
+                        <div className="p-3 pt-2 max-h-72 overflow-y-auto space-y-2 font-mono">
+                          <div className="flex items-center justify-between pb-1 border-b border-white/10">
+                            <span className="text-[10px] text-amber-400 font-bold uppercase flex items-center gap-1">
+                              🔔 Recent Notifications ({unreadNotifCount})
+                            </span>
+                            {unreadNotifCount > 0 && (
+                              <button
+                                onClick={handleMarkAllNotifsRead}
+                                className="text-[10px] text-amber-400 hover:underline cursor-pointer"
+                              >
+                                Mark all read
+                              </button>
                             )}
                           </div>
+
+                          {dbNotifications.length === 0 ? (
+                            <div className="py-4 text-center text-xs text-white/40 italic">
+                              No notifications yet.
+                            </div>
+                          ) : (
+                            dbNotifications.map((noti) => (
+                              <div
+                                key={noti.id}
+                                onClick={() => handleMarkNotifRead(noti.id)}
+                                className={`p-2 rounded-lg text-xs transition cursor-pointer ${
+                                  noti.isRead ? "bg-white/5 opacity-60" : "bg-amber-500/10 border-l-2 border-amber-500"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="font-bold text-amber-200 text-xs truncate">
+                                    {noti.title || "Notification"}
+                                  </span>
+                                  <span className="text-[9px] text-white/40">{formatDate(noti.createdAt)}</span>
+                                </div>
+                                <p className="text-[10px] text-white/70 mt-1 line-clamp-2">{noti.message}</p>
+                              </div>
+                            ))
+                          )}
                         </div>
                       </div>
                     </div>
