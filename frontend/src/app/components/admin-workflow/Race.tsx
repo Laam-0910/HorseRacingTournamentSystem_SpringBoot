@@ -5,7 +5,7 @@ import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 import ProfileModal from "../dashboards/components/ProfileModal";
 import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
 import { Pagination } from "../common/Pagination";
-import { confirm } from "../../../lib/confirm";
+import { confirm, showToast } from "../../../lib/confirm";
 
 interface Meeting {
   id: number;
@@ -503,8 +503,6 @@ export default function Race() {
           </div>
         </div>
         <div style={{ padding: "1.5rem" }}>
-          {error && <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px", marginBottom: "1rem" }}>{error}</div>}
-          {success && <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px", marginBottom: "1rem" }}>{success}</div>}
 
           <form onSubmit={handleCreateRace}>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "1.25rem", marginBottom: "1.5rem" }}>

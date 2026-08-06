@@ -2,6 +2,7 @@ import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
 import { formatDateTime, parseSafeDate } from "../../utils/dateTimeHelper";
+import { confirm, showToast } from "../../../lib/confirm";
 import { Pagination } from "../common/Pagination";
 
 interface InlineDatePickerProps {
@@ -440,17 +441,6 @@ export default function Season() {
 
   return (
     <div className="space-y-6">
-      {error && (
-        <div className="p-3 rounded-lg text-sm font-mono flex items-center gap-2" style={{ backgroundColor: "rgba(239,91,91,0.15)", color: "#ef5b5b", border: "1px solid rgba(239,91,91,0.3)" }}>
-          ⚠ {error}
-        </div>
-      )}
-      
-      {success && (
-        <div className="p-3 rounded-lg text-sm font-mono flex items-center gap-2" style={{ backgroundColor: "rgba(74,157,111,0.15)", color: "#4a9d6f", border: "1px solid rgba(74,157,111,0.3)" }}>
-          ✓ {success}
-        </div>
-      )}
 
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: "rgba(201,162,39,0.10)" }}>

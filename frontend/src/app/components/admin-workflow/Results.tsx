@@ -1,6 +1,7 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
+import { showToast } from "../../../lib/confirm";
 
 interface Meeting {
   id: number;
@@ -217,7 +218,6 @@ export default function Results() {
         </div>
 
         <form onSubmit={handleConfirmResults} style={{ padding: "1.5rem" }}>
-          {error && <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px", marginBottom: "1rem" }}>{error}</div>}
 
           {isMobile ? (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.5rem" }}>
@@ -304,9 +304,6 @@ export default function Results() {
           <h3 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "1rem", color: "#f4f2ec" }}>{$t("Process Results & Close Races", (localStorage.getItem('app-lang') || 'en'))}</h3>
           <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)" }}>{$t("Select a Race Meeting and process the outcomes of scheduled races.", (localStorage.getItem('app-lang') || 'en'))}</p>
         </div>
-
-        {error && <div style={{ margin: "1rem 1.5rem 0", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px" }}>{error}</div>}
-        {success && <div style={{ margin: "1rem 1.5rem 0", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", padding: "0.75rem", borderRadius: "0.25rem", fontSize: "12px" }}>{success}</div>}
 
         <div style={{ padding: "1.5rem" }}>
           <h4 style={{ fontSize: "9px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.75rem", color: "#c9a227" }}>{$t("Race Meetings List", (localStorage.getItem('app-lang') || 'en'))}</h4>

@@ -2,6 +2,7 @@ import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
 import { parseSafeDate } from "../../utils/dateTimeHelper";
+import { confirm, showToast } from "../../../lib/confirm";
 import { Pagination } from "../common/Pagination";
 
 /**
@@ -31,8 +32,8 @@ export default function RegistrationProcessing() {
   const [rejectedCount, setRejectedCount] = useState(0);
   
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const showSuccess = (msg: string) => { showToast(msg, "success"); };
+  const showError = (msg: string) => { showToast(msg, "error"); };
 
   const [viewingRegistrant, setViewingRegistrant] = useState<any | null>(null);
 
@@ -49,7 +50,6 @@ export default function RegistrationProcessing() {
 
   const fetchData = async () => {
     setLoading(true);
-    setError("");
     try {
       const data = await api.get<any>("/admin/pending-registrations");
       setPendingEntries(data.entriesData || []);
@@ -61,7 +61,7 @@ export default function RegistrationProcessing() {
       setApprovedCount(data.approvedCount || 0);
       setRejectedCount(data.rejectedCount || 0);
     } catch (err: any) {
-      setError(getErrMsg(err, "Failed to load registrations."));
+      showError(getErrMsg(err, "Failed to load registrations."));
     } finally {
       setLoading(false);
     }
@@ -78,11 +78,6 @@ export default function RegistrationProcessing() {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
-
-  const showSuccess = (msg: string) => {
-    setSuccess(msg);
-    setTimeout(() => setSuccess(""), 4000);
-  };
 
   const handleEntryApprove = async (id: number) => {
     try {
@@ -203,18 +198,6 @@ export default function RegistrationProcessing() {
           <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)", marginTop: "0.25rem" }}>{$t("entry denied", (localStorage.getItem('app-lang') || 'en'))}</p>
         </div>
       </div>
-
-      {error && (
-        <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "13px" }}>
-          ⚠️ {error}
-        </div>
-      )}
-
-      {success && (
-        <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "13px" }}>
-          ✓ {success}
-        </div>
-      )}
 
       {(() => {
         const totalItems = pendingEntries.length;

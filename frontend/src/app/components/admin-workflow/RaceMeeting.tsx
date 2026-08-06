@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
 import { formatDate, formatDateTime } from "../../utils/dateTimeHelper";
 import InlineDatePicker from "../ui/InlineDatePicker";
-import { confirm } from "../../../lib/confirm";
+import { confirm, showToast } from "../../../lib/confirm";
 import { Pagination } from "../common/Pagination";
 
 /**
@@ -428,18 +428,6 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
           <span className="h-2 w-2 rounded-full bg-amber-500"></span>
           <span>{editingMeeting ? `${$t("Edit Meeting", (localStorage.getItem('app-lang') || 'en'))} #${editingMeeting.id}` : $t("Add New Meeting", (localStorage.getItem('app-lang') || 'en'))}</span>
         </h3>
-
-        {error && (
-          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-sm">
-            {success}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="bg-white/[0.015] border border-white/10 rounded-2xl p-5 space-y-4">
           <div className="space-y-2">

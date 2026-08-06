@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
+import { showToast } from "../../../lib/confirm";
 
 interface SeasonRulesEditProps {
   seasonId: number;
@@ -101,16 +102,6 @@ export default function SeasonRulesEdit({ seasonId, seasonName, onClose, onSaved
         </div>
 
         <form onSubmit={handleSave} style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
-          {error && (
-            <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(239,68,68,0.15)", border: "1px solid rgba(239,68,68,0.3)", color: "#f87171", fontSize: "12px" }}>
-              ⚠ {error}
-            </div>
-          )}
-          {success && (
-            <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", color: "#34d399", fontSize: "12px" }}>
-              ✓ {success}
-            </div>
-          )}
 
           {loading ? (
             <div style={{ textAlign: "center", padding: "2rem", color: "#a0a0a0", fontFamily: "monospace", fontSize: "12px" }}>

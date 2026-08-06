@@ -1,6 +1,7 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
+import { showToast } from "../../../lib/confirm";
 
 const CONFIG_DESC_MAP: Record<string, string> = {
   MAX_TOP_WEIGHT: "Maximum top weight (kg)",
@@ -117,17 +118,6 @@ export default function SystemConfig() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {error && (
-        <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "13px" }}>
-          ⚠️ {error}
-        </div>
-      )}
-
-      {success && (
-        <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "13px" }}>
-          ✓ {success}
-        </div>
-      )}
 
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(21,19,16,0.6)" }}>

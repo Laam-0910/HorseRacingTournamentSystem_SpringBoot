@@ -1,6 +1,7 @@
 import { $t } from "../../../lib/i18n";
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
+import { showToast } from "../../../lib/confirm";
 import { Pagination } from "../common/Pagination";
 
 interface Request {
@@ -143,9 +144,6 @@ export default function AdminHorseRetirement() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-      {error && <p style={{ color: "#ef4444", fontSize: "0.8rem", fontFamily: "monospace" }}>❌ {error}</p>}
-      
-      {success && <p style={{ color: "#4ade80", fontSize: "0.8rem", fontFamily: "monospace" }}>✅ {success}</p>}
 
       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr minmax(260px,360px)", gap: "2rem", alignItems: "start" }}>
         

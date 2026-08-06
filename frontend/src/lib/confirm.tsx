@@ -343,3 +343,71 @@ if (typeof window !== "undefined") {
     }
   };
 }
+
+/**
+ * Floating Toast Popup (Success / Error / Info)
+ */
+export function showToast(message: string, type: "success" | "error" | "info" = "success"): void {
+  if (typeof document === "undefined" || !message) return;
+  
+  let container = document.getElementById("custom-toast-container");
+  if (!container) {
+    container = document.createElement("div");
+    container.id = "custom-toast-container";
+    container.style.cssText = `
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 999999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+      max-width: 420px;
+      width: calc(100vw - 48px);
+    `;
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement("div");
+  const isErr = type === "error";
+  const icon = isErr ? "⚠️" : type === "success" ? "✓" : "ℹ️";
+  const accentColor = isErr ? "#f87171" : "#34d399";
+  const borderColor = isErr ? "rgba(239, 68, 68, 0.4)" : "rgba(16, 185, 129, 0.4)";
+  const bgGlow = isErr ? "rgba(239, 68, 68, 0.15)" : "rgba(16, 185, 129, 0.15)";
+
+  toast.style.cssText = `
+    pointer-events: auto;
+    background: linear-gradient(145deg, #181612 0%, #0d0b08 100%);
+    border: 1px solid ${borderColor};
+    box-shadow: 0 16px 36px rgba(0,0,0,0.85), 0 0 20px ${bgGlow};
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #f4f2ec;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    backdrop-filter: blur(12px);
+    animation: toastSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    position: relative;
+    overflow: hidden;
+  `;
+
+  toast.innerHTML = `
+    <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background: ${accentColor};"></div>
+    <div style="width: 28px; height: 28px; border-radius: 50%; background: ${bgGlow}; border: 1px solid ${borderColor}; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; color: ${accentColor}; flex-shrink: 0;">${icon}</div>
+    <div style="flex: 1; line-height: 1.4; color: #f4f2ec; font-weight: 500;">${$t(message)}</div>
+    <button style="background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 14px; padding: 2px 6px;" onclick="this.parentElement.remove()">✕</button>
+  `;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.style.animation = "toastSlideOut 0.25s ease forwards";
+      setTimeout(() => toast.remove(), 250);
+    }
+  }, 4000);
+}

@@ -5,7 +5,7 @@ import { $t } from "../../../lib/i18n";
 import { Pagination } from "../common/Pagination";
 import VietQRModal from "../common/VietQRModal";
 import { useAuth } from "../../../context/AuthContext";
-import { confirm } from "../../../lib/confirm";
+import { confirm, showToast } from "../../../lib/confirm";
 
 interface AdminWalletModalProps {
   onClose?: () => void;
@@ -209,18 +209,6 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
           >✕</button>
         )}
       </div>
-
-        {/* Banners */}
-        {error && (
-          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-3 rounded-xl text-xs font-mono">
-            ⚠️ {error}
-          </div>
-        )}
-        {success && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-3 rounded-xl text-xs font-mono">
-            ✓ {success}
-          </div>
-        )}
 
         {/* Current Balance Card */}
         <div className="bg-gradient-to-r from-amber-950/40 via-black to-emerald-950/40 border border-amber-500/20 p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">

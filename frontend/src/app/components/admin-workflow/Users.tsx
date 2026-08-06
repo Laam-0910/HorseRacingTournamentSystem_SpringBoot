@@ -1,4 +1,5 @@
 import { $t } from "../../../lib/i18n";
+import { showToast } from "../../../lib/confirm";
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { api, getErrMsg } from "../../../lib/api";
@@ -100,8 +101,11 @@ export default function Users() {
   }, []);
 
   const showSuccess = (msg: string) => {
-    setSuccess(msg);
-    setTimeout(() => setSuccess(""), 4000);
+    showToast(msg, "success");
+  };
+
+  const showError = (msg: string) => {
+    showToast(msg, "error");
   };
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -111,13 +115,13 @@ export default function Users() {
     const lang = localStorage.getItem("app-lang") || "en";
 
     if (createUsername.trim().length < 3) {
-      setError($t("Username must be at least 3 characters long"));
+      showError($t("Username must be at least 3 characters long"));
       return;
     }
 
     const pwdRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
     if (!pwdRegex.test(createPassword)) {
-      setError(
+      showError(
         $t("Password must be at least 8 characters long, containing at least 1 uppercase letter, 1 number, and 1 special character (e.g. @$!%*?&^./,#-_+)")
       );
       return;
@@ -240,18 +244,6 @@ export default function Users() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      
-      {error && (
-        <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "13px" }}>
-          ⚠️ {error}
-        </div>
-      )}
-
-      {success && (
-        <div style={{ padding: "0.75rem", borderRadius: "0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "13px" }}>
-          ✓ {success}
-        </div>
-      )}
 
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", padding: "1.5rem" }}>
         <div style={{ marginBottom: "1rem" }}>

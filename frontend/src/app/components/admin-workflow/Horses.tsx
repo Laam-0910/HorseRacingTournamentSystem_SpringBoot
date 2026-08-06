@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { api, getErrMsg } from "../../../lib/api";
 import { parseSafeDate, formatDateTime } from "../../utils/dateTimeHelper";
+import { confirm, showToast } from "../../../lib/confirm";
 import { PaginationControls } from "./PaginationControls";
 
 interface InlineDatePickerProps {
@@ -325,17 +326,6 @@ export default function Horses() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      {error && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-xs font-mono text-red-400">
-          ⚠️ {error}
-        </div>
-      )}
-      
-      {success && (
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs font-mono text-emerald-400">
-          ✓ {success}
-        </div>
-      )}
 
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "1rem" }}>
         <div>

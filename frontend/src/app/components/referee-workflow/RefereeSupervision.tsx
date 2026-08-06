@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../lib/api";
-import { confirm } from "../../../lib/confirm";
+import { confirm, showToast } from "../../../lib/confirm";
 
 interface RefereeSupervisionProps {
   raceId: number;
@@ -237,12 +237,6 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
           <span>Log Race Violation</span>
         </h3>
 
-        {success && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 p-4 rounded-xl text-sm">
-            {success}
-          </div>
-        )}
-
         <form onSubmit={handleLogViolation} className="bg-white/[0.015] border border-white/10 p-5 rounded-2xl space-y-4">
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">Jockey & Horse</label>
@@ -299,12 +293,6 @@ export default function RefereeSupervision({ raceId, onBack }: RefereeSupervisio
           <span className="h-2 w-2 rounded-full bg-rose-500"></span>
           <span>Emergency Stop Control</span>
         </h3>
-
-        {error && (
-          <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-sm">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleEmergencyStop} className="bg-rose-950/5 border border-rose-900/20 p-5 rounded-2xl space-y-4">
           <div className="space-y-2">

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { api, getErrMsg } from "../../../../lib/api";
 import { formatDate } from "../../../utils/dateTimeHelper";
 import { $t } from "../../../../lib/i18n";
+import { showToast } from "../../../../lib/confirm";
 import { Pagination } from "../../common/Pagination";
 import VietQRModal from "../../common/VietQRModal";
 import { useAuth } from "../../../../context/AuthContext";
@@ -97,16 +98,22 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
     try {
       const res = await api.post<any>("/public/wallet/deposit", { userId: user.id, amount: val });
       if (res.success) {
-        setSuccessMsg(`Successfully deposited ${Math.round(val).toLocaleString('en-US')} VND into your wallet via VietQR! A deposit notification has been sent to your account notifications.`);
+        const msg = `Successfully deposited ${Math.round(val).toLocaleString('en-US')} VND into your wallet via VietQR! A deposit notification has been sent to your account notifications.`;
+        setSuccessMsg(msg);
+        showToast(msg, "success");
         setShowQrModal(false);
         setAmountInput("");
         if (user) user.walletBalance = res.newBalance;
         fetchWalletData();
       } else {
-        setError(res.error || "Deposit failed.");
+        const msg = res.error || "Deposit failed.";
+        setError(msg);
+        showToast(msg, "error");
       }
     } catch (err: any) {
-      setError(getErrMsg(err, "Failed to deposit funds."));
+      const msg = getErrMsg(err, "Failed to deposit funds.");
+      setError(msg);
+      showToast(msg, "error");
     } finally {
       setSubmitting(false);
     }
@@ -256,18 +263,6 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
           </div>
         </div>
       </div>
-
-      {successMsg && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 p-4 rounded-xl text-xs font-mono">
-          ✅ {successMsg}
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-4 rounded-xl text-xs font-mono">
-          ⚠️ {error}
-        </div>
-      )}
 
       {/* Deposit Modal */}
       {showDepositModal && (
