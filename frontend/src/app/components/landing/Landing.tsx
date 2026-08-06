@@ -2142,18 +2142,25 @@ export default function Landing() {
               {/* Auth Controls */}
               {user ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "1rem" }}>
-                  {/* Uiverse.io (icochran10) Notification Button & Downward Unfolding Accordion */}
-                  <div className="relative z-50">
-                    {/* Backdrop when opened */}
+                  {/* Uiverse.io (icochran10) Exact Single Notification Card Accordion */}
+                  <div className="relative h-9 w-11 z-50">
+                    {/* Backdrop when opened to allow click-outside-to-close */}
                     {showNotifications && (
                       <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
                     )}
 
-                    {/* Button: Stays in navbar flow, expands horizontally on hover */}
-                    <div className="group w-11 hover:w-64 overflow-hidden rounded-xl border border-amber-500/30 bg-[#181613]/90 backdrop-blur-md transition-all duration-500 shadow-lg hover:border-amber-500/60">
+                    {/* Single Uiverse Card Container anchored absolute top-0 right-0 */}
+                    <div
+                      className={`absolute right-0 top-0 overflow-hidden rounded-xl border border-amber-500/35 bg-[#181613]/95 backdrop-blur-xl shadow-2xl shadow-black/90 transition-all duration-500 z-50 ${
+                        showNotifications
+                          ? "w-80 border-amber-500/70"
+                          : "w-11 group hover:w-64 hover:border-amber-500/60"
+                      }`}
+                    >
+                      {/* Card Header (Bell Icon + Notifications Text) */}
                       <button
                         onClick={() => setShowNotifications(v => !v)}
-                        className="flex w-full cursor-pointer items-center gap-2.5 px-2.5 py-1.5 text-left text-amber-400 transition-all active:scale-95"
+                        className="peer flex w-full cursor-pointer items-center gap-2.5 px-2 py-1.5 text-left text-amber-400 transition-all active:scale-95"
                       >
                         <div className="rounded-lg border border-amber-500/40 bg-amber-500/20 p-1 relative flex-shrink-0">
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -2163,60 +2170,58 @@ export default function Landing() {
                             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border border-black animate-pulse" />
                           )}
                         </div>
-                        <div className="font-semibold text-xs font-mono text-amber-200 truncate flex items-center justify-between w-full">
+                        <div className="font-semibold text-xs font-mono text-amber-200 truncate flex items-center justify-between w-full pr-1">
                           <span>Notifications</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold ml-1">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold ml-1">
                             {unreadNotifCount}
                           </span>
                         </div>
                       </button>
-                    </div>
 
-                    {/* Downward Unfolding Accordion Drawer: Positioned ABSOLUTE top-[125%] right-0 */}
-                    <div
-                      className={`absolute right-0 top-[125%] w-80 rounded-xl border border-amber-500/40 bg-[#181613] shadow-2xl shadow-black/95 z-50 grid overflow-hidden transition-all duration-500 ${
-                        showNotifications ? "grid-rows-[1fr] opacity-100 pointer-events-auto" : "grid-rows-[0fr] opacity-0 pointer-events-none"
-                      }`}
-                    >
-                      <div className="overflow-hidden">
-                        <div className="p-3 pt-2 max-h-72 overflow-y-auto space-y-2 font-mono">
-                          <div className="flex items-center justify-between pb-1 border-b border-white/10">
-                            <span className="text-[10px] text-amber-400 font-bold uppercase flex items-center gap-1">
-                              🔔 Recent Notifications ({unreadNotifCount})
-                            </span>
-                            {unreadNotifCount > 0 && (
-                              <button
-                                onClick={handleMarkAllNotifsRead}
-                                className="text-[10px] text-amber-400 hover:underline cursor-pointer"
-                              >
-                                Mark all read
-                              </button>
+                      {/* Card Body (Divider line + Notification Items) unfolding vertically downwards */}
+                      <div
+                        className={`grid overflow-hidden transition-all duration-500 ${
+                          showNotifications ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          <ul className="divide-y divide-white/10 p-3 pt-1 text-xs font-mono text-white/80 max-h-72 overflow-y-auto space-y-1">
+                            <li className="flex items-center justify-between pb-1 pt-0">
+                              <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Recent Alerts</span>
+                              {unreadNotifCount > 0 && (
+                                <button
+                                  onClick={handleMarkAllNotifsRead}
+                                  className="text-[10px] text-amber-400 hover:underline cursor-pointer"
+                                >
+                                  Mark all read
+                                </button>
+                              )}
+                            </li>
+
+                            {dbNotifications.length === 0 ? (
+                              <li className="py-3 text-center text-xs text-white/40 italic">
+                                No notifications yet.
+                              </li>
+                            ) : (
+                              dbNotifications.map((noti) => (
+                                <li
+                                  key={noti.id}
+                                  onClick={() => handleMarkNotifRead(noti.id)}
+                                  className={`py-2 px-2 rounded-lg transition cursor-pointer ${
+                                    noti.isRead ? "bg-white/5 opacity-60" : "bg-amber-500/10 border-l-2 border-amber-500"
+                                  }`}
+                                >
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="font-semibold text-amber-200 text-xs truncate">
+                                      {noti.title || "Notification"}
+                                    </span>
+                                    <span className="text-[9px] text-white/40">{formatDate(noti.createdAt)}</span>
+                                  </div>
+                                  <div className="text-[10px] text-white/70 mt-0.5 line-clamp-2">{noti.message}</div>
+                                </li>
+                              ))
                             )}
-                          </div>
-
-                          {dbNotifications.length === 0 ? (
-                            <div className="py-4 text-center text-xs text-white/40 italic">
-                              No notifications yet.
-                            </div>
-                          ) : (
-                            dbNotifications.map((noti) => (
-                              <div
-                                key={noti.id}
-                                onClick={() => handleMarkNotifRead(noti.id)}
-                                className={`p-2 rounded-lg text-xs transition cursor-pointer ${
-                                  noti.isRead ? "bg-white/5 opacity-60" : "bg-amber-500/10 border-l-2 border-amber-500"
-                                }`}
-                              >
-                                <div className="flex items-center justify-between gap-1">
-                                  <span className="font-bold text-amber-200 text-xs truncate">
-                                    {noti.title || "Notification"}
-                                  </span>
-                                  <span className="text-[9px] text-white/40">{formatDate(noti.createdAt)}</span>
-                                </div>
-                                <p className="text-[10px] text-white/70 mt-1 line-clamp-2">{noti.message}</p>
-                              </div>
-                            ))
-                          )}
+                          </ul>
                         </div>
                       </div>
                     </div>
