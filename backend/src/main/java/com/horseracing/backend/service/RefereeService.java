@@ -49,6 +49,12 @@ public class RefereeService {
             throw new IllegalArgumentException("Cannot start race. Active entries (" + activeCount + ") is below minimum allowed (" + minEntries + ")."); // Ném ngoại lệ không đủ điều kiện khởi tranh
         }
 
+        // Validate maximum entries (exceeding max capacity)
+        int maxEntries = race.getMaxEntries() != null ? race.getMaxEntries() : 14;
+        if (activeCount > maxEntries) {
+            throw new IllegalArgumentException("Race has reached its maximum entry capacity.");
+        }
+
         // Validate that all participating entries have a gate number assigned
         List<RaceEntry> dbEntries = raceEntryRepository.findByRaceId(raceId); // Lấy danh sách lượt đăng ký thi đấu từ DB theo raceId
         for (RaceEntry e : dbEntries) { // Duyệt từng lượt đăng ký trong DB
@@ -111,11 +117,21 @@ public class RefereeService {
         if (!"RACE_ASSIGNED".equals(race.getStatus())) { // Kiểm tra nếu trận đua chưa hoàn tất kiểm tra pre-race
             throw new IllegalStateException("Race must be in RACE_ASSIGNED status to start (Pre-Race check must be completed first)"); // Ném ngoại lệ yêu cầu hoàn thành pre-check
         }
+
+        // Validate maximum entries (exceeding max capacity)
+        List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId);
+        long activeCount = entries.stream()
+                .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()) || "RUNNING".equalsIgnoreCase(e.getStatus()))
+                .count();
+        int maxEntries = race.getMaxEntries() != null ? race.getMaxEntries() : 14;
+        if (activeCount > maxEntries) {
+            throw new IllegalStateException("Race has reached its maximum entry capacity.");
+        }
+
         race.setStatus("RUNNING"); // Chuyển trạng thái trận đua sang RUNNING (đang diễn ra)
         raceRepository.save(race); // Lưu trạng thái trận đua mới vào DB
 
         // Transition all APPROVED entries of this race to RUNNING
-        List<RaceEntry> entries = raceEntryRepository.findByRaceId(raceId); // Lấy tất cả lượt thi đấu của trận đua này
         for (RaceEntry entry : entries) { // Duyệt từng lượt thi đấu
             if ("APPROVED".equalsIgnoreCase(entry.getStatus())) { // Nếu lượt thi đấu đã được duyệt (APPROVED)
                 entry.setStatus("RUNNING"); // Đổi trạng thái lượt thi đấu sang RUNNING

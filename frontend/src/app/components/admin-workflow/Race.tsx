@@ -5,6 +5,7 @@ import InlineDateTimePicker from "../ui/InlineDateTimePicker";
 import ProfileModal from "../dashboards/components/ProfileModal";
 import CameraBroadcasterModal from "../livestream/CameraBroadcasterModal";
 import { Pagination } from "../common/Pagination";
+import { confirm } from "../../../lib/confirm";
 
 interface Meeting {
   id: number;
@@ -400,7 +401,7 @@ export default function Race() {
 
   // Đóng trận đua sau khi OFFICIAL → RACE_EVENT_ENDED (giải phóng ngựa & nài)
   const handleCloseRace = async (raceId: number) => {
-    if (!window.confirm("Close this race event? This will release all horses and jockeys and mark the race as RACE_EVENT_ENDED.")) return;
+    if (!await confirm("Close this race event? This will release all horses and jockeys and mark the race as RACE_EVENT_ENDED.")) return;
     setError("");
     setSuccess("");
     try {
