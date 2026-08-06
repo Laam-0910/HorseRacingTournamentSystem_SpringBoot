@@ -2142,124 +2142,101 @@ export default function Landing() {
               {/* Auth Controls */}
               {user ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "1rem" }}>
-                  {/* Notification Bell Dropdown Button */}
-                  <div style={{ position: "relative" }}>
-                    <button
-                      onClick={() => setShowNotifications(v => !v)}
-                      title="Notifications"
-                      style={{
-                        position: "relative",
-                        background: "rgba(255,255,255,0.05)",
-                        border: "1px solid rgba(255,255,255,0.12)",
-                        borderRadius: "50%",
-                        width: "36px",
-                        height: "36px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#f4f2ec",
-                        cursor: "pointer",
-                        fontSize: "1.1rem",
-                        transition: "all 0.2s"
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = "rgba(201,162,39,0.5)"}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"}
-                    >
-                      🔔
-                      {unreadNotifCount > 0 && (
-                        <span style={{
-                          position: "absolute",
-                          top: "-3px",
-                          right: "-3px",
-                          background: "#ef4444",
-                          color: "#ffffff",
-                          borderRadius: "50%",
-                          fontSize: "10px",
-                          fontWeight: "bold",
-                          width: "18px",
-                          height: "18px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          border: "2px solid #0e0c09"
-                        }}>
-                          {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Notification Dropdown Drawer Panel */}
-                    {showNotifications && (
-                      <>
-                        <div style={{ position: "fixed", inset: 0, zIndex: 40 }} onClick={() => setShowNotifications(false)} />
-                        <div style={{
-                          position: "absolute",
-                          right: 0,
-                          top: "135%",
-                          width: "22rem",
-                          maxHeight: "26rem",
-                          background: "#181613",
-                          border: "1px solid rgba(201,162,39,0.35)",
-                          borderRadius: "0.75rem",
-                          boxShadow: "0 20px 50px rgba(0,0,0,0.85)",
-                          zIndex: 50,
-                          display: "flex",
-                          flexDirection: "column",
-                          overflow: "hidden"
-                        }}>
-                          {/* Drawer Header */}
-                          <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid rgba(255,255,255,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(201,162,39,0.08)" }}>
-                            <span style={{ fontWeight: "bold", fontSize: "0.85rem", color: "#f4f2ec", fontFamily: "monospace" }}>
-                              🔔 Notifications ({unreadNotifCount})
-                            </span>
+                  {/* Uiverse.io (icochran10) Interactive Expanding Notification & Quick Action Hub */}
+                  <div className="relative group/uiverseNotif">
+                    <ul className="flex flex-col gap-1.5 z-40">
+                      {/* Accordion Item 1: Notifications */}
+                      <li className="group w-11 overflow-hidden rounded-xl border border-amber-500/30 bg-[#181613]/90 backdrop-blur-md transition-all duration-500 hover:w-72 hover:border-amber-500/60 hover:shadow-2xl shadow-black/80 has-[:focus]:w-72">
+                        <button
+                          onClick={() => setShowNotifications(v => !v)}
+                          className="peer flex w-full cursor-pointer items-center gap-2.5 px-2.5 py-1.5 text-left text-amber-400 transition-all active:scale-95"
+                        >
+                          <div className="rounded-lg border border-amber-500/40 bg-amber-500/20 p-1 relative flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"></path>
+                            </svg>
                             {unreadNotifCount > 0 && (
-                              <button
-                                onClick={handleMarkAllNotifsRead}
-                                style={{ fontSize: "0.65rem", color: "#c9a227", background: "none", border: "none", cursor: "pointer", fontFamily: "monospace", textDecoration: "underline" }}
-                              >
-                                Mark all as read
-                              </button>
+                              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border border-black animate-pulse" />
                             )}
                           </div>
+                          <div className="font-semibold text-xs font-mono text-amber-200 truncate flex items-center justify-between w-full">
+                            <span>Notifications</span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                              {unreadNotifCount}
+                            </span>
+                          </div>
+                        </button>
 
-                          {/* Drawer Content Body */}
-                          <div style={{ overflowY: "auto", flex: 1, padding: "0.5rem" }} className="divide-y divide-white/5 space-y-1">
-                            {dbNotifications.length === 0 ? (
-                              <div style={{ padding: "1.5rem", textAlign: "center", color: "#a0a0a0", fontSize: "0.75rem", fontStyle: "italic", fontFamily: "monospace" }}>
-                                No notifications yet.
+                        {/* Dropdown Content */}
+                        <div className="grid grid-rows-[0fr] overflow-hidden transition-all duration-500 peer-focus:grid-rows-[1fr] group-hover:grid-rows-[1fr]">
+                          <div className="overflow-hidden">
+                            <div className="p-3 pt-1 border-t border-white/10 max-h-64 overflow-y-auto space-y-2">
+                              <div className="flex items-center justify-between pb-1 border-b border-white/5">
+                                <span className="text-[10px] font-mono text-amber-400/80 font-bold uppercase">Recent Alerts</span>
+                                {unreadNotifCount > 0 && (
+                                  <button onClick={handleMarkAllNotifsRead} className="text-[10px] text-amber-400 hover:underline font-mono">
+                                    Mark all read
+                                  </button>
+                                )}
                               </div>
-                            ) : (
-                              dbNotifications.map((noti) => (
-                                <div
-                                  key={noti.id}
-                                  onClick={() => handleMarkNotifRead(noti.id)}
-                                  style={{
-                                    padding: "0.65rem 0.75rem",
-                                    borderRadius: "0.5rem",
-                                    background: noti.isRead ? "transparent" : "rgba(201,162,39,0.1)",
-                                    borderLeft: noti.isRead ? "3px solid transparent" : "3px solid #c9a227",
-                                    cursor: "pointer",
-                                    transition: "background 0.2s"
-                                  }}
-                                >
-                                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "0.5rem" }}>
-                                    <p style={{ fontWeight: 700, fontSize: "0.75rem", color: noti.isRead ? "#a0a0a0" : "#f4f2ec" }}>
-                                      {noti.title || "Notification"}
-                                    </p>
-                                    <span style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.3)", fontFamily: "monospace" }}>
-                                      {formatDate(noti.createdAt)}
-                                    </span>
-                                  </div>
-                                  <p style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.75)", marginTop: "0.2rem", lineHeight: "1.3", wordBreak: "break-word" }}>
-                                    {noti.message}
-                                  </p>
+
+                              {dbNotifications.length === 0 ? (
+                                <div className="py-3 text-center text-xs text-white/40 italic font-mono">
+                                  No notifications yet.
                                 </div>
-                              ))
-                            )}
+                              ) : (
+                                dbNotifications.map((noti) => (
+                                  <div
+                                    key={noti.id}
+                                    onClick={() => handleMarkNotifRead(noti.id)}
+                                    className={`p-2 rounded-lg text-xs font-mono transition cursor-pointer ${noti.isRead ? 'bg-white/5 opacity-60' : 'bg-amber-500/10 border-l-2 border-amber-500'}`}
+                                  >
+                                    <div className="flex items-center justify-between gap-1">
+                                      <span className="font-bold text-amber-200 text-xs truncate">{noti.title || "Notification"}</span>
+                                      <span className="text-[9px] text-white/40">{formatDate(noti.createdAt)}</span>
+                                    </div>
+                                    <p className="text-[10px] text-white/70 mt-1 line-clamp-2">{noti.message}</p>
+                                  </div>
+                                ))
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </>
-                    )}
+                      </li>
+
+                      {/* Accordion Item 2: Quick Settings / Navigation */}
+                      <li className="group w-11 overflow-hidden rounded-xl border border-white/10 bg-[#181613]/90 backdrop-blur-md transition-all duration-500 hover:w-72 hover:border-amber-500/60 hover:shadow-2xl shadow-black/80 has-[:focus]:w-72">
+                        <button
+                          className="peer flex w-full cursor-pointer items-center gap-2.5 px-2.5 py-1.5 text-left text-amber-300 transition-all active:scale-95"
+                        >
+                          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-1 flex-shrink-0">
+                            <svg className="w-5 h-5" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" fill="none">
+                              <path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" strokeLinejoin="round" strokeLinecap="round"></path>
+                              <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" strokeLinejoin="round" strokeLinecap="round"></path>
+                            </svg>
+                          </div>
+                          <div className="font-semibold text-xs font-mono text-white truncate">System Quick Links</div>
+                        </button>
+                        <div className="grid grid-rows-[0fr] overflow-hidden transition-all duration-500 peer-focus:grid-rows-[1fr] group-hover:grid-rows-[1fr]">
+                          <div className="overflow-hidden">
+                            <ul className="divide-y divide-white/5 p-3 pt-1 text-xs font-mono text-white/80">
+                              <li onClick={() => navigate('/dashboard')} className="py-2 flex items-center justify-between cursor-pointer hover:text-amber-400 transition">
+                                <span>Go to Dashboard</span>
+                                <span className="text-amber-400">➔</span>
+                              </li>
+                              <li onClick={() => navigate('/livestream')} className="py-2 flex items-center justify-between cursor-pointer hover:text-amber-400 transition">
+                                <span>Watch Live Stream</span>
+                                <span className="text-amber-400">📺</span>
+                              </li>
+                              <li onClick={() => navigate('/dashboard')} className="py-2 flex items-center justify-between cursor-pointer hover:text-amber-400 transition">
+                                <span>My Wallet & Deposit</span>
+                                <span className="text-amber-400">💳</span>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </li>
+                    </ul>
                   </div>
 
                   {/* Avatar circle */}
