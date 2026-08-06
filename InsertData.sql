@@ -2,6 +2,16 @@ USE HorseRacingDB;
 GO
 
 -- =========================================================================
+-- 0. CLEANUP PREVIOUS SEED DATA (SAFE RE-RUNNABLE EXECUTION)
+-- =========================================================================
+DELETE FROM Bet WHERE horse_id IN (SELECT id FROM Horse WHERE owner_id IN (SELECT id FROM [User] WHERE username LIKE 'owner_%'));
+DELETE FROM RaceInvitation WHERE horse_id IN (SELECT id FROM Horse WHERE owner_id IN (SELECT id FROM [User] WHERE username LIKE 'owner_%'));
+DELETE FROM RaceEntry WHERE horse_id IN (SELECT id FROM Horse WHERE owner_id IN (SELECT id FROM [User] WHERE username LIKE 'owner_%'));
+DELETE FROM Horse WHERE owner_id IN (SELECT id FROM [User] WHERE username LIKE 'owner_%');
+DELETE FROM [User] WHERE username LIKE 'jockey_%' OR username LIKE 'spectator_%' OR username LIKE 'referee_%' OR username LIKE 'owner_%';
+GO
+
+-- =========================================================================
 -- 1. INSERT 20 JOCKEYS
 -- =========================================================================
 DECLARE @j INT = 1;
