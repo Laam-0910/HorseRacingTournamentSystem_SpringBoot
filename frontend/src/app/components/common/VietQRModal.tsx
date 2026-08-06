@@ -51,6 +51,16 @@ export default function VietQRModal({
     };
   }, [isOpen]);
 
+  // Lock background body scroll when modal is active
+  useEffect(() => {
+    if (!isOpen) return;
+    const originalStyle = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const minutes = Math.floor(timeLeft / 60);
@@ -69,8 +79,8 @@ export default function VietQRModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-      <div className="bg-[#151310] border border-amber-500/40 rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 relative text-white">
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 99999, padding: "1rem" }}>
+      <div style={{ background: "#151310", border: "1px solid rgba(245,158,11,0.4)", borderRadius: "1.5rem", width: "100%", maxWidth: "28rem", maxHeight: "92vh", overflowY: "auto", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.8)", position: "relative", color: "#fff", padding: "1.5rem" }} className="space-y-4">
         
         {/* Close Button */}
         <button
