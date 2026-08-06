@@ -12,8 +12,12 @@
 **/build/
 .gradle/
 **/out/
+# Environment variables and API keys (CRITICAL - DO NOT PUSH TO GITHUB)
 .env
 .env.*
+*.env
+**/.env
+**/.env.*
 !.env.example
 
 # Frontend (React / Node / Vite)
