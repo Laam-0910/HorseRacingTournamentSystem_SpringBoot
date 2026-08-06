@@ -344,67 +344,68 @@ export default function VietQRPaywallModal({
               const hideMonthlyCard = !isExtendMode && hasMonthly;
 
               return (
-                <div style={{ display: "grid", gridTemplateColumns: (hasRaceMeeting && !hideMonthlyCard) ? "1fr 1fr" : "1fr", gap: "0.75rem" }}>
-                  {/* Option 1: Monthly Pass */}
+                <div style={{ display: "grid", gridTemplateColumns: (hasRaceMeeting && !hideMonthlyCard) ? "1fr 1fr" : "1fr", gap: "1rem" }}>
+                  {/* Option 1: Monthly Pass (Uiverse Cobp Card) */}
                   {hasRaceMeeting && !hideMonthlyCard && (
                     <div
                       onClick={() => setSelectedPackage("RACEMEETING")}
-                      style={{
-                        padding: "0.875rem",
-                        borderRadius: "0.75rem",
-                        border: selectedPackage === "RACEMEETING" ? "2px solid #c9a227" : "1px solid rgba(255,255,255,0.1)",
-                        background: selectedPackage === "RACEMEETING" ? "rgba(201,162,39,0.12)" : "rgba(255,255,255,0.02)",
-                        cursor: "pointer",
-                        transition: "all 0.2s"
-                      }}
+                      className={`cobp-card-container ${selectedPackage === "RACEMEETING" ? "selected" : ""}`}
                     >
-                      <div style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>
-                        {isExtendMode ? "Extend Monthly (+30 Days)" : "Monthly Pass"}
+                      <div className="title-card">
+                        <p>{isExtendMode ? "EXTEND 30 DAYS" : "EVENT PASS"}</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                          <path fill="currentColor" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                        </svg>
                       </div>
-                      <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#c9a227", fontFamily: "monospace", marginTop: "4px" }}>
-                        {quotesLoading ? "..." : (meetingQuote ? Number(meetingQuote.finalPrice).toLocaleString('en-US') : "15,000")} VNĐ
-                      </div>
-                      <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "4px" }}>
-                        {isExtendMode ? "Add +30 days extra streaming time" : `30-day HD livestream access for ${raceMeetingName || "this event"}`}
+                      <div className="card-content">
+                        <p className="title">{isExtendMode ? "Extend Monthly (+30 Days)" : "Monthly Pass"}</p>
+                        <p className="plain">
+                          <span>{quotesLoading ? "..." : (meetingQuote ? Number(meetingQuote.finalPrice).toLocaleString('en-US') : "15,000")}</span>
+                          <span>VNĐ / month</span>
+                        </p>
+                        <p className="description">
+                          {isExtendMode ? "Add +30 days extra streaming time for this event." : `30-day HD livestream access for ${raceMeetingName || "this event"}.`}
+                        </p>
+                        <button className="card-btn">
+                          {selectedPackage === "RACEMEETING" ? "✓ Selected (Proceed Below)" : "Select Monthly Pass"}
+                        </button>
                       </div>
                     </div>
                   )}
 
-                  {/* Option 2: Annual Pass */}
+                  {/* Option 2: Annual Pass (Uiverse Cobp Card - Best Value / Most Popular) */}
                   <div
                     onClick={() => setSelectedPackage("SEASON")}
-                    style={{
-                      padding: "0.875rem",
-                      borderRadius: "0.75rem",
-                      border: selectedPackage === "SEASON" ? "2px solid #c9a227" : "1px solid rgba(255,255,255,0.1)",
-                      background: selectedPackage === "SEASON" ? "rgba(201,162,39,0.12)" : "rgba(255,255,255,0.02)",
-                      cursor: "pointer",
-                      transition: "all 0.2s"
-                    }}
+                    className={`cobp-card-container ${selectedPackage === "SEASON" ? "selected" : ""}`}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>
-                        {isExtendMode ? "Extend Annual (+365 Days)" : "Upgrade to Annual Pass"}
-                      </span>
-                      <span style={{ fontSize: "8px", background: "#10b981", color: "#000", padding: "1px 4px", borderRadius: "2px", fontWeight: "bold" }}>
-                        {!isExtendMode && hasMonthly ? "15,000 VNĐ OFF" : "BEST VALUE"}
-                      </span>
+                    <div className="title-card">
+                      <p>{!isExtendMode && hasMonthly ? "15,000 VNĐ OFF" : "MOST POPULAR / BEST VALUE"}</p>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                      </svg>
                     </div>
-                    <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#34d399", fontFamily: "monospace", marginTop: "4px" }}>
-                      {quotesLoading ? "..." : (seasonQuote ? Number(seasonQuote.finalPrice).toLocaleString('en-US') : "79,000")} VNĐ
+                    <div className="card-content">
+                      <p className="title">{isExtendMode ? "Extend Annual (+365 Days)" : "Upgrade to Annual Pass"}</p>
+                      <p className="plain">
+                        <span>{quotesLoading ? "..." : (seasonQuote ? Number(seasonQuote.finalPrice).toLocaleString('en-US') : "79,000")}</span>
+                        <span>VNĐ / year</span>
+                      </p>
+                      <p className="description">
+                        {isExtendMode
+                          ? "Add +365 days extra streaming time across all events."
+                          : !isExtendMode && hasMonthly
+                          ? "Upgrade to Annual Pass (15,000 VNĐ credited from active Monthly Pass)."
+                          : "Full 365-day unlimited HD livestream pass for all tournament events."}
+                      </p>
+                      {accessInfo && accessInfo.expiresAtFormatted && (
+                        <div style={{ fontSize: "9px", color: "#6ee7b7", fontFamily: "monospace", background: "rgba(16,185,129,0.1)", padding: "3px 6px", borderRadius: "4px", border: "1px solid rgba(16,185,129,0.2)" }}>
+                          ✅ Active until: {accessInfo.expiresAtFormatted}
+                        </div>
+                      )}
+                      <button className="card-btn">
+                        {selectedPackage === "SEASON" ? "✓ Selected (Proceed Below)" : "Select Annual Pass"}
+                      </button>
                     </div>
-                    <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "4px" }}>
-                      {isExtendMode
-                        ? "Add +365 days extra streaming time"
-                        : !isExtendMode && hasMonthly
-                        ? "Upgrade to Annual Pass (15,000 VNĐ credited from active Monthly Pass)"
-                        : "Full 365-day unlimited HD livestream pass for all events"}
-                    </div>
-                    {accessInfo && accessInfo.expiresAtFormatted && (
-                      <div style={{ marginTop: "6px", fontSize: "9px", color: "#6ee7b7", fontFamily: "monospace", background: "rgba(16,185,129,0.08)", padding: "3px 6px", borderRadius: "4px", border: "1px solid rgba(16,185,129,0.2)" }}>
-                        ✅ Active until: {accessInfo.expiresAtFormatted}
-                      </div>
-                    )}
                   </div>
                 </div>
               );
