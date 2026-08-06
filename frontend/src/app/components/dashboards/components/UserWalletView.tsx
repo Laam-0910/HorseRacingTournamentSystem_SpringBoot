@@ -224,39 +224,138 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
           </p>
         </div>
 
-        <div className="flex flex-col items-end gap-3 font-mono">
-          <div className="uiverse-credit-card">
-            <div className="flex items-center justify-between">
-              <div className="uiverse-card-chip"></div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full" style={{ color: roleColor, background: `${roleColor}20`, border: `1px solid ${roleColor}40` }}>
-                {roleLabel} VIP
-              </span>
-            </div>
-            <div>
-              <span className="text-[10px] text-white/50 uppercase tracking-widest font-mono block">Current Balance</span>
-              <div className="text-2xl font-extrabold font-mono mt-0.5" style={{ color: roleColor, textShadow: `0 0 15px ${roleColor}50` }}>
-                {walletBalance.toLocaleString('en-US')} <span className="text-sm font-bold text-white/80">VND</span>
+        <div className="flex flex-col items-center md:items-end gap-5 font-mono">
+          {/* Uiverse Interactive 3D Pocket Wallet */}
+          <div className="uiverse-wallet">
+            <div className="uiverse-wallet-back"></div>
+
+            {/* Card 1: Gold VIP Member Card */}
+            <div className="card stripe">
+              <div className="card-inner">
+                <div className="card-top">
+                  <span>Horse Racing</span>
+                  <div className="chip"></div>
+                </div>
+                <div className="card-bottom">
+                  <div className="card-info">
+                    <span className="label">Member</span>
+                    <span className="value">{(user?.username || user?.fullName || roleLabel).toUpperCase()}</span>
+                  </div>
+                  <div className="card-number-wrapper">
+                    <span className="hidden-stars">**** {user?.id ? String(user.id).padStart(4, '0') : '0001'}</span>
+                    <span className="card-number">8810 4242 {user?.id ? String(user.id).padStart(4, '0') : '0001'}</span>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="flex justify-between items-center text-[10px] font-mono text-white/50 border-t border-white/10 pt-2">
-              <span>ID: {user?.id ? `HR-${String(user.id).padStart(5, '0')}` : 'HR-00001'}</span>
-              <span className="text-emerald-400 font-bold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Active
-              </span>
+
+            {/* Card 2: Tournament Pass Card */}
+            <div className="card wise">
+              <div className="card-inner">
+                <div className="card-top">
+                  <span>{roleLabel} VIP</span>
+                  <div className="chip"></div>
+                </div>
+                <div className="card-bottom">
+                  <div className="card-info">
+                    <span className="label">Status</span>
+                    <span className="value">ACTIVE ACCESS</span>
+                  </div>
+                  <div className="card-number-wrapper">
+                    <span className="hidden-stars">**** 9910</span>
+                    <span className="card-number">9012 4432 9910</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Personal Wallet Info Card */}
+            <div className="card paypal">
+              <div className="card-inner">
+                <div className="card-top">
+                  <span>Pay<b style={{ color: "#c9a227" }}>Wallet</b></span>
+                  <div className="chip"></div>
+                </div>
+                <div className="card-bottom">
+                  <div className="card-info">
+                    <span className="label">Account ID</span>
+                    <span className="value">{user?.id ? `HR-${String(user.id).padStart(5, '0')}` : 'HR-00001'}</span>
+                  </div>
+                  <div className="card-number-wrapper">
+                    <span className="hidden-stars">**** 0094</span>
+                    <span className="card-number">3312 0045 0094</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Leather Pocket Cover with Live Balance Display */}
+            <div className="pocket">
+              <svg className="pocket-svg" viewBox="0 0 280 160" fill="none">
+                <path
+                  d="M 0 20 C 0 10, 5 10, 10 10 C 20 10, 25 25, 40 25 L 240 25 C 255 25, 260 10, 270 10 C 275 10, 280 10, 280 20 L 280 120 C 280 155, 260 160, 240 160 L 40 160 C 20 160, 0 155, 0 120 Z"
+                  fill="#1e1912"
+                ></path>
+                <path
+                  d="M 8 22 C 8 16, 12 16, 15 16 C 23 16, 27 29, 40 29 L 240 29 C 253 29, 257 16, 265 16 C 268 16, 272 16, 272 22 L 272 120 C 272 150, 255 152, 240 152 L 40 152 C 25 152, 8 152, 8 120 Z"
+                  stroke="#c9a227"
+                  strokeWidth="1.5"
+                  strokeDasharray="6 4"
+                ></path>
+              </svg>
+              <div className="pocket-content">
+                <div style={{ position: "relative", height: "24px", width: "100%" }}>
+                  <div className="balance-stars">****** VND</div>
+                  <div className="balance-real">{walletBalance.toLocaleString('en-US')} VND</div>
+                </div>
+                <div style={{ color: "#c9a227", fontSize: "11px", fontWeight: "600", marginTop: "2px" }}>
+                  Available Wallet Balance
+                </div>
+                <div className="eye-icon-wrapper">
+                  <svg
+                    className="eye-icon eye-slash"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <line x1="3" y1="3" x2="21" y2="21"></line>
+                  </svg>
+                  <svg
+                    className="eye-icon eye-open"
+                    style={{ opacity: 0 }}
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-4">
             <button
               onClick={() => { setAmountInput(""); setError(""); setShowDepositModal(true); }}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-gradient-to-r from-emerald-400 to-teal-500 hover:brightness-110 shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-black bg-gradient-to-r from-emerald-400 to-teal-500 hover:brightness-110 shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <span>➕</span> Deposit Funds
             </button>
 
             <button
               onClick={() => { setAmountInput(""); setError(""); setShowWithdrawModal(true); }}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-amber-500 to-rose-500 hover:brightness-110 shadow-lg shadow-rose-500/20 transition-all flex items-center gap-1.5"
+              className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-amber-500 to-rose-500 hover:brightness-110 shadow-lg shadow-rose-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <span>💸</span> Withdraw Cash
             </button>
