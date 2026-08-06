@@ -1865,17 +1865,27 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   width: 100%;
   background: linear-gradient(
     to top right,
+    rgba(151, 90, 244, 0.4),
+    rgba(47, 124, 248, 0.4) 40%,
+    rgba(120, 170, 250, 0.4) 65%,
+    rgba(147, 76, 255, 0.4) 100%
+  );
+  padding: 2px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.cobp-card-container:hover {
+  background: linear-gradient(
+    to top right,
     #975af4,
     #2f7cf8 40%,
     #78aafa 65%,
     #934cff 100%
   );
-  padding: 3px;
-  border-radius: 24px;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-  cursor: pointer;
+  transform: translateY(-2px);
 }
 .cobp-card-container.selected {
   background: linear-gradient(
@@ -1885,7 +1895,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     #fbbf24 65%,
     #f59e0b 100%
   );
-  box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.35);
 }
 .cobp-card-container .title-card {
   display: flex;

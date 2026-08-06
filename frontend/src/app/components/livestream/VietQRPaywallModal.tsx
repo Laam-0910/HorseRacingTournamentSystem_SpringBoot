@@ -342,10 +342,6 @@ export default function VietQRPaywallModal({
           {/* STEP 1: Package Selector Cards */}
           {activeStep === "PACKAGE" && (
             <div>
-              <label style={{ display: "block", fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#c9a227", marginBottom: "0.75rem" }}>
-                {isExtendMode ? "1. Select Extension Period (+ Extra Time)" : "1. Select Viewing Package"}
-              </label>
-              
               {(() => {
                 const currentActiveType = accessInfo?.packageType;
                 const hasDiscount = seasonQuote && Number(seasonQuote.discountApplied || 0) > 0;
@@ -390,9 +386,22 @@ export default function VietQRPaywallModal({
                             <span>{quotesLoading ? "..." : (meetingQuote ? Number(meetingQuote.finalPrice).toLocaleString('en-US') : "15,000")}</span>
                             <span>VNĐ / month</span>
                           </p>
-                          <p className="description">
-                            {isExtendMode ? "Add +30 days extra streaming time for this event." : `30-day HD livestream access for ${raceMeetingName || "this event"}.`}
-                          </p>
+                          <div className="description">
+                            <p style={{ color: "#f4f2ec", fontWeight: 600, marginBottom: "6px" }}>
+                              {isExtendMode ? "Add +30 days extra streaming time:" : `30-day access for ${raceMeetingName || "this event"}:`}
+                            </p>
+                            <ul style={{ paddingLeft: "0.25rem", margin: 0, display: "flex", flexDirection: "column", gap: "4px", listStyle: "none" }}>
+                              <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ color: "#34d399" }}>✓</span> 30-day HD livestream access for current event
+                              </li>
+                              <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ color: "#34d399" }}>✓</span> Real-time race commentary & live odds update
+                              </li>
+                              <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                <span style={{ color: "#34d399" }}>✓</span> High definition 1080p 60fps streaming
+                              </li>
+                            </ul>
+                          </div>
                           <button className="card-btn">
                             ⚡ Select Monthly Pass & Pay ➔
                           </button>
@@ -417,13 +426,25 @@ export default function VietQRPaywallModal({
                           <span>{quotesLoading ? "..." : (seasonQuote ? Number(seasonQuote.finalPrice).toLocaleString('en-US') : "79,000")}</span>
                           <span>VNĐ / year</span>
                         </p>
-                        <p className="description">
-                          {isExtendMode
-                            ? "Add +365 days extra streaming time across all events."
-                            : !isExtendMode && hasMonthly
-                            ? "Upgrade to Annual Pass (15,000 VNĐ credited from active Monthly Pass)."
-                            : "Full 365-day unlimited HD livestream pass for all tournament events."}
-                        </p>
+                        <div className="description">
+                          <p style={{ color: "#f4f2ec", fontWeight: 600, marginBottom: "6px" }}>
+                            {isExtendMode ? "Add +365 days extra full access:" : "Unlimited full-season access included:"}
+                          </p>
+                          <ul style={{ paddingLeft: "0.25rem", margin: 0, display: "flex", flexDirection: "column", gap: "4px", listStyle: "none" }}>
+                            <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{ color: "#fbbf24" }}>⭐</span> Full 365-day unlimited HD access for ALL events
+                            </li>
+                            <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{ color: "#fbbf24" }}>⭐</span> Includes all tournament finals & championship races
+                            </li>
+                            <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{ color: "#fbbf24" }}>⭐</span> Priority ultra-low latency streaming channel
+                            </li>
+                            <li style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                              <span style={{ color: "#34d399" }}>💰</span> Save &gt;70% compared to monthly event passes
+                            </li>
+                          </ul>
+                        </div>
                         {accessInfo && accessInfo.expiresAtFormatted && (
                           <div style={{ fontSize: "9px", color: "#6ee7b7", fontFamily: "monospace", background: "rgba(16,185,129,0.1)", padding: "3px 6px", borderRadius: "4px", border: "1px solid rgba(16,185,129,0.2)" }}>
                             ✅ Active until: {accessInfo.expiresAtFormatted}
