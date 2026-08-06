@@ -2142,68 +2142,74 @@ export default function Landing() {
               {/* Auth Controls */}
               {user ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", paddingLeft: "1rem" }}>
-                  {/* Interactive Expanding Notification Button (Hover expands to "Notifications", Click opens downward drawer) */}
+                  {/* Uiverse.io (icochran10) Interactive Expanding Notification Accordion */}
                   <div className="relative z-50">
-                    <button
-                      onClick={() => setShowNotifications(v => !v)}
-                      title="Notifications"
-                      className="group relative h-9 w-9 hover:w-36 overflow-hidden rounded-full hover:rounded-xl bg-[#181613] border border-amber-500/30 hover:border-amber-500/60 transition-all duration-300 flex items-center gap-2 px-2 text-amber-400 cursor-pointer shadow-lg active:scale-95"
-                    >
-                      <div className="rounded-lg border border-amber-500/40 bg-amber-500/20 p-1 relative flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"></path>
-                        </svg>
-                        {unreadNotifCount > 0 && (
-                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full border border-black animate-pulse" />
-                        )}
-                      </div>
-
-                      {/* Text revealed smoothly on hover */}
-                      <div className="font-semibold text-xs font-mono text-amber-200 truncate flex items-center justify-between w-full pr-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <span>Notifications</span>
-                        <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold ml-1">
-                          {unreadNotifCount}
-                        </span>
-                      </div>
-                    </button>
-
-                    {/* Notification Dropdown Drawer (Opened ONLY when clicked: showNotifications === true) */}
+                    {/* Backdrop when opened to allow click-outside-to-close */}
                     {showNotifications && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-                        <div className="absolute right-0 top-[130%] w-80 max-h-96 bg-[#181613] border border-amber-500/40 rounded-xl shadow-2xl shadow-black/90 z-50 overflow-hidden flex flex-col animate-fadeIn">
-                          {/* Drawer Header */}
-                          <div className="p-3 border-b border-white/10 bg-amber-500/10 flex items-center justify-between">
-                            <span className="font-mono font-bold text-xs text-amber-200 flex items-center gap-1.5">
-                              🔔 Notifications ({unreadNotifCount})
-                            </span>
-                            {unreadNotifCount > 0 && (
-                              <button
-                                onClick={handleMarkAllNotifsRead}
-                                className="text-[10px] font-mono text-amber-400 hover:underline cursor-pointer"
-                              >
-                                Mark all read
-                              </button>
-                            )}
-                          </div>
+                      <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
+                    )}
 
-                          {/* Drawer Body */}
-                          <div className="p-2 overflow-y-auto max-h-72 space-y-1 divide-y divide-white/5 font-mono">
+                    <div className={`group overflow-hidden rounded-xl border border-amber-500/30 bg-[#181613]/95 backdrop-blur-md transition-all duration-500 shadow-2xl shadow-black/90 ${
+                      showNotifications ? "w-80 border-amber-500/60" : "w-11 hover:w-64 hover:border-amber-500/60"
+                    }`}>
+                      {/* Trigger Button: Hover expands horizontally, Click toggles vertical accordion */}
+                      <button
+                        onClick={() => setShowNotifications(v => !v)}
+                        className="peer flex w-full cursor-pointer items-center gap-2.5 px-2.5 py-1.5 text-left text-amber-400 transition-all active:scale-95"
+                      >
+                        <div className="rounded-lg border border-amber-500/40 bg-amber-500/20 p-1 relative flex-shrink-0">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0"></path>
+                          </svg>
+                          {unreadNotifCount > 0 && (
+                            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border border-black animate-pulse" />
+                          )}
+                        </div>
+                        <div className="font-semibold text-xs font-mono text-amber-200 truncate flex items-center justify-between w-full">
+                          <span>Notifications</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-bold ml-1">
+                            {unreadNotifCount}
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Uiverse 0fr -> 1fr Grid Rows Accordion Drawer when clicked (showNotifications === true) */}
+                      <div
+                        className={`grid overflow-hidden transition-all duration-500 ${
+                          showNotifications ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          <div className="p-3 pt-1 border-t border-white/10 max-h-64 overflow-y-auto space-y-2 font-mono">
+                            <div className="flex items-center justify-between pb-1 border-b border-white/5">
+                              <span className="text-[10px] text-amber-400/80 font-bold uppercase">Recent Alerts</span>
+                              {unreadNotifCount > 0 && (
+                                <button
+                                  onClick={handleMarkAllNotifsRead}
+                                  className="text-[10px] text-amber-400 hover:underline cursor-pointer"
+                                >
+                                  Mark all read
+                                </button>
+                              )}
+                            </div>
+
                             {dbNotifications.length === 0 ? (
-                              <div className="p-4 text-center text-xs text-white/40 italic">
+                              <div className="py-3 text-center text-xs text-white/40 italic">
                                 No notifications yet.
                               </div>
                             ) : (
                               dbNotifications.map((noti) => (
                                 <div
                                   key={noti.id}
-                                  onClick={() => {
-                                    handleMarkNotifRead(noti.id);
-                                  }}
-                                  className={`p-2 rounded-lg text-xs transition cursor-pointer ${noti.isRead ? 'bg-transparent opacity-60' : 'bg-amber-500/10 border-l-2 border-amber-500'}`}
+                                  onClick={() => handleMarkNotifRead(noti.id)}
+                                  className={`p-2 rounded-lg text-xs transition cursor-pointer ${
+                                    noti.isRead ? "bg-white/5 opacity-60" : "bg-amber-500/10 border-l-2 border-amber-500"
+                                  }`}
                                 >
                                   <div className="flex items-center justify-between gap-1">
-                                    <span className="font-bold text-amber-200 text-xs truncate">{noti.title || "Notification"}</span>
+                                    <span className="font-bold text-amber-200 text-xs truncate">
+                                      {noti.title || "Notification"}
+                                    </span>
                                     <span className="text-[9px] text-white/40">{formatDate(noti.createdAt)}</span>
                                   </div>
                                   <p className="text-[10px] text-white/70 mt-1 line-clamp-2">{noti.message}</p>
@@ -2212,8 +2218,8 @@ export default function Landing() {
                             )}
                           </div>
                         </div>
-                      </>
-                    )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Avatar circle */}
