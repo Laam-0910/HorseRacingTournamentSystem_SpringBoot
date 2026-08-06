@@ -28,12 +28,7 @@ export default function VietQRPaywallModal({
     if (!hasRaceMeeting) return "SEASON";
     return initialPackage || "RACEMEETING";
   });
-
-  useEffect(() => {
-    if (!hasRaceMeeting && selectedPackage !== "SEASON") {
-      setSelectedPackage("SEASON");
-    }
-  }, [hasRaceMeeting, selectedPackage]);
+  const [paymentMethod, setPaymentMethod] = useState<"WALLET" | "VIETQR">("VIETQR");
 
 
   const [purchasing, setPurchasing] = useState(false);
@@ -471,28 +466,72 @@ export default function VietQRPaywallModal({
                 2. Choose Payment Method
               </label>
 
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "1.25rem", alignItems: "stretch" }}>
-                
-                {/* Column 1 / Method A: Available Wallet Balance */}
-                <div style={{ background: "rgba(201,162,39,0.06)", padding: "1.25rem", borderRadius: "0.85rem", border: "1px solid rgba(201,162,39,0.25)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              {/* Payment Method Selector Cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.25rem" }}>
+                {/* Method 1 Option Card */}
+                <div
+                  onClick={() => setPaymentMethod("WALLET")}
+                  style={{
+                    background: paymentMethod === "WALLET" ? "rgba(201,162,39,0.15)" : "rgba(255,255,255,0.03)",
+                    border: paymentMethod === "WALLET" ? "2px solid #c9a227" : "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "0.75rem",
+                    padding: "1rem",
+                    cursor: "pointer",
+                    transition: "all 0.2s flex",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem"
+                  }}
+                >
+                  <span style={{ fontSize: "1.5rem" }}>💳</span>
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.75rem" }}>
-                      <span style={{ fontSize: "1.25rem" }}>💳</span>
-                      <div>
-                        <h4 style={{ fontSize: "13px", fontWeight: "bold", color: "#f4f2ec", margin: 0 }}>Method 1: Account Wallet</h4>
-                        <p style={{ fontSize: "10px", color: "#a0a0a0", margin: 0 }}>Instant one-click deduction</p>
-                      </div>
-                    </div>
+                    <h4 style={{ fontSize: "13px", fontWeight: "bold", color: "#f4f2ec", margin: 0 }}>Method 1: Account Wallet</h4>
+                    <p style={{ fontSize: "10px", color: paymentMethod === "WALLET" ? "#fbbf24" : "#a0a0a0", margin: "2px 0 0 0", fontFamily: "monospace" }}>
+                      Bal: {walletBal.toLocaleString('en-US')} VND
+                    </p>
+                  </div>
+                </div>
 
-                    <div style={{ background: "rgba(0,0,0,0.35)", padding: "0.875rem", borderRadius: "0.6rem", border: "1px solid rgba(255,255,255,0.06)", marginBottom: "1rem" }}>
-                      <div style={{ fontSize: "10px", color: "#a0a0a0", fontFamily: "monospace" }}>Your Available Balance:</div>
-                      <div style={{ fontSize: "1.35rem", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace", marginTop: "2px" }}>
+                {/* Method 2 Option Card */}
+                <div
+                  onClick={() => setPaymentMethod("VIETQR")}
+                  style={{
+                    background: paymentMethod === "VIETQR" ? "rgba(201,162,39,0.15)" : "rgba(255,255,255,0.03)",
+                    border: paymentMethod === "VIETQR" ? "2px solid #c9a227" : "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "0.75rem",
+                    padding: "1rem",
+                    cursor: "pointer",
+                    transition: "all 0.2s",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.75rem"
+                  }}
+                >
+                  <span style={{ fontSize: "1.5rem" }}>📲</span>
+                  <div>
+                    <h4 style={{ fontSize: "13px", fontWeight: "bold", color: "#f4f2ec", margin: 0 }}>Method 2: Scan VietQR Code</h4>
+                    <p style={{ fontSize: "10px", color: paymentMethod === "VIETQR" ? "#fbbf24" : "#a0a0a0", margin: "2px 0 0 0", fontFamily: "monospace" }}>
+                      Banking App Instant Auto-Verification
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Active Payment Method Full-Width Expanded Content */}
+              {paymentMethod === "WALLET" && (
+                <div style={{ background: "rgba(201,162,39,0.06)", padding: "1.5rem", borderRadius: "0.85rem", border: "1px solid rgba(201,162,39,0.3)", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem" }}>
+                    <div>
+                      <h4 style={{ fontSize: "15px", fontWeight: "bold", color: "#f4f2ec", margin: 0 }}>Account Wallet Payment</h4>
+                      <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", margin: "4px 0 0 0" }}>
+                        Instant automated deduction from your system wallet balance.
+                      </p>
+                    </div>
+                    <div style={{ background: "rgba(0,0,0,0.4)", padding: "0.75rem 1.25rem", borderRadius: "0.6rem", border: "1px solid rgba(201,162,39,0.3)" }}>
+                      <div style={{ fontSize: "10px", color: "#a0a0a0", fontFamily: "monospace" }}>Available Wallet Balance:</div>
+                      <div style={{ fontSize: "1.4rem", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace" }}>
                         {walletBal.toLocaleString('en-US')} VND
                       </div>
-                    </div>
-
-                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", lineHeight: "1.4", marginBottom: "1rem" }}>
-                      Pay directly using funds available in your account wallet balance. Instant activation upon click.
                     </div>
                   </div>
 
@@ -501,63 +540,54 @@ export default function VietQRPaywallModal({
                     disabled={payingViaWallet || walletBal < finalAmount}
                     style={{
                       width: "100%",
-                      padding: "0.75rem",
+                      padding: "0.875rem",
                       background: walletBal >= finalAmount ? "linear-gradient(45deg, #c9a227, #f3d06c)" : "#27272a",
                       color: walletBal >= finalAmount ? "#000" : "#71717a",
                       border: "none",
                       borderRadius: "0.5rem",
-                      fontSize: "12px",
+                      fontSize: "13px",
                       fontFamily: "monospace",
                       fontWeight: 700,
                       cursor: walletBal >= finalAmount ? "pointer" : "not-allowed",
                       transition: "all 0.2s",
-                      boxShadow: walletBal >= finalAmount ? "0 4px 15px rgba(201,162,39,0.3)" : "none"
+                      boxShadow: walletBal >= finalAmount ? "0 4px 20px rgba(201,162,39,0.4)" : "none"
                     }}
                   >
-                    {payingViaWallet ? "Processing Deduction..." : walletBal >= finalAmount ? `⚡ Pay ${finalAmount.toLocaleString('en-US')} VND via Wallet` : `🔒 Insufficient Balance (${walletBal.toLocaleString('en-US')} VND)`}
+                    {payingViaWallet ? "Processing Deduction..." : walletBal >= finalAmount ? `⚡ Confirm & Pay ${finalAmount.toLocaleString('en-US')} VND via Wallet` : `🔒 Insufficient Balance (${walletBal.toLocaleString('en-US')} VND)`}
                   </button>
                 </div>
+              )}
 
-                {/* Column 2 / Method B: Scan VietQR Transfer */}
-                <div style={{ background: "rgba(0,0,0,0.4)", padding: "1.25rem", borderRadius: "0.85rem", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "0.875rem" }}>
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.75rem" }}>
-                      <span style={{ fontSize: "1.25rem" }}>📲</span>
-                      <div>
-                        <h4 style={{ fontSize: "13px", fontWeight: "bold", color: "#f4f2ec", margin: 0 }}>Method 2: Scan VietQR Code</h4>
-                        <p style={{ fontSize: "10px", color: "#a0a0a0", margin: 0 }}>Banking app auto-verification</p>
-                      </div>
+              {paymentMethod === "VIETQR" && (
+                <div style={{ background: "rgba(0,0,0,0.5)", padding: "1.5rem", borderRadius: "0.85rem", border: "1px solid rgba(201,162,39,0.3)", display: "flex", flexDirection: "column", alignItems: "center", gap: "1.25rem" }}>
+                  {/* Large Prominent VietQR Display (240px x 240px) */}
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", background: "rgba(255,255,255,0.03)", padding: "1.25rem", borderRadius: "1rem", border: "1px solid rgba(201,162,39,0.3)" }}>
+                    <div style={{ background: "#ffffff", padding: "12px", borderRadius: "0.85rem", boxShadow: "0 15px 35px rgba(0,0,0,0.7)" }}>
+                      <img
+                        src={qrImageUrl}
+                        alt="VietQR Code"
+                        style={{ width: "240px", height: "240px", display: "block", borderRadius: "0.5rem" }}
+                      />
                     </div>
+                    <span style={{ fontSize: "11px", color: "#fbbf24", fontFamily: "monospace", fontWeight: 700, marginTop: "10px" }}>
+                      📱 Open Mobile Banking App & Scan QR Code Above
+                    </span>
+                  </div>
 
-                    {/* Large Prominent VietQR Display */}
-                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "0.75rem", border: "1px solid rgba(201,162,39,0.25)", marginBottom: "0.75rem" }}>
-                      <div style={{ background: "#ffffff", padding: "10px", borderRadius: "0.75rem", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}>
-                        <img
-                          src={qrImageUrl}
-                          alt="VietQR Code"
-                          style={{ width: "180px", height: "180px", display: "block", borderRadius: "0.375rem" }}
-                        />
-                      </div>
-                      <span style={{ fontSize: "10px", color: "#fbbf24", fontFamily: "monospace", fontWeight: 600, marginTop: "8px" }}>
-                        📱 Scan with Banking App
-                      </span>
+                  {/* Bank Transfer Details Grid */}
+                  <div style={{ width: "100%", maxWidth: "32rem", fontSize: "11px", color: "#a0a0a0", display: "flex", flexDirection: "column", gap: "6px", background: "rgba(0,0,0,0.3)", padding: "1rem", borderRadius: "0.75rem", border: "1px solid rgba(255,255,255,0.08)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", fontFamily: "monospace", color: "#fbbf24", background: "rgba(251,191,36,0.1)", padding: "4px 8px", borderRadius: "4px", border: "1px solid rgba(251,191,36,0.2)", marginBottom: "4px" }}>
+                      <span>⏱️ QR Session Expires in:</span>
+                      <strong style={{ color: "#fcd34d", fontSize: "12px" }}>{formattedTime}</strong>
                     </div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Receiving Bank:</span> <strong style={{ color: "#fff" }}>{bankName}</strong></div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Account Number:</span> <strong style={{ color: "#c9a227", fontFamily: "monospace" }}>{accountNumber}</strong></div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Account Holder:</span> <strong style={{ color: "#fff" }}>{accountHolder}</strong></div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Transfer Content:</span> <strong style={{ color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "2px 6px", borderRadius: "4px", wordBreak: "break-all" }}>{transferContent}</strong></div>
+                  </div>
 
-                    {/* Bank Transfer Details */}
-                    <div style={{ fontSize: "10px", color: "#a0a0a0", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.3)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.05)" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "10px", fontFamily: "monospace", color: "#fbbf24", background: "rgba(251,191,36,0.1)", padding: "3px 6px", borderRadius: "4px", border: "1px solid rgba(251,191,36,0.2)", marginBottom: "2px" }}>
-                        <span>⏱️ Expires in:</span>
-                        <strong style={{ color: "#fcd34d", fontSize: "11px" }}>{formattedTime}</strong>
-                      </div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}><span>Bank:</span> <strong style={{ color: "#fff" }}>{bankName}</strong></div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}><span>Account:</span> <strong style={{ color: "#c9a227", fontFamily: "monospace" }}>{accountNumber}</strong></div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}><span>Holder:</span> <strong style={{ color: "#fff" }}>{accountHolder}</strong></div>
-                      <div style={{ display: "flex", justifyContent: "space-between" }}><span>Content:</span> <strong style={{ color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "1px 5px", borderRadius: "3px", wordBreak: "break-all" }}>{transferContent}</strong></div>
-                    </div>
-
-                    <div style={{ marginTop: "0.6rem", padding: "0.35rem 0.5rem", background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)", color: "#34d399", borderRadius: "0.375rem", fontSize: "9px", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "4px" }}>
-                      <span>🟢</span> Realtime Bank Webhook Active
-                    </div>
+                  <div style={{ padding: "0.4rem 0.75rem", background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.25)", color: "#34d399", borderRadius: "0.5rem", fontSize: "10px", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <span>🟢</span> Realtime Automatic Bank Webhook Active (Auto unlocks upon transfer)
                   </div>
 
                   <button
@@ -565,23 +595,23 @@ export default function VietQRPaywallModal({
                     disabled={purchasing || paymentSuccess}
                     style={{
                       width: "100%",
-                      padding: "0.65rem",
-                      background: purchasing || paymentSuccess ? "#27272a" : "linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.08) 100%)",
-                      border: "1px dashed rgba(251,191,36,0.45)",
+                      maxWidth: "32rem",
+                      padding: "0.85rem",
+                      background: purchasing || paymentSuccess ? "#27272a" : "linear-gradient(135deg, rgba(251,191,36,0.25) 0%, rgba(251,191,36,0.1) 100%)",
+                      border: "1px dashed rgba(251,191,36,0.5)",
                       color: purchasing || paymentSuccess ? "#52525b" : "#fbbf24",
-                      borderRadius: "0.5rem",
-                      fontSize: "11px",
+                      borderRadius: "0.6rem",
+                      fontSize: "12px",
                       fontFamily: "monospace",
-                      fontWeight: 600,
+                      fontWeight: 700,
                       cursor: purchasing || paymentSuccess ? "not-allowed" : "pointer",
                       transition: "all 0.2s"
                     }}
                   >
-                    {purchasing ? "⏳ Processing..." : paymentSuccess ? "✅ Payment Verified" : "⚡ Confirm Payment (Simulate Transfer)"}
+                    {purchasing ? "⏳ Verifying Payment..." : paymentSuccess ? "✅ Payment Verified" : "⚡ Confirm Payment (Simulate Transfer)"}
                   </button>
                 </div>
-
-              </div>
+              )}
             </div>
           )}
         </div>
