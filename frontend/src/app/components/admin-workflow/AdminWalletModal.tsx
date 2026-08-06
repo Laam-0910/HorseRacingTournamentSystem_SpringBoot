@@ -5,6 +5,7 @@ import { $t } from "../../../lib/i18n";
 import { Pagination } from "../common/Pagination";
 import VietQRModal from "../common/VietQRModal";
 import { useAuth } from "../../../context/AuthContext";
+import { confirm } from "../../../lib/confirm";
 
 interface AdminWalletModalProps {
   onClose?: () => void;
@@ -140,7 +141,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
   };
 
   const handleProcessWithdrawal = async (wrId: number) => {
-    if (!window.confirm(`Confirm: Have you already transferred the funds to the user's bank account? Clicking OK will deduct the amount from their wallet.`)) return;
+    if (!await confirm(`Confirm: Have you already transferred the funds to the user's bank account? Clicking OK will deduct the amount from their wallet.`)) return;
     setProcessingWrId(wrId);
     setError(""); setSuccess("");
     try {
@@ -156,7 +157,7 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
 
   const handleRejectWithdrawal = async (wrId: number) => {
     const note = (rejectNoteMap[wrId] || "").trim() || "Rejected by admin.";
-    if (!window.confirm(`Reject withdrawal request #${wrId}? Reason: "${note}". User wallet will NOT be deducted.`)) return;
+    if (!await confirm(`Reject withdrawal request #${wrId}? Reason: "${note}". User wallet will NOT be deducted.`)) return;
     setProcessingWrId(wrId);
     setError(""); setSuccess("");
     try {

@@ -325,6 +325,42 @@ public class AdminUserService {
 
         List<RaceEntry> raceEntries = raceEntryRepository.findByRaceId(entry.getRaceId());
 
+        // Kiểm tra số lượng ngựa đã phê duyệt (APPROVED) trong trận đua đã đạt giới hạn tối đa chưa
+        com.horseracing.backend.entity.Race race = raceRepository.findById(entry.getRaceId())
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+        long approvedCount = raceEntries.stream()
+                .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()) && !e.getId().equals(id))
+                .count();
+        if (approvedCount >= (race.getMaxEntries() != null ? race.getMaxEntries() : 14)) {
+            throw new IllegalArgumentException("Race has reached its maximum entry capacity.");
+        }
+
+        // Kiểm tra trùng lịch thi đấu cùng ngày cùng giờ của Kỵ sĩ và Chiến mã giữa các trận đua
+        if (race.getStartTime() != null) {
+            Timestamp targetStart = race.getStartTime();
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+            String formattedTime = sdf.format(targetStart);
+
+            List<RaceEntry> otherApprovedEntries = raceEntryRepository.findAll().stream()
+                    .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()) && !e.getRaceId().equals(entry.getRaceId()))
+                    .collect(Collectors.toList());
+
+            for (RaceEntry other : otherApprovedEntries) {
+                com.horseracing.backend.entity.Race otherRace = raceRepository.findById(other.getRaceId()).orElse(null);
+                if (otherRace != null && otherRace.getStartTime() != null) {
+                    long diffMs = Math.abs(otherRace.getStartTime().getTime() - targetStart.getTime());
+                    if (diffMs < 600000) { // Cùng khung giờ (trong khoảng 10 phút)
+                        if (entry.getHorseId().equals(other.getHorseId())) {
+                            throw new IllegalArgumentException("This horse is already scheduled to run in another race at the same time (" + formattedTime + " - Race #" + otherRace.getId() + ").");
+                        }
+                        if (entry.getJockeyId() != null && entry.getJockeyId().equals(other.getJockeyId())) {
+                            throw new IllegalArgumentException("This jockey is already scheduled to ride in another race at the same time (" + formattedTime + " - Race #" + otherRace.getId() + ").");
+                        }
+                    }
+                }
+            }
+        }
+
         // 0. Verify that if an invitation exists for this horse, the Jockey has ACCEPTED it
         if (entry.getHorseId() != null && entry.getRaceId() != null) {
             List<com.horseracing.backend.entity.RaceInvitation> invites = invitationRepository.findByRaceId(entry.getRaceId());

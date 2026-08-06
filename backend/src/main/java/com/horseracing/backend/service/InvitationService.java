@@ -178,6 +178,14 @@ public class InvitationService {
         // 4. Kiểm tra nài ngựa có đăng ký buổi đua này và đã được duyệt hay chưa
         com.horseracing.backend.entity.Race race = raceRepository.findById(raceId)
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+
+        long approvedCount = raceEntryRepository.findByRaceId(raceId).stream()
+                .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()))
+                .count();
+        if (approvedCount >= (race.getMaxEntries() != null ? race.getMaxEntries() : 14)) {
+            throw new IllegalArgumentException("Race has reached its maximum entry capacity.");
+        }
+
         Integer meetingId = race.getRaceMeetingId();
 
         jockeyRegRepository.findByRaceMeetingIdAndJockeyId(meetingId, jockeyId)
@@ -309,6 +317,15 @@ public class InvitationService {
         // Kiểm tra trùng lịch thi đấu cùng ngày cùng giờ giữa các trận đua của Kỵ sĩ & Chiến mã
         validateTimeConflict(invite.getJockeyId(), invite.getHorseId(), invite.getRaceId());
 
+        com.horseracing.backend.entity.Race race = raceRepository.findById(invite.getRaceId())
+                .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+        long approvedCount = raceEntryRepository.findByRaceId(invite.getRaceId()).stream()
+                .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()))
+                .count();
+        if (approvedCount >= (race.getMaxEntries() != null ? race.getMaxEntries() : 14)) {
+            throw new IllegalArgumentException("Race has reached its maximum entry capacity.");
+        }
+
         // Kiểm tra xem nài ngựa đã có lượt đua hoạt động nào trong trận này chưa
         List<RaceEntry> activeEntries = raceEntryRepository.findByRaceId(invite.getRaceId());
         boolean isBooked = activeEntries.stream()
@@ -380,6 +397,13 @@ public class InvitationService {
 
         com.horseracing.backend.entity.Race race = raceRepository.findById(entry.getRaceId())
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
+
+        long approvedCount = raceEntryRepository.findByRaceId(entry.getRaceId()).stream()
+                .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()))
+                .count();
+        if (approvedCount >= (race.getMaxEntries() != null ? race.getMaxEntries() : 14)) {
+            throw new IllegalArgumentException("Race has reached its maximum entry capacity.");
+        }
 
         if (!"DECLARATION_OPEN".equalsIgnoreCase(race.getStatus())) {
             throw new IllegalStateException("REGISTRATION_CLOSED");

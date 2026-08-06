@@ -173,6 +173,37 @@ public class RaceService {
             Timestamp newTime = DateTimeParser.parseTimestamp((String) body.get("startTime")); // Parse chuỗi thời gian sang Timestamp
             validateRaceTimeMatchesMeeting(newTime, race.getRaceMeetingId()); // Kiểm tra ngày xuất phát trùng với ngày của Ngày hội đua
             validateUniqueRaceTime(newTime, race.getRaceMeetingId(), id); // Kiểm tra không trùng mốc giờ với các trận đua khác
+
+            // Kiểm tra trùng lịch thi đấu cùng ngày cùng giờ của Kỵ sĩ và Chiến mã cho các lượt đã duyệt trong trận đua này
+            List<RaceEntry> currentApprovedEntries = raceEntryRepository.findByRaceId(id).stream()
+                    .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()))
+                    .collect(Collectors.toList());
+            if (!currentApprovedEntries.isEmpty()) {
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm");
+                String formattedTime = sdf.format(newTime);
+
+                List<RaceEntry> otherApprovedEntries = raceEntryRepository.findAll().stream()
+                        .filter(e -> "APPROVED".equalsIgnoreCase(e.getStatus()) && !e.getRaceId().equals(id))
+                        .collect(Collectors.toList());
+
+                for (RaceEntry entry : currentApprovedEntries) {
+                    for (RaceEntry other : otherApprovedEntries) {
+                        Race otherRace = raceRepository.findById(other.getRaceId()).orElse(null);
+                        if (otherRace != null && otherRace.getStartTime() != null) {
+                            long diffMs = Math.abs(otherRace.getStartTime().getTime() - newTime.getTime());
+                            if (diffMs < 600000) { // Cùng khung giờ (trong khoảng 10 phút)
+                                if (entry.getHorseId().equals(other.getHorseId())) {
+                                    throw new IllegalArgumentException("This horse is already scheduled to run in another race at the same time (" + formattedTime + " - Race #" + otherRace.getId() + ").");
+                                }
+                                if (entry.getJockeyId() != null && entry.getJockeyId().equals(other.getJockeyId())) {
+                                    throw new IllegalArgumentException("This jockey is already scheduled to ride in another race at the same time (" + formattedTime + " - Race #" + otherRace.getId() + ").");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             race.setStartTime(newTime); // Cập nhật mốc giờ xuất phát mới
         }
         if (body.get("registrationStartTime") != null) { // Kiểm tra nếu có cập nhật thời gian mở đăng ký
