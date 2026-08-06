@@ -96,21 +96,15 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
 
   const isMobileDevice = typeof window !== "undefined" && (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window));
 
-  // Auto-config default settings based on device type (mobile vs laptop)
+  // Stream Resolution, FPS, and Graphics Quality Controls (Optimal Aug 5th default: 720p, 18 FPS, 0.60 Quality for crystal clear + zero lag)
   const [resolution, setResolution] = useState<"360p" | "480p" | "720p" | "1080p">(() => {
-    const saved = localStorage.getItem("cam_res");
-    if (saved) return saved as any;
-    return isMobileDevice ? "720p" : "480p"; // Laptop default: 480p for stability
+    return (localStorage.getItem("cam_res") as any) || "720p";
   });
   const [targetFps, setTargetFps] = useState<number>(() => {
-    const saved = localStorage.getItem("cam_fps");
-    if (saved) return parseInt(saved, 10);
-    return isMobileDevice ? 20 : 15; // Laptop default: 15fps to reduce lag
+    return parseInt(localStorage.getItem("cam_fps") || "18", 10);
   });
   const [jpegQuality, setJpegQuality] = useState<number>(() => {
-    const saved = localStorage.getItem("cam_quality");
-    if (saved) return parseFloat(saved);
-    return isMobileDevice ? 0.70 : 0.55; // Laptop default: lower quality for performance
+    return parseFloat(localStorage.getItem("cam_quality") || "0.60");
   });
   const [showSettings, setShowSettings] = useState(false);
 
@@ -120,10 +114,8 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
   const intervalRef = useRef<any>(null);
   const isWsReadyRef = useRef<boolean>(false); // Track WebSocket ready state
   const streamRef = useRef<MediaStream | null>(null); // Ref to track latest stream (avoids stale closure)
-  const isEncodingFrameRef = useRef<boolean>(false); // Lock flag to prevent concurrent overlapping toBlob calls on mobile
+  const isEncodingFrameRef = useRef<boolean>(false); // Lock flag to prevent concurrent overlapping calls
   const frameSeqRef = useRef<number>(0); // Monotonic frame sequence counter
-
-
 
   const startCamera = async (mode: "environment" | "user") => {
     try {
@@ -152,7 +144,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
         }
 
         if (!mediaStream) {
-          // Mobile & Fallback camera constraints (keep mobile behavior untouched)
+          // Mobile & Fallback camera constraints (Aug 5th exact smooth mode)
           try {
             mediaStream = await navigator.mediaDevices.getUserMedia({
               video: { facingMode: { exact: mode } }

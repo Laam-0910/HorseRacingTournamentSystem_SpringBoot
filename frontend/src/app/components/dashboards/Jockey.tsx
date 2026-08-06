@@ -1147,7 +1147,7 @@ export default function Jockey() {
     if (!user) return;
     setLoading(true);
     try {
-      const [stats, mountData, invites, allMeetings, viols, racesData, refsData, walletRes] = await Promise.all([
+      const [stats, mountData, invites, allMeetings, viols, racesData, refsData, walletRes, userProf] = await Promise.all([
         api.get<any>(`/jockey/${user.id}/dashboard`).catch(() => null),
         api.get<any[]>(`/jockey/${user.id}/mounts`).catch(() => []),
         api.get<any[]>(`/invitations?jockeyId=${user.id}`).catch(() => []),
@@ -1156,10 +1156,20 @@ export default function Jockey() {
         api.get<any[]>("/public/races").catch(() => []),
         api.get<Record<number, any[]>>("/public/races/referees").catch(() => ({})),
         api.get<any>(`/admin/users/${user.id}/wallet`).catch(() => null),
+        api.get<any>(`/public/users/${user.id}/profile`).catch(() => null),
       ]);
       setDashboard(stats);
-      if (walletRes?.walletBalance !== undefined && user) {
-        setUser({ ...user, walletBalance: Number(walletRes.walletBalance) });
+      if ((walletRes?.walletBalance !== undefined || userProf?.jockeyFee !== undefined) && user) {
+        const updatedFee = userProf?.jockeyFee !== undefined && userProf?.jockeyFee !== null ? Number(userProf.jockeyFee) : (user as any)?.jockeyFee;
+        const updatedBalance = walletRes?.walletBalance !== undefined ? Number(walletRes.walletBalance) : user.walletBalance;
+        setUser({
+          ...user,
+          walletBalance: updatedBalance,
+          jockeyFee: updatedFee,
+          fullName: userProf?.fullName || user.fullName,
+          avatar: userProf?.avatar || user.avatar,
+          weight: userProf?.weight !== undefined && userProf?.weight !== null ? Number(userProf.weight) : user.weight,
+        });
       }
       setMounts(mountData);
       setInvitations(Array.isArray(invites) ? invites : []);
@@ -1173,8 +1183,10 @@ export default function Jockey() {
   };
 
   useEffect(() => { 
-    fetchData(); 
-  }, [user]);
+    if (user?.id) {
+      fetchData(); 
+    }
+  }, [user?.id]);
 
   const handleAcceptInvite = async (id: number) => {
     try {
@@ -1231,7 +1243,10 @@ export default function Jockey() {
     } catch (err: any) { setErrorMsg(getErrMsg(err, "Failed to register for meeting.")); }
   };
 
-  const hasUnpaidFine = violations?.some((v: any) => (v.fineStatus === "UNPAID" || !v.fineStatus) && v.status !== "DISMISSED");
+  const hasUnpaidFine = violations?.some((v: any) => {
+    const isPaidOrDismissed = v.status === "CONFIRMED" || v.status === "PAID" || v.fineStatus === "PAID" || v.status === "DISMISSED";
+    return !isPaidOrDismissed;
+  });
 
   const handleAcknowledgeViolation = async (violationId: number) => {
     try {
@@ -1258,7 +1273,10 @@ export default function Jockey() {
 
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Jockey Hub";
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
-  const pendingViolations = violations.filter(v => (v.fineStatus === "UNPAID" || !v.fineStatus) && v.status !== "DISMISSED").length;
+  const pendingViolations = violations?.filter((v: any) => {
+    const isPaidOrDismissed = v.status === "CONFIRMED" || v.status === "PAID" || v.fineStatus === "PAID" || v.status === "DISMISSED";
+    return !isPaidOrDismissed;
+  }).length || 0;
 
   const navItemsWithBadge = NAV_ITEMS.map(n => {
     if (n.view === "invitations") return { ...n, badge: pendingInvitations };

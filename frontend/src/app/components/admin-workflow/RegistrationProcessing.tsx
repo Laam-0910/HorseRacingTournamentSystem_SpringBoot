@@ -337,69 +337,92 @@ export default function RegistrationProcessing() {
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(21,19,16,0.6)" }}>
           <h4 style={{ fontFamily: "'Roboto Slab', serif", fontWeight: 700, fontSize: "0.9rem", color: "#f4f2ec" }}>{$t("Pending Horse Meeting Registrations", (localStorage.getItem('app-lang') || 'en'))}</h4>
           <p style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "0.25rem" }}>{$t("Horse event entry submissions awaiting steward approval", (localStorage.getItem('app-lang') || 'en'))}</p>
+          <p style={{ fontSize: "10px", color: "#34d399", marginTop: "0.35rem", fontStyle: "italic", fontFamily: "monospace" }}>
+            💡 {$t("System Feature: Approving an Owner's Meeting Registration automatically approves all active horses registered by that Owner for the event.", (localStorage.getItem('app-lang') || 'en'))}
+          </p>
         </div>
-        {isMobile ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
-            {loading ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</div>
-            ) : pendingHorseRegs.length === 0 ? (
-              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending horse meeting registrations found.", (localStorage.getItem('app-lang') || 'en'))}</div>
-            ) : pendingHorseRegs.map((e) => (
-              <div key={e.registration.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                  <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>REG-H-{e.registration.id}</span>
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button onClick={() => handleHorseRegReject(e.registration.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✕ Reject</button>
-                    <button onClick={() => handleHorseRegApprove(e.registration.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
-                  </div>
-                </div>
-                <div style={{ marginBottom: '0.5rem' }}>
-                  <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px' }}>{e.horse?.name}</div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Rating: {e.horse?.currentRating} | Breed: {e.horse?.breed}</div>
-                </div>
-                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginBottom: '0.4rem' }}>{$t("Owner:", (localStorage.getItem('app-lang') || 'en'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username}</span></div>
-                <div style={{ fontSize: '12px', fontWeight: 600, color: '#f4f2ec', marginBottom: '0.25rem' }}>{e.meeting?.name}</div>
-                <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>Submitted: {e.registration?.registeredAt}</div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
-              <thead>
-                <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
-                  {["Ref", "Horse", "Owner", "Target Meeting", "Submitted", "Actions"].map((h, idx) => (
-                    <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 5 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'en'))}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {loading ? (
-                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
-                ) : pendingHorseRegs.length === 0 ? (
-                  <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No pending horse meeting registrations found.", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
-                ) : pendingHorseRegs.map((e) => (
-                  <tr key={e.registration.id} className="hover:bg-white/[0.015] transition-colors">
-                    <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>REG-H-{e.registration.id}</td>
-                    <td style={{ padding: "0.75rem 1rem" }}>
-                      <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.horse?.name}</div>
-                      <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Rating: {e.horse?.currentRating} | Breed: {e.horse?.breed}</div>
-                    </td>
-                    <td style={{ padding: "0.75rem 1rem", fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>{e.owner?.username}</td>
-                    <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{e.meeting?.name}</td>
-                    <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{e.registration?.registeredAt}</td>
-                    <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
-                      <div style={{ display: "inline-flex", gap: "0.5rem" }}>
-                        <button onClick={() => handleHorseRegReject(e.registration.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
-                        <button onClick={() => handleHorseRegApprove(e.registration.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
+        {(() => {
+          const validPageH = Math.min(Math.max(1, pageHorse), Math.max(1, Math.ceil(pendingHorseRegs.length / pageSizeHorse)));
+          const pagedHorseRegs = pendingHorseRegs.slice((validPageH - 1) * pageSizeHorse, validPageH * pageSizeHorse);
+
+          return (
+            <>
+              {isMobile ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', padding: '1rem' }}>
+                  {loading ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</div>
+                  ) : pendingHorseRegs.length === 0 ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace', fontSize: '12px' }}>{$t("No pending horse meeting registrations found.", (localStorage.getItem('app-lang') || 'en'))}</div>
+                  ) : pagedHorseRegs.map((e) => (
+                    <div key={e.registration.id} style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '0.75rem', padding: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#c9a227' }}>REG-H-{e.registration.id}</span>
+                        <div style={{ display: 'flex', gap: '0.5rem' }}>
+                          <button onClick={() => handleHorseRegReject(e.registration.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#f87171', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✕ Reject</button>
+                          <button onClick={() => handleHorseRegApprove(e.registration.id)} style={{ padding: '0.25rem 0.5rem', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#34d399', fontSize: '10px', fontFamily: 'monospace', borderRadius: '0.25rem', cursor: 'pointer' }}>✓ Approve</button>
+                        </div>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                      <div style={{ marginBottom: '0.5rem' }}>
+                        <div style={{ fontWeight: 'bold', color: '#f4f2ec', fontSize: '14px' }}>{e.horse?.name}</div>
+                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Rating: {e.horse?.currentRating} | Breed: {e.horse?.breed}</div>
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginBottom: '0.4rem' }}>{$t("Owner:", (localStorage.getItem('app-lang') || 'en'))}<span style={{ color: 'rgba(255,255,255,0.8)' }}>{e.owner?.username}</span></div>
+                      <div style={{ fontSize: '12px', fontWeight: 600, color: '#f4f2ec', marginBottom: '0.25rem' }}>{e.meeting?.name}</div>
+                      <div style={{ fontSize: '10px', fontFamily: 'monospace', color: 'rgba(255,255,255,0.4)' }}>Submitted: {e.registration?.registeredAt}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 800 }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(255,255,255,0.02)" }}>
+                        {["Ref", "Horse", "Owner", "Target Meeting", "Submitted", "Actions"].map((h, idx) => (
+                          <th key={idx} style={{ padding: "0.75rem 1rem", textTransform: "uppercase", fontSize: "9px", fontFamily: "monospace", color: "rgba(255,255,255,0.35)", textAlign: idx === 5 ? "right" : "left" }}>{$t(h, (localStorage.getItem('app-lang') || 'en'))}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {loading ? (
+                        <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)" }}>{$t("Loading...", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
+                      ) : pendingHorseRegs.length === 0 ? (
+                        <tr><td colSpan={6} style={{ padding: "2rem", textAlign: "center", color: "rgba(255,255,255,0.4)", fontFamily: "monospace", fontSize: "12px" }}>{$t("No pending horse meeting registrations found.", (localStorage.getItem('app-lang') || 'en'))}</td></tr>
+                      ) : pagedHorseRegs.map((e) => (
+                        <tr key={e.registration.id} className="hover:bg-white/[0.015] transition-colors">
+                          <td style={{ padding: "0.75rem 1rem", fontFamily: "monospace", fontSize: "12px", color: "#c9a227" }}>REG-H-{e.registration.id}</td>
+                          <td style={{ padding: "0.75rem 1rem" }}>
+                            <div style={{ fontWeight: "bold", color: "#f4f2ec", fontSize: "13px" }}>{e.horse?.name}</div>
+                            <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.4)", marginTop: "2px" }}>Rating: {e.horse?.currentRating} | Breed: {e.horse?.breed}</div>
+                          </td>
+                          <td style={{ padding: "0.75rem 1rem", fontSize: "12px", color: "rgba(255,255,255,0.7)" }}>{e.owner?.username}</td>
+                          <td style={{ padding: "0.75rem 1rem", fontSize: "12px", fontWeight: "bold", color: "#f4f2ec" }}>{e.meeting?.name}</td>
+                          <td style={{ padding: "0.75rem 1rem", fontSize: "11px", fontFamily: "monospace", color: "rgba(255,255,255,0.5)" }}>{e.registration?.registeredAt}</td>
+                          <td style={{ padding: "0.75rem 1rem", textAlign: "right" }}>
+                            <div style={{ display: "inline-flex", gap: "0.5rem" }}>
+                              <button onClick={() => handleHorseRegReject(e.registration.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.2)", color: "#f87171", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✕ Reject</button>
+                              <button onClick={() => handleHorseRegApprove(e.registration.id)} style={{ padding: "0.25rem 0.5rem", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.2)", color: "#34d399", fontSize: "10px", fontFamily: "monospace", borderRadius: "0.25rem", cursor: "pointer" }}>✓ Approve</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {pendingHorseRegs.length > pageSizeHorse && (
+                <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                  <Pagination
+                    currentPage={validPageH}
+                    totalItems={pendingHorseRegs.length}
+                    pageSize={pageSizeHorse}
+                    onPageChange={(p: number) => setPageHorse(p)}
+                    onPageSizeChange={(s: number) => { setPageSizeHorse(s); setPageHorse(1); }}
+                  />
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
 
       <div className="rounded-xl border" style={{ background: "rgba(21,19,16,0.3)", borderColor: "rgba(255,255,255,0.08)", overflow: "hidden" }}>

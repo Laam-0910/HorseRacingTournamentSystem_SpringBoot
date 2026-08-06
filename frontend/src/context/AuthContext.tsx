@@ -14,6 +14,7 @@ export interface AuthUser {
   totalTop3Finishes?: number;
   biography?: string;
   walletBalance?: number;
+  jockeyFee?: number;
 }
 
 interface AuthContextType {

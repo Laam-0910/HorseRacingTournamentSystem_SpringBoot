@@ -182,7 +182,7 @@ export default function ProfileModal({ userId, onClose }: ProfileModalProps) {
                          <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-center col-span-2">
                           <p className="text-[9px] font-mono text-amber-400/80 uppercase font-bold">🏷️ Jockey Hire Fee</p>
                           <p className="text-lg font-bold font-mono text-amber-400 mt-0.5">
-                            {Number(profile.jockeyFee || 500000).toLocaleString()} VND
+                            {Number(profile.jockeyFee !== null && profile.jockeyFee !== undefined ? profile.jockeyFee : 500000).toLocaleString()} VND
                           </p>
                         </div>
                       </>

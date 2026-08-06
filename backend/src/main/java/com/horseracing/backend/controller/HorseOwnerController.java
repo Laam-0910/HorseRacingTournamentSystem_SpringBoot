@@ -76,4 +76,15 @@ public class HorseOwnerController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
         }
     }
+
+    // Chủ sở hữu ngựa nộp phạt trực tiếp cho vi phạm
+    @PostMapping("/violations/{violationId}/pay")
+    public ResponseEntity<?> payOwnerViolationFine(@PathVariable Integer violationId) {
+        try {
+            refereeService.confirmViolation(violationId);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Owner penalty fine paid successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "error", e.getMessage()));
+        }
+    }
 }

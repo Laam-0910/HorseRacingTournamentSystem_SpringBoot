@@ -429,52 +429,53 @@ function HubView({ dashboard, meetings, stable, onRegisterOwner, onRegisterHorse
                       </div>
                     ) : (
                       <>
-                        {/* Register button: only show when NOT registered (no entry at all) */}
-                        {!isReg && (
-                          <div>
-                            {unregHorses.length === 0
-                              ? (
-                                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                                  <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontStyle: "italic", fontFamily: "monospace" }}>No unregistered horses available.</p>
-                                  <button
-                                    onClick={() => onRegisterOwner(m.id)}
-                                    style={{ width: "100%", padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
-                                  >
-                                    Register for Event
-                                  </button>
-                                </div>
-                              )
-                              : (
-                                <>
-                                  <p style={{ ...labelStyle, marginBottom: "0.375rem" }}>Select Horses to Register:</p>
-                                  <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
-                                    {unregHorses.map((h: any) => {
-                                      return (
-                                        <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
-                                          <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
-                                          {h.name} (Rating: {h.currentRating ?? 0})
-                                        </label>
-                                      );
-                                    })}
-                                  </div>
-                                  <button
-                                    onClick={() => sel.length ? handleBulkRegister(m.id) : onRegisterOwner(m.id)}
-                                    disabled={sel.length === 0 && unregHorses.length > 0}
-                                    style={{ width: "100%", marginTop: "0.5rem", padding: "0.5rem", background: sel.length > 0 ? ROLE_COLOR : "rgba(74,157,111,0.3)", color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: sel.length > 0 ? "pointer" : "not-allowed" }}
-                                  >
-                                    {sel.length > 0 ? `Register ${sel.length} Horse(s)` : "Register for Event"}
-                                  </button>
-                                </>
-                              )}
-                          </div>
-                        )}
+                        {/* Event Registration & Horse Selection Block */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                          {isReg && (regStatus === "PENDING" || regStatus === "APPROVED") && (
+                            <div style={{ fontSize: "0.65rem", color: regStatus === "APPROVED" ? "#34d399" : "#fbbf24", fontFamily: "monospace", fontStyle: "italic", background: regStatus === "APPROVED" ? "rgba(52,211,153,0.08)" : "rgba(251,191,36,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: `1px solid ${regStatus === "APPROVED" ? "rgba(52,211,153,0.2)" : "rgba(251,191,36,0.2)"}` }}>
+                              {regStatus === "APPROVED" ? "✅ Owner Registration Approved." : "⏳ Owner Registration Pending Steward Approval."}
+                            </div>
+                          )}
 
-                        {/* PENDING / APPROVED: show info badge, hide register button */}
-                        {isReg && (regStatus === "PENDING" || regStatus === "APPROVED") && (
-                          <div style={{ fontSize: "0.65rem", color: regStatus === "APPROVED" ? "#34d399" : "#fbbf24", fontFamily: "monospace", fontStyle: "italic", background: regStatus === "APPROVED" ? "rgba(52,211,153,0.08)" : "rgba(251,191,36,0.08)", padding: "0.4rem 0.6rem", borderRadius: "0.375rem", border: `1px solid ${regStatus === "APPROVED" ? "rgba(52,211,153,0.2)" : "rgba(251,191,36,0.2)"}` }}>
-                            {regStatus === "APPROVED" ? "✅ Registration approved. You are registered for this event." : "⏳ Registration is pending approval. You cannot register again until reviewed."}
-                          </div>
-                        )}
+                          {hasUnpaidFine ? (
+                            <button
+                              onClick={() => onSwitchTab && onSwitchTab("violations")}
+                              style={{ width: "100%", padding: "0.625rem", background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.4)", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                            >
+                              🔒 Pay Fine First to Register
+                            </button>
+                          ) : unregHorses.length > 0 ? (
+                            <>
+                              <p style={{ ...labelStyle, marginBottom: "0.375rem" }}>Select Horses to Register:</p>
+                              <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxHeight: "100px", overflowY: "auto", background: "rgba(0,0,0,0.2)", borderRadius: "0.5rem", padding: "0.5rem", border: "1px solid rgba(255,255,255,0.06)" }}>
+                                {unregHorses.map((h: any) => (
+                                  <label key={h.id} style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.7rem", color: "#f4f2ec", cursor: "pointer", fontFamily: "monospace" }}>
+                                    <input type="checkbox" checked={sel.includes(h.id)} onChange={() => handleCheckbox(m.id, h.id)} style={{ accentColor: ROLE_COLOR }} />
+                                    {h.name} (Rating: {h.currentRating ?? 0})
+                                  </label>
+                                ))}
+                              </div>
+                              <button
+                                onClick={() => handleBulkRegister(m.id)}
+                                disabled={sel.length === 0}
+                                style={{ width: "100%", marginTop: "0.25rem", padding: "0.5rem", background: sel.length > 0 ? ROLE_COLOR : "rgba(255,255,255,0.05)", color: sel.length > 0 ? "#fff" : "#a0a0a0", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: sel.length > 0 ? "pointer" : "not-allowed" }}
+                              >
+                                {sel.length > 0 ? `Register ${sel.length} Horse(s)` : "Select Horse(s) to Register"}
+                              </button>
+                            </>
+                          ) : !isReg ? (
+                            <button
+                              onClick={() => onRegisterOwner(m.id)}
+                              style={{ width: "100%", padding: "0.5rem", background: ROLE_COLOR, color: "#fff", border: "none", borderRadius: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem", fontWeight: 700, cursor: "pointer" }}
+                            >
+                              Register for Event Ticket
+                            </button>
+                          ) : (
+                            <p style={{ fontSize: "0.65rem", color: "#34d399", fontStyle: "italic", fontFamily: "monospace", textAlign: "center" }}>
+                              🐴 All stable horses are registered for this event.
+                            </p>
+                          )}
+                        </div>
 
                         {/* REJECTED: show Red Re-registration Box ONLY when meeting & season are ACTIVE */}
                         {isReg && regStatus === "REJECTED" ? (
@@ -1061,11 +1062,12 @@ function StableView({ stable, onRefresh }: { stable: any[]; onRefresh: () => voi
 }
 
 // ── CalendarView ───────────────────────────────────────────────────────────
-function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onSendInvitation, onViewProfile, refereesMap }: {
+function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onSendInvitation, onViewProfile, refereesMap, onSwitchTab }: {
   meetings: any[]; allRaces: any[]; seasons: any[]; dashboard: any; invitations: any[];
   onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number }) => void;
   onViewProfile: (id: number) => void;
   refereesMap?: Record<number, any[]>;
+  onSwitchTab?: (tab: OwnerTab) => void;
 }) {
   const [seasonFilter, setSeasonFilter] = useState("");
   const [page, setPage] = useState(1);
@@ -1086,7 +1088,7 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
       <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
         <div>
           <h3 style={{ fontFamily: "'Roboto Slab',serif", fontWeight: 700, fontSize: "1.25rem", color: "#f4f2ec", marginBottom: "0.25rem" }}>Race Calendar</h3>
-          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Select a race to invite an approved jockey. You must be registered for the meeting.</p>
+          <p style={{ fontSize: "0.75rem", color: "#a0a0a0" }}>Select a race to invite an approved jockey. You must register your horses for the meeting first.</p>
         </div>
         {seasons.length > 0 && (
           <div style={{ background: "rgba(21,19,16,0.6)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.05)" }}>
@@ -1151,6 +1153,8 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
                           key={race.id}
                           race={race}
                           isReg={isReg}
+                          regStatus={regStatus}
+                          meetingHorsesCount={meetingHorses.length}
                           eligibleHorses={eligibleHorses}
                           jockeys={meetingJockeys}
                           bookedJockeysMap={dashboard?.bookedJockeysMap}
@@ -1158,6 +1162,7 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
                           onSendInvitation={onSendInvitation}
                           onViewProfile={onViewProfile}
                           refereesMap={refereesMap}
+                          onSwitchTab={onSwitchTab}
                         />
                       );
                     })}
@@ -1178,11 +1183,13 @@ function CalendarView({ meetings, allRaces, seasons, dashboard, invitations, onS
   );
 }
 
-function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invitations, onSendInvitation, onViewProfile, refereesMap }: {
-  race: any; isReg: boolean; eligibleHorses: any[]; jockeys: any[]; bookedJockeysMap?: Record<number, number[]>; invitations: any[];
+// ── RaceRow ────────────────────────────────────────────────────────────────
+function RaceRow({ race, isReg, regStatus, meetingHorsesCount, eligibleHorses, jockeys, bookedJockeysMap, invitations, onSendInvitation, onViewProfile, refereesMap, onSwitchTab }: {
+  race: any; isReg: boolean; regStatus?: string; meetingHorsesCount: number; eligibleHorses: any[]; jockeys: any[]; bookedJockeysMap?: Record<number, number[]>; invitations: any[];
   onSendInvitation: (form: { horseId: number; raceId: number; jockeyId: number; jockeyPrizePercentage?: number }) => void;
   onViewProfile: (id: number) => void;
   refereesMap?: Record<number, any[]>;
+  onSwitchTab?: (tab: OwnerTab) => void;
 }) {
   const [horseId, setHorseId] = useState("");
   const [jockeyId, setJockeyId] = useState("");
@@ -1225,6 +1232,7 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
   };
 
   const assignedReferees = refereesMap?.[race.id] || [];
+  const canInvite = isReg && regStatus === "APPROVED" && meetingHorsesCount > 0;
 
   return (
     <div style={{ padding: "1.25rem", borderBottom: "1px solid rgba(255,255,255,0.05)", display: "flex", flexWrap: "wrap", gap: "1.5rem", justifyContent: "space-between" }}>
@@ -1272,10 +1280,10 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
         )}
       </div>
 
-      {/* Invitation form */}
-      {isReg && (
-        <div style={{ width: "260px", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "1rem", borderLeft: "1px solid rgba(255,255,255,0.05)" }}>
-          {race.status === "DECLARATION_OPEN" ? (
+      {/* Invitation form or Guidance box */}
+      <div style={{ width: "260px", display: "flex", flexDirection: "column", justifyContent: "center", paddingLeft: "1rem", borderLeft: "1px solid rgba(255,255,255,0.05)" }}>
+        {canInvite ? (
+          (!race.status || race.status === "DECLARATION_OPEN" || race.status === "OPEN" || race.status === "REGISTRATION_OPEN" || race.status === "ACTIVE" || race.status === "SCHEDULED") ? (
             <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <div>
                 <label style={labelStyle}>Select Horse</label>
@@ -1283,19 +1291,24 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
                   <option value="">-- Select Horse --</option>
                   {filteredHorses.map((h: any) => <option key={h.id} value={h.id}>{h.name} (Rating: {h.currentRating})</option>)}
                 </select>
+                {filteredHorses.length === 0 && (
+                  <p style={{ fontSize: "0.6rem", color: "#f87171", fontFamily: "monospace", marginTop: "2px" }}>
+                    ⚠️ No horses in your stable match rating limits ({race.minRating ?? 0}–{race.maxRating ?? "∞"}).
+                  </p>
+                )}
               </div>
               <div>
                 <label style={labelStyle}>Select Jockey</label>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-                    <select value={jockeyId} onChange={e => setJockeyId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
-                      <option value="">-- Select Jockey --</option>
-                      {filteredJockeys.map((j: any) => <option key={j.id} value={j.id}>{j.fullName || j.username} ({j.weight || 0}kg — Fee: {Number(j.jockeyFee || 500000).toLocaleString('en-US')} VND)</option>)}
-                    </select>
+                  <select value={jockeyId} onChange={e => setJockeyId(e.target.value)} required style={{ ...inputStyle, cursor: "pointer" }}>
+                    <option value="">-- Select Jockey --</option>
+                    {filteredJockeys.map((j: any) => <option key={j.id} value={j.id}>{j.fullName || j.username} ({j.weight || 0}kg — Fee: {Number(j.jockeyFee !== null && j.jockeyFee !== undefined ? j.jockeyFee : 500000).toLocaleString('en-US')} VND)</option>)}
+                  </select>
                   {jockeyId && (
                     <>
                       {(() => {
                         const selJockey = filteredJockeys.find((j: any) => String(j.id) === String(jockeyId));
-                        const feeVal = Number(selJockey?.jockeyFee || 500000);
+                        const feeVal = Number(selJockey?.jockeyFee !== null && selJockey?.jockeyFee !== undefined ? selJockey.jockeyFee : 500000);
                         return (
                           <div style={{ marginTop: "0.25rem", padding: "0.5rem 0.75rem", borderRadius: "0.375rem", background: "rgba(201,162,39,0.12)", border: "1px solid rgba(201,162,39,0.3)", fontSize: "0.7rem", fontFamily: "monospace", color: "#fbbf24" }}>
                             <div style={{ fontWeight: "bold", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1336,16 +1349,48 @@ function RaceRow({ race, isReg, eligibleHorses, jockeys, bookedJockeysMap, invit
                 ✉ Send Invitation
               </button>
             </form>
-          ) : race.status === "SCHEDULED" ? (
-            <div style={{ textAlign: "center", padding: "1rem", border: "1px dashed rgba(255,255,255,0.08)", borderRadius: "0.5rem", background: "rgba(255,255,255,0.01)" }}>
-              <p style={{ fontSize: "0.65rem", color: "#a0a0a0", fontFamily: "monospace" }}>Registration opens at:</p>
-              <p style={{ fontSize: "0.7rem", color: "#c9a227", fontFamily: "monospace", fontWeight: 700 }}>{formatDate(race.registrationStartTime)}</p>
-            </div>
           ) : (
             <p style={{ fontSize: "0.7rem", color: "#a0a0a0", fontStyle: "italic", textAlign: "center" }}>Declarations closed for this race.</p>
-          )}
-        </div>
-      )}
+          )
+        ) : !isReg ? (
+          <div style={{ textAlign: "center", padding: "0.75rem" }}>
+            <p style={{ fontSize: "0.7rem", color: "#ef4444", fontFamily: "monospace", fontWeight: 700, marginBottom: "0.35rem" }}>
+              ⚠️ Event Registration Required
+            </p>
+            <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.4, marginBottom: "0.6rem" }}>
+              You must register your horses for this Race Meeting on the Hub tab before inviting jockeys.
+            </p>
+            {onSwitchTab && (
+              <button onClick={() => onSwitchTab("hub")} style={{ width: "100%", padding: "0.4rem", background: "rgba(239,68,68,0.18)", border: "1px solid rgba(239,68,68,0.4)", color: "#f87171", borderRadius: "0.375rem", fontSize: "0.65rem", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>
+                🚨 Go to Hub to Register
+              </button>
+            )}
+          </div>
+        ) : regStatus === "PENDING" ? (
+          <div style={{ textAlign: "center", padding: "0.75rem" }}>
+            <p style={{ fontSize: "0.7rem", color: "#fbbf24", fontFamily: "monospace", fontWeight: 700, marginBottom: "0.35rem" }}>
+              ⏳ Pending Admin Approval
+            </p>
+            <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.4 }}>
+              Your event registration is pending Admin approval. You can invite jockeys once approved.
+            </p>
+          </div>
+        ) : (
+          <div style={{ textAlign: "center", padding: "0.75rem" }}>
+            <p style={{ fontSize: "0.7rem", color: "#fbbf24", fontFamily: "monospace", fontWeight: 700, marginBottom: "0.35rem" }}>
+              🐴 No Horses Registered
+            </p>
+            <p style={{ fontSize: "0.65rem", color: "rgba(255,255,255,0.6)", lineHeight: 1.4, marginBottom: "0.6rem" }}>
+              No approved horses found in your stable for this event. Please register horses on the Hub tab.
+            </p>
+            {onSwitchTab && (
+              <button onClick={() => onSwitchTab("hub")} style={{ width: "100%", padding: "0.4rem", background: "rgba(251,191,36,0.18)", border: "1px solid rgba(251,191,36,0.4)", color: "#fbbf24", borderRadius: "0.375rem", fontSize: "0.65rem", fontFamily: "monospace", fontWeight: 700, cursor: "pointer" }}>
+                🐴 Register Horses on Hub
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -1908,7 +1953,8 @@ export default function HorseOwner() {
     try {
       setErrorMsg(""); setSuccessMsg("");
       const isOwnerReg = dashboard?.registeredMeetingIds?.includes(meetingId);
-      if (!isOwnerReg && user) {
+      const regStatus = dashboard?.regStatuses?.[meetingId];
+      if ((!isOwnerReg || regStatus === "REJECTED") && user) {
         await api.post("/registrations/owner", { meetingId, ownerId: user.id });
       }
       await Promise.all(horseIds.map(horseId => api.post("/registrations/horse", { meetingId, horseId })));
@@ -1998,8 +2044,14 @@ export default function HorseOwner() {
   };
 
   const pendingInvitations = invitations.filter(i => i.status === "PENDING").length;
-  const pendingViolations = violations.filter(v => v.status === "PENDING").length;
-  const hasUnpaidFine = violations.some(v => (v.fineStatus === "UNPAID" || !v.fineStatus) && v.status !== "DISMISSED");
+  const hasUnpaidFine = violations?.some((v: any) => {
+    const isPaidOrDismissed = v.status === "CONFIRMED" || v.status === "PAID" || v.fineStatus === "PAID" || v.status === "DISMISSED";
+    return !isPaidOrDismissed;
+  });
+  const pendingViolations = violations?.filter((v: any) => {
+    const isPaidOrDismissed = v.status === "CONFIRMED" || v.status === "PAID" || v.fineStatus === "PAID" || v.status === "DISMISSED";
+    return !isPaidOrDismissed;
+  }).length || 0;
   const activeLabel = NAV_ITEMS.find(n => n.view === activeTab)?.label ?? "Owner Hub";
   const navItemsWithBadge = NAV_ITEMS.map(n => {
     if (n.view === "invitations") return { ...n, badge: pendingInvitations };

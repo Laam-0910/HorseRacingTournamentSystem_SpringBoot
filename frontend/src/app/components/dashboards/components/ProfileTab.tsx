@@ -26,7 +26,14 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const [fullName, setFullName] = useState(user?.fullName || user?.username || "");
   const [email, setEmail] = useState(user?.email || "");
   const [weight, setWeight] = useState(user?.weight?.toString() || "");
-  const [jockeyFee, setJockeyFee] = useState((user as any)?.jockeyFee?.toString() || "500000");
+  const [jockeyFee, setJockeyFee] = useState(() => {
+    const raw = (user as any)?.jockeyFee;
+    if (raw !== undefined && raw !== null) {
+      const num = Number(raw);
+      return isNaN(num) ? "500000" : Math.round(num).toString();
+    }
+    return "500000";
+  });
   const [biography, setBiography] = useState(user?.biography || "");
   const [avatar, setAvatar] = useState(user?.avatar || "");
   const [profileLoading, setProfileLoading] = useState(false);
@@ -37,11 +44,22 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpMsg, setOtpMsg] = useState("");
 
+  const [initUserId, setInitUserId] = useState<number | null>(null);
+
   useEffect(() => {
-    if (user?.requireOtp !== undefined) {
-      setOtpEnabled(!!user.requireOtp);
+    if (user && user.id !== initUserId) {
+      setInitUserId(user.id);
+      if (user.fullName || user.username) setFullName(user.fullName || user.username || "");
+      if (user.email) setEmail(user.email || "");
+      if (user.weight !== undefined && user.weight !== null) setWeight(user.weight.toString());
+      if ((user as any)?.jockeyFee !== undefined && (user as any)?.jockeyFee !== null) {
+        const num = Number((user as any).jockeyFee);
+        setJockeyFee(isNaN(num) ? "500000" : Math.round(num).toString());
+      }
+      if (user.biography !== undefined && user.biography !== null) setBiography(user.biography || "");
+      if (user.avatar !== undefined && user.avatar !== null) setAvatar(user.avatar || "");
     }
-  }, [user?.requireOtp]);
+  }, [user, initUserId]);
 
   const [passMode, setPassMode] = useState(false);
   const [otpTxId, setOtpTxId] = useState("");
@@ -101,12 +119,47 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
     setProfileLoading(true);
     try {
       const parsedWeight = user?.roleId === 3 ? parseFloat(weight) || null : null;
-      const parsedFee = user?.roleId === 3 ? parseFloat(jockeyFee) || 500000 : null;
+      
+      let parsedFee: number | null = null;
+      if (user?.roleId === 3) {
+        const rawFeeStr = (jockeyFee ?? "").toString().replace(/,/g, "").trim();
+        if (rawFeeStr !== "" && !isNaN(Number(rawFeeStr))) {
+          const numFee = Number(rawFeeStr);
+          parsedFee = numFee >= 0 ? numFee : 500000;
+        } else {
+          parsedFee = 500000;
+        }
+      }
+
       const res = await api.post<any>("/auth/update-profile", {
         id: user?.id, fullName: fullName.trim(), email: email.trim(), weight: parsedWeight, jockeyFee: parsedFee, avatar: avatar || null, biography: biography.trim(), requireOtp: otpEnabled
       });
       if (res.success && res.user) {
-        setUser({ ...user, fullName: res.user.fullName, email: res.user.email, weight: res.user.weight, jockeyFee: res.user.jockeyFee, avatar: res.user.avatar, biography: res.user.biography, requireOtp: res.user.requireOtp ?? otpEnabled } as any);
+        const savedFee = res.user.jockeyFee !== undefined && res.user.jockeyFee !== null ? res.user.jockeyFee : parsedFee;
+        const updatedUser = {
+          ...user,
+          fullName: res.user.fullName,
+          email: res.user.email,
+          weight: res.user.weight,
+          jockeyFee: savedFee,
+          avatar: res.user.avatar,
+          biography: res.user.biography,
+          requireOtp: res.user.requireOtp ?? otpEnabled
+        };
+        setUser(updatedUser as any);
+        if (savedFee !== undefined && savedFee !== null) {
+          setJockeyFee(savedFee.toString());
+        }
+
+        // Gọi thêm API riêng của jockey fee để đảm bảo đồng bộ 100% backend
+        if (user?.roleId === 3 && user?.id && savedFee !== null) {
+          try {
+            await api.post(`/jockey/${user.id}/fee`, { jockeyFee: savedFee });
+          } catch (e) {
+            // ignore error
+          }
+        }
+
         setProfileMsg("✅ Profile saved successfully!");
         setTimeout(() => setProfileMsg(""), 3000);
       } else {
@@ -474,13 +527,15 @@ export default function ProfileTab({ roleColor, roleLabel }: Props) {
                   <div>
                     <label style={labelStyle}>Jockey Personal Hire Fee (VND)</label>
                     <input 
-                      type="number" 
-                      step="10000"
-                      min="0"
+                      type="text"
+                      inputMode="numeric"
                       className="bento-input" 
-                      placeholder="500000" 
+                      placeholder="e.g. 800000" 
                       value={jockeyFee} 
-                      onChange={e => setJockeyFee(e.target.value)} 
+                      onChange={e => {
+                        const digits = e.target.value.replace(/[^0-9]/g, "");
+                        setJockeyFee(digits);
+                      }} 
                       style={inputStyle} 
                     />
                   </div>
