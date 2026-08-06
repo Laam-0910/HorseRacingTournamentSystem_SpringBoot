@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { api, getErrMsg } from "../../../lib/api";
 
 interface VietQRPaywallModalProps {
@@ -285,8 +286,8 @@ export default function VietQRPaywallModal({
     };
   }, []);
 
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 99999, padding: "1rem" }}>
+  return createPortal(
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999999, padding: "1rem" }}>
       <div style={{ background: "#12100d", border: "1px solid rgba(201,162,39,0.35)", borderRadius: "1rem", width: "100%", maxWidth: "56rem", maxHeight: "92vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.8)", overflow: "hidden" }}>
         
         {/* Modal Header */}
@@ -537,6 +538,7 @@ export default function VietQRPaywallModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
