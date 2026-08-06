@@ -286,24 +286,50 @@ export default function VietQRPaywallModal({
     };
   }, []);
 
+  const [activeStep, setActiveStep] = useState<"PACKAGE" | "PAYMENT">("PACKAGE");
+
   return createPortal(
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 999999, padding: "1rem" }}>
       <div style={{ background: "#12100d", border: "1px solid rgba(201,162,39,0.35)", borderRadius: "1rem", width: "100%", maxWidth: "56rem", maxHeight: "92vh", display: "flex", flexDirection: "column", boxShadow: "0 25px 50px -12px rgba(0,0,0,0.8)", overflow: "hidden" }}>
         
         {/* Modal Header */}
         <div style={{ padding: "1.25rem 1.5rem", borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(201,162,39,0.08)", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
-          <div>
-            <h3 style={{ fontSize: "1.15rem", fontWeight: "bold", color: "#f4f2ec", fontFamily: "'Roboto Slab', serif" }}>
-              Unlock / Extend HD Livestream Access
-            </h3>
-            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
-              Pay via your available wallet balance or scan VietQR code to unlock or extend access time.
-            </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            {activeStep === "PAYMENT" && (
+              <button
+                onClick={() => setActiveStep("PACKAGE")}
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  border: "1px solid rgba(255,255,255,0.15)",
+                  color: "#fbbf24",
+                  borderRadius: "0.5rem",
+                  padding: "0.35rem 0.75rem",
+                  fontSize: "11px",
+                  fontFamily: "monospace",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.35rem"
+                }}
+              >
+                ← Change Package
+              </button>
+            )}
+            <div>
+              <h3 style={{ fontSize: "1.15rem", fontWeight: "bold", color: "#f4f2ec", fontFamily: "'Roboto Slab', serif" }}>
+                {activeStep === "PACKAGE" ? "Step 1: Select Viewing Package" : "Step 2: Choose Payment Method"}
+              </h3>
+              <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.5)", marginTop: "2px" }}>
+                {activeStep === "PACKAGE"
+                  ? "Choose a subscription pass below to proceed to payment options."
+                  : "Pay via your available account wallet balance or scan VietQR code."}
+              </p>
+            </div>
           </div>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#a0a0a0", cursor: "pointer", fontSize: "1.25rem", padding: "0.25rem" }}>✕</button>
         </div>
 
-        {/* Modal Body - Scrollable content if viewport is small */}
+        {/* Modal Body */}
         <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1.25rem", overflowY: "auto", flexGrow: 1 }}>
           {paymentSuccess && (
             <div style={{ padding: "1rem", borderRadius: "0.5rem", background: "rgba(16,185,129,0.2)", border: "1px solid #10b981", color: "#34d399", fontSize: "13px", fontWeight: "bold", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem" }}>
@@ -318,218 +344,246 @@ export default function VietQRPaywallModal({
             </div>
           )}
 
-          {/* Section 1: Package Selector */}
-          <div>
-            <label style={{ display: "block", fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#c9a227", marginBottom: "0.5rem" }}>
-              {isExtendMode ? "1. Select Extension Period (+ Extra Time)" : "1. Select Viewing Package"}
-            </label>
-            
-            {(() => {
-              const currentActiveType = accessInfo?.packageType;
-              const hasDiscount = seasonQuote && Number(seasonQuote.discountApplied || 0) > 0;
-              const hasMonthly = currentActiveType === "RACEMEETING" || hasDiscount;
-              const hasAnnual = currentActiveType === "SEASON";
+          {/* STEP 1: Package Selector Cards */}
+          {activeStep === "PACKAGE" && (
+            <div>
+              <label style={{ display: "block", fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#c9a227", marginBottom: "0.75rem" }}>
+                {isExtendMode ? "1. Select Extension Period (+ Extra Time)" : "1. Select Viewing Package"}
+              </label>
+              
+              {(() => {
+                const currentActiveType = accessInfo?.packageType;
+                const hasDiscount = seasonQuote && Number(seasonQuote.discountApplied || 0) > 0;
+                const hasMonthly = currentActiveType === "RACEMEETING" || hasDiscount;
+                const hasAnnual = currentActiveType === "SEASON";
 
-              if (!isExtendMode && hasAnnual) {
+                if (!isExtendMode && hasAnnual) {
+                  return (
+                    <div style={{ padding: "1rem", borderRadius: "0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.3)", color: "#fbbf24", fontSize: "12px", textAlign: "center" }}>
+                      <p style={{ fontWeight: "bold" }}>⭐ You already possess the highest pass level (Annual Pass)!</p>
+                      <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)", marginTop: "4px" }}>
+                        To add more viewing time to your active pass, please click the <strong>Extend Access</strong> button.
+                      </p>
+                    </div>
+                  );
+                }
+
+                const hideMonthlyCard = !isExtendMode && hasMonthly;
+
+                const handleChoosePackage = (pkg: "RACEMEETING" | "SEASON") => {
+                  setSelectedPackage(pkg);
+                  setActiveStep("PAYMENT");
+                };
+
                 return (
-                  <div style={{ padding: "1rem", borderRadius: "0.75rem", background: "rgba(201,162,39,0.1)", border: "1px solid rgba(201,162,39,0.3)", color: "#fbbf24", fontSize: "12px", textAlign: "center" }}>
-                    <p style={{ fontWeight: "bold" }}>⭐ You already possess the highest pass level (Annual Pass)!</p>
-                    <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.7)", marginTop: "4px" }}>
-                      To add more viewing time to your active pass, please click the <strong>Extend Access</strong> button.
-                    </p>
-                  </div>
-                );
-              }
+                  <div style={{ display: "grid", gridTemplateColumns: (hasRaceMeeting && !hideMonthlyCard) ? "1fr 1fr" : "1fr", gap: "1.25rem" }}>
+                    {/* Option 1: Monthly Pass (Uiverse Cobp Card) */}
+                    {hasRaceMeeting && !hideMonthlyCard && (
+                      <div
+                        onClick={() => handleChoosePackage("RACEMEETING")}
+                        className={`cobp-card-container ${selectedPackage === "RACEMEETING" ? "selected" : ""}`}
+                      >
+                        <div className="title-card">
+                          <p>{isExtendMode ? "EXTEND 30 DAYS" : "EVENT PASS"}</p>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
+                          </svg>
+                        </div>
+                        <div className="card-content">
+                          <p className="title">{isExtendMode ? "Extend Monthly (+30 Days)" : "Monthly Pass"}</p>
+                          <p className="plain">
+                            <span>{quotesLoading ? "..." : (meetingQuote ? Number(meetingQuote.finalPrice).toLocaleString('en-US') : "15,000")}</span>
+                            <span>VNĐ / month</span>
+                          </p>
+                          <p className="description">
+                            {isExtendMode ? "Add +30 days extra streaming time for this event." : `30-day HD livestream access for ${raceMeetingName || "this event"}.`}
+                          </p>
+                          <button className="card-btn">
+                            ⚡ Select Monthly Pass & Pay ➔
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
-              const hideMonthlyCard = !isExtendMode && hasMonthly;
-
-              return (
-                <div style={{ display: "grid", gridTemplateColumns: (hasRaceMeeting && !hideMonthlyCard) ? "1fr 1fr" : "1fr", gap: "1rem" }}>
-                  {/* Option 1: Monthly Pass (Uiverse Cobp Card) */}
-                  {hasRaceMeeting && !hideMonthlyCard && (
+                    {/* Option 2: Annual Pass (Uiverse Cobp Card - Best Value / Most Popular) */}
                     <div
-                      onClick={() => setSelectedPackage("RACEMEETING")}
-                      className={`cobp-card-container ${selectedPackage === "RACEMEETING" ? "selected" : ""}`}
+                      onClick={() => handleChoosePackage("SEASON")}
+                      className={`cobp-card-container ${selectedPackage === "SEASON" ? "selected" : ""}`}
                     >
                       <div className="title-card">
-                        <p>{isExtendMode ? "EXTEND 30 DAYS" : "EVENT PASS"}</p>
+                        <p>{!isExtendMode && hasMonthly ? "15,000 VNĐ OFF" : "MOST POPULAR / BEST VALUE"}</p>
                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
                           <path fill="currentColor" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
                         </svg>
                       </div>
                       <div className="card-content">
-                        <p className="title">{isExtendMode ? "Extend Monthly (+30 Days)" : "Monthly Pass"}</p>
+                        <p className="title">{isExtendMode ? "Extend Annual (+365 Days)" : "Upgrade to Annual Pass"}</p>
                         <p className="plain">
-                          <span>{quotesLoading ? "..." : (meetingQuote ? Number(meetingQuote.finalPrice).toLocaleString('en-US') : "15,000")}</span>
-                          <span>VNĐ / month</span>
+                          <span>{quotesLoading ? "..." : (seasonQuote ? Number(seasonQuote.finalPrice).toLocaleString('en-US') : "79,000")}</span>
+                          <span>VNĐ / year</span>
                         </p>
                         <p className="description">
-                          {isExtendMode ? "Add +30 days extra streaming time for this event." : `30-day HD livestream access for ${raceMeetingName || "this event"}.`}
+                          {isExtendMode
+                            ? "Add +365 days extra streaming time across all events."
+                            : !isExtendMode && hasMonthly
+                            ? "Upgrade to Annual Pass (15,000 VNĐ credited from active Monthly Pass)."
+                            : "Full 365-day unlimited HD livestream pass for all tournament events."}
                         </p>
+                        {accessInfo && accessInfo.expiresAtFormatted && (
+                          <div style={{ fontSize: "9px", color: "#6ee7b7", fontFamily: "monospace", background: "rgba(16,185,129,0.1)", padding: "3px 6px", borderRadius: "4px", border: "1px solid rgba(16,185,129,0.2)" }}>
+                            ✅ Active until: {accessInfo.expiresAtFormatted}
+                          </div>
+                        )}
                         <button className="card-btn">
-                          {selectedPackage === "RACEMEETING" ? "✓ Selected (Proceed Below)" : "Select Monthly Pass"}
+                          ⚡ Select Annual Pass & Pay ➔
                         </button>
                       </div>
                     </div>
-                  )}
-
-                  {/* Option 2: Annual Pass (Uiverse Cobp Card - Best Value / Most Popular) */}
-                  <div
-                    onClick={() => setSelectedPackage("SEASON")}
-                    className={`cobp-card-container ${selectedPackage === "SEASON" ? "selected" : ""}`}
-                  >
-                    <div className="title-card">
-                      <p>{!isExtendMode && hasMonthly ? "15,000 VNĐ OFF" : "MOST POPULAR / BEST VALUE"}</p>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-                      </svg>
-                    </div>
-                    <div className="card-content">
-                      <p className="title">{isExtendMode ? "Extend Annual (+365 Days)" : "Upgrade to Annual Pass"}</p>
-                      <p className="plain">
-                        <span>{quotesLoading ? "..." : (seasonQuote ? Number(seasonQuote.finalPrice).toLocaleString('en-US') : "79,000")}</span>
-                        <span>VNĐ / year</span>
-                      </p>
-                      <p className="description">
-                        {isExtendMode
-                          ? "Add +365 days extra streaming time across all events."
-                          : !isExtendMode && hasMonthly
-                          ? "Upgrade to Annual Pass (15,000 VNĐ credited from active Monthly Pass)."
-                          : "Full 365-day unlimited HD livestream pass for all tournament events."}
-                      </p>
-                      {accessInfo && accessInfo.expiresAtFormatted && (
-                        <div style={{ fontSize: "9px", color: "#6ee7b7", fontFamily: "monospace", background: "rgba(16,185,129,0.1)", padding: "3px 6px", borderRadius: "4px", border: "1px solid rgba(16,185,129,0.2)" }}>
-                          ✅ Active until: {accessInfo.expiresAtFormatted}
-                        </div>
-                      )}
-                      <button className="card-btn">
-                        {selectedPackage === "SEASON" ? "✓ Selected (Proceed Below)" : "Select Annual Pass"}
-                      </button>
-                    </div>
                   </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Section 2: Split 2 Payment Methods Side-by-Side (2 Columns) */}
-          <div>
-            <label style={{ display: "block", fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#c9a227", marginBottom: "0.5rem" }}>
-              2. Choose Payment Method
-            </label>
-
-            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "1.25rem", alignItems: "stretch" }}>
-              
-              {/* Column 1 / Method A: Available Wallet Balance */}
-              <div style={{ background: "rgba(201,162,39,0.06)", padding: "1.25rem", borderRadius: "0.85rem", border: "1px solid rgba(201,162,39,0.25)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.75rem" }}>
-                    <span style={{ fontSize: "1.25rem" }}>💳</span>
-                    <div>
-                      <h4 style={{ fontSize: "13px", fontWeight: "bold", color: "#f4f2ec", margin: 0 }}>Method 1: Account Wallet</h4>
-                      <p style={{ fontSize: "10px", color: "#a0a0a0", margin: 0 }}>Instant one-click deduction</p>
-                    </div>
-                  </div>
-
-                  <div style={{ background: "rgba(0,0,0,0.35)", padding: "0.875rem", borderRadius: "0.6rem", border: "1px solid rgba(255,255,255,0.06)", marginBottom: "1rem" }}>
-                    <div style={{ fontSize: "10px", color: "#a0a0a0", fontFamily: "monospace" }}>Your Available Balance:</div>
-                    <div style={{ fontSize: "1.35rem", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace", marginTop: "2px" }}>
-                      {walletBal.toLocaleString('en-US')} VND
-                    </div>
-                  </div>
-
-                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", lineHeight: "1.4", marginBottom: "1rem" }}>
-                    Pay directly using funds available in your account wallet balance. Instant activation upon click.
-                  </div>
-                </div>
-
-                <button
-                  onClick={handlePayViaWallet}
-                  disabled={payingViaWallet || walletBal < finalAmount}
-                  style={{
-                    width: "100%",
-                    padding: "0.75rem",
-                    background: walletBal >= finalAmount ? "linear-gradient(45deg, #c9a227, #f3d06c)" : "#27272a",
-                    color: walletBal >= finalAmount ? "#000" : "#71717a",
-                    border: "none",
-                    borderRadius: "0.5rem",
-                    fontSize: "12px",
-                    fontFamily: "monospace",
-                    fontWeight: 700,
-                    cursor: walletBal >= finalAmount ? "pointer" : "not-allowed",
-                    transition: "all 0.2s",
-                    boxShadow: walletBal >= finalAmount ? "0 4px 15px rgba(201,162,39,0.3)" : "none"
-                  }}
-                >
-                  {payingViaWallet ? "Processing Deduction..." : walletBal >= finalAmount ? `⚡ Pay ${finalAmount.toLocaleString('en-US')} VND via Wallet` : `🔒 Insufficient Balance (${walletBal.toLocaleString('en-US')} VND)`}
-                </button>
-              </div>
-
-              {/* Column 2 / Method B: Scan VietQR Transfer */}
-              <div style={{ background: "rgba(0,0,0,0.4)", padding: "1.25rem", borderRadius: "0.85rem", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "0.875rem" }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.75rem" }}>
-                    <span style={{ fontSize: "1.25rem" }}>📲</span>
-                    <div>
-                      <h4 style={{ fontSize: "13px", fontWeight: "bold", color: "#f4f2ec", margin: 0 }}>Method 2: Scan VietQR Code</h4>
-                      <p style={{ fontSize: "10px", color: "#a0a0a0", margin: 0 }}>Banking app auto-verification</p>
-                    </div>
-                  </div>
-
-                  {/* Large Prominent VietQR Display */}
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "0.75rem", border: "1px solid rgba(201,162,39,0.25)", marginBottom: "0.75rem" }}>
-                    <div style={{ background: "#ffffff", padding: "10px", borderRadius: "0.75rem", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}>
-                      <img
-                        src={qrImageUrl}
-                        alt="VietQR Code"
-                        style={{ width: "180px", height: "180px", display: "block", borderRadius: "0.375rem" }}
-                      />
-                    </div>
-                    <span style={{ fontSize: "10px", color: "#fbbf24", fontFamily: "monospace", fontWeight: 600, marginTop: "8px" }}>
-                      📱 Scan with Banking App
-                    </span>
-                  </div>
-
-                  {/* Bank Transfer Details */}
-                  <div style={{ fontSize: "10px", color: "#a0a0a0", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.3)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.05)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "10px", fontFamily: "monospace", color: "#fbbf24", background: "rgba(251,191,36,0.1)", padding: "3px 6px", borderRadius: "4px", border: "1px solid rgba(251,191,36,0.2)", marginBottom: "2px" }}>
-                      <span>⏱️ Expires in:</span>
-                      <strong style={{ color: "#fcd34d", fontSize: "11px" }}>{formattedTime}</strong>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Bank:</span> <strong style={{ color: "#fff" }}>{bankName}</strong></div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Account:</span> <strong style={{ color: "#c9a227", fontFamily: "monospace" }}>{accountNumber}</strong></div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Holder:</span> <strong style={{ color: "#fff" }}>{accountHolder}</strong></div>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><span>Content:</span> <strong style={{ color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "1px 5px", borderRadius: "3px", wordBreak: "break-all" }}>{transferContent}</strong></div>
-                  </div>
-
-                  <div style={{ marginTop: "0.6rem", padding: "0.35rem 0.5rem", background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)", color: "#34d399", borderRadius: "0.375rem", fontSize: "9px", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "4px" }}>
-                    <span>🟢</span> Realtime Bank Webhook Active
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleSimulateVietQRPay}
-                  disabled={purchasing || paymentSuccess}
-                  style={{
-                    width: "100%",
-                    padding: "0.65rem",
-                    background: purchasing || paymentSuccess ? "#27272a" : "linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.08) 100%)",
-                    border: "1px dashed rgba(251,191,36,0.45)",
-                    color: purchasing || paymentSuccess ? "#52525b" : "#fbbf24",
-                    borderRadius: "0.5rem",
-                    fontSize: "11px",
-                    fontFamily: "monospace",
-                    fontWeight: 600,
-                    cursor: purchasing || paymentSuccess ? "not-allowed" : "pointer",
-                    transition: "all 0.2s"
-                  }}
-                >
-                  {purchasing ? "⏳ Processing..." : paymentSuccess ? "✅ Payment Verified" : "⚡ Confirm Payment (Simulate Transfer)"}
-                </button>
-              </div>
-
+                );
+              })()}
             </div>
-          </div>
+          )}
+
+          {/* STEP 2: Choose Payment Method */}
+          {activeStep === "PAYMENT" && (
+            <div>
+              {/* Selected Package Summary Banner */}
+              <div style={{ background: "rgba(201,162,39,0.12)", border: "1px solid rgba(201,162,39,0.35)", borderRadius: "0.75rem", padding: "0.875rem 1.25rem", marginBottom: "1.25rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div>
+                  <span style={{ fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", display: "block" }}>Selected Package:</span>
+                  <strong style={{ fontSize: "14px", color: "#fcd34d", fontFamily: "'Roboto Slab', serif" }}>
+                    {selectedPackage === "RACEMEETING" ? (isExtendMode ? "Monthly Extension (+30 Days)" : "Monthly Pass") : (isExtendMode ? "Annual Extension (+365 Days)" : "Annual Pass")}
+                  </strong>
+                  <span style={{ fontSize: "13px", color: "#34d399", fontFamily: "monospace", fontWeight: "bold", marginLeft: "10px" }}>
+                    {finalAmount.toLocaleString('en-US')} VNĐ
+                  </span>
+                </div>
+                <button
+                  onClick={() => setActiveStep("PACKAGE")}
+                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)", color: "#fbbf24", borderRadius: "0.375rem", padding: "0.35rem 0.75rem", fontSize: "11px", fontFamily: "monospace", cursor: "pointer" }}
+                >
+                  ✏ Change Package
+                </button>
+              </div>
+
+              <label style={{ display: "block", fontSize: "10px", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.1em", color: "#c9a227", marginBottom: "0.75rem" }}>
+                2. Choose Payment Method
+              </label>
+
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "1.25rem", alignItems: "stretch" }}>
+                
+                {/* Column 1 / Method A: Available Wallet Balance */}
+                <div style={{ background: "rgba(201,162,39,0.06)", padding: "1.25rem", borderRadius: "0.85rem", border: "1px solid rgba(201,162,39,0.25)", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.75rem" }}>
+                      <span style={{ fontSize: "1.25rem" }}>💳</span>
+                      <div>
+                        <h4 style={{ fontSize: "13px", fontWeight: "bold", color: "#f4f2ec", margin: 0 }}>Method 1: Account Wallet</h4>
+                        <p style={{ fontSize: "10px", color: "#a0a0a0", margin: 0 }}>Instant one-click deduction</p>
+                      </div>
+                    </div>
+
+                    <div style={{ background: "rgba(0,0,0,0.35)", padding: "0.875rem", borderRadius: "0.6rem", border: "1px solid rgba(255,255,255,0.06)", marginBottom: "1rem" }}>
+                      <div style={{ fontSize: "10px", color: "#a0a0a0", fontFamily: "monospace" }}>Your Available Balance:</div>
+                      <div style={{ fontSize: "1.35rem", fontWeight: "bold", color: "#fbbf24", fontFamily: "monospace", marginTop: "2px" }}>
+                        {walletBal.toLocaleString('en-US')} VND
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", lineHeight: "1.4", marginBottom: "1rem" }}>
+                      Pay directly using funds available in your account wallet balance. Instant activation upon click.
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handlePayViaWallet}
+                    disabled={payingViaWallet || walletBal < finalAmount}
+                    style={{
+                      width: "100%",
+                      padding: "0.75rem",
+                      background: walletBal >= finalAmount ? "linear-gradient(45deg, #c9a227, #f3d06c)" : "#27272a",
+                      color: walletBal >= finalAmount ? "#000" : "#71717a",
+                      border: "none",
+                      borderRadius: "0.5rem",
+                      fontSize: "12px",
+                      fontFamily: "monospace",
+                      fontWeight: 700,
+                      cursor: walletBal >= finalAmount ? "pointer" : "not-allowed",
+                      transition: "all 0.2s",
+                      boxShadow: walletBal >= finalAmount ? "0 4px 15px rgba(201,162,39,0.3)" : "none"
+                    }}
+                  >
+                    {payingViaWallet ? "Processing Deduction..." : walletBal >= finalAmount ? `⚡ Pay ${finalAmount.toLocaleString('en-US')} VND via Wallet` : `🔒 Insufficient Balance (${walletBal.toLocaleString('en-US')} VND)`}
+                  </button>
+                </div>
+
+                {/* Column 2 / Method B: Scan VietQR Transfer */}
+                <div style={{ background: "rgba(0,0,0,0.4)", padding: "1.25rem", borderRadius: "0.85rem", border: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", justifyContent: "space-between", gap: "0.875rem" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "0.75rem" }}>
+                      <span style={{ fontSize: "1.25rem" }}>📲</span>
+                      <div>
+                        <h4 style={{ fontSize: "13px", fontWeight: "bold", color: "#f4f2ec", margin: 0 }}>Method 2: Scan VietQR Code</h4>
+                        <p style={{ fontSize: "10px", color: "#a0a0a0", margin: 0 }}>Banking app auto-verification</p>
+                      </div>
+                    </div>
+
+                    {/* Large Prominent VietQR Display */}
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "rgba(255,255,255,0.03)", padding: "1rem", borderRadius: "0.75rem", border: "1px solid rgba(201,162,39,0.25)", marginBottom: "0.75rem" }}>
+                      <div style={{ background: "#ffffff", padding: "10px", borderRadius: "0.75rem", boxShadow: "0 10px 30px rgba(0,0,0,0.6)" }}>
+                        <img
+                          src={qrImageUrl}
+                          alt="VietQR Code"
+                          style={{ width: "180px", height: "180px", display: "block", borderRadius: "0.375rem" }}
+                        />
+                      </div>
+                      <span style={{ fontSize: "10px", color: "#fbbf24", fontFamily: "monospace", fontWeight: 600, marginTop: "8px" }}>
+                        📱 Scan with Banking App
+                      </span>
+                    </div>
+
+                    {/* Bank Transfer Details */}
+                    <div style={{ fontSize: "10px", color: "#a0a0a0", display: "flex", flexDirection: "column", gap: "4px", background: "rgba(0,0,0,0.3)", padding: "0.75rem", borderRadius: "0.5rem", border: "1px solid rgba(255,255,255,0.05)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "10px", fontFamily: "monospace", color: "#fbbf24", background: "rgba(251,191,36,0.1)", padding: "3px 6px", borderRadius: "4px", border: "1px solid rgba(251,191,36,0.2)", marginBottom: "2px" }}>
+                        <span>⏱️ Expires in:</span>
+                        <strong style={{ color: "#fcd34d", fontSize: "11px" }}>{formattedTime}</strong>
+                      </div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}><span>Bank:</span> <strong style={{ color: "#fff" }}>{bankName}</strong></div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}><span>Account:</span> <strong style={{ color: "#c9a227", fontFamily: "monospace" }}>{accountNumber}</strong></div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}><span>Holder:</span> <strong style={{ color: "#fff" }}>{accountHolder}</strong></div>
+                      <div style={{ display: "flex", justifyContent: "space-between" }}><span>Content:</span> <strong style={{ color: "#fbbf24", fontFamily: "monospace", background: "rgba(251,191,36,0.1)", padding: "1px 5px", borderRadius: "3px", wordBreak: "break-all" }}>{transferContent}</strong></div>
+                    </div>
+
+                    <div style={{ marginTop: "0.6rem", padding: "0.35rem 0.5rem", background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.2)", color: "#34d399", borderRadius: "0.375rem", fontSize: "9px", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <span>🟢</span> Realtime Bank Webhook Active
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleSimulateVietQRPay}
+                    disabled={purchasing || paymentSuccess}
+                    style={{
+                      width: "100%",
+                      padding: "0.65rem",
+                      background: purchasing || paymentSuccess ? "#27272a" : "linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.08) 100%)",
+                      border: "1px dashed rgba(251,191,36,0.45)",
+                      color: purchasing || paymentSuccess ? "#52525b" : "#fbbf24",
+                      borderRadius: "0.5rem",
+                      fontSize: "11px",
+                      fontFamily: "monospace",
+                      fontWeight: 600,
+                      cursor: purchasing || paymentSuccess ? "not-allowed" : "pointer",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    {purchasing ? "⏳ Processing..." : paymentSuccess ? "✅ Payment Verified" : "⚡ Confirm Payment (Simulate Transfer)"}
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Modal Footer */}
