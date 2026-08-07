@@ -187,6 +187,8 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-500/20 text-teal-400 border border-teal-500/30">BUDGET REFUND</span>;
       case "TICKET_REFUND_DEDUCTION":
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-400 border border-purple-500/30">OWNER REFUND</span>;
+      case "LIVESTREAM_REVENUE":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">📺 LIVESTREAM REVENUE</span>;
       default:
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white/70">{type}</span>;
     }
@@ -239,26 +241,41 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
         </div>
 
         {/* System Treasury Breakdown Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 font-mono">
-          <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-            <span className="text-[10px] text-amber-400/80 uppercase font-bold block">🏦 Available Admin Wallet Balance</span>
-            <span className="text-base font-bold text-amber-300 mt-1 block">
-              {Number(walletData?.walletBalance || 0).toLocaleString('en-US')} VND
-            </span>
-          </div>
-          <div className="p-3.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
-            <span className="text-[10px] text-blue-400/80 uppercase font-bold block">🏟️ Active Meetings Allocated Budget</span>
-            <span className="text-base font-bold text-blue-300 mt-1 block">
-              {Number(walletData?.allocatedBudgetSum || 0).toLocaleString('en-US')} VND
-            </span>
-          </div>
-          <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-            <span className="text-[10px] text-emerald-400/80 uppercase font-bold block">💎 Total System Treasury (Capital)</span>
-            <span className="text-base font-bold text-emerald-300 mt-1 block">
-              {Number(walletData?.totalCapital || (Number(walletData?.walletBalance || 0) + Number(walletData?.allocatedBudgetSum || 0))).toLocaleString('en-US')} VND
-            </span>
-          </div>
-        </div>
+        {(() => {
+          const allTxs: any[] = walletData?.transactions || [];
+          const lsRevenue = allTxs
+            .filter((t: any) => t.transactionType === "LIVESTREAM_REVENUE")
+            .reduce((sum: number, t: any) => sum + (Number(t.amount) || 0), 0);
+
+          return (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 font-mono">
+              <div className="p-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                <span className="text-[10px] text-amber-400/80 uppercase font-bold block">🏦 Admin Wallet Balance</span>
+                <span className="text-base font-bold text-amber-300 mt-1 block">
+                  {Number(walletData?.walletBalance || 0).toLocaleString('en-US')} VND
+                </span>
+              </div>
+              <div className="p-3.5 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                <span className="text-[10px] text-blue-400/80 uppercase font-bold block">🏟️ Allocated Budget</span>
+                <span className="text-base font-bold text-blue-300 mt-1 block">
+                  {Number(walletData?.allocatedBudgetSum || 0).toLocaleString('en-US')} VND
+                </span>
+              </div>
+              <div className="p-3.5 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                <span className="text-[10px] text-purple-400/80 uppercase font-bold block">📺 Livestream PPV Revenue</span>
+                <span className="text-base font-bold text-purple-300 mt-1 block">
+                  +{lsRevenue.toLocaleString('en-US')} VND
+                </span>
+              </div>
+              <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+                <span className="text-[10px] text-emerald-400/80 uppercase font-bold block">💎 Total System Treasury</span>
+                <span className="text-base font-bold text-emerald-300 mt-1 block">
+                  {Number(walletData?.totalCapital || (Number(walletData?.walletBalance || 0) + Number(walletData?.allocatedBudgetSum || 0))).toLocaleString('en-US')} VND
+                </span>
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Top Up Form */}
         {activeAction === "topup" && (
