@@ -122,7 +122,10 @@ public class BettingService {
         // Validate race exists and is available for betting
         Race race = raceRepository.findById(raceId)
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
-        java.util.List<String> validStatuses = java.util.Arrays.asList("SCHEDULED", "DECLARATION_OPEN", "DECLARATION_CLOSED");
+        java.util.List<String> validStatuses = java.util.Arrays.asList(
+            "SCHEDULED", "DECLARATION_OPEN", "DECLARATION_CLOSED", "RACE_ASSIGNED", 
+            "STEWARDS_INQUIRY", "FINISHED", "OFFICIAL", "CANCELLED", "RACE_EVENT_ENDED", "STOPPED"
+        );
         if (race.getStatus() == null || !validStatuses.contains(race.getStatus().toUpperCase())) {
             throw new IllegalArgumentException("Betting is closed for this race. Current status: " + race.getStatus());
         }
@@ -254,8 +257,8 @@ public class BettingService {
             // Update Race & RaceEntry
             Race race = raceRepository.findById(bet.getRaceId()).orElse(null);
             if (race != null) {
-                race.setStatus("OFFICIAL");
-                raceRepository.save(race);
+                // race.setStatus("OFFICIAL");
+                // raceRepository.save(race);
             }
             List<RaceEntry> entries = raceEntryRepository.findByRaceId(bet.getRaceId());
             int pos = 2;
