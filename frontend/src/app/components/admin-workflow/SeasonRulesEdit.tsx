@@ -31,8 +31,8 @@ export default function SeasonRulesEdit({ seasonId, seasonName, onClose, onSaved
         if (Array.isArray(data) && data.length > 0) {
           const sanitized = data.map((r: any) => ({
             ...r,
-            minPrize: r.minPrize != null && r.minPrize < 10000000 ? r.minPrize * 1000 : r.minPrize,
-            maxPrize: r.maxPrize != null && r.maxPrize < 10000000 ? r.maxPrize * 1000 : r.maxPrize,
+            minPrize: r.minPrize != null && r.minPrize < 100000 ? r.minPrize * 1000 : r.minPrize,
+            maxPrize: r.maxPrize != null && r.maxPrize < 100000 ? r.maxPrize * 1000 : r.maxPrize,
           }));
           setRules(sanitized);
         } else {

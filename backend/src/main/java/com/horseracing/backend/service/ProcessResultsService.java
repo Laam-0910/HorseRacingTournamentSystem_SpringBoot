@@ -267,7 +267,7 @@ public class ProcessResultsService {
                             txJockey.setUserId(jUser.getId());
                             txJockey.setAmount(jockeyShare);
                             txJockey.setTransactionType("RACE_PRIZE_MONEY");
-                            txJockey.setDescription("Race prize money (" + jockeyPct + "%) for Position #" + finalPosition + " in Race #" + race.getId());
+                            txJockey.setDescription(String.format("Race prize: Position #%d in Race #%d | Jockey share (%s%%) | Amount: +%,.0f VND", finalPosition, race.getId(), jockeyPct.toPlainString(), jockeyShare.doubleValue()));
                             txJockey.setRaceMeetingId(race.getRaceMeetingId());
                             txJockey.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                             walletTransactionRepository.save(txJockey);
@@ -287,7 +287,7 @@ public class ProcessResultsService {
                                 txOwner.setUserId(oUser.getId());
                                 txOwner.setAmount(ownerShare);
                                 txOwner.setTransactionType("RACE_PRIZE_MONEY");
-                                txOwner.setDescription("Race prize money (" + (new BigDecimal("100.00").subtract(jockeyPct)) + "%) for Position #" + finalPosition + " in Race #" + race.getId());
+                                txOwner.setDescription(String.format("Race prize: Position #%d in Race #%d | Owner share (%s%%) | Amount: +%,.0f VND", finalPosition, race.getId(), new BigDecimal("100.00").subtract(jockeyPct).toPlainString(), ownerShare.doubleValue()));
                                 txOwner.setRaceMeetingId(race.getRaceMeetingId());
                                 txOwner.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                                 walletTransactionRepository.save(txOwner);
@@ -312,7 +312,7 @@ public class ProcessResultsService {
                                             txJockeyHire.setUserId(jockey.getId());
                                             txJockeyHire.setAmount(hireFee);
                                             txJockeyHire.setTransactionType("JOCKEY_HIRE_INCOME");
-                                            txJockeyHire.setDescription("Jockey hire fee payout for completed Race #" + race.getId());
+                                            txJockeyHire.setDescription(String.format("Jockey hire fee received for Race #%d | Amount: +%,.0f VND", race.getId(), hireFee.doubleValue()));
                                             txJockeyHire.setRaceMeetingId(race.getRaceMeetingId());
                                             txJockeyHire.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                                             walletTransactionRepository.save(txJockeyHire);

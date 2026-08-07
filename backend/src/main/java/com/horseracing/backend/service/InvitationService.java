@@ -309,7 +309,7 @@ public class InvitationService {
             txOwner.setUserId(owner.getId());
             txOwner.setAmount(hireFee.negate());
             txOwner.setTransactionType("JOCKEY_HIRE_FEE");
-            txOwner.setDescription("Jockey hire fee held in Escrow Vault for invitation #" + invite.getId());
+            txOwner.setDescription(String.format("Jockey hire fee for invitation #%d | Amount: %,.0f VND held in escrow until race completes", invite.getId(), hireFee.doubleValue()));
             txOwner.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
             walletTransactionRepository.save(txOwner);
         }
@@ -534,7 +534,7 @@ public class InvitationService {
                 txOwner.setUserId(owner.getId());
                 txOwner.setAmount(hireFee);
                 txOwner.setTransactionType("HIRE_FEE_REFUND");
-                txOwner.setDescription("Jockey hire fee refund from Escrow Vault for withdrawn invitation #" + invite.getId());
+                txOwner.setDescription(String.format("Jockey hire fee refunded for cancelled invitation #%d | Amount: +%,.0f VND returned", invite.getId(), hireFee.doubleValue()));
                 txOwner.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                 walletTransactionRepository.save(txOwner);
             }

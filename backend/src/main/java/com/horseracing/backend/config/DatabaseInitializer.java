@@ -531,6 +531,8 @@ public class DatabaseInitializer implements InitializingBean {
             }
 
             // 11.5 Ensure Active Season, Active Meeting, and 3 SCHEDULED races with entries exist
+            // Auto-seeding of the default season '2026 Grand Championship' has been disabled to prevent it from resetting to ACTIVE or recreating on startup.
+            /*
             try {
                 // Ensure Season 1 is ACTIVE
                 jdbcTemplate.update("UPDATE Season SET status = 'ACTIVE' WHERE id = 1");
@@ -542,6 +544,7 @@ public class DatabaseInitializer implements InitializingBean {
             } catch (Exception ex) {
                 System.err.println("Note on season active seeding: " + ex.getMessage());
             }
+            */
 
             // 12.1 Seed spectator users with wallet balance for betting demo
             try {
@@ -677,8 +680,12 @@ public class DatabaseInitializer implements InitializingBean {
                     jdbcTemplate.update("UPDATE Bet SET status = 'WON', payout = ? WHERE id = ?", payout, bId);
                     // Update spectator wallet balance with payout
                     jdbcTemplate.update("UPDATE [User] SET wallet_balance = wallet_balance + ?, balance = balance + ? WHERE id = ?", payout, payout, uId);
-                    // Mark Race as OFFICIAL
-                    // jdbcTemplate.update("UPDATE Race SET status = 'OFFICIAL' WHERE id = ?", rId);
+                    // Log BET_WIN transaction history for spectator
+                    String cleanDesc = String.format("Won bet payout on race #%d @ odds %.2fx (Payout: %,.0f VND)", rId, odds.doubleValue(), payout.doubleValue());
+                    jdbcTemplate.update(
+                        "INSERT INTO WalletTransaction (user_id, amount, transaction_type, description, created_at) VALUES (?, ?, 'BET_WIN', ?, GETDATE())",
+                        uId, payout, cleanDesc
+                    );
                     // Set winning horse position to 1
                     jdbcTemplate.update("UPDATE RaceEntry SET final_position = 1, finish_time = '1:35.20' WHERE race_id = ? AND horse_id = ?", rId, hId);
                 }
@@ -688,6 +695,33 @@ public class DatabaseInitializer implements InitializingBean {
             } catch (Exception ex) {
                 System.err.println("Note on bet auto-settlement: " + ex.getMessage());
             }
+
+            // Sync missing BET_WIN transaction history logs for any existing WON bets
+            try {
+                jdbcTemplate.update(
+                    "INSERT INTO WalletTransaction (user_id, amount, transaction_type, description, created_at) " +
+                    "SELECT b.user_id, b.payout, 'BET_WIN', CONCAT('Won bet payout on race #', b.race_id, ' @ odds ', b.odds, 'x (Payout: ', FORMAT(b.payout, 'N0'), ' VND)'), b.created_at " +
+                    "FROM Bet b " +
+                    "WHERE b.status = 'WON' AND b.payout > 0 " +
+                    "AND NOT EXISTS ( " +
+                    "  SELECT 1 FROM WalletTransaction wt " +
+                    "  WHERE wt.user_id = b.user_id AND wt.transaction_type = 'BET_WIN' " +
+                    "  AND ABS(wt.amount - b.payout) < 0.01 " +
+                    "  AND wt.description LIKE CONCAT('%race #', b.race_id, '%') " +
+                    ")"
+                );
+            } catch (Exception ex) {
+                System.err.println("Note on syncing missing BET_WIN transaction logs: " + ex.getMessage());
+            }
+
+            // Clean up any legacy unformatted or question mark characters in WalletTransaction descriptions
+            try {
+                jdbcTemplate.update(
+                    "UPDATE WalletTransaction " +
+                    "SET description = REPLACE(REPLACE(REPLACE(description, ' ? payout ', ' - Payout: '), ' ? ', ' - '), ' → ', ' - ') " +
+                    "WHERE description LIKE '%?%' OR description LIKE '%→%'"
+                );
+            } catch (Exception ignored) {}
 
             System.out.println("Database columns, ChatMessage table, HorseRetirementRequest table, Bet table, and RaceEntry auto-seeding verified successfully.");
         } catch (Exception e) {

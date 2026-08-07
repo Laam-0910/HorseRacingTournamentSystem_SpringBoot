@@ -262,9 +262,24 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
       case "RACE_PRIZE_MONEY":
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">PRIZE MONEY</span>;
       case "SELF_DEPOSIT":
+      case "ADMIN_DEPOSIT":
+      case "BANK_DEPOSIT":
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">DEPOSIT</span>;
       case "WITHDRAWAL":
+      case "USER_WITHDRAWAL":
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">WITHDRAWAL</span>;
+      case "BET_PLACED":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">BET PLACED</span>;
+      case "BET_WIN":
+      case "BET_PAYOUT":
+      case "BET_WINNING":
+      case "BET_WINNING_PAYOUT":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">BET WINNING</span>;
+      case "BET_REFUND":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30">BET REFUND</span>;
+      case "LIVESTREAM_TICKET_PAYMENT":
+      case "LIVESTREAM_PPV_PURCHASE":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">LIVE PASS</span>;
       default:
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white/70">{type}</span>;
     }
@@ -603,6 +618,10 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
                   {paginatedTransactions.map((tx: any) => {
                     const amt = Number(tx.amount || 0);
                     const isPositive = amt > 0;
+                    const cleanDesc = String(tx.description || "")
+                      .replace(/\s*\?\s*payout\s*/gi, " (Payout: ")
+                      .replace(/\s*\?\s*/g, " - ")
+                      .replace(/\s*→\s*/g, " - ");
                     return (
                       <tr key={tx.id} className="hover:bg-white/[0.02] transition">
                         <td className="px-4 py-3 text-white/40">#TX-{tx.id}</td>
@@ -611,7 +630,7 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
                           {isPositive ? `+${amt.toLocaleString('en-US')}` : `${amt.toLocaleString('en-US')}`}
                         </td>
                         <td className="px-4 py-3 text-white/80">
-                          <div className="max-w-[280px] whitespace-normal break-words leading-snug" title={tx.description}>{tx.description}</div>
+                          <div className="max-w-[280px] whitespace-normal break-words leading-snug" title={cleanDesc}>{cleanDesc}</div>
                         </td>
                         <td className="px-4 py-3 text-white/40">{formatDate(tx.createdAt)}</td>
                       </tr>

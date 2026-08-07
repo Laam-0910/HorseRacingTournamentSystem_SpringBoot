@@ -120,7 +120,7 @@ public class RegistrationService {
                     txOwner.setUserId(ownerId);
                     txOwner.setAmount(ticketPrice.negate());
                     txOwner.setTransactionType("TICKET_FEE");
-                    txOwner.setDescription("Bought ticket for Race Meeting: " + meeting.getName() + " (Held in Escrow Vault)");
+                    txOwner.setDescription("Race meeting entry fee for '" + meeting.getName() + "' | Amount: " + String.format("%,.0f", ticketPrice) + " VND (held in escrow until race completes)");
                     txOwner.setRaceMeetingId(meetingId);
                     txOwner.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                     walletTransactionRepository.save(txOwner);
@@ -159,7 +159,7 @@ public class RegistrationService {
             txOwner.setUserId(ownerId);
             txOwner.setAmount(ticketPrice.negate());
             txOwner.setTransactionType("TICKET_FEE");
-            txOwner.setDescription("Bought ticket for Race Meeting: " + meeting.getName() + " (Held in Escrow Vault)");
+            txOwner.setDescription("Race meeting entry fee for '" + meeting.getName() + "' | Amount: " + String.format("%,.0f", ticketPrice) + " VND (held in escrow until race completes)");
             txOwner.setRaceMeetingId(meetingId);
             txOwner.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             walletTransactionRepository.save(txOwner);

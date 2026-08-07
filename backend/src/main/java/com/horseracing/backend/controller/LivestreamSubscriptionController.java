@@ -65,6 +65,10 @@ public class LivestreamSubscriptionController {
         });
 
         // Prefer active subscription expiring latest to correctly expose accumulated extension date
+        boolean hasActiveSeason = userSubs.stream().anyMatch(sub ->
+                "SEASON".equalsIgnoreCase(sub.getPackageType()) && (sub.getExpiresAt() == null || !sub.getExpiresAt().before(now))
+        );
+
         Optional<LivestreamSubscription> activeSub = userSubs.stream()
                 .filter(sub -> sub.getExpiresAt() == null || !sub.getExpiresAt().before(now))
                 .sorted((a, b) -> {
@@ -74,9 +78,11 @@ public class LivestreamSubscriptionController {
                 })
                 .findFirst();
 
+        String effectivePackageType = hasActiveSeason ? "SEASON" : activeSub.map(LivestreamSubscription::getPackageType).orElse(null);
+
         Map<String, Object> resp = new java.util.HashMap<>();
         resp.put("hasAccess", hasAccess);
-        resp.put("packageType", activeSub.map(LivestreamSubscription::getPackageType).orElse(null));
+        resp.put("packageType", effectivePackageType);
         resp.put("expiresAt", activeSub.map(s -> s.getExpiresAt() != null ? s.getExpiresAt().getTime() : 0L).orElse(0L));
         resp.put("expiresAtFormatted", activeSub.map(s -> s.getExpiresAt() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(s.getExpiresAt()) : "").orElse(""));
         resp.put("startDateFormatted", activeSub.map(s -> s.getPurchaseTime() != null ? new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm").format(s.getPurchaseTime()) : "").orElse(""));
@@ -107,54 +113,13 @@ public class LivestreamSubscriptionController {
         }
 
         if ("SEASON".equalsIgnoreCase(packageType)) {
-            // In Extend mode, keep exact fixed price (79,000 VNĐ) without prorated discounts
-            if (Boolean.TRUE.equals(isExtend)) {
-                return ResponseEntity.ok(Map.of(
-                        "packageType", "SEASON",
-                        "originalPrice", BASE_SEASON_PRICE,
-                        "finalPrice", BASE_SEASON_PRICE,
-                        "discountApplied", BigDecimal.ZERO,
-                        "description", "Extend Annual Pass (+365 Days for 79,000 VNĐ)"
-                ));
-            }
-
-            // Calculate total paid for meeting passes in this season for Upgrade mode
-            BigDecimal paidForMeetings = userSubs.stream()
-                    .filter(s -> "RACEMEETING".equalsIgnoreCase(s.getPackageType()) &&
-                            (seasonId == null || seasonId.equals(s.getSeasonId())))
-                    .map(LivestreamSubscription::getPricePaid)
-                    .reduce(BigDecimal.ZERO, BigDecimal::add);
-
-            // Check if user owned a season pass for a previous season (loyalty discount 15%)
-            boolean isRenewal = userSubs.stream()
-                    .anyMatch(s -> "SEASON".equalsIgnoreCase(s.getPackageType()) &&
-                            (seasonId == null || !seasonId.equals(s.getSeasonId())));
-
-            BigDecimal finalPrice = BASE_SEASON_PRICE;
-            BigDecimal discountApplied = BigDecimal.ZERO;
-            String note = "Full Season Pass (79,000 VNĐ)";
-
-            if (paidForMeetings.compareTo(BigDecimal.ZERO) > 0) {
-                // Prorated upgrade: subtract paid meeting passes
-                discountApplied = paidForMeetings;
-                finalPrice = BASE_SEASON_PRICE.subtract(paidForMeetings);
-                if (finalPrice.compareTo(new BigDecimal("10000")) < 0) {
-                    finalPrice = new BigDecimal("10000"); // minimum 10,000 VNĐ
-                }
-                note = "Prorated Upgrade to Season Pass (Credit applied: " + String.format("%,.0f", paidForMeetings) + " VNĐ)";
-            } else if (isRenewal) {
-                // Loyalty 15% discount
-                discountApplied = BASE_SEASON_PRICE.multiply(new BigDecimal("0.15")).setScale(0, RoundingMode.HALF_UP);
-                finalPrice = BASE_SEASON_PRICE.subtract(discountApplied);
-                note = "Loyalty Renewal 15% Discount Applied";
-            }
-
+            // Keep fixed price (79,000 VNĐ) without prorated discounts so upgrading costs 79k and accumulates days
             return ResponseEntity.ok(Map.of(
                     "packageType", "SEASON",
                     "originalPrice", BASE_SEASON_PRICE,
-                    "finalPrice", finalPrice,
-                    "discountApplied", discountApplied,
-                    "description", note
+                    "finalPrice", BASE_SEASON_PRICE,
+                    "discountApplied", BigDecimal.ZERO,
+                    "description", "Annual Pass (79,000 VNĐ - 365 Days)"
             ));
         }
 
@@ -191,24 +156,23 @@ public class LivestreamSubscriptionController {
                 txUser.setUserId(spectator.getId());
                 txUser.setAmount(amount.negate());
                 txUser.setTransactionType("LIVESTREAM_TICKET_PAYMENT");
-                txUser.setDescription("HD Livestream " + packageType.toUpperCase() + " Pass payment");
+                String passLabel = "SEASON".equalsIgnoreCase(packageType) ? "Annual Pass (365-day access)" : "Monthly Pass (30-day access)";
+                txUser.setDescription("HD Livestream " + passLabel + " purchased | Amount: " + String.format("%,.0f", amount) + " VND");
                 if (raceMeetingId != null) txUser.setRaceMeetingId(raceMeetingId);
                 txUser.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                 walletTransactionRepository.save(txUser);
             }
 
-            LivestreamSubscription sub = new LivestreamSubscription();
-            sub.setUserId(userId);
-            sub.setPackageType(packageType.toUpperCase());
-            sub.setSeasonId(seasonId);
-            sub.setRaceMeetingId(raceMeetingId);
-            sub.setPricePaid(amount);
-            sub.setPurchaseTime(new Timestamp(System.currentTimeMillis()));
+            long now = System.currentTimeMillis();
+            List<LivestreamSubscription> existingSubs = subscriptionRepository.findByUserId(userId);
+
+            // Check if user currently has an active SEASON (Annual Pass) subscription
+            boolean hasActiveSeason = existingSubs.stream().anyMatch(s ->
+                    "SEASON".equalsIgnoreCase(s.getPackageType()) && s.getExpiresAt() != null && s.getExpiresAt().getTime() > now
+            );
 
             // Cumulative Extension & Upgrade Stacking Logic:
             // Find max existing expiresAt across ALL active subscriptions of the user
-            long now = System.currentTimeMillis();
-            List<LivestreamSubscription> existingSubs = subscriptionRepository.findByUserId(userId);
             long baseExpiryTime = existingSubs.stream()
                     .filter(s -> s.getExpiresAt() != null && s.getExpiresAt().getTime() > now)
                     .mapToLong(s -> s.getExpiresAt().getTime())
@@ -220,6 +184,16 @@ public class LivestreamSubscriptionController {
                     ? 365L * 24 * 3600 * 1000L
                     : 30L * 24 * 3600 * 1000L;
 
+            // If user has an active SEASON pass, any extension (+30 days or +365 days) preserves packageType as SEASON
+            String finalPackageType = (hasActiveSeason || "SEASON".equalsIgnoreCase(packageType)) ? "SEASON" : packageType.toUpperCase();
+
+            LivestreamSubscription sub = new LivestreamSubscription();
+            sub.setUserId(userId);
+            sub.setPackageType(finalPackageType);
+            sub.setSeasonId(seasonId);
+            sub.setRaceMeetingId(raceMeetingId);
+            sub.setPricePaid(amount);
+            sub.setPurchaseTime(new Timestamp(now));
             sub.setExpiresAt(new Timestamp(baseExpiryTime + durationMillis));
             sub.setPaymentMethod(payMethod);
 
@@ -233,7 +207,8 @@ public class LivestreamSubscriptionController {
             userTx.setUserId(userId);
             userTx.setAmount(amount.negate());
             userTx.setTransactionType("LIVESTREAM_PPV_PURCHASE");
-            userTx.setDescription("Unlocked Livestream HD Access (" + packageType.toUpperCase() + " Pass via VietQR)");
+            String passLabel2 = "SEASON".equalsIgnoreCase(packageType) ? "Annual Pass (365-day access)" : "Monthly Pass (30-day access)";
+            userTx.setDescription("HD Livestream " + passLabel2 + " activated via VietQR bank transfer | Amount: " + String.format("%,.0f", amount) + " VND");
             if (raceMeetingId != null) userTx.setRaceMeetingId(raceMeetingId);
             userTx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
             walletTransactionRepository.save(userTx);
@@ -254,7 +229,8 @@ public class LivestreamSubscriptionController {
                         tx.setUserId(admin.getId());
                         tx.setAmount(amount);
                         tx.setTransactionType("LIVESTREAM_REVENUE");
-                        tx.setDescription("Livestream PPV subscription revenue from User #" + userId + " (" + packageType.toUpperCase() + ")");
+                        String passLabelAdmin = "SEASON".equalsIgnoreCase(packageType) ? "Annual Pass" : "Monthly Pass";
+                        tx.setDescription("Livestream revenue received from User #" + userId + " | " + passLabelAdmin + " | Amount: " + String.format("%,.0f", amount) + " VND");
                         if (raceMeetingId != null) tx.setRaceMeetingId(raceMeetingId);
                         tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                         walletTransactionRepository.save(tx);

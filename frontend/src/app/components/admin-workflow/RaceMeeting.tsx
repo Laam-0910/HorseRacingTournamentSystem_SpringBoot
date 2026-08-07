@@ -430,6 +430,12 @@ export default function RaceMeeting({ onOpenWallet }: { onOpenWallet?: () => voi
         </h3>
 
         <form onSubmit={handleSubmit} className="bg-white/[0.015] border border-white/10 rounded-2xl p-5 space-y-4">
+          {error && (
+            <p className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-3 rounded-xl font-mono">⚠️ {error}</p>
+          )}
+          {success && (
+            <p className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl font-mono">✓ {success}</p>
+          )}
           <div className="space-y-2">
             <label className="text-xs font-semibold text-white/60 uppercase tracking-wider block">{$t("Meeting Name", (localStorage.getItem('app-lang') || 'en'))}</label>
             <input
