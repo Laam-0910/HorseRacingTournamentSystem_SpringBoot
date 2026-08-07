@@ -842,6 +842,10 @@ function LandingBettingContainer({ user, navigate, races }: { user: any; navigat
   }, [selectedRaceId]);
 
   const handleBetNow = () => {
+    if (user && user.roleId !== 4) {
+      alert("Only spectators can place bets");
+      return;
+    }
     if (user?.roleId === 5) {
       navigate("/dashboard/spectator?tab=betting");
     } else if (user) {
