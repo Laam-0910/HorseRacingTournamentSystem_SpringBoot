@@ -547,7 +547,10 @@ public class RefereeService {
                 tx.setUserId(finalUserId);
                 tx.setAmount(fine.negate());
                 tx.setTransactionType(isOwner ? "OWNER_FINE" : "REFEREE_FINE");
-                tx.setDescription((isOwner ? "Owner Violation Fine: " : "Referee Violation Fine: ") + (violation.getDescription() != null ? violation.getDescription() : "Violation") + " (" + penaltyStr + ")");
+                tx.setDescription(String.format("Penalty fine (%s): %s | Amount deducted: %,.0f VND",
+                    isOwner ? "Horse Owner" : "Jockey",
+                    (violation.getDescription() != null ? violation.getDescription() : "Race violation"),
+                    fine.doubleValue()) + " (" + penaltyStr + ")");
                 tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
                 walletTransactionRepository.save(tx);
 

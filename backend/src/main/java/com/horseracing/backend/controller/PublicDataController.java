@@ -623,7 +623,7 @@ public class PublicDataController {
             tx.setUserId(user.getId());
             tx.setAmount(amount);
             tx.setTransactionType("DEPOSIT");
-            tx.setDescription("Wallet Top-up Deposit via VietQR Banking Gateway");
+            tx.setDescription(String.format("Wallet top-up via VietQR | Amount: +%,.0f VND credited to your wallet", amount.doubleValue()));
             tx.setCreatedAt(new java.sql.Timestamp(System.currentTimeMillis()));
             walletTransactionRepository.save(tx);
 
@@ -749,9 +749,11 @@ public class PublicDataController {
                 withdrawalRequestRepository.save(wr);
 
                 // Ghi log giao dịch WITHDRAWAL
-                StringBuilder desc = new StringBuilder("Cash-out payout via ").append(bankName);
-                if (!accountNumber.isBlank()) desc.append(" | Acc: ").append(accountNumber);
-                if (!accountHolder.isBlank()) desc.append(" (Holder: ").append(accountHolder.toUpperCase()).append(")");
+                StringBuilder desc = new StringBuilder();
+                desc.append(String.format("Cash withdrawal: %,.0f VND", amount.doubleValue()));
+                if (!bankName.isBlank()) desc.append(" | Bank: ").append(bankName);
+                if (!accountNumber.isBlank()) desc.append(" | Account: ").append(accountNumber);
+                if (!accountHolder.isBlank()) desc.append(" (").append(accountHolder.toUpperCase()).append(")");
                 if (!notes.isBlank()) desc.append(" | Note: ").append(notes);
 
                 WalletTransaction tx = new WalletTransaction();

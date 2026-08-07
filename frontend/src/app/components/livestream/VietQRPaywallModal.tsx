@@ -492,7 +492,7 @@ export default function VietQRPaywallModal({
                         {isExtendMode ? "Extend Annual (+365 Days)" : "Upgrade to Annual Pass"}
                       </span>
                       <span style={{ fontSize: "8px", background: "#10b981", color: "#000", padding: "1px 4px", borderRadius: "2px", fontWeight: "bold" }}>
-                        {!isExtendMode && hasMonthly ? "15,000 VNĐ OFF" : "BEST VALUE"}
+                        {"BEST VALUE"}
                       </span>
                     </div>
                     <div style={{ fontSize: "1.25rem", fontWeight: "bold", color: "#34d399", fontFamily: "monospace", marginTop: "4px" }}>
@@ -501,8 +501,6 @@ export default function VietQRPaywallModal({
                     <div style={{ fontSize: "10px", color: "#a0a0a0", marginTop: "4px" }}>
                       {isExtendMode
                         ? "Add +365 days extra streaming time"
-                        : !isExtendMode && hasMonthly
-                        ? "Upgrade to Annual Pass (15,000 VNĐ credited from active Monthly Pass)"
                         : "Full 365-day unlimited HD livestream pass for all events"}
                     </div>
                     {/* Show current subscription dates if user already has an active pass */}

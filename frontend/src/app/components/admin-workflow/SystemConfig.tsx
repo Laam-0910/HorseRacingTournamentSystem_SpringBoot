@@ -49,7 +49,9 @@ export default function SystemConfig() {
       });
       setFormValues(values);
     } catch (err: any) {
-      setError(getErrMsg(err, "Failed to load system configurations."));
+      const errMsg = getErrMsg(err, "Failed to load system configurations.");
+      setError(errMsg);
+      showToast(errMsg, "error");
     } finally {
       setLoading(false);
     }
@@ -78,23 +80,31 @@ export default function SystemConfig() {
 
     if (!isNaN(p1) && !isNaN(p2) && !isNaN(p3)) {
       if (p1 <= p2) {
-        setError("1st Place Share (" + p1 + "%) must be strictly greater than 2nd Place Share (" + p2 + "%).");
+        const msg = "1st Place Share (" + p1 + "%) must be strictly greater than 2nd Place Share (" + p2 + "%).";
+        setError(msg);
+        showToast(msg, "error");
         setLoading(false);
         return;
       }
       if (p2 <= p3) {
-        setError("2nd Place Share (" + p2 + "%) must be strictly greater than 3rd Place Share (" + p3 + "%).");
+        const msg = "2nd Place Share (" + p2 + "%) must be strictly greater than 3rd Place Share (" + p3 + "%).";
+        setError(msg);
+        showToast(msg, "error");
         setLoading(false);
         return;
       }
       if (p1 < 40 || p1 > 80) {
-        setError("1st Place Share must be between 40% and 80%.");
+        const msg = "1st Place Share must be between 40% and 80%.";
+        setError(msg);
+        showToast(msg, "error");
         setLoading(false);
         return;
       }
       const sum = p1 + p2 + p3;
       if (Math.abs(sum - 100) > 0.01) {
-        setError("Total sum of 1st, 2nd, and 3rd place shares must equal exactly 100% (Current sum: " + sum + "%).");
+        const msg = "Total sum of 1st, 2nd, and 3rd place shares must equal exactly 100% (Current sum: " + sum + "%).";
+        setError(msg);
+        showToast(msg, "error");
         setLoading(false);
         return;
       }
@@ -103,17 +113,23 @@ export default function SystemConfig() {
     const minT = parseFloat(formValues["MIN_TICKET_PRICE"] || "10000");
     const maxT = parseFloat(formValues["MAX_TICKET_PRICE"] || "5000000");
     if (!isNaN(minT) && !isNaN(maxT) && maxT <= minT) {
-      setError("Maximum ticket price must be strictly greater than Minimum ticket price.");
+      const msg = "Maximum ticket price must be strictly greater than Minimum ticket price.";
+      setError(msg);
+      showToast(msg, "error");
       setLoading(false);
       return;
     }
 
     try {
       await api.post("/admin/configs", formValues);
-      setSuccess("System configurations updated successfully.");
+      const msg = "System configurations updated successfully.";
+      setSuccess(msg);
+      showToast(msg, "success");
       fetchConfigs();
     } catch (err: any) {
-      setError(getErrMsg(err, "Failed to update configurations."));
+      const errMsg = getErrMsg(err, "Failed to update configurations.");
+      setError(errMsg);
+      showToast(errMsg, "error");
     } finally {
       setLoading(false);
     }
@@ -121,6 +137,12 @@ export default function SystemConfig() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      {error && (
+        <div className="text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 p-3.5 rounded-xl font-mono">⚠️ {error}</div>
+      )}
+      {success && (
+        <div className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-xl font-mono">✓ {success}</div>
+      )}
 
       <div className="rounded-xl border" style={{ background: "rgba(255,255,255,0.028)", borderColor: "rgba(201,162,39,0.14)" }}>
         <div style={{ padding: "1rem 1.5rem", borderBottom: "1px solid rgba(201,162,39,0.10)", background: "rgba(21,19,16,0.6)" }}>
@@ -238,7 +260,7 @@ export default function SystemConfig() {
                     ) : (
                       <input
                         type="text"
-                        required
+                        required={!["PAYOS_BANK_NAME", "PAYOS_ACCOUNT_NUMBER", "PAYOS_ACCOUNT_NAME", "PAYOS_PAYOUT_API_KEY"].includes(c.configKey)}
                         value={formValues[c.configKey] || ""}
                         onChange={(e) => handleChange(c.configKey, e.target.value)}
                         style={{ width: "100%", padding: "0.625rem", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "0.5rem", color: "#f4f2ec", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }}

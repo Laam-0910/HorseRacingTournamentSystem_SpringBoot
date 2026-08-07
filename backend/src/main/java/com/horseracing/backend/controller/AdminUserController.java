@@ -552,11 +552,8 @@ public class AdminUserController {
             userRepository.save(user);
 
             // Ghi log WITHDRAWAL transaction
-            String desc = "Cash-out payout via " + wr.getBankName()
-                    + " | Acc: " + wr.getAccountNumber()
-                    + " (Holder: " + wr.getAccountHolder() + ")"
-                    + (wr.getNotes() != null && !wr.getNotes().isBlank() ? " | Note: " + wr.getNotes() : "")
-                    + " [Admin Processed - WR#" + id + "]";
+            String desc = String.format("Cash withdrawal approved by admin: %,.0f VND | Bank: %s | Account: %s (%s)", wr.getAmount().doubleValue(), wr.getBankName(), wr.getAccountNumber(), wr.getAccountHolder())
+                    + (wr.getNotes() != null && !wr.getNotes().isBlank() ? " | Note: " + wr.getNotes() : "");
             WalletTransaction tx = new WalletTransaction();
             tx.setUserId(wr.getUserId());
             tx.setAmount(wr.getAmount().negate());

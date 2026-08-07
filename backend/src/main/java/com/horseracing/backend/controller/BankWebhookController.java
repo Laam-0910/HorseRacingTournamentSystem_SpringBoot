@@ -326,7 +326,7 @@ public class BankWebhookController {
         tx.setUserId(user.getId());
         tx.setAmount(amount);
         tx.setTransactionType("DEPOSIT");
-        tx.setDescription("Automated VietQR Bank Deposit via Realtime Webhook (" + rawContent + ")");
+        tx.setDescription(String.format("Wallet top-up via bank transfer | Amount: +%,.0f VND credited to your wallet", amount.doubleValue()));
         tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
         walletTransactionRepository.save(tx);
 
@@ -397,20 +397,13 @@ public class BankWebhookController {
             }
         }
 
-        LivestreamSubscription sub = new LivestreamSubscription();
-        sub.setUserId(userId);
-        sub.setPackageType(packageType.toUpperCase());
-        if ("SEASON".equalsIgnoreCase(packageType)) {
-            sub.setSeasonId(refId);
-        } else {
-            sub.setRaceMeetingId(refId);
-        }
-        sub.setPricePaid(amount);
-        sub.setPurchaseTime(new Timestamp(System.currentTimeMillis()));
-
-        // Cumulative Extension & Upgrade Stacking Logic for Webhook Bank Payments:
         long now = System.currentTimeMillis();
         List<LivestreamSubscription> existingSubs = subscriptionRepository.findByUserId(userId);
+        
+        boolean hasActiveSeason = existingSubs.stream().anyMatch(s -> 
+            "SEASON".equalsIgnoreCase(s.getPackageType()) && s.getExpiresAt() != null && s.getExpiresAt().getTime() > now
+        );
+
         long baseExpiryTime = existingSubs.stream()
                 .filter(s -> s.getExpiresAt() != null && s.getExpiresAt().getTime() > now)
                 .mapToLong(s -> s.getExpiresAt().getTime())
@@ -421,6 +414,18 @@ public class BankWebhookController {
                 ? 365L * 24 * 3600 * 1000L
                 : 30L * 24 * 3600 * 1000L;
 
+        String finalPackageType = (hasActiveSeason || "SEASON".equalsIgnoreCase(packageType)) ? "SEASON" : packageType.toUpperCase();
+
+        LivestreamSubscription sub = new LivestreamSubscription();
+        sub.setUserId(userId);
+        sub.setPackageType(finalPackageType);
+        if ("SEASON".equalsIgnoreCase(finalPackageType)) {
+            sub.setSeasonId(refId);
+        } else {
+            sub.setRaceMeetingId(refId);
+        }
+        sub.setPricePaid(amount);
+        sub.setPurchaseTime(new Timestamp(now));
         sub.setExpiresAt(new Timestamp(baseExpiryTime + durationMillis));
         sub.setPaymentMethod("VIETQR_BANK_WEBHOOK");
         subscriptionRepository.save(sub);
@@ -438,7 +443,8 @@ public class BankWebhookController {
                     tx.setUserId(admin.getId());
                     tx.setAmount(amount);
                     tx.setTransactionType("LIVESTREAM_REVENUE");
-                    tx.setDescription("Automated VietQR Livestream Pass purchase (" + rawContent + ")");
+                    String passLabelWebhook = "SEASON".equalsIgnoreCase(packageType) ? "Annual Pass (365-day access)" : "Monthly Pass (30-day access)";
+                    tx.setDescription("Livestream revenue received via VietQR bank transfer | " + passLabelWebhook + " | Amount: " + String.format("%,.0f", amount) + " VND");
                     if (refId != null && "RACEMEETING".equalsIgnoreCase(packageType)) tx.setRaceMeetingId(refId);
                     tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                     walletTransactionRepository.save(tx);

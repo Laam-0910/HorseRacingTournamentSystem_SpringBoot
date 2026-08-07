@@ -159,17 +159,16 @@ public class SeasonService {
             com.horseracing.backend.entity.User admin = userRepository.findAll().stream()
                     .filter(u -> u.getRoleId() != null && u.getRoleId() == 1)
                     .findFirst().orElse(null);
-
             for (RaceMeeting m : meetings) {
-                boolean wasActive = !"INACTIVE".equalsIgnoreCase(m.getStatus());
+                boolean wasActive = "ACTIVE".equalsIgnoreCase(m.getStatus());
                 m.setStatus("INACTIVE");
 
                 // Hoàn lại ngân sách giải đấu ($totalBudget) về Ví Admin nếu meeting đang active và đặt totalBudget = 0
                 BigDecimal curBudget = m.getTotalBudget() != null ? m.getTotalBudget() : BigDecimal.ZERO;
-                if (curBudget.compareTo(BigDecimal.ZERO) > 0) {
+                if (wasActive && curBudget.compareTo(BigDecimal.ZERO) > 0) {
                     m.setLastAllocatedBudget(curBudget); // Lưu mốc ngân sách cũ
                 }
-                BigDecimal budgetToRefund = m.getLastAllocatedBudget() != null ? m.getLastAllocatedBudget() : curBudget;
+                BigDecimal budgetToRefund = wasActive ? curBudget : BigDecimal.ZERO;
 
                 if (wasActive && admin != null && budgetToRefund.compareTo(BigDecimal.ZERO) > 0) {
                     BigDecimal adminBal = admin.getWalletBalance() != null ? admin.getWalletBalance() : BigDecimal.ZERO;

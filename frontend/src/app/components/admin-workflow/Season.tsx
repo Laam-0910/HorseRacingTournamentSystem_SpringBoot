@@ -252,8 +252,8 @@ export default function Season() {
       const rawData = (Array.isArray(res) && res.length > 0)
         ? res.map((r: any) => ({
             ...r,
-            minPrize: r.minPrize != null && r.minPrize < 10000000 ? r.minPrize * 1000 : r.minPrize,
-            maxPrize: r.maxPrize != null && r.maxPrize < 10000000 ? r.maxPrize * 1000 : r.maxPrize,
+            minPrize: r.minPrize != null && r.minPrize < 100000 ? r.minPrize * 1000 : r.minPrize,
+            maxPrize: r.maxPrize != null && r.maxPrize < 100000 ? r.maxPrize * 1000 : r.maxPrize,
           }))
         : DEFAULT_TEMPLATE_RULES.map(r => ({
             classLevel: r.classLevelName,
