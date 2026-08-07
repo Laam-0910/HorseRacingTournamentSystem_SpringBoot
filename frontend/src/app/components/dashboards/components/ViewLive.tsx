@@ -4,6 +4,7 @@ import { getYouTubeEmbedUrl } from "../../../../lib/utils";
 import { useAuth } from "../../../../context/AuthContext";
 import WebCamLiveViewer, { BroadcasterInfo } from "../../livestream/WebCamLiveViewer";
 import VietQRPaywallModal from "../../livestream/VietQRPaywallModal";
+import { showToast } from "../../../../lib/confirm";
 
 interface Race {
   id: number;
@@ -47,6 +48,31 @@ export default function ViewLive({ preselectedRaceId, onClearPreselect }: ViewLi
 
   // State management for AI Win Probabilities
   const [raceEntries, setRaceEntries] = useState<any[]>([]);
+
+  // After PayOS redirect back (?payos=success), refresh access and notify
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("payos") !== "success" || !user?.id) return;
+
+    showToast("PayOS payment successful! Unlocking livestream access...", "success");
+    const meetingId = selectedRace?.raceMeetingId || "";
+    const seasonPart = selectedRace?.seasonId ? `&seasonId=${selectedRace.seasonId}` : "";
+    api.get<any>(`/public/livestream/access?userId=${user.id}&meetingId=${meetingId}${seasonPart}`)
+      .then((res) => {
+        setHasAccess(Boolean(res.hasAccess));
+        setSubInfo(res);
+        if (res.hasAccess) {
+          setShowPaywallModal(false);
+          isManualPaywallOpenRef.current = false;
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        params.delete("payos");
+        const qs = params.toString();
+        window.history.replaceState({}, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+      });
+  }, [user?.id, selectedRace?.raceMeetingId, selectedRace?.seasonId]);
 
   useEffect(() => {
     if (!selectedRace?.id) {
