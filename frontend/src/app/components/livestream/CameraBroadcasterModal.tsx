@@ -116,6 +116,32 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
   const streamRef = useRef<MediaStream | null>(null); // Ref to track latest stream (avoids stale closure)
   const isEncodingFrameRef = useRef<boolean>(false); // Lock flag to prevent concurrent overlapping calls
   const frameSeqRef = useRef<number>(0); // Monotonic frame sequence counter
+  const lastVideoTimeRef = useRef<number>(-1);
+  const delayedFramesQueueRef = useRef<{ buffer: ArrayBuffer; sendTime: number }[]>([]);
+
+  const applyCameraConstraints = async () => {
+    try {
+      if (!streamRef.current) return;
+      const videoTrack = streamRef.current.getVideoTracks()[0];
+      if (!videoTrack) return;
+
+      let targetW = 1280;
+      let targetH = 720;
+      if (resolution === "360p") { targetW = 640; targetH = 360; }
+      else if (resolution === "480p") { targetW = 854; targetH = 480; }
+      else if (resolution === "720p") { targetW = 1280; targetH = 720; }
+      else if (resolution === "1080p") { targetW = 1920; targetH = 1080; }
+
+      await videoTrack.applyConstraints({
+        width: { ideal: targetW },
+        height: { ideal: targetH },
+        frameRate: { ideal: targetFps }
+      });
+      console.log(`[Broadcaster] Adaptive camera constraints applied: ${resolution} @ ${targetFps} FPS`);
+    } catch (err) {
+      console.warn("[Broadcaster] Failed to apply constraints on video track dynamically:", err);
+    }
+  };
 
   const startCamera = async (mode: "environment" | "user") => {
     try {
@@ -127,27 +153,37 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
       const isMobileDevice = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
       let mediaStream: MediaStream | null = null;
 
+      let targetW = 1280;
+      let targetH = 720;
+      if (resolution === "360p") { targetW = 640; targetH = 360; }
+      else if (resolution === "480p") { targetW = 854; targetH = 480; }
+      else if (resolution === "720p") { targetW = 1280; targetH = 720; }
+      else if (resolution === "1080p") { targetW = 1920; targetH = 1080; }
+
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        if (!isMobileDevice) {
-          // Optimized high-performance Full HD resolution constraints for Laptop/Desktop Webcams
-          try {
-            mediaStream = await navigator.mediaDevices.getUserMedia({
-              video: {
-                width: { ideal: 1920, max: 1920 },
-                height: { ideal: 1080, max: 1080 },
-                frameRate: { ideal: 30, max: 60 }
-              }
-            });
-          } catch (lapErr) {
-            console.warn("[Broadcaster] Laptop HD camera setup fallback:", lapErr);
-          }
+        // Try requesting optimized user constraints to prevent camera over-capturing (which causes lag)
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: mode === "environment" ? { ideal: "environment" } : { ideal: "user" },
+              width: { ideal: targetW },
+              height: { ideal: targetH },
+              frameRate: { ideal: targetFps, max: 60 }
+            }
+          });
+        } catch (lapErr) {
+          console.warn("[Broadcaster] Optimized camera constraints failed, falling back:", lapErr);
         }
 
         if (!mediaStream) {
-          // Mobile & Fallback camera constraints (Aug 5th exact smooth mode)
+          // Mobile specific exact facingMode fallback
           try {
             mediaStream = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode: { exact: mode } }
+              video: {
+                facingMode: { exact: mode },
+                width: { ideal: targetW },
+                height: { ideal: targetH }
+              }
             });
           } catch (e1) {
             try {
@@ -280,6 +316,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
 
   const startStreamInterval = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
+    delayedFramesQueueRef.current = []; // Clear delayed queue on new interval start
 
     let targetWidth = 1280;
     if (resolution === "360p") targetWidth = 640;
@@ -294,15 +331,41 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
       canvas = document.createElement("canvas");
       canvasRef.current = canvas;
     }
-    const ctx = canvas.getContext("2d", { alpha: false, willReadFrequently: true });
+    // Optimization: Use desynchronized: true to reduce rendering pipeline latency, and disable alpha channel
+    const ctx = canvas.getContext("2d", { alpha: false, desynchronized: true });
     const enc = new TextEncoder();
 
-    intervalRef.current = setInterval(() => {
-      if (videoRef.current && ctx && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-        if (wsRef.current.bufferedAmount > 256 * 1024) return;
+    if (ctx) {
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "low"; // Faster drawing reduces latency
+    }
 
+    intervalRef.current = setInterval(() => {
+      // 1. Dispatch delayed frames whose sendTime (5 seconds after capture) has arrived
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        const now = performance.now();
+        while (delayedFramesQueueRef.current.length > 0 && delayedFramesQueueRef.current[0].sendTime <= now) {
+          const item = delayedFramesQueueRef.current.shift();
+          if (item && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            wsRef.current.send(item.buffer);
+          }
+        }
+      }
+
+      // 2. Capture and process the current camera frame
+      if (videoRef.current && ctx && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         const video = videoRef.current;
+
+        // Skip frame if camera hasn't generated a new one yet (huge CPU & bandwidth savings)
+        if (video.currentTime === lastVideoTimeRef.current && video.currentTime > 0) {
+          return;
+        }
+
+        // Tighter buffer threshold to prevent queue lag: drop frame if websocket has > 128KB queued
+        if (wsRef.current.bufferedAmount > 128 * 1024) return;
+
         if (video.videoWidth > 0 && video.videoHeight > 0) {
+          lastVideoTimeRef.current = video.currentTime;
           const maxSide = targetWidth;
           let w = video.videoWidth;
           let h = video.videoHeight;
@@ -327,7 +390,15 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
           frameSeqRef.current = (frameSeqRef.current + 1) % 4294967290;
           const currentSeq = frameSeqRef.current;
 
-          const dataUrl = canvas.toDataURL("image/jpeg", jpegQuality);
+          // Adaptive Quality: reduce jpeg quality on the fly if network buffer is starting to grow
+          let adaptiveQuality = jpegQuality;
+          if (wsRef.current.bufferedAmount > 64 * 1024) {
+            adaptiveQuality = Math.max(0.15, jpegQuality - 0.25);
+          } else if (wsRef.current.bufferedAmount > 32 * 1024) {
+            adaptiveQuality = Math.max(0.30, jpegQuality - 0.15);
+          }
+
+          const dataUrl = canvas.toDataURL("image/jpeg", adaptiveQuality);
           const broadcasterId = user?.id ? `user_${user.id}_${camInstanceId}` : `anon_${camInstanceId}`;
           const uName = user?.fullName || user?.username || "Referee";
           const broadcasterName = `${uName} (Ref Cam #${camInstanceId.replace("cam_", "")})`;
@@ -346,9 +417,9 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
           u8.set(metaBytes, 6);
           u8.set(imgBytes, 6 + metaBytes.byteLength);
 
-          if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-            wsRef.current.send(buffer);
-          }
+          // Queue the frame with a 5000ms delay target instead of sending immediately
+          const sendTime = performance.now() + 5000;
+          delayedFramesQueueRef.current.push({ buffer, sendTime });
         }
       }
     }, intervalMs);
@@ -358,6 +429,8 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
     localStorage.setItem("cam_res", resolution);
     localStorage.setItem("cam_fps", String(targetFps));
     localStorage.setItem("cam_quality", String(jpegQuality));
+
+    applyCameraConstraints();
 
     if (isLive) {
       startStreamInterval();
@@ -381,6 +454,7 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
 
   const handleStopLive = async () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
+    delayedFramesQueueRef.current = []; // Clear queue on stop
     setIsLive(false);
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "STREAM_STOPPED", raceId }));
@@ -393,6 +467,8 @@ export default function CameraBroadcasterModal({ raceId, raceTitle, onClose }: P
   const handleClose = () => {
     // 1. Stop frame interval
     if (intervalRef.current) clearInterval(intervalRef.current);
+    // Clear queue on close
+    delayedFramesQueueRef.current = [];
     // 2. Notify peers stream stopped
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({ type: "STREAM_STOPPED", raceId }));
