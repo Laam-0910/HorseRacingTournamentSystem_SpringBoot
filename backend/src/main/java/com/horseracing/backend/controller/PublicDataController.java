@@ -64,6 +64,9 @@ public class PublicDataController {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private com.horseracing.backend.service.PayOSService payOSService;
+
     // Lấy danh sách tin nhắn chat công khai theo raceId
     @GetMapping("/chat/{raceId}")
     public ResponseEntity<?> getRaceChatMessages(@PathVariable Integer raceId) {
@@ -815,6 +818,59 @@ public class PublicDataController {
             return ResponseEntity.ok(requests);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * POST /api/public/wallet/create-payos-link
+     * Calls official PayOS API to generate a live payment link with exact bank account details directly from PayOS.
+     */
+    @PostMapping("/wallet/create-payos-link")
+    public ResponseEntity<?> createPayOSLink(@RequestBody Map<String, Object> body) {
+        try {
+            Integer userId = body.get("userId") != null ? Integer.parseInt(body.get("userId").toString()) : null;
+            Number amountNum = (Number) body.get("amount");
+            if (userId == null || amountNum == null || amountNum.intValue() <= 0) {
+                return ResponseEntity.badRequest().body(Map.of("success", false, "error", "Invalid userId or amount"));
+            }
+
+            long orderCode = System.currentTimeMillis() / 1000L;
+            int amount = amountNum.intValue();
+            // Optional description from client (PPV_...); default TOPUP_{userId}. PayOS max 25 chars, no spaces.
+            String description = body.get("description") != null
+                    ? body.get("description").toString().replaceAll("\\s+", "").trim()
+                    : ("TOPUP_" + userId);
+            if (description.isBlank()) {
+                description = "TOPUP_" + userId;
+            }
+            if (description.length() > 25) {
+                description = description.substring(0, 25);
+            }
+            // Frontend Vite serves HTTPS locally; http:// causes ERR_EMPTY_RESPONSE after PayOS redirect
+            String cancelUrl = body.get("cancelUrl") != null ? body.get("cancelUrl").toString().trim() : "https://localhost:5173/";
+            String returnUrl = body.get("returnUrl") != null ? body.get("returnUrl").toString().trim() : "https://localhost:5173/";
+            if (cancelUrl.isBlank()) cancelUrl = "https://localhost:5173/";
+            if (returnUrl.isBlank()) returnUrl = "https://localhost:5173/";
+
+            Map<String, Object> payosResult = payOSService.createPaymentLink(orderCode, amount, description, cancelUrl, returnUrl);
+            if (Boolean.TRUE.equals(payosResult.get("success"))) {
+                Map<String, Object> extra = new HashMap<>();
+                String descUpper = description.toUpperCase(Locale.ROOT);
+                if (descUpper.startsWith("PPV_")) {
+                    String[] parts = descUpper.split("_");
+                    if (parts.length >= 4) {
+                        extra.put("purpose", "PPV");
+                        extra.put("packageType", parts[2]);
+                        try { extra.put("targetId", Integer.parseInt(parts[3])); } catch (Exception ignored) {}
+                    }
+                } else {
+                    extra.put("purpose", "TOPUP");
+                }
+                payOSService.rememberPendingOrder(orderCode, userId, amount, description, extra);
+            }
+            return ResponseEntity.ok(payosResult);
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body(Map.of("success", false, "error", ex.getMessage()));
         }
     }
 }

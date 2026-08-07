@@ -319,6 +319,24 @@ public class DatabaseInitializer implements InitializingBean {
                 "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_CHECKSUM_KEY', 'NOT_SET', 'PayOS Payment Gateway Checksum Key (for LIVE real money mode)'); " +
                 "END"
             );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PAYOS_BANK_NAME') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_BANK_NAME', 'MBBank (MB)', 'PayOS Beneficiary Bank Name (e.g. MBBank, VCB, TCB, VPBank)'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PAYOS_ACCOUNT_NUMBER') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_ACCOUNT_NUMBER', 'NOT_SET', 'PayOS Beneficiary Bank Account Number registered on PayOS'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PAYOS_ACCOUNT_NAME') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_ACCOUNT_NAME', 'NOT_SET', 'PayOS Beneficiary Bank Account Holder Name registered on PayOS'); " +
+                "END"
+            );
 
             // 9. Kiểm tra và tạo bảng HorseRetirementRequest (yêu cầu giải nghệ ngựa) nếu chưa tồn tại
             jdbcTemplate.execute(

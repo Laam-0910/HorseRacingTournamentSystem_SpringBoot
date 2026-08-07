@@ -22,6 +22,9 @@ const CONFIG_DESC_MAP: Record<string, string> = {
   PAYOS_API_KEY: "PayOS Payment Gateway API Key (for LIVE real money mode)",
   PAYOS_CHECKSUM_KEY: "PayOS Payment Gateway Checksum Key (for LIVE real money mode)",
   PAYOS_PAYOUT_API_KEY: "PayOS / Bank Payout API Key (for LIVE real money auto-disbursement)",
+  PAYOS_BANK_NAME: "PayOS Beneficiary Bank Name (e.g. MBBank, Vietcombank, Techcombank, VPBank)",
+  PAYOS_ACCOUNT_NUMBER: "PayOS Beneficiary Bank Account Number registered on PayOS",
+  PAYOS_ACCOUNT_NAME: "PayOS Beneficiary Bank Account Holder Name registered on PayOS",
 };
 
 /**
@@ -137,7 +140,7 @@ export default function SystemConfig() {
                     return false;
                   }
 
-                  const isPayOSKey = ["PAYOS_CLIENT_ID", "PAYOS_API_KEY", "PAYOS_CHECKSUM_KEY", "AUTO_DISBURSEMENT_ENABLED"].includes(c.configKey);
+                  const isPayOSKey = ["PAYOS_CLIENT_ID", "PAYOS_API_KEY", "PAYOS_CHECKSUM_KEY", "AUTO_DISBURSEMENT_ENABLED", "PAYOS_BANK_NAME", "PAYOS_ACCOUNT_NUMBER", "PAYOS_ACCOUNT_NAME"].includes(c.configKey);
                   if (isPayOSKey && !isLiveMode) {
                     return false;
                   }
@@ -151,6 +154,9 @@ export default function SystemConfig() {
                     "PAYOS_API_KEY",
                     "PAYOS_CHECKSUM_KEY",
                     "PAYOS_PAYOUT_API_KEY",
+                    "PAYOS_BANK_NAME",
+                    "PAYOS_ACCOUNT_NUMBER",
+                    "PAYOS_ACCOUNT_NAME",
                     "MIN_WITHDRAWAL_AMOUNT",
                     "DEFAULT_JOCKEY_HIRE_FEE",
                     "MIN_TICKET_PRICE",

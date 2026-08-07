@@ -60,26 +60,58 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
     }
   };
 
+  const [payosBankName, setPayosBankName] = useState("");
+  const [payosAccountNumber, setPayosAccountNumber] = useState("");
+  const [payosAccountName, setPayosAccountName] = useState("");
+
   useEffect(() => {
     setLoading(true);
     fetchWalletData().finally(() => setLoading(false));
     const interval = setInterval(fetchWalletData, 5000);
 
+    api.get<any>("/public/wallet/webhook/mode").then(res => {
+      setGatewayMode(res?.mode === "LIVE" ? "LIVE" : "MOCK");
+      if (res?.bankName != null) setPayosBankName(String(res.bankName));
+      if (res?.accountNumber != null) setPayosAccountNumber(String(res.accountNumber));
+      if (res?.accountName != null) setPayosAccountName(String(res.accountName));
+    }).catch(() => {});
+
     api.get<any[]>("/admin/configs").then(configs => {
-      const modeConfig = configs.find(c => c.configKey === "PAYMENT_GATEWAY_MODE");
-      if (modeConfig && modeConfig.configValue?.toUpperCase() === "LIVE") {
-        setGatewayMode("LIVE");
-      }
       const minWd = configs.find(c => c.configKey === "MIN_WITHDRAWAL_AMOUNT");
       if (minWd && !isNaN(Number(minWd.configValue))) {
         setMinWithdrawal(Number(minWd.configValue));
       }
     }).catch(() => {});
 
+    // Handle PayOS browser return (?payos=success / session flag)
+    const params = new URLSearchParams(window.location.search);
+    const payosFlag = params.get("payos");
+    const stored = sessionStorage.getItem("payos_return");
+    if (payosFlag === "success" || (stored && stored.includes('"PAID"'))) {
+      sessionStorage.removeItem("payos_return");
+      setSuccessMsg("PayOS payment confirmed. Refreshing wallet balance...");
+      showToast("PayOS payment successful! Updating wallet balance...", "success");
+      fetchWalletData();
+      // Clean payos query without leaving wallet tab
+      params.delete("payos");
+      const qs = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+    } else if (payosFlag === "cancelled") {
+      sessionStorage.removeItem("payos_return");
+      setError("PayOS payment was cancelled.");
+      params.delete("payos");
+      const qs = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+    }
+
     return () => clearInterval(interval);
   }, [user?.id]);
 
-  const handleDepositPrompt = (e: React.FormEvent) => {
+  const [payosCheckoutUrl, setPayosCheckoutUrl] = useState("");
+  const [payosQrCode, setPayosQrCode] = useState("");
+  const [payosError, setPayosError] = useState("");
+
+  const handleDepositPrompt = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = Number(amountInput);
     if (!val || val <= 0) {
@@ -87,6 +119,32 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
       return;
     }
     setShowDepositModal(false);
+
+    if (gatewayMode === "LIVE") {
+      setSubmitting(true);
+      setPayosError("");
+      try {
+        const res = await api.post<any>("/public/wallet/create-payos-link", { userId: user?.id, amount: val });
+        if (res?.success) {
+          sessionStorage.setItem("payos_pending_purpose", "TOPUP");
+          if (res.bin) setPayosBankName(String(res.bin));
+          if (res.accountNumber) setPayosAccountNumber(res.accountNumber);
+          if (res.accountName) setPayosAccountName(res.accountName);
+          if (res.checkoutUrl) setPayosCheckoutUrl(res.checkoutUrl);
+          if (res.qrCode) setPayosQrCode(res.qrCode);
+          setPayosError("");
+        } else {
+          setPayosError(res?.error || "PayOS API failed to generate live payment link.");
+        }
+      } catch (err: any) {
+        setPayosError(getErrMsg(err, "Failed to connect to PayOS API."));
+      } finally {
+        setSubmitting(false);
+      }
+    } else {
+      setPayosError("");
+    }
+
     setShowQrModal(true);
   };
 
@@ -117,6 +175,17 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
     } finally {
       setSubmitting(false);
     }
+  };
+
+  /** LIVE: wallet already credited by PayOS webhook — only refresh UI, do not call /deposit again */
+  const handleLiveDepositDetected = () => {
+    const val = Number(amountInput) || 0;
+    const msg = `PayOS payment received. ${Math.round(val).toLocaleString("en-US")} VND credited to your wallet.`;
+    setSuccessMsg(msg);
+    showToast(msg, "success");
+    setShowQrModal(false);
+    setAmountInput("");
+    fetchWalletData();
   };
 
   const handleWithdraw = async (e: React.FormEvent) => {
@@ -428,14 +497,18 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
       <VietQRModal
         isOpen={showQrModal}
         onClose={() => setShowQrModal(false)}
-        onConfirmSuccess={handleConfirmDeposit}
+        onConfirmSuccess={gatewayMode === "LIVE" ? handleLiveDepositDetected : handleConfirmDeposit}
         amount={Number(amountInput) || 0}
-        transferNote={`TOPUP ${user?.username ?? 'USER'}`}
-        accountName="HORSE RACING SYSTEM FUNDING"
-        accountNumber="9999 8888 6868"
-        bankName="Vietcombank (VCB)"
+        transferNote={`TOPUP_${user?.id ?? 'USER'}`}
+        accountName={payosAccountName}
+        accountNumber={payosAccountNumber}
+        bankName={payosBankName}
         gatewayMode={gatewayMode}
         loading={submitting}
+        checkoutUrl={payosCheckoutUrl}
+        qrCode={payosQrCode}
+        payosError={payosError}
+        pollUserId={user?.id}
       />
 
       {/* Withdrawal Requests History */}
