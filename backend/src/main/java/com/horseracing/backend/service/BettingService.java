@@ -122,7 +122,10 @@ public class BettingService {
         // Validate race exists and is available for betting
         Race race = raceRepository.findById(raceId)
                 .orElseThrow(() -> new IllegalArgumentException("Race not found"));
-        java.util.List<String> validStatuses = java.util.Arrays.asList("SCHEDULED", "DECLARATION_OPEN", "DECLARATION_CLOSED");
+        java.util.List<String> validStatuses = java.util.Arrays.asList(
+            "SCHEDULED", "DECLARATION_OPEN", "DECLARATION_CLOSED", "RACE_ASSIGNED", 
+            "STEWARDS_INQUIRY", "FINISHED", "OFFICIAL", "CANCELLED", "RACE_EVENT_ENDED", "STOPPED"
+        );
         if (race.getStatus() == null || !validStatuses.contains(race.getStatus().toUpperCase())) {
             throw new IllegalArgumentException("Betting is closed for this race. Current status: " + race.getStatus());
         }
@@ -168,7 +171,7 @@ public class BettingService {
         tx.setUserId(userId);
         tx.setAmount(amount.negate());
         tx.setTransactionType("BET_PLACED");
-        tx.setDescription("Bet placed on horse #" + horseId + " in race #" + raceId + " @ odds " + betOdds);
+        tx.setDescription(String.format("Bet placed: Horse #%d in Race #%d | Odds: %.2fx | Amount: %,.0f VND", horseId, raceId, betOdds.doubleValue(), amount.doubleValue()));
         tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
         walletTransactionRepository.save(tx);
 
@@ -224,7 +227,7 @@ public class BettingService {
                     tx.setUserId(bet.getUserId());
                     tx.setAmount(payout);
                     tx.setTransactionType("BET_WIN");
-                    tx.setDescription("Won bet on race #" + raceId + " @ odds " + bet.getOdds() + " → payout " + payout);
+                    tx.setDescription(String.format("Bet won! Race #%d | Odds: %.2fx | Winnings credited: +%,.0f VND", raceId, bet.getOdds().doubleValue(), payout.doubleValue()));
                     tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                     walletTransactionRepository.save(tx);
                 }
@@ -254,8 +257,8 @@ public class BettingService {
             // Update Race & RaceEntry
             Race race = raceRepository.findById(bet.getRaceId()).orElse(null);
             if (race != null) {
-                race.setStatus("OFFICIAL");
-                raceRepository.save(race);
+                // race.setStatus("OFFICIAL");
+                // raceRepository.save(race);
             }
             List<RaceEntry> entries = raceEntryRepository.findByRaceId(bet.getRaceId());
             int pos = 2;
@@ -280,7 +283,7 @@ public class BettingService {
                 tx.setUserId(bet.getUserId());
                 tx.setAmount(payout);
                 tx.setTransactionType("BET_WIN");
-                tx.setDescription("Won bet on race #" + bet.getRaceId() + " @ odds " + bet.getOdds() + "x → Payout: " + payout + " VND");
+                tx.setDescription(String.format("Bet won! Race #%d | Odds: %.2fx | Winnings credited: +%,.0f VND", bet.getRaceId(), bet.getOdds().doubleValue(), payout.doubleValue()));
                 tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                 walletTransactionRepository.save(tx);
             }
@@ -309,7 +312,7 @@ public class BettingService {
                 tx.setUserId(bet.getUserId());
                 tx.setAmount(bet.getAmount());
                 tx.setTransactionType("BET_REFUND");
-                tx.setDescription("Refund for cancelled race #" + raceId);
+                tx.setDescription(String.format("Bet refunded: Race #%d was cancelled | Amount returned: +%,.0f VND", raceId, bet.getAmount().doubleValue()));
                 tx.setCreatedAt(new Timestamp(System.currentTimeMillis()));
                 walletTransactionRepository.save(tx);
             }

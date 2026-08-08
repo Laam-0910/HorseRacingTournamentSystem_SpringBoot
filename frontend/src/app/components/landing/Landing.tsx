@@ -827,7 +827,7 @@ function LandingBettingContainer({ user, navigate, races }: { user: any; navigat
 
   useEffect(() => {
     api.get<any[]>("/public/races").then(all => {
-      const scheduled = (Array.isArray(all) ? all : []).filter(r => r.status === "SCHEDULED" || r.status === "DECLARATION_CLOSED");
+      const scheduled = (Array.isArray(all) ? all : []).filter(r => r.status === "SCHEDULED" || r.status === "DECLARATION_OPEN" || r.status === "DECLARATION_CLOSED" || r.status === "RACE_ASSIGNED" || r.status === "STEWARDS_INQUIRY" || r.status === "FINISHED" || r.status === "OFFICIAL" || r.status === "CANCELLED" || r.status === "RACE_EVENT_ENDED" || r.status === "STOPPED");
       setScheduledRaces(scheduled);
       if (scheduled.length > 0) setSelectedRaceId(scheduled[0].id);
     }).catch(() => {});
@@ -842,6 +842,10 @@ function LandingBettingContainer({ user, navigate, races }: { user: any; navigat
   }, [selectedRaceId]);
 
   const handleBetNow = () => {
+    if (user && user.roleId !== 4) {
+      alert("Only spectators can place bets");
+      return;
+    }
     if (user?.roleId === 5) {
       navigate("/dashboard/spectator?tab=betting");
     } else if (user) {

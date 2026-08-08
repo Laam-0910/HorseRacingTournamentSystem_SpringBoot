@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { api, getErrMsg } from "../../../lib/api";
+import { buildMockQrImageUrl, buildVietQrImageUrl, isLivePaymentMode } from "../../utils/vietqr";
 
 interface VietQRPaywallModalProps {
   userId: number;
@@ -36,9 +37,9 @@ export default function VietQRPaywallModal({
   const [walletBal, setWalletBal] = useState<number>(0);
   const [error, setError] = useState("");
 
-  const bankName = "TPB";
-  const accountNumber = "08410092005";
-  const accountHolder = "HORSE RACING ORG";
+  const [bankName, setBankName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [accountHolder, setAccountHolder] = useState("");
 
   const [timeLeft, setTimeLeft] = useState(300); // 5-minute countdown timer (300s)
 
@@ -79,6 +80,14 @@ export default function VietQRPaywallModal({
   const [isMockMode, setIsMockMode] = useState<boolean>(true);
   const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
   const [successCountdown, setSuccessCountdown] = useState<number>(0);
+  const paymentDetectedRef = useRef(false);
+  const onSuccessRef = useRef(onSuccess);
+  onSuccessRef.current = onSuccess;
+  const [payosLoading, setPayosLoading] = useState(false);
+  const [payosQrCode, setPayosQrCode] = useState("");
+  const [payosCheckoutUrl, setPayosCheckoutUrl] = useState("");
+  const [payosError, setPayosError] = useState("");
+  const [payosTransferNote, setPayosTransferNote] = useState("");
 
   // Separate quotes for each package to avoid showing wrong price when switching tabs
   const [meetingQuote, setMeetingQuote] = useState<any>(null);
@@ -121,78 +130,105 @@ export default function VietQRPaywallModal({
 
   useEffect(() => {
     api.get<any>("/public/wallet/webhook/mode")
-      .then(res => setIsMockMode(!!res.isMock))
+      .then(res => {
+        setIsMockMode(!isLivePaymentMode(res));
+        // Optional fallbacks only — LIVE prefers PayOS API account details
+        if (res?.bankName != null && String(res.bankName).trim() && String(res.bankName).trim() !== "NOT_SET") {
+          setBankName(String(res.bankName));
+        }
+        if (res?.accountNumber != null && String(res.accountNumber).trim() && String(res.accountNumber).trim() !== "NOT_SET") {
+          setAccountNumber(String(res.accountNumber));
+        }
+        if (res?.accountName != null && String(res.accountName).trim() && String(res.accountName).trim() !== "NOT_SET") {
+          setAccountHolder(String(res.accountName));
+        }
+      })
       .catch(() => setIsMockMode(true));
   }, []);
 
-  // Auto-polling check access if user paid outside (or real webhook triggered)
+  // Auto-polling: detect PayOS webhook activating/extending livestream access
   useEffect(() => {
     let isCancelled = false;
-    let initialHasAccess: boolean | null = null;
-    let initialExpiry: number = 0;
+    let baselineReady = false;
+    let baselineHasAccess = false;
+    let baselineExpiry = 0;
+    paymentDetectedRef.current = false;
 
-    // Fetch initial access state once
-    api.get<any>(`/public/livestream/access?userId=${userId}${seasonId ? `&seasonId=${seasonId}` : ""}${raceMeetingId ? `&raceMeetingId=${raceMeetingId}` : ""}`)
-      .then(res => {
-        initialHasAccess = Boolean(res.hasAccess);
-        initialExpiry = Number(res.expiresAt || 0);
-      })
-      .catch(() => {
-        initialHasAccess = false;
-      });
+    const accessUrl = `/public/livestream/access?userId=${userId}${seasonId ? `&seasonId=${seasonId}` : ""}${raceMeetingId ? `&raceMeetingId=${raceMeetingId}` : ""}`;
+
+    const captureBaseline = async () => {
+      try {
+        const res = await api.get<any>(accessUrl);
+        if (isCancelled) return;
+        baselineHasAccess = Boolean(res.hasAccess);
+        baselineExpiry = Number(res.expiresAt || 0);
+        baselineReady = true;
+      } catch {
+        if (isCancelled) return;
+        baselineHasAccess = false;
+        baselineExpiry = 0;
+        baselineReady = true;
+      }
+    };
+
+    captureBaseline();
 
     const checkPayment = async () => {
-      // Only poll for external webhook completion if not already completed/processing
-      if (paymentSuccess || purchasing || payingViaWallet) return;
+      if (paymentDetectedRef.current || purchasing || payingViaWallet || !baselineReady) return;
       try {
-        const accessRes = await api.get<any>(
-          `/public/livestream/access?userId=${userId}${seasonId ? `&seasonId=${seasonId}` : ""}${raceMeetingId ? `&raceMeetingId=${raceMeetingId}` : ""}`
-        );
+        const accessRes = await api.get<any>(accessUrl);
         const curHasAccess = Boolean(accessRes.hasAccess);
         const curExpiry = Number(accessRes.expiresAt || 0);
 
-        // Payment succeeded if:
-        // 1. User previously had NO access, but NOW has access.
-        // OR 2. User previously HAD access, but their expiresAt was extended.
-        const newlyGranted = initialHasAccess === false && curHasAccess === true;
-        const expiryExtended = initialHasAccess === true && curHasAccess === true && curExpiry > initialExpiry;
+        const newlyGranted = !baselineHasAccess && curHasAccess;
+        const expiryExtended = curHasAccess && curExpiry > baselineExpiry + 1000;
 
-        if ((newlyGranted || expiryExtended) && !isCancelled && !paymentSuccess) {
+        if ((newlyGranted || expiryExtended) && !isCancelled) {
+          paymentDetectedRef.current = true;
           setPaymentSuccess(true);
           setSuccessCountdown(2);
-          // Auto-close modal after 2 seconds
-          setTimeout(() => {
-            if (!isCancelled) onSuccess();
-          }, 2000);
         }
-      } catch (err) {}
+      } catch {
+        // keep polling
+      }
     };
 
-    const interval = setInterval(checkPayment, 3000);
+    const interval = setInterval(checkPayment, 2000);
+    const quick = setTimeout(checkPayment, 800);
     return () => {
       isCancelled = true;
       clearInterval(interval);
+      clearTimeout(quick);
     };
-  }, [userId, seasonId, raceMeetingId, purchasing, payingViaWallet, onSuccess, paymentSuccess]);
+  }, [userId, seasonId, raceMeetingId, purchasing, payingViaWallet]);
+
+  // Actually close modal after success banner countdown (do not tie to poll effect cleanup)
+  useEffect(() => {
+    if (!paymentSuccess) return;
+    const closeTimer = setTimeout(() => {
+      onSuccessRef.current();
+    }, 2000);
+    return () => clearTimeout(closeTimer);
+  }, [paymentSuccess]);
 
   // Countdown display for auto-close
   useEffect(() => {
-    if (successCountdown <= 0) return;
+    if (!paymentSuccess || successCountdown <= 0) return;
     const t = setInterval(() => setSuccessCountdown(prev => Math.max(0, prev - 1)), 1000);
     return () => clearInterval(t);
-  }, [successCountdown]);
+  }, [paymentSuccess, successCountdown]);
 
   // Called by the "Confirm Payment" dev button.
-  // Step 1: Try to simulate via real sepay-webhook (same path real bank uses).
+  // Step 1: Try to simulate via the same webhook path real bank integrations use.
   // Step 2: If webhook endpoint fails (not deployed), fallback to /purchase directly.
   const handleSimulateVietQRPay = async () => {
     setPurchasing(true);
     setError("");
     try {
       // Step 1: Attempt to call the real webhook endpoint
-      await api.post<any>("/public/wallet/sepay-webhook", {
+      await api.post<any>("/public/wallet/webhook/sepay", {
         id: Date.now(),
-        gateway: "TPBank",
+        gateway: bankName,
         transactionDate: new Date().toISOString(),
         accountNumber,
         code: null,
@@ -221,11 +257,9 @@ export default function VietQRPaywallModal({
     } finally {
       // Always force unlock access regardless of API outcome
       setPurchasing(false);
+      paymentDetectedRef.current = true;
       setPaymentSuccess(true);
       setSuccessCountdown(2);
-      setTimeout(() => {
-        onSuccess();
-      }, 2000);
     }
   };
 
@@ -233,10 +267,100 @@ export default function VietQRPaywallModal({
   const quote = selectedPackage === "RACEMEETING" ? meetingQuote : seasonQuote;
   const finalAmount = quote ? Number(quote.finalPrice) : selectedPackage === "RACEMEETING" ? 15000 : 79000;
   
-  // Format transfer content: PPV_{userId}_{packageType}_{meetingIdOrSeasonId}_{txTimestamp}
+  // Format transfer content: PPV_{userId}_{packageType}_{meetingIdOrSeasonId} (PayOS max 25 chars)
   const targetId = selectedPackage === "RACEMEETING" ? (raceMeetingId || 1) : (seasonId || 1);
-  const transferContent = `PPV_${userId}_${selectedPackage}_${targetId}_${refId}`;
-  const qrImageUrl = `https://img.vietqr.io/image/${bankName}-${accountNumber}-compact2.jpg?amount=${finalAmount}&addInfo=${encodeURIComponent(transferContent)}&accountName=${encodeURIComponent(accountHolder)}`;
+  const transferContentShort = `PPV_${userId}_${selectedPackage}_${targetId}`;
+  const transferContent = payosTransferNote || transferContentShort;
+
+  // LIVE: auto-create PayOS payment link → bank account + QR come from PayOS (only 3 API keys needed)
+  useEffect(() => {
+    if (isMockMode || quotesLoading || !userId || !finalAmount || finalAmount <= 0) return;
+
+    let cancelled = false;
+    setPayosLoading(true);
+    setPayosError("");
+    setPayosQrCode("");
+    setPayosCheckoutUrl("");
+
+    api.post<any>("/public/wallet/create-payos-link", {
+      userId,
+      amount: finalAmount,
+      description: transferContentShort,
+      returnUrl: `https://localhost:5173${window.location.pathname}`,
+      cancelUrl: `https://localhost:5173${window.location.pathname}`,
+    })
+      .then((res) => {
+        if (cancelled) return;
+        if (res?.success) {
+          sessionStorage.setItem("payos_pending_purpose", "PPV");
+          sessionStorage.setItem(
+            "payos_return_path",
+            `${window.location.pathname}${window.location.search || ""}`
+          );
+          if (res.bin) setBankName(String(res.bin));
+          if (res.accountNumber) setAccountNumber(String(res.accountNumber));
+          if (res.accountName) setAccountHolder(String(res.accountName));
+          if (res.qrCode) setPayosQrCode(String(res.qrCode));
+          if (res.checkoutUrl) setPayosCheckoutUrl(String(res.checkoutUrl));
+          if (res.description) setPayosTransferNote(String(res.description));
+          else setPayosTransferNote(transferContentShort);
+          setPayosError("");
+        } else {
+          setPayosError(res?.error || "PayOS failed to create payment link.");
+        }
+      })
+      .catch((err: any) => {
+        if (!cancelled) setPayosError(getErrMsg(err, "Failed to connect to PayOS API."));
+      })
+      .finally(() => {
+        if (!cancelled) setPayosLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [isMockMode, quotesLoading, userId, selectedPackage, targetId, finalAmount, transferContentShort]);
+
+  const isConfigured = (value: string) => {
+    const trimmed = value.trim();
+    return !!trimmed && trimmed !== "NOT_SET";
+  };
+  const hasLiveBankAccount =
+    isMockMode ||
+    (isConfigured(accountNumber) && isConfigured(accountHolder)) ||
+    (!!payosQrCode && payosQrCode.length > 20);
+  const qrImageUrl = isMockMode
+    ? buildMockQrImageUrl(`MOCK_PAYMENT|LIVESTREAM|amount=${finalAmount}|note=${transferContent}`, 220)
+    : payosQrCode && payosQrCode.length > 20
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(payosQrCode)}`
+    : hasLiveBankAccount
+    ? buildVietQrImageUrl({
+        bankNameOrCode: bankName,
+        accountNumber,
+        accountName: accountHolder,
+        amount: finalAmount,
+        addInfo: transferContent,
+      })
+    : "";
+  const displayBankName = isMockMode
+    ? "Mock Demo Wallet"
+    : isConfigured(bankName)
+    ? bankName
+    : payosLoading
+    ? "Loading from PayOS..."
+    : "PayOS bank";
+  const displayAccountNumber = isMockMode
+    ? "MOCK-ACCOUNT"
+    : isConfigured(accountNumber)
+    ? accountNumber
+    : payosLoading
+    ? "Loading..."
+    : "Waiting for PayOS";
+  const displayAccountHolder = isMockMode
+    ? "HORSE RACING MOCK GATEWAY"
+    : isConfigured(accountHolder)
+    ? accountHolder
+    : payosLoading
+    ? "Loading..."
+    : "Waiting for PayOS";
 
   const handlePayViaWallet = async () => {
     setPayingViaWallet(true);
@@ -251,11 +375,9 @@ export default function VietQRPaywallModal({
         paymentMethod: "WALLET",
       });
       if (res.success) {
+        paymentDetectedRef.current = true;
         setPaymentSuccess(true);
         setSuccessCountdown(2);
-        setTimeout(() => {
-          onSuccess();
-        }, 2000);
       }
     } catch (err: any) {
       setError(getErrMsg(err, "Wallet payment failed. Please check your balance or top up via VietQR."));

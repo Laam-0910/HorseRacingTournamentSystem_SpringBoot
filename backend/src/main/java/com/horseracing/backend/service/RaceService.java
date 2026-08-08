@@ -35,6 +35,7 @@ public class RaceService {
     private final OwnerRaceMeetingRegistrationRepository ownerRegRepository;
     private final RaceInvitationRepository raceInvitationRepository;
     private final SystemConfigRepository systemConfigRepository;
+    private final BettingService bettingService;
 
     @jakarta.persistence.PersistenceContext
     private jakarta.persistence.EntityManager entityManager;
@@ -245,6 +246,15 @@ public class RaceService {
             if (java.util.Arrays.asList("FINISHED", "OFFICIAL", "COMPLETED", "RACE_EVENT_ENDED", "CANCELLED", "CLOSED").contains(newStatus.toUpperCase())) {
                 race.setStreamMode("NONE");
                 race.setYoutubeLiveUrl(null);
+            }
+            if ("CANCELLED".equalsIgnoreCase(newStatus)) {
+                try {
+                    bettingService.refundBets(race.getId());
+                } catch (Exception ignored) {}
+            } else if (java.util.Arrays.asList("OFFICIAL", "FINISHED", "COMPLETED", "RACE_EVENT_ENDED").contains(newStatus.toUpperCase())) {
+                try {
+                    bettingService.settleBets(race.getId());
+                } catch (Exception ignored) {}
             }
         }
         if (body.containsKey("youtubeLiveUrl")) { // Kiểm tra nếu có cập nhật đường dẫn phát trực tiếp

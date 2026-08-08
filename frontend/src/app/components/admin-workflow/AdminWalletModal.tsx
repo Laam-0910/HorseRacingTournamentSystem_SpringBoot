@@ -40,6 +40,12 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
   // State cho VietQR Modal
   const [showQrModal, setShowQrModal] = useState(false);
   const [gatewayMode, setGatewayMode] = useState<"MOCK" | "LIVE">("MOCK");
+  const [payosBankName, setPayosBankName] = useState("");
+  const [payosAccountNumber, setPayosAccountNumber] = useState("");
+  const [payosAccountName, setPayosAccountName] = useState("");
+  const [payosCheckoutUrl, setPayosCheckoutUrl] = useState("");
+  const [payosQrCode, setPayosQrCode] = useState("");
+  const [payosError, setPayosError] = useState("");
 
   // Withdrawal Requests Management
   const [withdrawalRequests, setWithdrawalRequests] = useState<any[]>([]);
@@ -76,9 +82,28 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
         setGatewayMode("LIVE");
       }
     }).catch(() => {});
+
+    const params = new URLSearchParams(window.location.search);
+    const payosFlag = params.get("payos");
+    const stored = sessionStorage.getItem("payos_return");
+    if (payosFlag === "success" || (stored && stored.includes('"PAID"'))) {
+      sessionStorage.removeItem("payos_return");
+      setSuccess("PayOS payment confirmed. Refreshing wallet balance...");
+      showToast("PayOS payment successful! Updating wallet balance...", "success");
+      fetchWallet();
+      params.delete("payos");
+      const qs = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+    } else if (payosFlag === "cancelled") {
+      sessionStorage.removeItem("payos_return");
+      setError("PayOS payment was cancelled.");
+      params.delete("payos");
+      const qs = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+    }
   }, []);
 
-  const handleTopUpSubmit = (e: React.FormEvent) => {
+  const handleTopUpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccess("");
@@ -87,6 +112,32 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
       setError("Top-up amount must be at least 10,000 VND.");
       return;
     }
+
+    setPayosCheckoutUrl("");
+    setPayosQrCode("");
+    setPayosError("");
+
+    if (gatewayMode === "LIVE") {
+      setSubmitting(true);
+      try {
+        const res = await api.post<any>("/public/wallet/create-payos-link", { userId: user?.id ?? 1, amount: val });
+        if (res?.success) {
+          sessionStorage.setItem("payos_pending_purpose", "TOPUP");
+          if (res.bin) setPayosBankName(String(res.bin));
+          if (res.accountNumber) setPayosAccountNumber(String(res.accountNumber));
+          if (res.accountName) setPayosAccountName(String(res.accountName));
+          if (res.checkoutUrl) setPayosCheckoutUrl(String(res.checkoutUrl));
+          if (res.qrCode) setPayosQrCode(String(res.qrCode));
+        } else {
+          setPayosError(res?.error || "PayOS API failed to generate live payment link.");
+        }
+      } catch (err: any) {
+        setPayosError(getErrMsg(err, "Failed to connect to PayOS API."));
+      } finally {
+        setSubmitting(false);
+      }
+    }
+
     setShowQrModal(true);
   };
 
@@ -105,6 +156,18 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
     } finally {
       setSubmitting(false);
     }
+  };
+
+  /** LIVE: wallet already credited by PayOS webhook — only refresh UI, do not call /topup again */
+  const handleLiveTopUpDetected = () => {
+    const val = parseFloat(amount) || 0;
+    const msg = `PayOS payment received. ${Math.round(val).toLocaleString("en-US")} VND credited to Admin wallet.`;
+    setSuccess(msg);
+    showToast(msg, "success");
+    setShowQrModal(false);
+    setAmount("");
+    setActiveAction("none");
+    fetchWallet();
   };
 
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
@@ -577,14 +640,19 @@ export default function AdminWalletModal({ onClose, onBalanceUpdated, isPage = f
         <VietQRModal
           isOpen={showQrModal}
           onClose={() => setShowQrModal(false)}
-          onConfirmSuccess={handleConfirmTopUp}
+          onConfirmSuccess={gatewayMode === "LIVE" ? handleLiveTopUpDetected : handleConfirmTopUp}
           amount={parseFloat(amount) || 0}
-          transferNote={`TOPUP ADMIN admin_root`}
-          accountName="HORSE RACING SYSTEM FUNDING"
-          accountNumber="9999 8888 6868"
-          bankName="Vietcombank (VCB)"
+          transferNote={`TOPUP_${user?.id ?? 1}`}
+          accountName={payosAccountName}
+          accountNumber={payosAccountNumber}
+          bankName={payosBankName}
           gatewayMode={gatewayMode}
           loading={submitting}
+          checkoutUrl={payosCheckoutUrl}
+          qrCode={payosQrCode}
+          payosError={payosError}
+          pollUserId={user?.id ?? 1}
+          pollAsAdmin
         />
       </div>
     );

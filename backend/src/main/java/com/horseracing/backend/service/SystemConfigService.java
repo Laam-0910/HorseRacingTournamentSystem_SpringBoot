@@ -48,7 +48,10 @@ public class SystemConfigService {
             Map.entry("PAYOS_CLIENT_ID", ""),
             Map.entry("PAYOS_API_KEY", ""),
             Map.entry("PAYOS_CHECKSUM_KEY", ""),
-            Map.entry("PAYOS_PAYOUT_API_KEY", "")
+            Map.entry("PAYOS_PAYOUT_API_KEY", ""),
+            Map.entry("PAYOS_BANK_NAME", "MBBank (MB)"),
+            Map.entry("PAYOS_ACCOUNT_NUMBER", ""),
+            Map.entry("PAYOS_ACCOUNT_NAME", "")
         );
 
         for (Map.Entry<String, String> e : defaultMap.entrySet()) {

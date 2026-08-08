@@ -65,7 +65,7 @@ export default function BettingView() {
       const allRaces = await api.get<any[]>("/public/races").catch(() => []);
       // Filter scheduled or active races
       const scheduled = (Array.isArray(allRaces) ? allRaces : []).filter(
-        (r) => r.status === "SCHEDULED" || r.status === "DECLARATION_CLOSED" || r.status === "RUNNING"
+        (r) => r.status === "SCHEDULED" || r.status === "DECLARATION_OPEN" || r.status === "DECLARATION_CLOSED" || r.status === "RACE_ASSIGNED" || r.status === "STEWARDS_INQUIRY" || r.status === "FINISHED" || r.status === "OFFICIAL" || r.status === "CANCELLED" || r.status === "RACE_EVENT_ENDED" || r.status === "STOPPED"
       );
       setRaces(scheduled);
       if (scheduled.length > 0 && !selectedRaceId) {
@@ -172,7 +172,14 @@ export default function BettingView() {
   const isBettingOpen =
     currentRaceObj?.status === "SCHEDULED" ||
     currentRaceObj?.status === "DECLARATION_OPEN" ||
-    currentRaceObj?.status === "DECLARATION_CLOSED";
+    currentRaceObj?.status === "DECLARATION_CLOSED" ||
+    currentRaceObj?.status === "RACE_ASSIGNED" ||
+    currentRaceObj?.status === "STEWARDS_INQUIRY" ||
+    currentRaceObj?.status === "FINISHED" ||
+    currentRaceObj?.status === "OFFICIAL" ||
+    currentRaceObj?.status === "CANCELLED" ||
+    currentRaceObj?.status === "RACE_EVENT_ENDED" ||
+    currentRaceObj?.status === "STOPPED";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
@@ -290,7 +297,14 @@ export default function BettingView() {
                   const isOpen =
                     r.status === "SCHEDULED" ||
                     r.status === "DECLARATION_OPEN" ||
-                    r.status === "DECLARATION_CLOSED";
+                    r.status === "DECLARATION_CLOSED" ||
+                    r.status === "RACE_ASSIGNED" ||
+                    r.status === "STEWARDS_INQUIRY" ||
+                    r.status === "FINISHED" ||
+                    r.status === "OFFICIAL" ||
+                    r.status === "CANCELLED" ||
+                    r.status === "RACE_EVENT_ENDED" ||
+                    r.status === "STOPPED";
                   return (
                     <div
                       key={r.id}

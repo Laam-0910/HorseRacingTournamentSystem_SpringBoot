@@ -60,26 +60,58 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
     }
   };
 
+  const [payosBankName, setPayosBankName] = useState("");
+  const [payosAccountNumber, setPayosAccountNumber] = useState("");
+  const [payosAccountName, setPayosAccountName] = useState("");
+
   useEffect(() => {
     setLoading(true);
     fetchWalletData().finally(() => setLoading(false));
     const interval = setInterval(fetchWalletData, 5000);
 
+    api.get<any>("/public/wallet/webhook/mode").then(res => {
+      setGatewayMode(res?.mode === "LIVE" ? "LIVE" : "MOCK");
+      if (res?.bankName != null) setPayosBankName(String(res.bankName));
+      if (res?.accountNumber != null) setPayosAccountNumber(String(res.accountNumber));
+      if (res?.accountName != null) setPayosAccountName(String(res.accountName));
+    }).catch(() => {});
+
     api.get<any[]>("/admin/configs").then(configs => {
-      const modeConfig = configs.find(c => c.configKey === "PAYMENT_GATEWAY_MODE");
-      if (modeConfig && modeConfig.configValue?.toUpperCase() === "LIVE") {
-        setGatewayMode("LIVE");
-      }
       const minWd = configs.find(c => c.configKey === "MIN_WITHDRAWAL_AMOUNT");
       if (minWd && !isNaN(Number(minWd.configValue))) {
         setMinWithdrawal(Number(minWd.configValue));
       }
     }).catch(() => {});
 
+    // Handle PayOS browser return (?payos=success / session flag)
+    const params = new URLSearchParams(window.location.search);
+    const payosFlag = params.get("payos");
+    const stored = sessionStorage.getItem("payos_return");
+    if (payosFlag === "success" || (stored && stored.includes('"PAID"'))) {
+      sessionStorage.removeItem("payos_return");
+      setSuccessMsg("PayOS payment confirmed. Refreshing wallet balance...");
+      showToast("PayOS payment successful! Updating wallet balance...", "success");
+      fetchWalletData();
+      // Clean payos query without leaving wallet tab
+      params.delete("payos");
+      const qs = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+    } else if (payosFlag === "cancelled") {
+      sessionStorage.removeItem("payos_return");
+      setError("PayOS payment was cancelled.");
+      params.delete("payos");
+      const qs = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
+    }
+
     return () => clearInterval(interval);
   }, [user?.id]);
 
-  const handleDepositPrompt = (e: React.FormEvent) => {
+  const [payosCheckoutUrl, setPayosCheckoutUrl] = useState("");
+  const [payosQrCode, setPayosQrCode] = useState("");
+  const [payosError, setPayosError] = useState("");
+
+  const handleDepositPrompt = async (e: React.FormEvent) => {
     e.preventDefault();
     const val = Number(amountInput);
     if (!val || val <= 0) {
@@ -87,6 +119,32 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
       return;
     }
     setShowDepositModal(false);
+
+    if (gatewayMode === "LIVE") {
+      setSubmitting(true);
+      setPayosError("");
+      try {
+        const res = await api.post<any>("/public/wallet/create-payos-link", { userId: user?.id, amount: val });
+        if (res?.success) {
+          sessionStorage.setItem("payos_pending_purpose", "TOPUP");
+          if (res.bin) setPayosBankName(String(res.bin));
+          if (res.accountNumber) setPayosAccountNumber(res.accountNumber);
+          if (res.accountName) setPayosAccountName(res.accountName);
+          if (res.checkoutUrl) setPayosCheckoutUrl(res.checkoutUrl);
+          if (res.qrCode) setPayosQrCode(res.qrCode);
+          setPayosError("");
+        } else {
+          setPayosError(res?.error || "PayOS API failed to generate live payment link.");
+        }
+      } catch (err: any) {
+        setPayosError(getErrMsg(err, "Failed to connect to PayOS API."));
+      } finally {
+        setSubmitting(false);
+      }
+    } else {
+      setPayosError("");
+    }
+
     setShowQrModal(true);
   };
 
@@ -117,6 +175,17 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
     } finally {
       setSubmitting(false);
     }
+  };
+
+  /** LIVE: wallet already credited by PayOS webhook — only refresh UI, do not call /deposit again */
+  const handleLiveDepositDetected = () => {
+    const val = Number(amountInput) || 0;
+    const msg = `PayOS payment received. ${Math.round(val).toLocaleString("en-US")} VND credited to your wallet.`;
+    setSuccessMsg(msg);
+    showToast(msg, "success");
+    setShowQrModal(false);
+    setAmountInput("");
+    fetchWalletData();
   };
 
   const handleWithdraw = async (e: React.FormEvent) => {
@@ -193,9 +262,24 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
       case "RACE_PRIZE_MONEY":
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">PRIZE MONEY</span>;
       case "SELF_DEPOSIT":
+      case "ADMIN_DEPOSIT":
+      case "BANK_DEPOSIT":
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">DEPOSIT</span>;
       case "WITHDRAWAL":
+      case "USER_WITHDRAWAL":
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">WITHDRAWAL</span>;
+      case "BET_PLACED":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">BET PLACED</span>;
+      case "BET_WIN":
+      case "BET_PAYOUT":
+      case "BET_WINNING":
+      case "BET_WINNING_PAYOUT":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">BET WINNING</span>;
+      case "BET_REFUND":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-400 border border-sky-500/30">BET REFUND</span>;
+      case "LIVESTREAM_TICKET_PAYMENT":
+      case "LIVESTREAM_PPV_PURCHASE":
+        return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">LIVE PASS</span>;
       default:
         return <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-white/10 text-white/70">{type}</span>;
     }
@@ -527,14 +611,18 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
       <VietQRModal
         isOpen={showQrModal}
         onClose={() => setShowQrModal(false)}
-        onConfirmSuccess={handleConfirmDeposit}
+        onConfirmSuccess={gatewayMode === "LIVE" ? handleLiveDepositDetected : handleConfirmDeposit}
         amount={Number(amountInput) || 0}
-        transferNote={`TOPUP ${user?.username ?? 'USER'}`}
-        accountName="HORSE RACING SYSTEM FUNDING"
-        accountNumber="9999 8888 6868"
-        bankName="Vietcombank (VCB)"
+        transferNote={`TOPUP_${user?.id ?? 'USER'}`}
+        accountName={payosAccountName}
+        accountNumber={payosAccountNumber}
+        bankName={payosBankName}
         gatewayMode={gatewayMode}
         loading={submitting}
+        checkoutUrl={payosCheckoutUrl}
+        qrCode={payosQrCode}
+        payosError={payosError}
+        pollUserId={user?.id}
       />
 
       {/* Withdrawal Requests History */}
@@ -629,6 +717,10 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
                   {paginatedTransactions.map((tx: any) => {
                     const amt = Number(tx.amount || 0);
                     const isPositive = amt > 0;
+                    const cleanDesc = String(tx.description || "")
+                      .replace(/\s*\?\s*payout\s*/gi, " (Payout: ")
+                      .replace(/\s*\?\s*/g, " - ")
+                      .replace(/\s*→\s*/g, " - ");
                     return (
                       <tr key={tx.id} className="hover:bg-white/[0.02] transition">
                         <td className="px-4 py-3 text-white/40">#TX-{tx.id}</td>
@@ -637,7 +729,7 @@ export default function UserWalletView({ user: propUser, roleLabel = "User", rol
                           {isPositive ? `+${amt.toLocaleString('en-US')}` : `${amt.toLocaleString('en-US')}`}
                         </td>
                         <td className="px-4 py-3 text-white/80">
-                          <div className="max-w-[280px] whitespace-normal break-words leading-snug" title={tx.description}>{tx.description}</div>
+                          <div className="max-w-[280px] whitespace-normal break-words leading-snug" title={cleanDesc}>{cleanDesc}</div>
                         </td>
                         <td className="px-4 py-3 text-white/40">{formatDate(tx.createdAt)}</td>
                       </tr>

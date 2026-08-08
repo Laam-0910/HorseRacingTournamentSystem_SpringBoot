@@ -319,6 +319,24 @@ public class DatabaseInitializer implements InitializingBean {
                 "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_CHECKSUM_KEY', 'NOT_SET', 'PayOS Payment Gateway Checksum Key (for LIVE real money mode)'); " +
                 "END"
             );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PAYOS_BANK_NAME') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_BANK_NAME', 'MBBank (MB)', 'PayOS Beneficiary Bank Name (e.g. MBBank, VCB, TCB, VPBank)'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PAYOS_ACCOUNT_NUMBER') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_ACCOUNT_NUMBER', 'NOT_SET', 'PayOS Beneficiary Bank Account Number registered on PayOS'); " +
+                "END"
+            );
+            jdbcTemplate.execute(
+                "IF OBJECT_ID('SystemConfig', 'U') IS NOT NULL AND NOT EXISTS (SELECT * FROM SystemConfig WHERE config_key = 'PAYOS_ACCOUNT_NAME') " +
+                "BEGIN " +
+                "    INSERT INTO SystemConfig (config_key, config_value, description) VALUES ('PAYOS_ACCOUNT_NAME', 'NOT_SET', 'PayOS Beneficiary Bank Account Holder Name registered on PayOS'); " +
+                "END"
+            );
 
             // 9. Kiểm tra và tạo bảng HorseRetirementRequest (yêu cầu giải nghệ ngựa) nếu chưa tồn tại
             jdbcTemplate.execute(
@@ -513,6 +531,8 @@ public class DatabaseInitializer implements InitializingBean {
             }
 
             // 11.5 Ensure Active Season, Active Meeting, and 3 SCHEDULED races with entries exist
+            // Auto-seeding of the default season '2026 Grand Championship' has been disabled to prevent it from resetting to ACTIVE or recreating on startup.
+            /*
             try {
                 // Ensure Season 1 is ACTIVE
                 jdbcTemplate.update("UPDATE Season SET status = 'ACTIVE' WHERE id = 1");
@@ -521,56 +541,17 @@ public class DatabaseInitializer implements InitializingBean {
                     jdbcTemplate.update("INSERT INTO Season (name, start_date, end_date, status) VALUES ('2026 Grand Championship', '2026-01-01', '2026-12-31', 'ACTIVE')");
                 }
 
-                // Ensure Meeting 1 is ACTIVE
-                jdbcTemplate.update("UPDATE RaceMeeting SET status = 'ACTIVE' WHERE id = 1");
-                Integer activeMeetingCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM RaceMeeting WHERE status = 'ACTIVE'", Integer.class);
-                if (activeMeetingCount == null || activeMeetingCount == 0) {
-                    jdbcTemplate.update("INSERT INTO RaceMeeting (season_id, name, venue, start_date, total_budget, ticket_price, status) VALUES (1, 'Saigon Turf Club Summer Meeting', 'Phu Tho Racetrack', GETDATE(), 500000000.00, 50000.00, 'ACTIVE')");
-                }
-
-                // Ensure 3 SCHEDULED races exist
-                Integer scheduledCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM Race WHERE status = 'SCHEDULED'", Integer.class);
-                if (scheduledCount == null || scheduledCount < 3) {
-                    jdbcTemplate.update(
-                        "INSERT INTO Race (race_meeting_id, start_time, registration_start_time, registration_end_time, status, class_level, min_rating, max_rating, distance_meters, track_type, purse, min_entries, max_entries) VALUES " +
-                        "(1, DATEADD(hour, 4, GETDATE()), DATEADD(day, -2, GETDATE()), DATEADD(hour, -1, GETDATE()), 'SCHEDULED', 'Class 1 Elite Championship', 80, 100, 1600, 'TURF', 100000000.00, 3, 14), " +
-                        "(1, DATEADD(hour, 6, GETDATE()), DATEADD(day, -2, GETDATE()), DATEADD(hour, -1, GETDATE()), 'SCHEDULED', 'Class 2 Premier Sprint',    65, 79,  1200, 'DIRT', 60000000.00,  3, 14), " +
-                        "(1, DATEADD(hour, 8, GETDATE()), DATEADD(day, -2, GETDATE()), DATEADD(hour, -1, GETDATE()), 'SCHEDULED', 'Class 3 Handicap Cup',      50, 64,  1400, 'TURF', 40000000.00,  3, 14)"
-                    );
-                }
-
-                // Auto-assign entries for SCHEDULED races
-                List<Integer> scheduledRaceIds = jdbcTemplate.queryForList("SELECT id FROM Race WHERE status = 'SCHEDULED'", Integer.class);
-                List<Integer> horseIds = jdbcTemplate.queryForList("SELECT id FROM Horse WHERE status = 'ACTIVE' OR status IS NULL", Integer.class);
-                List<Integer> jockeyIds = jdbcTemplate.queryForList("SELECT id FROM [User] WHERE role_id = 3", Integer.class);
-
-                if (!scheduledRaceIds.isEmpty() && horseIds.size() >= 3 && !jockeyIds.isEmpty()) {
-                    for (int rIdx = 0; rIdx < scheduledRaceIds.size(); rIdx++) {
-                        Integer rId = scheduledRaceIds.get(rIdx);
-                        Integer entryCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM RaceEntry WHERE race_id = ? AND status = 'APPROVED'", Integer.class, rId);
-                        if (entryCount == null || entryCount < 3) {
-                            int numToInsert = Math.min(4, horseIds.size());
-                            for (int i = 0; i < numToInsert; i++) {
-                                Integer hId = horseIds.get((rIdx * 3 + i) % horseIds.size());
-                                Integer jId = jockeyIds.get(i % jockeyIds.size());
-                                int gate = i + 1;
-                                jdbcTemplate.update(
-                                    "IF NOT EXISTS (SELECT 1 FROM RaceEntry WHERE race_id = ? AND horse_id = ?) " +
-                                    "INSERT INTO RaceEntry (race_id, horse_id, jockey_id, gate_number, status, carried_weight) VALUES (?, ?, ?, ?, 'APPROVED', 55.0)",
-                                    rId, hId, rId, hId, jId, gate
-                                );
-                            }
-                        }
-                    }
-                }
             } catch (Exception ex) {
-                System.err.println("Note on scheduled race seeding: " + ex.getMessage());
+                System.err.println("Note on season active seeding: " + ex.getMessage());
             }
+            */
 
             // 12.1 Seed spectator users with wallet balance for betting demo
             try {
                 // Fix role_id for existing spectators if set to 5
-                jdbcTemplate.update("UPDATE [User] SET role_id = 4 WHERE username LIKE 'spectator%' OR role_id = 5");
+                jdbcTemplate.update("UPDATE [User] SET role_id = 4 WHERE username LIKE 'spectator%' AND role_id = 5");
+                // Restore referee roles to 5 (Referee)
+                jdbcTemplate.update("UPDATE [User] SET role_id = 5 WHERE username LIKE 'referee_%'");
 
                 // Check if spectator users exist (roleId = 4)
                 List<Integer> spectatorIds = jdbcTemplate.queryForList(
@@ -699,8 +680,12 @@ public class DatabaseInitializer implements InitializingBean {
                     jdbcTemplate.update("UPDATE Bet SET status = 'WON', payout = ? WHERE id = ?", payout, bId);
                     // Update spectator wallet balance with payout
                     jdbcTemplate.update("UPDATE [User] SET wallet_balance = wallet_balance + ?, balance = balance + ? WHERE id = ?", payout, payout, uId);
-                    // Mark Race as OFFICIAL
-                    jdbcTemplate.update("UPDATE Race SET status = 'OFFICIAL' WHERE id = ?", rId);
+                    // Log BET_WIN transaction history for spectator
+                    String cleanDesc = String.format("Won bet payout on race #%d @ odds %.2fx (Payout: %,.0f VND)", rId, odds.doubleValue(), payout.doubleValue());
+                    jdbcTemplate.update(
+                        "INSERT INTO WalletTransaction (user_id, amount, transaction_type, description, created_at) VALUES (?, ?, 'BET_WIN', ?, GETDATE())",
+                        uId, payout, cleanDesc
+                    );
                     // Set winning horse position to 1
                     jdbcTemplate.update("UPDATE RaceEntry SET final_position = 1, finish_time = '1:35.20' WHERE race_id = ? AND horse_id = ?", rId, hId);
                 }
@@ -710,6 +695,33 @@ public class DatabaseInitializer implements InitializingBean {
             } catch (Exception ex) {
                 System.err.println("Note on bet auto-settlement: " + ex.getMessage());
             }
+
+            // Sync missing BET_WIN transaction history logs for any existing WON bets
+            try {
+                jdbcTemplate.update(
+                    "INSERT INTO WalletTransaction (user_id, amount, transaction_type, description, created_at) " +
+                    "SELECT b.user_id, b.payout, 'BET_WIN', CONCAT('Won bet payout on race #', b.race_id, ' @ odds ', b.odds, 'x (Payout: ', FORMAT(b.payout, 'N0'), ' VND)'), b.created_at " +
+                    "FROM Bet b " +
+                    "WHERE b.status = 'WON' AND b.payout > 0 " +
+                    "AND NOT EXISTS ( " +
+                    "  SELECT 1 FROM WalletTransaction wt " +
+                    "  WHERE wt.user_id = b.user_id AND wt.transaction_type = 'BET_WIN' " +
+                    "  AND ABS(wt.amount - b.payout) < 0.01 " +
+                    "  AND wt.description LIKE CONCAT('%race #', b.race_id, '%') " +
+                    ")"
+                );
+            } catch (Exception ex) {
+                System.err.println("Note on syncing missing BET_WIN transaction logs: " + ex.getMessage());
+            }
+
+            // Clean up any legacy unformatted or question mark characters in WalletTransaction descriptions
+            try {
+                jdbcTemplate.update(
+                    "UPDATE WalletTransaction " +
+                    "SET description = REPLACE(REPLACE(REPLACE(description, ' ? payout ', ' - Payout: '), ' ? ', ' - '), ' → ', ' - ') " +
+                    "WHERE description LIKE '%?%' OR description LIKE '%→%'"
+                );
+            } catch (Exception ignored) {}
 
             System.out.println("Database columns, ChatMessage table, HorseRetirementRequest table, Bet table, and RaceEntry auto-seeding verified successfully.");
         } catch (Exception e) {

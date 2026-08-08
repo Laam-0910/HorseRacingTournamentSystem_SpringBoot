@@ -501,7 +501,7 @@ public class AdminUserService {
         // Send notification to Owner and Jockey
         notificationService.notifyPartiesOnRaceEntryDecision(entry, false);
 
-        autoCalculateWeights(entry.getRaceId());
+        autoCalculateWeights(entry.getRaceId(), false);
     }
 
     // Phê duyệt đăng ký Nài ngựa tham gia Ngày hội đua
